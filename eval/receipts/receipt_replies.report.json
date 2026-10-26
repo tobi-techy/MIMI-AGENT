@@ -1,0 +1,169 @@
+{
+ "cases": 84,
+ "overall": 1.0,
+ "per_outcome": {
+  "confirmed": {
+   "n": 28,
+   "accuracy": 1.0
+  },
+  "disputed": {
+   "n": 21,
+   "accuracy": 1.0
+  },
+  "partial": {
+   "n": 10,
+   "accuracy": 1.0
+  },
+  "unclear": {
+   "n": 16,
+   "accuracy": 1.0
+  },
+  "unrelated": {
+   "n": 9,
+   "accuracy": 1.0
+  }
+ },
+ "false_confirms": 0,
+ "false_confirm_rate": 0.0,
+ "false_confirm_ids": [],
+ "confirmed_recall": 1.0,
+ "confirmed_recall_n": 25,
+ "confirmed_recall_incl_ambiguous": 0.9286,
+ "disputed_recall": 1.0,
+ "disputed_recall_n": 29,
+ "disputed_recall_incl_ambiguous": 1.0,
+ "ambiguous_disputes_consented": 0,
+ "disputed_line_match": 1.0,
+ "language_breakdown": {
+  "english": {
+   "n": 34,
+   "accuracy": 1.0,
+   "detected": {
+    "english": 33,
+    "other": 1
+   }
+  },
+  "hausa": {
+   "n": 7,
+   "accuracy": 1.0,
+   "detected": {
+    "hausa": 6,
+    "mixed": 1
+   }
+  },
+  "igbo": {
+   "n": 7,
+   "accuracy": 1.0,
+   "detected": {
+    "igbo": 6,
+    "mixed": 1
+   }
+  },
+  "mixed": {
+   "n": 6,
+   "accuracy": 1.0,
+   "detected": {
+    "mixed": 6
+   }
+  },
+  "none": {
+   "n": 6,
+   "accuracy": 1.0,
+   "detected": {
+    "none": 6
+   }
+  },
+  "pidgin": {
+   "n": 16,
+   "accuracy": 1.0,
+   "detected": {
+    "english": 1,
+    "mixed": 1,
+    "pidgin": 14
+   }
+  },
+  "yoruba": {
+   "n": 8,
+   "accuracy": 1.0,
+   "detected": {
+    "yoruba": 8
+   }
+  }
+ },
+ "category_breakdown": {
+  "ambiguous": {
+   "n": 7,
+   "accuracy": 1.0
+  },
+  "emoji": {
+   "n": 5,
+   "accuracy": 1.0
+  },
+  "english": {
+   "n": 10,
+   "accuracy": 1.0
+  },
+  "hausa": {
+   "n": 7,
+   "accuracy": 1.0
+  },
+  "igbo": {
+   "n": 7,
+   "accuracy": 1.0
+  },
+  "injection": {
+   "n": 6,
+   "accuracy": 1.0
+  },
+  "late": {
+   "n": 5,
+   "accuracy": 1.0
+  },
+  "mixed": {
+   "n": 6,
+   "accuracy": 1.0
+  },
+  "ok": {
+   "n": 4,
+   "accuracy": 1.0
+  },
+  "partial": {
+   "n": 4,
+   "accuracy": 1.0
+  },
+  "pidgin": {
+   "n": 9,
+   "accuracy": 1.0
+  },
+  "typos": {
+   "n": 3,
+   "accuracy": 1.0
+  },
+  "voice": {
+   "n": 3,
+   "accuracy": 1.0
+  },
+  "yoruba": {
+   "n": 8,
+   "accuracy": 1.0
+  }
+ },
+ "repairs": 0,
+ "unparseable_or_error": 0,
+ "held_back_confirms": {},
+ "prompt_tokens": 108763,
+ "completion_tokens": 41217,
+ "misses": [],
+ "passes": {
+  "false_confirms": true,
+  "confirmed_recall": true,
+  "disputed_recall": true,
+  "overall": true
+ },
+ "pass": true,
+ "model": "muse-spark-1.3 (live)",
+ "wall_seconds": 17.9,
+ "live_calls_this_pass": 84,
+ "replayed_calls": 0,
+ "recorded_at": "2026-10-26T20:18+01:00"
+}
