@@ -120,6 +120,8 @@ class RecordPaymentPromise:
     confirm_text: str = ""
     confirmed_at: str = ""
     timezone: str = "Africa/Lagos"
+    # The shop's own word, confirmed back: not verified against the bank.
+    label: Literal["self_reported"] = "self_reported"
     consent: Literal["shop_confirmed_readback"] = "shop_confirmed_readback"
     kind: Literal["record_payment_promise"] = field(default="record_payment_promise")
 

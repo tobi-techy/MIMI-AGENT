@@ -96,8 +96,9 @@ Reference: `https://docs.spitch.app/features/transcription` and
 USD 0.0014 per second generated. The WAV comes back with a streaming header
 (length unknown), so Mimi sets the real sizes before reading its length.
 On one Yoruba fixture sentence (`vn-31`, about 4 seconds of text) the
-`sade` voice ran on for 15 seconds, and 22 seconds on a retry; the first
-take is kept as a stress case.
+`sade` voice ran on for 15 seconds, 22 seconds on a retry, and the `femi`
+voice for 19 seconds, so it is the engine on that sentence, not the voice.
+The first take is kept as a stress case.
 
 ## Router policy, checked again by the 50-clip eval
 
@@ -244,7 +245,10 @@ WER has no pass mark. "Amount and day right" counts the 14 clips with a
 clear promise where the transcript gave exactly the right kobo and day;
 the router missed only `vn-31`, the clip where the speech engine ran on
 ("egberun mewarun mewarun"): the amount is unreadable, so Mimi asks and
-records nothing. Every read-back the router sent (10) was right, and every
+records nothing. RAI-290's bar is 95% amount and date accuracy: the router
+is at 93% (13 of 14) on the clear promises and 95% (19 of 20) on every clip
+that talks about paying; the one miss is that fixture. Every read-back the
+router sent (10) was right, and every
 one was recorded correctly after the YES. No transcriber ever heard a
 promise in a clip that had none.
 

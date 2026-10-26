@@ -176,6 +176,7 @@ def test_voice_promise_is_read_back_and_recorded_only_after_yes() -> None:
     assert (p["amount_kobo"], p["due_on"], p["timezone"]) == (2_000_000, "2026-10-27", "Africa/Lagos")
     assert p["said_kind"] == "voice" and p["transcript_provider"] == "fake"
     assert p["confirm_text"] == "YES" and p["readback_text"] == back[0]["text"]
+    assert p["label"] == "self_reported"
     assert r.job().result == "confirmed"
     note = json.loads(r.job().working_note)
     assert note["promise_result"] == "recorded"
