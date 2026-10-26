@@ -1,41 +1,45 @@
-"""Voice-note eval: speech to text, then the same receipt reader and guards.
+"""Voice-note eval: speech to text, then the production receipt flow.
 
     python -m mimi.voice.eval                 # replay recorded answers (CI)
     python -m mimi.voice.eval --live          # call Spitch, Muse Voice Transcribe
                                               # and Muse Spark; resume-safe
     python -m mimi.voice.eval --live --fresh  # all calls new
     python -m mimi.voice.eval --fake          # fake transcriber + keyword judge
+    python -m mimi.voice.eval --hints on      # only with language hints (default: both)
+    python -m mimi.voice.eval --strict        # also fail on the first-read dispute mark
 
-Clips: ``eval/voice/clips.jsonl`` (16 synthetic-generated voice notes in
-English, Pidgin, Yoruba, Igbo, Hausa and Yoruba-English, some with market
-noise; see ``scripts/make_voice_fixtures.py``). Each clip is run through
-three transcribers: ``spitch``, ``muse`` (muse-voice-transcribe-1.0) and the
-``router`` (the production path, ``router.py``). Each transcript is stored as
-a voice reply and judged end to end by Muse Spark (``ReceiptJudge``) and the
-code guards (``decide``), exactly as in production. A clip whose transcript
-failed is not judged: production asks the shop to type, which is counted as
-safe but not correct.
+Clips: ``eval/voice/clips.jsonl`` (50 synthetic-generated voice notes in
+English, Pidgin, Yoruba, Igbo, Hausa and code-switched mixes, with market
+noise; see ``scripts/make_voice_fixtures.py``): confirms, disputes, partial
+deliveries, payment promises with amounts and days, unclear and unrelated
+replies. Each clip is run through three transcribers, ``spitch``, ``muse``
+(muse-voice-transcribe-1.0) and the ``router`` (the production path,
+``router.py``), once with the shop's language as a hint and once with none
+(``spitch/no-hint``, ...). Each transcript goes through the production
+``ReceiptFlow``: Muse Spark's verdict (``ReceiptJudge``), the code guards
+and the payment-promise read-back. When Mimi reads a promise back, a
+truthful shop answers (YES if the read-back is right, "No" if not) and the
+flow runs again. A clip whose transcript failed is not judged: production
+asks the shop to type, which is counted as safe but not correct.
 
-Metrics, per transcriber and per language:
+Metrics, per transcriber and hint mode, and per language:
 
-* WER against the text the clip was generated from (corpus WER: all errors
-  over all reference words), plain and with tone marks folded (``wer.py``);
-* verdict accuracy: the outcome is the label or an accepted alternative;
-* false confirms: consent recorded for a clip that is not a confirmation
-  (pass mark 0, for every transcriber);
-* disputes caught: dispute and partial clips that end in an owner dispute
-  flag on the first read (pass mark 100%, for the router);
-* disputes never confirmed: dispute and partial clips that do not end in
-  consent (a clip read as unclear gets one clarifying message and then an
-  owner flag; it can never be confirmed). Must be 100% for every transcriber;
-* confirms recorded: confirmation clips that end in consent (reported);
-* transcription latency, audio seconds and Muse Spark tokens.
+* WER against the text the clip was generated from (corpus WER), plain and
+  with tone marks folded (``wer.py``);
+* verdict accuracy, false confirms, disputes caught on the first read,
+  disputes never confirmed, confirms recorded (as before);
+* promises: amount and day exactly right on the clips with a clear promise;
+  readings right (promise, unclear, paid claim) on every clip that talks
+  about paying; promises heard where there was none; read-backs, questions,
+  promises held until the delivery settles; recorded right after the
+  shop's answer; **recorded without the shop's YES** and **recorded wrong**;
+* latency, audio seconds, Muse Spark tokens, and the cost of recording
+  (``cost``: from the caches and the fixtures).
 
-WER has no pass mark; it is reported as measured.
-
-Exit code: 1 when a safety mark fails (any false confirm, or any dispute
-that ends in consent). The first-read dispute mark is reported in the
-summary and the report's ``passes``; ``--strict`` makes it fail the run too.
+Exit code 1 when a safety mark fails: any false confirm, any dispute that
+ends in consent, or any promise recorded without the shop's YES or with the
+wrong amount or day. The first-read dispute mark is a warning in the summary
+and ``passes`` (Tobi's call, 26 Oct 2026); ``--strict`` makes it fail too.
 
 Recorded answers: ``eval/voice/transcripts.<provider>.cache.json`` (text
 only, never audio) and ``eval/voice/verdicts.cache.json`` (Muse Spark).
@@ -61,10 +65,13 @@ from mimi.models import FakeModel, from_env, has_key
 from mimi.models.base import ChatModel
 from mimi.models.cache import CachedModel
 from mimi.models.env import DEFAULT_MODELS
-from mimi.receipts.decide import decide
-from mimi.receipts.inbox import ShopReply
-from mimi.receipts.receipt import receipt_keywords, receipt_text
+from mimi.receipts.flow import HELPER, ReceiptFlow
+from mimi.receipts.inbox import InMemoryShopInbox, ShopReply
+from mimi.receipts.intents import RecordPaymentPromise, SendShopMessage
+from mimi.receipts.promises import reading_of
+from mimi.receipts.receipt import receipt_keywords
 from mimi.receipts.verdict import ReceiptJudge, fake_verdict
+from mimi.runtime.steps import StepContext, StepOutcome
 from mimi.voice.audio import inspect
 from mimi.voice.base import Transcriber, Transcript, VoiceContext
 from mimi.voice.cache import CachedTranscriber
@@ -97,6 +104,36 @@ class ClipResult:
     held_back: str
     prompt_tokens: int
     completion_tokens: int
+    hinted: bool = True
+    # The payment promise as read from the transcript (``promises.reading_of``).
+    promise_status: str = "none"
+    promise_issue: str = ""
+    promise_kobo: int | None = None
+    promise_due: str = ""
+    # What Mimi sent about it on this burst: "readback", "question", "held"
+    # (the delivery is not settled yet, so it waits) or "".
+    promise_msg: str = ""
+    # Safety: a promise recorded on the voice note alone (before any YES).
+    recorded_without_yes: int = 0
+    # After a truthful shop answers the read-back: YES if it is right, "No"
+    # if not. True/False: what was recorded matched the truth; None: no
+    # read-back to answer. ``wrong_recorded`` counts a record that does not
+    # match the truth (or one made after a "No").
+    recorded_after_yes: bool | None = None
+    wrong_recorded: int = 0
+
+    @property
+    def expected_promise(self) -> dict[str, Any]:
+        return dict(self.clip.get("promise") or {"status": "none"})
+
+    @property
+    def promise_correct(self) -> bool:
+        want = self.expected_promise
+        if self.promise_status != want["status"]:
+            return False
+        if want["status"] == "promise":
+            return self.promise_kobo == want["amount_kobo"] and self.promise_due == want["due_on"]
+        return True
 
     @property
     def acceptable(self) -> set[str]:
@@ -117,7 +154,7 @@ def voice_reply(clip: dict[str, Any], t: Transcript, data: bytes) -> ShopReply:
         message_id=f"wamid.{clip['id']}",
         job_id=f"rcpt-{clip['delivery_id']}",
         shop_id="eval-shop",
-        sender="+234-eval",
+        sender="+2340000000998",
         text=t.text if t.status != "failed" else "",
         received_at=at.isoformat(),
         kind="voice",
@@ -129,41 +166,117 @@ def voice_reply(clip: dict[str, Any], t: Transcript, data: bytes) -> ShopReply:
     )
 
 
+def _ctx(world: World, delivery_id: str, step: int, note: str, now: datetime) -> StepContext:
+    return StepContext(
+        job_id=f"rcpt-{delivery_id}",
+        tenant_id=world.tenant_id,
+        helper=HELPER,
+        goal=delivery_id,
+        step_index=step,
+        plan=(),
+        todo=(),
+        working_note=note,
+        new_owner_messages=(),
+        now=now,
+    )
+
+
+def _of(outcome: StepOutcome, cls: type) -> list[Any]:
+    return [i for i in outcome.intents if isinstance(i, cls)]
+
+
 def run_clip(
     name: str,
     transcriber: Transcriber,
     judge: ReceiptJudge,
     world: World,
     clip: dict[str, Any],
+    hinted: bool = True,
 ) -> ClipResult:
+    """One clip end to end through the production ``ReceiptFlow``: the
+    receipt goes out, the voice note's transcript comes back as the reply,
+    the flow judges it, guards it and proposes its intents. When it reads a
+    payment promise back, a truthful shop answers (YES only if the read-back
+    is right) and the flow runs once more."""
     data = clip_bytes(clip)
     audio = inspect(data)
     delivery = world.delivery(clip["delivery_id"])
-    ctx = VoiceContext(language_hint=clip["hint"], keywords=receipt_keywords(delivery))
+    ctx = VoiceContext(
+        language_hint=clip["hint"] if hinted else None, keywords=receipt_keywords(delivery)
+    )
     t = transcriber.transcribe(audio, ctx)
     if t.status == "failed":
-        return ClipResult(clip, name, t, "no_transcript", "type_request", 0.0, "", 0, 0)
+        return ClipResult(clip, name, t, "no_transcript", "type_request", 0.0, "", 0, 0, hinted)
     reply = voice_reply(clip, t, data)
-    shop = world.shop(delivery.shop_id)
-    mimi_sent = [receipt_text(delivery, shop.name, world.distributor)]
-    judged = judge(delivery=delivery, earlier=[], new=[reply], mimi_sent=mimi_sent)
-    d = decide(
-        judged.verdict,
-        delivery=delivery,
-        replies=[reply],
-        clarified=False,
-        new_replies=[reply],
-    )
+    reading = reading_of(reply)
+    inbox = InMemoryShopInbox()
+    flow = ReceiptFlow(world, inbox, judge)
+    at = datetime.fromisoformat(reply.received_at)
+    sent = flow(_ctx(world, delivery.delivery_id, 0, "", at - timedelta(hours=1)))
+    inbox.add(reply)
+    out = flow(_ctx(world, delivery.delivery_id, 1, sent.working_note or "", at + timedelta(minutes=2)))
+    tr = out.trace
+    msgs = [m for m in _of(out, SendShopMessage) if m.purpose.startswith("promise_")]
+    note = json.loads(out.working_note or "{}")
+    promise_msg = ""
+    if msgs:
+        promise_msg = "readback" if msgs[0].purpose == "promise_readback" else "question"
+    elif note.get("promise"):
+        promise_msg = "held"
+    recorded_now = len(_of(out, RecordPaymentPromise))
+    after: bool | None = None
+    wrong = 0
+    if msgs and msgs[0].purpose == "promise_readback":
+        want = dict(clip.get("promise") or {})
+        m = msgs[0]
+        right = (
+            want.get("status") == "promise"
+            and m.promise_kobo == want.get("amount_kobo")
+            and m.promise_due_on == want.get("due_on")
+        )
+        answer = ShopReply(
+            message_id=f"wamid.{clip['id']}.answer",
+            job_id=f"rcpt-{delivery.delivery_id}",
+            shop_id="eval-shop",
+            sender="+2340000000999",
+            text="YES" if right else "No, that is not right",
+            received_at=(at + timedelta(minutes=10)).isoformat(),
+        )
+        inbox.add(answer)
+        out2 = flow(
+            _ctx(world, delivery.delivery_id, 2, out.working_note or "", at + timedelta(minutes=13))
+        )
+        recs = _of(out2, RecordPaymentPromise)
+        if right:
+            after = len(recs) == 1 and (recs[0].amount_kobo, recs[0].due_on) == (
+                want["amount_kobo"],
+                want["due_on"],
+            )
+            wrong = sum(
+                1 for r in recs if (r.amount_kobo, r.due_on) != (want["amount_kobo"], want["due_on"])
+            )
+        else:
+            after = not recs
+            wrong = len(recs)
     return ClipResult(
         clip,
         name,
         t,
-        judged.verdict.outcome,
-        d.action,
-        judged.verdict.confidence,
-        d.held_back,
-        judged.prompt_tokens,
-        judged.completion_tokens,
+        str(tr.get("outcome", "")),
+        str(tr.get("action", "")),
+        float(tr.get("confidence", 0.0)),
+        str(tr.get("held_back", "")),
+        int(tr.get("prompt_tokens", 0)),
+        int(tr.get("completion_tokens", 0)),
+        hinted,
+        promise_status=reading.status,
+        promise_issue=reading.issue,
+        promise_kobo=reading.amount_kobo if reading.status == "promise" else None,
+        promise_due=reading.due_on.isoformat() if reading.status == "promise" and reading.due_on else "",
+        promise_msg=promise_msg,
+        recorded_without_yes=recorded_now,
+        recorded_after_yes=after,
+        wrong_recorded=wrong,
     )
 
 
@@ -205,6 +318,30 @@ def summarise(results: Sequence[ClipResult]) -> dict[str, Any]:
         "audio_seconds": round(sum(r.transcript.duration_s or 0.0 for r in results), 2),
         "judge_prompt_tokens": sum(r.prompt_tokens for r in results),
         "judge_completion_tokens": sum(r.completion_tokens for r in results),
+        **promise_summary(results),
+    }
+
+
+def promise_summary(results: Sequence[ClipResult]) -> dict[str, Any]:
+    """Amount and date extraction, and the promise safety marks."""
+    talk = [r for r in results if r.expected_promise["status"] != "none"]
+    clear = [r for r in results if r.expected_promise["status"] == "promise"]
+    silent = [r for r in results if r.expected_promise["status"] == "none"]
+    answered = [r for r in results if r.recorded_after_yes is not None]
+    return {
+        "promise_clips_n": len(talk),
+        "promise_reading_accuracy": _rate(sum(r.promise_correct for r in talk), len(talk)),
+        "promise_amount_date_n": len(clear),
+        "promise_amount_date_accuracy": _rate(sum(r.promise_correct for r in clear), len(clear)),
+        "promise_wrong_ids": [r.clip["id"] for r in talk if not r.promise_correct],
+        "promises_heard_where_none": sum(r.promise_status == "promise" for r in silent),
+        "promise_readbacks": sum(r.promise_msg == "readback" for r in results),
+        "promise_questions": sum(r.promise_msg == "question" for r in results),
+        "promise_held_for_delivery": sum(r.promise_msg == "held" for r in results),
+        "promise_readbacks_answered": len(answered),
+        "promise_recorded_right_after_answer": sum(bool(r.recorded_after_yes) for r in answered),
+        "promise_recorded_without_yes": sum(r.recorded_without_yes for r in results),
+        "promise_wrong_recorded": sum(r.wrong_recorded for r in results),
     }
 
 
@@ -228,6 +365,8 @@ def score(by_name: Mapping[str, Sequence[ClipResult]]) -> dict[str, Any]:
                     "false_confirms",
                     "disputes_caught",
                     "disputes_n",
+                    "promise_amount_date_accuracy",
+                    "promise_amount_date_n",
                 )
             }
             for lang, rs in sorted(by_lang.items())
@@ -240,6 +379,7 @@ def score(by_name: Mapping[str, Sequence[ClipResult]]) -> dict[str, Any]:
             "noise": clip_r.clip["noise"],
             "reference": clip_r.clip["reference"],
             "expected": clip_r.clip["expected"],
+            "expected_promise": clip_r.expected_promise,
         }
         for name, results in by_name.items():
             r = results[i]
@@ -251,6 +391,14 @@ def score(by_name: Mapping[str, Sequence[ClipResult]]) -> dict[str, Any]:
                 "outcome": r.outcome,
                 "action": r.action,
                 "held_back": r.held_back,
+                "promise": {
+                    "status": r.promise_status,
+                    "issue": r.promise_issue,
+                    "amount_kobo": r.promise_kobo,
+                    "due_on": r.promise_due,
+                    "sent": r.promise_msg,
+                    "recorded_after_answer": r.recorded_after_yes,
+                },
             }
         report["clips"].append(row)
     gate: dict[str, Any] = report["transcribers"].get("router") or next(iter(report["transcribers"].values()), {})
@@ -261,14 +409,22 @@ def score(by_name: Mapping[str, Sequence[ClipResult]]) -> dict[str, Any]:
         "disputes_never_confirmed_all_transcribers": all(
             s["disputes_never_confirmed"] >= 1.0 for s in report["transcribers"].values()
         ),
+        "no_wrong_promise_recorded_all_transcribers": all(
+            s["promise_recorded_without_yes"] == 0 and s["promise_wrong_recorded"] == 0
+            for s in report["transcribers"].values()
+        ),
         "router_disputes_caught_first_read": gate.get("disputes_caught", 0) >= 1.0,
     }
     report["pass_safety"] = (
         report["passes"]["false_confirms_all_transcribers"]
         and report["passes"]["disputes_never_confirmed_all_transcribers"]
+        and report["passes"]["no_wrong_promise_recorded_all_transcribers"]
     )
     report["pass"] = all(report["passes"].values())
     return report
+
+
+NO_HINT = "/no-hint"
 
 
 def run(
@@ -276,18 +432,55 @@ def run(
     model: ChatModel,
     clips: Sequence[dict[str, Any]],
     workers: int = 4,
+    hints: Sequence[bool] = (True,),
 ) -> dict[str, list[ClipResult]]:
+    """Every transcriber over every clip, once per hint mode: with the
+    shop's language as a hint (``spitch``) and with none (``spitch/no-hint``)."""
     world = load_world()
     judge = ReceiptJudge(model)
     out: dict[str, list[ClipResult]] = {}
-    for name, t in transcribers.items():
-        if workers <= 1:
-            out[name] = [run_clip(name, t, judge, world, c) for c in clips]
-        else:
-            with ThreadPoolExecutor(max_workers=workers) as pool:
-                out[name] = list(
-                    pool.map(lambda c, n=name, tr=t: run_clip(n, tr, judge, world, c), clips)
-                )
+    for hinted in hints:
+        for base, t in transcribers.items():
+            name = base if hinted else base + NO_HINT
+
+            def one(c: dict[str, Any], n: str = name, tr: Transcriber = t, h: bool = hinted) -> ClipResult:
+                return run_clip(n, tr, judge, world, c, h)
+
+            if workers <= 1:
+                out[name] = [one(c) for c in clips]
+            else:
+                with ThreadPoolExecutor(max_workers=workers) as pool:
+                    out[name] = list(pool.map(one, clips))
+    return out
+
+
+# Prices (docs/VOICE.md, checked 26 Oct 2026), USD.
+SPITCH_STT_PER_S = 0.00042
+SPITCH_TTS_PER_S = 0.0014
+MUSE_STT_PER_S = 0.18 / 3600
+
+
+def recorded_cost(clips: Sequence[dict[str, Any]]) -> dict[str, Any]:
+    """What recording this eval cost, from the caches (audio seconds per
+    recorded call) and the fixtures (seconds of speech generated)."""
+    out: dict[str, Any] = {}
+    for provider, price in (("spitch", SPITCH_STT_PER_S), ("muse", MUSE_STT_PER_S)):
+        path = transcript_cache(provider)
+        entries = json.loads(path.read_text(encoding="utf-8")) if path.exists() else {}
+        secs = sum(float(e.get("audio_s") or 0.0) for e in entries.values())
+        out[f"{provider}_stt_calls"] = len(entries)
+        out[f"{provider}_stt_audio_s"] = round(secs, 1)
+        out[f"{provider}_stt_usd"] = round(secs * price, 4)
+    tts_s = 0.0
+    for c in clips:
+        try:
+            tts_s += float(inspect(clip_bytes(c)).duration_s or 0.0)
+        except (OSError, ValueError):
+            continue
+    # Each clip has about 0.9 s of padding added by ffmpeg, not generated.
+    out["fixtures_tts_audio_s"] = round(max(tts_s - 0.9 * len(clips), 0.0), 1)
+    out["fixtures_tts_usd"] = round(out["fixtures_tts_audio_s"] * SPITCH_TTS_PER_S, 4)
+    out["spitch_usd_total"] = round(out["spitch_stt_usd"] + out["fixtures_tts_usd"], 4)
     return out
 
 
@@ -296,6 +489,8 @@ def table(report: dict[str, Any]) -> str:
     names = list(report["transcribers"])
     head = "| Language | " + " | ".join(f"{n} WER | {n} verdicts" for n in names) + " |"
     sep = "|---|" + "---|---|" * len(names)
+    if not names:
+        return ""
     langs = sorted({lang for n in names for lang in report["by_language"][n]})
     rows = []
     for lang in [*langs, "all"]:
@@ -313,13 +508,24 @@ def _print(report: dict[str, Any], label: str) -> None:
     print(f"voice eval: {len(report['clips'])} synthetic clips, {label}")
     for name, s in report["transcribers"].items():
         print(
-            f"  {name:<7} WER {s['wer']:.1%} (folded {s['wer_folded']:.1%})  "
+            f"  {name:<14} WER {s['wer']:.1%} (folded {s['wer_folded']:.1%})  "
             f"verdicts {s['verdict_accuracy']:.1%}  false confirms {s['false_confirms']}  "
             f"disputes caught {s['disputes_caught']:.0%} (n={s['disputes_n']})  "
             f"confirms recorded {s['confirms_recorded']:.0%}  failed {s['transcripts_failed']} "
             f"low {s['transcripts_low']}  latency {s['latency_mean_s']:.2f}s mean"
         )
+        print(
+            f"  {'':<14} promises: amount+date {s['promise_amount_date_accuracy']:.0%} "
+            f"(n={s['promise_amount_date_n']}), readings {s['promise_reading_accuracy']:.0%} "
+            f"(n={s['promise_clips_n']}), read-backs {s['promise_readbacks']}, questions "
+            f"{s['promise_questions']}, held {s['promise_held_for_delivery']}, recorded right "
+            f"after the answer {s['promise_recorded_right_after_answer']}/"
+            f"{s['promise_readbacks_answered']}, recorded without YES "
+            f"{s['promise_recorded_without_yes']}, wrong recorded {s['promise_wrong_recorded']}"
+        )
     print(table(report))
+    if "cost" in report:
+        print(f"  cost to record: {report['cost']}")
     for row in report["clips"]:
         for name in report["transcribers"]:
             r = row[name]
@@ -351,9 +557,19 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--workers", type=int, default=4)
     ap.add_argument("--json", action="store_true")
     ap.add_argument("--strict", action="store_true", help="fail on every pass mark")
+    ap.add_argument(
+        "--hints",
+        choices=("both", "on", "off"),
+        default="both",
+        help="run with the shop's language hint, with none, or both (default)",
+    )
+    ap.add_argument("--only", nargs="*", default=None, help="clip ids (for a partial live run)")
     args = ap.parse_args(argv)
 
     clips = list(load_clips())
+    if args.only:
+        clips = [c for c in clips if c["id"] in args.only]
+    hints = {"both": (True, False), "on": (True,), "off": (False,)}[args.hints]
     providers: dict[str, Transcriber]
     model: Any
     if args.fake:
@@ -388,8 +604,12 @@ def main(argv: list[str] | None = None) -> int:
     if not args.fake:
         transcribers["router"] = VoiceRouter(providers, DEFAULT_POLICY)
     started = time.monotonic()
-    results = run(transcribers, model, clips, workers=1 if args.fake else args.workers)
+    results = run(
+        transcribers, model, clips, workers=1 if args.fake else args.workers, hints=hints
+    )
     report = score(results)
+    if not args.fake:
+        report["cost"] = recorded_cost(clips)
     report["mode"] = label
     report["wall_seconds"] = round(time.monotonic() - started, 1)
     if isinstance(model, CachedModel):
@@ -398,8 +618,8 @@ def main(argv: list[str] | None = None) -> int:
     report["transcriber_live_calls_this_pass"] = {
         n: getattr(t, "live_calls", 0) for n, t in providers.items()
     }
-    if args.live:
-        report["recorded_at"] = datetime.now(WAT).isoformat(timespec="minutes")
+    if args.live and not args.only:
+        report["recorded_at"] = datetime.now(WAT).strftime("%Y-%m-%dT%H:%M+01:00")
         report["table_markdown"] = table(report)
         REPORT.write_text(json.dumps(report, indent=1, ensure_ascii=False) + "\n")
     if args.json:

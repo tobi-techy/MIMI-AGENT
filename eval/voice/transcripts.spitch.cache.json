@@ -1,4 +1,81 @@
 {
+ "03696e43de057bdfe487e89142d93a33": {
+  "audio_s": 3.544,
+  "confidence": null,
+  "language": "yo",
+  "latency_s": 1.409,
+  "text": "gbogbo pé má san ẹgbẹ̀rún márùn-ún"
+ },
+ "05ab431c02608b00c3b9c15c84d5e6a9": {
+  "audio_s": 5.24,
+  "confidence": null,
+  "language": "en",
+  "latency_s": 3.742,
+  "text": "yes everything arrived i will pay twenty thousand nara tomorrow"
+ },
+ "0ac396ee0c527cfce8d7e2c08f292d84": {
+  "audio_s": 2.58,
+  "confidence": null,
+  "language": "ha",
+  "latency_s": 1.859,
+  "text": "zan duba kayan anjima"
+ },
+ "0d97d6e4c12ce96ca7e9b0adcb0a390b": {
+  "audio_s": 5.24,
+  "confidence": null,
+  "language": "sna",
+  "latency_s": 2.539,
+  "text": "yes everything arrived i will pay twenty thousand nara tomorrow"
+ },
+ "0fd2145acc774624944426ac1084632e": {
+  "audio_s": 3.339,
+  "confidence": null,
+  "language": "ha",
+  "latency_s": 2.779,
+  "text": "don allah yaushe za ku kawo sabon farashi"
+ },
+ "12c30ef2899dea96f857dd6d5dacf17b": {
+  "audio_s": 3.875,
+  "confidence": null,
+  "language": "slv",
+  "latency_s": 1.637,
+  "text": "yes sir everything is complete thank you"
+ },
+ "15da08b333f2ae05c9330bafb55dde72": {
+  "audio_s": 2.688,
+  "confidence": null,
+  "language": "yo",
+  "latency_s": 1.786,
+  "text": "ẹ ṣe ọ́ gbogbo ẹ̀rù ti dépẹ́"
+ },
+ "165653d583644fd20d42fdc9f9559c9b": {
+  "audio_s": 5.873,
+  "confidence": null,
+  "language": "yo",
+  "latency_s": 2.207,
+  "text": "everything ti dé máa san 20,000 náírà ní friday"
+ },
+ "17fb79fbaca20320dc20c19f904588b8": {
+  "audio_s": 4.168,
+  "confidence": null,
+  "language": "ig",
+  "latency_s": 7.585,
+  "text": "northern rock northern rock northern rock northern rock northern rock northern rock northern rock northern rock northern rock northern rock northern rock northern rock northern rock northern rock northern rock northern rock northern rock northern rock northern rock northern rock northern ro"
+ },
+ "186badf2c8d9c4315c2d26e21156de97": {
+  "audio_s": 2.676,
+  "confidence": null,
+  "language": "yo",
+  "latency_s": 1.688,
+  "text": "mi ò ti kà á máa pè yín"
+ },
+ "195e8389364c3c80010d5212ca9dee74": {
+  "audio_s": 5.874,
+  "confidence": null,
+  "language": "ig",
+  "latency_s": 1.247,
+  "text": "evriting kọmplit a ga m akwụ 15,000 naịra ọn fraịde"
+ },
  "1c3152499208bdda8a445d5e3383c79b": {
   "audio_s": 3.423,
   "confidence": null,
@@ -6,12 +83,89 @@
   "latency_s": 2.636,
   "text": "yes i have received everything thank you"
  },
+ "2420b9e02b53315777337ed483ba7ce1": {
+  "audio_s": 5.158,
+  "confidence": null,
+  "language": "en",
+  "latency_s": 3.687,
+  "text": "everything came except di sugar di sugar did not come atall"
+ },
+ "2735bf00d68a219358844bd9b8f23d9a": {
+  "audio_s": 2.805,
+  "confidence": null,
+  "language": "haw",
+  "latency_s": 0.93,
+  "text": "daalu ihe nii la biala"
+ },
+ "27b1e8ec3e8a1baf7c224249d24640c6": {
+  "audio_s": 3.339,
+  "confidence": null,
+  "language": "ha",
+  "latency_s": 1.076,
+  "text": "don allah yaushe za ku kawo sabon farashi"
+ },
+ "2836007434792f91769be8f31ac80d40": {
+  "audio_s": 4.057,
+  "confidence": null,
+  "language": "kat",
+  "latency_s": 3.203,
+  "text": "my boy collected it i have not counted it yet"
+ },
+ "28f61cf59ba75f5a0ec603d6dda63d50": {
+  "audio_s": 4.848,
+  "confidence": null,
+  "language": "ha",
+  "latency_s": 2.35,
+  "text": "everything complete zambia fifteen thousand naira ranar juma'a"
+ },
+ "2a4875a8ea8215e33891b40ee618426e": {
+  "audio_s": 3.423,
+  "confidence": null,
+  "language": "en",
+  "latency_s": 2.841,
+  "text": "yes i have received everything thank you"
+ },
+ "2dc25a052271887acd051c1449241bd8": {
+  "audio_s": 4.684,
+  "confidence": null,
+  "language": "en",
+  "latency_s": 1.785,
+  "text": "everything is complete iwill pay you twenty thousand for it"
+ },
+ "2f6a9af4f8d138c92393a06262f9e3aa": {
+  "audio_s": 5.158,
+  "confidence": null,
+  "language": "en",
+  "latency_s": 1.782,
+  "text": "everything came except di sugar di sugar did not come atall"
+ },
+ "3601a8ed520568bd612ec5b0a75a787d": {
+  "audio_s": 2.676,
+  "confidence": null,
+  "language": "yo",
+  "latency_s": 0.913,
+  "text": "mi ò ti kà á máa pè yín"
+ },
+ "3b86bfddd5cb52ccb7a240c2797b781e": {
+  "audio_s": 2.58,
+  "confidence": null,
+  "language": "ha",
+  "latency_s": 2.978,
+  "text": "zan duba kayan anjima"
+ },
  "3d530928880c1ba690ced59ebf4a18fb": {
   "audio_s": 2.805,
   "confidence": null,
   "language": "ig",
   "latency_s": 1.357,
   "text": "daalụ ihe niile abịala"
+ },
+ "426be5a284fecbb59baf4a36f2de9da4": {
+  "audio_s": 3.184,
+  "confidence": null,
+  "language": "ha",
+  "latency_s": 1.107,
+  "text": "duk sun iso sai shuga shuga bai zo ba"
  },
  "489d35d505bd568f8258269e52d5011a": {
   "audio_s": 2.688,
@@ -27,6 +181,13 @@
   "latency_s": 5.73,
   "text": "northern rock northern rock northern rock northern rock northern rock northern rock northern rock northern rock northern rock northern rock northern rock northern rock northern rock northern rock northern rock northern rock northern rock northern rock northern rock northern rock northern ro"
  },
+ "4cadb6e858f6e8813316450bddd17717": {
+  "audio_s": 4.844,
+  "confidence": null,
+  "language": "en",
+  "latency_s": 2.359,
+  "text": "good don land i go pay you twenty thousand next tomorrow"
+ },
  "4f3b07a8068c7f2a5fab36edc421d72c": {
   "audio_s": 3.278,
   "confidence": null,
@@ -41,6 +202,13 @@
   "latency_s": 2.636,
   "text": "yes sir everything is complete thank you"
  },
+ "5dec6f16d1511d0f023003bd407db10b": {
+  "audio_s": 3.75,
+  "confidence": null,
+  "language": "yo",
+  "latency_s": 1.049,
+  "text": "gbogbo ẹdẹ àyà fi súgà súgà kò dé rárá"
+ },
  "5e13b56de674525d5b282480f261fea7": {
   "audio_s": 2.777,
   "confidence": null,
@@ -48,12 +216,180 @@
   "latency_s": 0.949,
   "text": "bẹ́ẹ̀ni mo ti gba gbogbo rẹ̀ ṣe"
  },
+ "5e5abd7e9d85fbc7e05188e52d2020c1": {
+  "audio_s": 4.983,
+  "confidence": null,
+  "language": "yo",
+  "latency_s": 2.86,
+  "text": "ẹ jí noodles kò pé mẹ́rin ni mo rí kì í ṣe mẹ́fà"
+ },
+ "5e9d3b10c5347734732e7bbd0981ed41": {
+  "audio_s": 4.152,
+  "confidence": null,
+  "language": "yo",
+  "latency_s": 1.59,
+  "text": "everything complete i go pay 20k tomorrow"
+ },
+ "610c675d51d757c6214ae3164d565af0": {
+  "audio_s": 3.76,
+  "confidence": null,
+  "language": "ha",
+  "latency_s": 6.639,
+  "text": "windows ba su cika ba hulu na gani ba shi da ba"
+ },
+ "62f1d7ab461d80f774fd1c533bba74bc": {
+  "audio_s": 3.267,
+  "confidence": null,
+  "language": "en",
+  "latency_s": 1.515,
+  "text": "i don pay di money yesterday check am"
+ },
+ "6529f185a575ca212add7f3a3f2d61bc": {
+  "audio_s": 3.75,
+  "confidence": null,
+  "language": "yo",
+  "latency_s": 1.786,
+  "text": "gbogbo ẹdẹ àyà fi súgà súgà kò dé rárá"
+ },
+ "6ab23f15bd5e2e7d415eda1eaa20f35d": {
+  "audio_s": 3.184,
+  "confidence": null,
+  "language": "ha",
+  "latency_s": 1.45,
+  "text": "duk sun iso sai shuga shuga bai zo ba"
+ },
+ "6bf8c37e65bb294ecbfd089c2c16ff8a": {
+  "audio_s": 2.41,
+  "confidence": null,
+  "language": "yo",
+  "latency_s": 1.804,
+  "text": "ẹ dúró máa wò ó"
+ },
  "6cd007b88aa59173bae87755aa5444d1": {
   "audio_s": 2.592,
   "confidence": null,
   "language": "ha",
   "latency_s": 3.085,
   "text": "nagode duk kayan sun iso"
+ },
+ "6dd0ed7570bc94403c9c247bbc4ce0ef": {
+  "audio_s": 2.638,
+  "confidence": null,
+  "language": "haw",
+  "latency_s": 1.694,
+  "text": "anatalani henili"
+ },
+ "73c601e692df8cd17fd348b222901622": {
+  "audio_s": 4.848,
+  "confidence": null,
+  "language": "ha",
+  "latency_s": 1.767,
+  "text": "everything complete zambia fifteen thousand naira ranar juma'a"
+ },
+ "746585a2bd5de2723c4e38c7470e0714": {
+  "audio_s": 3.157,
+  "confidence": null,
+  "language": "zlm",
+  "latency_s": 2.841,
+  "text": "abeg when una go bring di new price list"
+ },
+ "74e9aee5d647e775bd7011a514612fbe": {
+  "audio_s": 2.851,
+  "confidence": null,
+  "language": "hat",
+  "latency_s": 2.01,
+  "text": "sugar norwicho di rest onland"
+ },
+ "7546c127b8ed3776aebadd45750ba21d": {
+  "audio_s": 3.103,
+  "confidence": null,
+  "language": "en",
+  "latency_s": 1.025,
+  "text": "but not shot mean to carton of nudus"
+ },
+ "7739491bee86e6fa3595d70b5963afd6": {
+  "audio_s": 4.057,
+  "confidence": null,
+  "language": "en",
+  "latency_s": 2.464,
+  "text": "my boy collected it i have not counted it yet"
+ },
+ "79425fa35bfc2f36db932c200705fc63": {
+  "audio_s": 3.103,
+  "confidence": null,
+  "language": "tgk",
+  "latency_s": 1.909,
+  "text": "bunashot mini suka tonovnudur"
+ },
+ "7f71c825c30ec3873035ff1fcf3eb31b": {
+  "audio_s": 2.592,
+  "confidence": null,
+  "language": "ha",
+  "latency_s": 2.341,
+  "text": "nagode duk kayan sun iso"
+ },
+ "819ccbf567ac96aa540e354f5fb357bb": {
+  "audio_s": 2.851,
+  "confidence": null,
+  "language": "en",
+  "latency_s": 2.863,
+  "text": "sugar no reach of the rest online"
+ },
+ "82151e50326271d7034ffda3e177ed3e": {
+  "audio_s": 4.423,
+  "confidence": null,
+  "language": "en",
+  "latency_s": 2.187,
+  "text": "two katons of noodles did not come i will pay for the rest on friday"
+ },
+ "821c72882f572c120985fdd5fb7b72f0": {
+  "audio_s": 4.101,
+  "confidence": null,
+  "language": "en",
+  "latency_s": 2.343,
+  "text": "make i pay fifteen thousand for friday"
+ },
+ "84343d0768a37d00a5d43df5781bd2c6": {
+  "audio_s": 3.64,
+  "confidence": null,
+  "language": "yo",
+  "latency_s": 2.386,
+  "text": "everything rich i go pay you friday"
+ },
+ "8e504681cbccee3f6b590681dc07b90c": {
+  "audio_s": 5.272,
+  "confidence": null,
+  "language": "en",
+  "latency_s": 2.246,
+  "text": "all goods received i will pay fifty thousand nara at the end of the month"
+ },
+ "8eae5af0be18d72399372b38b1aae166": {
+  "audio_s": 4.273,
+  "confidence": null,
+  "language": "en",
+  "latency_s": 2.61,
+  "text": "all don land i go pay thirty k next week monday"
+ },
+ "8f0e9c6beb99bdce8059d5cdb69e849e": {
+  "audio_s": 15.296,
+  "confidence": null,
+  "language": "yo",
+  "latency_s": 2.281,
+  "text": "gbogbo eru ti de masan egberun mewarun mewarun"
+ },
+ "93c010611822530d87caad8b91fa6cae": {
+  "audio_s": 5.272,
+  "confidence": null,
+  "language": "en",
+  "latency_s": 3.378,
+  "text": "all goods received i will pay fifty thousand nara at the end of the month"
+ },
+ "94dfedd5091d4682770e1731f0bf63f2": {
+  "audio_s": 6.099,
+  "confidence": null,
+  "language": "en",
+  "latency_s": 1.637,
+  "text": "noodles no complete na forkerton i go pay 15,000 friday for the ones we land"
  },
  "950ed517daaf48b99018cac68f73bb13": {
   "audio_s": 4.404,
@@ -76,6 +412,20 @@
   "latency_s": 1.216,
   "text": "ẹ jí noodles kò pé mẹ́rin ni mo rí kì í ṣe mẹ́fà"
  },
+ "9b6333b0d8f995c92d4af2c936a7fe36": {
+  "audio_s": 6.099,
+  "confidence": null,
+  "language": "sna",
+  "latency_s": 3.062,
+  "text": "noodles no complete na forkerton i go pay 15,000 friday for the ones wey land"
+ },
+ "9c1dabc533f9fe4bb698762cedb631bb": {
+  "audio_s": 4.423,
+  "confidence": null,
+  "language": "en",
+  "latency_s": 6.679,
+  "text": "two katons of noodles did not come i will pay for the rest on friday"
+ },
  "9ca8644ff015d3ec28bdb799e33db4e2": {
   "audio_s": 4.67,
   "confidence": null,
@@ -90,12 +440,138 @@
   "latency_s": 2.26,
   "text": "everything reach except di sugar di sugar never land"
  },
+ "a005dad6a28760e4e585cf9cc6ae664b": {
+  "audio_s": 4.404,
+  "confidence": null,
+  "language": "lin",
+  "latency_s": 1.525,
+  "text": "kɔmplito na afɔkatɔn nɔ bi siks"
+ },
+ "a11fd86a9896e15338c4fc3c319320bb": {
+  "audio_s": 2.777,
+  "confidence": null,
+  "language": "yo",
+  "latency_s": 1.029,
+  "text": "bẹ́ẹ̀ni mo ti gba gbogbo rẹ̀ ṣe"
+ },
+ "a292c885f6c13508d1ef7dde6fdd6f08": {
+  "audio_s": 3.127,
+  "confidence": null,
+  "language": "kbp",
+  "latency_s": 1.802,
+  "text": "ka m lee ya anya m ga-akpọ gị"
+ },
+ "a42056056fdcbe4a5068c9fa7f19f889": {
+  "audio_s": 3.127,
+  "confidence": null,
+  "language": "ig",
+  "latency_s": 0.935,
+  "text": "ka m lee ya anya m ga-akpọ gị"
+ },
+ "a5d43e66d1ee82e9fc1fc91fa5a2c54b": {
+  "audio_s": 3.544,
+  "confidence": null,
+  "language": "yo",
+  "latency_s": 1.387,
+  "text": "gbogbo pé má san ẹgbẹ̀rún márùn-ún"
+ },
+ "a79652729d7e17dbc25ec0bdf85d02bc": {
+  "audio_s": 4.273,
+  "confidence": null,
+  "language": "oci",
+  "latency_s": 1.747,
+  "text": "all don land i go pe 30 k next wik monde"
+ },
+ "aa83033dab2004bdb989d517fe212fca": {
+  "audio_s": 3.87,
+  "confidence": null,
+  "language": "ha",
+  "latency_s": 1.32,
+  "text": "duk kayan sun iso zan biya naira dubu ashirin gobe"
+ },
+ "aba7d418290381fe67e2523b78126350": {
+  "audio_s": 4.101,
+  "confidence": null,
+  "language": "yo",
+  "latency_s": 2.272,
+  "text": "make i pay fifteen thousand for friday"
+ },
+ "b0f4a9b10ecc7051770c7b7531aa53fd": {
+  "audio_s": 3.764,
+  "confidence": null,
+  "language": "ig",
+  "latency_s": 1.074,
+  "text": "ihe niile bịara ma shuga abịaghị"
+ },
+ "b39dea96216e3d7b783b0c11407ded85": {
+  "audio_s": 3.278,
+  "confidence": null,
+  "language": "cym",
+  "latency_s": 1.472,
+  "text": "iwil ček the goods later and get bak to you"
+ },
+ "b43417f4443e41814fc256bcbc0fecfe": {
+  "audio_s": 4.536,
+  "confidence": null,
+  "language": "zlm",
+  "latency_s": 2.51,
+  "text": "everything reach except di sugar di sugar never land"
+ },
+ "b9702a32b4d72da4fb8b23f7a8f0b9cf": {
+  "audio_s": 4.765,
+  "confidence": null,
+  "language": "war",
+  "latency_s": 3.224,
+  "text": "everything is fine i will pay fifteen or twenty thousand on friday"
+ },
+ "bc05ce7ccdcb8b5f95b16dea114251a5": {
+  "audio_s": 3.261,
+  "confidence": null,
+  "language": "en",
+  "latency_s": 1.404,
+  "text": "received in full thank you very much"
+ },
+ "bcc9ea6d3345aa8d5e2029073098c890": {
+  "audio_s": 4.012,
+  "confidence": null,
+  "language": "lat",
+  "latency_s": 3.274,
+  "text": "yeso everything don lan komplete thank you"
+ },
+ "c3e3078bcc111f32e6298ccfcaf040ee": {
+  "audio_s": 15.296,
+  "confidence": null,
+  "language": "yo",
+  "latency_s": 1.799,
+  "text": "gbogbo eru ti de masan egberun mewarun mewarun"
+ },
  "c93f6917d5991e2a247fe7a675d3352c": {
   "audio_s": 3.157,
   "confidence": null,
   "language": "en",
   "latency_s": 1.104,
   "text": "abeg when una go bring the new price list"
+ },
+ "ce72b444304292485e46f1a4d940fb28": {
+  "audio_s": 3.64,
+  "confidence": null,
+  "language": "en",
+  "latency_s": 2.515,
+  "text": "everything rich i go pay you friday"
+ },
+ "d2411950c640a874479350d1fd521bc9": {
+  "audio_s": 4.765,
+  "confidence": null,
+  "language": "en",
+  "latency_s": 2.761,
+  "text": "everything is fine i will pay fifteen or twenty thousand on friday"
+ },
+ "d24a25e51653f348a98138e80861642c": {
+  "audio_s": 5.873,
+  "confidence": null,
+  "language": "yo",
+  "latency_s": 2.077,
+  "text": "everything ti dé máa san 20,000 náírà ní friday"
  },
  "d309a5103fb3f9b81abc96046f5ef463": {
   "audio_s": 3.76,
@@ -110,5 +586,117 @@
   "language": "en",
   "latency_s": 1.119,
   "text": "yeso everything don lan complete thank you"
+ },
+ "d719b34923eabbb8b573b2c1e43a9184": {
+  "audio_s": 5.177,
+  "confidence": null,
+  "language": "ig",
+  "latency_s": 1.27,
+  "text": "ihe niile abịala aga m akwụ puku naịra iri abụọ echi"
+ },
+ "d71c8c4a7fe12fdb7befa13f2455afa0": {
+  "audio_s": 3.261,
+  "confidence": null,
+  "language": "en",
+  "latency_s": 1.687,
+  "text": "received in full thank you very much"
+ },
+ "da68001f4efb562c5ddf9c33fb70a73b": {
+  "audio_s": 5.874,
+  "confidence": null,
+  "language": "ig",
+  "latency_s": 2.142,
+  "text": "evriting kọmplit a ga m akwụ 15,000 naịra ọn fraịde"
+ },
+ "dc25a98db0eecca5897230a39b42e57d": {
+  "audio_s": 3.764,
+  "confidence": null,
+  "language": "ig",
+  "latency_s": 1.627,
+  "text": "ihe niile bịara ma shuga abịaghị"
+ },
+ "dcea5e7cc1508f4465efdb6631a5329d": {
+  "audio_s": 5.177,
+  "confidence": null,
+  "language": "ig",
+  "latency_s": 1.389,
+  "text": "ihe niile abịala aga m akwụ puku naịra iri abụọ echi"
+ },
+ "dd671904340904957fc0730fa117f96a": {
+  "audio_s": 4.844,
+  "confidence": null,
+  "language": "oci",
+  "latency_s": 1.639,
+  "text": "good don land i go pay you twenty thousand next tomorrow"
+ },
+ "deb00010ff50be53c8629279abd52bff": {
+  "audio_s": 3.136,
+  "confidence": null,
+  "language": "en",
+  "latency_s": 1.747,
+  "text": "i will pay fifteen thousand naira on friday"
+ },
+ "df51418f6dedc8c21b5dff018b108084": {
+  "audio_s": 3.267,
+  "confidence": null,
+  "language": "mkd",
+  "latency_s": 1.786,
+  "text": "i don pay di money yesterday check am"
+ },
+ "e43d82278735dc1021e2dcf7d53a792d": {
+  "audio_s": 3.136,
+  "confidence": null,
+  "language": "en",
+  "latency_s": 2.516,
+  "text": "i will pay fifteen thousand naira on friday"
+ },
+ "e517f56641a50bac2f84bfe82ff932f4": {
+  "audio_s": 2.638,
+  "confidence": null,
+  "language": "ig",
+  "latency_s": 0.853,
+  "text": "a natala ni henili"
+ },
+ "e8d2bae89a1b53bcaa1aca8c3af7117f": {
+  "audio_s": 2.792,
+  "confidence": null,
+  "language": "ha",
+  "latency_s": 0.976,
+  "text": "katan biyu na noodles ba su zo ba"
+ },
+ "ea5ed182c804f612627ccd969335f5df": {
+  "audio_s": 4.684,
+  "confidence": null,
+  "language": "mri",
+  "latency_s": 1.635,
+  "text": "everything is complete iwil pay you twenty thousand for it"
+ },
+ "ed02e5b807c8e64412797a9b573a5768": {
+  "audio_s": 4.67,
+  "confidence": null,
+  "language": "en",
+  "latency_s": 1.942,
+  "text": "two kartons of the noodles are short i counted four kartons not six"
+ },
+ "f61deb63a56804d0c6f32a8c7e11497b": {
+  "audio_s": 2.792,
+  "confidence": null,
+  "language": "ha",
+  "latency_s": 1.121,
+  "text": "katan biyu na noodles ba su zo ba"
+ },
+ "f6cf2deb759da328f4b32aebeebb2039": {
+  "audio_s": 4.152,
+  "confidence": null,
+  "language": "en",
+  "latency_s": 1.527,
+  "text": "everything complete i go pay 20k tomorrow"
+ },
+ "f7bf550f8068b38860bcba7cd384c03c": {
+  "audio_s": 3.87,
+  "confidence": null,
+  "language": "ha",
+  "latency_s": 1.972,
+  "text": "duk kayan sun iso zan biya naira dubu ashirin gobe"
  }
 }
