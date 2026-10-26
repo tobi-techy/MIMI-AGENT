@@ -15,7 +15,13 @@ from mimi.receipts.decide import DisputedLine
 from mimi.runtime.outbox import intent_types
 from mimi.types import ShopScope
 
-MessagePurpose = Literal["delivery_receipt", "receipt_clarify", "receipt_type_request"]
+MessagePurpose = Literal[
+    "delivery_receipt",
+    "receipt_clarify",
+    "receipt_type_request",
+    "promise_readback",
+    "promise_clarify",
+]
 FlagReason = Literal[
     "dispute", "partial_dispute", "unclear_reply", "no_reply", "voice_unreadable"
 ]
@@ -29,6 +35,14 @@ class SendShopMessage:
     text: str
     # The receipt's figures, from code, so Go can check the text against them.
     total_kobo: int = 0
+    # A payment promise being read back: its amount and day, from code.
+    promise_kobo: int = 0
+    promise_due_on: str = ""
+    # Shops that opted in to voice replies: what to say and in which
+    # language (``mimi.receipts.voice_replies``). The text above is always
+    # sent too, and every amount and day is in it. "" means text only.
+    voice_script: str = ""
+    voice_language: str = ""
     kind: Literal["send_shop_message"] = field(default="send_shop_message")
 
 
@@ -80,6 +94,36 @@ class FlagToOwner:
     kind: Literal["flag_to_owner"] = field(default="flag_to_owner")
 
 
+@dataclass(frozen=True)
+class RecordPaymentPromise:
+    """A shop's promise to pay, recorded only after the shop answered YES to
+    Mimi's read-back of exactly this amount and day.
+
+    A note for the books and the owner's follow-up. It moves no money, asks
+    for none and starts no collection: Mimi never moves money.
+    """
+
+    scope: ShopScope
+    delivery_id: str
+    amount_kobo: int
+    due_on: str  # ISO date, Africa/Lagos
+    # The message the promise was heard in (a voice note's transcript, or text).
+    said_message_id: str
+    said_text: str
+    said_at: str
+    said_kind: str = "text"
+    transcript_provider: str = ""
+    # What Mimi read back, and the shop's YES to it.
+    readback_text: str = ""
+    readback_digest: str = ""
+    confirm_message_id: str = ""
+    confirm_text: str = ""
+    confirmed_at: str = ""
+    timezone: str = "Africa/Lagos"
+    consent: Literal["shop_confirmed_readback"] = "shop_confirmed_readback"
+    kind: Literal["record_payment_promise"] = field(default="record_payment_promise")
+
+
 RECEIPT_INTENTS: tuple[type, ...] = intent_types(
-    SendShopMessage, RecordDeliveryConsent, FlagToOwner
+    SendShopMessage, RecordDeliveryConsent, FlagToOwner, RecordPaymentPromise
 )

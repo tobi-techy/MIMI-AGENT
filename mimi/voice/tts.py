@@ -1,5 +1,7 @@
-"""Spitch speech generation (``POST https://api.spitch.app/v1/speech``), used
-only to make the synthetic voice-note fixtures. Mimi never speaks to shops.
+"""Spitch speech generation (``POST https://api.spitch.app/v1/speech``).
+
+Used for two things: the synthetic voice-note fixtures, and Mimi's short
+voice replies to shops that opted in (``speak.SpitchSpeaker``).
 
 Request JSON: ``text``, ``voice`` (a system voice id such as ``jude``),
 ``language`` (ISO 639 code: ``en``, ``yo``, ``ig``, ``ha``; Spitch has no
