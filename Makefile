@@ -1,6 +1,6 @@
 PY ?= python
 
-.PHONY: install test eval eval-live eval-fake voice-eval voice-eval-live voice-fixtures sim sim-live sim-voice world-check lint typecheck secrets provenance migrate check
+.PHONY: install test eval eval-live eval-fake voice-eval voice-eval-live voice-fixtures sim sim-live sim-voice sim-voice-v2 world-check lint typecheck secrets provenance migrate check
 
 install:            ## editable install with dev tools
 	$(PY) -m pip install -e '.[dev,otel]'
@@ -54,3 +54,6 @@ migrate:            ## create Mimi's tables; set MIMI_DB_URL first
 	alembic upgrade head
 
 check: lint typecheck test eval voice-eval world-check secrets provenance
+
+sim-voice-v2:       ## offline sim: voice notes, payment promises, voice replies
+	META_API_KEY= SPITCH_API_KEY= $(PY) -m mimi.sim --shops 3 --transcript --voice 1 --promises 1 --voice-replies

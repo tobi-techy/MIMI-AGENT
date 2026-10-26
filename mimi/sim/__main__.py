@@ -3,7 +3,8 @@
     --shops N          first N shops of the live day (default all 40)
     --hours H          how long the day runs on the sim clock (default 26)
     --realtime SPEED   sleep between events: 1 = real time, 60 = 1h per minute
-    --db URL           persist jobs and shop replies (Postgres or SQLite URL)
+    --db URL           persist jobs, shop replies and voice-reply consents
+                       (Postgres or SQLite URL)
     --transcript       print the WhatsApp transcript
     --cache PATH       record live model answers to PATH and replay them on a
                        rerun (a long live run can be resumed; tokens reported
@@ -11,6 +12,12 @@
     --voice SHARE      shops send synthetic voice notes: SHARE (0 to 1) of
                        shops answer the receipt with a voice clip, and every
                        "[voice note]" placeholder becomes one (default 0: off)
+    --promises SHARE   of the shops whose first reply is a voice note, SHARE
+                       send one that also promises to pay ("I go pay 20k
+                       tomorrow"); Mimi reads it back and waits for YES
+    --voice-replies    every shop sends "VOICE ON" at the start (its consent),
+                       and Mimi's short replies also go as a voice note
+                       (Spitch speech with SPITCH_API_KEY, else the fake)
 
 Models come from the environment (``META_API_KEY``, ``MIMI_MODEL``,
 ``SIM_MODEL``); with no key both sides use the deterministic FakeModel. The
@@ -31,7 +38,7 @@ from mimi.models.cache import CachedModel
 from mimi.receipts.verdict import fake_verdict
 from mimi.sim.engine import Simulator
 from mimi.sim.persona import fake_shop
-from mimi.voice.env import transcriber_from_env
+from mimi.voice.env import speaker_from_env, transcriber_from_env
 from mimi.world import load_world
 
 
@@ -45,6 +52,8 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--transcript", action="store_true")
     ap.add_argument("--cache", default=None)
     ap.add_argument("--voice", type=float, default=0.0)
+    ap.add_argument("--promises", type=float, default=0.0)
+    ap.add_argument("--voice-replies", action="store_true")
     args = ap.parse_args(argv)
 
     world = load_world()
@@ -62,16 +71,22 @@ def main(argv: list[str] | None = None) -> int:
 
         from mimi.receipts.inbox import SqlShopInbox
         from mimi.runtime.sql_store import SqlJobStore
+        from mimi.voice.prefs import SqlVoicePrefs
 
         engine = sa.create_engine(args.db)
         store, inbox = SqlJobStore(engine), SqlShopInbox(engine)
+        prefs = SqlVoicePrefs(engine)
         if args.db.startswith("sqlite"):
             store.ensure_schema()
             inbox.ensure_schema()
-        extra = {"store": store, "inbox": inbox}
+            prefs.ensure_schema()
+        extra = {"store": store, "inbox": inbox, "voice_prefs": prefs}
     transcriber = None
     if args.voice > 0:
         transcriber = transcriber_from_env(cache=(args.cache + ".voice") if args.cache else None)
+    speaker = None
+    if args.voice_replies:
+        speaker = speaker_from_env(cache=(args.cache + ".tts") if args.cache else None)
     started = time.monotonic()
     runner = Simulator(
         world,
@@ -83,6 +98,9 @@ def main(argv: list[str] | None = None) -> int:
         hours=args.hours,
         transcriber=transcriber,
         voice_share=args.voice,
+        promise_share=args.promises,
+        voice_replies=args.voice_replies,
+        speaker=speaker,
         **extra,
     )
     report = runner.run()
@@ -90,6 +108,8 @@ def main(argv: list[str] | None = None) -> int:
     report["sim_model"] = sim.name
     if transcriber is not None:
         report["transcriber"] = transcriber.name
+    if speaker is not None:
+        report["speaker"] = speaker.name
     if isinstance(mimi, CachedModel):
         report["live_calls_this_pass"] = mimi.live_calls + sim.live_calls
         report["replayed_calls"] = mimi.cached_calls + sim.cached_calls

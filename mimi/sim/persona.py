@@ -107,7 +107,9 @@ def _persona_prompt(world: World, shop: Shop, delivery: Delivery) -> str:
         "Short messages, small typos are fine, sometimes ALL CAPS, "
         "sometimes just 'ok' or a thumbs up, sometimes '[voice note 0:12]'. "
         "If everything arrived you may confirm, but you do not always follow "
-        "instructions exactly. Never invent amounts. Output 1 to 3 WhatsApp "
+        "instructions exactly. Never invent amounts. If Mimi reads back a "
+        "payment promise you made, answer YES when the amount and day are what "
+        "you said, otherwise say what is wrong. Output 1 to 3 WhatsApp "
         "messages, one per line, nothing else."
     )
 
@@ -124,6 +126,12 @@ class ShopPersona:
         self.round = 0
         self.prompt_tokens = 0
         self.completion_tokens = 0
+
+    def said_instead(self, words: str) -> None:
+        """The sim sent a voice clip in place of this persona's last burst:
+        remember what the clip said, so later replies follow from it."""
+        if self.history and self.history[-1].role == "assistant":
+            self.history[-1] = ChatMessage("assistant", f"[voice note] {words}")
 
     def reply(self, inbound: str, delivery: Delivery) -> list[OutMessage]:
         meta = {
@@ -195,6 +203,11 @@ def fake_shop(messages: Sequence[ChatMessage], meta: Mapping[str, str]) -> str:
     """Deterministic shop replies, picked by shop, round and seed."""
     rng = _rng(meta.get("seed", ""), meta.get("shop_id", ""), meta.get("round", ""))
     round_no = int(meta.get("round", "0") or 0)
+    last = messages[-1].content if messages else ""
+    if "Reply YES if that is right" in last:
+        return rng.choice(("YES", "Yes", "yes o", "YES SIR"))
+    if "will pay" in last and "?" in last:
+        return "20,000 on Friday"
     if meta.get("short"):
         short = meta["short"]
         if round_no == 0:
