@@ -13,7 +13,7 @@ starts with no intent types of its own. The module rules test
 |---|---|---|
 | `sqlalchemy` | MIT | `mimi/runtime/sql_store.py`, `mimi/receipts/inbox.py`, sim `--db` |
 | `alembic` | MIT | migrations `0001_runtime_jobs`, `0002_shop_inbox` |
-| `httpx` | BSD-3-Clause | `mimi/models/meta.py` (Meta Model API client) |
+| `httpx` | BSD-3-Clause | `mimi/models/meta.py` (Meta Model API client), `mimi/voice/` (Spitch and Muse Voice Transcribe clients) |
 | `pydantic` | MIT | `mimi/receipts/verdict.py` (typed verdict) |
 
 Optional extras:
@@ -29,6 +29,18 @@ Their transitive packages: `httpcore` (BSD-3-Clause), `h11` (MIT), `anyio`
 (MIT), `greenlet` (MIT AND PSF-2.0), `mako` (MIT), `markupsafe`
 (BSD-3-Clause).
 
+## System tools
+
+| Tool | Licence | Used by |
+|---|---|---|
+| `ffmpeg`, `ffprobe` | LGPL-2.1 or later (GPL builds exist; we only run the binary, never link it) | `mimi/voice/audio.py`: reading MP3 and M4A, converting to 16 kHz WAV for Muse Voice Transcribe; `scripts/make_voice_fixtures.py`: noise and encoding. Installed in CI with apt. Ogg/Opus and WAV work without it |
+
+Not used: the official `spitch` Python SDK (Apache-2.0, checked on PyPI,
+version 1.50.0). The Spitch adapter calls the REST API with `httpx`, like the
+Meta client, so there is one HTTP stack and tests use `httpx.MockTransport`.
+espeak-ng and piper were not used either; the fixtures are made with Spitch
+text to speech.
+
 ## Development and CI only
 
 | Package or tool | Licence | Used by |
@@ -40,7 +52,15 @@ Their transitive packages: `httpcore` (BSD-3-Clause), `h11` (MIT), `anyio`
 
 ## Services
 
-Meta Model API (`https://api.meta.ai/v1`): `muse-spark-1.3` and
-`muse-spark-1.3-contributor`, used under Meta's terms for the hackathon. No
-other external service. Offline runs and CI use the deterministic FakeModel
+Meta Model API (`https://api.meta.ai/v1`): `muse-spark-1.3`,
+`muse-spark-1.3-contributor` and `muse-voice-transcribe-1.0`, used under
+Meta's terms for the hackathon.
+
+Spitch (`https://api.spitch.app/v1`), a third-party paid API, usage-based:
+speech to text (USD 0.00042 per second of audio) for voice notes, and text to
+speech (USD 0.0014 per second) only to make the synthetic fixtures. Every
+call sends `X-Data-Retention: false`, so Spitch stores no copy of the audio
+or the output. Key: `SPITCH_API_KEY`, from the shell only.
+
+Offline runs and CI use the deterministic FakeModel, the fake transcriber
 and the recorded answers, and make no network call.
