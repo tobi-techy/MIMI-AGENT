@@ -1,243 +1,674 @@
 {
  "transcribers": {
   "spitch": {
-   "clips": 16,
-   "wer": 0.5241,
-   "wer_folded": 0.5035,
-   "verdict_accuracy": 0.875,
+   "clips": 50,
+   "wer": 0.3126,
+   "wer_folded": 0.281,
+   "verdict_accuracy": 0.9,
    "false_confirms": 0,
    "false_confirm_ids": [],
-   "disputes_caught": 0.6667,
-   "disputes_n": 6,
+   "disputes_caught": 0.8,
+   "disputes_n": 15,
    "disputes_never_confirmed": 1.0,
    "missed_dispute_ids": [
     "vn-14",
-    "vn-16"
+    "vn-16",
+    "vn-29"
    ],
-   "confirms_recorded": 1.0,
-   "confirms_n": 7,
+   "confirms_recorded": 0.875,
+   "confirms_n": 24,
    "transcripts_failed": 0,
    "transcripts_low": 1,
-   "latency_mean_s": 1.978,
+   "latency_mean_s": 1.896,
    "latency_max_s": 5.73,
-   "audio_seconds": 57.54,
-   "judge_prompt_tokens": 21034,
-   "judge_completion_tokens": 8134
+   "audio_seconds": 206.2,
+   "judge_prompt_tokens": 65595,
+   "judge_completion_tokens": 31365,
+   "promise_clips_n": 20,
+   "promise_reading_accuracy": 0.95,
+   "promise_amount_date_n": 14,
+   "promise_amount_date_accuracy": 0.9286,
+   "promise_wrong_ids": [
+    "vn-31"
+   ],
+   "promises_heard_where_none": 0,
+   "promise_readbacks": 10,
+   "promise_questions": 5,
+   "promise_held_for_delivery": 4,
+   "promise_readbacks_answered": 10,
+   "promise_recorded_right_after_answer": 10,
+   "promise_recorded_without_yes": 0,
+   "promise_wrong_recorded": 0
   },
   "muse": {
-   "clips": 16,
-   "wer": 0.4828,
-   "wer_folded": 0.4113,
-   "verdict_accuracy": 0.875,
+   "clips": 50,
+   "wer": 0.4133,
+   "wer_folded": 0.3638,
+   "verdict_accuracy": 0.76,
    "false_confirms": 0,
    "false_confirm_ids": [],
-   "disputes_caught": 0.8333,
-   "disputes_n": 6,
+   "disputes_caught": 0.6667,
+   "disputes_n": 15,
    "disputes_never_confirmed": 1.0,
    "missed_dispute_ids": [
-    "vn-16"
+    "vn-16",
+    "vn-29",
+    "vn-33",
+    "vn-37",
+    "vn-42"
    ],
-   "confirms_recorded": 0.8571,
-   "confirms_n": 7,
+   "confirms_recorded": 0.7083,
+   "confirms_n": 24,
    "transcripts_failed": 0,
    "transcripts_low": 0,
-   "latency_mean_s": 2.437,
-   "latency_max_s": 3.461,
-   "audio_seconds": 57.54,
-   "judge_prompt_tokens": 20986,
-   "judge_completion_tokens": 10176
+   "latency_mean_s": 2.436,
+   "latency_max_s": 3.701,
+   "audio_seconds": 206.2,
+   "judge_prompt_tokens": 65489,
+   "judge_completion_tokens": 32903,
+   "promise_clips_n": 20,
+   "promise_reading_accuracy": 0.7,
+   "promise_amount_date_n": 14,
+   "promise_amount_date_accuracy": 0.7143,
+   "promise_wrong_ids": [
+    "vn-30",
+    "vn-31",
+    "vn-32",
+    "vn-35",
+    "vn-36",
+    "vn-41"
+   ],
+   "promises_heard_where_none": 0,
+   "promise_readbacks": 6,
+   "promise_questions": 4,
+   "promise_held_for_delivery": 5,
+   "promise_readbacks_answered": 6,
+   "promise_recorded_right_after_answer": 6,
+   "promise_recorded_without_yes": 0,
+   "promise_wrong_recorded": 0
   },
   "router": {
-   "clips": 16,
-   "wer": 0.2621,
-   "wer_folded": 0.234,
-   "verdict_accuracy": 0.9375,
+   "clips": 50,
+   "wer": 0.2163,
+   "wer_folded": 0.183,
+   "verdict_accuracy": 0.92,
    "false_confirms": 0,
    "false_confirm_ids": [],
-   "disputes_caught": 0.8333,
-   "disputes_n": 6,
+   "disputes_caught": 0.8667,
+   "disputes_n": 15,
    "disputes_never_confirmed": 1.0,
    "missed_dispute_ids": [
-    "vn-16"
+    "vn-16",
+    "vn-29"
    ],
-   "confirms_recorded": 1.0,
-   "confirms_n": 7,
+   "confirms_recorded": 0.875,
+   "confirms_n": 24,
    "transcripts_failed": 0,
    "transcripts_low": 0,
-   "latency_mean_s": 2.079,
-   "latency_max_s": 3.461,
-   "audio_seconds": 57.54,
-   "judge_prompt_tokens": 21015,
-   "judge_completion_tokens": 9578
+   "latency_mean_s": 2.022,
+   "latency_max_s": 3.669,
+   "audio_seconds": 206.2,
+   "judge_prompt_tokens": 65584,
+   "judge_completion_tokens": 32219,
+   "promise_clips_n": 20,
+   "promise_reading_accuracy": 0.95,
+   "promise_amount_date_n": 14,
+   "promise_amount_date_accuracy": 0.9286,
+   "promise_wrong_ids": [
+    "vn-31"
+   ],
+   "promises_heard_where_none": 0,
+   "promise_readbacks": 10,
+   "promise_questions": 5,
+   "promise_held_for_delivery": 4,
+   "promise_readbacks_answered": 10,
+   "promise_recorded_right_after_answer": 10,
+   "promise_recorded_without_yes": 0,
+   "promise_wrong_recorded": 0
+  },
+  "spitch/no-hint": {
+   "clips": 50,
+   "wer": 0.349,
+   "wer_folded": 0.3159,
+   "verdict_accuracy": 0.86,
+   "false_confirms": 0,
+   "false_confirm_ids": [],
+   "disputes_caught": 0.7333,
+   "disputes_n": 15,
+   "disputes_never_confirmed": 1.0,
+   "missed_dispute_ids": [
+    "vn-06",
+    "vn-14",
+    "vn-16",
+    "vn-29"
+   ],
+   "confirms_recorded": 0.875,
+   "confirms_n": 24,
+   "transcripts_failed": 0,
+   "transcripts_low": 1,
+   "latency_mean_s": 2.334,
+   "latency_max_s": 7.585,
+   "audio_seconds": 206.2,
+   "judge_prompt_tokens": 65602,
+   "judge_completion_tokens": 30211,
+   "promise_clips_n": 20,
+   "promise_reading_accuracy": 0.9,
+   "promise_amount_date_n": 14,
+   "promise_amount_date_accuracy": 0.8571,
+   "promise_wrong_ids": [
+    "vn-31",
+    "vn-49"
+   ],
+   "promises_heard_where_none": 0,
+   "promise_readbacks": 9,
+   "promise_questions": 5,
+   "promise_held_for_delivery": 4,
+   "promise_readbacks_answered": 9,
+   "promise_recorded_right_after_answer": 9,
+   "promise_recorded_without_yes": 0,
+   "promise_wrong_recorded": 0
+  },
+  "muse/no-hint": {
+   "clips": 50,
+   "wer": 0.4154,
+   "wer_folded": 0.3791,
+   "verdict_accuracy": 0.66,
+   "false_confirms": 0,
+   "false_confirm_ids": [],
+   "disputes_caught": 0.4667,
+   "disputes_n": 15,
+   "disputes_never_confirmed": 1.0,
+   "missed_dispute_ids": [
+    "vn-06",
+    "vn-14",
+    "vn-16",
+    "vn-29",
+    "vn-33",
+    "vn-37",
+    "vn-42",
+    "vn-45"
+   ],
+   "confirms_recorded": 0.625,
+   "confirms_n": 24,
+   "transcripts_failed": 0,
+   "transcripts_low": 0,
+   "latency_mean_s": 2.175,
+   "latency_max_s": 3.768,
+   "audio_seconds": 206.2,
+   "judge_prompt_tokens": 65505,
+   "judge_completion_tokens": 31080,
+   "promise_clips_n": 20,
+   "promise_reading_accuracy": 0.65,
+   "promise_amount_date_n": 14,
+   "promise_amount_date_accuracy": 0.6429,
+   "promise_wrong_ids": [
+    "vn-30",
+    "vn-31",
+    "vn-32",
+    "vn-35",
+    "vn-36",
+    "vn-38",
+    "vn-41"
+   ],
+   "promises_heard_where_none": 0,
+   "promise_readbacks": 5,
+   "promise_questions": 4,
+   "promise_held_for_delivery": 5,
+   "promise_readbacks_answered": 5,
+   "promise_recorded_right_after_answer": 5,
+   "promise_recorded_without_yes": 0,
+   "promise_wrong_recorded": 0
+  },
+  "router/no-hint": {
+   "clips": 50,
+   "wer": 0.2762,
+   "wer_folded": 0.2418,
+   "verdict_accuracy": 0.86,
+   "false_confirms": 0,
+   "false_confirm_ids": [],
+   "disputes_caught": 0.7333,
+   "disputes_n": 15,
+   "disputes_never_confirmed": 1.0,
+   "missed_dispute_ids": [
+    "vn-06",
+    "vn-14",
+    "vn-16",
+    "vn-29"
+   ],
+   "confirms_recorded": 0.875,
+   "confirms_n": 24,
+   "transcripts_failed": 0,
+   "transcripts_low": 0,
+   "latency_mean_s": 2.223,
+   "latency_max_s": 6.679,
+   "audio_seconds": 206.2,
+   "judge_prompt_tokens": 65572,
+   "judge_completion_tokens": 30576,
+   "promise_clips_n": 20,
+   "promise_reading_accuracy": 0.9,
+   "promise_amount_date_n": 14,
+   "promise_amount_date_accuracy": 0.8571,
+   "promise_wrong_ids": [
+    "vn-31",
+    "vn-49"
+   ],
+   "promises_heard_where_none": 0,
+   "promise_readbacks": 9,
+   "promise_questions": 5,
+   "promise_held_for_delivery": 4,
+   "promise_readbacks_answered": 9,
+   "promise_recorded_right_after_answer": 9,
+   "promise_recorded_without_yes": 0,
+   "promise_wrong_recorded": 0
   }
  },
  "by_language": {
   "spitch": {
    "english": {
-    "clips": 4,
-    "wer": 0.1579,
-    "wer_folded": 0.1579,
+    "clips": 13,
+    "wer": 0.1087,
+    "wer_folded": 0.1087,
     "verdict_accuracy": 1.0,
     "false_confirms": 0,
     "disputes_caught": 1.0,
-    "disputes_n": 1
+    "disputes_n": 3,
+    "promise_amount_date_n": 3,
+    "promise_amount_date_accuracy": 1.0
    },
    "hausa": {
-    "clips": 2,
-    "wer": 0.3529,
-    "wer_folded": 0.3529,
-    "verdict_accuracy": 0.5,
+    "clips": 7,
+    "wer": 0.1429,
+    "wer_folded": 0.1429,
+    "verdict_accuracy": 0.8571,
     "false_confirms": 0,
-    "disputes_caught": 0.0,
-    "disputes_n": 1
+    "disputes_caught": 0.6667,
+    "disputes_n": 3,
+    "promise_amount_date_n": 1,
+    "promise_amount_date_accuracy": 1.0
    },
    "igbo": {
-    "clips": 2,
-    "wer": 3.2308,
-    "wer_folded": 3.2308,
-    "verdict_accuracy": 0.5,
+    "clips": 6,
+    "wer": 1.1136,
+    "wer_folded": 1.0909,
+    "verdict_accuracy": 0.8333,
     "false_confirms": 0,
-    "disputes_caught": 0.0,
-    "disputes_n": 1
+    "disputes_caught": 0.5,
+    "disputes_n": 2,
+    "promise_amount_date_n": 1,
+    "promise_amount_date_accuracy": 1.0
    },
    "mixed": {
-    "clips": 1,
-    "wer": 0.125,
-    "wer_folded": 0.0769,
+    "clips": 4,
+    "wer": 0.3261,
+    "wer_folded": 0.2326,
     "verdict_accuracy": 1.0,
     "false_confirms": 0,
     "disputes_caught": 1.0,
-    "disputes_n": 1
+    "disputes_n": 1,
+    "promise_amount_date_n": 3,
+    "promise_amount_date_accuracy": 1.0
    },
    "pidgin": {
-    "clips": 4,
-    "wer": 0.2703,
-    "wer_folded": 0.2703,
-    "verdict_accuracy": 1.0,
+    "clips": 13,
+    "wer": 0.2353,
+    "wer_folded": 0.2353,
+    "verdict_accuracy": 0.8462,
     "false_confirms": 0,
-    "disputes_caught": 1.0,
-    "disputes_n": 2
+    "disputes_caught": 0.8,
+    "disputes_n": 5,
+    "promise_amount_date_n": 5,
+    "promise_amount_date_accuracy": 1.0
    },
    "yoruba": {
-    "clips": 3,
-    "wer": 0.4167,
-    "wer_folded": 0.2609,
-    "verdict_accuracy": 1.0,
+    "clips": 7,
+    "wer": 0.4844,
+    "wer_folded": 0.339,
+    "verdict_accuracy": 0.8571,
     "false_confirms": 0,
     "disputes_caught": 1.0,
-    "disputes_n": 0
+    "disputes_n": 1,
+    "promise_amount_date_n": 1,
+    "promise_amount_date_accuracy": 0.0
    }
   },
   "muse": {
    "english": {
-    "clips": 4,
-    "wer": 0.0526,
-    "wer_folded": 0.0526,
+    "clips": 13,
+    "wer": 0.029,
+    "wer_folded": 0.029,
     "verdict_accuracy": 1.0,
     "false_confirms": 0,
     "disputes_caught": 1.0,
-    "disputes_n": 1
+    "disputes_n": 3,
+    "promise_amount_date_n": 3,
+    "promise_amount_date_accuracy": 1.0
    },
    "hausa": {
-    "clips": 2,
-    "wer": 0.8824,
-    "wer_folded": 0.8824,
-    "verdict_accuracy": 0.0,
+    "clips": 7,
+    "wer": 0.8036,
+    "wer_folded": 0.8036,
+    "verdict_accuracy": 0.4286,
     "false_confirms": 0,
-    "disputes_caught": 0.0,
-    "disputes_n": 1
+    "disputes_caught": 0.3333,
+    "disputes_n": 3,
+    "promise_amount_date_n": 1,
+    "promise_amount_date_accuracy": 0.0
    },
    "igbo": {
-    "clips": 2,
-    "wer": 0.8462,
-    "wer_folded": 0.7692,
-    "verdict_accuracy": 1.0,
+    "clips": 6,
+    "wer": 0.7955,
+    "wer_folded": 0.75,
+    "verdict_accuracy": 0.6667,
     "false_confirms": 0,
-    "disputes_caught": 1.0,
-    "disputes_n": 1
+    "disputes_caught": 0.5,
+    "disputes_n": 2,
+    "promise_amount_date_n": 1,
+    "promise_amount_date_accuracy": 0.0
    },
    "mixed": {
-    "clips": 1,
-    "wer": 0.875,
-    "wer_folded": 0.6154,
-    "verdict_accuracy": 1.0,
+    "clips": 4,
+    "wer": 0.5652,
+    "wer_folded": 0.4186,
+    "verdict_accuracy": 0.75,
     "false_confirms": 0,
     "disputes_caught": 1.0,
-    "disputes_n": 1
+    "disputes_n": 1,
+    "promise_amount_date_n": 3,
+    "promise_amount_date_accuracy": 0.6667
    },
    "pidgin": {
-    "clips": 4,
-    "wer": 0.3243,
-    "wer_folded": 0.3243,
-    "verdict_accuracy": 1.0,
+    "clips": 13,
+    "wer": 0.2605,
+    "wer_folded": 0.2605,
+    "verdict_accuracy": 0.7692,
     "false_confirms": 0,
-    "disputes_caught": 1.0,
-    "disputes_n": 2
+    "disputes_caught": 0.8,
+    "disputes_n": 5,
+    "promise_amount_date_n": 5,
+    "promise_amount_date_accuracy": 1.0
    },
    "yoruba": {
-    "clips": 3,
-    "wer": 0.6667,
-    "wer_folded": 0.4783,
-    "verdict_accuracy": 1.0,
+    "clips": 7,
+    "wer": 0.8125,
+    "wer_folded": 0.6102,
+    "verdict_accuracy": 0.7143,
     "false_confirms": 0,
-    "disputes_caught": 1.0,
-    "disputes_n": 0
+    "disputes_caught": 0.0,
+    "disputes_n": 1,
+    "promise_amount_date_n": 1,
+    "promise_amount_date_accuracy": 0.0
    }
   },
   "router": {
    "english": {
-    "clips": 4,
-    "wer": 0.0526,
-    "wer_folded": 0.0526,
+    "clips": 13,
+    "wer": 0.029,
+    "wer_folded": 0.029,
     "verdict_accuracy": 1.0,
     "false_confirms": 0,
     "disputes_caught": 1.0,
-    "disputes_n": 1
+    "disputes_n": 3,
+    "promise_amount_date_n": 3,
+    "promise_amount_date_accuracy": 1.0
    },
    "hausa": {
-    "clips": 2,
-    "wer": 0.3529,
-    "wer_folded": 0.3529,
-    "verdict_accuracy": 0.5,
+    "clips": 7,
+    "wer": 0.1429,
+    "wer_folded": 0.1429,
+    "verdict_accuracy": 0.8571,
     "false_confirms": 0,
-    "disputes_caught": 0.0,
-    "disputes_n": 1
+    "disputes_caught": 0.6667,
+    "disputes_n": 3,
+    "promise_amount_date_n": 1,
+    "promise_amount_date_accuracy": 1.0
    },
    "igbo": {
-    "clips": 2,
-    "wer": 0.6154,
-    "wer_folded": 0.6154,
+    "clips": 6,
+    "wer": 0.3409,
+    "wer_folded": 0.3182,
     "verdict_accuracy": 1.0,
     "false_confirms": 0,
     "disputes_caught": 1.0,
-    "disputes_n": 1
+    "disputes_n": 2,
+    "promise_amount_date_n": 1,
+    "promise_amount_date_accuracy": 1.0
    },
    "mixed": {
-    "clips": 1,
-    "wer": 0.125,
-    "wer_folded": 0.0769,
+    "clips": 4,
+    "wer": 0.3261,
+    "wer_folded": 0.2326,
     "verdict_accuracy": 1.0,
     "false_confirms": 0,
     "disputes_caught": 1.0,
-    "disputes_n": 1
+    "disputes_n": 1,
+    "promise_amount_date_n": 3,
+    "promise_amount_date_accuracy": 1.0
    },
    "pidgin": {
-    "clips": 4,
-    "wer": 0.2703,
-    "wer_folded": 0.2703,
-    "verdict_accuracy": 1.0,
+    "clips": 13,
+    "wer": 0.2353,
+    "wer_folded": 0.2353,
+    "verdict_accuracy": 0.8462,
     "false_confirms": 0,
-    "disputes_caught": 1.0,
-    "disputes_n": 2
+    "disputes_caught": 0.8,
+    "disputes_n": 5,
+    "promise_amount_date_n": 5,
+    "promise_amount_date_accuracy": 1.0
    },
    "yoruba": {
-    "clips": 3,
-    "wer": 0.4167,
-    "wer_folded": 0.2609,
+    "clips": 7,
+    "wer": 0.4844,
+    "wer_folded": 0.339,
+    "verdict_accuracy": 0.8571,
+    "false_confirms": 0,
+    "disputes_caught": 1.0,
+    "disputes_n": 1,
+    "promise_amount_date_n": 1,
+    "promise_amount_date_accuracy": 0.0
+   }
+  },
+  "spitch/no-hint": {
+   "english": {
+    "clips": 13,
+    "wer": 0.1087,
+    "wer_folded": 0.1087,
     "verdict_accuracy": 1.0,
     "false_confirms": 0,
     "disputes_caught": 1.0,
-    "disputes_n": 0
+    "disputes_n": 3,
+    "promise_amount_date_n": 3,
+    "promise_amount_date_accuracy": 1.0
+   },
+   "hausa": {
+    "clips": 7,
+    "wer": 0.1429,
+    "wer_folded": 0.1429,
+    "verdict_accuracy": 0.8571,
+    "false_confirms": 0,
+    "disputes_caught": 0.6667,
+    "disputes_n": 3,
+    "promise_amount_date_n": 1,
+    "promise_amount_date_accuracy": 1.0
+   },
+   "igbo": {
+    "clips": 6,
+    "wer": 1.2045,
+    "wer_folded": 1.1591,
+    "verdict_accuracy": 0.6667,
+    "false_confirms": 0,
+    "disputes_caught": 0.5,
+    "disputes_n": 2,
+    "promise_amount_date_n": 1,
+    "promise_amount_date_accuracy": 1.0
+   },
+   "mixed": {
+    "clips": 4,
+    "wer": 0.3261,
+    "wer_folded": 0.2326,
+    "verdict_accuracy": 1.0,
+    "false_confirms": 0,
+    "disputes_caught": 1.0,
+    "disputes_n": 1,
+    "promise_amount_date_n": 3,
+    "promise_amount_date_accuracy": 1.0
+   },
+   "pidgin": {
+    "clips": 13,
+    "wer": 0.3445,
+    "wer_folded": 0.3445,
+    "verdict_accuracy": 0.7692,
+    "false_confirms": 0,
+    "disputes_caught": 0.6,
+    "disputes_n": 5,
+    "promise_amount_date_n": 5,
+    "promise_amount_date_accuracy": 0.8
+   },
+   "yoruba": {
+    "clips": 7,
+    "wer": 0.4844,
+    "wer_folded": 0.339,
+    "verdict_accuracy": 0.8571,
+    "false_confirms": 0,
+    "disputes_caught": 1.0,
+    "disputes_n": 1,
+    "promise_amount_date_n": 1,
+    "promise_amount_date_accuracy": 0.0
+   }
+  },
+  "muse/no-hint": {
+   "english": {
+    "clips": 13,
+    "wer": 0.0217,
+    "wer_folded": 0.0217,
+    "verdict_accuracy": 1.0,
+    "false_confirms": 0,
+    "disputes_caught": 1.0,
+    "disputes_n": 3,
+    "promise_amount_date_n": 3,
+    "promise_amount_date_accuracy": 1.0
+   },
+   "hausa": {
+    "clips": 7,
+    "wer": 0.7321,
+    "wer_folded": 0.7321,
+    "verdict_accuracy": 0.2857,
+    "false_confirms": 0,
+    "disputes_caught": 0.0,
+    "disputes_n": 3,
+    "promise_amount_date_n": 1,
+    "promise_amount_date_accuracy": 0.0
+   },
+   "igbo": {
+    "clips": 6,
+    "wer": 0.7955,
+    "wer_folded": 0.75,
+    "verdict_accuracy": 0.3333,
+    "false_confirms": 0,
+    "disputes_caught": 0.0,
+    "disputes_n": 2,
+    "promise_amount_date_n": 1,
+    "promise_amount_date_accuracy": 0.0
+   },
+   "mixed": {
+    "clips": 4,
+    "wer": 0.587,
+    "wer_folded": 0.4884,
+    "verdict_accuracy": 0.75,
+    "false_confirms": 0,
+    "disputes_caught": 1.0,
+    "disputes_n": 1,
+    "promise_amount_date_n": 3,
+    "promise_amount_date_accuracy": 0.3333
+   },
+   "pidgin": {
+    "clips": 13,
+    "wer": 0.2941,
+    "wer_folded": 0.2941,
+    "verdict_accuracy": 0.6923,
+    "false_confirms": 0,
+    "disputes_caught": 0.6,
+    "disputes_n": 5,
+    "promise_amount_date_n": 5,
+    "promise_amount_date_accuracy": 1.0
+   },
+   "yoruba": {
+    "clips": 7,
+    "wer": 0.8281,
+    "wer_folded": 0.6949,
+    "verdict_accuracy": 0.5714,
+    "false_confirms": 0,
+    "disputes_caught": 0.0,
+    "disputes_n": 1,
+    "promise_amount_date_n": 1,
+    "promise_amount_date_accuracy": 0.0
+   }
+  },
+  "router/no-hint": {
+   "english": {
+    "clips": 13,
+    "wer": 0.1087,
+    "wer_folded": 0.1087,
+    "verdict_accuracy": 1.0,
+    "false_confirms": 0,
+    "disputes_caught": 1.0,
+    "disputes_n": 3,
+    "promise_amount_date_n": 3,
+    "promise_amount_date_accuracy": 1.0
+   },
+   "hausa": {
+    "clips": 7,
+    "wer": 0.1429,
+    "wer_folded": 0.1429,
+    "verdict_accuracy": 0.8571,
+    "false_confirms": 0,
+    "disputes_caught": 0.6667,
+    "disputes_n": 3,
+    "promise_amount_date_n": 1,
+    "promise_amount_date_accuracy": 1.0
+   },
+   "igbo": {
+    "clips": 6,
+    "wer": 0.4318,
+    "wer_folded": 0.3864,
+    "verdict_accuracy": 0.6667,
+    "false_confirms": 0,
+    "disputes_caught": 0.5,
+    "disputes_n": 2,
+    "promise_amount_date_n": 1,
+    "promise_amount_date_accuracy": 1.0
+   },
+   "mixed": {
+    "clips": 4,
+    "wer": 0.3261,
+    "wer_folded": 0.2326,
+    "verdict_accuracy": 1.0,
+    "false_confirms": 0,
+    "disputes_caught": 1.0,
+    "disputes_n": 1,
+    "promise_amount_date_n": 3,
+    "promise_amount_date_accuracy": 1.0
+   },
+   "pidgin": {
+    "clips": 13,
+    "wer": 0.3445,
+    "wer_folded": 0.3445,
+    "verdict_accuracy": 0.7692,
+    "false_confirms": 0,
+    "disputes_caught": 0.6,
+    "disputes_n": 5,
+    "promise_amount_date_n": 5,
+    "promise_amount_date_accuracy": 0.8
+   },
+   "yoruba": {
+    "clips": 7,
+    "wer": 0.4844,
+    "wer_folded": 0.339,
+    "verdict_accuracy": 0.8571,
+    "false_confirms": 0,
+    "disputes_caught": 1.0,
+    "disputes_n": 1,
+    "promise_amount_date_n": 1,
+    "promise_amount_date_accuracy": 0.0
    }
   }
  },
@@ -248,6 +679,9 @@
    "noise": "none",
    "reference": "Yes, I have received everything. Thank you.",
    "expected": "confirmed",
+   "expected_promise": {
+    "status": "none"
+   },
    "spitch": {
     "transcript": "yes i have received everything thank you",
     "status": "ok",
@@ -257,7 +691,15 @@
     "wer": 0.0,
     "outcome": "confirmed",
     "action": "consent",
-    "held_back": ""
+    "held_back": "",
+    "promise": {
+     "status": "none",
+     "issue": "",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "",
+     "recorded_after_answer": null
+    }
    },
    "muse": {
     "transcript": "yes, I have received everything. Thank you.",
@@ -268,7 +710,15 @@
     "wer": 0.0,
     "outcome": "confirmed",
     "action": "consent",
-    "held_back": ""
+    "held_back": "",
+    "promise": {
+     "status": "none",
+     "issue": "",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "",
+     "recorded_after_answer": null
+    }
    },
    "router": {
     "transcript": "yes, I have received everything. Thank you.",
@@ -279,7 +729,72 @@
     "wer": 0.0,
     "outcome": "confirmed",
     "action": "consent",
-    "held_back": ""
+    "held_back": "",
+    "promise": {
+     "status": "none",
+     "issue": "",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "",
+     "recorded_after_answer": null
+    }
+   },
+   "spitch/no-hint": {
+    "transcript": "yes i have received everything thank you",
+    "status": "ok",
+    "tried": [
+     "spitch"
+    ],
+    "wer": 0.0,
+    "outcome": "confirmed",
+    "action": "consent",
+    "held_back": "",
+    "promise": {
+     "status": "none",
+     "issue": "",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "",
+     "recorded_after_answer": null
+    }
+   },
+   "muse/no-hint": {
+    "transcript": "yes, I have received everything. thank you.",
+    "status": "ok",
+    "tried": [
+     "muse"
+    ],
+    "wer": 0.0,
+    "outcome": "confirmed",
+    "action": "consent",
+    "held_back": "",
+    "promise": {
+     "status": "none",
+     "issue": "",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "",
+     "recorded_after_answer": null
+    }
+   },
+   "router/no-hint": {
+    "transcript": "yes i have received everything thank you",
+    "status": "ok",
+    "tried": [
+     "spitch:ok"
+    ],
+    "wer": 0.0,
+    "outcome": "confirmed",
+    "action": "consent",
+    "held_back": "",
+    "promise": {
+     "status": "none",
+     "issue": "",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "",
+     "recorded_after_answer": null
+    }
    }
   },
   {
@@ -288,6 +803,9 @@
    "noise": "heavy",
    "reference": "Yes sir, everything is complete. Thank you.",
    "expected": "confirmed",
+   "expected_promise": {
+    "status": "none"
+   },
    "spitch": {
     "transcript": "yes sir everything is complete thank you",
     "status": "ok",
@@ -297,7 +815,15 @@
     "wer": 0.0,
     "outcome": "confirmed",
     "action": "consent",
-    "held_back": ""
+    "held_back": "",
+    "promise": {
+     "status": "none",
+     "issue": "",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "",
+     "recorded_after_answer": null
+    }
    },
    "muse": {
     "transcript": "Yes, sir. Everything is complete. Thank you.",
@@ -308,7 +834,15 @@
     "wer": 0.0,
     "outcome": "confirmed",
     "action": "consent",
-    "held_back": ""
+    "held_back": "",
+    "promise": {
+     "status": "none",
+     "issue": "",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "",
+     "recorded_after_answer": null
+    }
    },
    "router": {
     "transcript": "Yes, sir. Everything is complete. Thank you.",
@@ -319,7 +853,72 @@
     "wer": 0.0,
     "outcome": "confirmed",
     "action": "consent",
-    "held_back": ""
+    "held_back": "",
+    "promise": {
+     "status": "none",
+     "issue": "",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "",
+     "recorded_after_answer": null
+    }
+   },
+   "spitch/no-hint": {
+    "transcript": "yes sir everything is complete thank you",
+    "status": "ok",
+    "tried": [
+     "spitch"
+    ],
+    "wer": 0.0,
+    "outcome": "confirmed",
+    "action": "consent",
+    "held_back": "",
+    "promise": {
+     "status": "none",
+     "issue": "",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "",
+     "recorded_after_answer": null
+    }
+   },
+   "muse/no-hint": {
+    "transcript": "Yes, sir. Everything is complete. Thank you.",
+    "status": "ok",
+    "tried": [
+     "muse"
+    ],
+    "wer": 0.0,
+    "outcome": "confirmed",
+    "action": "consent",
+    "held_back": "",
+    "promise": {
+     "status": "none",
+     "issue": "",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "",
+     "recorded_after_answer": null
+    }
+   },
+   "router/no-hint": {
+    "transcript": "yes sir everything is complete thank you",
+    "status": "ok",
+    "tried": [
+     "spitch:ok"
+    ],
+    "wer": 0.0,
+    "outcome": "confirmed",
+    "action": "consent",
+    "held_back": "",
+    "promise": {
+     "status": "none",
+     "issue": "",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "",
+     "recorded_after_answer": null
+    }
    }
   },
   {
@@ -328,6 +927,9 @@
    "noise": "light",
    "reference": "Two cartons of the noodles are short. I counted 4 cartons, not 6.",
    "expected": "disputed",
+   "expected_promise": {
+    "status": "none"
+   },
    "spitch": {
     "transcript": "two kartons of the noodles are short i counted four kartons not six",
     "status": "ok",
@@ -337,7 +939,15 @@
     "wer": 0.154,
     "outcome": "disputed",
     "action": "flag_dispute",
-    "held_back": ""
+    "held_back": "",
+    "promise": {
+     "status": "none",
+     "issue": "",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "",
+     "recorded_after_answer": null
+    }
    },
    "muse": {
     "transcript": "two cartons of the noodles are short. I counted four cartons, cartons, not six.",
@@ -348,7 +958,15 @@
     "wer": 0.077,
     "outcome": "disputed",
     "action": "flag_dispute",
-    "held_back": ""
+    "held_back": "",
+    "promise": {
+     "status": "none",
+     "issue": "",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "",
+     "recorded_after_answer": null
+    }
    },
    "router": {
     "transcript": "two cartons of the noodles are short. I counted four cartons, cartons, not six.",
@@ -359,7 +977,72 @@
     "wer": 0.077,
     "outcome": "disputed",
     "action": "flag_dispute",
-    "held_back": ""
+    "held_back": "",
+    "promise": {
+     "status": "none",
+     "issue": "",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "",
+     "recorded_after_answer": null
+    }
+   },
+   "spitch/no-hint": {
+    "transcript": "two kartons of the noodles are short i counted four kartons not six",
+    "status": "ok",
+    "tried": [
+     "spitch"
+    ],
+    "wer": 0.154,
+    "outcome": "disputed",
+    "action": "flag_dispute",
+    "held_back": "",
+    "promise": {
+     "status": "none",
+     "issue": "",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "",
+     "recorded_after_answer": null
+    }
+   },
+   "muse/no-hint": {
+    "transcript": "two cartons of the noodles are short. I counted four cartons, not six.",
+    "status": "ok",
+    "tried": [
+     "muse"
+    ],
+    "wer": 0.0,
+    "outcome": "disputed",
+    "action": "flag_dispute",
+    "held_back": "",
+    "promise": {
+     "status": "none",
+     "issue": "",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "",
+     "recorded_after_answer": null
+    }
+   },
+   "router/no-hint": {
+    "transcript": "two kartons of the noodles are short i counted four kartons not six",
+    "status": "ok",
+    "tried": [
+     "spitch:ok"
+    ],
+    "wer": 0.154,
+    "outcome": "disputed",
+    "action": "flag_dispute",
+    "held_back": "",
+    "promise": {
+     "status": "none",
+     "issue": "",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "",
+     "recorded_after_answer": null
+    }
    }
   },
   {
@@ -368,6 +1051,9 @@
    "noise": "light",
    "reference": "I will check the goods later and get back to you.",
    "expected": "unclear",
+   "expected_promise": {
+    "status": "none"
+   },
    "spitch": {
     "transcript": "iwil ček the goods later and get bak to you",
     "status": "ok",
@@ -377,7 +1063,15 @@
     "wer": 0.364,
     "outcome": "unclear",
     "action": "clarify",
-    "held_back": ""
+    "held_back": "",
+    "promise": {
+     "status": "none",
+     "issue": "",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "",
+     "recorded_after_answer": null
+    }
    },
    "muse": {
     "transcript": "I will check the goods later later and get back to you.",
@@ -388,7 +1082,15 @@
     "wer": 0.091,
     "outcome": "unclear",
     "action": "clarify",
-    "held_back": ""
+    "held_back": "",
+    "promise": {
+     "status": "none",
+     "issue": "",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "",
+     "recorded_after_answer": null
+    }
    },
    "router": {
     "transcript": "I will check the goods later later and get back to you.",
@@ -399,7 +1101,72 @@
     "wer": 0.091,
     "outcome": "unclear",
     "action": "clarify",
-    "held_back": ""
+    "held_back": "",
+    "promise": {
+     "status": "none",
+     "issue": "",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "",
+     "recorded_after_answer": null
+    }
+   },
+   "spitch/no-hint": {
+    "transcript": "iwil ček the goods later and get bak to you",
+    "status": "ok",
+    "tried": [
+     "spitch"
+    ],
+    "wer": 0.364,
+    "outcome": "unclear",
+    "action": "clarify",
+    "held_back": "",
+    "promise": {
+     "status": "none",
+     "issue": "",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "",
+     "recorded_after_answer": null
+    }
+   },
+   "muse/no-hint": {
+    "transcript": "i will check the goods later later and get back to you.",
+    "status": "ok",
+    "tried": [
+     "muse"
+    ],
+    "wer": 0.091,
+    "outcome": "unclear",
+    "action": "clarify",
+    "held_back": "",
+    "promise": {
+     "status": "none",
+     "issue": "",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "",
+     "recorded_after_answer": null
+    }
+   },
+   "router/no-hint": {
+    "transcript": "iwil ček the goods later and get bak to you",
+    "status": "ok",
+    "tried": [
+     "spitch:ok"
+    ],
+    "wer": 0.364,
+    "outcome": "unclear",
+    "action": "clarify",
+    "held_back": "",
+    "promise": {
+     "status": "none",
+     "issue": "",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "",
+     "recorded_after_answer": null
+    }
    }
   },
   {
@@ -408,6 +1175,9 @@
    "noise": "light",
    "reference": "Yes o, everything don land complete. Thank you.",
    "expected": "confirmed",
+   "expected_promise": {
+    "status": "none"
+   },
    "spitch": {
     "transcript": "yeso everything don lan complete thank you",
     "status": "ok",
@@ -417,7 +1187,15 @@
     "wer": 0.375,
     "outcome": "confirmed",
     "action": "consent",
-    "held_back": ""
+    "held_back": "",
+    "promise": {
+     "status": "none",
+     "issue": "",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "",
+     "recorded_after_answer": null
+    }
    },
    "muse": {
     "transcript": "yes oh everything don't land complete. Thank you.",
@@ -428,7 +1206,15 @@
     "wer": 0.125,
     "outcome": "confirmed",
     "action": "consent",
-    "held_back": ""
+    "held_back": "",
+    "promise": {
+     "status": "none",
+     "issue": "",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "",
+     "recorded_after_answer": null
+    }
    },
    "router": {
     "transcript": "yeso everything don lan complete thank you",
@@ -439,7 +1225,72 @@
     "wer": 0.375,
     "outcome": "confirmed",
     "action": "consent",
-    "held_back": ""
+    "held_back": "",
+    "promise": {
+     "status": "none",
+     "issue": "",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "",
+     "recorded_after_answer": null
+    }
+   },
+   "spitch/no-hint": {
+    "transcript": "yeso everything don lan komplete thank you",
+    "status": "ok",
+    "tried": [
+     "spitch"
+    ],
+    "wer": 0.5,
+    "outcome": "confirmed",
+    "action": "consent",
+    "held_back": "",
+    "promise": {
+     "status": "none",
+     "issue": "",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "",
+     "recorded_after_answer": null
+    }
+   },
+   "muse/no-hint": {
+    "transcript": "Yes o, everything don't land complete. Thank you.",
+    "status": "ok",
+    "tried": [
+     "muse"
+    ],
+    "wer": 0.125,
+    "outcome": "confirmed",
+    "action": "consent",
+    "held_back": "",
+    "promise": {
+     "status": "none",
+     "issue": "",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "",
+     "recorded_after_answer": null
+    }
+   },
+   "router/no-hint": {
+    "transcript": "yeso everything don lan komplete thank you",
+    "status": "ok",
+    "tried": [
+     "spitch:ok"
+    ],
+    "wer": 0.5,
+    "outcome": "confirmed",
+    "action": "consent",
+    "held_back": "",
+    "promise": {
+     "status": "none",
+     "issue": "",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "",
+     "recorded_after_answer": null
+    }
    }
   },
   {
@@ -448,6 +1299,9 @@
    "noise": "heavy",
    "reference": "The noodles no complete o. Na 4 carton, no be 6.",
    "expected": "disputed",
+   "expected_promise": {
+    "status": "none"
+   },
    "spitch": {
     "transcript": "complete o na afocarton no be six",
     "status": "ok",
@@ -457,7 +1311,15 @@
     "wer": 0.455,
     "outcome": "disputed",
     "action": "flag_dispute",
-    "held_back": ""
+    "held_back": "",
+    "promise": {
+     "status": "none",
+     "issue": "",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "",
+     "recorded_after_answer": null
+    }
    },
    "muse": {
     "transcript": "now a four carton no be six.",
@@ -468,7 +1330,15 @@
     "wer": 0.545,
     "outcome": "disputed",
     "action": "flag_dispute",
-    "held_back": ""
+    "held_back": "",
+    "promise": {
+     "status": "none",
+     "issue": "",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "",
+     "recorded_after_answer": null
+    }
    },
    "router": {
     "transcript": "complete o na afocarton no be six",
@@ -479,7 +1349,72 @@
     "wer": 0.455,
     "outcome": "disputed",
     "action": "flag_dispute",
-    "held_back": ""
+    "held_back": "",
+    "promise": {
+     "status": "none",
+     "issue": "",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "",
+     "recorded_after_answer": null
+    }
+   },
+   "spitch/no-hint": {
+    "transcript": "kɔmplito na afɔkatɔn nɔ bi siks",
+    "status": "ok",
+    "tried": [
+     "spitch"
+    ],
+    "wer": 0.909,
+    "outcome": "unclear",
+    "action": "clarify",
+    "held_back": "",
+    "promise": {
+     "status": "none",
+     "issue": "",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "",
+     "recorded_after_answer": null
+    }
+   },
+   "muse/no-hint": {
+    "transcript": "complete now a full carton no be six.",
+    "status": "ok",
+    "tried": [
+     "muse"
+    ],
+    "wer": 0.545,
+    "outcome": "unclear",
+    "action": "clarify",
+    "held_back": "",
+    "promise": {
+     "status": "none",
+     "issue": "",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "",
+     "recorded_after_answer": null
+    }
+   },
+   "router/no-hint": {
+    "transcript": "kɔmplito na afɔkatɔn nɔ bi siks",
+    "status": "ok",
+    "tried": [
+     "spitch:ok"
+    ],
+    "wer": 0.909,
+    "outcome": "unclear",
+    "action": "clarify",
+    "held_back": "",
+    "promise": {
+     "status": "none",
+     "issue": "",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "",
+     "recorded_after_answer": null
+    }
    }
   },
   {
@@ -488,6 +1423,9 @@
    "noise": "light",
    "reference": "Everything reach except the sugar. The sugar never land.",
    "expected": "partial",
+   "expected_promise": {
+    "status": "none"
+   },
    "spitch": {
     "transcript": "everything reach except di sugar di sugar never land",
     "status": "ok",
@@ -497,7 +1435,15 @@
     "wer": 0.222,
     "outcome": "partial",
     "action": "flag_dispute",
-    "held_back": ""
+    "held_back": "",
+    "promise": {
+     "status": "none",
+     "issue": "",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "",
+     "recorded_after_answer": null
+    }
    },
    "muse": {
     "transcript": "everything rich except the sugar, the sugar never land.",
@@ -508,7 +1454,15 @@
     "wer": 0.111,
     "outcome": "partial",
     "action": "flag_dispute",
-    "held_back": ""
+    "held_back": "",
+    "promise": {
+     "status": "none",
+     "issue": "",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "",
+     "recorded_after_answer": null
+    }
    },
    "router": {
     "transcript": "everything reach except di sugar di sugar never land",
@@ -519,7 +1473,72 @@
     "wer": 0.222,
     "outcome": "partial",
     "action": "flag_dispute",
-    "held_back": ""
+    "held_back": "",
+    "promise": {
+     "status": "none",
+     "issue": "",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "",
+     "recorded_after_answer": null
+    }
+   },
+   "spitch/no-hint": {
+    "transcript": "everything reach except di sugar di sugar never land",
+    "status": "ok",
+    "tried": [
+     "spitch"
+    ],
+    "wer": 0.222,
+    "outcome": "partial",
+    "action": "flag_dispute",
+    "held_back": "",
+    "promise": {
+     "status": "none",
+     "issue": "",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "",
+     "recorded_after_answer": null
+    }
+   },
+   "muse/no-hint": {
+    "transcript": "everything rich except the except the sugar the sugar never land",
+    "status": "ok",
+    "tried": [
+     "muse"
+    ],
+    "wer": 0.333,
+    "outcome": "partial",
+    "action": "flag_dispute",
+    "held_back": "",
+    "promise": {
+     "status": "none",
+     "issue": "",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "",
+     "recorded_after_answer": null
+    }
+   },
+   "router/no-hint": {
+    "transcript": "everything reach except di sugar di sugar never land",
+    "status": "ok",
+    "tried": [
+     "spitch:ok"
+    ],
+    "wer": 0.222,
+    "outcome": "partial",
+    "action": "flag_dispute",
+    "held_back": "",
+    "promise": {
+     "status": "none",
+     "issue": "",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "",
+     "recorded_after_answer": null
+    }
    }
   },
   {
@@ -528,6 +1547,9 @@
    "noise": "heavy",
    "reference": "Abeg, when una go bring the new price list?",
    "expected": "unrelated",
+   "expected_promise": {
+    "status": "none"
+   },
    "spitch": {
     "transcript": "abeg when una go bring the new price list",
     "status": "ok",
@@ -537,7 +1559,15 @@
     "wer": 0.0,
     "outcome": "unrelated",
     "action": "clarify",
-    "held_back": ""
+    "held_back": "",
+    "promise": {
+     "status": "none",
+     "issue": "",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "",
+     "recorded_after_answer": null
+    }
    },
    "muse": {
     "transcript": "I beg when you na go bring the new price list.",
@@ -548,7 +1578,15 @@
     "wer": 0.444,
     "outcome": "unrelated",
     "action": "clarify",
-    "held_back": ""
+    "held_back": "",
+    "promise": {
+     "status": "none",
+     "issue": "",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "",
+     "recorded_after_answer": null
+    }
    },
    "router": {
     "transcript": "abeg when una go bring the new price list",
@@ -559,7 +1597,72 @@
     "wer": 0.0,
     "outcome": "unrelated",
     "action": "clarify",
-    "held_back": ""
+    "held_back": "",
+    "promise": {
+     "status": "none",
+     "issue": "",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "",
+     "recorded_after_answer": null
+    }
+   },
+   "spitch/no-hint": {
+    "transcript": "abeg when una go bring di new price list",
+    "status": "ok",
+    "tried": [
+     "spitch"
+    ],
+    "wer": 0.111,
+    "outcome": "unrelated",
+    "action": "clarify",
+    "held_back": "",
+    "promise": {
+     "status": "none",
+     "issue": "",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "",
+     "recorded_after_answer": null
+    }
+   },
+   "muse/no-hint": {
+    "transcript": "I beg when you na go bring the new price list?",
+    "status": "ok",
+    "tried": [
+     "muse"
+    ],
+    "wer": 0.444,
+    "outcome": "unrelated",
+    "action": "clarify",
+    "held_back": "",
+    "promise": {
+     "status": "none",
+     "issue": "",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "",
+     "recorded_after_answer": null
+    }
+   },
+   "router/no-hint": {
+    "transcript": "abeg when una go bring di new price list",
+    "status": "ok",
+    "tried": [
+     "spitch:ok"
+    ],
+    "wer": 0.111,
+    "outcome": "unrelated",
+    "action": "clarify",
+    "held_back": "",
+    "promise": {
+     "status": "none",
+     "issue": "",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "",
+     "recorded_after_answer": null
+    }
    }
   },
   {
@@ -568,6 +1671,9 @@
    "noise": "none",
    "reference": "Ẹ ṣé o, gbogbo ẹrù ti dé pé.",
    "expected": "confirmed",
+   "expected_promise": {
+    "status": "none"
+   },
    "spitch": {
     "transcript": "ẹ ṣe ọ́ gbogbo ẹ̀rù ti dépẹ́",
     "status": "ok",
@@ -577,7 +1683,15 @@
     "wer": 0.75,
     "outcome": "confirmed",
     "action": "consent",
-    "held_back": ""
+    "held_back": "",
+    "promise": {
+     "status": "none",
+     "issue": "",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "",
+     "recorded_after_answer": null
+    }
    },
    "muse": {
     "transcript": "E shi o gbogbo ero ti de pe,",
@@ -588,7 +1702,15 @@
     "wer": 0.625,
     "outcome": "confirmed",
     "action": "consent",
-    "held_back": ""
+    "held_back": "",
+    "promise": {
+     "status": "none",
+     "issue": "",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "",
+     "recorded_after_answer": null
+    }
    },
    "router": {
     "transcript": "ẹ ṣe ọ́ gbogbo ẹ̀rù ti dépẹ́",
@@ -599,7 +1721,72 @@
     "wer": 0.75,
     "outcome": "confirmed",
     "action": "consent",
-    "held_back": ""
+    "held_back": "",
+    "promise": {
+     "status": "none",
+     "issue": "",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "",
+     "recorded_after_answer": null
+    }
+   },
+   "spitch/no-hint": {
+    "transcript": "ẹ ṣe ọ́ gbogbo ẹ̀rù ti dépẹ́",
+    "status": "ok",
+    "tried": [
+     "spitch"
+    ],
+    "wer": 0.75,
+    "outcome": "confirmed",
+    "action": "consent",
+    "held_back": "",
+    "promise": {
+     "status": "none",
+     "issue": "",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "",
+     "recorded_after_answer": null
+    }
+   },
+   "muse/no-hint": {
+    "transcript": "E shi o gbogbo ero ti de pe!.",
+    "status": "ok",
+    "tried": [
+     "muse"
+    ],
+    "wer": 0.625,
+    "outcome": "confirmed",
+    "action": "consent",
+    "held_back": "",
+    "promise": {
+     "status": "none",
+     "issue": "",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "",
+     "recorded_after_answer": null
+    }
+   },
+   "router/no-hint": {
+    "transcript": "ẹ ṣe ọ́ gbogbo ẹ̀rù ti dépẹ́",
+    "status": "ok",
+    "tried": [
+     "spitch:ok"
+    ],
+    "wer": 0.75,
+    "outcome": "confirmed",
+    "action": "consent",
+    "held_back": "",
+    "promise": {
+     "status": "none",
+     "issue": "",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "",
+     "recorded_after_answer": null
+    }
    }
   },
   {
@@ -608,6 +1795,9 @@
    "noise": "heavy",
    "reference": "Bẹ́ẹ̀ ni, mo ti gba gbogbo rẹ̀. Ẹ ṣé.",
    "expected": "confirmed",
+   "expected_promise": {
+    "status": "none"
+   },
    "spitch": {
     "transcript": "bẹ́ẹ̀ni mo ti gba gbogbo rẹ̀ ṣe",
     "status": "ok",
@@ -617,7 +1807,15 @@
     "wer": 0.2,
     "outcome": "confirmed",
     "action": "consent",
-    "held_back": ""
+    "held_back": "",
+    "promise": {
+     "status": "none",
+     "issue": "",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "",
+     "recorded_after_answer": null
+    }
    },
    "muse": {
     "transcript": "beni mo ti gba gbogbo rẹ́ she.",
@@ -628,7 +1826,15 @@
     "wer": 0.5,
     "outcome": "confirmed",
     "action": "consent",
-    "held_back": ""
+    "held_back": "",
+    "promise": {
+     "status": "none",
+     "issue": "",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "",
+     "recorded_after_answer": null
+    }
    },
    "router": {
     "transcript": "bẹ́ẹ̀ni mo ti gba gbogbo rẹ̀ ṣe",
@@ -639,7 +1845,72 @@
     "wer": 0.2,
     "outcome": "confirmed",
     "action": "consent",
-    "held_back": ""
+    "held_back": "",
+    "promise": {
+     "status": "none",
+     "issue": "",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "",
+     "recorded_after_answer": null
+    }
+   },
+   "spitch/no-hint": {
+    "transcript": "bẹ́ẹ̀ni mo ti gba gbogbo rẹ̀ ṣe",
+    "status": "ok",
+    "tried": [
+     "spitch"
+    ],
+    "wer": 0.2,
+    "outcome": "confirmed",
+    "action": "consent",
+    "held_back": "",
+    "promise": {
+     "status": "none",
+     "issue": "",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "",
+     "recorded_after_answer": null
+    }
+   },
+   "muse/no-hint": {
+    "transcript": "beni moti gba gbogbo reshe.",
+    "status": "ok",
+    "tried": [
+     "muse"
+    ],
+    "wer": 0.8,
+    "outcome": "confirmed",
+    "action": "consent",
+    "held_back": "",
+    "promise": {
+     "status": "none",
+     "issue": "",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "",
+     "recorded_after_answer": null
+    }
+   },
+   "router/no-hint": {
+    "transcript": "bẹ́ẹ̀ni mo ti gba gbogbo rẹ̀ ṣe",
+    "status": "ok",
+    "tried": [
+     "spitch:ok"
+    ],
+    "wer": 0.2,
+    "outcome": "confirmed",
+    "action": "consent",
+    "held_back": "",
+    "promise": {
+     "status": "none",
+     "issue": "",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "",
+     "recorded_after_answer": null
+    }
    }
   },
   {
@@ -648,6 +1919,9 @@
    "noise": "light",
    "reference": "Ẹ jọ̀ọ́, noodles kò pé. Mẹ́rin ni mo rí, kì í ṣe mẹ́fà.",
    "expected": "disputed",
+   "expected_promise": {
+    "status": "none"
+   },
    "spitch": {
     "transcript": "ẹ jí noodles kò pé mẹ́rin ni mo rí kì í ṣe mẹ́fà",
     "status": "ok",
@@ -657,7 +1931,15 @@
     "wer": 0.125,
     "outcome": "disputed",
     "action": "flag_dispute",
-    "held_back": ""
+    "held_back": "",
+    "promise": {
+     "status": "none",
+     "issue": "",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "",
+     "recorded_after_answer": null
+    }
    },
    "muse": {
     "transcript": "edgy noodles kokwe merin ni mori kii se mefa,",
@@ -668,7 +1950,15 @@
     "wer": 0.875,
     "outcome": "disputed",
     "action": "flag_dispute",
-    "held_back": ""
+    "held_back": "",
+    "promise": {
+     "status": "none",
+     "issue": "",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "",
+     "recorded_after_answer": null
+    }
    },
    "router": {
     "transcript": "ẹ jí noodles kò pé mẹ́rin ni mo rí kì í ṣe mẹ́fà",
@@ -679,7 +1969,72 @@
     "wer": 0.125,
     "outcome": "disputed",
     "action": "flag_dispute",
-    "held_back": ""
+    "held_back": "",
+    "promise": {
+     "status": "none",
+     "issue": "",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "",
+     "recorded_after_answer": null
+    }
+   },
+   "spitch/no-hint": {
+    "transcript": "ẹ jí noodles kò pé mẹ́rin ni mo rí kì í ṣe mẹ́fà",
+    "status": "ok",
+    "tried": [
+     "spitch"
+    ],
+    "wer": 0.125,
+    "outcome": "disputed",
+    "action": "flag_dispute",
+    "held_back": "",
+    "promise": {
+     "status": "none",
+     "issue": "",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "",
+     "recorded_after_answer": null
+    }
+   },
+   "muse/no-hint": {
+    "transcript": "edgy noodles kokwei merin ni mori kiiše mefa",
+    "status": "ok",
+    "tried": [
+     "muse"
+    ],
+    "wer": 0.875,
+    "outcome": "disputed",
+    "action": "flag_dispute",
+    "held_back": "",
+    "promise": {
+     "status": "none",
+     "issue": "",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "",
+     "recorded_after_answer": null
+    }
+   },
+   "router/no-hint": {
+    "transcript": "ẹ jí noodles kò pé mẹ́rin ni mo rí kì í ṣe mẹ́fà",
+    "status": "ok",
+    "tried": [
+     "spitch:ok"
+    ],
+    "wer": 0.125,
+    "outcome": "disputed",
+    "action": "flag_dispute",
+    "held_back": "",
+    "promise": {
+     "status": "none",
+     "issue": "",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "",
+     "recorded_after_answer": null
+    }
    }
   },
   {
@@ -688,6 +2043,9 @@
    "noise": "light",
    "reference": "Ẹ dúró ná, màá wò ó.",
    "expected": "unclear",
+   "expected_promise": {
+    "status": "none"
+   },
    "spitch": {
     "transcript": "ẹ dúró máa wò ó",
     "status": "ok",
@@ -697,7 +2055,15 @@
     "wer": 0.333,
     "outcome": "unclear",
     "action": "clarify",
-    "held_back": ""
+    "held_back": "",
+    "promise": {
+     "status": "none",
+     "issue": "",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "",
+     "recorded_after_answer": null
+    }
    },
    "muse": {
     "transcript": "Eduro ma wọ́.",
@@ -708,7 +2074,15 @@
     "wer": 1.0,
     "outcome": "unclear",
     "action": "clarify",
-    "held_back": ""
+    "held_back": "",
+    "promise": {
+     "status": "none",
+     "issue": "",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "",
+     "recorded_after_answer": null
+    }
    },
    "router": {
     "transcript": "ẹ dúró máa wò ó",
@@ -719,7 +2093,72 @@
     "wer": 0.333,
     "outcome": "unclear",
     "action": "clarify",
-    "held_back": ""
+    "held_back": "",
+    "promise": {
+     "status": "none",
+     "issue": "",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "",
+     "recorded_after_answer": null
+    }
+   },
+   "spitch/no-hint": {
+    "transcript": "ẹ dúró máa wò ó",
+    "status": "ok",
+    "tried": [
+     "spitch"
+    ],
+    "wer": 0.333,
+    "outcome": "unclear",
+    "action": "clarify",
+    "held_back": "",
+    "promise": {
+     "status": "none",
+     "issue": "",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "",
+     "recorded_after_answer": null
+    }
+   },
+   "muse/no-hint": {
+    "transcript": "Eduro, ma mawo.",
+    "status": "ok",
+    "tried": [
+     "muse"
+    ],
+    "wer": 1.0,
+    "outcome": "unclear",
+    "action": "clarify",
+    "held_back": "",
+    "promise": {
+     "status": "none",
+     "issue": "",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "",
+     "recorded_after_answer": null
+    }
+   },
+   "router/no-hint": {
+    "transcript": "ẹ dúró máa wò ó",
+    "status": "ok",
+    "tried": [
+     "spitch:ok"
+    ],
+    "wer": 0.333,
+    "outcome": "unclear",
+    "action": "clarify",
+    "held_back": "",
+    "promise": {
+     "status": "none",
+     "issue": "",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "",
+     "recorded_after_answer": null
+    }
    }
   },
   {
@@ -728,6 +2167,9 @@
    "noise": "light",
    "reference": "Daalụ, ihe niile abịala.",
    "expected": "confirmed",
+   "expected_promise": {
+    "status": "none"
+   },
    "spitch": {
     "transcript": "daalụ ihe niile abịala",
     "status": "ok",
@@ -737,7 +2179,15 @@
     "wer": 0.0,
     "outcome": "confirmed",
     "action": "consent",
-    "held_back": ""
+    "held_back": "",
+    "promise": {
+     "status": "none",
+     "issue": "",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "",
+     "recorded_after_answer": null
+    }
    },
    "muse": {
     "transcript": "Dalo ihe nile abiala.",
@@ -748,7 +2198,15 @@
     "wer": 0.75,
     "outcome": "confirmed",
     "action": "consent",
-    "held_back": ""
+    "held_back": "",
+    "promise": {
+     "status": "none",
+     "issue": "",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "",
+     "recorded_after_answer": null
+    }
    },
    "router": {
     "transcript": "daalụ ihe niile abịala",
@@ -759,7 +2217,72 @@
     "wer": 0.0,
     "outcome": "confirmed",
     "action": "consent",
-    "held_back": ""
+    "held_back": "",
+    "promise": {
+     "status": "none",
+     "issue": "",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "",
+     "recorded_after_answer": null
+    }
+   },
+   "spitch/no-hint": {
+    "transcript": "daalu ihe nii la biala",
+    "status": "ok",
+    "tried": [
+     "spitch"
+    ],
+    "wer": 1.0,
+    "outcome": "confirmed",
+    "action": "consent",
+    "held_back": "",
+    "promise": {
+     "status": "none",
+     "issue": "",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "",
+     "recorded_after_answer": null
+    }
+   },
+   "muse/no-hint": {
+    "transcript": "dalo ihe niile abiala.",
+    "status": "ok",
+    "tried": [
+     "muse"
+    ],
+    "wer": 0.5,
+    "outcome": "confirmed",
+    "action": "consent",
+    "held_back": "",
+    "promise": {
+     "status": "none",
+     "issue": "",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "",
+     "recorded_after_answer": null
+    }
+   },
+   "router/no-hint": {
+    "transcript": "daalu ihe nii la biala",
+    "status": "ok",
+    "tried": [
+     "spitch:ok"
+    ],
+    "wer": 1.0,
+    "outcome": "confirmed",
+    "action": "consent",
+    "held_back": "",
+    "promise": {
+     "status": "none",
+     "issue": "",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "",
+     "recorded_after_answer": null
+    }
    }
   },
   {
@@ -768,6 +2291,9 @@
    "noise": "heavy",
    "reference": "Noodles ezughị. Anọ ka m hụrụ, ọ bụghị isii.",
    "expected": "disputed",
+   "expected_promise": {
+    "status": "none"
+   },
    "spitch": {
     "transcript": "northern rock northern rock northern rock northern rock northern rock northern rock northern rock northern rock northern rock northern rock northern rock northern rock northern rock northern rock northern rock northern rock northern rock northern rock northern rock northern rock northern ro",
     "status": "low",
@@ -777,7 +2303,15 @@
     "wer": 4.667,
     "outcome": "unclear",
     "action": "clarify",
-    "held_back": ""
+    "held_back": "",
+    "promise": {
+     "status": "none",
+     "issue": "",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "",
+     "recorded_after_answer": null
+    }
    },
    "muse": {
     "transcript": "Noodles ezugi anọka mhụro obugi isi",
@@ -788,7 +2322,15 @@
     "wer": 0.889,
     "outcome": "disputed",
     "action": "flag_dispute",
-    "held_back": ""
+    "held_back": "",
+    "promise": {
+     "status": "none",
+     "issue": "",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "",
+     "recorded_after_answer": null
+    }
    },
    "router": {
     "transcript": "Noodles ezugi anọka mhụro obugi isi",
@@ -800,7 +2342,73 @@
     "wer": 0.889,
     "outcome": "disputed",
     "action": "flag_dispute",
-    "held_back": ""
+    "held_back": "",
+    "promise": {
+     "status": "none",
+     "issue": "",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "",
+     "recorded_after_answer": null
+    }
+   },
+   "spitch/no-hint": {
+    "transcript": "northern rock northern rock northern rock northern rock northern rock northern rock northern rock northern rock northern rock northern rock northern rock northern rock northern rock northern rock northern rock northern rock northern rock northern rock northern rock northern rock northern ro",
+    "status": "low",
+    "tried": [
+     "spitch"
+    ],
+    "wer": 4.667,
+    "outcome": "unclear",
+    "action": "clarify",
+    "held_back": "",
+    "promise": {
+     "status": "none",
+     "issue": "",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "",
+     "recorded_after_answer": null
+    }
+   },
+   "muse/no-hint": {
+    "transcript": "noodles ezugi zucchi anokamhoro obugisi.",
+    "status": "ok",
+    "tried": [
+     "muse"
+    ],
+    "wer": 0.889,
+    "outcome": "unclear",
+    "action": "clarify",
+    "held_back": "",
+    "promise": {
+     "status": "none",
+     "issue": "",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "",
+     "recorded_after_answer": null
+    }
+   },
+   "router/no-hint": {
+    "transcript": "noodles ezugi zucchi anokamhoro obugisi.",
+    "status": "ok",
+    "tried": [
+     "spitch:low",
+     "muse:ok"
+    ],
+    "wer": 0.889,
+    "outcome": "unclear",
+    "action": "clarify",
+    "held_back": "",
+    "promise": {
+     "status": "none",
+     "issue": "",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "",
+     "recorded_after_answer": null
+    }
    }
   },
   {
@@ -809,6 +2417,9 @@
    "noise": "light",
    "reference": "Na gode, duk kayan sun iso.",
    "expected": "confirmed",
+   "expected_promise": {
+    "status": "none"
+   },
    "spitch": {
     "transcript": "nagode duk kayan sun iso",
     "status": "ok",
@@ -818,7 +2429,15 @@
     "wer": 0.333,
     "outcome": "confirmed",
     "action": "consent",
-    "held_back": ""
+    "held_back": "",
+    "promise": {
+     "status": "none",
+     "issue": "",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "",
+     "recorded_after_answer": null
+    }
    },
    "muse": {
     "transcript": "now could you look and see",
@@ -829,7 +2448,15 @@
     "wer": 1.0,
     "outcome": "unclear",
     "action": "clarify",
-    "held_back": ""
+    "held_back": "",
+    "promise": {
+     "status": "none",
+     "issue": "",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "",
+     "recorded_after_answer": null
+    }
    },
    "router": {
     "transcript": "nagode duk kayan sun iso",
@@ -840,7 +2467,72 @@
     "wer": 0.333,
     "outcome": "confirmed",
     "action": "consent",
-    "held_back": ""
+    "held_back": "",
+    "promise": {
+     "status": "none",
+     "issue": "",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "",
+     "recorded_after_answer": null
+    }
+   },
+   "spitch/no-hint": {
+    "transcript": "nagode duk kayan sun iso",
+    "status": "ok",
+    "tried": [
+     "spitch"
+    ],
+    "wer": 0.333,
+    "outcome": "confirmed",
+    "action": "consent",
+    "held_back": "",
+    "promise": {
+     "status": "none",
+     "issue": "",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "",
+     "recorded_after_answer": null
+    }
+   },
+   "muse/no-hint": {
+    "transcript": "Now could you look and see",
+    "status": "ok",
+    "tried": [
+     "muse"
+    ],
+    "wer": 1.0,
+    "outcome": "unclear",
+    "action": "clarify",
+    "held_back": "",
+    "promise": {
+     "status": "none",
+     "issue": "",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "",
+     "recorded_after_answer": null
+    }
+   },
+   "router/no-hint": {
+    "transcript": "nagode duk kayan sun iso",
+    "status": "ok",
+    "tried": [
+     "spitch:ok"
+    ],
+    "wer": 0.333,
+    "outcome": "confirmed",
+    "action": "consent",
+    "held_back": "",
+    "promise": {
+     "status": "none",
+     "issue": "",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "",
+     "recorded_after_answer": null
+    }
    }
   },
   {
@@ -849,6 +2541,9 @@
    "noise": "heavy",
    "reference": "Noodles ba su cika ba. Hudu na gani, ba shida ba.",
    "expected": "disputed",
+   "expected_promise": {
+    "status": "none"
+   },
    "spitch": {
     "transcript": "windows ba su cika ba hulu na gani ba shi da ba",
     "status": "ok",
@@ -858,7 +2553,15 @@
     "wer": 0.364,
     "outcome": "unclear",
     "action": "clarify",
-    "held_back": ""
+    "held_back": "",
+    "promise": {
+     "status": "none",
+     "issue": "",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "",
+     "recorded_after_answer": null
+    }
    },
    "muse": {
     "transcript": "windows bus sugar ba hubuna gani bashi da aba.",
@@ -869,7 +2572,15 @@
     "wer": 0.818,
     "outcome": "unclear",
     "action": "clarify",
-    "held_back": ""
+    "held_back": "",
+    "promise": {
+     "status": "none",
+     "issue": "",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "",
+     "recorded_after_answer": null
+    }
    },
    "router": {
     "transcript": "windows ba su cika ba hulu na gani ba shi da ba",
@@ -880,25 +2591,4351 @@
     "wer": 0.364,
     "outcome": "unclear",
     "action": "clarify",
-    "held_back": ""
+    "held_back": "",
+    "promise": {
+     "status": "none",
+     "issue": "",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "",
+     "recorded_after_answer": null
+    }
+   },
+   "spitch/no-hint": {
+    "transcript": "windows ba su cika ba hulu na gani ba shi da ba",
+    "status": "ok",
+    "tried": [
+     "spitch"
+    ],
+    "wer": 0.364,
+    "outcome": "unclear",
+    "action": "clarify",
+    "held_back": "",
+    "promise": {
+     "status": "none",
+     "issue": "",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "",
+     "recorded_after_answer": null
+    }
+   },
+   "muse/no-hint": {
+    "transcript": "noodles बस chika ba, hubuna gani bashi da aba.",
+    "status": "ok",
+    "tried": [
+     "muse"
+    ],
+    "wer": 0.727,
+    "outcome": "unclear",
+    "action": "clarify",
+    "held_back": "",
+    "promise": {
+     "status": "none",
+     "issue": "",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "",
+     "recorded_after_answer": null
+    }
+   },
+   "router/no-hint": {
+    "transcript": "windows ba su cika ba hulu na gani ba shi da ba",
+    "status": "ok",
+    "tried": [
+     "spitch:ok"
+    ],
+    "wer": 0.364,
+    "outcome": "unclear",
+    "action": "clarify",
+    "held_back": "",
+    "promise": {
+     "status": "none",
+     "issue": "",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "",
+     "recorded_after_answer": null
+    }
+   }
+  },
+  {
+   "id": "vn-17",
+   "lang": "english",
+   "noise": "light",
+   "reference": "Yes, everything arrived. I will pay twenty thousand naira tomorrow.",
+   "expected": "confirmed",
+   "expected_promise": {
+    "status": "promise",
+    "amount_kobo": 2000000,
+    "due_on": "2026-10-27"
+   },
+   "spitch": {
+    "transcript": "yes everything arrived i will pay twenty thousand nara tomorrow",
+    "status": "ok",
+    "tried": [
+     "spitch"
+    ],
+    "wer": 0.1,
+    "outcome": "confirmed",
+    "action": "consent",
+    "held_back": "",
+    "promise": {
+     "status": "promise",
+     "issue": "",
+     "amount_kobo": 2000000,
+     "due_on": "2026-10-27",
+     "sent": "readback",
+     "recorded_after_answer": true
+    }
+   },
+   "muse": {
+    "transcript": "Yes, everything arrived. I will pay twenty thousand naira tomorrow.",
+    "status": "ok",
+    "tried": [
+     "muse"
+    ],
+    "wer": 0.0,
+    "outcome": "confirmed",
+    "action": "consent",
+    "held_back": "",
+    "promise": {
+     "status": "promise",
+     "issue": "",
+     "amount_kobo": 2000000,
+     "due_on": "2026-10-27",
+     "sent": "readback",
+     "recorded_after_answer": true
+    }
+   },
+   "router": {
+    "transcript": "Yes, everything arrived. I will pay twenty thousand naira tomorrow.",
+    "status": "ok",
+    "tried": [
+     "muse:ok"
+    ],
+    "wer": 0.0,
+    "outcome": "confirmed",
+    "action": "consent",
+    "held_back": "",
+    "promise": {
+     "status": "promise",
+     "issue": "",
+     "amount_kobo": 2000000,
+     "due_on": "2026-10-27",
+     "sent": "readback",
+     "recorded_after_answer": true
+    }
+   },
+   "spitch/no-hint": {
+    "transcript": "yes everything arrived i will pay twenty thousand nara tomorrow",
+    "status": "ok",
+    "tried": [
+     "spitch"
+    ],
+    "wer": 0.1,
+    "outcome": "confirmed",
+    "action": "consent",
+    "held_back": "",
+    "promise": {
+     "status": "promise",
+     "issue": "",
+     "amount_kobo": 2000000,
+     "due_on": "2026-10-27",
+     "sent": "readback",
+     "recorded_after_answer": true
+    }
+   },
+   "muse/no-hint": {
+    "transcript": "yes, everything arrived. I will pay twenty thousand naira tomorrow.",
+    "status": "ok",
+    "tried": [
+     "muse"
+    ],
+    "wer": 0.0,
+    "outcome": "confirmed",
+    "action": "consent",
+    "held_back": "",
+    "promise": {
+     "status": "promise",
+     "issue": "",
+     "amount_kobo": 2000000,
+     "due_on": "2026-10-27",
+     "sent": "readback",
+     "recorded_after_answer": true
+    }
+   },
+   "router/no-hint": {
+    "transcript": "yes everything arrived i will pay twenty thousand nara tomorrow",
+    "status": "ok",
+    "tried": [
+     "spitch:ok"
+    ],
+    "wer": 0.1,
+    "outcome": "confirmed",
+    "action": "consent",
+    "held_back": "",
+    "promise": {
+     "status": "promise",
+     "issue": "",
+     "amount_kobo": 2000000,
+     "due_on": "2026-10-27",
+     "sent": "readback",
+     "recorded_after_answer": true
+    }
+   }
+  },
+  {
+   "id": "vn-18",
+   "lang": "english",
+   "noise": "none",
+   "reference": "I will pay fifteen thousand naira on Friday.",
+   "expected": "unclear",
+   "expected_promise": {
+    "status": "promise",
+    "amount_kobo": 1500000,
+    "due_on": "2026-10-30"
+   },
+   "spitch": {
+    "transcript": "i will pay fifteen thousand naira on friday",
+    "status": "ok",
+    "tried": [
+     "spitch"
+    ],
+    "wer": 0.0,
+    "outcome": "unclear",
+    "action": "clarify",
+    "held_back": "",
+    "promise": {
+     "status": "promise",
+     "issue": "",
+     "amount_kobo": 1500000,
+     "due_on": "2026-10-30",
+     "sent": "held",
+     "recorded_after_answer": null
+    }
+   },
+   "muse": {
+    "transcript": "i will pay fifteen thousand naira on Friday.",
+    "status": "ok",
+    "tried": [
+     "muse"
+    ],
+    "wer": 0.0,
+    "outcome": "unclear",
+    "action": "clarify",
+    "held_back": "",
+    "promise": {
+     "status": "promise",
+     "issue": "",
+     "amount_kobo": 1500000,
+     "due_on": "2026-10-30",
+     "sent": "held",
+     "recorded_after_answer": null
+    }
+   },
+   "router": {
+    "transcript": "i will pay fifteen thousand naira on Friday.",
+    "status": "ok",
+    "tried": [
+     "muse:ok"
+    ],
+    "wer": 0.0,
+    "outcome": "unclear",
+    "action": "clarify",
+    "held_back": "",
+    "promise": {
+     "status": "promise",
+     "issue": "",
+     "amount_kobo": 1500000,
+     "due_on": "2026-10-30",
+     "sent": "held",
+     "recorded_after_answer": null
+    }
+   },
+   "spitch/no-hint": {
+    "transcript": "i will pay fifteen thousand naira on friday",
+    "status": "ok",
+    "tried": [
+     "spitch"
+    ],
+    "wer": 0.0,
+    "outcome": "unclear",
+    "action": "clarify",
+    "held_back": "",
+    "promise": {
+     "status": "promise",
+     "issue": "",
+     "amount_kobo": 1500000,
+     "due_on": "2026-10-30",
+     "sent": "held",
+     "recorded_after_answer": null
+    }
+   },
+   "muse/no-hint": {
+    "transcript": "i will pay fifteen thousand naira on Friday,",
+    "status": "ok",
+    "tried": [
+     "muse"
+    ],
+    "wer": 0.0,
+    "outcome": "unrelated",
+    "action": "clarify",
+    "held_back": "",
+    "promise": {
+     "status": "promise",
+     "issue": "",
+     "amount_kobo": 1500000,
+     "due_on": "2026-10-30",
+     "sent": "held",
+     "recorded_after_answer": null
+    }
+   },
+   "router/no-hint": {
+    "transcript": "i will pay fifteen thousand naira on friday",
+    "status": "ok",
+    "tried": [
+     "spitch:ok"
+    ],
+    "wer": 0.0,
+    "outcome": "unclear",
+    "action": "clarify",
+    "held_back": "",
+    "promise": {
+     "status": "promise",
+     "issue": "",
+     "amount_kobo": 1500000,
+     "due_on": "2026-10-30",
+     "sent": "held",
+     "recorded_after_answer": null
+    }
+   }
+  },
+  {
+   "id": "vn-19",
+   "lang": "english",
+   "noise": "heavy",
+   "reference": "Everything came except the sugar. The sugar did not come at all.",
+   "expected": "partial",
+   "expected_promise": {
+    "status": "none"
+   },
+   "spitch": {
+    "transcript": "everything came except di sugar di sugar did not come atall",
+    "status": "ok",
+    "tried": [
+     "spitch"
+    ],
+    "wer": 0.333,
+    "outcome": "partial",
+    "action": "flag_dispute",
+    "held_back": "",
+    "promise": {
+     "status": "none",
+     "issue": "",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "",
+     "recorded_after_answer": null
+    }
+   },
+   "muse": {
+    "transcript": "everything came except the sugar. The sugar did not did not come at all.",
+    "status": "ok",
+    "tried": [
+     "muse"
+    ],
+    "wer": 0.167,
+    "outcome": "partial",
+    "action": "flag_dispute",
+    "held_back": "",
+    "promise": {
+     "status": "none",
+     "issue": "",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "",
+     "recorded_after_answer": null
+    }
+   },
+   "router": {
+    "transcript": "everything came except the sugar. The sugar did not did not come at all.",
+    "status": "ok",
+    "tried": [
+     "muse:ok"
+    ],
+    "wer": 0.167,
+    "outcome": "partial",
+    "action": "flag_dispute",
+    "held_back": "",
+    "promise": {
+     "status": "none",
+     "issue": "",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "",
+     "recorded_after_answer": null
+    }
+   },
+   "spitch/no-hint": {
+    "transcript": "everything came except di sugar di sugar did not come atall",
+    "status": "ok",
+    "tried": [
+     "spitch"
+    ],
+    "wer": 0.333,
+    "outcome": "partial",
+    "action": "flag_dispute",
+    "held_back": "",
+    "promise": {
+     "status": "none",
+     "issue": "",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "",
+     "recorded_after_answer": null
+    }
+   },
+   "muse/no-hint": {
+    "transcript": "everything came except the sugar. The sugar did did not come at all.",
+    "status": "ok",
+    "tried": [
+     "muse"
+    ],
+    "wer": 0.083,
+    "outcome": "partial",
+    "action": "flag_dispute",
+    "held_back": "",
+    "promise": {
+     "status": "none",
+     "issue": "",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "",
+     "recorded_after_answer": null
+    }
+   },
+   "router/no-hint": {
+    "transcript": "everything came except di sugar di sugar did not come atall",
+    "status": "ok",
+    "tried": [
+     "spitch:ok"
+    ],
+    "wer": 0.333,
+    "outcome": "partial",
+    "action": "flag_dispute",
+    "held_back": "",
+    "promise": {
+     "status": "none",
+     "issue": "",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "",
+     "recorded_after_answer": null
+    }
+   }
+  },
+  {
+   "id": "vn-20",
+   "lang": "english",
+   "noise": "light",
+   "reference": "Everything is complete. I will pay you twenty thousand for it.",
+   "expected": "confirmed",
+   "expected_promise": {
+    "status": "unclear",
+    "issue": "no_date"
+   },
+   "spitch": {
+    "transcript": "everything is complete iwill pay you twenty thousand for it",
+    "status": "ok",
+    "tried": [
+     "spitch"
+    ],
+    "wer": 0.182,
+    "outcome": "confirmed",
+    "action": "consent",
+    "held_back": "",
+    "promise": {
+     "status": "unclear",
+     "issue": "no_date",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "question",
+     "recorded_after_answer": null
+    }
+   },
+   "muse": {
+    "transcript": "everything is complete. I will pay you twenty thousand for it.",
+    "status": "ok",
+    "tried": [
+     "muse"
+    ],
+    "wer": 0.0,
+    "outcome": "confirmed",
+    "action": "consent",
+    "held_back": "",
+    "promise": {
+     "status": "unclear",
+     "issue": "no_date",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "question",
+     "recorded_after_answer": null
+    }
+   },
+   "router": {
+    "transcript": "everything is complete. I will pay you twenty thousand for it.",
+    "status": "ok",
+    "tried": [
+     "muse:ok"
+    ],
+    "wer": 0.0,
+    "outcome": "confirmed",
+    "action": "consent",
+    "held_back": "",
+    "promise": {
+     "status": "unclear",
+     "issue": "no_date",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "question",
+     "recorded_after_answer": null
+    }
+   },
+   "spitch/no-hint": {
+    "transcript": "everything is complete iwil pay you twenty thousand for it",
+    "status": "ok",
+    "tried": [
+     "spitch"
+    ],
+    "wer": 0.182,
+    "outcome": "confirmed",
+    "action": "consent",
+    "held_back": "",
+    "promise": {
+     "status": "unclear",
+     "issue": "no_date",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "question",
+     "recorded_after_answer": null
+    }
+   },
+   "muse/no-hint": {
+    "transcript": "everything is complete. I will pay you twenty thousand for it.",
+    "status": "ok",
+    "tried": [
+     "muse"
+    ],
+    "wer": 0.0,
+    "outcome": "confirmed",
+    "action": "consent",
+    "held_back": "",
+    "promise": {
+     "status": "unclear",
+     "issue": "no_date",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "question",
+     "recorded_after_answer": null
+    }
+   },
+   "router/no-hint": {
+    "transcript": "everything is complete iwil pay you twenty thousand for it",
+    "status": "ok",
+    "tried": [
+     "spitch:ok"
+    ],
+    "wer": 0.182,
+    "outcome": "confirmed",
+    "action": "consent",
+    "held_back": "",
+    "promise": {
+     "status": "unclear",
+     "issue": "no_date",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "question",
+     "recorded_after_answer": null
+    }
+   }
+  },
+  {
+   "id": "vn-21",
+   "lang": "english",
+   "noise": "light",
+   "reference": "Two cartons of noodles did not come. I will pay for the rest on Friday.",
+   "expected": "disputed",
+   "expected_promise": {
+    "status": "unclear",
+    "issue": "no_amount"
+   },
+   "spitch": {
+    "transcript": "two katons of noodles did not come i will pay for the rest on friday",
+    "status": "ok",
+    "tried": [
+     "spitch"
+    ],
+    "wer": 0.067,
+    "outcome": "disputed",
+    "action": "flag_dispute",
+    "held_back": "",
+    "promise": {
+     "status": "unclear",
+     "issue": "ambiguous_amount",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "question",
+     "recorded_after_answer": null
+    }
+   },
+   "muse": {
+    "transcript": "two cartons of noodles did not come. I will pay for the rest on Friday.",
+    "status": "ok",
+    "tried": [
+     "muse"
+    ],
+    "wer": 0.0,
+    "outcome": "disputed",
+    "action": "flag_dispute",
+    "held_back": "",
+    "promise": {
+     "status": "unclear",
+     "issue": "no_amount",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "question",
+     "recorded_after_answer": null
+    }
+   },
+   "router": {
+    "transcript": "two cartons of noodles did not come. I will pay for the rest on Friday.",
+    "status": "ok",
+    "tried": [
+     "muse:ok"
+    ],
+    "wer": 0.0,
+    "outcome": "disputed",
+    "action": "flag_dispute",
+    "held_back": "",
+    "promise": {
+     "status": "unclear",
+     "issue": "no_amount",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "question",
+     "recorded_after_answer": null
+    }
+   },
+   "spitch/no-hint": {
+    "transcript": "two katons of noodles did not come i will pay for the rest on friday",
+    "status": "ok",
+    "tried": [
+     "spitch"
+    ],
+    "wer": 0.067,
+    "outcome": "disputed",
+    "action": "flag_dispute",
+    "held_back": "",
+    "promise": {
+     "status": "unclear",
+     "issue": "ambiguous_amount",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "question",
+     "recorded_after_answer": null
+    }
+   },
+   "muse/no-hint": {
+    "transcript": "two cartons of noodles did not come. I will pay for the rest on Friday.",
+    "status": "ok",
+    "tried": [
+     "muse"
+    ],
+    "wer": 0.0,
+    "outcome": "disputed",
+    "action": "flag_dispute",
+    "held_back": "",
+    "promise": {
+     "status": "unclear",
+     "issue": "no_amount",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "question",
+     "recorded_after_answer": null
+    }
+   },
+   "router/no-hint": {
+    "transcript": "two katons of noodles did not come i will pay for the rest on friday",
+    "status": "ok",
+    "tried": [
+     "spitch:ok"
+    ],
+    "wer": 0.067,
+    "outcome": "disputed",
+    "action": "flag_dispute",
+    "held_back": "",
+    "promise": {
+     "status": "unclear",
+     "issue": "ambiguous_amount",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "question",
+     "recorded_after_answer": null
+    }
+   }
+  },
+  {
+   "id": "vn-22",
+   "lang": "english",
+   "noise": "heavy",
+   "reference": "Received in full, thank you very much.",
+   "expected": "confirmed",
+   "expected_promise": {
+    "status": "none"
+   },
+   "spitch": {
+    "transcript": "received in full thank you very much",
+    "status": "ok",
+    "tried": [
+     "spitch"
+    ],
+    "wer": 0.0,
+    "outcome": "confirmed",
+    "action": "consent",
+    "held_back": "",
+    "promise": {
+     "status": "none",
+     "issue": "",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "",
+     "recorded_after_answer": null
+    }
+   },
+   "muse": {
+    "transcript": "received in full thank you very much",
+    "status": "ok",
+    "tried": [
+     "muse"
+    ],
+    "wer": 0.0,
+    "outcome": "confirmed",
+    "action": "consent",
+    "held_back": "",
+    "promise": {
+     "status": "none",
+     "issue": "",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "",
+     "recorded_after_answer": null
+    }
+   },
+   "router": {
+    "transcript": "received in full thank you very much",
+    "status": "ok",
+    "tried": [
+     "muse:ok"
+    ],
+    "wer": 0.0,
+    "outcome": "confirmed",
+    "action": "consent",
+    "held_back": "",
+    "promise": {
+     "status": "none",
+     "issue": "",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "",
+     "recorded_after_answer": null
+    }
+   },
+   "spitch/no-hint": {
+    "transcript": "received in full thank you very much",
+    "status": "ok",
+    "tried": [
+     "spitch"
+    ],
+    "wer": 0.0,
+    "outcome": "confirmed",
+    "action": "consent",
+    "held_back": "",
+    "promise": {
+     "status": "none",
+     "issue": "",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "",
+     "recorded_after_answer": null
+    }
+   },
+   "muse/no-hint": {
+    "transcript": "received in full, thank you very much.",
+    "status": "ok",
+    "tried": [
+     "muse"
+    ],
+    "wer": 0.0,
+    "outcome": "confirmed",
+    "action": "consent",
+    "held_back": "",
+    "promise": {
+     "status": "none",
+     "issue": "",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "",
+     "recorded_after_answer": null
+    }
+   },
+   "router/no-hint": {
+    "transcript": "received in full thank you very much",
+    "status": "ok",
+    "tried": [
+     "spitch:ok"
+    ],
+    "wer": 0.0,
+    "outcome": "confirmed",
+    "action": "consent",
+    "held_back": "",
+    "promise": {
+     "status": "none",
+     "issue": "",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "",
+     "recorded_after_answer": null
+    }
+   }
+  },
+  {
+   "id": "vn-23",
+   "lang": "english",
+   "noise": "light",
+   "reference": "My boy collected it. I have not counted it yet.",
+   "expected": "unclear",
+   "expected_promise": {
+    "status": "none"
+   },
+   "spitch": {
+    "transcript": "my boy collected it i have not counted it yet",
+    "status": "ok",
+    "tried": [
+     "spitch"
+    ],
+    "wer": 0.0,
+    "outcome": "unclear",
+    "action": "clarify",
+    "held_back": "",
+    "promise": {
+     "status": "none",
+     "issue": "",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "",
+     "recorded_after_answer": null
+    }
+   },
+   "muse": {
+    "transcript": "my boy collected it. I have not counted it yet",
+    "status": "ok",
+    "tried": [
+     "muse"
+    ],
+    "wer": 0.0,
+    "outcome": "unclear",
+    "action": "clarify",
+    "held_back": "",
+    "promise": {
+     "status": "none",
+     "issue": "",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "",
+     "recorded_after_answer": null
+    }
+   },
+   "router": {
+    "transcript": "my boy collected it. I have not counted it yet",
+    "status": "ok",
+    "tried": [
+     "muse:ok"
+    ],
+    "wer": 0.0,
+    "outcome": "unclear",
+    "action": "clarify",
+    "held_back": "",
+    "promise": {
+     "status": "none",
+     "issue": "",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "",
+     "recorded_after_answer": null
+    }
+   },
+   "spitch/no-hint": {
+    "transcript": "my boy collected it i have not counted it yet",
+    "status": "ok",
+    "tried": [
+     "spitch"
+    ],
+    "wer": 0.0,
+    "outcome": "unclear",
+    "action": "clarify",
+    "held_back": "",
+    "promise": {
+     "status": "none",
+     "issue": "",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "",
+     "recorded_after_answer": null
+    }
+   },
+   "muse/no-hint": {
+    "transcript": "My boy collected it. I have not counted it yet.",
+    "status": "ok",
+    "tried": [
+     "muse"
+    ],
+    "wer": 0.0,
+    "outcome": "unclear",
+    "action": "clarify",
+    "held_back": "",
+    "promise": {
+     "status": "none",
+     "issue": "",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "",
+     "recorded_after_answer": null
+    }
+   },
+   "router/no-hint": {
+    "transcript": "my boy collected it i have not counted it yet",
+    "status": "ok",
+    "tried": [
+     "spitch:ok"
+    ],
+    "wer": 0.0,
+    "outcome": "unclear",
+    "action": "clarify",
+    "held_back": "",
+    "promise": {
+     "status": "none",
+     "issue": "",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "",
+     "recorded_after_answer": null
+    }
+   }
+  },
+  {
+   "id": "vn-24",
+   "lang": "pidgin",
+   "noise": "light",
+   "reference": "Everything complete. I go pay 20k tomorrow.",
+   "expected": "confirmed",
+   "expected_promise": {
+    "status": "promise",
+    "amount_kobo": 2000000,
+    "due_on": "2026-10-27"
+   },
+   "spitch": {
+    "transcript": "everything complete i go pay 20k tomorrow",
+    "status": "ok",
+    "tried": [
+     "spitch"
+    ],
+    "wer": 0.0,
+    "outcome": "confirmed",
+    "action": "consent",
+    "held_back": "",
+    "promise": {
+     "status": "promise",
+     "issue": "",
+     "amount_kobo": 2000000,
+     "due_on": "2026-10-27",
+     "sent": "readback",
+     "recorded_after_answer": true
+    }
+   },
+   "muse": {
+    "transcript": "everything complete i go pay twenty k tomorrow",
+    "status": "ok",
+    "tried": [
+     "muse"
+    ],
+    "wer": 0.286,
+    "outcome": "confirmed",
+    "action": "consent",
+    "held_back": "",
+    "promise": {
+     "status": "promise",
+     "issue": "",
+     "amount_kobo": 2000000,
+     "due_on": "2026-10-27",
+     "sent": "readback",
+     "recorded_after_answer": true
+    }
+   },
+   "router": {
+    "transcript": "everything complete i go pay 20k tomorrow",
+    "status": "ok",
+    "tried": [
+     "spitch:ok"
+    ],
+    "wer": 0.0,
+    "outcome": "confirmed",
+    "action": "consent",
+    "held_back": "",
+    "promise": {
+     "status": "promise",
+     "issue": "",
+     "amount_kobo": 2000000,
+     "due_on": "2026-10-27",
+     "sent": "readback",
+     "recorded_after_answer": true
+    }
+   },
+   "spitch/no-hint": {
+    "transcript": "everything complete i go pay 20k tomorrow",
+    "status": "ok",
+    "tried": [
+     "spitch"
+    ],
+    "wer": 0.0,
+    "outcome": "confirmed",
+    "action": "consent",
+    "held_back": "",
+    "promise": {
+     "status": "promise",
+     "issue": "",
+     "amount_kobo": 2000000,
+     "due_on": "2026-10-27",
+     "sent": "readback",
+     "recorded_after_answer": true
+    }
+   },
+   "muse/no-hint": {
+    "transcript": "everything complete, I go pay twenty K tomorrow.",
+    "status": "ok",
+    "tried": [
+     "muse"
+    ],
+    "wer": 0.286,
+    "outcome": "confirmed",
+    "action": "consent",
+    "held_back": "",
+    "promise": {
+     "status": "promise",
+     "issue": "",
+     "amount_kobo": 2000000,
+     "due_on": "2026-10-27",
+     "sent": "readback",
+     "recorded_after_answer": true
+    }
+   },
+   "router/no-hint": {
+    "transcript": "everything complete i go pay 20k tomorrow",
+    "status": "ok",
+    "tried": [
+     "spitch:ok"
+    ],
+    "wer": 0.0,
+    "outcome": "confirmed",
+    "action": "consent",
+    "held_back": "",
+    "promise": {
+     "status": "promise",
+     "issue": "",
+     "amount_kobo": 2000000,
+     "due_on": "2026-10-27",
+     "sent": "readback",
+     "recorded_after_answer": true
+    }
+   }
+  },
+  {
+   "id": "vn-25",
+   "lang": "pidgin",
+   "noise": "heavy",
+   "reference": "Make I pay 15,000 for Friday.",
+   "expected": "unclear",
+   "expected_promise": {
+    "status": "promise",
+    "amount_kobo": 1500000,
+    "due_on": "2026-10-30"
+   },
+   "spitch": {
+    "transcript": "make i pay fifteen thousand for friday",
+    "status": "ok",
+    "tried": [
+     "spitch"
+    ],
+    "wer": 0.143,
+    "outcome": "unrelated",
+    "action": "clarify",
+    "held_back": "",
+    "promise": {
+     "status": "promise",
+     "issue": "",
+     "amount_kobo": 1500000,
+     "due_on": "2026-10-30",
+     "sent": "held",
+     "recorded_after_answer": null
+    }
+   },
+   "muse": {
+    "transcript": "Make I pay fifteen thousand for Friday.",
+    "status": "ok",
+    "tried": [
+     "muse"
+    ],
+    "wer": 0.143,
+    "outcome": "unrelated",
+    "action": "clarify",
+    "held_back": "",
+    "promise": {
+     "status": "promise",
+     "issue": "",
+     "amount_kobo": 1500000,
+     "due_on": "2026-10-30",
+     "sent": "held",
+     "recorded_after_answer": null
+    }
+   },
+   "router": {
+    "transcript": "make i pay fifteen thousand for friday",
+    "status": "ok",
+    "tried": [
+     "spitch:ok"
+    ],
+    "wer": 0.143,
+    "outcome": "unrelated",
+    "action": "clarify",
+    "held_back": "",
+    "promise": {
+     "status": "promise",
+     "issue": "",
+     "amount_kobo": 1500000,
+     "due_on": "2026-10-30",
+     "sent": "held",
+     "recorded_after_answer": null
+    }
+   },
+   "spitch/no-hint": {
+    "transcript": "make i pay fifteen thousand for friday",
+    "status": "ok",
+    "tried": [
+     "spitch"
+    ],
+    "wer": 0.143,
+    "outcome": "unrelated",
+    "action": "clarify",
+    "held_back": "",
+    "promise": {
+     "status": "promise",
+     "issue": "",
+     "amount_kobo": 1500000,
+     "due_on": "2026-10-30",
+     "sent": "held",
+     "recorded_after_answer": null
+    }
+   },
+   "muse/no-hint": {
+    "transcript": "make I pay fifteen thousand for Friday.",
+    "status": "ok",
+    "tried": [
+     "muse"
+    ],
+    "wer": 0.143,
+    "outcome": "unrelated",
+    "action": "clarify",
+    "held_back": "",
+    "promise": {
+     "status": "promise",
+     "issue": "",
+     "amount_kobo": 1500000,
+     "due_on": "2026-10-30",
+     "sent": "held",
+     "recorded_after_answer": null
+    }
+   },
+   "router/no-hint": {
+    "transcript": "make i pay fifteen thousand for friday",
+    "status": "ok",
+    "tried": [
+     "spitch:ok"
+    ],
+    "wer": 0.143,
+    "outcome": "unrelated",
+    "action": "clarify",
+    "held_back": "",
+    "promise": {
+     "status": "promise",
+     "issue": "",
+     "amount_kobo": 1500000,
+     "due_on": "2026-10-30",
+     "sent": "held",
+     "recorded_after_answer": null
+    }
+   }
+  },
+  {
+   "id": "vn-26",
+   "lang": "pidgin",
+   "noise": "none",
+   "reference": "Goods don land. I go pay you twenty thousand next tomorrow.",
+   "expected": "confirmed",
+   "expected_promise": {
+    "status": "promise",
+    "amount_kobo": 2000000,
+    "due_on": "2026-10-28"
+   },
+   "spitch": {
+    "transcript": "good don land i go pay you twenty thousand next tomorrow",
+    "status": "ok",
+    "tried": [
+     "spitch"
+    ],
+    "wer": 0.091,
+    "outcome": "unclear",
+    "action": "clarify",
+    "held_back": "",
+    "promise": {
+     "status": "promise",
+     "issue": "",
+     "amount_kobo": 2000000,
+     "due_on": "2026-10-28",
+     "sent": "held",
+     "recorded_after_answer": null
+    }
+   },
+   "muse": {
+    "transcript": "Goldstone Land I go pay you twenty thousand next tomorrow.",
+    "status": "ok",
+    "tried": [
+     "muse"
+    ],
+    "wer": 0.182,
+    "outcome": "unrelated",
+    "action": "clarify",
+    "held_back": "",
+    "promise": {
+     "status": "promise",
+     "issue": "",
+     "amount_kobo": 2000000,
+     "due_on": "2026-10-28",
+     "sent": "held",
+     "recorded_after_answer": null
+    }
+   },
+   "router": {
+    "transcript": "good don land i go pay you twenty thousand next tomorrow",
+    "status": "ok",
+    "tried": [
+     "spitch:ok"
+    ],
+    "wer": 0.091,
+    "outcome": "unclear",
+    "action": "clarify",
+    "held_back": "",
+    "promise": {
+     "status": "promise",
+     "issue": "",
+     "amount_kobo": 2000000,
+     "due_on": "2026-10-28",
+     "sent": "held",
+     "recorded_after_answer": null
+    }
+   },
+   "spitch/no-hint": {
+    "transcript": "good don land i go pay you twenty thousand next tomorrow",
+    "status": "ok",
+    "tried": [
+     "spitch"
+    ],
+    "wer": 0.091,
+    "outcome": "unclear",
+    "action": "clarify",
+    "held_back": "",
+    "promise": {
+     "status": "promise",
+     "issue": "",
+     "amount_kobo": 2000000,
+     "due_on": "2026-10-28",
+     "sent": "held",
+     "recorded_after_answer": null
+    }
+   },
+   "muse/no-hint": {
+    "transcript": "Goldstoneland, I go pay you twenty thousand next tomorrow.",
+    "status": "ok",
+    "tried": [
+     "muse"
+    ],
+    "wer": 0.273,
+    "outcome": "unrelated",
+    "action": "clarify",
+    "held_back": "",
+    "promise": {
+     "status": "promise",
+     "issue": "",
+     "amount_kobo": 2000000,
+     "due_on": "2026-10-28",
+     "sent": "held",
+     "recorded_after_answer": null
+    }
+   },
+   "router/no-hint": {
+    "transcript": "good don land i go pay you twenty thousand next tomorrow",
+    "status": "ok",
+    "tried": [
+     "spitch:ok"
+    ],
+    "wer": 0.091,
+    "outcome": "unclear",
+    "action": "clarify",
+    "held_back": "",
+    "promise": {
+     "status": "promise",
+     "issue": "",
+     "amount_kobo": 2000000,
+     "due_on": "2026-10-28",
+     "sent": "held",
+     "recorded_after_answer": null
+    }
+   }
+  },
+  {
+   "id": "vn-27",
+   "lang": "pidgin",
+   "noise": "light",
+   "reference": "Sugar no reach o, the rest don land.",
+   "expected": "partial",
+   "expected_promise": {
+    "status": "none"
+   },
+   "spitch": {
+    "transcript": "sugar no reach of the rest online",
+    "status": "ok",
+    "tried": [
+     "spitch"
+    ],
+    "wer": 0.375,
+    "outcome": "disputed",
+    "action": "flag_dispute",
+    "held_back": "",
+    "promise": {
+     "status": "none",
+     "issue": "",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "",
+     "recorded_after_answer": null
+    }
+   },
+   "muse": {
+    "transcript": "Sugar no reach where the rest don't land.",
+    "status": "ok",
+    "tried": [
+     "muse"
+    ],
+    "wer": 0.25,
+    "outcome": "partial",
+    "action": "flag_dispute",
+    "held_back": "",
+    "promise": {
+     "status": "none",
+     "issue": "",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "",
+     "recorded_after_answer": null
+    }
+   },
+   "router": {
+    "transcript": "sugar no reach of the rest online",
+    "status": "ok",
+    "tried": [
+     "spitch:ok"
+    ],
+    "wer": 0.375,
+    "outcome": "disputed",
+    "action": "flag_dispute",
+    "held_back": "",
+    "promise": {
+     "status": "none",
+     "issue": "",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "",
+     "recorded_after_answer": null
+    }
+   },
+   "spitch/no-hint": {
+    "transcript": "sugar norwicho di rest onland",
+    "status": "ok",
+    "tried": [
+     "spitch"
+    ],
+    "wer": 0.75,
+    "outcome": "partial",
+    "action": "flag_dispute",
+    "held_back": "",
+    "promise": {
+     "status": "none",
+     "issue": "",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "",
+     "recorded_after_answer": null
+    }
+   },
+   "muse/no-hint": {
+    "transcript": "Sugar no reach where the rest don land.",
+    "status": "ok",
+    "tried": [
+     "muse"
+    ],
+    "wer": 0.125,
+    "outcome": "partial",
+    "action": "flag_dispute",
+    "held_back": "",
+    "promise": {
+     "status": "none",
+     "issue": "",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "",
+     "recorded_after_answer": null
+    }
+   },
+   "router/no-hint": {
+    "transcript": "sugar norwicho di rest onland",
+    "status": "ok",
+    "tried": [
+     "spitch:ok"
+    ],
+    "wer": 0.75,
+    "outcome": "partial",
+    "action": "flag_dispute",
+    "held_back": "",
+    "promise": {
+     "status": "none",
+     "issue": "",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "",
+     "recorded_after_answer": null
+    }
+   }
+  },
+  {
+   "id": "vn-28",
+   "lang": "pidgin",
+   "noise": "light",
+   "reference": "Everything reach. I go pay you Friday.",
+   "expected": "confirmed",
+   "expected_promise": {
+    "status": "unclear",
+    "issue": "no_amount"
+   },
+   "spitch": {
+    "transcript": "everything rich i go pay you friday",
+    "status": "ok",
+    "tried": [
+     "spitch"
+    ],
+    "wer": 0.143,
+    "outcome": "confirmed",
+    "action": "consent",
+    "held_back": "",
+    "promise": {
+     "status": "unclear",
+     "issue": "no_amount",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "question",
+     "recorded_after_answer": null
+    }
+   },
+   "muse": {
+    "transcript": "Everything rich, i go pay you Friday",
+    "status": "ok",
+    "tried": [
+     "muse"
+    ],
+    "wer": 0.143,
+    "outcome": "confirmed",
+    "action": "consent",
+    "held_back": "",
+    "promise": {
+     "status": "unclear",
+     "issue": "no_amount",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "question",
+     "recorded_after_answer": null
+    }
+   },
+   "router": {
+    "transcript": "everything rich i go pay you friday",
+    "status": "ok",
+    "tried": [
+     "spitch:ok"
+    ],
+    "wer": 0.143,
+    "outcome": "confirmed",
+    "action": "consent",
+    "held_back": "",
+    "promise": {
+     "status": "unclear",
+     "issue": "no_amount",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "question",
+     "recorded_after_answer": null
+    }
+   },
+   "spitch/no-hint": {
+    "transcript": "everything rich i go pay you friday",
+    "status": "ok",
+    "tried": [
+     "spitch"
+    ],
+    "wer": 0.143,
+    "outcome": "confirmed",
+    "action": "consent",
+    "held_back": "",
+    "promise": {
+     "status": "unclear",
+     "issue": "no_amount",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "question",
+     "recorded_after_answer": null
+    }
+   },
+   "muse/no-hint": {
+    "transcript": "everything rich i go I go pay you Friday.",
+    "status": "ok",
+    "tried": [
+     "muse"
+    ],
+    "wer": 0.429,
+    "outcome": "confirmed",
+    "action": "consent",
+    "held_back": "",
+    "promise": {
+     "status": "unclear",
+     "issue": "no_amount",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "question",
+     "recorded_after_answer": null
+    }
+   },
+   "router/no-hint": {
+    "transcript": "everything rich i go pay you friday",
+    "status": "ok",
+    "tried": [
+     "spitch:ok"
+    ],
+    "wer": 0.143,
+    "outcome": "confirmed",
+    "action": "consent",
+    "held_back": "",
+    "promise": {
+     "status": "unclear",
+     "issue": "no_amount",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "question",
+     "recorded_after_answer": null
+    }
+   }
+  },
+  {
+   "id": "vn-29",
+   "lang": "pidgin",
+   "noise": "heavy",
+   "reference": "Una short me two carton of noodles.",
+   "expected": "disputed",
+   "expected_promise": {
+    "status": "none"
+   },
+   "spitch": {
+    "transcript": "but not shot mean to carton of nudus",
+    "status": "ok",
+    "tried": [
+     "spitch"
+    ],
+    "wer": 0.857,
+    "outcome": "unclear",
+    "action": "clarify",
+    "held_back": "",
+    "promise": {
+     "status": "none",
+     "issue": "",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "",
+     "recorded_after_answer": null
+    }
+   },
+   "muse": {
+    "transcript": "When I shot me two carton of noodles,",
+    "status": "ok",
+    "tried": [
+     "muse"
+    ],
+    "wer": 0.429,
+    "outcome": "unclear",
+    "action": "clarify",
+    "held_back": "",
+    "promise": {
+     "status": "none",
+     "issue": "",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "",
+     "recorded_after_answer": null
+    }
+   },
+   "router": {
+    "transcript": "but not shot mean to carton of nudus",
+    "status": "ok",
+    "tried": [
+     "spitch:ok"
+    ],
+    "wer": 0.857,
+    "outcome": "unclear",
+    "action": "clarify",
+    "held_back": "",
+    "promise": {
+     "status": "none",
+     "issue": "",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "",
+     "recorded_after_answer": null
+    }
+   },
+   "spitch/no-hint": {
+    "transcript": "bunashot mini suka tonovnudur",
+    "status": "ok",
+    "tried": [
+     "spitch"
+    ],
+    "wer": 1.0,
+    "outcome": "unclear",
+    "action": "clarify",
+    "held_back": "",
+    "promise": {
+     "status": "none",
+     "issue": "",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "",
+     "recorded_after_answer": null
+    }
+   },
+   "muse/no-hint": {
+    "transcript": "When I shot me two carton of noodles",
+    "status": "ok",
+    "tried": [
+     "muse"
+    ],
+    "wer": 0.429,
+    "outcome": "unclear",
+    "action": "clarify",
+    "held_back": "",
+    "promise": {
+     "status": "none",
+     "issue": "",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "",
+     "recorded_after_answer": null
+    }
+   },
+   "router/no-hint": {
+    "transcript": "bunashot mini suka tonovnudur",
+    "status": "ok",
+    "tried": [
+     "spitch:ok"
+    ],
+    "wer": 1.0,
+    "outcome": "unclear",
+    "action": "clarify",
+    "held_back": "",
+    "promise": {
+     "status": "none",
+     "issue": "",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "",
+     "recorded_after_answer": null
+    }
+   }
+  },
+  {
+   "id": "vn-30",
+   "lang": "pidgin",
+   "noise": "light",
+   "reference": "I don pay the money yesterday, check am.",
+   "expected": "unclear",
+   "expected_promise": {
+    "status": "paid_claim"
+   },
+   "spitch": {
+    "transcript": "i don pay di money yesterday check am",
+    "status": "ok",
+    "tried": [
+     "spitch"
+    ],
+    "wer": 0.125,
+    "outcome": "unclear",
+    "action": "clarify",
+    "held_back": "",
+    "promise": {
+     "status": "paid_claim",
+     "issue": "",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "",
+     "recorded_after_answer": null
+    }
+   },
+   "muse": {
+    "transcript": "I don't pay the money yesterday check calm.",
+    "status": "ok",
+    "tried": [
+     "muse"
+    ],
+    "wer": 0.25,
+    "outcome": "unclear",
+    "action": "clarify",
+    "held_back": "",
+    "promise": {
+     "status": "unclear",
+     "issue": "no_amount",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "held",
+     "recorded_after_answer": null
+    }
+   },
+   "router": {
+    "transcript": "i don pay di money yesterday check am",
+    "status": "ok",
+    "tried": [
+     "spitch:ok"
+    ],
+    "wer": 0.125,
+    "outcome": "unclear",
+    "action": "clarify",
+    "held_back": "",
+    "promise": {
+     "status": "paid_claim",
+     "issue": "",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "",
+     "recorded_after_answer": null
+    }
+   },
+   "spitch/no-hint": {
+    "transcript": "i don pay di money yesterday check am",
+    "status": "ok",
+    "tried": [
+     "spitch"
+    ],
+    "wer": 0.125,
+    "outcome": "unclear",
+    "action": "clarify",
+    "held_back": "",
+    "promise": {
+     "status": "paid_claim",
+     "issue": "",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "",
+     "recorded_after_answer": null
+    }
+   },
+   "muse/no-hint": {
+    "transcript": "i don't pay the money yesterday check com.",
+    "status": "ok",
+    "tried": [
+     "muse"
+    ],
+    "wer": 0.25,
+    "outcome": "unrelated",
+    "action": "clarify",
+    "held_back": "",
+    "promise": {
+     "status": "unclear",
+     "issue": "no_amount",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "held",
+     "recorded_after_answer": null
+    }
+   },
+   "router/no-hint": {
+    "transcript": "i don pay di money yesterday check am",
+    "status": "ok",
+    "tried": [
+     "spitch:ok"
+    ],
+    "wer": 0.125,
+    "outcome": "unclear",
+    "action": "clarify",
+    "held_back": "",
+    "promise": {
+     "status": "paid_claim",
+     "issue": "",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "",
+     "recorded_after_answer": null
+    }
+   }
+  },
+  {
+   "id": "vn-31",
+   "lang": "yoruba",
+   "noise": "light",
+   "reference": "Gbogbo ẹrù ti dé. Màá san ẹgbẹ̀rún mẹ́wàá náírà ní ọ̀la.",
+   "expected": "confirmed",
+   "expected_promise": {
+    "status": "promise",
+    "amount_kobo": 1000000,
+    "due_on": "2026-10-27"
+   },
+   "spitch": {
+    "transcript": "gbogbo eru ti de masan egberun mewarun mewarun",
+    "status": "ok",
+    "tried": [
+     "spitch"
+    ],
+    "wer": 0.857,
+    "outcome": "confirmed",
+    "action": "consent",
+    "held_back": "",
+    "promise": {
+     "status": "unclear",
+     "issue": "ambiguous_amount",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "question",
+     "recorded_after_answer": null
+    }
+   },
+   "muse": {
+    "transcript": "Bogbo eru ti de, mason egberun, méwaanu méwaanu",
+    "status": "ok",
+    "tried": [
+     "muse"
+    ],
+    "wer": 0.929,
+    "outcome": "confirmed",
+    "action": "consent",
+    "held_back": "",
+    "promise": {
+     "status": "none",
+     "issue": "",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "",
+     "recorded_after_answer": null
+    }
+   },
+   "router": {
+    "transcript": "gbogbo eru ti de masan egberun mewarun mewarun",
+    "status": "ok",
+    "tried": [
+     "spitch:ok"
+    ],
+    "wer": 0.857,
+    "outcome": "confirmed",
+    "action": "consent",
+    "held_back": "",
+    "promise": {
+     "status": "unclear",
+     "issue": "ambiguous_amount",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "question",
+     "recorded_after_answer": null
+    }
+   },
+   "spitch/no-hint": {
+    "transcript": "gbogbo eru ti de masan egberun mewarun mewarun",
+    "status": "ok",
+    "tried": [
+     "spitch"
+    ],
+    "wer": 0.857,
+    "outcome": "confirmed",
+    "action": "consent",
+    "held_back": "",
+    "promise": {
+     "status": "unclear",
+     "issue": "ambiguous_amount",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "question",
+     "recorded_after_answer": null
+    }
+   },
+   "muse/no-hint": {
+    "transcript": "Bobo eru ti de, de mason egberun mẹwaanu mẹwaanu",
+    "status": "ok",
+    "tried": [
+     "muse"
+    ],
+    "wer": 0.929,
+    "outcome": "unclear",
+    "action": "clarify",
+    "held_back": "",
+    "promise": {
+     "status": "none",
+     "issue": "",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "",
+     "recorded_after_answer": null
+    }
+   },
+   "router/no-hint": {
+    "transcript": "gbogbo eru ti de masan egberun mewarun mewarun",
+    "status": "ok",
+    "tried": [
+     "spitch:ok"
+    ],
+    "wer": 0.857,
+    "outcome": "confirmed",
+    "action": "consent",
+    "held_back": "",
+    "promise": {
+     "status": "unclear",
+     "issue": "ambiguous_amount",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "question",
+     "recorded_after_answer": null
+    }
+   }
+  },
+  {
+   "id": "vn-32",
+   "lang": "mixed",
+   "noise": "light",
+   "reference": "Everything ti dé. Màá san twenty thousand naira ní Friday.",
+   "expected": "confirmed",
+   "expected_promise": {
+    "status": "promise",
+    "amount_kobo": 2000000,
+    "due_on": "2026-10-30"
+   },
+   "spitch": {
+    "transcript": "everything ti dé máa san 20,000 náírà ní friday",
+    "status": "ok",
+    "tried": [
+     "spitch"
+    ],
+    "wer": 0.3,
+    "outcome": "confirmed",
+    "action": "consent",
+    "held_back": "",
+    "promise": {
+     "status": "promise",
+     "issue": "",
+     "amount_kobo": 2000000,
+     "due_on": "2026-10-30",
+     "sent": "readback",
+     "recorded_after_answer": true
+    }
+   },
+   "muse": {
+    "transcript": "everything today marsan twenty thousand naira ni Friday.",
+    "status": "ok",
+    "tried": [
+     "muse"
+    ],
+    "wer": 0.5,
+    "outcome": "unclear",
+    "action": "clarify",
+    "held_back": "",
+    "promise": {
+     "status": "none",
+     "issue": "",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "",
+     "recorded_after_answer": null
+    }
+   },
+   "router": {
+    "transcript": "everything ti dé máa san 20,000 náírà ní friday",
+    "status": "ok",
+    "tried": [
+     "spitch:ok"
+    ],
+    "wer": 0.3,
+    "outcome": "confirmed",
+    "action": "consent",
+    "held_back": "",
+    "promise": {
+     "status": "promise",
+     "issue": "",
+     "amount_kobo": 2000000,
+     "due_on": "2026-10-30",
+     "sent": "readback",
+     "recorded_after_answer": true
+    }
+   },
+   "spitch/no-hint": {
+    "transcript": "everything ti dé máa san 20,000 náírà ní friday",
+    "status": "ok",
+    "tried": [
+     "spitch"
+    ],
+    "wer": 0.3,
+    "outcome": "confirmed",
+    "action": "consent",
+    "held_back": "",
+    "promise": {
+     "status": "promise",
+     "issue": "",
+     "amount_kobo": 2000000,
+     "due_on": "2026-10-30",
+     "sent": "readback",
+     "recorded_after_answer": true
+    }
+   },
+   "muse/no-hint": {
+    "transcript": "everything today mason twenty thousand naira ni Friday.",
+    "status": "ok",
+    "tried": [
+     "muse"
+    ],
+    "wer": 0.5,
+    "outcome": "unclear",
+    "action": "clarify",
+    "held_back": "",
+    "promise": {
+     "status": "none",
+     "issue": "",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "",
+     "recorded_after_answer": null
+    }
+   },
+   "router/no-hint": {
+    "transcript": "everything ti dé máa san 20,000 náírà ní friday",
+    "status": "ok",
+    "tried": [
+     "spitch:ok"
+    ],
+    "wer": 0.3,
+    "outcome": "confirmed",
+    "action": "consent",
+    "held_back": "",
+    "promise": {
+     "status": "promise",
+     "issue": "",
+     "amount_kobo": 2000000,
+     "due_on": "2026-10-30",
+     "sent": "readback",
+     "recorded_after_answer": true
+    }
+   }
+  },
+  {
+   "id": "vn-33",
+   "lang": "yoruba",
+   "noise": "heavy",
+   "reference": "Gbogbo ẹ̀ dé àyàfi sugar. Sugar kò dé rárá.",
+   "expected": "partial",
+   "expected_promise": {
+    "status": "none"
+   },
+   "spitch": {
+    "transcript": "gbogbo ẹdẹ àyà fi súgà súgà kò dé rárá",
+    "status": "ok",
+    "tried": [
+     "spitch"
+    ],
+    "wer": 0.556,
+    "outcome": "partial",
+    "action": "flag_dispute",
+    "held_back": "",
+    "promise": {
+     "status": "none",
+     "issue": "",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "",
+     "recorded_after_answer": null
+    }
+   },
+   "muse": {
+    "transcript": "burdi ayat sugar sugar podera.",
+    "status": "ok",
+    "tried": [
+     "muse"
+    ],
+    "wer": 0.778,
+    "outcome": "unclear",
+    "action": "clarify",
+    "held_back": "",
+    "promise": {
+     "status": "none",
+     "issue": "",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "",
+     "recorded_after_answer": null
+    }
+   },
+   "router": {
+    "transcript": "gbogbo ẹdẹ àyà fi súgà súgà kò dé rárá",
+    "status": "ok",
+    "tried": [
+     "spitch:ok"
+    ],
+    "wer": 0.556,
+    "outcome": "partial",
+    "action": "flag_dispute",
+    "held_back": "",
+    "promise": {
+     "status": "none",
+     "issue": "",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "",
+     "recorded_after_answer": null
+    }
+   },
+   "spitch/no-hint": {
+    "transcript": "gbogbo ẹdẹ àyà fi súgà súgà kò dé rárá",
+    "status": "ok",
+    "tried": [
+     "spitch"
+    ],
+    "wer": 0.556,
+    "outcome": "partial",
+    "action": "flag_dispute",
+    "held_back": "",
+    "promise": {
+     "status": "none",
+     "issue": "",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "",
+     "recorded_after_answer": null
+    }
+   },
+   "muse/no-hint": {
+    "transcript": "weady added to sugar sugar powder",
+    "status": "ok",
+    "tried": [
+     "muse"
+    ],
+    "wer": 0.778,
+    "outcome": "unclear",
+    "action": "clarify",
+    "held_back": "",
+    "promise": {
+     "status": "none",
+     "issue": "",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "",
+     "recorded_after_answer": null
+    }
+   },
+   "router/no-hint": {
+    "transcript": "gbogbo ẹdẹ àyà fi súgà súgà kò dé rárá",
+    "status": "ok",
+    "tried": [
+     "spitch:ok"
+    ],
+    "wer": 0.556,
+    "outcome": "partial",
+    "action": "flag_dispute",
+    "held_back": "",
+    "promise": {
+     "status": "none",
+     "issue": "",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "",
+     "recorded_after_answer": null
+    }
+   }
+  },
+  {
+   "id": "vn-34",
+   "lang": "yoruba",
+   "noise": "none",
+   "reference": "Mi ò tíì kà á, màá pè yín.",
+   "expected": "unclear",
+   "expected_promise": {
+    "status": "none"
+   },
+   "spitch": {
+    "transcript": "mi ò ti kà á máa pè yín",
+    "status": "ok",
+    "tried": [
+     "spitch"
+    ],
+    "wer": 0.25,
+    "outcome": "unclear",
+    "action": "clarify",
+    "held_back": "",
+    "promise": {
+     "status": "none",
+     "issue": "",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "",
+     "recorded_after_answer": null
+    }
+   },
+   "muse": {
+    "transcript": "míọ́tí ká má pé ní.",
+    "status": "ok",
+    "tried": [
+     "muse"
+    ],
+    "wer": 1.0,
+    "outcome": "unclear",
+    "action": "clarify",
+    "held_back": "",
+    "promise": {
+     "status": "none",
+     "issue": "",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "",
+     "recorded_after_answer": null
+    }
+   },
+   "router": {
+    "transcript": "mi ò ti kà á máa pè yín",
+    "status": "ok",
+    "tried": [
+     "spitch:ok"
+    ],
+    "wer": 0.25,
+    "outcome": "unclear",
+    "action": "clarify",
+    "held_back": "",
+    "promise": {
+     "status": "none",
+     "issue": "",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "",
+     "recorded_after_answer": null
+    }
+   },
+   "spitch/no-hint": {
+    "transcript": "mi ò ti kà á máa pè yín",
+    "status": "ok",
+    "tried": [
+     "spitch"
+    ],
+    "wer": 0.25,
+    "outcome": "unclear",
+    "action": "clarify",
+    "held_back": "",
+    "promise": {
+     "status": "none",
+     "issue": "",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "",
+     "recorded_after_answer": null
+    }
+   },
+   "muse/no-hint": {
+    "transcript": "miọ́tímiu",
+    "status": "ok",
+    "tried": [
+     "muse"
+    ],
+    "wer": 1.0,
+    "outcome": "unclear",
+    "action": "clarify",
+    "held_back": "",
+    "promise": {
+     "status": "none",
+     "issue": "",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "",
+     "recorded_after_answer": null
+    }
+   },
+   "router/no-hint": {
+    "transcript": "mi ò ti kà á máa pè yín",
+    "status": "ok",
+    "tried": [
+     "spitch:ok"
+    ],
+    "wer": 0.25,
+    "outcome": "unclear",
+    "action": "clarify",
+    "held_back": "",
+    "promise": {
+     "status": "none",
+     "issue": "",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "",
+     "recorded_after_answer": null
+    }
+   }
+  },
+  {
+   "id": "vn-35",
+   "lang": "yoruba",
+   "noise": "light",
+   "reference": "Gbogbo ẹ̀ pé. Màá san ẹgbẹ̀rún márùn-ún.",
+   "expected": "confirmed",
+   "expected_promise": {
+    "status": "unclear",
+    "issue": "no_date"
+   },
+   "spitch": {
+    "transcript": "gbogbo pé má san ẹgbẹ̀rún márùn-ún",
+    "status": "ok",
+    "tried": [
+     "spitch"
+    ],
+    "wer": 0.222,
+    "outcome": "unclear",
+    "action": "clarify",
+    "held_back": "",
+    "promise": {
+     "status": "unclear",
+     "issue": "no_date",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "held",
+     "recorded_after_answer": null
+    }
+   },
+   "muse": {
+    "transcript": "gbogbo ma egberun marun.",
+    "status": "ok",
+    "tried": [
+     "muse"
+    ],
+    "wer": 0.889,
+    "outcome": "unclear",
+    "action": "clarify",
+    "held_back": "",
+    "promise": {
+     "status": "none",
+     "issue": "",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "",
+     "recorded_after_answer": null
+    }
+   },
+   "router": {
+    "transcript": "gbogbo pé má san ẹgbẹ̀rún márùn-ún",
+    "status": "ok",
+    "tried": [
+     "spitch:ok"
+    ],
+    "wer": 0.222,
+    "outcome": "unclear",
+    "action": "clarify",
+    "held_back": "",
+    "promise": {
+     "status": "unclear",
+     "issue": "no_date",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "held",
+     "recorded_after_answer": null
+    }
+   },
+   "spitch/no-hint": {
+    "transcript": "gbogbo pé má san ẹgbẹ̀rún márùn-ún",
+    "status": "ok",
+    "tried": [
+     "spitch"
+    ],
+    "wer": 0.222,
+    "outcome": "unclear",
+    "action": "clarify",
+    "held_back": "",
+    "promise": {
+     "status": "unclear",
+     "issue": "no_date",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "held",
+     "recorded_after_answer": null
+    }
+   },
+   "muse/no-hint": {
+    "transcript": "gbogbo pẹ̀, ẹgbẹ̀rún marùn.",
+    "status": "ok",
+    "tried": [
+     "muse"
+    ],
+    "wer": 0.667,
+    "outcome": "unclear",
+    "action": "clarify",
+    "held_back": "",
+    "promise": {
+     "status": "none",
+     "issue": "",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "",
+     "recorded_after_answer": null
+    }
+   },
+   "router/no-hint": {
+    "transcript": "gbogbo pé má san ẹgbẹ̀rún márùn-ún",
+    "status": "ok",
+    "tried": [
+     "spitch:ok"
+    ],
+    "wer": 0.222,
+    "outcome": "unclear",
+    "action": "clarify",
+    "held_back": "",
+    "promise": {
+     "status": "unclear",
+     "issue": "no_date",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "held",
+     "recorded_after_answer": null
+    }
+   }
+  },
+  {
+   "id": "vn-36",
+   "lang": "igbo",
+   "noise": "light",
+   "reference": "Ihe niile abịala. Aga m akwụ puku naira iri abụọ echi.",
+   "expected": "confirmed",
+   "expected_promise": {
+    "status": "promise",
+    "amount_kobo": 2000000,
+    "due_on": "2026-10-27"
+   },
+   "spitch": {
+    "transcript": "ihe niile abịala aga m akwụ puku naịra iri abụọ echi",
+    "status": "ok",
+    "tried": [
+     "spitch"
+    ],
+    "wer": 0.091,
+    "outcome": "confirmed",
+    "action": "consent",
+    "held_back": "",
+    "promise": {
+     "status": "promise",
+     "issue": "",
+     "amount_kobo": 2000000,
+     "due_on": "2026-10-27",
+     "sent": "readback",
+     "recorded_after_answer": true
+    }
+   },
+   "muse": {
+    "transcript": "Ihe ni la obiala, aghama akpọpụku naira iri abuo echi.",
+    "status": "ok",
+    "tried": [
+     "muse"
+    ],
+    "wer": 0.636,
+    "outcome": "unclear",
+    "action": "clarify",
+    "held_back": "",
+    "promise": {
+     "status": "none",
+     "issue": "",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "",
+     "recorded_after_answer": null
+    }
+   },
+   "router": {
+    "transcript": "ihe niile abịala aga m akwụ puku naịra iri abụọ echi",
+    "status": "ok",
+    "tried": [
+     "spitch:ok"
+    ],
+    "wer": 0.091,
+    "outcome": "confirmed",
+    "action": "consent",
+    "held_back": "",
+    "promise": {
+     "status": "promise",
+     "issue": "",
+     "amount_kobo": 2000000,
+     "due_on": "2026-10-27",
+     "sent": "readback",
+     "recorded_after_answer": true
+    }
+   },
+   "spitch/no-hint": {
+    "transcript": "ihe niile abịala aga m akwụ puku naịra iri abụọ echi",
+    "status": "ok",
+    "tried": [
+     "spitch"
+    ],
+    "wer": 0.091,
+    "outcome": "confirmed",
+    "action": "consent",
+    "held_back": "",
+    "promise": {
+     "status": "promise",
+     "issue": "",
+     "amount_kobo": 2000000,
+     "due_on": "2026-10-27",
+     "sent": "readback",
+     "recorded_after_answer": true
+    }
+   },
+   "muse/no-hint": {
+    "transcript": "Ihene la abiala agama akwụkwọ naira naira iri abụọ echi.",
+    "status": "ok",
+    "tried": [
+     "muse"
+    ],
+    "wer": 0.636,
+    "outcome": "unclear",
+    "action": "clarify",
+    "held_back": "",
+    "promise": {
+     "status": "none",
+     "issue": "",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "",
+     "recorded_after_answer": null
+    }
+   },
+   "router/no-hint": {
+    "transcript": "ihe niile abịala aga m akwụ puku naịra iri abụọ echi",
+    "status": "ok",
+    "tried": [
+     "spitch:ok"
+    ],
+    "wer": 0.091,
+    "outcome": "confirmed",
+    "action": "consent",
+    "held_back": "",
+    "promise": {
+     "status": "promise",
+     "issue": "",
+     "amount_kobo": 2000000,
+     "due_on": "2026-10-27",
+     "sent": "readback",
+     "recorded_after_answer": true
+    }
+   }
+  },
+  {
+   "id": "vn-37",
+   "lang": "igbo",
+   "noise": "light",
+   "reference": "Ihe niile bịara ma sugar abịaghị.",
+   "expected": "partial",
+   "expected_promise": {
+    "status": "none"
+   },
+   "spitch": {
+    "transcript": "ihe niile bịara ma shuga abịaghị",
+    "status": "ok",
+    "tried": [
+     "spitch"
+    ],
+    "wer": 0.167,
+    "outcome": "partial",
+    "action": "flag_dispute",
+    "held_back": "",
+    "promise": {
+     "status": "none",
+     "issue": "",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "",
+     "recorded_after_answer": null
+    }
+   },
+   "muse": {
+    "transcript": "inginile darah, mah sugar, abiaahi.",
+    "status": "ok",
+    "tried": [
+     "muse"
+    ],
+    "wer": 0.833,
+    "outcome": "unclear",
+    "action": "clarify",
+    "held_back": "",
+    "promise": {
+     "status": "none",
+     "issue": "",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "",
+     "recorded_after_answer": null
+    }
+   },
+   "router": {
+    "transcript": "ihe niile bịara ma shuga abịaghị",
+    "status": "ok",
+    "tried": [
+     "spitch:ok"
+    ],
+    "wer": 0.167,
+    "outcome": "partial",
+    "action": "flag_dispute",
+    "held_back": "",
+    "promise": {
+     "status": "none",
+     "issue": "",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "",
+     "recorded_after_answer": null
+    }
+   },
+   "spitch/no-hint": {
+    "transcript": "ihe niile bịara ma shuga abịaghị",
+    "status": "ok",
+    "tried": [
+     "spitch"
+    ],
+    "wer": 0.167,
+    "outcome": "partial",
+    "action": "flag_dispute",
+    "held_back": "",
+    "promise": {
+     "status": "none",
+     "issue": "",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "",
+     "recorded_after_answer": null
+    }
+   },
+   "muse/no-hint": {
+    "transcript": "Ini nilai darah, mah sugar abiahi.",
+    "status": "ok",
+    "tried": [
+     "muse"
+    ],
+    "wer": 0.833,
+    "outcome": "unclear",
+    "action": "clarify",
+    "held_back": "",
+    "promise": {
+     "status": "none",
+     "issue": "",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "",
+     "recorded_after_answer": null
+    }
+   },
+   "router/no-hint": {
+    "transcript": "ihe niile bịara ma shuga abịaghị",
+    "status": "ok",
+    "tried": [
+     "spitch:ok"
+    ],
+    "wer": 0.167,
+    "outcome": "partial",
+    "action": "flag_dispute",
+    "held_back": "",
+    "promise": {
+     "status": "none",
+     "issue": "",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "",
+     "recorded_after_answer": null
+    }
+   }
+  },
+  {
+   "id": "vn-38",
+   "lang": "mixed",
+   "noise": "heavy",
+   "reference": "Everything complete. Aga m akwụ fifteen thousand naira on Friday.",
+   "expected": "confirmed",
+   "expected_promise": {
+    "status": "promise",
+    "amount_kobo": 1500000,
+    "due_on": "2026-10-30"
+   },
+   "spitch": {
+    "transcript": "evriting kọmplit a ga m akwụ 15,000 naịra ọn fraịde",
+    "status": "ok",
+    "tried": [
+     "spitch"
+    ],
+    "wer": 0.8,
+    "outcome": "confirmed",
+    "action": "consent",
+    "held_back": "",
+    "promise": {
+     "status": "promise",
+     "issue": "",
+     "amount_kobo": 1500000,
+     "due_on": "2026-10-30",
+     "sent": "readback",
+     "recorded_after_answer": true
+    }
+   },
+   "muse": {
+    "transcript": "everything complete. Aga ma akwu fifteen thousand naira on Friday.",
+    "status": "ok",
+    "tried": [
+     "muse"
+    ],
+    "wer": 0.2,
+    "outcome": "confirmed",
+    "action": "consent",
+    "held_back": "",
+    "promise": {
+     "status": "promise",
+     "issue": "",
+     "amount_kobo": 1500000,
+     "due_on": "2026-10-30",
+     "sent": "readback",
+     "recorded_after_answer": true
+    }
+   },
+   "router": {
+    "transcript": "evriting kọmplit a ga m akwụ 15,000 naịra ọn fraịde",
+    "status": "ok",
+    "tried": [
+     "spitch:ok"
+    ],
+    "wer": 0.8,
+    "outcome": "confirmed",
+    "action": "consent",
+    "held_back": "",
+    "promise": {
+     "status": "promise",
+     "issue": "",
+     "amount_kobo": 1500000,
+     "due_on": "2026-10-30",
+     "sent": "readback",
+     "recorded_after_answer": true
+    }
+   },
+   "spitch/no-hint": {
+    "transcript": "evriting kọmplit a ga m akwụ 15,000 naịra ọn fraịde",
+    "status": "ok",
+    "tried": [
+     "spitch"
+    ],
+    "wer": 0.8,
+    "outcome": "confirmed",
+    "action": "consent",
+    "held_back": "",
+    "promise": {
+     "status": "promise",
+     "issue": "",
+     "amount_kobo": 1500000,
+     "due_on": "2026-10-30",
+     "sent": "readback",
+     "recorded_after_answer": true
+    }
+   },
+   "muse/no-hint": {
+    "transcript": "everything complete. Aga ma aku fifteen fifteen thousand naira, on Friday.",
+    "status": "ok",
+    "tried": [
+     "muse"
+    ],
+    "wer": 0.3,
+    "outcome": "confirmed",
+    "action": "consent",
+    "held_back": "",
+    "promise": {
+     "status": "none",
+     "issue": "",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "",
+     "recorded_after_answer": null
+    }
+   },
+   "router/no-hint": {
+    "transcript": "evriting kọmplit a ga m akwụ 15,000 naịra ọn fraịde",
+    "status": "ok",
+    "tried": [
+     "spitch:ok"
+    ],
+    "wer": 0.8,
+    "outcome": "confirmed",
+    "action": "consent",
+    "held_back": "",
+    "promise": {
+     "status": "promise",
+     "issue": "",
+     "amount_kobo": 1500000,
+     "due_on": "2026-10-30",
+     "sent": "readback",
+     "recorded_after_answer": true
+    }
+   }
+  },
+  {
+   "id": "vn-39",
+   "lang": "igbo",
+   "noise": "none",
+   "reference": "Ka m lee ya anya, m ga-akpọ gị.",
+   "expected": "unclear",
+   "expected_promise": {
+    "status": "none"
+   },
+   "spitch": {
+    "transcript": "ka m lee ya anya m ga-akpọ gị",
+    "status": "ok",
+    "tried": [
+     "spitch"
+    ],
+    "wer": 0.0,
+    "outcome": "unclear",
+    "action": "clarify",
+    "held_back": "",
+    "promise": {
+     "status": "none",
+     "issue": "",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "",
+     "recorded_after_answer": null
+    }
+   },
+   "muse": {
+    "transcript": "Kamle ya anya nya nga akpọgi",
+    "status": "ok",
+    "tried": [
+     "muse"
+    ],
+    "wer": 0.778,
+    "outcome": "unclear",
+    "action": "clarify",
+    "held_back": "",
+    "promise": {
+     "status": "none",
+     "issue": "",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "",
+     "recorded_after_answer": null
+    }
+   },
+   "router": {
+    "transcript": "ka m lee ya anya m ga-akpọ gị",
+    "status": "ok",
+    "tried": [
+     "spitch:ok"
+    ],
+    "wer": 0.0,
+    "outcome": "unclear",
+    "action": "clarify",
+    "held_back": "",
+    "promise": {
+     "status": "none",
+     "issue": "",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "",
+     "recorded_after_answer": null
+    }
+   },
+   "spitch/no-hint": {
+    "transcript": "ka m lee ya anya m ga-akpọ gị",
+    "status": "ok",
+    "tried": [
+     "spitch"
+    ],
+    "wer": 0.0,
+    "outcome": "unclear",
+    "action": "clarify",
+    "held_back": "",
+    "promise": {
+     "status": "none",
+     "issue": "",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "",
+     "recorded_after_answer": null
+    }
+   },
+   "muse/no-hint": {
+    "transcript": "Kamle yaanya nga apọ̀gi,",
+    "status": "ok",
+    "tried": [
+     "muse"
+    ],
+    "wer": 1.0,
+    "outcome": "unclear",
+    "action": "clarify",
+    "held_back": "",
+    "promise": {
+     "status": "none",
+     "issue": "",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "",
+     "recorded_after_answer": null
+    }
+   },
+   "router/no-hint": {
+    "transcript": "ka m lee ya anya m ga-akpọ gị",
+    "status": "ok",
+    "tried": [
+     "spitch:ok"
+    ],
+    "wer": 0.0,
+    "outcome": "unclear",
+    "action": "clarify",
+    "held_back": "",
+    "promise": {
+     "status": "none",
+     "issue": "",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "",
+     "recorded_after_answer": null
+    }
+   }
+  },
+  {
+   "id": "vn-40",
+   "lang": "igbo",
+   "noise": "heavy",
+   "reference": "Ee, anatala m ihe niile.",
+   "expected": "confirmed",
+   "expected_promise": {
+    "status": "none"
+   },
+   "spitch": {
+    "transcript": "a natala ni henili",
+    "status": "ok",
+    "tried": [
+     "spitch"
+    ],
+    "wer": 1.0,
+    "outcome": "confirmed",
+    "action": "clarify",
+    "held_back": "low_confidence",
+    "promise": {
+     "status": "none",
+     "issue": "",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "",
+     "recorded_after_answer": null
+    }
+   },
+   "muse": {
+    "transcript": "Eh anatalamihe nile",
+    "status": "ok",
+    "tried": [
+     "muse"
+    ],
+    "wer": 1.0,
+    "outcome": "confirmed",
+    "action": "consent",
+    "held_back": "",
+    "promise": {
+     "status": "none",
+     "issue": "",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "",
+     "recorded_after_answer": null
+    }
+   },
+   "router": {
+    "transcript": "a natala ni henili",
+    "status": "ok",
+    "tried": [
+     "spitch:ok"
+    ],
+    "wer": 1.0,
+    "outcome": "confirmed",
+    "action": "clarify",
+    "held_back": "low_confidence",
+    "promise": {
+     "status": "none",
+     "issue": "",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "",
+     "recorded_after_answer": null
+    }
+   },
+   "spitch/no-hint": {
+    "transcript": "anatalani henili",
+    "status": "ok",
+    "tried": [
+     "spitch"
+    ],
+    "wer": 1.0,
+    "outcome": "unclear",
+    "action": "clarify",
+    "held_back": "",
+    "promise": {
+     "status": "none",
+     "issue": "",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "",
+     "recorded_after_answer": null
+    }
+   },
+   "muse/no-hint": {
+    "transcript": "Anatala mihe nile?",
+    "status": "ok",
+    "tried": [
+     "muse"
+    ],
+    "wer": 0.8,
+    "outcome": "unclear",
+    "action": "clarify",
+    "held_back": "",
+    "promise": {
+     "status": "none",
+     "issue": "",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "",
+     "recorded_after_answer": null
+    }
+   },
+   "router/no-hint": {
+    "transcript": "anatalani henili",
+    "status": "ok",
+    "tried": [
+     "spitch:ok"
+    ],
+    "wer": 1.0,
+    "outcome": "unclear",
+    "action": "clarify",
+    "held_back": "",
+    "promise": {
+     "status": "none",
+     "issue": "",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "",
+     "recorded_after_answer": null
+    }
+   }
+  },
+  {
+   "id": "vn-41",
+   "lang": "hausa",
+   "noise": "light",
+   "reference": "Duk kayan sun iso. Zan biya naira dubu ashirin gobe.",
+   "expected": "confirmed",
+   "expected_promise": {
+    "status": "promise",
+    "amount_kobo": 2000000,
+    "due_on": "2026-10-27"
+   },
+   "spitch": {
+    "transcript": "duk kayan sun iso zan biya naira dubu ashirin gobe",
+    "status": "ok",
+    "tried": [
+     "spitch"
+    ],
+    "wer": 0.0,
+    "outcome": "confirmed",
+    "action": "consent",
+    "held_back": "",
+    "promise": {
+     "status": "promise",
+     "issue": "",
+     "amount_kobo": 2000000,
+     "due_on": "2026-10-27",
+     "sent": "readback",
+     "recorded_after_answer": true
+    }
+   },
+   "muse": {
+    "transcript": "good canton is would be another",
+    "status": "ok",
+    "tried": [
+     "muse"
+    ],
+    "wer": 1.0,
+    "outcome": "unclear",
+    "action": "clarify",
+    "held_back": "",
+    "promise": {
+     "status": "none",
+     "issue": "",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "",
+     "recorded_after_answer": null
+    }
+   },
+   "router": {
+    "transcript": "duk kayan sun iso zan biya naira dubu ashirin gobe",
+    "status": "ok",
+    "tried": [
+     "spitch:ok"
+    ],
+    "wer": 0.0,
+    "outcome": "confirmed",
+    "action": "consent",
+    "held_back": "",
+    "promise": {
+     "status": "promise",
+     "issue": "",
+     "amount_kobo": 2000000,
+     "due_on": "2026-10-27",
+     "sent": "readback",
+     "recorded_after_answer": true
+    }
+   },
+   "spitch/no-hint": {
+    "transcript": "duk kayan sun iso zan biya naira dubu ashirin gobe",
+    "status": "ok",
+    "tried": [
+     "spitch"
+    ],
+    "wer": 0.0,
+    "outcome": "confirmed",
+    "action": "consent",
+    "held_back": "",
+    "promise": {
+     "status": "promise",
+     "issue": "",
+     "amount_kobo": 2000000,
+     "due_on": "2026-10-27",
+     "sent": "readback",
+     "recorded_after_answer": true
+    }
+   },
+   "muse/no-hint": {
+    "transcript": "The currency is 20,000 rubu ashirin gobe.",
+    "status": "ok",
+    "tried": [
+     "muse"
+    ],
+    "wer": 0.8,
+    "outcome": "unrelated",
+    "action": "clarify",
+    "held_back": "",
+    "promise": {
+     "status": "none",
+     "issue": "",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "",
+     "recorded_after_answer": null
+    }
+   },
+   "router/no-hint": {
+    "transcript": "duk kayan sun iso zan biya naira dubu ashirin gobe",
+    "status": "ok",
+    "tried": [
+     "spitch:ok"
+    ],
+    "wer": 0.0,
+    "outcome": "confirmed",
+    "action": "consent",
+    "held_back": "",
+    "promise": {
+     "status": "promise",
+     "issue": "",
+     "amount_kobo": 2000000,
+     "due_on": "2026-10-27",
+     "sent": "readback",
+     "recorded_after_answer": true
+    }
+   }
+  },
+  {
+   "id": "vn-42",
+   "lang": "hausa",
+   "noise": "light",
+   "reference": "Duk sun iso sai sugar. Sugar bai zo ba.",
+   "expected": "partial",
+   "expected_promise": {
+    "status": "none"
+   },
+   "spitch": {
+    "transcript": "duk sun iso sai shuga shuga bai zo ba",
+    "status": "ok",
+    "tried": [
+     "spitch"
+    ],
+    "wer": 0.222,
+    "outcome": "partial",
+    "action": "flag_dispute",
+    "held_back": "",
+    "promise": {
+     "status": "none",
+     "issue": "",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "",
+     "recorded_after_answer": null
+    }
+   },
+   "muse": {
+    "transcript": "boxing is say sugar. Sugar is over.",
+    "status": "ok",
+    "tried": [
+     "muse"
+    ],
+    "wer": 0.778,
+    "outcome": "unclear",
+    "action": "clarify",
+    "held_back": "",
+    "promise": {
+     "status": "none",
+     "issue": "",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "",
+     "recorded_after_answer": null
+    }
+   },
+   "router": {
+    "transcript": "duk sun iso sai shuga shuga bai zo ba",
+    "status": "ok",
+    "tried": [
+     "spitch:ok"
+    ],
+    "wer": 0.222,
+    "outcome": "partial",
+    "action": "flag_dispute",
+    "held_back": "",
+    "promise": {
+     "status": "none",
+     "issue": "",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "",
+     "recorded_after_answer": null
+    }
+   },
+   "spitch/no-hint": {
+    "transcript": "duk sun iso sai shuga shuga bai zo ba",
+    "status": "ok",
+    "tried": [
+     "spitch"
+    ],
+    "wer": 0.222,
+    "outcome": "partial",
+    "action": "flag_dispute",
+    "held_back": "",
+    "promise": {
+     "status": "none",
+     "issue": "",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "",
+     "recorded_after_answer": null
+    }
+   },
+   "muse/no-hint": {
+    "transcript": "boxing is using sugar. Sugar is over.",
+    "status": "ok",
+    "tried": [
+     "muse"
+    ],
+    "wer": 0.778,
+    "outcome": "unclear",
+    "action": "clarify",
+    "held_back": "",
+    "promise": {
+     "status": "none",
+     "issue": "",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "",
+     "recorded_after_answer": null
+    }
+   },
+   "router/no-hint": {
+    "transcript": "duk sun iso sai shuga shuga bai zo ba",
+    "status": "ok",
+    "tried": [
+     "spitch:ok"
+    ],
+    "wer": 0.222,
+    "outcome": "partial",
+    "action": "flag_dispute",
+    "held_back": "",
+    "promise": {
+     "status": "none",
+     "issue": "",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "",
+     "recorded_after_answer": null
+    }
+   }
+  },
+  {
+   "id": "vn-43",
+   "lang": "mixed",
+   "noise": "light",
+   "reference": "Everything complete. Zan biya fifteen thousand naira ranar Juma'a.",
+   "expected": "confirmed",
+   "expected_promise": {
+    "status": "promise",
+    "amount_kobo": 1500000,
+    "due_on": "2026-10-30"
+   },
+   "spitch": {
+    "transcript": "everything complete zambia fifteen thousand naira ranar juma'a",
+    "status": "ok",
+    "tried": [
+     "spitch"
+    ],
+    "wer": 0.2,
+    "outcome": "confirmed",
+    "action": "consent",
+    "held_back": "",
+    "promise": {
+     "status": "promise",
+     "issue": "",
+     "amount_kobo": 1500000,
+     "due_on": "2026-10-30",
+     "sent": "readback",
+     "recorded_after_answer": true
+    }
+   },
+   "muse": {
+    "transcript": "everything complete. Zambia fifteen thousand naira round of Jumaa.",
+    "status": "ok",
+    "tried": [
+     "muse"
+    ],
+    "wer": 0.5,
+    "outcome": "confirmed",
+    "action": "consent",
+    "held_back": "",
+    "promise": {
+     "status": "promise",
+     "issue": "",
+     "amount_kobo": 1500000,
+     "due_on": "2026-10-30",
+     "sent": "readback",
+     "recorded_after_answer": true
+    }
+   },
+   "router": {
+    "transcript": "everything complete zambia fifteen thousand naira ranar juma'a",
+    "status": "ok",
+    "tried": [
+     "spitch:ok"
+    ],
+    "wer": 0.2,
+    "outcome": "confirmed",
+    "action": "consent",
+    "held_back": "",
+    "promise": {
+     "status": "promise",
+     "issue": "",
+     "amount_kobo": 1500000,
+     "due_on": "2026-10-30",
+     "sent": "readback",
+     "recorded_after_answer": true
+    }
+   },
+   "spitch/no-hint": {
+    "transcript": "everything complete zambia fifteen thousand naira ranar juma'a",
+    "status": "ok",
+    "tried": [
+     "spitch"
+    ],
+    "wer": 0.2,
+    "outcome": "confirmed",
+    "action": "consent",
+    "held_back": "",
+    "promise": {
+     "status": "promise",
+     "issue": "",
+     "amount_kobo": 1500000,
+     "due_on": "2026-10-30",
+     "sent": "readback",
+     "recorded_after_answer": true
+    }
+   },
+   "muse/no-hint": {
+    "transcript": "everything complete. Zambia fifteen thousand Naira round of Jumaa.",
+    "status": "ok",
+    "tried": [
+     "muse"
+    ],
+    "wer": 0.5,
+    "outcome": "confirmed",
+    "action": "consent",
+    "held_back": "",
+    "promise": {
+     "status": "promise",
+     "issue": "",
+     "amount_kobo": 1500000,
+     "due_on": "2026-10-30",
+     "sent": "readback",
+     "recorded_after_answer": true
+    }
+   },
+   "router/no-hint": {
+    "transcript": "everything complete zambia fifteen thousand naira ranar juma'a",
+    "status": "ok",
+    "tried": [
+     "spitch:ok"
+    ],
+    "wer": 0.2,
+    "outcome": "confirmed",
+    "action": "consent",
+    "held_back": "",
+    "promise": {
+     "status": "promise",
+     "issue": "",
+     "amount_kobo": 1500000,
+     "due_on": "2026-10-30",
+     "sent": "readback",
+     "recorded_after_answer": true
+    }
+   }
+  },
+  {
+   "id": "vn-44",
+   "lang": "hausa",
+   "noise": "none",
+   "reference": "Zan duba kayan anjima.",
+   "expected": "unclear",
+   "expected_promise": {
+    "status": "none"
+   },
+   "spitch": {
+    "transcript": "zan duba kayan anjima",
+    "status": "ok",
+    "tried": [
+     "spitch"
+    ],
+    "wer": 0.0,
+    "outcome": "unclear",
+    "action": "clarify",
+    "held_back": "",
+    "promise": {
+     "status": "none",
+     "issue": "",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "",
+     "recorded_after_answer": null
+    }
+   },
+   "muse": {
+    "transcript": "Sudan duba kayan aikin.",
+    "status": "ok",
+    "tried": [
+     "muse"
+    ],
+    "wer": 0.5,
+    "outcome": "unclear",
+    "action": "clarify",
+    "held_back": "",
+    "promise": {
+     "status": "none",
+     "issue": "",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "",
+     "recorded_after_answer": null
+    }
+   },
+   "router": {
+    "transcript": "zan duba kayan anjima",
+    "status": "ok",
+    "tried": [
+     "spitch:ok"
+    ],
+    "wer": 0.0,
+    "outcome": "unclear",
+    "action": "clarify",
+    "held_back": "",
+    "promise": {
+     "status": "none",
+     "issue": "",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "",
+     "recorded_after_answer": null
+    }
+   },
+   "spitch/no-hint": {
+    "transcript": "zan duba kayan anjima",
+    "status": "ok",
+    "tried": [
+     "spitch"
+    ],
+    "wer": 0.0,
+    "outcome": "unclear",
+    "action": "clarify",
+    "held_back": "",
+    "promise": {
+     "status": "none",
+     "issue": "",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "",
+     "recorded_after_answer": null
+    }
+   },
+   "muse/no-hint": {
+    "transcript": "son du ba kayan anjima.",
+    "status": "ok",
+    "tried": [
+     "muse"
+    ],
+    "wer": 0.75,
+    "outcome": "unclear",
+    "action": "clarify",
+    "held_back": "",
+    "promise": {
+     "status": "none",
+     "issue": "",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "",
+     "recorded_after_answer": null
+    }
+   },
+   "router/no-hint": {
+    "transcript": "zan duba kayan anjima",
+    "status": "ok",
+    "tried": [
+     "spitch:ok"
+    ],
+    "wer": 0.0,
+    "outcome": "unclear",
+    "action": "clarify",
+    "held_back": "",
+    "promise": {
+     "status": "none",
+     "issue": "",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "",
+     "recorded_after_answer": null
+    }
+   }
+  },
+  {
+   "id": "vn-45",
+   "lang": "hausa",
+   "noise": "heavy",
+   "reference": "Katan biyu na noodles ba su zo ba.",
+   "expected": "disputed",
+   "expected_promise": {
+    "status": "none"
+   },
+   "spitch": {
+    "transcript": "katan biyu na noodles ba su zo ba",
+    "status": "ok",
+    "tried": [
+     "spitch"
+    ],
+    "wer": 0.0,
+    "outcome": "disputed",
+    "action": "flag_dispute",
+    "held_back": "",
+    "promise": {
+     "status": "none",
+     "issue": "",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "",
+     "recorded_after_answer": null
+    }
+   },
+   "muse": {
+    "transcript": "cutting Noodles burst",
+    "status": "ok",
+    "tried": [
+     "muse"
+    ],
+    "wer": 0.875,
+    "outcome": "disputed",
+    "action": "flag_dispute",
+    "held_back": "",
+    "promise": {
+     "status": "none",
+     "issue": "",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "",
+     "recorded_after_answer": null
+    }
+   },
+   "router": {
+    "transcript": "katan biyu na noodles ba su zo ba",
+    "status": "ok",
+    "tried": [
+     "spitch:ok"
+    ],
+    "wer": 0.0,
+    "outcome": "disputed",
+    "action": "flag_dispute",
+    "held_back": "",
+    "promise": {
+     "status": "none",
+     "issue": "",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "",
+     "recorded_after_answer": null
+    }
+   },
+   "spitch/no-hint": {
+    "transcript": "katan biyu na noodles ba su zo ba",
+    "status": "ok",
+    "tried": [
+     "spitch"
+    ],
+    "wer": 0.0,
+    "outcome": "disputed",
+    "action": "flag_dispute",
+    "held_back": "",
+    "promise": {
+     "status": "none",
+     "issue": "",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "",
+     "recorded_after_answer": null
+    }
+   },
+   "muse/no-hint": {
+    "transcript": "cutting Buna Noodles noodles was",
+    "status": "ok",
+    "tried": [
+     "muse"
+    ],
+    "wer": 0.875,
+    "outcome": "unclear",
+    "action": "clarify",
+    "held_back": "",
+    "promise": {
+     "status": "none",
+     "issue": "",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "",
+     "recorded_after_answer": null
+    }
+   },
+   "router/no-hint": {
+    "transcript": "katan biyu na noodles ba su zo ba",
+    "status": "ok",
+    "tried": [
+     "spitch:ok"
+    ],
+    "wer": 0.0,
+    "outcome": "disputed",
+    "action": "flag_dispute",
+    "held_back": "",
+    "promise": {
+     "status": "none",
+     "issue": "",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "",
+     "recorded_after_answer": null
+    }
+   }
+  },
+  {
+   "id": "vn-46",
+   "lang": "pidgin",
+   "noise": "light",
+   "reference": "Noodles no complete, na 4 carton. I go pay 15,000 Friday for the ones wey land.",
+   "expected": "disputed",
+   "expected_promise": {
+    "status": "promise",
+    "amount_kobo": 1500000,
+    "due_on": "2026-10-30"
+   },
+   "spitch": {
+    "transcript": "noodles no complete na forkerton i go pay 15,000 friday for the ones we land",
+    "status": "ok",
+    "tried": [
+     "spitch"
+    ],
+    "wer": 0.176,
+    "outcome": "disputed",
+    "action": "flag_dispute",
+    "held_back": "",
+    "promise": {
+     "status": "promise",
+     "issue": "",
+     "amount_kobo": 1500000,
+     "due_on": "2026-10-30",
+     "sent": "readback",
+     "recorded_after_answer": true
+    }
+   },
+   "muse": {
+    "transcript": "Noodles no complete, na four carton, I go pay fifteen thousand Friday for the ones we land.",
+    "status": "ok",
+    "tried": [
+     "muse"
+    ],
+    "wer": 0.118,
+    "outcome": "disputed",
+    "action": "flag_dispute",
+    "held_back": "",
+    "promise": {
+     "status": "promise",
+     "issue": "",
+     "amount_kobo": 1500000,
+     "due_on": "2026-10-30",
+     "sent": "readback",
+     "recorded_after_answer": true
+    }
+   },
+   "router": {
+    "transcript": "noodles no complete na forkerton i go pay 15,000 friday for the ones we land",
+    "status": "ok",
+    "tried": [
+     "spitch:ok"
+    ],
+    "wer": 0.176,
+    "outcome": "disputed",
+    "action": "flag_dispute",
+    "held_back": "",
+    "promise": {
+     "status": "promise",
+     "issue": "",
+     "amount_kobo": 1500000,
+     "due_on": "2026-10-30",
+     "sent": "readback",
+     "recorded_after_answer": true
+    }
+   },
+   "spitch/no-hint": {
+    "transcript": "noodles no complete na forkerton i go pay 15,000 friday for the ones wey land",
+    "status": "ok",
+    "tried": [
+     "spitch"
+    ],
+    "wer": 0.118,
+    "outcome": "disputed",
+    "action": "flag_dispute",
+    "held_back": "",
+    "promise": {
+     "status": "promise",
+     "issue": "",
+     "amount_kobo": 1500000,
+     "due_on": "2026-10-30",
+     "sent": "readback",
+     "recorded_after_answer": true
+    }
+   },
+   "muse/no-hint": {
+    "transcript": "Noodles no complete. na four carton, I go pay fifteen thousand Friday for the ones we land.",
+    "status": "ok",
+    "tried": [
+     "muse"
+    ],
+    "wer": 0.118,
+    "outcome": "disputed",
+    "action": "flag_dispute",
+    "held_back": "",
+    "promise": {
+     "status": "promise",
+     "issue": "",
+     "amount_kobo": 1500000,
+     "due_on": "2026-10-30",
+     "sent": "readback",
+     "recorded_after_answer": true
+    }
+   },
+   "router/no-hint": {
+    "transcript": "noodles no complete na forkerton i go pay 15,000 friday for the ones wey land",
+    "status": "ok",
+    "tried": [
+     "spitch:ok"
+    ],
+    "wer": 0.118,
+    "outcome": "disputed",
+    "action": "flag_dispute",
+    "held_back": "",
+    "promise": {
+     "status": "promise",
+     "issue": "",
+     "amount_kobo": 1500000,
+     "due_on": "2026-10-30",
+     "sent": "readback",
+     "recorded_after_answer": true
+    }
+   }
+  },
+  {
+   "id": "vn-47",
+   "lang": "english",
+   "noise": "none",
+   "reference": "All goods received. I will pay fifty thousand naira at the end of the month.",
+   "expected": "confirmed",
+   "expected_promise": {
+    "status": "promise",
+    "amount_kobo": 5000000,
+    "due_on": "2026-10-31"
+   },
+   "spitch": {
+    "transcript": "all goods received i will pay fifty thousand nara at the end of the month",
+    "status": "ok",
+    "tried": [
+     "spitch"
+    ],
+    "wer": 0.067,
+    "outcome": "confirmed",
+    "action": "consent",
+    "held_back": "",
+    "promise": {
+     "status": "promise",
+     "issue": "",
+     "amount_kobo": 5000000,
+     "due_on": "2026-10-31",
+     "sent": "readback",
+     "recorded_after_answer": true
+    }
+   },
+   "muse": {
+    "transcript": "all goods received i will pay fifty thousand naira at the end of the month",
+    "status": "ok",
+    "tried": [
+     "muse"
+    ],
+    "wer": 0.0,
+    "outcome": "confirmed",
+    "action": "consent",
+    "held_back": "",
+    "promise": {
+     "status": "promise",
+     "issue": "",
+     "amount_kobo": 5000000,
+     "due_on": "2026-10-31",
+     "sent": "readback",
+     "recorded_after_answer": true
+    }
+   },
+   "router": {
+    "transcript": "all goods received i will pay fifty thousand naira at the end of the month",
+    "status": "ok",
+    "tried": [
+     "muse:ok"
+    ],
+    "wer": 0.0,
+    "outcome": "confirmed",
+    "action": "consent",
+    "held_back": "",
+    "promise": {
+     "status": "promise",
+     "issue": "",
+     "amount_kobo": 5000000,
+     "due_on": "2026-10-31",
+     "sent": "readback",
+     "recorded_after_answer": true
+    }
+   },
+   "spitch/no-hint": {
+    "transcript": "all goods received i will pay fifty thousand nara at the end of the month",
+    "status": "ok",
+    "tried": [
+     "spitch"
+    ],
+    "wer": 0.067,
+    "outcome": "confirmed",
+    "action": "consent",
+    "held_back": "",
+    "promise": {
+     "status": "promise",
+     "issue": "",
+     "amount_kobo": 5000000,
+     "due_on": "2026-10-31",
+     "sent": "readback",
+     "recorded_after_answer": true
+    }
+   },
+   "muse/no-hint": {
+    "transcript": "all goods received received. I will pay fifty thousand naira at the end of the month.",
+    "status": "ok",
+    "tried": [
+     "muse"
+    ],
+    "wer": 0.067,
+    "outcome": "confirmed",
+    "action": "consent",
+    "held_back": "",
+    "promise": {
+     "status": "promise",
+     "issue": "",
+     "amount_kobo": 5000000,
+     "due_on": "2026-10-31",
+     "sent": "readback",
+     "recorded_after_answer": true
+    }
+   },
+   "router/no-hint": {
+    "transcript": "all goods received i will pay fifty thousand nara at the end of the month",
+    "status": "ok",
+    "tried": [
+     "spitch:ok"
+    ],
+    "wer": 0.067,
+    "outcome": "confirmed",
+    "action": "consent",
+    "held_back": "",
+    "promise": {
+     "status": "promise",
+     "issue": "",
+     "amount_kobo": 5000000,
+     "due_on": "2026-10-31",
+     "sent": "readback",
+     "recorded_after_answer": true
+    }
+   }
+  },
+  {
+   "id": "vn-48",
+   "lang": "english",
+   "noise": "light",
+   "reference": "Everything is fine. I will pay fifteen or twenty thousand on Friday.",
+   "expected": "confirmed",
+   "expected_promise": {
+    "status": "unclear",
+    "issue": "several_amounts"
+   },
+   "spitch": {
+    "transcript": "everything is fine i will pay fifteen or twenty thousand on friday",
+    "status": "ok",
+    "tried": [
+     "spitch"
+    ],
+    "wer": 0.0,
+    "outcome": "confirmed",
+    "action": "consent",
+    "held_back": "",
+    "promise": {
+     "status": "unclear",
+     "issue": "several_amounts",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "question",
+     "recorded_after_answer": null
+    }
+   },
+   "muse": {
+    "transcript": "everything is fine. I will pay fifteen or twenty thousand on Friday.",
+    "status": "ok",
+    "tried": [
+     "muse"
+    ],
+    "wer": 0.0,
+    "outcome": "confirmed",
+    "action": "consent",
+    "held_back": "",
+    "promise": {
+     "status": "unclear",
+     "issue": "several_amounts",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "question",
+     "recorded_after_answer": null
+    }
+   },
+   "router": {
+    "transcript": "everything is fine. I will pay fifteen or twenty thousand on Friday.",
+    "status": "ok",
+    "tried": [
+     "muse:ok"
+    ],
+    "wer": 0.0,
+    "outcome": "confirmed",
+    "action": "consent",
+    "held_back": "",
+    "promise": {
+     "status": "unclear",
+     "issue": "several_amounts",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "question",
+     "recorded_after_answer": null
+    }
+   },
+   "spitch/no-hint": {
+    "transcript": "everything is fine i will pay fifteen or twenty thousand on friday",
+    "status": "ok",
+    "tried": [
+     "spitch"
+    ],
+    "wer": 0.0,
+    "outcome": "confirmed",
+    "action": "consent",
+    "held_back": "",
+    "promise": {
+     "status": "unclear",
+     "issue": "several_amounts",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "question",
+     "recorded_after_answer": null
+    }
+   },
+   "muse/no-hint": {
+    "transcript": "everything is fine, I will pay fifteen or twenty thousand on Friday.",
+    "status": "ok",
+    "tried": [
+     "muse"
+    ],
+    "wer": 0.0,
+    "outcome": "confirmed",
+    "action": "consent",
+    "held_back": "",
+    "promise": {
+     "status": "unclear",
+     "issue": "several_amounts",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "question",
+     "recorded_after_answer": null
+    }
+   },
+   "router/no-hint": {
+    "transcript": "everything is fine i will pay fifteen or twenty thousand on friday",
+    "status": "ok",
+    "tried": [
+     "spitch:ok"
+    ],
+    "wer": 0.0,
+    "outcome": "confirmed",
+    "action": "consent",
+    "held_back": "",
+    "promise": {
+     "status": "unclear",
+     "issue": "several_amounts",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "question",
+     "recorded_after_answer": null
+    }
+   }
+  },
+  {
+   "id": "vn-49",
+   "lang": "pidgin",
+   "noise": "heavy",
+   "reference": "All don land. I go pay 30k next week Monday.",
+   "expected": "confirmed",
+   "expected_promise": {
+    "status": "promise",
+    "amount_kobo": 3000000,
+    "due_on": "2026-11-02"
+   },
+   "spitch": {
+    "transcript": "all don land i go pay thirty k next week monday",
+    "status": "ok",
+    "tried": [
+     "spitch"
+    ],
+    "wer": 0.2,
+    "outcome": "confirmed",
+    "action": "consent",
+    "held_back": "",
+    "promise": {
+     "status": "promise",
+     "issue": "",
+     "amount_kobo": 3000000,
+     "due_on": "2026-11-02",
+     "sent": "readback",
+     "recorded_after_answer": true
+    }
+   },
+   "muse": {
+    "transcript": "All done and I go pay thirty k next week Monday.",
+    "status": "ok",
+    "tried": [
+     "muse"
+    ],
+    "wer": 0.4,
+    "outcome": "unclear",
+    "action": "clarify",
+    "held_back": "",
+    "promise": {
+     "status": "promise",
+     "issue": "",
+     "amount_kobo": 3000000,
+     "due_on": "2026-11-02",
+     "sent": "held",
+     "recorded_after_answer": null
+    }
+   },
+   "router": {
+    "transcript": "all don land i go pay thirty k next week monday",
+    "status": "ok",
+    "tried": [
+     "spitch:ok"
+    ],
+    "wer": 0.2,
+    "outcome": "confirmed",
+    "action": "consent",
+    "held_back": "",
+    "promise": {
+     "status": "promise",
+     "issue": "",
+     "amount_kobo": 3000000,
+     "due_on": "2026-11-02",
+     "sent": "readback",
+     "recorded_after_answer": true
+    }
+   },
+   "spitch/no-hint": {
+    "transcript": "all don land i go pe 30 k next wik monde",
+    "status": "ok",
+    "tried": [
+     "spitch"
+    ],
+    "wer": 0.5,
+    "outcome": "confirmed",
+    "action": "consent",
+    "held_back": "",
+    "promise": {
+     "status": "none",
+     "issue": "",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "",
+     "recorded_after_answer": null
+    }
+   },
+   "muse/no-hint": {
+    "transcript": "All done and I go pay thirty K next week Monday.",
+    "status": "ok",
+    "tried": [
+     "muse"
+    ],
+    "wer": 0.4,
+    "outcome": "unclear",
+    "action": "clarify",
+    "held_back": "",
+    "promise": {
+     "status": "promise",
+     "issue": "",
+     "amount_kobo": 3000000,
+     "due_on": "2026-11-02",
+     "sent": "held",
+     "recorded_after_answer": null
+    }
+   },
+   "router/no-hint": {
+    "transcript": "all don land i go pe 30 k next wik monde",
+    "status": "ok",
+    "tried": [
+     "spitch:ok"
+    ],
+    "wer": 0.5,
+    "outcome": "confirmed",
+    "action": "consent",
+    "held_back": "",
+    "promise": {
+     "status": "none",
+     "issue": "",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "",
+     "recorded_after_answer": null
+    }
+   }
+  },
+  {
+   "id": "vn-50",
+   "lang": "hausa",
+   "noise": "light",
+   "reference": "Don Allah yaushe za ku kawo sabon farashi?",
+   "expected": "unrelated",
+   "expected_promise": {
+    "status": "none"
+   },
+   "spitch": {
+    "transcript": "don allah yaushe za ku kawo sabon farashi",
+    "status": "ok",
+    "tried": [
+     "spitch"
+    ],
+    "wer": 0.0,
+    "outcome": "unrelated",
+    "action": "clarify",
+    "held_back": "",
+    "promise": {
+     "status": "none",
+     "issue": "",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "",
+     "recorded_after_answer": null
+    }
+   },
+   "muse": {
+    "transcript": "Don Allah ya ushe za ƙara wo sabon farashi,",
+    "status": "ok",
+    "tried": [
+     "muse"
+    ],
+    "wer": 0.5,
+    "outcome": "unrelated",
+    "action": "clarify",
+    "held_back": "",
+    "promise": {
+     "status": "none",
+     "issue": "",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "",
+     "recorded_after_answer": null
+    }
+   },
+   "router": {
+    "transcript": "don allah yaushe za ku kawo sabon farashi",
+    "status": "ok",
+    "tried": [
+     "spitch:ok"
+    ],
+    "wer": 0.0,
+    "outcome": "unrelated",
+    "action": "clarify",
+    "held_back": "",
+    "promise": {
+     "status": "none",
+     "issue": "",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "",
+     "recorded_after_answer": null
+    }
+   },
+   "spitch/no-hint": {
+    "transcript": "don allah yaushe za ku kawo sabon farashi",
+    "status": "ok",
+    "tried": [
+     "spitch"
+    ],
+    "wer": 0.0,
+    "outcome": "unrelated",
+    "action": "clarify",
+    "held_back": "",
+    "promise": {
+     "status": "none",
+     "issue": "",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "",
+     "recorded_after_answer": null
+    }
+   },
+   "muse/no-hint": {
+    "transcript": "Don Allah ya usa za ku kawo sabon farashi,",
+    "status": "ok",
+    "tried": [
+     "muse"
+    ],
+    "wer": 0.25,
+    "outcome": "unrelated",
+    "action": "clarify",
+    "held_back": "",
+    "promise": {
+     "status": "none",
+     "issue": "",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "",
+     "recorded_after_answer": null
+    }
+   },
+   "router/no-hint": {
+    "transcript": "don allah yaushe za ku kawo sabon farashi",
+    "status": "ok",
+    "tried": [
+     "spitch:ok"
+    ],
+    "wer": 0.0,
+    "outcome": "unrelated",
+    "action": "clarify",
+    "held_back": "",
+    "promise": {
+     "status": "none",
+     "issue": "",
+     "amount_kobo": null,
+     "due_on": "",
+     "sent": "",
+     "recorded_after_answer": null
+    }
    }
   }
  ],
  "passes": {
   "false_confirms_all_transcribers": true,
   "disputes_never_confirmed_all_transcribers": true,
+  "no_wrong_promise_recorded_all_transcribers": true,
   "router_disputes_caught_first_read": false
  },
  "pass_safety": true,
  "pass": false,
+ "cost": {
+  "spitch_stt_calls": 100,
+  "spitch_stt_audio_s": 412.4,
+  "spitch_stt_usd": 0.1732,
+  "muse_stt_calls": 100,
+  "muse_stt_audio_s": 412.4,
+  "muse_stt_usd": 0.0206,
+  "fixtures_tts_audio_s": 161.2,
+  "fixtures_tts_usd": 0.2257,
+  "spitch_usd_total": 0.3989
+ },
  "mode": "live, judge muse-spark-1.3",
- "wall_seconds": 0.3,
+ "wall_seconds": 0.8,
  "judge_live_calls_this_pass": 0,
- "judge_replayed_calls": 48,
+ "judge_replayed_calls": 300,
  "transcriber_live_calls_this_pass": {
   "spitch": 0,
   "muse": 0
  },
- "recorded_at": "2026-10-26T21:42+01:00",
- "table_markdown": "| Language | spitch WER | spitch verdicts | muse WER | muse verdicts | router WER | router verdicts |\n|---|---|---|---|---|---|---|\n| english (n=4) | 16% | 4/4 | 5% | 4/4 | 5% | 4/4 |\n| hausa (n=2) | 35% | 1/2 | 88% | 0/2 | 35% | 1/2 |\n| igbo (n=2) | 323% | 1/2 | 85% | 2/2 | 62% | 2/2 |\n| mixed (n=1) | 12% | 1/1 | 88% | 1/1 | 12% | 1/1 |\n| pidgin (n=4) | 27% | 4/4 | 32% | 4/4 | 27% | 4/4 |\n| yoruba (n=3) | 42% | 3/3 | 67% | 3/3 | 42% | 3/3 |\n| **all** | 52% | 14/16 | 48% | 14/16 | 26% | 15/16 |"
+ "recorded_at": "2026-10-26T23:52+01:00",
+ "table_markdown": "| Language | spitch WER | spitch verdicts | muse WER | muse verdicts | router WER | router verdicts | spitch/no-hint WER | spitch/no-hint verdicts | muse/no-hint WER | muse/no-hint verdicts | router/no-hint WER | router/no-hint verdicts |\n|---|---|---|---|---|---|---|---|---|---|---|---|---|\n| english (n=13) | 11% | 13/13 | 3% | 13/13 | 3% | 13/13 | 11% | 13/13 | 2% | 13/13 | 11% | 13/13 |\n| hausa (n=7) | 14% | 6/7 | 80% | 3/7 | 14% | 6/7 | 14% | 6/7 | 73% | 2/7 | 14% | 6/7 |\n| igbo (n=6) | 111% | 5/6 | 80% | 4/6 | 34% | 6/6 | 120% | 4/6 | 80% | 2/6 | 43% | 4/6 |\n| mixed (n=4) | 33% | 4/4 | 57% | 3/4 | 33% | 4/4 | 33% | 4/4 | 59% | 3/4 | 33% | 4/4 |\n| pidgin (n=13) | 24% | 11/13 | 26% | 10/13 | 24% | 11/13 | 34% | 10/13 | 29% | 9/13 | 34% | 10/13 |\n| yoruba (n=7) | 48% | 6/7 | 81% | 5/7 | 48% | 6/7 | 48% | 6/7 | 83% | 4/7 | 48% | 6/7 |\n| **all** | 31% | 45/50 | 41% | 38/50 | 22% | 46/50 | 35% | 43/50 | 42% | 33/50 | 28% | 43/50 |"
 }

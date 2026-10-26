@@ -13,6 +13,10 @@ the router). The inbox stores the transcript with its status and provider,
 the clip's length and SHA-256; the audio bytes are dropped. With no
 transcriber, or when transcription fails, the reply is stored as a failed
 transcript and the flow asks the shop to type.
+
+A typed ``VOICE ON`` / ``VOICE ON YORUBA`` / ``VOICE OFF`` (``mimi.voice.prefs``)
+is the shop's own choice about voice replies: the desk records it with the
+message as consent (``voice_prefs``) and does not route it to a receipt.
 """
 
 from __future__ import annotations
@@ -29,9 +33,17 @@ from mimi.runtime.states import JobState
 from mimi.runtime.store import JobStore
 from mimi.voice.base import Transcriber, Transcript, VoiceContext
 from mimi.voice.fake import audio_sha256
+from mimi.voice.prefs import (
+    VOICE_LANGUAGES,
+    VoicePreference,
+    VoicePrefs,
+    parse_voice_command,
+)
 from mimi.voice.reader import read_voice_note
 
 VoiceContextFor = Callable[[str, str], VoiceContext]
+# shop_id -> the language the shop usually writes in ("english", "pidgin", ...)
+ShopLanguageFor = Callable[[str], str]
 
 
 @dataclass(frozen=True)
@@ -59,6 +71,8 @@ class ReceiptDesk:
     # (shop_id, job_id) -> language hint and receipt keywords for the clip.
     voice_context: VoiceContextFor | None = None
     transcripts: list[Transcript] = field(default_factory=list)
+    voice_prefs: VoicePrefs | None = None
+    shop_language: ShopLanguageFor | None = None
 
     def open_receipt(self, delivery_id: str, shop_id: str) -> str:
         job_id = f"rcpt-{delivery_id}"
@@ -86,7 +100,11 @@ class ReceiptDesk:
         return None
 
     def receive(self, hook: ShopWebhook) -> str:
-        """Returns "routed", "duplicate" or "unrouted"."""
+        """Returns "routed", "duplicate", "unrouted", "voice_on" or "voice_off"."""
+        if hook.audio is None and self.voice_prefs is not None:
+            command = parse_voice_command(hook.text)
+            if command is not None:
+                return self._voice_choice(hook, *command)
         job_id = self._open_job(hook.shop_id)
         if job_id is None:
             self.unrouted.append(hook)
@@ -110,6 +128,29 @@ class ReceiptDesk:
             return "duplicate"
         self.store.wake(job_id)
         return "routed"
+
+    def _voice_choice(self, hook: ShopWebhook, on: bool, language: str | None) -> str:
+        assert self.voice_prefs is not None
+        lang = language or (
+            self.shop_language(hook.shop_id) if self.shop_language is not None else "english"
+        )
+        if lang not in VOICE_LANGUAGES:
+            lang = "english"
+        added = self.voice_prefs.record(
+            VoicePreference(
+                shop_id=hook.shop_id,
+                voice_replies=on,
+                language=lang,
+                consent_message_id=hook.message_id,
+                consent_text=hook.text,
+                consent_sender=hook.sender,
+                decided_at=hook.received_at.isoformat(),
+            )
+        )
+        if not added:
+            self.duplicates += 1
+            return "duplicate"
+        return "voice_on" if on else "voice_off"
 
     def _voice_reply(self, reply: ShopReply, hook: ShopWebhook, job_id: str) -> ShopReply:
         assert hook.audio is not None

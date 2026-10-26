@@ -83,6 +83,7 @@ export SPITCH_API_KEY=...       # Spitch (Yoruba, Igbo, Hausa, Pidgin, default)
 export META_API_KEY=...         # also used by muse-voice-transcribe-1.0
 # optional
 export MIMI_VOICE=router        # router (default) | spitch | muse | fake
+export MIMI_TTS=spitch          # voice replies: spitch (default with a key) | fake
 export VOICE_TIMEOUT_S=30
 ```
 
@@ -98,23 +99,55 @@ python -m mimi.voice.eval --live     # Spitch + Muse Voice Transcribe + Muse Spa
 python -m mimi.voice.eval --live --fresh   # all calls new
 python -m mimi.voice.eval --fake     # fake transcriber and keyword judge (plumbing)
 python -m mimi.voice.eval --strict   # also fail on the first-read dispute mark
+python -m mimi.voice.eval --hints on # only with the shop's language hint (default: both)
+python -m mimi.voice.eval --live --only vn-03 --hints off   # record one missing call
 ```
 
-Recorded answers: `eval/voice/transcripts.spitch.cache.json`,
+Each clip runs with the shop's language as a hint and with none
+(`spitch/no-hint`, ...), through the production `ReceiptFlow`; a payment
+promise read back is answered by a truthful shop (YES if right). The run
+exits 1 when a safety mark fails: a false confirm, a dispute that ends in
+consent, or a promise recorded without the shop's YES or with the wrong
+amount or day. Recorded answers: `eval/voice/transcripts.spitch.cache.json`,
 `transcripts.muse.cache.json` (text only, never audio) and
-`verdicts.cache.json`; `--live` writes `voice.report.json`.
+`verdicts.cache.json`; `--live` writes `voice.report.json` (with the cost of
+recording it). A live run is resumable: a call that errors is not recorded,
+so rerunning `--live` makes only the missing calls.
 
 Voice notes in the simulator: `--voice SHARE` makes that share of shops
 answer the receipt with a synthetic clip in their language (a dispute clip
 when goods were short), and turns every "[voice note]" placeholder into a
 clip. The transcript prints what Mimi heard and which service heard it.
 
+`--promises SHARE`: that share of those shops send a clip that also
+promises to pay ("Everything complete. I go pay 20k tomorrow"); Mimi reads
+the amount and day back and records the promise only after the persona's
+YES. `--voice-replies`: every shop sends "VOICE ON" at the start of the day
+(recorded as its consent), and Mimi's short replies also go as a voice note
+(Spitch with `SPITCH_API_KEY`, else the fake). The transcript shows each
+voice reply's length, language and voice; the audio is dropped.
+
 ```bash
 python -m mimi.sim --shops 3 --transcript --voice 1
 python -m mimi.sim --shops 10 --voice 0.3 --cache /tmp/sim10   # also records transcripts
+# the live smoke: voice notes, a payment promise, voice replies
+python -m mimi.sim --shops 3 --transcript --voice 1 --promises 1 --voice-replies \
+  --cache /tmp/smoke/run      # resumable; voice replies recorded under /tmp/smoke/run.tts
 ```
 
-Regenerate the fixtures (costs Spitch credit; about 60 seconds of speech):
+Live smoke, 26 Oct 2026 (`muse-spark-1.3`, router, Spitch speech): 3 shops,
+3 voice notes, 2 confirmed and 1 dispute flagged (0 confirmed despite a
+shortage). The Pidgin-English shop's note "All goods received. I will pay
+fifty thousand naira at the end of the month" was read back as "N50,000 on
+Saturday 31 October 2026", the shop answered "YES correct, 50k for 31st",
+and `RecordPaymentPromise` was recorded (5,000,000 kobo, 2026-10-31). The
+Yoruba shop's note ran on in the speech engine and its amount could not be
+read, so Mimi asked (in text, and as a 4.2 s Yoruba voice note) and recorded
+nothing; that persona never answered. 2 voice replies, 13.7 s, about USD
+0.03 of Spitch credit.
+
+Regenerate the fixtures (costs Spitch credit; about 160 seconds of speech,
+about USD 0.23):
 
 ```bash
 python scripts/make_voice_fixtures.py          # missing clips only
@@ -130,20 +163,22 @@ python -m mimi.sim --hours 26
 # Real time for a demo: 1 = wall clock, 60 = one sim hour per minute
 python -m mimi.sim --shops 3 --realtime 60 --transcript
 
-# Persist jobs and shop replies (SQLite creates the tables itself)
+# Persist jobs, shop replies and voice-reply consents (SQLite creates the tables)
 python -m mimi.sim --db sqlite:////tmp/mimi-sim.db
 
 # Postgres: install the extra, then create the tables with alembic first
-# (revisions 0001 to 0003). MIMI_DB_URL is a SQLAlchemy URL for your own
+# (revisions 0001 to 0004). MIMI_DB_URL is a SQLAlchemy URL for your own
 # local database, set in your shell (never written into a file in this repo).
-# Revision 0003 adds the voice-note columns (transcript, never audio).
+# Revision 0003 adds the voice-note columns (transcript, never audio);
+# 0004 the shops' voice-reply choices, each with its consent message.
 pip install -e '.[postgres]'
 alembic upgrade head
 python -m mimi.sim --db "$MIMI_DB_URL"
 ```
 
 Jobs land in `runtime_jobs` (the durable state machine, readable by the
-console) and shop replies in `shop_inbox`.
+console), shop replies in `shop_inbox` and voice-reply choices in
+`shop_voice_consent`.
 
 ## 5. Tests
 

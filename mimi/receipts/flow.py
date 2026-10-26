@@ -24,6 +24,16 @@ where the last save left it):
   (the one clarification), and a second unreadable burst flags the owner. A
   confirm held back because of a doubtful transcript also gets the request
   to type, not the language template.
+
+* ``promise``: a shop's message promised to pay ("I go pay 20k tomorrow";
+  ``promises.py``). Once the delivery itself is settled (consent or a
+  flag), Mimi reads the amount and day back in plain English, or asks for
+  what is missing, and records ``RecordPaymentPromise`` only after the
+  shop's YES to that exact read-back. No answer by the deadline, or no YES
+  after three messages, records nothing. Mimi never moves money.
+
+Shops that turned voice replies on (``mimi.voice.prefs``) get Mimi's short
+replies as a voice note too (``voice_replies.py``); the text always goes.
 """
 
 from __future__ import annotations
@@ -31,15 +41,26 @@ from __future__ import annotations
 import json
 from collections.abc import Callable
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 
 from mimi.receipts.decide import Decision, decide
 from mimi.receipts.inbox import ShopInbox, ShopReply
 from mimi.receipts.intents import (
     FlagReason,
     FlagToOwner,
+    MessagePurpose,
     RecordDeliveryConsent,
+    RecordPaymentPromise,
     SendShopMessage,
+)
+from mimi.receipts.promises import (
+    digest as promise_digest,
+)
+from mimi.receipts.promises import (
+    message_for,
+    pending_from,
+    promise_step,
+    scan_burst,
 )
 from mimi.receipts.receipt import (
     clarify_text,
@@ -48,8 +69,11 @@ from mimi.receipts.receipt import (
     type_request_text,
 )
 from mimi.receipts.verdict import Judged
+from mimi.receipts.voice_replies import voice_fields
 from mimi.runtime.steps import StepContext, StepOutcome
 from mimi.types import ShopScope
+from mimi.voice.prefs import VoicePrefs
+from mimi.voice.promise import lagos_day
 from mimi.world.model import Delivery, World
 
 HELPER = "delivery_receipt"
@@ -68,6 +92,7 @@ class ReceiptFlow:
     # Shops send bursts of 2 or 3 messages: wait this long after the newest
     # one before judging, so "Good afternoon" is not answered on its own.
     burst_settle: timedelta = timedelta(seconds=90)
+    voice_prefs: VoicePrefs | None = None
 
     def __call__(self, ctx: StepContext) -> StepOutcome:
         state = json.loads(ctx.working_note) if ctx.working_note else {"stage": "new"}
@@ -115,6 +140,8 @@ class ReceiptFlow:
             if r.message_id not in state["seen"]
         ]
         if not new:
+            if ctx.now >= deadline and state["stage"] == "promise":
+                return self._promise_done(state, "unanswered")
             if ctx.now >= deadline:
                 return self._finish(
                     state,
@@ -140,6 +167,11 @@ class ReceiptFlow:
         state["seen"] = [*state["seen"], *(r.message_id for r in new)]
         delivery = self.world.delivery(delivery_id)
         shop = self.world.shop(delivery.shop_id)
+        if state["stage"] == "promise":
+            return self._promise_burst(ctx, state, scope, delivery, new, deadline)
+        found = scan_burst(new)
+        if found is not None:
+            state["promise"] = pending_from(*found)
         voice = [r for r in new if r.is_voice]
         voice_trace: dict[str, str | int | float] = {}
         if voice:
@@ -180,8 +212,11 @@ class ReceiptFlow:
         }
         if decision.action == "consent":
             assert decision.witness is not None
-            return self._finish(
+            return self._close(
+                ctx,
                 state,
+                scope,
+                delivery,
                 "confirmed",
                 self._consent(scope, delivery_id, state, decision),
                 trace,
@@ -189,8 +224,11 @@ class ReceiptFlow:
         words = " / ".join(r.shown() for r in new)
         if decision.action == "flag_dispute":
             partial = v.outcome == "partial"
-            return self._finish(
+            return self._close(
+                ctx,
                 state,
+                scope,
+                delivery,
                 "partial" if partial else "disputed",
                 self._flag(
                     scope,
@@ -202,8 +240,11 @@ class ReceiptFlow:
                 trace,
             )
         if decision.action == "flag_unclear":
-            return self._finish(
+            return self._close(
+                ctx,
                 state,
+                scope,
+                delivery,
                 "flagged",
                 self._flag(scope, delivery_id, "unclear_reply", words, decision),
                 trace,
@@ -217,12 +258,8 @@ class ReceiptFlow:
             return StepOutcome(
                 kind="sleep",
                 intents=(
-                    SendShopMessage(
-                        scope,
-                        delivery_id,
-                        "receipt_type_request",
-                        type_request_text(delivery),
-                        delivery.total_kobo,
+                    self._send(
+                        ctx, scope, delivery, "receipt_type_request", type_request_text(delivery)
                     ),
                 ),
                 working_note=json.dumps(state),
@@ -235,13 +272,7 @@ class ReceiptFlow:
         return StepOutcome(
             kind="sleep",
             intents=(
-                SendShopMessage(
-                    scope,
-                    delivery_id,
-                    "receipt_clarify",
-                    clarify_text(delivery, lang),
-                    delivery.total_kobo,
-                ),
+                self._send(ctx, scope, delivery, "receipt_clarify", clarify_text(delivery, lang)),
             ),
             working_note=json.dumps(state),
             sleep_until=self._next_check(ctx.now, deadline),
@@ -286,17 +317,152 @@ class ReceiptFlow:
         return StepOutcome(
             kind="sleep",
             intents=(
-                SendShopMessage(
-                    scope,
-                    delivery_id,
-                    "receipt_type_request",
-                    type_request_text(delivery),
-                    delivery.total_kobo,
+                self._send(
+                    ctx, scope, delivery, "receipt_type_request", type_request_text(delivery)
                 ),
             ),
             working_note=json.dumps(state),
             sleep_until=self._next_check(ctx.now, deadline),
             trace={**trace, "stage": "asked_to_type"},
+        )
+
+    def _send(
+        self,
+        ctx: StepContext,
+        scope: ShopScope,
+        delivery: Delivery,
+        purpose: MessagePurpose,
+        text: str,
+        *,
+        amount_kobo: int | None = None,
+        due_on: date | None = None,
+    ) -> SendShopMessage:
+        """A short reply: text always, and a voice script when the shop
+        turned voice replies on."""
+        pref = self.voice_prefs.get(scope.shop_id) if self.voice_prefs is not None else None
+        script, lang = voice_fields(
+            pref,
+            purpose,
+            text,
+            today=lagos_day(ctx.now),
+            amount_kobo=amount_kobo,
+            due_on=due_on,
+        )
+        readback = purpose == "promise_readback"
+        return SendShopMessage(
+            scope,
+            delivery.delivery_id,
+            purpose,
+            text,
+            delivery.total_kobo,
+            promise_kobo=(amount_kobo or 0) if readback else 0,
+            promise_due_on=due_on.isoformat() if readback and due_on else "",
+            voice_script=script,
+            voice_language=lang,
+        )
+
+    # ------------------------------------------------------------ promises
+
+    def _close(
+        self,
+        ctx: StepContext,
+        state: dict,
+        scope: ShopScope,
+        delivery: Delivery,
+        result: str,
+        intent: FlagToOwner | RecordDeliveryConsent,
+        trace: dict[str, str | int | float] | None = None,
+    ) -> StepOutcome:
+        """The delivery is settled. With a payment promise heard, ask about
+        it before finishing; otherwise finish."""
+        if not state.get("promise"):
+            return self._finish(state, result, intent, trace)
+        state = {**state, "result": result}
+        return self._promise_ask(ctx, state, scope, delivery, (intent,), trace or {})
+
+    def _promise_ask(
+        self,
+        ctx: StepContext,
+        state: dict,
+        scope: ShopScope,
+        delivery: Delivery,
+        before: tuple[object, ...],
+        trace: dict[str, str | int | float],
+        pending: dict | None = None,
+    ) -> StepOutcome:
+        p = dict(pending or state["promise"])
+        purpose, text = message_for(p, delivery.delivery_id)
+        due = date.fromisoformat(p["due_on"]) if p.get("due_on") else None
+        msg = self._send(
+            ctx, scope, delivery, purpose, text, amount_kobo=p.get("amount_kobo"), due_on=due
+        )
+        p["asked"] = "readback" if purpose == "promise_readback" else "question"
+        p["sent"] = int(p.get("sent", 0)) + 1
+        p["last_text"] = text
+        deadline = ctx.now + self.reply_window
+        state = {**state, "stage": "promise", "promise": p, "deadline": deadline.isoformat()}
+        return StepOutcome(
+            kind="sleep",
+            intents=(*before, msg),
+            working_note=json.dumps(state),
+            sleep_until=self._next_check(ctx.now, deadline),
+            trace={**trace, "stage": f"promise_{p['asked']}", "promise_issue": p.get("issue", "")},
+        )
+
+    def _promise_burst(
+        self,
+        ctx: StepContext,
+        state: dict,
+        scope: ShopScope,
+        delivery: Delivery,
+        new: list[ShopReply],
+        deadline: datetime,
+    ) -> StepOutcome:
+        step = promise_step(state["promise"], new)
+        trace: dict[str, str | int | float] = {
+            "replies": len(new),
+            "promise_action": step.action,
+            "promise_reason": step.reason,
+        }
+        if step.action == "record":
+            assert step.witness is not None
+            p, w = step.pending, step.witness
+            intent = RecordPaymentPromise(
+                scope=scope,
+                delivery_id=delivery.delivery_id,
+                amount_kobo=int(p["amount_kobo"]),
+                due_on=str(p["due_on"]),
+                said_message_id=p["said_message_id"],
+                said_text=p["said_text"],
+                said_at=p["said_at"],
+                said_kind=p["said_kind"],
+                transcript_provider=p["transcript_provider"],
+                readback_text=p["last_text"],
+                readback_digest=promise_digest(p["last_text"]),
+                confirm_message_id=w.message_id,
+                confirm_text=w.text,
+                confirmed_at=w.received_at,
+            )
+            return self._promise_done(state, "recorded", (intent,), trace)
+        if step.action == "give_up":
+            return self._promise_done(state, "not_recorded", (), trace)
+        return self._promise_ask(ctx, state, scope, delivery, (), trace, step.pending)
+
+    @staticmethod
+    def _promise_done(
+        state: dict,
+        how: str,
+        intents: tuple[object, ...] = (),
+        trace: dict[str, str | int | float] | None = None,
+    ) -> StepOutcome:
+        result = state.get("result", "flagged")
+        state = {**state, "stage": "done", "promise_result": how}
+        return StepOutcome(
+            kind="done",
+            intents=intents,
+            working_note=json.dumps(state),
+            result=result,
+            trace={**(trace or {}), "stage": f"promise_{how}"},
         )
 
     @staticmethod

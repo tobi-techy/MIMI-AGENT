@@ -1,10 +1,59 @@
 {
+ "039f9a93c18d5b48c5f9396df5cd81fe": {
+  "audio_s": 6.099,
+  "confidence": null,
+  "language": null,
+  "latency_s": 2.243,
+  "text": "Noodles no complete, na four carton, I go pay fifteen thousand Friday for the ones we land."
+ },
+ "059b23268eb06e54f0211b4fd86cd213": {
+  "audio_s": 2.58,
+  "confidence": null,
+  "language": null,
+  "latency_s": 1.861,
+  "text": "Sudan duba kayan aikin."
+ },
+ "090dc15f0b2069ba91ba2ade18a645ef": {
+  "audio_s": 5.272,
+  "confidence": null,
+  "language": null,
+  "latency_s": 2.512,
+  "text": "all goods received received. I will pay fifty thousand naira at the end of the month."
+ },
+ "0e0e52af10a7734b9b2b3b55a1d8bc1d": {
+  "audio_s": 3.127,
+  "confidence": null,
+  "language": null,
+  "latency_s": 1.934,
+  "text": "Kamle ya anya nya nga akpọgi"
+ },
+ "0f079302bd34596a899bc507508bc455": {
+  "audio_s": 3.64,
+  "confidence": null,
+  "language": null,
+  "latency_s": 2.049,
+  "text": "everything rich i go I go pay you Friday."
+ },
+ "1123ee23f3db3fc0b86562adb3db35af": {
+  "audio_s": 4.101,
+  "confidence": null,
+  "language": null,
+  "latency_s": 2.0,
+  "text": "Make I pay fifteen thousand for Friday."
+ },
  "120a5be88caecdf7fd9dc64b40706de7": {
   "audio_s": 2.592,
   "confidence": null,
   "language": null,
   "latency_s": 2.111,
   "text": "now could you look and see"
+ },
+ "138482a82699ea863e83a556e7d0246c": {
+  "audio_s": 4.684,
+  "confidence": null,
+  "language": null,
+  "latency_s": 2.129,
+  "text": "everything is complete. I will pay you twenty thousand for it."
  },
  "14d4bc614f2f5fc6f2409499ecab77bb": {
   "audio_s": 4.012,
@@ -13,12 +62,40 @@
   "latency_s": 2.465,
   "text": "yes oh everything don't land complete. Thank you."
  },
+ "15c35127b1b58b445807b2e61f854c9d": {
+  "audio_s": 3.267,
+  "confidence": null,
+  "language": null,
+  "latency_s": 1.877,
+  "text": "i don't pay the money yesterday check com."
+ },
+ "1b40ba5b2b76a83bca52e126bbb8359c": {
+  "audio_s": 2.638,
+  "confidence": null,
+  "language": null,
+  "latency_s": 1.601,
+  "text": "Eh anatalamihe nile"
+ },
+ "1d9443e64eeb0e17e2d89a28988fcee1": {
+  "audio_s": 2.851,
+  "confidence": null,
+  "language": null,
+  "latency_s": 1.917,
+  "text": "Sugar no reach where the rest don land."
+ },
  "241a95323cc3771f940d8272c2221411": {
   "audio_s": 3.423,
   "confidence": null,
   "language": null,
   "latency_s": 3.377,
   "text": "yes, I have received everything. Thank you."
+ },
+ "2635fbec5c2515e7a5d80023286ee73d": {
+  "audio_s": 3.136,
+  "confidence": null,
+  "language": null,
+  "latency_s": 2.936,
+  "text": "i will pay fifteen thousand naira on Friday."
  },
  "28247da0a819399680471cb3188145f6": {
   "audio_s": 4.536,
@@ -27,12 +104,75 @@
   "latency_s": 2.12,
   "text": "everything rich except the sugar, the sugar never land."
  },
+ "2b4a495f7279b065137946ecb7a19496": {
+  "audio_s": 4.844,
+  "confidence": null,
+  "language": null,
+  "latency_s": 2.213,
+  "text": "Goldstoneland, I go pay you twenty thousand next tomorrow."
+ },
+ "2d4215c3576a20c2ea501ac43cd8e803": {
+  "audio_s": 2.41,
+  "confidence": null,
+  "language": null,
+  "latency_s": 1.65,
+  "text": "Eduro, ma mawo."
+ },
+ "30c76de6000afc391e83fbe7e5ac49f7": {
+  "audio_s": 3.136,
+  "confidence": null,
+  "language": null,
+  "latency_s": 1.925,
+  "text": "i will pay fifteen thousand naira on Friday,"
+ },
+ "34dab38ddcc15f6c77955fe3c5eee20d": {
+  "audio_s": 3.544,
+  "confidence": null,
+  "language": null,
+  "latency_s": 1.849,
+  "text": "gbogbo pẹ̀, ẹgbẹ̀rún marùn."
+ },
  "46a6a8944b247ef7db22696d41d3da40": {
   "audio_s": 3.157,
   "confidence": null,
   "language": null,
   "latency_s": 2.214,
   "text": "I beg when you na go bring the new price list."
+ },
+ "47b881589d02f96427f95e080918a6c8": {
+  "audio_s": 3.184,
+  "confidence": null,
+  "language": null,
+  "latency_s": 2.209,
+  "text": "boxing is say sugar. Sugar is over."
+ },
+ "483847ee5f98392cb01fb0e2f9fd5f47": {
+  "audio_s": 4.844,
+  "confidence": null,
+  "language": null,
+  "latency_s": 2.395,
+  "text": "Goldstone Land I go pay you twenty thousand next tomorrow."
+ },
+ "4b6fda655ab73af0088f00115944e265": {
+  "audio_s": 4.057,
+  "confidence": null,
+  "language": null,
+  "latency_s": 2.075,
+  "text": "My boy collected it. I have not counted it yet."
+ },
+ "4d5a80529c6787b8360797ebfc1709c0": {
+  "audio_s": 4.152,
+  "confidence": null,
+  "language": null,
+  "latency_s": 2.895,
+  "text": "everything complete i go pay twenty k tomorrow"
+ },
+ "4de5b1869e932aaa7d4a42a2fbfef469": {
+  "audio_s": 3.127,
+  "confidence": null,
+  "language": null,
+  "latency_s": 2.073,
+  "text": "Kamle yaanya nga apọ̀gi,"
  },
  "4eea11dc503481d8e383cf7d559a8558": {
   "audio_s": 4.67,
@@ -48,12 +188,117 @@
   "latency_s": 2.234,
   "text": "windows bus sugar ba hubuna gani bashi da aba."
  },
+ "521a13a1a50c3bd8d266cbf3be05c962": {
+  "audio_s": 3.76,
+  "confidence": null,
+  "language": null,
+  "latency_s": 2.068,
+  "text": "noodles बस chika ba, hubuna gani bashi da aba."
+ },
+ "5299e76038290be40d5e97a12bc4016e": {
+  "audio_s": 4.168,
+  "confidence": null,
+  "language": null,
+  "latency_s": 2.044,
+  "text": "noodles ezugi zucchi anokamhoro obugisi."
+ },
+ "5311b1c1eac011d3b2c7d59830be028e": {
+  "audio_s": 3.157,
+  "confidence": null,
+  "language": null,
+  "latency_s": 2.407,
+  "text": "I beg when you na go bring the new price list?"
+ },
+ "59c9633308b39f8cc5c8bccd6327e6c1": {
+  "audio_s": 4.536,
+  "confidence": null,
+  "language": null,
+  "latency_s": 2.72,
+  "text": "everything rich except the except the sugar the sugar never land"
+ },
+ "59ffe4614e001b1139794611a9e889b5": {
+  "audio_s": 3.75,
+  "confidence": null,
+  "language": null,
+  "latency_s": 2.407,
+  "text": "burdi ayat sugar sugar podera."
+ },
+ "5ad89b4310a07fa49c4ef2e8516aaba5": {
+  "audio_s": 3.261,
+  "confidence": null,
+  "language": null,
+  "latency_s": 1.809,
+  "text": "received in full, thank you very much."
+ },
+ "6498e3fa1d7996630ab0fe69c9dee9d5": {
+  "audio_s": 3.261,
+  "confidence": null,
+  "language": null,
+  "latency_s": 3.281,
+  "text": "received in full thank you very much"
+ },
+ "67f744f9b07566022b166127a27fbf36": {
+  "audio_s": 3.339,
+  "confidence": null,
+  "language": null,
+  "latency_s": 1.759,
+  "text": "Don Allah ya usa za ku kawo sabon farashi,"
+ },
  "6fbd2bf76d66ce5cf45e176779d487c8": {
   "audio_s": 4.983,
   "confidence": null,
   "language": null,
   "latency_s": 2.224,
   "text": "edgy noodles kokwe merin ni mori kii se mefa,"
+ },
+ "74118ba77cfd4595d1980344df3de556": {
+  "audio_s": 3.64,
+  "confidence": null,
+  "language": null,
+  "latency_s": 1.913,
+  "text": "Everything rich, i go pay you Friday"
+ },
+ "74809b0d13567fd3af6fc2e307c167da": {
+  "audio_s": 4.152,
+  "confidence": null,
+  "language": null,
+  "latency_s": 1.894,
+  "text": "everything complete, I go pay twenty K tomorrow."
+ },
+ "769f45a41d291c65ca94cb3c016770ab": {
+  "audio_s": 4.684,
+  "confidence": null,
+  "language": null,
+  "latency_s": 3.485,
+  "text": "everything is complete. I will pay you twenty thousand for it."
+ },
+ "783c2e56987e84a5c51458f4010e9a9f": {
+  "audio_s": 5.177,
+  "confidence": null,
+  "language": null,
+  "latency_s": 2.511,
+  "text": "Ihe ni la obiala, aghama akpọpụku naira iri abuo echi."
+ },
+ "79a49bcad3e7d214d55a5084d2fc9e69": {
+  "audio_s": 2.851,
+  "confidence": null,
+  "language": null,
+  "latency_s": 1.786,
+  "text": "Sugar no reach where the rest don't land."
+ },
+ "8006f668e9fa82dfe30b37d99bc55f2c": {
+  "audio_s": 4.67,
+  "confidence": null,
+  "language": null,
+  "latency_s": 2.603,
+  "text": "two cartons of the noodles are short. I counted four cartons, not six."
+ },
+ "821610220be30793c8a8461afa5db466": {
+  "audio_s": 2.792,
+  "confidence": null,
+  "language": null,
+  "latency_s": 1.991,
+  "text": "cutting Noodles burst"
  },
  "822ab614069dc2d1a6893579d5d2d36e": {
   "audio_s": 4.404,
@@ -62,12 +307,103 @@
   "latency_s": 2.205,
   "text": "now a four carton no be six."
  },
+ "827dc8942076ca058fc212293a8cf77f": {
+  "audio_s": 4.404,
+  "confidence": null,
+  "language": null,
+  "latency_s": 2.521,
+  "text": "complete now a full carton no be six."
+ },
+ "845649e7604156146da351cf4675e9d0": {
+  "audio_s": 4.273,
+  "confidence": null,
+  "language": null,
+  "latency_s": 2.056,
+  "text": "All done and I go pay thirty K next week Monday."
+ },
  "848d7fd509a18143da4066a336dbdb29": {
   "audio_s": 2.688,
   "confidence": null,
   "language": null,
   "latency_s": 2.114,
   "text": "E shi o gbogbo ero ti de pe,"
+ },
+ "8ad6929c265902dbaa83b2a17a4d372e": {
+  "audio_s": 4.765,
+  "confidence": null,
+  "language": null,
+  "latency_s": 2.026,
+  "text": "everything is fine. I will pay fifteen or twenty thousand on Friday."
+ },
+ "8bbf8ebd95fdd0567cc306030e118afe": {
+  "audio_s": 3.339,
+  "confidence": null,
+  "language": null,
+  "latency_s": 2.064,
+  "text": "Don Allah ya ushe za ƙara wo sabon farashi,"
+ },
+ "8bcd3aa5bbce3ae16089a163f20272ff": {
+  "audio_s": 3.103,
+  "confidence": null,
+  "language": null,
+  "latency_s": 2.167,
+  "text": "When I shot me two carton of noodles,"
+ },
+ "8e64832dd75524ae5e5896c0191c515f": {
+  "audio_s": 3.87,
+  "confidence": null,
+  "language": null,
+  "latency_s": 1.964,
+  "text": "good canton is would be another"
+ },
+ "8e89c3d527b24af3c95eba6c12bc7056": {
+  "audio_s": 5.272,
+  "confidence": null,
+  "language": null,
+  "latency_s": 2.259,
+  "text": "all goods received i will pay fifty thousand naira at the end of the month"
+ },
+ "8f5c7c628ef9ec67c440c39cd7607782": {
+  "audio_s": 2.676,
+  "confidence": null,
+  "language": null,
+  "latency_s": 1.932,
+  "text": "miọ́tímiu"
+ },
+ "96c6491868b2dbb60378551e214fa0aa": {
+  "audio_s": 2.805,
+  "confidence": null,
+  "language": null,
+  "latency_s": 1.682,
+  "text": "dalo ihe niile abiala."
+ },
+ "9898bef1b88ce339b0653802ea8d93d8": {
+  "audio_s": 3.544,
+  "confidence": null,
+  "language": null,
+  "latency_s": 1.797,
+  "text": "gbogbo ma egberun marun."
+ },
+ "9cf4066ed01492cdc6bce45313516c2e": {
+  "audio_s": 4.765,
+  "confidence": null,
+  "language": null,
+  "latency_s": 2.188,
+  "text": "everything is fine, I will pay fifteen or twenty thousand on Friday."
+ },
+ "a0af25c2a478f02a278e5f277c8beef0": {
+  "audio_s": 4.101,
+  "confidence": null,
+  "language": null,
+  "latency_s": 1.787,
+  "text": "make I pay fifteen thousand for Friday."
+ },
+ "a197c6ca376f2dc055ed4ed3cb836611": {
+  "audio_s": 3.278,
+  "confidence": null,
+  "language": null,
+  "latency_s": 2.494,
+  "text": "i will check the goods later later and get back to you."
  },
  "a2336214545fb60146f39e7aa7310e35": {
   "audio_s": 2.777,
@@ -76,12 +412,54 @@
   "latency_s": 1.761,
   "text": "beni mo ti gba gbogbo rẹ́ she."
  },
+ "a600b0692f40a4a006b5b7d3d7cf7db4": {
+  "audio_s": 2.58,
+  "confidence": null,
+  "language": null,
+  "latency_s": 1.693,
+  "text": "son du ba kayan anjima."
+ },
+ "a79fb86644aaa5c029253c44fbe10832": {
+  "audio_s": 3.267,
+  "confidence": null,
+  "language": null,
+  "latency_s": 1.853,
+  "text": "I don't pay the money yesterday check calm."
+ },
+ "a9c184e70d22b72179b3e739ca169bf2": {
+  "audio_s": 4.848,
+  "confidence": null,
+  "language": null,
+  "latency_s": 2.288,
+  "text": "everything complete. Zambia fifteen thousand Naira round of Jumaa."
+ },
+ "b3193b69bfb2fc3e4491d05a40d06fae": {
+  "audio_s": 2.688,
+  "confidence": null,
+  "language": null,
+  "latency_s": 1.852,
+  "text": "E shi o gbogbo ero ti de pe!."
+ },
+ "b378a6d1e6164d025a5278e562a74314": {
+  "audio_s": 2.777,
+  "confidence": null,
+  "language": null,
+  "latency_s": 1.55,
+  "text": "beni moti gba gbogbo reshe."
+ },
  "b7495d9e062e9cb44f9e338a3f2d97fe": {
   "audio_s": 2.805,
   "confidence": null,
   "language": null,
   "latency_s": 2.077,
   "text": "Dalo ihe nile abiala."
+ },
+ "b7b9d09b57f07dd8607d3ced4ee23b3d": {
+  "audio_s": 5.873,
+  "confidence": null,
+  "language": null,
+  "latency_s": 3.089,
+  "text": "everything today mason twenty thousand naira ni Friday."
  },
  "be0676f424e6fc3ac8cc0559571114ed": {
   "audio_s": 3.278,
@@ -90,12 +468,82 @@
   "latency_s": 3.461,
   "text": "I will check the goods later later and get back to you."
  },
+ "be2363482bfd48ba2a9334aed130e437": {
+  "audio_s": 3.87,
+  "confidence": null,
+  "language": null,
+  "latency_s": 2.078,
+  "text": "The currency is 20,000 rubu ashirin gobe."
+ },
+ "c22713f67755639afce0e2e7c0d65513": {
+  "audio_s": 4.423,
+  "confidence": null,
+  "language": null,
+  "latency_s": 3.669,
+  "text": "two cartons of noodles did not come. I will pay for the rest on Friday."
+ },
+ "c9982161e7341fbea9cb1952d8f35f26": {
+  "audio_s": 3.75,
+  "confidence": null,
+  "language": null,
+  "latency_s": 2.489,
+  "text": "weady added to sugar sugar powder"
+ },
+ "cbf7672efe4fdfcec4f796695d46900e": {
+  "audio_s": 3.103,
+  "confidence": null,
+  "language": null,
+  "latency_s": 2.314,
+  "text": "When I shot me two carton of noodles"
+ },
+ "cc5358b07cd743eb02da10a4c62a8eb9": {
+  "audio_s": 15.296,
+  "confidence": null,
+  "language": null,
+  "latency_s": 3.701,
+  "text": "Bogbo eru ti de, mason egberun, méwaanu méwaanu"
+ },
+ "cda0930b8b447c0ca9f8ec024540dd77": {
+  "audio_s": 3.764,
+  "confidence": null,
+  "language": null,
+  "latency_s": 1.964,
+  "text": "inginile darah, mah sugar, abiaahi."
+ },
+ "cfd1721f6632fddfd2b29a2a3d3b537b": {
+  "audio_s": 5.874,
+  "confidence": null,
+  "language": null,
+  "latency_s": 2.119,
+  "text": "everything complete. Aga ma akwu fifteen thousand naira on Friday."
+ },
+ "d268502e23907d4cf8feec7af14713ec": {
+  "audio_s": 5.158,
+  "confidence": null,
+  "language": null,
+  "latency_s": 3.256,
+  "text": "everything came except the sugar. The sugar did not did not come at all."
+ },
  "d2b34639a20927c99c1e8568ff312b8d": {
   "audio_s": 4.168,
   "confidence": null,
   "language": null,
   "latency_s": 2.487,
   "text": "Noodles ezugi anọka mhụro obugi isi"
+ },
+ "d2de77c32fe0059137ed47123ba09c0a": {
+  "audio_s": 3.184,
+  "confidence": null,
+  "language": null,
+  "latency_s": 2.188,
+  "text": "boxing is using sugar. Sugar is over."
+ },
+ "d57931510abf00b657f3dc66128e1132": {
+  "audio_s": 2.592,
+  "confidence": null,
+  "language": null,
+  "latency_s": 1.608,
+  "text": "Now could you look and see"
  },
  "d6afa2ef175becbf48d9f2981148402f": {
   "audio_s": 3.875,
@@ -104,11 +552,151 @@
   "latency_s": 3.266,
   "text": "Yes, sir. Everything is complete. Thank you."
  },
+ "d8d821ee8bdfc2b2ffe32c67adfaeea5": {
+  "audio_s": 5.24,
+  "confidence": null,
+  "language": null,
+  "latency_s": 3.299,
+  "text": "Yes, everything arrived. I will pay twenty thousand naira tomorrow."
+ },
+ "db40a993edd9285c888f2c246c5f919f": {
+  "audio_s": 2.638,
+  "confidence": null,
+  "language": null,
+  "latency_s": 1.749,
+  "text": "Anatala mihe nile?"
+ },
+ "db4f2aee900ba0d72e98d418a5593d21": {
+  "audio_s": 5.158,
+  "confidence": null,
+  "language": null,
+  "latency_s": 2.498,
+  "text": "everything came except the sugar. The sugar did did not come at all."
+ },
+ "dba17dca389190328c8803c97411ff25": {
+  "audio_s": 5.874,
+  "confidence": null,
+  "language": null,
+  "latency_s": 2.547,
+  "text": "everything complete. Aga ma aku fifteen fifteen thousand naira, on Friday."
+ },
+ "dd6527b489208cb74064e9a588731cfb": {
+  "audio_s": 5.177,
+  "confidence": null,
+  "language": null,
+  "latency_s": 2.215,
+  "text": "Ihene la abiala agama akwụkwọ naira naira iri abụọ echi."
+ },
+ "ddb1fcc4cf71269f083759096145147f": {
+  "audio_s": 4.848,
+  "confidence": null,
+  "language": null,
+  "latency_s": 2.807,
+  "text": "everything complete. Zambia fifteen thousand naira round of Jumaa."
+ },
+ "debb9a157f92e7946e4bc7a80b7451d9": {
+  "audio_s": 4.273,
+  "confidence": null,
+  "language": null,
+  "latency_s": 2.165,
+  "text": "All done and I go pay thirty k next week Monday."
+ },
+ "df6372b7d7e5a008e5f9b788e184b34c": {
+  "audio_s": 4.057,
+  "confidence": null,
+  "language": null,
+  "latency_s": 3.565,
+  "text": "my boy collected it. I have not counted it yet"
+ },
+ "df86adf19bf120c9463289f39cadb825": {
+  "audio_s": 2.792,
+  "confidence": null,
+  "language": null,
+  "latency_s": 1.702,
+  "text": "cutting Buna Noodles noodles was"
+ },
+ "e039468eb3c40c324297a26c72371a96": {
+  "audio_s": 5.24,
+  "confidence": null,
+  "language": null,
+  "latency_s": 2.145,
+  "text": "yes, everything arrived. I will pay twenty thousand naira tomorrow."
+ },
  "e06ffabc3a5ff1c1007fbb22f311f141": {
   "audio_s": 2.41,
   "confidence": null,
   "language": null,
   "latency_s": 1.765,
   "text": "Eduro ma wọ́."
+ },
+ "e097c465f0af6c8cb48c392286bb49b9": {
+  "audio_s": 4.983,
+  "confidence": null,
+  "language": null,
+  "latency_s": 2.23,
+  "text": "edgy noodles kokwei merin ni mori kiiše mefa"
+ },
+ "ec1428d5491de52776fa2eda84dc5236": {
+  "audio_s": 5.873,
+  "confidence": null,
+  "language": null,
+  "latency_s": 2.216,
+  "text": "everything today marsan twenty thousand naira ni Friday."
+ },
+ "eca85c7dc582b0cb2ea18d34ed2ff98d": {
+  "audio_s": 15.296,
+  "confidence": null,
+  "language": null,
+  "latency_s": 3.768,
+  "text": "Bobo eru ti de, de mason egberun mẹwaanu mẹwaanu"
+ },
+ "ee5ae81dd16638601e298644f1c252a6": {
+  "audio_s": 3.764,
+  "confidence": null,
+  "language": null,
+  "latency_s": 2.262,
+  "text": "Ini nilai darah, mah sugar abiahi."
+ },
+ "ee921bc2e45cb3ba7e207b680f2461a4": {
+  "audio_s": 3.875,
+  "confidence": null,
+  "language": null,
+  "latency_s": 2.451,
+  "text": "Yes, sir. Everything is complete. Thank you."
+ },
+ "f05eda79724a9bf132109315392c0199": {
+  "audio_s": 4.012,
+  "confidence": null,
+  "language": null,
+  "latency_s": 2.529,
+  "text": "Yes o, everything don't land complete. Thank you."
+ },
+ "f0a3af8c13a8e9a3c9d45cf6eba7166c": {
+  "audio_s": 4.423,
+  "confidence": null,
+  "language": null,
+  "latency_s": 2.206,
+  "text": "two cartons of noodles did not come. I will pay for the rest on Friday."
+ },
+ "fe842cca9b70dfc1005cf03acbc646de": {
+  "audio_s": 3.423,
+  "confidence": null,
+  "language": null,
+  "latency_s": 2.777,
+  "text": "yes, I have received everything. thank you."
+ },
+ "feff5f72e00d0db540c2db361ce8874a": {
+  "audio_s": 6.099,
+  "confidence": null,
+  "language": null,
+  "latency_s": 2.266,
+  "text": "Noodles no complete. na four carton, I go pay fifteen thousand Friday for the ones we land."
+ },
+ "ff51abb7ba4b7cdb04b7ca8f1aee289b": {
+  "audio_s": 2.676,
+  "confidence": null,
+  "language": null,
+  "latency_s": 2.446,
+  "text": "míọ́tí ká má pé ní."
  }
 }

@@ -38,12 +38,16 @@ jobs:
         run: python -m mimi.world --check
       - name: Reply-reader eval (recorded Muse Spark answers)
         run: python -m mimi.receipts.eval
-      - name: Voice-note eval (recorded Spitch, Muse Voice Transcribe and Muse Spark answers)
+      - name: Voice-note eval, 50 clips with and without hints (recorded Spitch, Muse Voice Transcribe and Muse Spark answers)
         run: python -m mimi.voice.eval
       - name: Offline 3-shop sim
         run: python -m mimi.sim --shops 3 --transcript
       - name: Offline 3-shop sim with voice notes
         run: python -m mimi.sim --shops 3 --transcript --voice 1
+      - name: Offline 3-shop sim with voice notes, payment promises and voice replies
+        env:
+          SPITCH_API_KEY: ""
+        run: python -m mimi.sim --shops 3 --transcript --voice 1 --promises 1 --voice-replies
       - name: Migrations run on a clean SQLite database
         env:
           MIMI_DB_URL: sqlite:///${{ runner.temp }}/mimi-ci.db

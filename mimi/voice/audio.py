@@ -181,6 +181,7 @@ def to_wav16k(clip: AudioClip) -> AudioClip:
 
 
 def _fix_wav_sizes(data: bytes) -> bytes:
+    """Set the RIFF and data chunk sizes from the bytes actually there."""
     pos = data.find(b"data", 12)
     if pos < 0:
         return data
@@ -188,3 +189,25 @@ def _fix_wav_sizes(data: bytes) -> bytes:
     struct.pack_into("<I", buf, 4, len(buf) - 8)
     struct.pack_into("<I", buf, pos + 4, len(buf) - pos - 8)
     return bytes(buf)
+
+
+def to_ogg_opus(wav: bytes) -> bytes:
+    """A WAV (a voice reply from text to speech) as a WhatsApp-style voice
+    note: mono Ogg/Opus at 16 kbps. Read and written through a private
+    temporary directory that is deleted straight after."""
+    if shutil.which("ffmpeg") is None:
+        raise AudioError("ffmpeg is not installed; cannot encode a voice reply")
+    with tempfile.TemporaryDirectory(prefix="mimi-voice-") as tmp:
+        src, dst = Path(tmp) / "in.wav", Path(tmp) / "out.ogg"
+        src.write_bytes(wav)
+        cmd = [
+            "ffmpeg", "-v", "error", "-y", "-i", str(src), "-ac", "1", "-ar", "16000",
+            "-c:a", "libopus", "-b:a", "16k", "-map_metadata", "-1", str(dst),
+        ]
+        try:
+            out = subprocess.run(cmd, capture_output=True, timeout=FFMPEG_TIMEOUT_S, check=False)
+        except subprocess.TimeoutExpired as exc:
+            raise AudioError("ffmpeg timed out") from exc
+        if out.returncode != 0 or not dst.exists():
+            raise AudioError("ffmpeg could not encode the voice reply")
+        return dst.read_bytes()

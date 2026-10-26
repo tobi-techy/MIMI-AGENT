@@ -50,12 +50,22 @@ def wav_bytes(seconds: float = 1.0, rate: int = 16000, channels: int = 1) -> byt
 
 
 def test_fixture_manifest_is_synthetic_and_covers_languages() -> None:
-    assert 12 <= len(CLIPS) <= 16
+    assert len(CLIPS) == 50
     assert all(c["synthetic"] and c["origin"].startswith("synthetic-generated") for c in CLIPS)
     langs = {c["lang"] for c in CLIPS}
     assert {"english", "pidgin", "yoruba", "igbo", "hausa"} <= langs
     cats = {c["category"] for c in CLIPS}
-    assert cats == {"confirm", "dispute", "partial", "unclear", "unrelated"}
+    assert cats == {
+        "confirm",
+        "dispute",
+        "partial",
+        "unclear",
+        "unrelated",
+        "promise",
+        "promise_clarify",
+        "paid_claim",
+    }
+    assert {"mixed"} <= langs
     assert any("na 4 carton, no be 6" in c["reference"].lower() for c in CLIPS)
     assert {c["noise"] for c in CLIPS} == {"none", "light", "heavy"}
     for c in CLIPS:
