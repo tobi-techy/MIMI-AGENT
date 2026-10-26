@@ -1,0 +1,904 @@
+{
+ "transcribers": {
+  "spitch": {
+   "clips": 16,
+   "wer": 0.5241,
+   "wer_folded": 0.5035,
+   "verdict_accuracy": 0.875,
+   "false_confirms": 0,
+   "false_confirm_ids": [],
+   "disputes_caught": 0.6667,
+   "disputes_n": 6,
+   "disputes_never_confirmed": 1.0,
+   "missed_dispute_ids": [
+    "vn-14",
+    "vn-16"
+   ],
+   "confirms_recorded": 1.0,
+   "confirms_n": 7,
+   "transcripts_failed": 0,
+   "transcripts_low": 1,
+   "latency_mean_s": 1.978,
+   "latency_max_s": 5.73,
+   "audio_seconds": 57.54,
+   "judge_prompt_tokens": 21034,
+   "judge_completion_tokens": 8134
+  },
+  "muse": {
+   "clips": 16,
+   "wer": 0.4828,
+   "wer_folded": 0.4113,
+   "verdict_accuracy": 0.875,
+   "false_confirms": 0,
+   "false_confirm_ids": [],
+   "disputes_caught": 0.8333,
+   "disputes_n": 6,
+   "disputes_never_confirmed": 1.0,
+   "missed_dispute_ids": [
+    "vn-16"
+   ],
+   "confirms_recorded": 0.8571,
+   "confirms_n": 7,
+   "transcripts_failed": 0,
+   "transcripts_low": 0,
+   "latency_mean_s": 2.437,
+   "latency_max_s": 3.461,
+   "audio_seconds": 57.54,
+   "judge_prompt_tokens": 20986,
+   "judge_completion_tokens": 10176
+  },
+  "router": {
+   "clips": 16,
+   "wer": 0.2621,
+   "wer_folded": 0.234,
+   "verdict_accuracy": 0.9375,
+   "false_confirms": 0,
+   "false_confirm_ids": [],
+   "disputes_caught": 0.8333,
+   "disputes_n": 6,
+   "disputes_never_confirmed": 1.0,
+   "missed_dispute_ids": [
+    "vn-16"
+   ],
+   "confirms_recorded": 1.0,
+   "confirms_n": 7,
+   "transcripts_failed": 0,
+   "transcripts_low": 0,
+   "latency_mean_s": 2.079,
+   "latency_max_s": 3.461,
+   "audio_seconds": 57.54,
+   "judge_prompt_tokens": 21015,
+   "judge_completion_tokens": 9578
+  }
+ },
+ "by_language": {
+  "spitch": {
+   "english": {
+    "clips": 4,
+    "wer": 0.1579,
+    "wer_folded": 0.1579,
+    "verdict_accuracy": 1.0,
+    "false_confirms": 0,
+    "disputes_caught": 1.0,
+    "disputes_n": 1
+   },
+   "hausa": {
+    "clips": 2,
+    "wer": 0.3529,
+    "wer_folded": 0.3529,
+    "verdict_accuracy": 0.5,
+    "false_confirms": 0,
+    "disputes_caught": 0.0,
+    "disputes_n": 1
+   },
+   "igbo": {
+    "clips": 2,
+    "wer": 3.2308,
+    "wer_folded": 3.2308,
+    "verdict_accuracy": 0.5,
+    "false_confirms": 0,
+    "disputes_caught": 0.0,
+    "disputes_n": 1
+   },
+   "mixed": {
+    "clips": 1,
+    "wer": 0.125,
+    "wer_folded": 0.0769,
+    "verdict_accuracy": 1.0,
+    "false_confirms": 0,
+    "disputes_caught": 1.0,
+    "disputes_n": 1
+   },
+   "pidgin": {
+    "clips": 4,
+    "wer": 0.2703,
+    "wer_folded": 0.2703,
+    "verdict_accuracy": 1.0,
+    "false_confirms": 0,
+    "disputes_caught": 1.0,
+    "disputes_n": 2
+   },
+   "yoruba": {
+    "clips": 3,
+    "wer": 0.4167,
+    "wer_folded": 0.2609,
+    "verdict_accuracy": 1.0,
+    "false_confirms": 0,
+    "disputes_caught": 1.0,
+    "disputes_n": 0
+   }
+  },
+  "muse": {
+   "english": {
+    "clips": 4,
+    "wer": 0.0526,
+    "wer_folded": 0.0526,
+    "verdict_accuracy": 1.0,
+    "false_confirms": 0,
+    "disputes_caught": 1.0,
+    "disputes_n": 1
+   },
+   "hausa": {
+    "clips": 2,
+    "wer": 0.8824,
+    "wer_folded": 0.8824,
+    "verdict_accuracy": 0.0,
+    "false_confirms": 0,
+    "disputes_caught": 0.0,
+    "disputes_n": 1
+   },
+   "igbo": {
+    "clips": 2,
+    "wer": 0.8462,
+    "wer_folded": 0.7692,
+    "verdict_accuracy": 1.0,
+    "false_confirms": 0,
+    "disputes_caught": 1.0,
+    "disputes_n": 1
+   },
+   "mixed": {
+    "clips": 1,
+    "wer": 0.875,
+    "wer_folded": 0.6154,
+    "verdict_accuracy": 1.0,
+    "false_confirms": 0,
+    "disputes_caught": 1.0,
+    "disputes_n": 1
+   },
+   "pidgin": {
+    "clips": 4,
+    "wer": 0.3243,
+    "wer_folded": 0.3243,
+    "verdict_accuracy": 1.0,
+    "false_confirms": 0,
+    "disputes_caught": 1.0,
+    "disputes_n": 2
+   },
+   "yoruba": {
+    "clips": 3,
+    "wer": 0.6667,
+    "wer_folded": 0.4783,
+    "verdict_accuracy": 1.0,
+    "false_confirms": 0,
+    "disputes_caught": 1.0,
+    "disputes_n": 0
+   }
+  },
+  "router": {
+   "english": {
+    "clips": 4,
+    "wer": 0.0526,
+    "wer_folded": 0.0526,
+    "verdict_accuracy": 1.0,
+    "false_confirms": 0,
+    "disputes_caught": 1.0,
+    "disputes_n": 1
+   },
+   "hausa": {
+    "clips": 2,
+    "wer": 0.3529,
+    "wer_folded": 0.3529,
+    "verdict_accuracy": 0.5,
+    "false_confirms": 0,
+    "disputes_caught": 0.0,
+    "disputes_n": 1
+   },
+   "igbo": {
+    "clips": 2,
+    "wer": 0.6154,
+    "wer_folded": 0.6154,
+    "verdict_accuracy": 1.0,
+    "false_confirms": 0,
+    "disputes_caught": 1.0,
+    "disputes_n": 1
+   },
+   "mixed": {
+    "clips": 1,
+    "wer": 0.125,
+    "wer_folded": 0.0769,
+    "verdict_accuracy": 1.0,
+    "false_confirms": 0,
+    "disputes_caught": 1.0,
+    "disputes_n": 1
+   },
+   "pidgin": {
+    "clips": 4,
+    "wer": 0.2703,
+    "wer_folded": 0.2703,
+    "verdict_accuracy": 1.0,
+    "false_confirms": 0,
+    "disputes_caught": 1.0,
+    "disputes_n": 2
+   },
+   "yoruba": {
+    "clips": 3,
+    "wer": 0.4167,
+    "wer_folded": 0.2609,
+    "verdict_accuracy": 1.0,
+    "false_confirms": 0,
+    "disputes_caught": 1.0,
+    "disputes_n": 0
+   }
+  }
+ },
+ "clips": [
+  {
+   "id": "vn-01",
+   "lang": "english",
+   "noise": "none",
+   "reference": "Yes, I have received everything. Thank you.",
+   "expected": "confirmed",
+   "spitch": {
+    "transcript": "yes i have received everything thank you",
+    "status": "ok",
+    "tried": [
+     "spitch"
+    ],
+    "wer": 0.0,
+    "outcome": "confirmed",
+    "action": "consent",
+    "held_back": ""
+   },
+   "muse": {
+    "transcript": "yes, I have received everything. Thank you.",
+    "status": "ok",
+    "tried": [
+     "muse"
+    ],
+    "wer": 0.0,
+    "outcome": "confirmed",
+    "action": "consent",
+    "held_back": ""
+   },
+   "router": {
+    "transcript": "yes, I have received everything. Thank you.",
+    "status": "ok",
+    "tried": [
+     "muse:ok"
+    ],
+    "wer": 0.0,
+    "outcome": "confirmed",
+    "action": "consent",
+    "held_back": ""
+   }
+  },
+  {
+   "id": "vn-02",
+   "lang": "english",
+   "noise": "heavy",
+   "reference": "Yes sir, everything is complete. Thank you.",
+   "expected": "confirmed",
+   "spitch": {
+    "transcript": "yes sir everything is complete thank you",
+    "status": "ok",
+    "tried": [
+     "spitch"
+    ],
+    "wer": 0.0,
+    "outcome": "confirmed",
+    "action": "consent",
+    "held_back": ""
+   },
+   "muse": {
+    "transcript": "Yes, sir. Everything is complete. Thank you.",
+    "status": "ok",
+    "tried": [
+     "muse"
+    ],
+    "wer": 0.0,
+    "outcome": "confirmed",
+    "action": "consent",
+    "held_back": ""
+   },
+   "router": {
+    "transcript": "Yes, sir. Everything is complete. Thank you.",
+    "status": "ok",
+    "tried": [
+     "muse:ok"
+    ],
+    "wer": 0.0,
+    "outcome": "confirmed",
+    "action": "consent",
+    "held_back": ""
+   }
+  },
+  {
+   "id": "vn-03",
+   "lang": "english",
+   "noise": "light",
+   "reference": "Two cartons of the noodles are short. I counted 4 cartons, not 6.",
+   "expected": "disputed",
+   "spitch": {
+    "transcript": "two kartons of the noodles are short i counted four kartons not six",
+    "status": "ok",
+    "tried": [
+     "spitch"
+    ],
+    "wer": 0.154,
+    "outcome": "disputed",
+    "action": "flag_dispute",
+    "held_back": ""
+   },
+   "muse": {
+    "transcript": "two cartons of the noodles are short. I counted four cartons, cartons, not six.",
+    "status": "ok",
+    "tried": [
+     "muse"
+    ],
+    "wer": 0.077,
+    "outcome": "disputed",
+    "action": "flag_dispute",
+    "held_back": ""
+   },
+   "router": {
+    "transcript": "two cartons of the noodles are short. I counted four cartons, cartons, not six.",
+    "status": "ok",
+    "tried": [
+     "muse:ok"
+    ],
+    "wer": 0.077,
+    "outcome": "disputed",
+    "action": "flag_dispute",
+    "held_back": ""
+   }
+  },
+  {
+   "id": "vn-04",
+   "lang": "english",
+   "noise": "light",
+   "reference": "I will check the goods later and get back to you.",
+   "expected": "unclear",
+   "spitch": {
+    "transcript": "iwil ček the goods later and get bak to you",
+    "status": "ok",
+    "tried": [
+     "spitch"
+    ],
+    "wer": 0.364,
+    "outcome": "unclear",
+    "action": "clarify",
+    "held_back": ""
+   },
+   "muse": {
+    "transcript": "I will check the goods later later and get back to you.",
+    "status": "ok",
+    "tried": [
+     "muse"
+    ],
+    "wer": 0.091,
+    "outcome": "unclear",
+    "action": "clarify",
+    "held_back": ""
+   },
+   "router": {
+    "transcript": "I will check the goods later later and get back to you.",
+    "status": "ok",
+    "tried": [
+     "muse:ok"
+    ],
+    "wer": 0.091,
+    "outcome": "unclear",
+    "action": "clarify",
+    "held_back": ""
+   }
+  },
+  {
+   "id": "vn-05",
+   "lang": "pidgin",
+   "noise": "light",
+   "reference": "Yes o, everything don land complete. Thank you.",
+   "expected": "confirmed",
+   "spitch": {
+    "transcript": "yeso everything don lan complete thank you",
+    "status": "ok",
+    "tried": [
+     "spitch"
+    ],
+    "wer": 0.375,
+    "outcome": "confirmed",
+    "action": "consent",
+    "held_back": ""
+   },
+   "muse": {
+    "transcript": "yes oh everything don't land complete. Thank you.",
+    "status": "ok",
+    "tried": [
+     "muse"
+    ],
+    "wer": 0.125,
+    "outcome": "confirmed",
+    "action": "consent",
+    "held_back": ""
+   },
+   "router": {
+    "transcript": "yeso everything don lan complete thank you",
+    "status": "ok",
+    "tried": [
+     "spitch:ok"
+    ],
+    "wer": 0.375,
+    "outcome": "confirmed",
+    "action": "consent",
+    "held_back": ""
+   }
+  },
+  {
+   "id": "vn-06",
+   "lang": "pidgin",
+   "noise": "heavy",
+   "reference": "The noodles no complete o. Na 4 carton, no be 6.",
+   "expected": "disputed",
+   "spitch": {
+    "transcript": "complete o na afocarton no be six",
+    "status": "ok",
+    "tried": [
+     "spitch"
+    ],
+    "wer": 0.455,
+    "outcome": "disputed",
+    "action": "flag_dispute",
+    "held_back": ""
+   },
+   "muse": {
+    "transcript": "now a four carton no be six.",
+    "status": "ok",
+    "tried": [
+     "muse"
+    ],
+    "wer": 0.545,
+    "outcome": "disputed",
+    "action": "flag_dispute",
+    "held_back": ""
+   },
+   "router": {
+    "transcript": "complete o na afocarton no be six",
+    "status": "ok",
+    "tried": [
+     "spitch:ok"
+    ],
+    "wer": 0.455,
+    "outcome": "disputed",
+    "action": "flag_dispute",
+    "held_back": ""
+   }
+  },
+  {
+   "id": "vn-07",
+   "lang": "pidgin",
+   "noise": "light",
+   "reference": "Everything reach except the sugar. The sugar never land.",
+   "expected": "partial",
+   "spitch": {
+    "transcript": "everything reach except di sugar di sugar never land",
+    "status": "ok",
+    "tried": [
+     "spitch"
+    ],
+    "wer": 0.222,
+    "outcome": "partial",
+    "action": "flag_dispute",
+    "held_back": ""
+   },
+   "muse": {
+    "transcript": "everything rich except the sugar, the sugar never land.",
+    "status": "ok",
+    "tried": [
+     "muse"
+    ],
+    "wer": 0.111,
+    "outcome": "partial",
+    "action": "flag_dispute",
+    "held_back": ""
+   },
+   "router": {
+    "transcript": "everything reach except di sugar di sugar never land",
+    "status": "ok",
+    "tried": [
+     "spitch:ok"
+    ],
+    "wer": 0.222,
+    "outcome": "partial",
+    "action": "flag_dispute",
+    "held_back": ""
+   }
+  },
+  {
+   "id": "vn-08",
+   "lang": "pidgin",
+   "noise": "heavy",
+   "reference": "Abeg, when una go bring the new price list?",
+   "expected": "unrelated",
+   "spitch": {
+    "transcript": "abeg when una go bring the new price list",
+    "status": "ok",
+    "tried": [
+     "spitch"
+    ],
+    "wer": 0.0,
+    "outcome": "unrelated",
+    "action": "clarify",
+    "held_back": ""
+   },
+   "muse": {
+    "transcript": "I beg when you na go bring the new price list.",
+    "status": "ok",
+    "tried": [
+     "muse"
+    ],
+    "wer": 0.444,
+    "outcome": "unrelated",
+    "action": "clarify",
+    "held_back": ""
+   },
+   "router": {
+    "transcript": "abeg when una go bring the new price list",
+    "status": "ok",
+    "tried": [
+     "spitch:ok"
+    ],
+    "wer": 0.0,
+    "outcome": "unrelated",
+    "action": "clarify",
+    "held_back": ""
+   }
+  },
+  {
+   "id": "vn-09",
+   "lang": "yoruba",
+   "noise": "none",
+   "reference": "Ẹ ṣé o, gbogbo ẹrù ti dé pé.",
+   "expected": "confirmed",
+   "spitch": {
+    "transcript": "ẹ ṣe ọ́ gbogbo ẹ̀rù ti dépẹ́",
+    "status": "ok",
+    "tried": [
+     "spitch"
+    ],
+    "wer": 0.75,
+    "outcome": "confirmed",
+    "action": "consent",
+    "held_back": ""
+   },
+   "muse": {
+    "transcript": "E shi o gbogbo ero ti de pe,",
+    "status": "ok",
+    "tried": [
+     "muse"
+    ],
+    "wer": 0.625,
+    "outcome": "confirmed",
+    "action": "consent",
+    "held_back": ""
+   },
+   "router": {
+    "transcript": "ẹ ṣe ọ́ gbogbo ẹ̀rù ti dépẹ́",
+    "status": "ok",
+    "tried": [
+     "spitch:ok"
+    ],
+    "wer": 0.75,
+    "outcome": "confirmed",
+    "action": "consent",
+    "held_back": ""
+   }
+  },
+  {
+   "id": "vn-10",
+   "lang": "yoruba",
+   "noise": "heavy",
+   "reference": "Bẹ́ẹ̀ ni, mo ti gba gbogbo rẹ̀. Ẹ ṣé.",
+   "expected": "confirmed",
+   "spitch": {
+    "transcript": "bẹ́ẹ̀ni mo ti gba gbogbo rẹ̀ ṣe",
+    "status": "ok",
+    "tried": [
+     "spitch"
+    ],
+    "wer": 0.2,
+    "outcome": "confirmed",
+    "action": "consent",
+    "held_back": ""
+   },
+   "muse": {
+    "transcript": "beni mo ti gba gbogbo rẹ́ she.",
+    "status": "ok",
+    "tried": [
+     "muse"
+    ],
+    "wer": 0.5,
+    "outcome": "confirmed",
+    "action": "consent",
+    "held_back": ""
+   },
+   "router": {
+    "transcript": "bẹ́ẹ̀ni mo ti gba gbogbo rẹ̀ ṣe",
+    "status": "ok",
+    "tried": [
+     "spitch:ok"
+    ],
+    "wer": 0.2,
+    "outcome": "confirmed",
+    "action": "consent",
+    "held_back": ""
+   }
+  },
+  {
+   "id": "vn-11",
+   "lang": "mixed",
+   "noise": "light",
+   "reference": "Ẹ jọ̀ọ́, noodles kò pé. Mẹ́rin ni mo rí, kì í ṣe mẹ́fà.",
+   "expected": "disputed",
+   "spitch": {
+    "transcript": "ẹ jí noodles kò pé mẹ́rin ni mo rí kì í ṣe mẹ́fà",
+    "status": "ok",
+    "tried": [
+     "spitch"
+    ],
+    "wer": 0.125,
+    "outcome": "disputed",
+    "action": "flag_dispute",
+    "held_back": ""
+   },
+   "muse": {
+    "transcript": "edgy noodles kokwe merin ni mori kii se mefa,",
+    "status": "ok",
+    "tried": [
+     "muse"
+    ],
+    "wer": 0.875,
+    "outcome": "disputed",
+    "action": "flag_dispute",
+    "held_back": ""
+   },
+   "router": {
+    "transcript": "ẹ jí noodles kò pé mẹ́rin ni mo rí kì í ṣe mẹ́fà",
+    "status": "ok",
+    "tried": [
+     "spitch:ok"
+    ],
+    "wer": 0.125,
+    "outcome": "disputed",
+    "action": "flag_dispute",
+    "held_back": ""
+   }
+  },
+  {
+   "id": "vn-12",
+   "lang": "yoruba",
+   "noise": "light",
+   "reference": "Ẹ dúró ná, màá wò ó.",
+   "expected": "unclear",
+   "spitch": {
+    "transcript": "ẹ dúró máa wò ó",
+    "status": "ok",
+    "tried": [
+     "spitch"
+    ],
+    "wer": 0.333,
+    "outcome": "unclear",
+    "action": "clarify",
+    "held_back": ""
+   },
+   "muse": {
+    "transcript": "Eduro ma wọ́.",
+    "status": "ok",
+    "tried": [
+     "muse"
+    ],
+    "wer": 1.0,
+    "outcome": "unclear",
+    "action": "clarify",
+    "held_back": ""
+   },
+   "router": {
+    "transcript": "ẹ dúró máa wò ó",
+    "status": "ok",
+    "tried": [
+     "spitch:ok"
+    ],
+    "wer": 0.333,
+    "outcome": "unclear",
+    "action": "clarify",
+    "held_back": ""
+   }
+  },
+  {
+   "id": "vn-13",
+   "lang": "igbo",
+   "noise": "light",
+   "reference": "Daalụ, ihe niile abịala.",
+   "expected": "confirmed",
+   "spitch": {
+    "transcript": "daalụ ihe niile abịala",
+    "status": "ok",
+    "tried": [
+     "spitch"
+    ],
+    "wer": 0.0,
+    "outcome": "confirmed",
+    "action": "consent",
+    "held_back": ""
+   },
+   "muse": {
+    "transcript": "Dalo ihe nile abiala.",
+    "status": "ok",
+    "tried": [
+     "muse"
+    ],
+    "wer": 0.75,
+    "outcome": "confirmed",
+    "action": "consent",
+    "held_back": ""
+   },
+   "router": {
+    "transcript": "daalụ ihe niile abịala",
+    "status": "ok",
+    "tried": [
+     "spitch:ok"
+    ],
+    "wer": 0.0,
+    "outcome": "confirmed",
+    "action": "consent",
+    "held_back": ""
+   }
+  },
+  {
+   "id": "vn-14",
+   "lang": "igbo",
+   "noise": "heavy",
+   "reference": "Noodles ezughị. Anọ ka m hụrụ, ọ bụghị isii.",
+   "expected": "disputed",
+   "spitch": {
+    "transcript": "northern rock northern rock northern rock northern rock northern rock northern rock northern rock northern rock northern rock northern rock northern rock northern rock northern rock northern rock northern rock northern rock northern rock northern rock northern rock northern rock northern ro",
+    "status": "low",
+    "tried": [
+     "spitch"
+    ],
+    "wer": 4.667,
+    "outcome": "unclear",
+    "action": "clarify",
+    "held_back": ""
+   },
+   "muse": {
+    "transcript": "Noodles ezugi anọka mhụro obugi isi",
+    "status": "ok",
+    "tried": [
+     "muse"
+    ],
+    "wer": 0.889,
+    "outcome": "disputed",
+    "action": "flag_dispute",
+    "held_back": ""
+   },
+   "router": {
+    "transcript": "Noodles ezugi anọka mhụro obugi isi",
+    "status": "ok",
+    "tried": [
+     "spitch:low",
+     "muse:ok"
+    ],
+    "wer": 0.889,
+    "outcome": "disputed",
+    "action": "flag_dispute",
+    "held_back": ""
+   }
+  },
+  {
+   "id": "vn-15",
+   "lang": "hausa",
+   "noise": "light",
+   "reference": "Na gode, duk kayan sun iso.",
+   "expected": "confirmed",
+   "spitch": {
+    "transcript": "nagode duk kayan sun iso",
+    "status": "ok",
+    "tried": [
+     "spitch"
+    ],
+    "wer": 0.333,
+    "outcome": "confirmed",
+    "action": "consent",
+    "held_back": ""
+   },
+   "muse": {
+    "transcript": "now could you look and see",
+    "status": "ok",
+    "tried": [
+     "muse"
+    ],
+    "wer": 1.0,
+    "outcome": "unclear",
+    "action": "clarify",
+    "held_back": ""
+   },
+   "router": {
+    "transcript": "nagode duk kayan sun iso",
+    "status": "ok",
+    "tried": [
+     "spitch:ok"
+    ],
+    "wer": 0.333,
+    "outcome": "confirmed",
+    "action": "consent",
+    "held_back": ""
+   }
+  },
+  {
+   "id": "vn-16",
+   "lang": "hausa",
+   "noise": "heavy",
+   "reference": "Noodles ba su cika ba. Hudu na gani, ba shida ba.",
+   "expected": "disputed",
+   "spitch": {
+    "transcript": "windows ba su cika ba hulu na gani ba shi da ba",
+    "status": "ok",
+    "tried": [
+     "spitch"
+    ],
+    "wer": 0.364,
+    "outcome": "unclear",
+    "action": "clarify",
+    "held_back": ""
+   },
+   "muse": {
+    "transcript": "windows bus sugar ba hubuna gani bashi da aba.",
+    "status": "ok",
+    "tried": [
+     "muse"
+    ],
+    "wer": 0.818,
+    "outcome": "unclear",
+    "action": "clarify",
+    "held_back": ""
+   },
+   "router": {
+    "transcript": "windows ba su cika ba hulu na gani ba shi da ba",
+    "status": "ok",
+    "tried": [
+     "spitch:ok"
+    ],
+    "wer": 0.364,
+    "outcome": "unclear",
+    "action": "clarify",
+    "held_back": ""
+   }
+  }
+ ],
+ "passes": {
+  "false_confirms_all_transcribers": true,
+  "disputes_never_confirmed_all_transcribers": true,
+  "router_disputes_caught_first_read": false
+ },
+ "pass_safety": true,
+ "pass": false,
+ "mode": "live, judge muse-spark-1.3",
+ "wall_seconds": 0.3,
+ "judge_live_calls_this_pass": 0,
+ "judge_replayed_calls": 48,
+ "transcriber_live_calls_this_pass": {
+  "spitch": 0,
+  "muse": 0
+ },
+ "recorded_at": "2026-10-26T21:42+01:00",
+ "table_markdown": "| Language | spitch WER | spitch verdicts | muse WER | muse verdicts | router WER | router verdicts |\n|---|---|---|---|---|---|---|\n| english (n=4) | 16% | 4/4 | 5% | 4/4 | 5% | 4/4 |\n| hausa (n=2) | 35% | 1/2 | 88% | 0/2 | 35% | 1/2 |\n| igbo (n=2) | 323% | 1/2 | 85% | 2/2 | 62% | 2/2 |\n| mixed (n=1) | 12% | 1/1 | 88% | 1/1 | 12% | 1/1 |\n| pidgin (n=4) | 27% | 4/4 | 32% | 4/4 | 27% | 4/4 |\n| yoruba (n=3) | 42% | 3/3 | 67% | 3/3 | 42% | 3/3 |\n| **all** | 52% | 14/16 | 48% | 14/16 | 26% | 15/16 |"
+}
