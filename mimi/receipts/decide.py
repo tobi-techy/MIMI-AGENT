@@ -12,6 +12,11 @@ wrong flag, so every doubt falls toward asking or flagging.
 * ``disputed`` or ``partial`` always flags the owner with the quote, and no
   consent is recorded (for a partial, not even for the lines the shop did
   confirm: the owner settles the receipt).
+* A voice note is judged from its transcript, and the quote must be in the
+  transcript. A confirm is held back when its witness is a voice note whose
+  transcript is ``low`` or ``failed``, or when any message in the new burst
+  is such a voice note (Mimi cannot know what it said). Those go to the
+  clarifying path and Mimi asks the shop to type.
 * Anything else (unclear, unrelated, a confirm that failed a guard, a reply
   that did not parse) gets one clarifying message, then an owner flag.
 * Quantities in a flag come from the receipt. The shop's stated number is
@@ -150,7 +155,10 @@ def decide(
     replies: Sequence[ShopReply],
     clarified: bool,
     threshold: float = CONFIRM_THRESHOLD,
+    new_replies: Sequence[ShopReply] | None = None,
 ) -> Decision:
+    """``new_replies``: the burst being judged (default: all ``replies``)."""
+    burst = list(new_replies) if new_replies is not None else list(replies)
     witness = find_witness(verdict.evidence_quote, replies)
     found = witness is not None
     if verdict.outcome in ("disputed", "partial"):
@@ -177,6 +185,10 @@ def decide(
             held = "low_confidence"
         elif witness is None:
             held = "evidence_not_in_shop_messages"
+        elif witness.voice_doubtful:
+            held = "low_quality_transcript"
+        elif any(r.voice_doubtful for r in burst):
+            held = "doubtful_voice_note_in_burst"
         elif _INJECTION.search(verdict.evidence_quote) or _INJECTION.search(
             witness.text
         ):

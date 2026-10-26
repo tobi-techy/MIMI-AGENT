@@ -8,12 +8,14 @@ in code (``decide.py``).
 Mimi's own copy is plain English. The one exception is the clarifying
 question: when the shop wrote in Pidgin, Yoruba, Igbo or Hausa, Mimi asks in
 that language (fixed templates below, never model-written). Mixed or any other
-language gets plain English.
+language gets plain English. The request to type a reply after a voice note
+Mimi could not use is plain English too.
 """
 
 from __future__ import annotations
 
 import hashlib
+import re
 
 from mimi.world.model import Delivery
 
@@ -76,5 +78,34 @@ def clarify_text(delivery: Delivery, language: str = "english") -> str:
     return template.format(ref=delivery.delivery_id)
 
 
+TYPE_REQUEST = (
+    "I could not understand your voice note about delivery {ref}. Please type "
+    "your reply: YES if every item on the receipt arrived, or tell me what is "
+    "different."
+)
+
+
+def type_request_text(delivery: Delivery) -> str:
+    """Sent when a voice note could not be transcribed, or its transcript is
+    too doubtful to confirm on. Plain English, never model-written."""
+    return TYPE_REQUEST.format(ref=delivery.delivery_id)
+
+
 def receipt_digest(text: str) -> str:
     return "rcpt_" + hashlib.sha256(text.encode("utf-8")).hexdigest()[:24]
+
+
+_KW_STOP = frozenset({"pack", "refill", "with", "from"})
+
+
+def receipt_keywords(delivery: Delivery, limit: int = 20) -> tuple[str, ...]:
+    """Brand and product words from the receipt, to bias speech recognition
+    toward them ("Sunrise", "Noodles", "Sardines"), plus "carton"."""
+    out: list[str] = []
+    for line in delivery.lines:
+        for word in re.findall(r"[A-Za-z][A-Za-z-]{3,}", line.name):
+            if word.casefold() not in _KW_STOP and word not in out:
+                out.append(word)
+    if "carton" not in out:
+        out.append("carton")
+    return tuple(out[:limit])

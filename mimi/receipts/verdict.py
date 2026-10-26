@@ -231,6 +231,22 @@ def receipt_view(delivery: Delivery) -> dict[str, object]:
     }
 
 
+def message_view(reply: ShopReply) -> dict[str, object]:
+    """One shop message as the model sees it.
+
+    A typed message is ``{"at", "text"}`` (unchanged, so recorded answers
+    still replay). A voice note is marked as a transcript, with its quality
+    from the code checks and the API's confidence when it gave one (neither
+    Spitch nor Muse Voice Transcribe does, so it is null today).
+    """
+    view: dict[str, object] = {"at": reply.received_at, "text": reply.text}
+    if reply.is_voice:
+        view["source"] = "voice_note_transcript"
+        view["transcript_quality"] = reply.transcript_status or "failed"
+        view["transcription_confidence"] = reply.transcript_confidence
+    return view
+
+
 def build_messages(
     delivery: Delivery,
     earlier: Sequence[ShopReply],
@@ -238,8 +254,8 @@ def build_messages(
     mimi_sent: Sequence[str],
 ) -> list[ChatMessage]:
     shop = {
-        "earlier_messages": [{"at": r.received_at, "text": r.text} for r in earlier],
-        "new_messages": [{"at": r.received_at, "text": r.text} for r in new],
+        "earlier_messages": [message_view(r) for r in earlier],
+        "new_messages": [message_view(r) for r in new],
     }
     user = (
         "<receipt>\n"
