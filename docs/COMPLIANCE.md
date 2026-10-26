@@ -18,7 +18,7 @@ Build window: 26 Oct 2026 12:00 PM ET (16:00 UTC, 17:00 WAT) to 4 Nov 2026
 | Original work, solely owned | Mimi is Rail Technology Concepts Ltd's own code, written by Tobi Omotade, the participant. Copyright notice in `LICENSE` and `pyproject.toml`. |
 | Third-party technical help allowed if the work stays the participant's own | AI coding assistants were used for parts of the implementation, under the participant's direction and review. All output is owned by Rail Technology Concepts Ltd. |
 | Open source allowed if licences are followed | Every package is listed with its licence in `DEPENDENCIES.md`: MIT, BSD-3-Clause, Apache-2.0, PSF-2.0, MPL-2.0 (certifi, unmodified) and LGPL with exceptions (psycopg2-binary, optional, a dynamically loaded driver, unmodified). ffmpeg (LGPL-2.1 or later) is run as a separate program, never linked. None requires releasing our code. |
-| Third-party APIs | Spitch (speech to text, and text to speech for fixtures) is a paid, usage-based third-party API used under its terms, with data retention switched off (`X-Data-Retention: false` on every call). Listed in `DEPENDENCIES.md`. |
+| Third-party APIs | Spitch (speech to text; text to speech for the fixtures and for voice replies to shops that opted in) is a paid, usage-based third-party API used under its terms, with data retention switched off (`X-Data-Retention: false` on every call). Listed in `DEPENDENCIES.md`. |
 | No infringement of IP, privacy or other rights | Data is fully synthetic (below). Brands are invented. Bank and fintech names appear only as text in fake alert layouts, never with logos. No real person, phone number or account number. |
 | Build window | Every commit in this repo is authored and committed after 26 Oct 2026 16:00 UTC. `scripts/hackathon_provenance.py` prints each one in WAT and fails CI if one is earlier. |
 | Pre-existing work kept separate | This is a fresh repo with only window work. Pre-existing work is named in `HACKATHON.md` and the README and is not here. The demo video opens with one line naming what was pre-existing and what was built this week. |
@@ -62,8 +62,8 @@ modify or distribute it is granted without written permission.
 * Fully synthetic world: Coral Lane Trading (fictional distributor), 40
   fictional shops in real Ado-Ekiti areas, 30 invented-brand SKUs, 8 weeks of
   deliveries, payments and bank feed, fixed seed (`WORLD.md`).
-* Phones use `+2340000...` (never assigned). Account numbers are fictional and
-  masked.
+* Phones use `+2340000...` (never assigned), including the eval's and the
+  tests'. Account numbers are fictional and masked.
 * The receipt-reply eval (`eval/receipts/receipt_replies.jsonl`) is synthetic
   and hand-written; every case carries `"synthetic": true`.
 * The recorded model answers are Muse Spark's outputs on those synthetic
@@ -81,6 +81,22 @@ modify or distribute it is granted without written permission.
   consent, and kept out of this public repo.
 * In the product, Mimi stores a voice note's transcript, its length and its
   SHA-256, never the audio. Spitch is called with data retention off.
+* Voice replies are off by default. Only the shop can turn them on, by
+  sending "VOICE ON"; every choice is kept with the shop's own message as
+  its consent (`shop_voice_consent`, alembic `0004`). The text always goes
+  with the voice note and carries every amount and day. Voice-reply audio is
+  handed to the channel and dropped; it is written to disk only by the
+  recorded smoke run's cache, outside this repo.
+* The voice replies are Spitch system voices, not a real person's voice.
+
+## Money
+
+* Mimi never moves money. A payment promise ("I go pay 20k tomorrow") is
+  read in code (integer kobo, a day in Africa/Lagos), read back to the shop
+  in plain English, and recorded (`RecordPaymentPromise`, a note for the
+  books) only after the shop's YES to that read-back. An unclear amount or
+  day gets a question and records nothing. The intent carries no money verb
+  and the runtime refuses any that does.
 
 ## Assets
 
@@ -102,7 +118,8 @@ permission and no faces in frame, and each will be listed here.
   voice notes into text: first choice for English notes and the fallback for
   the rest, behind a router with Spitch (`mimi/voice/`, `docs/VOICE.md`).
   The transcript goes to Muse Spark like any typed reply. Measured on a
-  16-clip synthetic voice eval, recorded live.
+  50-clip synthetic voice eval (with and without language hints), recorded
+  live.
 * Planned during the window: **SAM 3.1** for shelf-photo segmentation.
 
 ## Pre-submit checklist

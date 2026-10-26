@@ -11,8 +11,8 @@ starts with no intent types of its own. The module rules test
 
 | Package | Licence | Used by |
 |---|---|---|
-| `sqlalchemy` | MIT | `mimi/runtime/sql_store.py`, `mimi/receipts/inbox.py`, sim `--db` |
-| `alembic` | MIT | migrations `0001_runtime_jobs`, `0002_shop_inbox` |
+| `sqlalchemy` | MIT | `mimi/runtime/sql_store.py`, `mimi/receipts/inbox.py`, `mimi/voice/prefs.py`, sim `--db` |
+| `alembic` | MIT | migrations `0001_runtime_jobs` to `0004_voice_consent` |
 | `httpx` | BSD-3-Clause | `mimi/models/meta.py` (Meta Model API client), `mimi/voice/` (Spitch and Muse Voice Transcribe clients) |
 | `pydantic` | MIT | `mimi/receipts/verdict.py` (typed verdict) |
 
@@ -33,7 +33,8 @@ Their transitive packages: `httpcore` (BSD-3-Clause), `h11` (MIT), `anyio`
 
 | Tool | Licence | Used by |
 |---|---|---|
-| `ffmpeg`, `ffprobe` | LGPL-2.1 or later (GPL builds exist; we only run the binary, never link it) | `mimi/voice/audio.py`: reading MP3 and M4A, converting to 16 kHz WAV for Muse Voice Transcribe; `scripts/make_voice_fixtures.py`: noise and encoding. Installed in CI with apt. Ogg/Opus and WAV work without it |
+| `ffmpeg`, `ffprobe` | LGPL-2.1 or later (GPL builds exist; we only run the binary, never link it) | `mimi/voice/audio.py`: reading MP3 and M4A, converting to 16 kHz WAV for Muse Voice Transcribe, encoding voice replies as Ogg/Opus; `scripts/make_voice_fixtures.py`: noise and encoding. Installed in CI with apt. Ogg/Opus and WAV input work without it; without it a voice reply is not made and the text goes alone |
+| IANA time zone data | public domain | `zoneinfo` (standard library) for Africa/Lagos in `mimi/voice/promise.py`; the system copy on Linux and macOS (on Windows, `pip install tzdata`) |
 
 Not used: the official `spitch` Python SDK (Apache-2.0, checked on PyPI,
 version 1.50.0). The Spitch adapter calls the REST API with `httpx`, like the
@@ -58,7 +59,8 @@ Meta's terms for the hackathon.
 
 Spitch (`https://api.spitch.app/v1`), a third-party paid API, usage-based:
 speech to text (USD 0.00042 per second of audio) for voice notes, and text to
-speech (USD 0.0014 per second) only to make the synthetic fixtures. Every
+speech (USD 0.0014 per second) for the synthetic fixtures and for voice
+replies to shops that opted in. Every
 call sends `X-Data-Retention: false`, so Spitch stores no copy of the audio
 or the output. Key: `SPITCH_API_KEY`, from the shell only.
 
