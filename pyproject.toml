@@ -1,0 +1,66 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "mimi-agent"
+version = "0.1.0"
+description = "Mimi: WhatsApp agents for FMCG distributors in Nigeria. Confirms deliveries with shops and flags disputes; never moves money."
+authors = [{ name = "Rail Technology Concepts Ltd" }]
+readme = "README.md"
+license = { text = "Proprietary. Copyright (c) 2026 Rail Technology Concepts Ltd. All rights reserved." }
+requires-python = ">=3.11"
+classifiers = [
+    "License :: Other/Proprietary License",
+    "Private :: Do Not Upload",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
+# Runtime dependencies, with licences, are listed in docs/DEPENDENCIES.md.
+dependencies = [
+    "sqlalchemy>=2.0.23",
+    "alembic>=1.13.0",
+    "httpx>=0.25.0",
+    "pydantic>=2.5.0",
+]
+
+[project.optional-dependencies]
+# OtelStepTracer only; the sim and the tests use RecordingStepTracer.
+otel = ["opentelemetry-api>=1.23.0"]
+# Only when the sim or alembic points at Postgres.
+postgres = ["psycopg2-binary>=2.9.9"]
+dev = [
+    "pytest>=7.4.3",
+    "ruff>=0.4.0",
+    "mypy>=1.8.0",
+    "detect-secrets==1.5.0",
+]
+
+[tool.setuptools.packages.find]
+include = ["mimi*"]
+
+[tool.setuptools.package-data]
+"mimi.world" = ["fixtures/*.json"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+extend-exclude = ["mimi/world/fixtures"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP"]
+ignore = ["E501", "B008", "UP017"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["mimi"]
+
+[tool.mypy]
+python_version = "3.11"
+packages = ["mimi"]
+ignore_missing_imports = true
+warn_unused_ignores = false
