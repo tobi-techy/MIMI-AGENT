@@ -10,6 +10,14 @@ shop's persona, whose replies are queued at the time they would arrive.
 
 Fast-forward is the default (no waiting). ``realtime_speed`` makes the sim
 sleep between events: 1.0 is real time, 60.0 plays an hour a minute.
+
+Voice notes: with ``voice_share`` above 0, a shop's first reply is sometimes
+(that share of shops, picked from the seed) a real synthetic voice clip from
+``eval/voice/clips/`` instead of text, in the shop's language: a dispute clip
+when goods were short, a confirmation otherwise. A persona's
+"[voice note 0:12]" placeholder line becomes a clip the same way. The clips
+come from a fixed library, so their numbers may not match the receipt. The
+desk transcribes them with ``transcriber`` (the router, or the fake).
 """
 
 from __future__ import annotations
@@ -30,14 +38,40 @@ from mimi.receipts import (
     ShopWebhook,
 )
 from mimi.receipts.inbox import InMemoryShopInbox, ShopInbox
+from mimi.receipts.receipt import receipt_keywords
 from mimi.receipts.verdict import Judged
 from mimi.runtime.runner import JobRunner
 from mimi.runtime.store import InMemoryJobStore, JobStore
 from mimi.runtime.tracing import RecordingStepTracer
-from mimi.sim.persona import ShopPersona
+from mimi.sim.persona import ShopPersona, _rng, voice_for
+from mimi.voice.base import Transcriber, VoiceContext
+from mimi.voice.fixtures import clip_bytes, load_clips
 from mimi.world.model import Delivery, World
 
 WAT = timezone(timedelta(hours=1), "WAT")
+
+# Persona voice -> (fixture language, hint for the transcriber).
+_VOICE_LANG = {
+    "short casual Nigerian English, small typos": ("english", "en"),
+    "Nigerian Pidgin": ("pidgin", "pcm"),
+    "Yoruba mixed with English words": ("yoruba", "yo"),
+    "Igbo mixed with English words": ("igbo", "ig"),
+    "Hausa mixed with English words": ("hausa", "ha"),
+}
+
+
+def voice_clip_for(shop_id: str, short: bool, n: int = 0) -> dict[str, Any] | None:
+    """A fixture clip in the shop's language: a dispute when goods were
+    short, a confirmation otherwise (Yoruba disputes use the Yoruba-English
+    clip). ``None`` when the library has none."""
+    lang, _ = _VOICE_LANG.get(voice_for(shop_id), ("english", "en"))
+    want = "dispute" if short else "confirm"
+    clips = load_clips()
+    for langs in ((lang, "mixed") if lang == "yoruba" else (lang,), ("english",)):
+        pool = [c for c in clips if c["lang"] in langs and c["category"] == want]
+        if pool:
+            return pool[n % len(pool)]
+    return None
 
 
 class SimClock:
@@ -103,12 +137,12 @@ class Simulator:
         realtime_speed: float | None = None,
         seed: int = 0,
         hours: float = 26.0,
+        transcriber: Transcriber | None = None,
+        voice_share: float = 0.0,
     ) -> None:
         self.world = world
         self.deliveries: list[Delivery] = [
-            d
-            for d in world.live_deliveries
-            if shop_ids is None or d.shop_id in shop_ids
+            d for d in world.live_deliveries if shop_ids is None or d.shop_id in shop_ids
         ]
         start_day = world.date_of(world.live_day)
         self.start = datetime.combine(start_day, time(7, 0), WAT)
@@ -117,7 +151,15 @@ class Simulator:
         self.store = store or InMemoryJobStore()
         self.inbox = inbox or InMemoryShopInbox()
         self.go = SimGo()
-        self.desk = ReceiptDesk(self.store, self.inbox, world.tenant_id)
+        self.voice_share = voice_share
+        self.desk = ReceiptDesk(
+            self.store,
+            self.inbox,
+            world.tenant_id,
+            transcriber=transcriber,
+            voice_context=self._voice_context,
+        )
+        self.voice_sent: list[str] = []
         self.judge = ReceiptJudge(mimi_model)
         self.verdicts: list[Judged] = []
         self.flow = ReceiptFlow(world, self.inbox, self._judge)
@@ -154,6 +196,27 @@ class Simulator:
         )
         return judged
 
+    def _voice_context(self, shop_id: str, job_id: str) -> VoiceContext:
+        _, hint = _VOICE_LANG.get(voice_for(shop_id), ("english", "en"))
+        delivery = self.world.delivery(job_id.removeprefix("rcpt-"))
+        return VoiceContext(language_hint=hint, keywords=receipt_keywords(delivery))
+
+    def _voiced(
+        self, shop_id: str, delivery: Delivery, round_no: int, texts: list[str]
+    ) -> list[str | dict[str, Any]]:
+        """Swap text for a synthetic clip: a placeholder line always (when
+        voice is on), and a whole first-round burst for ``voice_share`` of
+        the shops."""
+        if self.voice_share <= 0:
+            return list(texts)
+        clip = voice_clip_for(shop_id, delivery.shortage is not None, len(self.voice_sent))
+        if clip is None:
+            return list(texts)
+        roll = _rng("voice-note", shop_id, self.personas[shop_id].seed).random()
+        if round_no == 0 and roll < self.voice_share and texts:
+            return [clip]
+        return [clip if t.startswith("[voice note") else t for t in texts]
+
     def _push(self, when: datetime, kind: str, payload: Any) -> None:
         self._seq += 1
         heapq.heappush(self._queue, (when, self._seq, kind, payload))
@@ -166,23 +229,21 @@ class Simulator:
             shop_id = msg["scope"]["shop_id"]
             delivery = self.world.delivery(msg["delivery_id"])
             now = self.clock.now()
-            self.transcript.add(
-                now, f"Mimi -> {shop_id}", msg["text"].replace("\n", " | ")
-            )
-            for i, out in enumerate(
-                self.personas[shop_id].reply(msg["text"], delivery)
-            ):
+            self.transcript.add(now, f"Mimi -> {shop_id}", msg["text"].replace("\n", " | "))
+            persona = self.personas[shop_id]
+            round_no = persona.round
+            outs = persona.reply(msg["text"], delivery)
+            bodies = self._voiced(shop_id, delivery, round_no, [o.text for o in outs])
+            for i, (out, body) in enumerate(zip(outs, bodies, strict=False)):
                 self._push(
                     now + out.delay,
                     "reply",
-                    (shop_id, f"{msg['delivery_id']}-{self._handed}-{i}", out.text),
+                    (shop_id, f"{msg['delivery_id']}-{self._handed}-{i}", body),
                 )
 
     def run(self) -> dict[str, Any]:
         for d in self.deliveries:
-            when = datetime.combine(
-                self.start.date(), time(d.minute // 60, d.minute % 60), WAT
-            )
+            when = datetime.combine(self.start.date(), time(d.minute // 60, d.minute % 60), WAT)
             self._push(when, "log", d)
         tick = self.start
         while tick <= self.end:
@@ -196,17 +257,38 @@ class Simulator:
             if kind == "log":
                 self.desk.open_receipt(payload.delivery_id, payload.shop_id)
             elif kind == "reply":
-                shop_id, mid, text = payload
+                shop_id, mid, body = payload
                 shop = self.world.shop(shop_id)
-                self.transcript.add(when, shop.name, text)
                 self.webhooks += 1
-                self.desk.receive(
-                    ShopWebhook(f"wamid.{mid}", shop_id, shop.phone, text, when)
-                )
+                if isinstance(body, dict):
+                    data = clip_bytes(body)
+                    self.voice_sent.append(body["id"])
+                    self.transcript.add(
+                        when, shop.name, f"[voice note, synthetic clip {body['id']}]"
+                    )
+                    self.desk.receive(
+                        ShopWebhook(
+                            f"wamid.{mid}",
+                            shop_id,
+                            shop.phone,
+                            "",
+                            when,
+                            audio=data,
+                            audio_mime="audio/ogg; codecs=opus",
+                        )
+                    )
+                    t = self.desk.transcripts[-1]
+                    self.transcript.add(
+                        when,
+                        "Mimi (hears)",
+                        f"{t.status} via {'/'.join(t.tried) or t.provider} "
+                        f'"{t.text[:80]}"' + (f" ({t.reason})" if t.reason else ""),
+                    )
+                else:
+                    self.transcript.add(when, shop.name, body)
+                    self.desk.receive(ShopWebhook(f"wamid.{mid}", shop_id, shop.phone, body, when))
                 # Wake again once the burst could have settled.
-                self._push(
-                    when + self.flow.burst_settle + timedelta(seconds=1), "tick", None
-                )
+                self._push(when + self.flow.burst_settle + timedelta(seconds=1), "tick", None)
             self._drain()
         return self.report()
 
@@ -221,9 +303,7 @@ class Simulator:
                 open_jobs += 1
         shortages = {d.delivery_id for d in self.deliveries if d.shortage}
         flagged = {
-            f["delivery_id"]
-            for f in self.go.flags
-            if f["reason"] in ("dispute", "partial_dispute")
+            f["delivery_id"] for f in self.go.flags if f["reason"] in ("dispute", "partial_dispute")
         }
         outcomes: dict[str, int] = {}
         langs: dict[str, int] = {}
@@ -235,11 +315,29 @@ class Simulator:
             "results": results,
             "still_waiting": open_jobs,
             "messages_to_shops": len(self.go.to_shops),
-            "receipts_sent": sum(
-                1 for m in self.go.to_shops if m["purpose"] == "delivery_receipt"
-            ),
+            "receipts_sent": sum(1 for m in self.go.to_shops if m["purpose"] == "delivery_receipt"),
             "clarifications_sent": sum(
                 1 for m in self.go.to_shops if m["purpose"] == "receipt_clarify"
+            ),
+            "type_requests_sent": sum(
+                1 for m in self.go.to_shops if m["purpose"] == "receipt_type_request"
+            ),
+            "voice_notes": len(self.desk.transcripts),
+            "voice_clips": list(self.voice_sent),
+            "voice_transcripts": {
+                f"{'/'.join(t.tried) or t.provider}": sum(
+                    1
+                    for x in self.desk.transcripts
+                    if ("/".join(x.tried) or x.provider) == ("/".join(t.tried) or t.provider)
+                )
+                for t in self.desk.transcripts
+            },
+            "voice_audio_seconds": round(
+                sum(t.duration_s or 0.0 for t in self.desk.transcripts), 2
+            ),
+            "voice_latency_s": round(sum(t.latency_s for t in self.desk.transcripts), 2),
+            "consents_from_voice": sum(
+                1 for c in self.go.consents.values() if c.get("witness_kind") == "voice"
             ),
             "consents_recorded": len(self.go.consents),
             "verdicts": len(self.verdicts),
@@ -261,8 +359,6 @@ class Simulator:
             "intents_accepted": len(self.go.accepted),
             "runtime_steps": self.steps,
             "sim_prompt_tokens": sum(p.prompt_tokens for p in self.personas.values()),
-            "sim_completion_tokens": sum(
-                p.completion_tokens for p in self.personas.values()
-            ),
+            "sim_completion_tokens": sum(p.completion_tokens for p in self.personas.values()),
             "sim_clock_end": self.clock.now().isoformat(),
         }
