@@ -8,9 +8,14 @@
     --cache PATH       record live model answers to PATH and replay them on a
                        rerun (a long live run can be resumed; tokens reported
                        include the replayed calls' recorded usage)
+    --voice SHARE      shops send synthetic voice notes: SHARE (0 to 1) of
+                       shops answer the receipt with a voice clip, and every
+                       "[voice note]" placeholder becomes one (default 0: off)
 
 Models come from the environment (``META_API_KEY``, ``MIMI_MODEL``,
-``SIM_MODEL``); with no key both sides use the deterministic FakeModel.
+``SIM_MODEL``); with no key both sides use the deterministic FakeModel. The
+transcriber comes from ``mimi.voice.env`` (``SPITCH_API_KEY``,
+``META_API_KEY``, ``MIMI_VOICE``); with no key it is the fake.
 """
 
 from __future__ import annotations
@@ -26,6 +31,7 @@ from mimi.models.cache import CachedModel
 from mimi.receipts.verdict import fake_verdict
 from mimi.sim.engine import Simulator
 from mimi.sim.persona import fake_shop
+from mimi.voice.env import transcriber_from_env
 from mimi.world import load_world
 
 
@@ -38,6 +44,7 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--transcript", action="store_true")
     ap.add_argument("--cache", default=None)
+    ap.add_argument("--voice", type=float, default=0.0)
     args = ap.parse_args(argv)
 
     world = load_world()
@@ -62,6 +69,9 @@ def main(argv: list[str] | None = None) -> int:
             store.ensure_schema()
             inbox.ensure_schema()
         extra = {"store": store, "inbox": inbox}
+    transcriber = None
+    if args.voice > 0:
+        transcriber = transcriber_from_env(cache=(args.cache + ".voice") if args.cache else None)
     started = time.monotonic()
     runner = Simulator(
         world,
@@ -71,11 +81,15 @@ def main(argv: list[str] | None = None) -> int:
         realtime_speed=args.realtime,
         seed=args.seed,
         hours=args.hours,
+        transcriber=transcriber,
+        voice_share=args.voice,
         **extra,
     )
     report = runner.run()
     report["mimi_model"] = mimi.name
     report["sim_model"] = sim.name
+    if transcriber is not None:
+        report["transcriber"] = transcriber.name
     if isinstance(mimi, CachedModel):
         report["live_calls_this_pass"] = mimi.live_calls + sim.live_calls
         report["replayed_calls"] = mimi.cached_calls + sim.cached_calls

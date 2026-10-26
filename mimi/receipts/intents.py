@@ -15,8 +15,10 @@ from mimi.receipts.decide import DisputedLine
 from mimi.runtime.outbox import intent_types
 from mimi.types import ShopScope
 
-MessagePurpose = Literal["delivery_receipt", "receipt_clarify"]
-FlagReason = Literal["dispute", "partial_dispute", "unclear_reply", "no_reply"]
+MessagePurpose = Literal["delivery_receipt", "receipt_clarify", "receipt_type_request"]
+FlagReason = Literal[
+    "dispute", "partial_dispute", "unclear_reply", "no_reply", "voice_unreadable"
+]
 
 
 @dataclass(frozen=True)
@@ -49,6 +51,10 @@ class RecordDeliveryConsent:
     evidence_quote: str = ""
     language: str = ""
     confidence: float = 0.0
+    # "voice" when the witness is a voice note's transcript; then the
+    # provider that transcribed it (the audio is not kept).
+    witness_kind: str = "text"
+    transcript_provider: str = ""
     consent: Literal["shop_confirmed"] = "shop_confirmed"
     kind: Literal["record_delivery_consent"] = field(default="record_delivery_consent")
 
@@ -58,7 +64,9 @@ class FlagToOwner:
     scope: ShopScope
     delivery_id: str
     reason: FlagReason
-    # The shop's own words, quoted, never paraphrased by a model.
+    # The shop's own words, quoted, never paraphrased by a model. A voice
+    # note appears as "[voice note transcript] ..." so the owner knows it
+    # was heard, not typed.
     shop_words: str = ""
     # The span the model pointed at, checked in code to be in shop_words's
     # messages ("" when it was not found there).

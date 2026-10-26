@@ -73,6 +73,54 @@ Cases are in `eval/receipts/receipt_replies.jsonl` (synthetic, hand-written).
 and `receipt_replies.report.json`. Changing the prompt or a case makes CI miss
 the cache: re-record with `--live --fresh`.
 
+## 3c. Voice notes
+
+Speech to text for WhatsApp voice notes (`docs/VOICE.md`). Keys from the
+shell, never written into a file in this repo:
+
+```bash
+export SPITCH_API_KEY=...       # Spitch (Yoruba, Igbo, Hausa, Pidgin, default)
+export META_API_KEY=...         # also used by muse-voice-transcribe-1.0
+# optional
+export MIMI_VOICE=router        # router (default) | spitch | muse | fake
+export VOICE_TIMEOUT_S=30
+```
+
+With neither key set the transcriber is the deterministic fake: each
+fixture clip transcribes to the text it was made from, and any other audio
+fails (so the "please type your reply" path runs offline too). ffmpeg must
+be installed for MP3 and M4A clips and for Muse Voice Transcribe, which only
+takes 16 kHz mono WAV; Ogg/Opus and WAV durations are read without it.
+
+```bash
+python -m mimi.voice.eval            # replay recorded transcripts and verdicts (CI)
+python -m mimi.voice.eval --live     # Spitch + Muse Voice Transcribe + Muse Spark
+python -m mimi.voice.eval --live --fresh   # all calls new
+python -m mimi.voice.eval --fake     # fake transcriber and keyword judge (plumbing)
+python -m mimi.voice.eval --strict   # also fail on the first-read dispute mark
+```
+
+Recorded answers: `eval/voice/transcripts.spitch.cache.json`,
+`transcripts.muse.cache.json` (text only, never audio) and
+`verdicts.cache.json`; `--live` writes `voice.report.json`.
+
+Voice notes in the simulator: `--voice SHARE` makes that share of shops
+answer the receipt with a synthetic clip in their language (a dispute clip
+when goods were short), and turns every "[voice note]" placeholder into a
+clip. The transcript prints what Mimi heard and which service heard it.
+
+```bash
+python -m mimi.sim --shops 3 --transcript --voice 1
+python -m mimi.sim --shops 10 --voice 0.3 --cache /tmp/sim10   # also records transcripts
+```
+
+Regenerate the fixtures (costs Spitch credit; about 60 seconds of speech):
+
+```bash
+python scripts/make_voice_fixtures.py          # missing clips only
+python scripts/make_voice_fixtures.py --force
+```
+
 ## 4. Clock modes and persistence
 
 ```bash
@@ -86,8 +134,9 @@ python -m mimi.sim --shops 3 --realtime 60 --transcript
 python -m mimi.sim --db sqlite:////tmp/mimi-sim.db
 
 # Postgres: install the extra, then create the tables with alembic first
-# (revisions 0001 and 0002). MIMI_DB_URL is a SQLAlchemy URL for your own
+# (revisions 0001 to 0003). MIMI_DB_URL is a SQLAlchemy URL for your own
 # local database, set in your shell (never written into a file in this repo).
+# Revision 0003 adds the voice-note columns (transcript, never audio).
 pip install -e '.[postgres]'
 alembic upgrade head
 python -m mimi.sim --db "$MIMI_DB_URL"

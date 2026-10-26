@@ -1,0 +1,226 @@
+{
+ "05d03894c3f58b7bb5972398e3d97234": {
+  "completion_tokens": 433,
+  "latency_s": 3.254,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 1266,
+  "text": "{\"confidence\": 0.85, \"disputed_items\": [], \"evidence_quote\": \"ẹ ṣe ọ́ gbogbo ẹ̀rù ti dépẹ́\", \"language\": \"yoruba\", \"outcome\": \"confirmed\", \"reason\": \"Shop says thank you, all goods have arrived.\"}"
+ },
+ "081c2b2be260aaf08ee1bc07b700d062": {
+  "completion_tokens": 603,
+  "latency_s": 4.154,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 1253,
+  "text": "{\"confidence\": 0.3, \"disputed_items\": [], \"evidence_quote\": \"Eduro ma wọ́.\", \"language\": \"yoruba\", \"outcome\": \"unclear\", \"reason\": \"The message does not clearly say if the delivery arrived complete.\"}"
+ },
+ "0a8c137071106ebdb84f56664d0f61cc": {
+  "completion_tokens": 593,
+  "latency_s": 3.505,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 1253,
+  "text": "{\"confidence\": 0.3, \"disputed_items\": [], \"evidence_quote\": \"now could you look and see\", \"language\": \"english\", \"outcome\": \"unclear\", \"reason\": \"The message asks to look without saying if goods arrived complete.\"}"
+ },
+ "0dffcd0d18905247a39cfb7824c20ebe": {
+  "completion_tokens": 423,
+  "latency_s": 2.822,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 1256,
+  "text": "{\"confidence\": 0.95, \"disputed_items\": [], \"evidence_quote\": \"yes, I have received everything. Thank you.\", \"language\": \"english\", \"outcome\": \"confirmed\", \"reason\": \"Shop states all items were received.\"}"
+ },
+ "13162a2bd90f64117015f1cf81629fc5": {
+  "completion_tokens": 436,
+  "latency_s": 3.208,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 1257,
+  "text": "{\"confidence\": 0.95, \"disputed_items\": [], \"evidence_quote\": \"abeg when una go bring the new price list\", \"language\": \"pidgin\", \"outcome\": \"unrelated\", \"reason\": \"The message asks about a price list and says nothing about the delivered goods.\"}"
+ },
+ "16b5eb6be5a092fbefce7e4a66646e4a": {
+  "completion_tokens": 955,
+  "latency_s": 5.135,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 1355,
+  "text": "{\"confidence\": 0.85, \"disputed_items\": [{\"claimed_qty_if_stated\": 4, \"receipt_line\": 2, \"sku_or_name_as_written\": \"noodles\"}], \"evidence_quote\": \"ẹ jí noodles kò pé mẹ́rin ni mo rí kì í ṣe mẹ́fà\", \"language\": \"yoruba\", \"outcome\": \"disputed\", \"reason\": \"Shop says the noodles delivery is short, receiving four instead of six.\"}"
+ },
+ "17dde2bcaa80000573a75d39fb507981": {
+  "completion_tokens": 491,
+  "latency_s": 3.045,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 1341,
+  "text": "{\"confidence\": 0.92, \"disputed_items\": [{\"claimed_qty_if_stated\": null, \"receipt_line\": 4, \"sku_or_name_as_written\": \"di sugar\"}], \"evidence_quote\": \"everything reach except di sugar di sugar never land\", \"language\": \"pidgin\", \"outcome\": \"partial\", \"reason\": \"Shop confirms all other items arrived but says the sugar did not arrive.\"}"
+ },
+ "2888b497e88976ef796bafdfab30efe4": {
+  "completion_tokens": 811,
+  "latency_s": 4.61,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 1348,
+  "text": "{\"confidence\": 0.75, \"disputed_items\": [{\"claimed_qty_if_stated\": 4, \"receipt_line\": 2, \"sku_or_name_as_written\": \"edgy noodles\"}], \"evidence_quote\": \"edgy noodles kokwe merin ni mori kii se mefa,\", \"language\": \"mixed\", \"outcome\": \"disputed\", \"reason\": \"Shop says it received four noodle cartons, not six.\"}"
+ },
+ "31e95659fa6dde26e8f672bd2e4fc6e0": {
+  "completion_tokens": 1735,
+  "latency_s": 9.907,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 1345,
+  "text": "{\"confidence\": 0.65, \"disputed_items\": [{\"claimed_qty_if_stated\": 4, \"receipt_line\": 2, \"sku_or_name_as_written\": \"Noodles\"}], \"evidence_quote\": \"Noodles ezugi an\\u1ecdka mh\\u1ee5ro obugi isi\", \"language\": \"igbo\", \"outcome\": \"disputed\", \"reason\": \"Shop says in Igbo the noodles are incomplete, seeing four not six.\"}"
+ },
+ "3536442a122709267026e7b69ef8ea2d": {
+  "completion_tokens": 717,
+  "latency_s": 3.906,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 1342,
+  "text": "{\"confidence\": 0.9, \"disputed_items\": [{\"claimed_qty_if_stated\": null, \"receipt_line\": 4, \"sku_or_name_as_written\": \"sugar\"}], \"evidence_quote\": \"everything rich except the sugar, the sugar never land.\", \"language\": \"pidgin\", \"outcome\": \"partial\", \"reason\": \"Shop confirms other items but says the sugar did not arrive.\"}"
+ },
+ "36b94781a3e4be0bd0be81b05f94fd52": {
+  "completion_tokens": 1206,
+  "latency_s": 7.361,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 1341,
+  "text": "{\"confidence\": 0.65, \"disputed_items\": [{\"claimed_qty_if_stated\": 4, \"receipt_line\": 2, \"sku_or_name_as_written\": \"afocarton\"}], \"evidence_quote\": \"na afocarton no be six\", \"language\": \"pidgin\", \"outcome\": \"disputed\", \"reason\": \"Shop says only four cartons arrived, not six.\"}"
+ },
+ "41f3df576d18213a00923dd7cb4fa64e": {
+  "completion_tokens": 492,
+  "latency_s": 3.273,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 1258,
+  "text": "{\"confidence\": 0.9, \"disputed_items\": [], \"evidence_quote\": \"gbogbo ero ti de pe\", \"language\": \"yoruba\", \"outcome\": \"confirmed\", \"reason\": \"Shop states in Yoruba that all goods arrived complete.\"}"
+ },
+ "81678a38c7bf600552ce5d5df6ef21a6": {
+  "completion_tokens": 325,
+  "latency_s": 2.894,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 1254,
+  "text": "{\"confidence\": 0.95, \"disputed_items\": [], \"evidence_quote\": \"yes i have received everything thank you\", \"language\": \"english\", \"outcome\": \"confirmed\", \"reason\": \"Shop explicitly says everything was received.\"}"
+ },
+ "84ce7f4018df907a076641f0afd2dca8": {
+  "completion_tokens": 296,
+  "latency_s": 1.773,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 1355,
+  "text": "{\"confidence\": 0.9, \"disputed_items\": [], \"evidence_quote\": \"bẹ́ẹ̀ni mo ti gba gbogbo rẹ̀ ṣe\", \"language\": \"yoruba\", \"outcome\": \"confirmed\", \"reason\": \"Shop says yes it has received all of it.\"}"
+ },
+ "84e66adc4c96cc01df9da503b275cca8": {
+  "completion_tokens": 328,
+  "latency_s": 3.329,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 1255,
+  "text": "{\"confidence\": 0.9, \"disputed_items\": [], \"evidence_quote\": \"ẹ dúró máa wò ó\", \"language\": \"yoruba\", \"outcome\": \"unclear\", \"reason\": \"Shop says it will check, not confirming or disputing delivery.\"}"
+ },
+ "8b67f2ebcd6a72c739074e52e4403392": {
+  "completion_tokens": 280,
+  "latency_s": 2.829,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 1342,
+  "text": "{\"confidence\": 0.95, \"disputed_items\": [], \"evidence_quote\": \"everything is complete\", \"language\": \"english\", \"outcome\": \"confirmed\", \"reason\": \"Shop states everything is complete in response to receipt.\"}"
+ },
+ "93df672e9e0735b666268c65a5b9d992": {
+  "completion_tokens": 464,
+  "latency_s": 2.831,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 1343,
+  "text": "{\"confidence\": 0.92, \"disputed_items\": [], \"evidence_quote\": \"everything don lan complete\", \"language\": \"pidgin\", \"outcome\": \"confirmed\", \"reason\": \"Shop states everything arrived complete.\"}"
+ },
+ "96a16466d06f968f4833b1d461f340e1": {
+  "completion_tokens": 356,
+  "latency_s": 2.35,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 1258,
+  "text": "{\"confidence\": 0.95, \"disputed_items\": [], \"evidence_quote\": \"I beg when you na go bring the new price list.\", \"language\": \"pidgin\", \"outcome\": \"unrelated\", \"reason\": \"Message asks about price list, not about the delivery receipt.\"}"
+ },
+ "98e714f99d9bd43b1cefbfcf6623081d": {
+  "completion_tokens": 789,
+  "latency_s": 4.317,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 1339,
+  "text": "{\"confidence\": 0.7, \"disputed_items\": [{\"claimed_qty_if_stated\": 4, \"receipt_line\": 2, \"sku_or_name_as_written\": \"four carton\"}], \"evidence_quote\": \"now a four carton no be six.\", \"language\": \"pidgin\", \"outcome\": \"disputed\", \"reason\": \"Shop says the six-carton line arrived as four cartons.\"}"
+ },
+ "9c9e146e8798925d3bc094fefa8008d5": {
+  "completion_tokens": 492,
+  "latency_s": 2.933,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 1344,
+  "text": "{\"confidence\": 0.95, \"disputed_items\": [], \"evidence_quote\": \"everything don't land complete\", \"language\": \"pidgin\", \"outcome\": \"confirmed\", \"reason\": \"Shop states everything arrived complete.\"}"
+ },
+ "9fd9555a341bdc0bdbeb1c429a61d910": {
+  "completion_tokens": 858,
+  "latency_s": 4.805,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 1347,
+  "text": "{\"confidence\": 0.35, \"disputed_items\": [], \"evidence_quote\": \"ba su cika ba\", \"language\": \"hausa\", \"outcome\": \"unclear\", \"reason\": \"Message says something is incomplete but mentions windows which match no receipt line.\"}"
+ },
+ "a2ad2af2203edde30d5f3a9d0ff652cd": {
+  "completion_tokens": 777,
+  "latency_s": 4.884,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 1344,
+  "text": "{\"confidence\": 0.25, \"disputed_items\": [], \"evidence_quote\": \"windows bus sugar ba hubuna gani bashi da aba.\", \"language\": \"mixed\", \"outcome\": \"unclear\", \"reason\": \"Message mentions sugar but is too garbled to confirm or dispute delivery.\"}"
+ },
+ "a3e13d9ae2f03aefce4b0f2474ed4b72": {
+  "completion_tokens": 447,
+  "latency_s": 3.431,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 1348,
+  "text": "{\"confidence\": 0.9, \"disputed_items\": [], \"evidence_quote\": \"beni mo ti gba gbogbo r\\u1eb9\\u0301 she.\", \"language\": \"yoruba\", \"outcome\": \"confirmed\", \"reason\": \"Shop says in Yoruba they received all items.\"}"
+ },
+ "aa4cb663ed16b49dac062b4d758b7cf5": {
+  "completion_tokens": 547,
+  "latency_s": 3.894,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 1375,
+  "text": "{\"confidence\": 0.15, \"disputed_items\": [], \"evidence_quote\": \"northern rock northern rock northern rock\", \"language\": \"english\", \"outcome\": \"unclear\", \"reason\": \"Transcript is repetitive gibberish that cannot be reconciled with the receipt.\"}"
+ },
+ "ab509d2603672694265519c79ac103d2": {
+  "completion_tokens": 284,
+  "latency_s": 1.863,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 1344,
+  "text": "{\"confidence\": 0.92, \"disputed_items\": [], \"evidence_quote\": \"daal\\u1ee5 ihe niile ab\\u1ecbala\", \"language\": \"igbo\", \"outcome\": \"confirmed\", \"reason\": \"Shop says in Igbo that everything has arrived.\"}"
+ },
+ "abb34fbe6c75480f8513d5ce5b5a58d0": {
+  "completion_tokens": 570,
+  "latency_s": 4.338,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 1347,
+  "text": "{\"confidence\": 0.9,\"disputed_items\": [{\"claimed_qty_if_stated\": 4,\"receipt_line\": 2,\"sku_or_name_as_written\": \"the noodles\"}],\"evidence_quote\": \"two kartons of the noodles are short\",\"language\": \"english\",\"outcome\": \"disputed\",\"reason\": \"Shop reports the 6-carton noodle line arrived short with only four counted.\"}"
+ },
+ "aff3fa36c003e2663f0894fe3e83b39f": {
+  "completion_tokens": 582,
+  "latency_s": 3.086,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 1352,
+  "text": "{\"confidence\": 0.85, \"disputed_items\": [{\"claimed_qty_if_stated\": 4, \"receipt_line\": 2, \"sku_or_name_as_written\": \"noodles\"}], \"evidence_quote\": \"two cartons of the noodles are short.\", \"language\": \"english\", \"outcome\": \"disputed\", \"reason\": \"Shop reports only 4 cartons received instead of 6 for the noodles line.\"}"
+ },
+ "b270fa838fd4b331fa8ab1b661c8a93c": {
+  "completion_tokens": 315,
+  "latency_s": 2.277,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 1254,
+  "text": "{\"confidence\": 0.95, \"disputed_items\": [], \"evidence_quote\": \"nagode duk kayan sun iso\", \"language\": \"hausa\", \"outcome\": \"confirmed\", \"reason\": \"Shop says in Hausa that all the goods have arrived.\"}"
+ },
+ "c4ef6466cd0a4597ecb855f39ca0ef6a": {
+  "completion_tokens": 426,
+  "latency_s": 2.975,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 1259,
+  "text": "{\"confidence\": 0.95, \"disputed_items\": [], \"evidence_quote\": \"I will check the goods later later and get back to you.\", \"language\": \"english\", \"outcome\": \"unclear\", \"reason\": \"Shop says they will check later without confirming the delivery.\"}"
+ },
+ "ecc0d8f0a19aa1ebd0d46b22e2286e54": {
+  "completion_tokens": 587,
+  "latency_s": 4.624,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 1342,
+  "text": "{\"confidence\": 0.9, \"disputed_items\": [], \"evidence_quote\": \"ihe nile abiala.\", \"language\": \"igbo\", \"outcome\": \"confirmed\", \"reason\": \"Shop states in Igbo that everything has arrived.\"}"
+ },
+ "f146858d01fcc3355e93ccff8dbd80aa": {
+  "completion_tokens": 346,
+  "latency_s": 3.237,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 1345,
+  "text": "{\"confidence\": 0.95, \"disputed_items\": [], \"evidence_quote\": \"Everything is complete.\", \"language\": \"english\", \"outcome\": \"confirmed\", \"reason\": \"Shop states all items arrived complete.\"}"
+ },
+ "fa246da126b7b61d3def00df7c7cd0b1": {
+  "completion_tokens": 346,
+  "latency_s": 3.403,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 1258,
+  "text": "{\"confidence\": 0.9, \"disputed_items\": [], \"evidence_quote\": \"iwil \\u010dek the goods later and get bak to you\", \"language\": \"english\", \"outcome\": \"unclear\", \"reason\": \"Shop says they will check later without confirming completeness.\"}"
+ }
+}

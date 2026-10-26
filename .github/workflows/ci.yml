@@ -25,6 +25,8 @@ jobs:
         with:
           python-version: ${{ matrix.python }}
           cache: pip
+      - name: ffmpeg (voice-note conversion tests)
+        run: sudo apt-get update -q && sudo apt-get install -y -q --no-install-recommends ffmpeg
       - run: python -m pip install -e '.[dev,otel]'
       - name: Lint
         run: python -m ruff check .
@@ -36,8 +38,12 @@ jobs:
         run: python -m mimi.world --check
       - name: Reply-reader eval (recorded Muse Spark answers)
         run: python -m mimi.receipts.eval
+      - name: Voice-note eval (recorded Spitch, Muse Voice Transcribe and Muse Spark answers)
+        run: python -m mimi.voice.eval
       - name: Offline 3-shop sim
         run: python -m mimi.sim --shops 3 --transcript
+      - name: Offline 3-shop sim with voice notes
+        run: python -m mimi.sim --shops 3 --transcript --voice 1
       - name: Migrations run on a clean SQLite database
         env:
           MIMI_DB_URL: sqlite:///${{ runner.temp }}/mimi-ci.db

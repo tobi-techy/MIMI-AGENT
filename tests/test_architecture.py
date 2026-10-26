@@ -41,3 +41,12 @@ def test_world_and_models_do_not_import_the_flow() -> None:
         for path in (ROOT / sub).rglob("*.py"):
             for name in _imports(path):
                 assert not name.startswith(("mimi.receipts", "mimi.sim")), (path, name)
+
+
+def test_voice_does_not_import_the_flow() -> None:
+    """The speech port sits under the receipts; only its eval drives them."""
+    for path in (ROOT / "voice").rglob("*.py"):
+        if path.name == "eval.py":
+            continue
+        for name in _imports(path):
+            assert not name.startswith(("mimi.receipts", "mimi.sim")), (path, name)

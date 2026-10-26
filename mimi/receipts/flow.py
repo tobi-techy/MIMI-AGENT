@@ -17,6 +17,13 @@ where the last save left it):
   - anything else: one clarifying message (in the shop's language when it
     wrote in a templated one), then an owner flag. No reply by the deadline
     also flags the owner.
+
+  Voice notes arrive already transcribed (``desk.py``) and are judged like
+  typed replies. When every new message is a voice note that could not be
+  transcribed, the model is not asked: Mimi asks the shop to type its reply
+  (the one clarification), and a second unreadable burst flags the owner. A
+  confirm held back because of a doubtful transcript also gets the request
+  to type, not the language template.
 """
 
 from __future__ import annotations
@@ -27,7 +34,7 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 
 from mimi.receipts.decide import Decision, decide
-from mimi.receipts.inbox import ShopInbox
+from mimi.receipts.inbox import ShopInbox, ShopReply
 from mimi.receipts.intents import (
     FlagReason,
     FlagToOwner,
@@ -38,11 +45,12 @@ from mimi.receipts.receipt import (
     clarify_text,
     receipt_digest,
     receipt_text,
+    type_request_text,
 )
 from mimi.receipts.verdict import Judged
 from mimi.runtime.steps import StepContext, StepOutcome
 from mimi.types import ShopScope
-from mimi.world.model import World
+from mimi.world.model import Delivery, World
 
 HELPER = "delivery_receipt"
 # Languages Mimi has a fixed clarifying template for (receipt._CLARIFY).
@@ -132,9 +140,20 @@ class ReceiptFlow:
         state["seen"] = [*state["seen"], *(r.message_id for r in new)]
         delivery = self.world.delivery(delivery_id)
         shop = self.world.shop(delivery.shop_id)
+        voice = [r for r in new if r.is_voice]
+        voice_trace: dict[str, str | int | float] = {}
+        if voice:
+            voice_trace = {
+                "voice_notes": len(voice),
+                "transcripts": ",".join(
+                    f"{r.transcript_provider or '-'}:{r.transcript_status}" for r in voice
+                ),
+            }
+        if new and all(r.is_voice and r.transcript_status == "failed" for r in new):
+            return self._unreadable(ctx, state, scope, delivery_id, new, deadline, voice_trace)
         mimi_sent = [receipt_text(delivery, shop.name, self.world.distributor)]
         if state["clarified"]:
-            mimi_sent.append(clarify_text(delivery, state.get("clarify_lang", "")))
+            mimi_sent.append(self._clarify_sent(delivery, state))
         judged = self.judge(
             delivery=delivery, earlier=earlier, new=new, mimi_sent=mimi_sent
         )
@@ -143,6 +162,7 @@ class ReceiptFlow:
             delivery=delivery,
             replies=[*earlier, *new],
             clarified=bool(state["clarified"]),
+            new_replies=new,
         )
         v = judged.verdict
         trace: dict[str, str | int | float] = {
@@ -156,6 +176,7 @@ class ReceiptFlow:
             "held_back": decision.held_back,
             "prompt_tokens": judged.prompt_tokens,
             "completion_tokens": judged.completion_tokens,
+            **voice_trace,
         }
         if decision.action == "consent":
             assert decision.witness is not None
@@ -165,7 +186,7 @@ class ReceiptFlow:
                 self._consent(scope, delivery_id, state, decision),
                 trace,
             )
-        words = " / ".join(r.text for r in new)
+        words = " / ".join(r.shown() for r in new)
         if decision.action == "flag_dispute":
             partial = v.outcome == "partial"
             return self._finish(
@@ -175,7 +196,7 @@ class ReceiptFlow:
                     scope,
                     delivery_id,
                     "partial_dispute" if partial else "dispute",
-                    " / ".join(r.text for r in [*earlier, *new]),
+                    " / ".join(r.shown() for r in [*earlier, *new]),
                     decision,
                 ),
                 trace,
@@ -186,6 +207,27 @@ class ReceiptFlow:
                 "flagged",
                 self._flag(scope, delivery_id, "unclear_reply", words, decision),
                 trace,
+            )
+        if any(r.voice_doubtful for r in new) or (
+            decision.witness is not None and decision.witness.voice_doubtful
+        ):
+            # Mimi could not trust what it heard: ask the shop to type.
+            state["clarified"] = True
+            state["clarify_kind"] = "type"
+            return StepOutcome(
+                kind="sleep",
+                intents=(
+                    SendShopMessage(
+                        scope,
+                        delivery_id,
+                        "receipt_type_request",
+                        type_request_text(delivery),
+                        delivery.total_kobo,
+                    ),
+                ),
+                working_note=json.dumps(state),
+                sleep_until=self._next_check(ctx.now, deadline),
+                trace={**trace, "stage": "asked_to_type"},
             )
         lang = v.language if v.language in _SHOP_LANGS else "english"
         state["clarified"] = True
@@ -204,6 +246,57 @@ class ReceiptFlow:
             working_note=json.dumps(state),
             sleep_until=self._next_check(ctx.now, deadline),
             trace={**trace, "stage": "clarified"},
+        )
+
+    @staticmethod
+    def _clarify_sent(delivery: Delivery, state: dict) -> str:
+        if state.get("clarify_kind") == "type":
+            return type_request_text(delivery)
+        return clarify_text(delivery, state.get("clarify_lang", ""))
+
+    def _unreadable(
+        self,
+        ctx: StepContext,
+        state: dict,
+        scope: ShopScope,
+        delivery_id: str,
+        new: list[ShopReply],
+        deadline: datetime,
+        voice_trace: dict[str, str | int | float],
+    ) -> StepOutcome:
+        """Every new message is a voice note with no usable transcript.
+        Never guess: ask the shop to type, or flag the owner if Mimi
+        already asked once."""
+        trace = {**voice_trace, "replies": len(new), "action": "no_transcript"}
+        if state["clarified"]:
+            return self._finish(
+                state,
+                "flagged",
+                FlagToOwner(
+                    scope,
+                    delivery_id,
+                    "voice_unreadable",
+                    " / ".join(r.shown() for r in new),
+                ),
+                trace,
+            )
+        delivery = self.world.delivery(delivery_id)
+        state["clarified"] = True
+        state["clarify_kind"] = "type"
+        return StepOutcome(
+            kind="sleep",
+            intents=(
+                SendShopMessage(
+                    scope,
+                    delivery_id,
+                    "receipt_type_request",
+                    type_request_text(delivery),
+                    delivery.total_kobo,
+                ),
+            ),
+            working_note=json.dumps(state),
+            sleep_until=self._next_check(ctx.now, deadline),
+            trace={**trace, "stage": "asked_to_type"},
         )
 
     @staticmethod
@@ -245,6 +338,8 @@ class ReceiptFlow:
             evidence_quote=decision.verdict.evidence_quote,
             language=decision.verdict.language,
             confidence=decision.verdict.confidence,
+            witness_kind=reply.kind,
+            transcript_provider=reply.transcript_provider,
         )
 
     @staticmethod
