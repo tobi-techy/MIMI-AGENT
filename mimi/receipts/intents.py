@@ -21,6 +21,13 @@ MessagePurpose = Literal[
     "receipt_type_request",
     "promise_readback",
     "promise_clarify",
+    # Payment screenshots (mimi.proof): never "received" or "verified" from
+    # a screenshot; "proof_verified" only after the bank's own credit.
+    "proof_likely",
+    "proof_review",
+    "proof_ask",
+    "proof_duplicate",
+    "proof_verified",
 ]
 FlagReason = Literal[
     "dispute", "partial_dispute", "unclear_reply", "no_reply", "voice_unreadable"

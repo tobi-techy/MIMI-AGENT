@@ -10,7 +10,8 @@ messages, ``max_tokens`` and ``response_format``:
   so nothing downstream quietly turns it into an "unclear"): re-record with a
   live run.
 
-The file holds model outputs on synthetic data only, never a key. Writes are
+The file holds model outputs on synthetic data only, never a key or an
+image (images are keyed by their SHA-256). Writes are
 atomic (temp file and rename) after every new answer.
 """
 
@@ -43,7 +44,14 @@ def cache_key(
     canon = json.dumps(
         {
             "model": name,
-            "messages": [[m.role, m.content] for m in messages],
+            # An image is keyed by its SHA-256 (a third element only when a
+            # message has images, so text-only keys are unchanged).
+            "messages": [
+                [m.role, m.content, [im.sha256 for im in m.images]]
+                if m.images
+                else [m.role, m.content]
+                for m in messages
+            ],
             "max_tokens": max_tokens,
             "response_format": response_format or None,
         },

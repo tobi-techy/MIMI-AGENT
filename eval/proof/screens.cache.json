@@ -1,0 +1,282 @@
+{
+ "10931259f31641834b4b0fdb58fc8f35": {
+  "completion_tokens": 926,
+  "latency_s": 4.684,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 1752,
+  "text": "{\"amount_as_printed\":\"₦71,600.00\",\"amount_confidence\":0.95,\"bank_name\":\"Lagoonpay\",\"date_time_as_printed\":\"2026-10-26 18:58:45\",\"editing_confidence\":0,\"editing_signs\":[],\"fee_as_printed\":\"₦0.00\",\"headline_status\":\"Payment sent\",\"is_payment_screenshot\":true,\"layout\":\"app_receipt\",\"legibility\":0.9,\"narration\":\"CLT\",\"notes\":\"Receipt shows a successful transfer of 71600 naira.\",\"recipient_account_as_printed\":\"999****4471\",\"recipient_bank\":\"Kestrel Bank\",\"recipient_name\":\"CORAL LANE TRADING\",\"reference\":\"999084991018989232461282201994\",\"sender_name\":\"TOYIN ADESINA\",\"session_id\":null,\"status_detail\":\"Successful\",\"total_as_printed\":\"₦71,600.00\",\"typefaces\":{\"amount\":\"sans-serif\",\"date_time\":\"sans-serif\",\"other_rows\":\"sans-serif\",\"recipient_name\":\"sans-serif\",\"reference\":\"sans-serif\",\"sender_name\":\"sans-serif\"}}"
+ },
+ "1127f54a2785273812debd6ed9333daa": {
+  "completion_tokens": 1433,
+  "latency_s": 8.288,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 1889,
+  "text": "{\"amount_as_printed\":\"NGN130,650.00\",\"amount_confidence\":0.99,\"bank_name\":\"Ironleaf Bank\",\"date_time_as_printed\":\"26/10/2026 16:54\",\"editing_confidence\":0.6,\"editing_signs\":[\"amount characters sit on a differently coloured patch\"],\"fee_as_printed\":null,\"headline_status\":null,\"is_payment_screenshot\":true,\"layout\":\"sms_alert\",\"legibility\":0.95,\"narration\":null,\"notes\":\"SMS debit alert showing a transfer to Coral Lane Trading.\",\"recipient_account_as_printed\":null,\"recipient_bank\":null,\"recipient_name\":\"CORAL LANE TRADING\",\"reference\":\"IL/TRF/259745877\",\"sender_name\":null,\"session_id\":null,\"status_detail\":null,\"total_as_printed\":null,\"typefaces\":{\"amount\":\"serif\",\"date_time\":\"serif\",\"other_rows\":\"serif\",\"recipient_name\":\"serif\",\"reference\":\"serif\",\"sender_name\":\"unclear\"}}"
+ },
+ "1333d526ec7a464d5b4b27fd5cd476e4": {
+  "completion_tokens": 1167,
+  "latency_s": 8.25,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 1965,
+  "text": "{\"amount_as_printed\":\"₦432,600.00\",\"amount_confidence\":0.99,\"bank_name\":\"Kestrel Bank\",\"date_time_as_printed\":\"26 Oct 2026, 19:00\",\"editing_confidence\":0,\"editing_signs\":[],\"fee_as_printed\":\"₦10.00\",\"headline_status\":\"Transfer Successful\",\"is_payment_screenshot\":true,\"layout\":\"app_receipt\",\"legibility\":0.95,\"narration\":null,\"notes\":\"Total debited does not equal amount plus fee as printed.\",\"recipient_account_as_printed\":\"******4471\",\"recipient_bank\":\"Kestrel Bank\",\"recipient_name\":\"CORAL LANE TRADING\",\"reference\":\"KST402254768971\",\"sender_name\":\"EMEKA OLATUNJI\",\"session_id\":\"999661005469523090681734473919\",\"status_detail\":\"Successful\",\"total_as_printed\":\"₦43,270.00\",\"typefaces\":{\"amount\":\"sans-serif\",\"date_time\":\"sans-serif\",\"other_rows\":\"sans-serif\",\"recipient_name\":\"sans-serif\",\"reference\":\"sans-serif\",\"sender_name\":\"sans-serif\"}}"
+ },
+ "135348bed7861c741fe0000031f58f84": {
+  "completion_tokens": 918,
+  "latency_s": 5.146,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 1752,
+  "text": "{\"amount_as_printed\":\"₦11,700.00\",\"amount_confidence\":0.95,\"bank_name\":\"Kestrel Bank\",\"date_time_as_printed\":\"26 Oct 2026, 12:33\",\"editing_confidence\":0,\"editing_signs\":[],\"fee_as_printed\":\"N53.75\",\"headline_status\":\"Transfer Successful\",\"is_payment_screenshot\":true,\"layout\":\"app_receipt\",\"legibility\":0.9,\"narration\":\"dlv-56-9016\",\"notes\":\"Kestrel Bank receipt shows a successful transfer to Coral Lane Trading.\",\"recipient_account_as_printed\":\"******4471\",\"recipient_bank\":\"Kestrel Bank\",\"recipient_name\":\"CORAL LANE TRADING\",\"reference\":\"KST774173847806\",\"sender_name\":\"KEHINDE OJO\",\"session_id\":\"999966117688750415801551406170\",\"status_detail\":\"Successful\",\"total_as_printed\":\"₦11,753.75\",\"typefaces\":{\"amount\":\"sans-serif\",\"date_time\":\"sans-serif\",\"other_rows\":\"sans-serif\",\"recipient_name\":\"sans-serif\",\"reference\":\"sans-serif\",\"sender_name\":\"sans-serif\"}}"
+ },
+ "1809b8dd21cb917f4a42edc8207fc2a6": {
+  "completion_tokens": 1062,
+  "latency_s": 6.854,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 1256,
+  "text": "{\"amount_as_printed\":\"₦258,500.00\",\"amount_confidence\":0.9,\"bank_name\":null,\"date_time_as_printed\":null,\"editing_confidence\":0,\"editing_signs\":[],\"fee_as_printed\":null,\"headline_status\":\"Payment sent\",\"is_payment_screenshot\":true,\"layout\":\"app_receipt\",\"legibility\":0.35,\"narration\":null,\"notes\":\"Image is very blurry and most small fields cannot be read with certainty.\",\"recipient_account_as_printed\":null,\"recipient_bank\":null,\"recipient_name\":null,\"reference\":null,\"sender_name\":null,\"session_id\":null,\"status_detail\":null,\"total_as_printed\":null,\"typefaces\":{\"amount\":\"sans-serif\",\"date_time\":\"unclear\",\"other_rows\":\"sans-serif\",\"recipient_name\":\"unclear\",\"reference\":\"unclear\",\"sender_name\":\"unclear\"}}"
+ },
+ "19c3b83c6d0c8b0e4f46a04a6b307b1a": {
+  "completion_tokens": 909,
+  "latency_s": 6.307,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 1965,
+  "text": "{\"amount_as_printed\": \"₦20,200.00\", \"amount_confidence\": 1.0, \"bank_name\": \"Kestrel Bank\", \"date_time_as_printed\": \"26 Oct 2026, 17:01\", \"editing_confidence\": 0.0, \"editing_signs\": [], \"fee_as_printed\": null, \"headline_status\": \"Transfer Successful\", \"is_payment_screenshot\": true, \"layout\": \"app_receipt\", \"legibility\": 0.99, \"narration\": \"payment\", \"notes\": \"App receipt shows successful transfer to Coral Lane Trading.\", \"recipient_account_as_printed\": \"******9917\", \"recipient_bank\": \"Kestrel Bank\", \"recipient_name\": \"CORAL LANE TRADING\", \"reference\": \"KST720309554208\", \"sender_name\": \"ABIODUN OGUNLEYE\", \"session_id\": \"999201080322816011014522697842\", \"status_detail\": \"Successful\", \"total_as_printed\": null, \"typefaces\": {\"amount\": \"sans-serif\", \"date_time\": \"sans-serif\", \"other_rows\": \"sans-serif\", \"recipient_name\": \"sans-serif\", \"reference\": \"sans-serif\", \"sender_name\": \"sans-serif\"}}"
+ },
+ "271e27e66d4b3cb5c2eed434f0a9b883": {
+  "completion_tokens": 884,
+  "latency_s": 4.732,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 1965,
+  "text": "{\"amount_as_printed\":\"₦62,800.00\",\"amount_confidence\":1,\"bank_name\":\"Harmattan MFB\",\"date_time_as_printed\":\"Oct 26, 2026 02:14:20 PM\",\"editing_confidence\":0,\"editing_signs\":[],\"fee_as_printed\":null,\"headline_status\":\"Transaction Successful\",\"is_payment_screenshot\":true,\"layout\":\"app_receipt\",\"legibility\":0.98,\"narration\":\"CLT\",\"notes\":\"Receipt shows a successful transfer of ₦62,800.00 to Coral Lane Trading.\",\"recipient_account_as_printed\":\"******4471\",\"recipient_bank\":\"Kestrel Bank\",\"recipient_name\":\"CORAL LANE TRADING\",\"reference\":\"HMF-HTDQ2FBHQL\",\"sender_name\":\"Wale Olatunji\",\"session_id\":null,\"status_detail\":\"Successful\",\"total_as_printed\":null,\"typefaces\":{\"amount\":\"sans-serif\",\"date_time\":\"sans-serif\",\"other_rows\":\"sans-serif\",\"recipient_name\":\"sans-serif\",\"reference\":\"sans-serif\",\"sender_name\":\"sans-serif\"}}"
+ },
+ "2f7a78bc65d53e748fbd27fb6bb9e04b": {
+  "completion_tokens": 1314,
+  "latency_s": 7.67,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 1889,
+  "text": "{\"amount_as_printed\": \"NGN861,700.00\", \"amount_confidence\": 0.99, \"bank_name\": \"Ironleaf Bank\", \"date_time_as_printed\": \"05/10/2026 20:27\", \"editing_confidence\": 0, \"editing_signs\": [], \"fee_as_printed\": null, \"headline_status\": null, \"is_payment_screenshot\": true, \"layout\": \"sms_alert\", \"legibility\": 0.95, \"narration\": \"TRF TO CORAL LANE TRADING/IL/TRF/865465240\", \"notes\": \"SMS debit alert shows a transfer to Coral Lane Trading.\", \"recipient_account_as_printed\": null, \"recipient_bank\": null, \"recipient_name\": \"CORAL LANE TRADING\", \"reference\": \"IL/TRF/865465240\", \"sender_name\": null, \"session_id\": null, \"status_detail\": null, \"total_as_printed\": null, \"typefaces\": {\"amount\": \"sans-serif\", \"date_time\": \"sans-serif\", \"other_rows\": \"sans-serif\", \"recipient_name\": \"sans-serif\", \"reference\": \"sans-serif\", \"sender_name\": \"unclear\"}}"
+ },
+ "30a2c1a8648df9b1e5063fbd21f7cdde": {
+  "completion_tokens": 755,
+  "latency_s": 4.898,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 1965,
+  "text": "{\"amount_as_printed\":\"₦34,950.00\",\"amount_confidence\":1,\"bank_name\":\"Harmattan MFB\",\"date_time_as_printed\":\"Sep 31, 2026 02:15:44 PM\",\"editing_confidence\":0,\"editing_signs\":[],\"fee_as_printed\":null,\"headline_status\":\"Transaction Successful\",\"is_payment_screenshot\":true,\"layout\":\"app_receipt\",\"legibility\":0.98,\"narration\":\"CLT\",\"notes\":\"Receipt shows a successful transfer of ₦34,950.00 to CORAL LANE TRADING.\",\"recipient_account_as_printed\":\"******4471\",\"recipient_bank\":\"Kestrel Bank\",\"recipient_name\":\"CORAL LANE TRADING\",\"reference\":\"HMF-VBIZ020XIH\",\"sender_name\":\"Chidi Fagbemi\",\"session_id\":null,\"status_detail\":\"Successful\",\"total_as_printed\":null,\"typefaces\":{\"amount\":\"sans-serif\",\"date_time\":\"sans-serif\",\"other_rows\":\"sans-serif\",\"recipient_name\":\"sans-serif\",\"reference\":\"sans-serif\",\"sender_name\":\"sans-serif\"}}"
+ },
+ "38b3b582ec455bd905b7991b3e47352f": {
+  "completion_tokens": 1070,
+  "latency_s": 5.755,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 1851,
+  "text": "{\"amount_as_printed\":\"NGN139,300.00\",\"amount_confidence\":1,\"bank_name\":\"Ironleaf Bank\",\"date_time_as_printed\":\"26/10/2026 13:48\",\"editing_confidence\":0,\"editing_signs\":[],\"fee_as_printed\":null,\"headline_status\":null,\"is_payment_screenshot\":true,\"layout\":\"sms_alert\",\"legibility\":0.95,\"narration\":null,\"notes\":\"SMS debit alert showing a transfer to Coral Lane Trading.\",\"recipient_account_as_printed\":null,\"recipient_bank\":null,\"recipient_name\":\"CORAL LANE TRADING\",\"reference\":\"IL/TRF/244437091\",\"sender_name\":null,\"session_id\":null,\"status_detail\":null,\"total_as_printed\":null,\"typefaces\":{\"amount\":\"sans-serif\",\"date_time\":\"sans-serif\",\"other_rows\":\"sans-serif\",\"recipient_name\":\"sans-serif\",\"reference\":\"sans-serif\",\"sender_name\":\"unclear\"}}"
+ },
+ "3bc4567a36963b059ee64af8b75b09cb": {
+  "completion_tokens": 848,
+  "latency_s": 4.49,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 1965,
+  "text": "{\"amount_as_printed\":\"₦603,000.00\",\"amount_confidence\":0.99,\"bank_name\":\"Kestrel Bank\",\"date_time_as_printed\":\"26 Oct 2026, 13:52\",\"editing_confidence\":0,\"editing_signs\":[],\"fee_as_printed\":\"₦53.75\",\"headline_status\":\"Transfer Successful\",\"is_payment_screenshot\":true,\"layout\":\"app_receipt\",\"legibility\":0.95,\"narration\":\"payment\",\"notes\":\"Receipt shows a successful Kestrel Bank transfer of over six hundred thousand naira.\",\"recipient_account_as_printed\":\"******4471\",\"recipient_bank\":\"Kestrel Bank\",\"recipient_name\":\"CORAL LANE TRADING\",\"reference\":\"KST026299470366\",\"sender_name\":\"SOLA ADESINA\",\"session_id\":\"999261262646877032190217643850\",\"status_detail\":\"Successful\",\"total_as_printed\":\"₦603,053.75\",\"typefaces\":{\"amount\":\"sans-serif\",\"date_time\":\"sans-serif\",\"other_rows\":\"sans-serif\",\"recipient_name\":\"sans-serif\",\"reference\":\"sans-serif\",\"sender_name\":\"sans-serif\"}}"
+ },
+ "3e4f52b70daf95e725d2b2b2bb1dece5": {
+  "completion_tokens": 1292,
+  "latency_s": 6.4,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 1644,
+  "text": "{\"amount_as_printed\": \"NGN22,000.00 DR\", \"amount_confidence\": 1.0, \"bank_name\": \"Ironleaf Bank\", \"date_time_as_printed\": \"26/10/2026 16:39\", \"editing_confidence\": 0.0, \"editing_signs\": [], \"fee_as_printed\": null, \"headline_status\": null, \"is_payment_screenshot\": true, \"layout\": \"sms_alert\", \"legibility\": 0.95, \"narration\": \"TRF TO CORAL LANE TRADING/IL/TRF/706043368\", \"notes\": \"SMS debit alert shows a transfer to Coral Lane Trading.\", \"recipient_account_as_printed\": null, \"recipient_bank\": null, \"recipient_name\": \"CORAL LANE TRADING\", \"reference\": \"IL/TRF/706043368\", \"sender_name\": null, \"session_id\": null, \"status_detail\": null, \"total_as_printed\": null, \"typefaces\": {\"amount\": \"sans-serif\", \"date_time\": \"sans-serif\", \"other_rows\": \"sans-serif\", \"recipient_name\": \"sans-serif\", \"reference\": \"sans-serif\", \"sender_name\": \"unclear\"}}"
+ },
+ "4274301927982f008cb68f7713af9f2f": {
+  "completion_tokens": 669,
+  "latency_s": 3.899,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 1851,
+  "text": "{\"amount_as_printed\":null,\"amount_confidence\":0,\"bank_name\":null,\"date_time_as_printed\":\"Oct 26, 2026 04:23:46 PM\",\"editing_confidence\":0,\"editing_signs\":[],\"fee_as_printed\":null,\"headline_status\":\"Transaction Successful\",\"is_payment_screenshot\":true,\"layout\":\"app_receipt\",\"legibility\":0.85,\"narration\":\"payment\",\"notes\":\"Amount is not shown on the receipt.\",\"recipient_account_as_printed\":\"******4471\",\"recipient_bank\":\"Kestrel Bank\",\"recipient_name\":\"CORAL LANE TRADING\",\"reference\":\"HMF-7NO41NTZ9F\",\"sender_name\":\"Segun Olatunji\",\"session_id\":null,\"status_detail\":\"Successful\",\"total_as_printed\":null,\"typefaces\":{\"amount\":\"unclear\",\"date_time\":\"sans-serif\",\"other_rows\":\"sans-serif\",\"recipient_name\":\"sans-serif\",\"reference\":\"sans-serif\",\"sender_name\":\"sans-serif\"}}"
+ },
+ "4457332f9f537f1b11f53fd7fcfb8b9f": {
+  "completion_tokens": 844,
+  "latency_s": 4.314,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 1870,
+  "text": "{\"amount_as_printed\": \"₦4,000.00\", \"amount_confidence\": 1, \"bank_name\": \"Harmattan MFB\", \"date_time_as_printed\": \"Oct 26, 2026 04:48:41 PM\", \"editing_confidence\": 0, \"editing_signs\": [], \"fee_as_printed\": \"₦10.00\", \"headline_status\": \"Transaction Successful\", \"is_payment_screenshot\": true, \"layout\": \"app_receipt\", \"legibility\": 0.98, \"narration\": \"goods\", \"notes\": \"Receipt shows a successful transfer of 4,000 naira plus charges.\", \"recipient_account_as_printed\": \"******4471\", \"recipient_bank\": \"Kestrel Bank\", \"recipient_name\": \"CORAL LANE TRADING\", \"reference\": \"HMF-DM80F83YCA\", \"sender_name\": \"Funke Ogundipe\", \"session_id\": null, \"status_detail\": \"Successful\", \"total_as_printed\": \"₦4,010.00\", \"typefaces\": {\"amount\": \"sans-serif\", \"date_time\": \"sans-serif\", \"other_rows\": \"sans-serif\", \"recipient_name\": \"sans-serif\", \"reference\": \"sans-serif\", \"sender_name\": \"sans-serif\"}}"
+ },
+ "44b9db19096ca0b6fba15917156e0247": {
+  "completion_tokens": 788,
+  "latency_s": 3.615,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 1927,
+  "text": "{\"amount_as_printed\": \"₦600.00\", \"amount_confidence\": 1, \"bank_name\": \"Harmattan MFB\", \"date_time_as_printed\": \"Oct 26, 2026 02:19:37 PM\", \"editing_confidence\": 0, \"editing_signs\": [], \"fee_as_printed\": \"₦10.00\", \"headline_status\": \"Transaction Successful\", \"is_payment_screenshot\": true, \"layout\": \"app_receipt\", \"legibility\": 0.97, \"narration\": \"dlv-56-9005\", \"notes\": \"Receipt shows a successful transfer of 600 naira plus charges.\", \"recipient_account_as_printed\": \"******4471\", \"recipient_bank\": \"Kestrel Bank\", \"recipient_name\": \"CORAL LANE TRADING\", \"reference\": \"HMF-T1H9QCQ7WB\", \"sender_name\": \"Folake Falodun\", \"session_id\": null, \"status_detail\": \"Successful\", \"total_as_printed\": \"₦610.00\", \"typefaces\": {\"amount\": \"sans-serif\", \"date_time\": \"sans-serif\", \"other_rows\": \"sans-serif\", \"recipient_name\": \"sans-serif\", \"reference\": \"sans-serif\", \"sender_name\": \"sans-serif\"}}"
+ },
+ "4cf7250bb9de4902c7a3e1a9218e50fe": {
+  "completion_tokens": 931,
+  "latency_s": 5.351,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 1965,
+  "text": "{\"amount_as_printed\":\"₦96,000.00\",\"amount_confidence\":1,\"bank_name\":\"Lagoonpay\",\"date_time_as_printed\":\"2026-10-26 22:09:32\",\"editing_confidence\":0,\"editing_signs\":[],\"fee_as_printed\":null,\"headline_status\":\"Payment sent\",\"is_payment_screenshot\":true,\"layout\":\"app_receipt\",\"legibility\":1,\"narration\":\"payment\",\"notes\":\"App receipt shows payment sent while status is still processing.\",\"recipient_account_as_printed\":\"999****4471\",\"recipient_bank\":\"Kestrel Bank\",\"recipient_name\":\"CORAL LANE TRADING\",\"reference\":\"999930221425420375109484491171\",\"sender_name\":\"HALIMA FAGBEMI\",\"session_id\":null,\"status_detail\":\"Processing\",\"total_as_printed\":null,\"typefaces\":{\"amount\":\"sans-serif\",\"date_time\":\"sans-serif\",\"other_rows\":\"sans-serif\",\"recipient_name\":\"sans-serif\",\"reference\":\"sans-serif\",\"sender_name\":\"sans-serif\"}}"
+ },
+ "51fcecc3cd933e99afa92e699ae3adb0": {
+  "completion_tokens": 793,
+  "latency_s": 5.084,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 1965,
+  "text": "{\"amount_as_printed\":\"₦13,600.00\",\"amount_confidence\":1,\"bank_name\":\"Kestrel Bank\",\"date_time_as_printed\":\"26 Oct 2026, 15:58\",\"editing_confidence\":0,\"editing_signs\":[],\"fee_as_printed\":null,\"headline_status\":\"Transfer Successful\",\"is_payment_screenshot\":true,\"layout\":\"app_receipt\",\"legibility\":0.98,\"narration\":\"goods\",\"notes\":\"Receipt shows successful headline with pending status detail.\",\"recipient_account_as_printed\":\"******4471\",\"recipient_bank\":\"Kestrel Bank\",\"recipient_name\":\"CORAL LANE TRADING\",\"reference\":\"KST421480934488\",\"sender_name\":\"KUNLE AKINOLA\",\"session_id\":\"999317433561416934185513502260\",\"status_detail\":\"Pending\",\"total_as_printed\":null,\"typefaces\":{\"amount\":\"sans-serif\",\"date_time\":\"sans-serif\",\"other_rows\":\"sans-serif\",\"recipient_name\":\"sans-serif\",\"reference\":\"sans-serif\",\"sender_name\":\"sans-serif\"}}"
+ },
+ "5be8f35c7e149a5ec0efd2d6095ca4bc": {
+  "completion_tokens": 710,
+  "latency_s": 3.847,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 1965,
+  "text": "{\"amount_as_printed\":\"₦11,700.00\",\"amount_confidence\":1,\"bank_name\":\"Lagoonpay\",\"date_time_as_printed\":\"2026-09-21 14:37:57\",\"editing_confidence\":0,\"editing_signs\":[],\"fee_as_printed\":null,\"headline_status\":\"Payment sent\",\"is_payment_screenshot\":true,\"layout\":\"app_receipt\",\"legibility\":0.98,\"narration\":\"payment\",\"notes\":\"Receipt shows a successful Lagoonpay transfer of ₦11,700.00.\",\"recipient_account_as_printed\":\"999****4471\",\"recipient_bank\":\"Kestrel Bank\",\"recipient_name\":\"CORAL LANE TRADING\",\"reference\":\"999931324726025237136624560578\",\"sender_name\":\"KEHINDE OJO\",\"session_id\":null,\"status_detail\":\"Successful\",\"total_as_printed\":null,\"typefaces\":{\"amount\":\"sans-serif\",\"date_time\":\"sans-serif\",\"other_rows\":\"sans-serif\",\"recipient_name\":\"sans-serif\",\"reference\":\"sans-serif\",\"sender_name\":\"sans-serif\"}}"
+ },
+ "5e9a575a58fb67f3f482aac182901ddc": {
+  "completion_tokens": 1270,
+  "latency_s": 7.486,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 1889,
+  "text": "{\"amount_as_printed\":\"NGN139,300.00\",\"amount_confidence\":1.0,\"bank_name\":\"Ironleaf Bank\",\"date_time_as_printed\":\"26/10/2026 25:14\",\"editing_confidence\":0.0,\"editing_signs\":[],\"fee_as_printed\":null,\"headline_status\":null,\"is_payment_screenshot\":true,\"layout\":\"sms_alert\",\"legibility\":0.95,\"narration\":null,\"notes\":\"SMS debit alert showing a transfer to Coral Lane Trading.\",\"recipient_account_as_printed\":null,\"recipient_bank\":null,\"recipient_name\":\"CORAL LANE TRADING\",\"reference\":\"IL/TRF/355886720\",\"sender_name\":null,\"session_id\":null,\"status_detail\":null,\"total_as_printed\":null,\"typefaces\":{\"amount\":\"sans-serif\",\"date_time\":\"sans-serif\",\"other_rows\":\"sans-serif\",\"recipient_name\":\"sans-serif\",\"reference\":\"sans-serif\",\"sender_name\":\"unclear\"}}"
+ },
+ "5ebe8c5d293e11d5a932bbb7cc33e9c6": {
+  "completion_tokens": 535,
+  "latency_s": 3.575,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 1699,
+  "text": "{\"amount_as_printed\":null,\"amount_confidence\":0,\"bank_name\":null,\"date_time_as_printed\":null,\"editing_confidence\":0,\"editing_signs\":[],\"fee_as_printed\":null,\"headline_status\":null,\"is_payment_screenshot\":false,\"layout\":\"other\",\"legibility\":0,\"narration\":null,\"notes\":\"Image shows colorful bookshelves, not a payment screenshot.\",\"recipient_account_as_printed\":null,\"recipient_bank\":null,\"recipient_name\":null,\"reference\":null,\"sender_name\":null,\"session_id\":null,\"status_detail\":null,\"total_as_printed\":null,\"typefaces\":{\"amount\":\"unclear\",\"date_time\":\"unclear\",\"other_rows\":\"unclear\",\"recipient_name\":\"unclear\",\"reference\":\"unclear\",\"sender_name\":\"unclear\"}}"
+ },
+ "62b92f6b9e2439ea468fb8d188e54554": {
+  "completion_tokens": 663,
+  "latency_s": 2.999,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 2064,
+  "text": "{\"amount_as_printed\":\"₦62,600.00\",\"amount_confidence\":1,\"bank_name\":\"Kestrel Bank\",\"date_time_as_printed\":\"26 Oct 2026, 16:27\",\"editing_confidence\":0,\"editing_signs\":[],\"fee_as_printed\":\"₦25.00\",\"headline_status\":\"Transfer Successful\",\"is_payment_screenshot\":true,\"layout\":\"app_receipt\",\"legibility\":0.95,\"narration\":\"dlv-56-9030\",\"notes\":\"Kestrel Bank receipt shows a successful transfer to CORAL LANE TRADING.\",\"recipient_account_as_printed\":\"******4471\",\"recipient_bank\":\"Kestrel Bank\",\"recipient_name\":\"CORAL LANE TRADING\",\"reference\":\"KST842979989176\",\"sender_name\":\"HALIMA OKAFOR\",\"session_id\":\"999939160855828109032304194677\",\"status_detail\":\"Successful\",\"total_as_printed\":\"₦62,625.00\",\"typefaces\":{\"amount\":\"sans-serif\",\"date_time\":\"sans-serif\",\"other_rows\":\"sans-serif\",\"recipient_name\":\"sans-serif\",\"reference\":\"sans-serif\",\"sender_name\":\"sans-serif\"}}"
+ },
+ "6566f85be4074045eb0e725592ebe306": {
+  "completion_tokens": 691,
+  "latency_s": 4.411,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 1965,
+  "text": "{\"amount_as_printed\":\"₦408,600.00\",\"amount_confidence\":1,\"bank_name\":\"Lagoonpay\",\"date_time_as_printed\":\"2026-10-26 13:22:27\",\"editing_confidence\":0,\"editing_signs\":[],\"fee_as_printed\":null,\"headline_status\":\"Payment sent\",\"is_payment_screenshot\":true,\"layout\":\"app_receipt\",\"legibility\":1,\"narration\":\"payment\",\"notes\":\"Receipt shows a successful Lagoonpay transfer of ₦408,600.00.\",\"recipient_account_as_printed\":\"999****5512\",\"recipient_bank\":\"Harmattan MFB\",\"recipient_name\":\"CORAL LANE TRADERS VENTURES\",\"reference\":\"999019197316814553649563980674\",\"sender_name\":\"TOLU OGUNLEYE\",\"session_id\":null,\"status_detail\":\"Successful\",\"total_as_printed\":null,\"typefaces\":{\"amount\":\"sans-serif\",\"date_time\":\"sans-serif\",\"other_rows\":\"sans-serif\",\"recipient_name\":\"sans-serif\",\"reference\":\"sans-serif\",\"sender_name\":\"sans-serif\"}}"
+ },
+ "66f7d53eabdfa3289527b0040944239a": {
+  "completion_tokens": 820,
+  "latency_s": 4.16,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 1965,
+  "text": "{\"amount_as_printed\": \"₦142,300.00\", \"amount_confidence\": 0.99, \"bank_name\": \"Lagoonpay\", \"date_time_as_printed\": \"2026-10-26 16:35:11\", \"editing_confidence\": 0, \"editing_signs\": [], \"fee_as_printed\": null, \"headline_status\": \"Payment sent\", \"is_payment_screenshot\": true, \"layout\": \"app_receipt\", \"legibility\": 0.98, \"narration\": \"dlv-56-9009\", \"notes\": \"App receipt shows a successful payment from Tolu Adeyemi to Coral Lane Trading.\", \"recipient_account_as_printed\": \"999****4471\", \"recipient_bank\": \"Kestrel Bank\", \"recipient_name\": \"CORAL LANE TRADING\", \"reference\": \"999454053365721763555120316880\", \"sender_name\": \"TOLU ADEYEMI\", \"session_id\": null, \"status_detail\": \"Successful\", \"total_as_printed\": null, \"typefaces\": {\"amount\": \"sans-serif\", \"date_time\": \"sans-serif\", \"other_rows\": \"sans-serif\", \"recipient_name\": \"sans-serif\", \"reference\": \"sans-serif\", \"sender_name\": \"sans-serif\"}}"
+ },
+ "6952a58bfbeb9c54ab6203cda605c27e": {
+  "completion_tokens": 870,
+  "latency_s": 4.5,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 1965,
+  "text": "{\"amount_as_printed\":\"₦26,400.00\",\"amount_confidence\":1,\"bank_name\":\"Lagoonpay\",\"date_time_as_printed\":\"2026-10-26 12:16:38\",\"editing_confidence\":0,\"editing_signs\":[],\"fee_as_printed\":\"₦0.00\",\"headline_status\":\"Payment sent\",\"is_payment_screenshot\":true,\"layout\":\"app_receipt\",\"legibility\":0.97,\"narration\":\"payment\",\"notes\":\"Lagoonpay app receipt shows a successful payment of 26400 naira.\",\"recipient_account_as_printed\":\"999****4471\",\"recipient_bank\":\"Kestrel Bank\",\"recipient_name\":\"CORAL LANE TRADING\",\"reference\":\"999837636444668557691183680036\",\"sender_name\":\"BUKOLA OLATUNJI\",\"session_id\":null,\"status_detail\":\"Successful\",\"total_as_printed\":\"₦26,400.00\",\"typefaces\":{\"amount\":\"sans-serif\",\"date_time\":\"sans-serif\",\"other_rows\":\"sans-serif\",\"recipient_name\":\"sans-serif\",\"reference\":\"sans-serif\",\"sender_name\":\"sans-serif\"}}"
+ },
+ "7c092c9a9cfe8428c15b18c653f94b20": {
+  "completion_tokens": 1569,
+  "latency_s": 8.031,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 1889,
+  "text": "{\"amount_as_printed\":\"NGN171,950.00\",\"amount_confidence\":0.99,\"bank_name\":\"Ironleaf Bank\",\"date_time_as_printed\":\"26/10/2026 21:02\",\"editing_confidence\":0.0,\"editing_signs\":[],\"fee_as_printed\":null,\"headline_status\":null,\"is_payment_screenshot\":true,\"layout\":\"sms_alert\",\"legibility\":0.95,\"narration\":null,\"notes\":\"SMS debit alert showing a transfer to Coral Lane Trading.\",\"recipient_account_as_printed\":null,\"recipient_bank\":null,\"recipient_name\":\"CORAL LANE TRADING\",\"reference\":\"IL/TRF/135418644\",\"sender_name\":null,\"session_id\":null,\"status_detail\":null,\"total_as_printed\":null,\"typefaces\":{\"amount\":\"sans-serif\",\"date_time\":\"sans-serif\",\"other_rows\":\"sans-serif\",\"recipient_name\":\"sans-serif\",\"reference\":\"sans-serif\",\"sender_name\":\"unclear\"}}"
+ },
+ "7dbccfb78203947723a312527e9d79e4": {
+  "completion_tokens": 832,
+  "latency_s": 4.866,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 1689,
+  "text": "{\"amount_as_printed\": \"₦48,000.00\", \"amount_confidence\": 1, \"bank_name\": \"Harmattan MFB\", \"date_time_as_printed\": \"Oct 26, 2026 07:52:13 PM\", \"editing_confidence\": 0, \"editing_signs\": [], \"fee_as_printed\": \"₦10.00\", \"headline_status\": \"Transaction Successful\", \"is_payment_screenshot\": true, \"layout\": \"app_receipt\", \"legibility\": 0.99, \"narration\": \"goods\", \"notes\": \"App receipt shows a successful transfer of 48,000 naira.\", \"recipient_account_as_printed\": \"******4471\", \"recipient_bank\": \"Kestrel Bank\", \"recipient_name\": \"CORAL LANE TRADING\", \"reference\": \"HMF-QDH8JW7XZK\", \"sender_name\": \"Halima Fagbemi\", \"session_id\": null, \"status_detail\": \"Successful\", \"total_as_printed\": \"₦48,010.00\", \"typefaces\": {\"amount\": \"sans-serif\", \"date_time\": \"sans-serif\", \"other_rows\": \"sans-serif\", \"recipient_name\": \"sans-serif\", \"reference\": \"sans-serif\", \"sender_name\": \"sans-serif\"}}"
+ },
+ "8281e69d661e1ff1b67acba3553888fa": {
+  "completion_tokens": 861,
+  "latency_s": 4.378,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 1965,
+  "text": "{\"amount_as_printed\": \"₦13,600.00\", \"amount_confidence\": 1.0, \"bank_name\": \"Kestrel Bank\", \"date_time_as_printed\": \"26 Oct 2026, 17:15\", \"editing_confidence\": 0.0, \"editing_signs\": [], \"fee_as_printed\": \"₦53.75\", \"headline_status\": \"Transfer Successful\", \"is_payment_screenshot\": true, \"layout\": \"app_receipt\", \"legibility\": 0.97, \"narration\": \"CLT\", \"notes\": \"Receipt shows a successful Kestrel Bank transfer.\", \"recipient_account_as_printed\": \"******4471\", \"recipient_bank\": \"Kestrel Bank\", \"recipient_name\": \"CORAL LANE TRADING\", \"reference\": \"KST333159016370\", \"sender_name\": \"KUNLE AKINOLA\", \"session_id\": \"999844434638608638395731219449\", \"status_detail\": \"Successful\", \"total_as_printed\": \"₦13,653.75\", \"typefaces\": {\"amount\": \"sans-serif\", \"date_time\": \"sans-serif\", \"other_rows\": \"sans-serif\", \"recipient_name\": \"sans-serif\", \"reference\": \"sans-serif\", \"sender_name\": \"sans-serif\"}}"
+ },
+ "8395ab83ea7e3b03e50fae7e99d27ef1": {
+  "completion_tokens": 1252,
+  "latency_s": 7.763,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 1965,
+  "text": "{\"amount_as_printed\": \"₦88,650.00\", \"amount_confidence\": 0.95, \"bank_name\": \"Harmattan MFB\", \"date_time_as_printed\": \"Oct 26, 2026 08:38:20 PM\", \"editing_confidence\": 0, \"editing_signs\": [], \"fee_as_printed\": \"₦0.00\", \"headline_status\": \"Transaction Successful\", \"is_payment_screenshot\": true, \"layout\": \"app_receipt\", \"legibility\": 0.95, \"narration\": \"CLT\", \"notes\": \"Total printed as \\u20a68,865.00 does not match amount of \\u20a688,650.00.\", \"recipient_account_as_printed\": \"******4471\", \"recipient_bank\": \"Kestrel Bank\", \"recipient_name\": \"CORAL LANE TRADING\", \"reference\": \"HMF-G0Q1O1YRVH\", \"sender_name\": \"Yinka Adesina\", \"session_id\": null, \"status_detail\": \"Successful\", \"total_as_printed\": \"₦8,865.00\", \"typefaces\": {\"amount\": \"serif\", \"date_time\": \"sans-serif\", \"other_rows\": \"sans-serif\", \"recipient_name\": \"sans-serif\", \"reference\": \"sans-serif\", \"sender_name\": \"sans-serif\"}}"
+ },
+ "86eec09e6adfafa146069253789e5f65": {
+  "completion_tokens": 1114,
+  "latency_s": 6.019,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 1980,
+  "text": "{\"amount_as_printed\":\"NGN16,300.00\",\"amount_confidence\":0.98,\"bank_name\":\"Ironleaf Bank\",\"date_time_as_printed\":\"26/10/2026 15:50\",\"editing_confidence\":0,\"editing_signs\":[],\"fee_as_printed\":null,\"headline_status\":null,\"is_payment_screenshot\":true,\"layout\":\"sms_alert\",\"legibility\":0.9,\"narration\":null,\"notes\":\"SMS debit alert shows a transfer to Coral Lane Trading.\",\"recipient_account_as_printed\":null,\"recipient_bank\":null,\"recipient_name\":\"CORAL LANE TRADING\",\"reference\":\"IL/TRF/735085835\",\"sender_name\":null,\"session_id\":null,\"status_detail\":null,\"total_as_printed\":null,\"typefaces\":{\"amount\":\"sans-serif\",\"date_time\":\"sans-serif\",\"other_rows\":\"sans-serif\",\"recipient_name\":\"sans-serif\",\"reference\":\"sans-serif\",\"sender_name\":\"unclear\"}}"
+ },
+ "a97781b1c8dcbaa172b4fa6b5172049b": {
+  "completion_tokens": 920,
+  "latency_s": 5.745,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 1512,
+  "text": "{\"amount_as_printed\":\"\\u20a6298,300.00\",\"amount_confidence\":0.5,\"bank_name\":null,\"date_time_as_printed\":null,\"editing_confidence\":0,\"editing_signs\":[],\"fee_as_printed\":null,\"headline_status\":null,\"is_payment_screenshot\":true,\"layout\":\"app_receipt\",\"legibility\":0.2,\"narration\":null,\"notes\":\"Image is heavily blurred so most fields cannot be read with certainty.\",\"recipient_account_as_printed\":null,\"recipient_bank\":null,\"recipient_name\":null,\"reference\":null,\"sender_name\":null,\"session_id\":null,\"status_detail\":null,\"total_as_printed\":null,\"typefaces\":{\"amount\":\"unclear\",\"date_time\":\"unclear\",\"other_rows\":\"unclear\",\"recipient_name\":\"unclear\",\"reference\":\"unclear\",\"sender_name\":\"unclear\"}}"
+ },
+ "b91e4120083e04c8135615047266a1b3": {
+  "completion_tokens": 1604,
+  "latency_s": 9.366,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 1794,
+  "text": "{\"amount_as_printed\":\"NGN82,400.00 DR\",\"amount_confidence\":0.98,\"bank_name\":\"Ironleaf Bank\",\"date_time_as_printed\":\"26/10/2026 16:09\",\"editing_confidence\":0.0,\"editing_signs\":[],\"fee_as_printed\":null,\"headline_status\":null,\"is_payment_screenshot\":true,\"layout\":\"sms_alert\",\"legibility\":0.95,\"narration\":null,\"notes\":\"SMS debit alert shows a transfer to Coral Lane Trading.\",\"recipient_account_as_printed\":null,\"recipient_bank\":null,\"recipient_name\":\"CORAL LANE TRADING\",\"reference\":\"IL/TRF/400516724\",\"sender_name\":null,\"session_id\":null,\"status_detail\":null,\"total_as_printed\":null,\"typefaces\":{\"amount\":\"sans-serif\",\"date_time\":\"sans-serif\",\"other_rows\":\"sans-serif\",\"recipient_name\":\"sans-serif\",\"reference\":\"sans-serif\",\"sender_name\":\"unclear\"}}"
+ },
+ "c487c8cb7058810c78b254d60e1a30c8": {
+  "completion_tokens": 740,
+  "latency_s": 3.329,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 1965,
+  "text": "{\"amount_as_printed\":\"₦298,300.00\",\"amount_confidence\":1,\"bank_name\":\"Lagoonpay\",\"date_time_as_printed\":\"2026-10-26 21:40:29\",\"editing_confidence\":0,\"editing_signs\":[],\"fee_as_printed\":\"₦0.00\",\"headline_status\":\"Payment sent\",\"is_payment_screenshot\":true,\"layout\":\"app_receipt\",\"legibility\":1,\"narration\":\"payment\",\"notes\":\"Receipt shows a successful transfer of 298,300 naira to Coral Lane Trading.\",\"recipient_account_as_printed\":\"999****4471\",\"recipient_bank\":\"Kestrel Bank\",\"recipient_name\":\"CORAL LANE TRADING\",\"reference\":\"99929642482252903225144351929\",\"sender_name\":\"RONKE IBITOYE\",\"session_id\":null,\"status_detail\":\"Successful\",\"total_as_printed\":\"₦298,300.00\",\"typefaces\":{\"amount\":\"sans-serif\",\"date_time\":\"sans-serif\",\"other_rows\":\"sans-serif\",\"recipient_name\":\"sans-serif\",\"reference\":\"sans-serif\",\"sender_name\":\"sans-serif\"}}"
+ },
+ "c9b4b70757e91d4c63c5ff674cd8718f": {
+  "completion_tokens": 728,
+  "latency_s": 4.962,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 1965,
+  "text": "{\"amount_as_printed\":\"₦293,450.00\",\"amount_confidence\":1,\"bank_name\":\"Kestrel Bank\",\"date_time_as_printed\":\"26 Oct 2026, 18:01\",\"editing_confidence\":0,\"editing_signs\":[],\"fee_as_printed\":\"₦10.00\",\"headline_status\":\"Transfer Successful\",\"is_payment_screenshot\":true,\"layout\":\"app_receipt\",\"legibility\":0.99,\"narration\":null,\"notes\":\"The receipt shows a successful transfer of 293450 naira from Kestrel Bank.\",\"recipient_account_as_printed\":\"******4471\",\"recipient_bank\":\"Kestrel Bank\",\"recipient_name\":\"CORAL LANE TRADING\",\"reference\":\"KST641692139912\",\"sender_name\":\"EMEKA AFOLABI\",\"session_id\":\"999616575677311817121623761567\",\"status_detail\":\"Successful\",\"total_as_printed\":\"₦293,460.00\",\"typefaces\":{\"amount\":\"sans-serif\",\"date_time\":\"sans-serif\",\"other_rows\":\"sans-serif\",\"recipient_name\":\"sans-serif\",\"reference\":\"sans-serif\",\"sender_name\":\"sans-serif\"}}"
+ },
+ "cfc42fd273dc03ea14119c5b54d8a85d": {
+  "completion_tokens": 1250,
+  "latency_s": 7.819,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 1889,
+  "text": "{\"amount_as_printed\":\"NGN293,450.00 DR\",\"amount_confidence\":1,\"bank_name\":\"Ironleaf Bank\",\"date_time_as_printed\":\"26/10/2026 16:07\",\"editing_confidence\":0,\"editing_signs\":[],\"fee_as_printed\":null,\"headline_status\":null,\"is_payment_screenshot\":true,\"layout\":\"sms_alert\",\"legibility\":0.98,\"narration\":null,\"notes\":\"SMS debit alert showing a transfer to Coral Lane Trading.\",\"recipient_account_as_printed\":null,\"recipient_bank\":null,\"recipient_name\":\"CORAL LANE TRADING\",\"reference\":\"IL/TRF/727297754\",\"sender_name\":null,\"session_id\":null,\"status_detail\":null,\"total_as_printed\":null,\"typefaces\":{\"amount\":\"sans-serif\",\"date_time\":\"sans-serif\",\"other_rows\":\"sans-serif\",\"recipient_name\":\"sans-serif\",\"reference\":\"sans-serif\",\"sender_name\":\"unclear\"}}"
+ },
+ "d2f12a379cb4f67884eea56ea3b2602b": {
+  "completion_tokens": 681,
+  "latency_s": 4.281,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 2064,
+  "text": "{\"amount_as_printed\":\"₦377,800.00\",\"amount_confidence\":0.98,\"bank_name\":\"Lagoonpay\",\"date_time_as_printed\":\"2026-10-26 20:27:29\",\"editing_confidence\":0,\"editing_signs\":[],\"fee_as_printed\":null,\"headline_status\":\"Payment sent\",\"is_payment_screenshot\":true,\"layout\":\"app_receipt\",\"legibility\":0.92,\"narration\":\"CLT\",\"notes\":\"App receipt shows a successful transfer of 377800 naira.\",\"recipient_account_as_printed\":\"999****4471\",\"recipient_bank\":\"Kestrel Bank\",\"recipient_name\":\"CORAL LANE TRADING\",\"reference\":\"999921580080693808056738652232\",\"sender_name\":\"FUNKE ADESINA\",\"session_id\":null,\"status_detail\":\"Successful\",\"total_as_printed\":null,\"typefaces\":{\"amount\":\"sans-serif\",\"date_time\":\"sans-serif\",\"other_rows\":\"sans-serif\",\"recipient_name\":\"sans-serif\",\"reference\":\"sans-serif\",\"sender_name\":\"sans-serif\"}}"
+ },
+ "dedc60dfdf9f1f15977394586ee27640": {
+  "completion_tokens": 724,
+  "latency_s": 4.712,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 1965,
+  "text": "{\"amount_as_printed\":\"₦82,400.00\",\"amount_confidence\":1,\"bank_name\":\"Harmattan MFB\",\"date_time_as_printed\":\"Oct 26, 2026 03:10:34 PM\",\"editing_confidence\":0,\"editing_signs\":[],\"fee_as_printed\":null,\"headline_status\":\"Transaction Successful\",\"is_payment_screenshot\":true,\"layout\":\"app_receipt\",\"legibility\":0.99,\"narration\":\"CLT\",\"notes\":\"App receipt from Harmattan MFB shows a successful transfer to Coral Lane Trading.\",\"recipient_account_as_printed\":\"******4471\",\"recipient_bank\":\"Kestrel Bank\",\"recipient_name\":\"CORAL LANE TRADING\",\"reference\":\"HMF-06M077Z6SI\",\"sender_name\":\"Bola Ojo\",\"session_id\":null,\"status_detail\":\"Successful\",\"total_as_printed\":null,\"typefaces\":{\"amount\":\"serif\",\"date_time\":\"sans-serif\",\"other_rows\":\"sans-serif\",\"recipient_name\":\"sans-serif\",\"reference\":\"sans-serif\",\"sender_name\":\"sans-serif\"}}"
+ },
+ "e4455cdc6c443cc7bba9cab4972bb0de": {
+  "completion_tokens": 661,
+  "latency_s": 4.33,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 2064,
+  "text": "{\"amount_as_printed\":\"₦34,950.00\",\"amount_confidence\":1,\"bank_name\":\"Harmattan MFB\",\"date_time_as_printed\":\"Oct 26, 2026 03:47:14 PM\",\"editing_confidence\":0,\"editing_signs\":[],\"fee_as_printed\":\"₦10.00\",\"headline_status\":\"Transaction Successful\",\"is_payment_screenshot\":true,\"layout\":\"app_receipt\",\"legibility\":0.95,\"narration\":null,\"notes\":\"App receipt shows a successful transfer from Harmattan MFB.\",\"recipient_account_as_printed\":\"******4471\",\"recipient_bank\":\"Kestrel Bank\",\"recipient_name\":\"CORAL LANE TRADING\",\"reference\":\"HMF-GH6KIXFX7E\",\"sender_name\":\"Chidi Fagbemi\",\"session_id\":null,\"status_detail\":\"Successful\",\"total_as_printed\":\"₦34,960.00\",\"typefaces\":{\"amount\":\"sans-serif\",\"date_time\":\"sans-serif\",\"other_rows\":\"sans-serif\",\"recipient_name\":\"sans-serif\",\"reference\":\"sans-serif\",\"sender_name\":\"sans-serif\"}}"
+ },
+ "e7307d54ba2277f3720a36f827f30a57": {
+  "completion_tokens": 710,
+  "latency_s": 4.156,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 1965,
+  "text": "{\"amount_as_printed\":\"₦26,400.00\",\"amount_confidence\":1,\"bank_name\":\"Kestrel Bank\",\"date_time_as_printed\":\"26 Oct 2026, 21:50\",\"editing_confidence\":0,\"editing_signs\":[],\"fee_as_printed\":null,\"headline_status\":\"Transfer Successful\",\"is_payment_screenshot\":true,\"layout\":\"app_receipt\",\"legibility\":0.98,\"narration\":\"payment\",\"notes\":\"Kestrel Bank receipt shows a successful transfer of 26400 naira.\",\"recipient_account_as_printed\":\"******4471\",\"recipient_bank\":\"Kestrel Bank\",\"recipient_name\":\"CORAL LANE TRADING\",\"reference\":\"KST328654302065\",\"sender_name\":\"BUKOLA OLATUNJI\",\"session_id\":\"999185693582087299038001180561\",\"status_detail\":\"Successful\",\"total_as_printed\":null,\"typefaces\":{\"amount\":\"sans-serif\",\"date_time\":\"sans-serif\",\"other_rows\":\"sans-serif\",\"recipient_name\":\"sans-serif\",\"reference\":\"sans-serif\",\"sender_name\":\"sans-serif\"}}"
+ },
+ "ebb032e432f627bc5f7c4e87aba5b876": {
+  "completion_tokens": 1439,
+  "latency_s": 8.315,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 1965,
+  "text": "{\"amount_as_printed\": \"₦377,800.00\", \"amount_confidence\": 0.99, \"bank_name\": \"Kestrel Bank\", \"date_time_as_printed\": \"26 Oct 2026, 17:58\", \"editing_confidence\": 0.65, \"editing_signs\": [\"sender name uses serif lettering while all other values use sans-serif\"], \"fee_as_printed\": null, \"headline_status\": \"Transfer Successful\", \"is_payment_screenshot\": true, \"layout\": \"app_receipt\", \"legibility\": 0.95, \"narration\": \"dlv-56-9002\", \"notes\": \"Receipt shows a successful Kestrel Bank transfer of N377,800.\", \"recipient_account_as_printed\": \"******4471\", \"recipient_bank\": \"Kestrel Bank\", \"recipient_name\": \"CORAL LANE TRADING\", \"reference\": \"KST646136445344\", \"sender_name\": \"FUNKE ADESINA\", \"session_id\": \"999474734931813629\", \"status_detail\": \"Successful\", \"total_as_printed\": null, \"typefaces\": {\"amount\": \"sans-serif\", \"date_time\": \"sans-serif\", \"other_rows\": \"sans-serif\", \"recipient_name\": \"sans-serif\", \"reference\": \"sans-serif\", \"sender_name\": \"serif\"}}"
+ },
+ "fc3def3888a32470af0037eaf7b2d0e1": {
+  "completion_tokens": 635,
+  "latency_s": 3.659,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 1965,
+  "text": "{\"amount_as_printed\":\"₦2,845,250.00\",\"amount_confidence\":1,\"bank_name\":\"Harmattan MFB\",\"date_time_as_printed\":\"Oct 26, 2026 08:00:56 PM\",\"editing_confidence\":0,\"editing_signs\":[],\"fee_as_printed\":\"₦0.00\",\"headline_status\":\"Transaction Successful\",\"is_payment_screenshot\":true,\"layout\":\"app_receipt\",\"legibility\":1,\"narration\":\"CLT\",\"notes\":\"Receipt shows a successful transfer of over two million naira.\",\"recipient_account_as_printed\":\"******4471\",\"recipient_bank\":\"Kestrel Bank\",\"recipient_name\":\"CORAL LANE TRADING\",\"reference\":\"HMF-I5040XFDL8\",\"sender_name\":\"Wale Afolabi\",\"session_id\":null,\"status_detail\":\"Successful\",\"total_as_printed\":\"₦2,845,250.00\",\"typefaces\":{\"amount\":\"sans-serif\",\"date_time\":\"sans-serif\",\"other_rows\":\"sans-serif\",\"recipient_name\":\"sans-serif\",\"reference\":\"sans-serif\",\"sender_name\":\"sans-serif\"}}"
+ }
+}

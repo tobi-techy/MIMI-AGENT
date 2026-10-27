@@ -15,6 +15,13 @@
     --promises SHARE   of the shops whose first reply is a voice note, SHARE
                        send one that also promises to pay ("I go pay 20k
                        tomorrow"); Mimi reads it back and waits for YES
+    --screenshots SHARE  of the shops that pay by transfer, SHARE send a
+                       payment screenshot for the day's delivery (drawn on the
+                       fly, fictional banks); Mimi reads it with Muse Spark,
+                       checks it in code and marks it likely paid, and the
+                       sim's bank feed later witnesses the genuine ones
+    --fakes SHARE      of those, SHARE send a fake screenshot instead
+    --shop-ids A,B     run exactly these shops (instead of --shops N)
     --voice-replies    every shop sends "VOICE ON" at the start (its consent),
                        and Mimi's short replies also go as a voice note
                        (Spitch speech with SPITCH_API_KEY, else the fake)
@@ -54,16 +61,22 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--voice", type=float, default=0.0)
     ap.add_argument("--promises", type=float, default=0.0)
     ap.add_argument("--voice-replies", action="store_true")
+    ap.add_argument("--screenshots", type=float, default=0.0)
+    ap.add_argument("--fakes", type=float, default=0.0)
+    ap.add_argument("--shop-ids", default="")
     args = ap.parse_args(argv)
 
     world = load_world()
     shop_ids = None
-    if args.shops:
+    if args.shop_ids:
+        shop_ids = [s.strip() for s in args.shop_ids.split(",") if s.strip()]
+    elif args.shops:
         shop_ids = [d.shop_id for d in world.live_deliveries][: args.shops]
     mimi: Any = from_env("mimi", fake=fake_verdict)
     sim: Any = from_env("sim", fake=fake_shop)
     if args.cache and not mimi.name.startswith("fake"):
         mimi = CachedModel(mimi, args.cache + ".mimi.json")
+        # The screenshot reader shares Mimi's cache file (keys include the image hash).
         sim = CachedModel(sim, args.cache + ".sim.json")
     extra: dict[str, Any] = {}
     if args.db:
@@ -76,11 +89,15 @@ def main(argv: list[str] | None = None) -> int:
         engine = sa.create_engine(args.db)
         store, inbox = SqlJobStore(engine), SqlShopInbox(engine)
         prefs = SqlVoicePrefs(engine)
+        from mimi.proof.ledger import SqlProofLedger
+
+        ledger = SqlProofLedger(engine)
         if args.db.startswith("sqlite"):
             store.ensure_schema()
             inbox.ensure_schema()
             prefs.ensure_schema()
-        extra = {"store": store, "inbox": inbox, "voice_prefs": prefs}
+            ledger.ensure_schema()
+        extra = {"store": store, "inbox": inbox, "voice_prefs": prefs, "proof_ledger": ledger}
     transcriber = None
     if args.voice > 0:
         transcriber = transcriber_from_env(cache=(args.cache + ".voice") if args.cache else None)
@@ -101,6 +118,8 @@ def main(argv: list[str] | None = None) -> int:
         promise_share=args.promises,
         voice_replies=args.voice_replies,
         speaker=speaker,
+        screenshot_share=args.screenshots,
+        fake_share=args.fakes,
         **extra,
     )
     report = runner.run()

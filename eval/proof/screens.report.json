@@ -1,0 +1,110 @@
+{
+ "cases": 40,
+ "split": {
+  "genuine": 20,
+  "fake": 16,
+  "unreadable": 4
+ },
+ "prompt_version": "proof-read-v4",
+ "field_exact": 1.0,
+ "field_exact_by_field": {
+  "amount": 1.0,
+  "time": 1.0,
+  "sender": 1.0,
+  "bank": 1.0
+ },
+ "verdict_accuracy": 1.0,
+ "verdict_confusion": {
+  "likely_genuine": {
+   "likely_genuine": 20
+  },
+  "looks_fake": {
+   "looks_fake": 16
+  },
+  "cannot_tell": {
+   "cannot_tell": 4
+  }
+ },
+ "fake_catch": 1.0,
+ "fake_catch_by_kind": {
+  "edited_amount": {
+   "n": 3,
+   "caught": 3
+  },
+  "wrong_recipient": {
+   "n": 2,
+   "caught": 2
+  },
+  "duplicated_reference": {
+   "n": 2,
+   "caught": 2
+  },
+  "impossible_time": {
+   "n": 3,
+   "caught": 3
+  },
+  "pending_as_success": {
+   "n": 2,
+   "caught": 2
+  },
+  "mismatched_fonts": {
+   "n": 2,
+   "caught": 2
+  },
+  "old_screenshot": {
+   "n": 2,
+   "caught": 2
+  }
+ },
+ "fakes_caught_by_an_expected_rule": 1.0,
+ "failed_rules_on_fakes": {
+  "editing_signs": 4,
+  "reference_unique": 3,
+  "arithmetic": 2,
+  "recipient": 2,
+  "time_real": 2,
+  "status": 2,
+  "time_after_delivery": 2,
+  "time_recent": 2,
+  "time_not_future": 1,
+  "reference_format": 1
+ },
+ "false_likely_on_fakes": 0,
+ "false_likely_ids": [],
+ "explained": {},
+ "real_marked_fake": 0,
+ "real_marked_fake_ids": [],
+ "unreadable_asked": 4,
+ "invoice_match": 1.0,
+ "invented_amounts": 0,
+ "verified_from_screenshot": 0,
+ "read_via": {
+  "model": 40
+ },
+ "model_calls": 40,
+ "prompt_tokens": 75549,
+ "completion_tokens": 37882,
+ "tokens_per_screenshot": 2835.8,
+ "latency_p50_s": 4.88,
+ "latency_p95_s": 8.31,
+ "baseline_no_reading": {
+  "verdict_accuracy": 0.5,
+  "fake_catch": 0.0,
+  "false_likely_on_fakes": 16,
+  "real_marked_fake": 0
+ },
+ "failures": [],
+ "pass": {
+  "false_likely_on_fakes": true,
+  "real_marked_fake": true,
+  "invented_amounts": true,
+  "verified_from_screenshot": true,
+  "fake_catch": true,
+  "field_exact": true,
+  "invoice_match": true
+ },
+ "model": "muse-spark-1.3",
+ "wall_seconds": 0.05,
+ "live_calls_this_pass": 0,
+ "replayed_calls": 40
+}
