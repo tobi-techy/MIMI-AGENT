@@ -1,4 +1,4 @@
-"""Backtest of estimator v0 with the one-tap loop (RAI-270). No model calls.
+"""Backtest of estimator v0.2 with the one-tap loop (RAI-270). No model calls.
 
     python -m mimi.stock.backtest            # both histories, both seeds; compare to the report
     python -m mimi.stock.backtest --write    # write eval/stock/backtest.report.json
@@ -136,7 +136,7 @@ def play(
         for key, h in histories.items():
             e = estimate(h, ledger.counts_for(key), day)
             t = truth[key]
-            if e is None or t.stock_at(day) <= 1e-9:
+            if e is None:
                 continue
             true_out = t.run_out_day(day)
             scored.append({"key": key, "day": day, "pred": e.run_out_day, "true": true_out,

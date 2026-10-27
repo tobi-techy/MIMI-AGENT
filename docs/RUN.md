@@ -205,7 +205,7 @@ for 3 reads; 9 live calls in all (with the receipt reader and the shops),
 ## 3f. Stock: backtest, answer eval and the low-stock scene
 
 ```bash
-# Backtest: estimator v0 with the one-tap loop, day by day, no model calls.
+# Backtest: estimator v0.2 with the one-tap loop, day by day, no model calls.
 # Reorder history on the dev seed (tuned) and the held-out seed (the mark),
 # plus the world's own deliveries as a stress test. Compares to the report.
 python -m mimi.stock.backtest

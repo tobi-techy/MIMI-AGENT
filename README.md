@@ -223,19 +223,20 @@ reported on a held-out seed it never saw.
 
 | | Mark | Held-out seed | Same estimator, never asks | Naive baseline |
 |---|---|---|---|---|
-| Run-out within 2 days (true run-out within 7 days) | >= 70% (proposed) | **73.9%** | 71.2% | 58.0% |
-| ... high-confidence items | | 80.8% | | |
-| ... true run-out within 3 days | | 81.6% | | |
+| Run-out within 2 days (true run-out within 7 days) | >= 70% (proposed) | **74.3%** | 72.0% | 59.4% |
+| ... high-confidence items | | 81.8% | | |
+| ... true run-out within 3 days | | 81.5% | | |
 | Max questions per item per week | <= 1 | **1** | | |
 | Restock drafts without the shop's count / orders placed | 0 | **0 / 0** | | |
 
 The proposed 70% bar is **met** on the held-out seed (estimator v0.2; v0.1
 was 67.5%). It is not met everywhere: over six more unseen seeds the mean is
-71.5% (69.1% to 74.5%; three of six just under 70%), and slow lines at small
+72.3% (70.2% to 75.1%; all six at or just over 70%), and slow lines at small
 shops (one or two deliveries a month) still miss most, where one unit is
 days of sales. That is why every "likely to run low" carries a confidence.
 On the world's own random-basket deliveries, which carry no reorder rhythm,
-it is 34% (a stress test, no mark).
+it is 42% (a stress test, no mark). Item-days that start on an empty shelf
+are scored too: a stock-out is the miss that matters most.
 
 **Answer reading**: 30 synthetic answers (taps, numbers, number words,
 Pidgin, Yoruba, Igbo, Hausa, packets of a carton, ranges, a burst, vague
@@ -298,7 +299,7 @@ Hobby plan has no alerts API). Details: [`docs/RUN.md`](docs/RUN.md#3e-langfuse-
 | `mimi/receipts` | The delivery receipt flow, the reply reader and its guards, payment-promise read-back, voice-reply scripts, the eval |
 | `mimi/voice` | Voice notes: a transcription port with Spitch and Muse Voice Transcribe adapters, a router, audio checks and ffmpeg conversion, money and date reading, voice-reply consent and text to speech, fakes, record and replay, the voice eval |
 | `mimi/proof` | Payment screenshots: the `read_payment_image` tool (Muse Spark vision), code checks, verdicts and invoice match, the bank witness, the proof ledger, the synthetic screenshot renderer, the eval |
-| `mimi/stock` | Stock: estimator v0 (stock in minus estimated sales, with confidence), trigger and weekly caps, one-tap question and answer reading (code for taps, Muse Spark for words), restock draft and verifier, the backtest and the answer eval |
+| `mimi/stock` | Stock: estimator v0.2 (stock in minus estimated sales, with confidence), trigger and weekly caps, one-tap question and answer reading (code for taps, Muse Spark for words), restock draft and verifier, the backtest and the answer eval |
 | `mimi/observe` | Optional Langfuse tracing: turn traces, redaction, the evals as datasets and experiments (off without keys) |
 | `mimi/sim` | Shop personas and a one-day simulator (shops can pay by screenshot), and the low-stock scene |
 | `mimi/types.py` | `ShopScope` and the kobo money unit |

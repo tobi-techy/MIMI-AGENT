@@ -1,4 +1,4 @@
-# Stock: estimator v0, one-tap low-stock count, restock draft (RAI-270)
+# Stock: estimator v0.2, one-tap low-stock count, restock draft (RAI-270)
 
 The shop never counts its stock and never keeps a book. Mimi keeps an
 estimate for every item of every shop: **exact stock in** (the deliveries
@@ -158,16 +158,18 @@ conservative case; typed exact numbers would help), the flow records,
 re-estimates and drafts. Scored on weeks 5 to 8, on each morning's estimate
 after that morning's count, over every item-day whose true shelf, with
 nothing more delivered, empties within 7 days (the restock planning week).
+Item-days that start on an already empty shelf count too (their true run-out
+is that day): leaving them out would drop the stock-outs from the score.
 
 | Metric | Mark | Reorders, held-out seed 7 | Reorders, dev seed 2610 | World deliveries (stress) |
 |---|---|---|---|---|
-| **Run-out within 2 days** (true run-out within 7 days) | >= 70% (proposed) | **73.9%** (met) | 72.7% | 34.5% |
-| ... true run-out within 3 days | | 81.6% | 81.1% | 54.1% |
-| ... true run-out within 14 days | | 58.1% | 59.2% | 21.3% |
-| ... confidence high / medium / low | | 80.8% / 76.4% / 50.4% | 79.9% / 73.6% / 58.1% | 35.3% / 46.9% / 28.7% |
-| Baseline: same estimator, never asks | | 71.2% | 71.0% | 34.9% |
-| Baseline: naive (last delivery, 28-day units-in rate) | | 58.0% | 53.2% | 22.6% |
-| "Likely low" flag precision / recall | | 47.3% / 46.1% | 47.4% / 48.6% | 6.3% / 43.8% |
+| **Run-out within 2 days** (true run-out within 7 days) | >= 70% (proposed) | **74.3%** (met) | 73.2% | 41.8% |
+| ... true run-out within 3 days | | 81.5% | 81.2% | 51.8% |
+| ... true run-out within 14 days | | 58.9% | 59.9% | 28.5% |
+| ... confidence high / medium / low | | 81.8% / 76.6% / 50.4% | 80.8% / 74.1% / 58.1% | 45.0% / 44.6% / 40.6% |
+| Baseline: same estimator, never asks | | 72.0% | 71.8% | 51.4% |
+| Baseline: naive (last delivery, 28-day units-in rate) | | 59.4% | 54.6% | 21.7% |
+| "Likely low" flag precision / recall | | 54.7% / 51.4% | 54.2% / 53.4% | 18.7% / 46.3% |
 | Questions asked (202 lines, 6 weeks) | | 358 | 335 | 464 |
 | Max questions per item per week | <= 1 | 1 | 1 | 1 |
 | Max questions per shop per week | <= 3 | 3 | 3 | 3 |
@@ -180,17 +182,19 @@ Spread over six more reorder seeds that were never used for tuning (11, 42,
 
 | | v0.1 | v0.2 |
 |---|---|---|
-| Mean run-out within 2 days | 67.6% | **71.5%** |
-| Range | 64.2% to 72.7% | 69.1% to 74.5% |
-| Seeds at or over 70% | 1 of 6 | 3 of 6 |
+| Mean run-out within 2 days | 67.6% | **72.3%** |
+| Range | 64.2% to 72.7% | 70.2% to 75.1% |
+| Seeds at or over 70% | 1 of 6 | 6 of 6 |
 
 Read honestly:
 
-* **The proposed 70% bar is met on the held-out seed**: 73.9% (v0.1 was
-  67.5%). Across six more unseen seeds the mean is 71.5%, and three of six
-  sit just under 70% (69.1%, 69.8%, 69.9%). So the bar holds on average, not
-  on every seed. High-confidence items are at 80% or more, and items about
-  to run out within 3 days, which is when Mimi asks, at 82%.
+* **The proposed 70% bar is met on the held-out seed**: 74.3% (v0.1 was
+  67.5%). Across six more unseen seeds the mean is 72.3%, and all six are at
+  or just over 70% (lowest 70.2%), so the margin is thin. High-confidence
+  items are at 80% or more, and items about to run out within 3 days, which
+  is when Mimi asks, at 81.5%. (v0.1 numbers, and the v0.2 numbers first
+  published here, left out item-days that start on an empty shelf; those
+  were 73.9% held-out and 71.5% mean. v0.1 was not re-scored.)
 * **What changed from v0.1 to v0.2** (chosen on the dev seed only, then read
   once on the held-out seed). A diagnosis on the dev seed showed predictions
   ran +1.4 days late on average, mostly on shops with a 14-day van (about 50% vs
@@ -213,10 +217,12 @@ Read honestly:
 * Most of the remaining error is the units left between counts, and
   low-confidence lines (50% on the held-out seed): slow lines at small shops,
   where one unit is days of sales.
-* Counts help a little on the reorder history (71.2% to 73.9%). Tapped
+* Counts help a little on the reorder history (72.0% to 74.3%). Tapped
   buckets are coarse ("6+" says little), and one question a week per item is
-  the cap. On the world's random-basket deliveries, counts do not help (34.9%
-  vs 34.5%): with no reorder rhythm the sell rate itself is wrong, and a
+  the cap. On the world's random-basket deliveries, counts hurt (51.4% never
+  asking vs 41.8% with taps; most of these item-days start on an empty or
+  near-empty shelf, where a "0-2" tap anchors the shelf low and the
+  random-basket rhythm then refills it): with no reorder rhythm the sell rate itself is wrong, and a
   bucket cannot fix that. The world's deliveries are not a fair test of an
   estimator built on reorder rhythm, which is why it carries no mark.
 * Earlier (v0.1, dev seed): anchoring on the last delivery with zero left

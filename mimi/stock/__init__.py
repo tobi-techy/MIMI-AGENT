@@ -1,4 +1,4 @@
-"""The stock helper (RAI-270): estimator v0, one-tap low-stock count, restock draft.
+"""The stock helper (RAI-270): estimator v0.2, one-tap low-stock count, restock draft.
 
 Stock left = exact stock in (deliveries) minus estimated sales, corrected by
 the shop's one-tap counts. Code decides every number; Muse Spark only reads
