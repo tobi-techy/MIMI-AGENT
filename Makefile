@@ -1,6 +1,6 @@
 PY ?= python
 
-.PHONY: install test eval eval-live eval-fake voice-eval voice-eval-live voice-fixtures proof-eval proof-eval-live proof-fixtures sim sim-live sim-voice sim-voice-v2 sim-screens trace-smoke langfuse-setup langfuse-monitor langfuse-datasets proof-experiment voice-experiment receipts-experiment judge-calibration world-check lint typecheck secrets provenance migrate check
+.PHONY: install test eval eval-live eval-fake voice-eval voice-eval-live voice-fixtures proof-eval proof-eval-live proof-fixtures stock-backtest stock-eval stock-eval-live stock-eval-fake sim-stock trace-stock sim sim-live sim-voice sim-voice-v2 sim-screens trace-smoke langfuse-setup langfuse-monitor langfuse-datasets proof-experiment voice-experiment receipts-experiment judge-calibration world-check lint typecheck secrets provenance migrate check
 
 install:            ## editable install with dev tools
 	$(PY) -m pip install -e '.[dev,otel,langfuse]'
@@ -35,6 +35,21 @@ proof-eval-live:    ## call Muse Spark on the 40 screenshots (needs META_API_KEY
 proof-fixtures:     ## redraw the 40 synthetic screenshots and their labels (Pillow)
 	$(PY) scripts/make_proof_fixtures.py
 
+stock-backtest:     ## stock estimator backtest with the one-tap loop (no model; compares to the report)
+	$(PY) -m mimi.stock.backtest
+
+stock-eval:         ## stock answer-reading eval, 30 cases, replaying the recorded Muse Spark answers
+	META_API_KEY= $(PY) -m mimi.stock.eval
+
+stock-eval-fake:    ## keyword FakeModel run of the same 30 cases (plumbing)
+	$(PY) -m mimi.stock.eval --fake
+
+stock-eval-live:    ## call Muse Spark (needs META_API_KEY); resumes from the cache
+	$(PY) -m mimi.stock.eval --live
+
+sim-stock:          ## offline low-stock scene: Monday stock check, one-tap counts, restock drafts
+	META_API_KEY= $(PY) -m mimi.sim --stock --transcript
+
 sim:                ## offline one-day sim, 3 shops, with the transcript
 	META_API_KEY= $(PY) -m mimi.sim --shops 3 --transcript
 
@@ -62,7 +77,7 @@ provenance:         ## every commit was made in the hackathon window
 migrate:            ## create Mimi's tables; set MIMI_DB_URL first
 	alembic upgrade head
 
-check: lint typecheck test eval voice-eval proof-eval world-check secrets provenance
+check: lint typecheck test eval voice-eval proof-eval stock-backtest stock-eval world-check secrets provenance
 
 sim-voice-v2:       ## offline sim: voice notes, payment promises, voice replies
 	META_API_KEY= SPITCH_API_KEY= $(PY) -m mimi.sim --shops 3 --transcript --voice 1 --promises 1 --voice-replies
@@ -92,6 +107,9 @@ voice-experiment:   ## voice eval as a Langfuse experiment (replayed transcripts
 
 receipts-experiment: ## reply-reader eval as a Langfuse experiment (replayed answers)
 	$(PY) -m mimi.observe.experiments run receipts
+
+trace-stock:        ## low-stock scene traced to Langfuse (demo env, shops type their answers); --public link
+	$(PY) scripts/trace_stock.py --public
 
 judge-calibration:  ## calibrate the reply-tone LLM judge on 8 labelled replies (Muse, cached)
 	$(PY) -m mimi.observe.experiments calibrate-judge

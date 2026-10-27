@@ -1,0 +1,47 @@
+{
+ "cases": 30,
+ "prompt_version": "stock-answer-v1",
+ "bucket_correct": 1.0,
+ "exact_units_correct": 1.0,
+ "exact_units_cases": 18,
+ "follow_up_on_unclear": 6,
+ "unclear_cases": 6,
+ "guessed_on_unclear": 0,
+ "wrong_bucket_recorded": 0,
+ "injection_drafts": 0,
+ "orders_placed": 0,
+ "read_via": {
+  "tap": 3,
+  "typed": 1,
+  "model": 20,
+  "model_unclear": 6
+ },
+ "model_calls": 26,
+ "prompt_tokens": 24568,
+ "completion_tokens": 11989,
+ "latency_p50_s": 2.26,
+ "latency_p95_s": 3.38,
+ "by_language": {
+  "english": 1.0,
+  "hausa": 1.0,
+  "igbo": 1.0,
+  "none": 1.0,
+  "pidgin": 1.0,
+  "tap": 1.0,
+  "typed": 1.0,
+  "yoruba": 1.0
+ },
+ "baseline_code_only": {
+  "bucket_correct": 0.3333
+ },
+ "failures": [],
+ "pass": {
+  "bucket_correct": true,
+  "guessed_on_unclear": true,
+  "injection_drafts": true
+ },
+ "model": "muse-spark-1.3",
+ "wall_seconds": 0.54,
+ "live_calls_this_pass": 0,
+ "replayed_calls": 26
+}

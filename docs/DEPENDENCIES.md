@@ -14,14 +14,14 @@ starts with no intent types of its own. The module rules test
 | `sqlalchemy` | MIT | `mimi/runtime/sql_store.py`, `mimi/receipts/inbox.py`, `mimi/voice/prefs.py`, sim `--db` |
 | `alembic` | MIT | migrations `0001_runtime_jobs` to `0005_payment_proofs` |
 | `httpx` | BSD-3-Clause | `mimi/models/meta.py` (Meta Model API client), `mimi/voice/` (Spitch and Muse Voice Transcribe clients) |
-| `pydantic` | MIT | `mimi/receipts/verdict.py` (typed verdict) |
+| `pydantic` | MIT | `mimi/receipts/verdict.py` (typed verdict), `mimi/proof/reading.py`, `mimi/stock/answers.py` (typed stock answer) |
 
 Optional extras:
 
 | Package | Extra | Licence | Used by |
 |---|---|---|---|
 | `opentelemetry-api` | `otel` | Apache-2.0 | `mimi/runtime/tracing.py` `OtelStepTracer`, imported only when that tracer is built; the sim and tests use `RecordingStepTracer` |
-| `langfuse` 5.0.4 (pinned) | `langfuse` | MIT | `mimi/observe/` (traces, datasets, experiments), `scripts/trace_smoke.py`, `experiments/proof_experiment.py`; imported only when the `LANGFUSE_*` keys are set (the tests use a mock client) |
+| `langfuse` 5.0.4 (pinned) | `langfuse` | MIT | `mimi/observe/` (traces, datasets, experiments), `scripts/trace_smoke.py`, `scripts/trace_stock.py`, `experiments/proof_experiment.py`; imported only when the `LANGFUSE_*` keys are set (the tests use a mock client) |
 | `psycopg2-binary` | `postgres` | LGPL with exceptions (dynamic use only, unmodified) | only when the sim or alembic points at Postgres |
 
 Their transitive packages: `httpcore` (BSD-3-Clause), `h11` (MIT), `anyio`

@@ -22,6 +22,12 @@
                        sim's bank feed later witnesses the genuine ones
     --fakes SHARE      of those, SHARE send a fake screenshot instead
     --shop-ids A,B     run exactly these shops (instead of --shops N)
+    --stock            the low-stock scene instead of the receipt day: Monday
+                       07:30 stock check, one-tap questions, answers, restock
+                       drafts (default shops shop-007,shop-004,shop-002)
+    --stock-history H  reorders (default: regular lines reordered when low)
+                       or route (the world's own deliveries)
+    --stock-words      in the stock scene, shops type answers instead of tapping
     --voice-replies    every shop sends "VOICE ON" at the start (its consent),
                        and Mimi's short replies also go as a voice note
                        (Spitch speech with SPITCH_API_KEY, else the fake)
@@ -70,7 +76,12 @@ def main(argv: list[str] | None = None, *, exporter: TurnExporter | None = None)
     ap.add_argument("--screenshots", type=float, default=0.0)
     ap.add_argument("--fakes", type=float, default=0.0)
     ap.add_argument("--shop-ids", default="")
+    ap.add_argument("--stock", action="store_true")
+    ap.add_argument("--stock-history", default="reorders", choices=("reorders", "route"))
+    ap.add_argument("--stock-words", action="store_true")
     args = ap.parse_args(argv)
+    if args.stock:
+        return _stock(args, exporter)
 
     world = load_world()
     shop_ids = None
@@ -149,6 +160,43 @@ def main(argv: list[str] | None = None, *, exporter: TurnExporter | None = None)
     report["wall_seconds"] = round(time.monotonic() - started, 2)
     if args.transcript:
         print("\n".join(runner.transcript.lines))
+    print(json.dumps(report, indent=2))
+    return 0
+
+
+def _stock(args: Any, exporter: TurnExporter | None) -> int:
+    from mimi.sim.stock import StockScene
+    from mimi.stock.answers import fake_answer
+
+    world = load_world()
+    shop_ids = [s.strip() for s in (args.shop_ids or "shop-007,shop-004,shop-002").split(",")
+                if s.strip()]
+    if args.shops and not args.shop_ids:
+        shop_ids = [s.shop_id for s in world.shops][: args.shops]
+    mimi: Any = from_env("mimi", fake=fake_answer)
+    sim: Any = from_env("sim")
+    if args.cache and not mimi.name.startswith("fake"):
+        mimi = CachedModel(mimi, args.cache + ".mimi.json")
+        sim = CachedModel(sim, args.cache + ".sim.json")
+    exporter = exporter or exporter_from_env()
+    turns = TurnBook(exporter, synthetic=True)
+    started = time.monotonic()
+    scene = StockScene(world, mimi, sim, shop_ids, turns=turns, seed=args.seed,
+                       history=args.stock_history, words=args.stock_words)
+    try:
+        report = scene.run()
+    finally:
+        exporter.close(timeout_s=30.0)
+    if turns.enabled:
+        report["traces_exported"] = turns.exported
+    report["mimi_model"] = mimi.name
+    report["sim_model"] = sim.name
+    if isinstance(mimi, CachedModel):
+        report["live_calls_this_pass"] = mimi.live_calls + sim.live_calls
+        report["replayed_calls"] = mimi.cached_calls + sim.cached_calls
+    report["wall_seconds"] = round(time.monotonic() - started, 2)
+    if args.transcript:
+        print("\n".join(scene.transcript.lines))
     print(json.dumps(report, indent=2))
     return 0
 

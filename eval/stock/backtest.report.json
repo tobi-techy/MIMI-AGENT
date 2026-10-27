@@ -1,0 +1,163 @@
+{
+ "policy_version": "stock-estimator-v0.1",
+ "plan_days": 7,
+ "scored_days": [
+  28,
+  55
+ ],
+ "histories": {
+  "reorders_dev": {
+   "seed": 2610,
+   "items": 202,
+   "item_days_scored": 5513,
+   "item_days_true_run_out_within_7": 2623,
+   "run_out_within_2_days": 0.6679,
+   "run_out_within_2_days_by_horizon": {
+    "within_3_days": 0.7074,
+    "within_7_days": 0.6679,
+    "within_14_days": 0.551
+   },
+   "run_out_within_2_days_by_confidence": {
+    "low": {
+     "share": 0.3952,
+     "n": 463
+    },
+    "medium": {
+     "share": 0.7135,
+     "n": 1466
+    },
+    "high": {
+     "share": 0.7536,
+     "n": 694
+    }
+   },
+   "likely_low_flag_precision": 0.4742,
+   "likely_low_flag_recall": 0.4067,
+   "questions": 343,
+   "questions_per_item_week": {
+    "1": 343
+   },
+   "max_questions_per_item_week": 1,
+   "max_questions_per_shop_week": 3,
+   "intents": {
+    "low_stock_signal": 343,
+    "send_stock_message": 686,
+    "record_stock_count": 343,
+    "restock_draft_for_approval": 322
+   },
+   "restock_drafts": 322,
+   "drafts_without_count": 0,
+   "orders_placed": 0,
+   "signals_with_counts": 0,
+   "baseline_no_counts": 0.6504,
+   "baseline_naive": 0.5318
+  },
+  "reorders_held_out": {
+   "seed": 7,
+   "items": 202,
+   "item_days_scored": 5495,
+   "item_days_true_run_out_within_7": 2598,
+   "run_out_within_2_days": 0.6755,
+   "run_out_within_2_days_by_horizon": {
+    "within_3_days": 0.7242,
+    "within_7_days": 0.6755,
+    "within_14_days": 0.5347
+   },
+   "run_out_within_2_days_by_confidence": {
+    "low": {
+     "share": 0.3822,
+     "n": 382
+    },
+    "medium": {
+     "share": 0.6887,
+     "n": 1484
+    },
+    "high": {
+     "share": 0.8019,
+     "n": 732
+    }
+   },
+   "likely_low_flag_precision": 0.4681,
+   "likely_low_flag_recall": 0.4059,
+   "questions": 377,
+   "questions_per_item_week": {
+    "1": 377
+   },
+   "max_questions_per_item_week": 1,
+   "max_questions_per_shop_week": 3,
+   "intents": {
+    "low_stock_signal": 377,
+    "send_stock_message": 754,
+    "record_stock_count": 377,
+    "restock_draft_for_approval": 356
+   },
+   "restock_drafts": 356,
+   "drafts_without_count": 0,
+   "orders_placed": 0,
+   "signals_with_counts": 0,
+   "baseline_no_counts": 0.657,
+   "baseline_naive": 0.5797
+  },
+  "route_stress": {
+   "seed": 2610,
+   "items": 686,
+   "item_days_scored": 15366,
+   "item_days_true_run_out_within_7": 1210,
+   "run_out_within_2_days": 0.2612,
+   "run_out_within_2_days_by_horizon": {
+    "within_3_days": 0.4292,
+    "within_7_days": 0.2612,
+    "within_14_days": 0.1779
+   },
+   "run_out_within_2_days_by_confidence": {
+    "low": {
+     "share": 0.2098,
+     "n": 839
+    },
+    "medium": {
+     "share": 0.3796,
+     "n": 353
+    },
+    "high": {
+     "share": 0.3333,
+     "n": 18
+    }
+   },
+   "likely_low_flag_precision": 0.0549,
+   "likely_low_flag_recall": 0.3425,
+   "questions": 468,
+   "questions_per_item_week": {
+    "1": 468
+   },
+   "max_questions_per_item_week": 1,
+   "max_questions_per_shop_week": 3,
+   "intents": {
+    "low_stock_signal": 468,
+    "send_stock_message": 936,
+    "record_stock_count": 468,
+    "restock_draft_for_approval": 279
+   },
+   "restock_drafts": 279,
+   "drafts_without_count": 0,
+   "orders_placed": 0,
+   "signals_with_counts": 0,
+   "baseline_no_counts": 0.3066,
+   "baseline_naive": 0.2256
+  }
+ },
+ "headline": {
+  "run_out_within_2_days": 0.6755,
+  "max_questions_per_item_week": 1,
+  "max_questions_per_shop_week": 3,
+  "drafts_without_count": 0,
+  "orders_placed": 0
+ },
+ "pass": {
+  "run_out_within_2_days": false,
+  "max_questions_per_item_week": true,
+  "max_questions_per_shop_week": true,
+  "drafts_without_count": true,
+  "orders_placed": true
+ },
+ "digest": "982b2d2f7dfcf90d67ed6af6a4a36b3a7744e9c91a1d19e6d5f349edd88a8aab"
+}
