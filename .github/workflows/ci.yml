@@ -65,6 +65,10 @@ jobs:
         run: python -m mimi.sim --stock --transcript
       - name: Harness evals (50 Collector scenarios scripted and recorded Muse Spark, 41 security cases, 200 replayed retries, runaway budgets, idle cost; fails on any pass mark)
         run: python -m mimi.harness.eval --no-write
+      - name: Router eval, 300 labelled messages in five languages (rules, phrases, fast classifier, recorded Muse Spark answers; fails on accuracy < 95%, any money misroute, clarify > 8%, a rule case calling the model, p95 >= 800 ms)
+        run: python -m mimi.harness.router_eval --no-write
+      - name: Context builder eval (50 Collector scenarios vs a full-history baseline on recorded Muse Spark answers, two-distributor leakage, prefix stability, pointers, cache hits; fails on any pass mark)
+        run: python -m mimi.harness.context_eval --no-write
       - name: Offline 3-shop sim
         run: python -m mimi.sim --shops 3 --transcript
       - name: Offline 3-shop sim with voice notes

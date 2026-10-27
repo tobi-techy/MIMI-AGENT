@@ -14,7 +14,7 @@ starts with no intent types of its own. The module rules test
 | `sqlalchemy` | MIT | `mimi/runtime/sql_store.py`, `mimi/receipts/inbox.py`, `mimi/voice/prefs.py`, sim `--db` |
 | `alembic` | MIT | migrations `0001_runtime_jobs` to `0005_payment_proofs` |
 | `httpx` | BSD-3-Clause | `mimi/models/meta.py` (Meta Model API client), `mimi/harness/gateway.py` (tool-calling client), `mimi/voice/` (Spitch and Muse Voice Transcribe clients) |
-| `pydantic` | MIT | `mimi/receipts/verdict.py` (typed verdict), `mimi/proof/reading.py`, `mimi/stock/answers.py` (typed stock answer), `mimi/harness/` (tool inputs and outputs, events, intents, run results) |
+| `pydantic` | MIT | `mimi/receipts/verdict.py` (typed verdict), `mimi/proof/reading.py`, `mimi/stock/answers.py` (typed stock answer), `mimi/harness/` (tool inputs and outputs, events, intents, run results, the front-door envelope, route decisions, context manifests) |
 
 Optional extras:
 
@@ -83,6 +83,12 @@ datasets, experiments, evaluators and a dashboard for the project, on the
 Hobby plan. Keys: `LANGFUSE_PUBLIC_KEY` and `LANGFUSE_SECRET_KEY`, from the
 shell only. The optional `langfuse/experiment-action` GitHub Action is
 pinned by commit (v1.0.12) in a manual, off-by-default workflow.
+
+The router's fast classifier (`mimi/harness/fastclass.py`) is a naive Bayes
+model written here in plain Python (no new dependency). Its training set
+(`mimi/harness/data/router_train.jsonl`, 2,708 lines) was written by
+`muse-spark-1.3-contributor` from synthetic prompts only (no real shop text),
+with real bank and fintech names replaced by the fictional ones.
 
 Offline runs and CI use the deterministic FakeModel, the fake transcriber
 and the recorded answers, and make no network call.

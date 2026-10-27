@@ -15,6 +15,8 @@ pip install -e '.[dev,otel,langfuse]'
 make lint typecheck test      # ruff, mypy, pytest (offline)
 make check                    # everything CI runs, offline
 make harness-eval             # the harness suites and pass marks
+make router-eval              # router: 300 labelled messages, pass marks
+make context-eval             # context builder: 50 scenarios vs full history, pass marks
 ```
 
 CI is offline: no key means FakeModel or recorded answers. Recorded Muse
@@ -39,6 +41,26 @@ cache with the change.
 6. Keep description plus schema under 4,000 characters (a test checks).
 7. Add a test, and a scenario to `mimi/harness/scenarios.py` when it changes
    what a helper does; rerun `make harness-eval`.
+
+## Routing and context (`mimi/harness/router.py`, `context.py`)
+
+* Every wake-up enters as an `Inbound` through the `FrontDoor`; never call a
+  helper around it. Rules come before any model call; a rule case that calls
+  the model fails the router eval.
+* A new skill goes in `skills.py` (helper, name, a routing description,
+  senders, `money`), with phrase rules in `lexicon.py` if shops say it in
+  fixed ways, labelled cases in `eval/router/messages.jsonl`, and a slice in
+  `context.SLICES` if it needs the book. Re-record with
+  `python -m mimi.harness.router_eval --live` (a few naira) and commit the
+  cache.
+* Tune thresholds on the `dev` split only; ship a new set behind
+  `MIMI_ROUTER_THRESHOLDS`.
+* Never put anything that changes per turn in sections 1 to 5 of the
+  context; it goes in the notes on the newest message. A change to the core
+  rules, a skill or a tool description changes every recorded request:
+  re-record the harness and context evals.
+* Shop text never reaches a model unmarked: it is wrapped in `untrusted`
+  tags, with injected sentences and shop @mentions removed before routing.
 
 ## Hard rules
 

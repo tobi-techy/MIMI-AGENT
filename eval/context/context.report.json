@@ -1,0 +1,198 @@
+{
+ "generated_by": "python -m mimi.harness.context_eval",
+ "model": "muse-spark-1.3",
+ "builder": {
+  "runs": 50,
+  "task_success": 1.0,
+  "completed": 50,
+  "median_input_tokens_per_run": 10179.0,
+  "median_first_call_tokens": 4808.0,
+  "input_tokens": 512469,
+  "model_calls": 97,
+  "model_spend_kobo": 117714,
+  "provider_cached_tokens": 417105,
+  "provider_cache_rate": 0.8139,
+  "max_context_tokens": 7942,
+  "runs_over_n50": 0,
+  "over_budget": 0,
+  "manifest_on_runs": 50,
+  "routed_to_collector": 48,
+  "cache_misses": 0,
+  "by_kind": {
+   "balance": "10/10",
+   "chase": "8/8",
+   "dispute": "6/6",
+   "paid_match": "8/8",
+   "paid_no_match": "6/6",
+   "promise": "6/6",
+   "quiet": "6/6"
+  },
+  "failures": [],
+  "routes_not_collector": [
+   {
+    "sid": "dispute-03",
+    "route": "mimi/escalate-owner"
+   },
+   {
+    "sid": "dispute-06",
+    "route": "order/drop-confirmation"
+   }
+  ]
+ },
+ "baseline": {
+  "runs": 50,
+  "task_success": 0.92,
+  "completed": 46,
+  "median_input_tokens_per_run": 54431.5,
+  "median_first_call_tokens": 21251.5,
+  "input_tokens": 2525597,
+  "model_calls": 119,
+  "model_spend_kobo": 533187,
+  "provider_cached_tokens": 868705,
+  "provider_cache_rate": 0.344,
+  "max_context_tokens": 0,
+  "runs_over_n50": 50,
+  "over_budget": 0,
+  "manifest_on_runs": 0,
+  "routed_to_collector": 48,
+  "cache_misses": 0,
+  "by_kind": {
+   "balance": "10/10",
+   "chase": "8/8",
+   "dispute": "5/6",
+   "paid_match": "6/8",
+   "paid_no_match": "6/6",
+   "promise": "5/6",
+   "quiet": "6/6"
+  },
+  "failures": [
+   {
+    "sid": "paid-02",
+    "status": "done",
+    "why": [
+     "missing intent send_receipt"
+    ],
+    "route": "collector/payment-check"
+   },
+   {
+    "sid": "paid-08",
+    "status": "done",
+    "why": [
+     "missing intent send_receipt"
+    ],
+    "route": "collector/payment-check"
+   },
+   {
+    "sid": "promise-03",
+    "status": "failed",
+    "why": [
+     "status failed not in ('parked_for_timer',) (invalid model output after one repair: the model ran out of tokens before answering)",
+     "missing intent set_followup",
+     "nothing sent to the shop"
+    ],
+    "route": "collector/promise-to-pay"
+   },
+   {
+    "sid": "dispute-04",
+    "status": "done",
+    "why": [
+     "status done not in ('asked_question',) (turn finished)",
+     "missing intent ask_question"
+    ],
+    "route": "collector/collections"
+   }
+  ],
+  "routes_not_collector": [
+   {
+    "sid": "dispute-03",
+    "route": "mimi/escalate-owner"
+   },
+   {
+    "sid": "dispute-06",
+    "route": "order/drop-confirmation"
+   }
+  ]
+ },
+ "median_input_tokens_cut": 0.813,
+ "multi_turn_cache_estimate": {
+  "calls": 88,
+  "input_tokens": 434678,
+  "cached_tokens": 385664,
+  "hit_rate": 0.8872,
+  "same_thread_only_hit_rate": 0.7256,
+  "scripted_task_success": 1.0,
+  "threads": 22
+ },
+ "cross_tenant": {
+  "cases": 26,
+  "leaks": 0,
+  "details": []
+ },
+ "stability": {
+  "turns": 20,
+  "sections_1_to_5_identical": true,
+  "budget_never_exceeded": true,
+  "deploy_running_thread_prefix_unchanged": true,
+  "deploy_running_thread_noted": true,
+  "deploy_new_thread_new_prefix": true
+ },
+ "pointers_and_images": {
+  "long_output_is_a_pointer": true,
+  "pointer_tokens": 95,
+  "image_bytes_refused": true,
+  "image_parts_refused": true
+ },
+ "missing_data": {
+  "no_open_items": {
+   "valid": true,
+   "omitted": [
+    "no memory store wired (RAI-236)"
+   ],
+   "tokens": 4052
+  },
+  "withheld_consent": {
+   "valid": true,
+   "omitted": [
+    "no memory store wired (RAI-236)",
+    "shop-002 has not shared shop:balance",
+    "shop-002 has not shared shop:invoices",
+    "shop-002 has not shared shop:payments",
+    "shop-002 has not shared shop:promises",
+    "nothing shared to show"
+   ],
+   "tokens": 3809
+  },
+  "unknown_shop": {
+   "valid": true,
+   "omitted": [
+    "no memory store wired (RAI-236)",
+    "shop-999 is not this distributor's shop"
+   ],
+   "tokens": 3808
+  },
+  "no_shop": {
+   "valid": true,
+   "omitted": [
+    "no memory store wired (RAI-236)",
+    "no shop on this run"
+   ],
+   "tokens": 3792
+  }
+ },
+ "pass_marks": {
+  "task_success_builder>=baseline": true,
+  "median_input_tokens_down>=50%": true,
+  "context_never_over_budget": true,
+  "manifest_on_100pct_of_runs": true,
+  "cross_tenant_leaks==0": true,
+  "sections_1_to_5_identical_over_20_turns": true,
+  "deploy_keeps_running_thread_prefix": true,
+  "long_tool_output_is_a_pointer": true,
+  "no_image_bytes_in_main_context": true,
+  "missing_data_gives_valid_context": true,
+  "prompt_cache_hit_rate>=80%": true,
+  "provider_reported_cache_rate>=80%": true,
+  "no_cache_misses": true
+ },
+ "passed": true
+}

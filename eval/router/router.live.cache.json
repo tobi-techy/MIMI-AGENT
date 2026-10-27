@@ -1,0 +1,1556 @@
+{
+ "016ade034e9bce0f280c1acde468b67d": {
+  "completion_tokens": 245,
+  "latency_s": 1.658,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 755,
+  "text": "{\"route\": \"stock/stock-count\", \"confidence\": 0.85, \"second\": \"order/order-intake\", \"language\": \"pcm\"}"
+ },
+ "01b13f1bf284752eae5c7569da0c50a3": {
+  "completion_tokens": 244,
+  "latency_s": 1.543,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 748,
+  "text": "{\"route\": \"stock/stock-count\", \"confidence\": 0.92, \"second\": \"\", \"language\": \"pcm\"}"
+ },
+ "0560c85c455183fbfa27aefc6fad4a97": {
+  "completion_tokens": 104,
+  "latency_s": 0.826,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 748,
+  "text": "{\"route\": \"credit/credit-request\", \"confidence\": 0.95, \"second\": \"\", \"language\": \"en\"}"
+ },
+ "072a860b8ab473d62fafe60c487d586e": {
+  "completion_tokens": 546,
+  "latency_s": 3.077,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 749,
+  "text": "{\"route\": \"stock/stock-count\", \"confidence\": 0.6, \"second\": \"order/order-intake\", \"language\": \"yo\"}"
+ },
+ "073f86f93e61a120669ed1d2686a988d": {
+  "completion_tokens": 88,
+  "latency_s": 0.767,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 750,
+  "text": "{\"route\": \"collector/promise-to-pay\", \"confidence\": 0.9, \"second\": \"\", \"language\": \"en\"}"
+ },
+ "08044b96e090928d21d2873cd98cf908": {
+  "completion_tokens": 96,
+  "latency_s": 0.835,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 756,
+  "text": "{\"route\": \"collector/promise-to-pay\", \"confidence\": 0.95, \"second\": \"\", \"language\": \"ig\"}"
+ },
+ "082c4aec43dfba00e203e39a30a9d606": {
+  "completion_tokens": 94,
+  "latency_s": 1.013,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 764,
+  "text": "{\"route\": \"order/order-intake\", \"confidence\": 0.99, \"second\": \"\", \"language\": \"en\"}"
+ },
+ "083348f57389231a4a5ce419004bf027": {
+  "completion_tokens": 106,
+  "latency_s": 1.289,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 754,
+  "text": "{\"route\": \"collector/payment-check\", \"confidence\": 0.97, \"second\": \"\", \"language\": \"en\"}"
+ },
+ "08fd0f8b066b8118da5df8acd38ab164": {
+  "completion_tokens": 98,
+  "latency_s": 1.979,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 749,
+  "text": "{\"route\": \"collector/collections\", \"confidence\": 0.97, \"second\": \"\", \"language\": \"pcm\"}"
+ },
+ "09270271fd86c35f81c2728e27a5052d": {
+  "completion_tokens": 124,
+  "latency_s": 1.141,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 762,
+  "text": "{\"route\": \"collector/collections\", \"confidence\": 0.95, \"second\": \"\", \"language\": \"ig\"}"
+ },
+ "092b50e53447c095a85e3f55fe6ae9b6": {
+  "completion_tokens": 142,
+  "latency_s": 2.032,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 754,
+  "text": "{\"route\": \"collector/collections\", \"confidence\": 0.95, \"second\": \"\", \"language\": \"pcm\"}"
+ },
+ "0b4e7f330dd2b2f2c49a09de2eebe2d1": {
+  "completion_tokens": 93,
+  "latency_s": 1.049,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 753,
+  "text": "{\"route\": \"collector/promise-to-pay\", \"confidence\": 0.92, \"second\": \"\", \"language\": \"pcm\"}"
+ },
+ "0b87877ab5e315ae678169586f9799c9": {
+  "completion_tokens": 166,
+  "latency_s": 1.089,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 751,
+  "text": "{\"route\": \"proof/fake-alert-check\", \"confidence\": 0.9, \"second\": \"\", \"language\": \"en\"}"
+ },
+ "0c2d2357ae28c6dd790f62008d50c848": {
+  "completion_tokens": 167,
+  "latency_s": 1.077,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 751,
+  "text": "{\"route\": \"collector/promise-to-pay\", \"confidence\": 0.95, \"second\": \"\", \"language\": \"yo\"}"
+ },
+ "0c9b4ef15b8e1fd36cc861135d37797b": {
+  "completion_tokens": 98,
+  "latency_s": 0.911,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 745,
+  "text": "{\"route\": \"mimi/chat\", \"confidence\": 0.95, \"second\": \"\", \"language\": \"ha\"}"
+ },
+ "0edadd7dd84d90e54b2d88a95b64ad7c": {
+  "completion_tokens": 102,
+  "latency_s": 1.061,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 751,
+  "text": "{\"route\": \"mimi/escalate-owner\", \"confidence\": 0.95, \"second\": \"\", \"language\": \"en\"}"
+ },
+ "0f8a714ee356a29a138e4066f72c3b89": {
+  "completion_tokens": 114,
+  "latency_s": 0.916,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 753,
+  "text": "{\"route\": \"order/delivery-status\", \"confidence\": 0.95, \"second\": \"\", \"language\": \"ig\"}"
+ },
+ "100667ed8fc349db85bafcf7b37e352d": {
+  "completion_tokens": 78,
+  "latency_s": 0.746,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 770,
+  "text": "{\"route\": \"collector/collections\", \"confidence\": 0.97, \"second\": \"\", \"language\": \"pcm\"}"
+ },
+ "10947c66c13ddf07ca3bcea0e2897669": {
+  "completion_tokens": 108,
+  "latency_s": 0.824,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 756,
+  "text": "{\"route\": \"order/delivery-status\", \"confidence\": 0.95, \"second\": \"\", \"language\": \"ha\"}"
+ },
+ "113d7396383d39427ecbc4ef340d981e": {
+  "completion_tokens": 91,
+  "latency_s": 0.812,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 765,
+  "text": "{\"route\": \"collector/promise-to-pay\", \"confidence\": 0.97, \"second\": \"\", \"language\": \"ha\"}"
+ },
+ "135525245c4095d3f59ee516f0b9b2c7": {
+  "completion_tokens": 94,
+  "latency_s": 1.143,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 752,
+  "text": "{\"route\": \"order/order-intake\", \"confidence\": 0.95, \"second\": \"\", \"language\": \"ig\"}"
+ },
+ "144c99101a2f0742e3834b07e25ae9aa": {
+  "completion_tokens": 71,
+  "latency_s": 0.751,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 611,
+  "text": "{\"route\": \"mimi/chat\", \"confidence\": 1.0, \"second\": \"\", \"language\": \"en\"}"
+ },
+ "1782cee349e8651b69627799e3d11637": {
+  "completion_tokens": 199,
+  "latency_s": 1.363,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 751,
+  "text": "{\"route\": \"proof/fake-alert-check\", \"confidence\": 0.85, \"second\": \"collector/payment-check\", \"language\": \"en\"}"
+ },
+ "197856fe9e38deba46483b07be8cfb71": {
+  "completion_tokens": 65,
+  "latency_s": 0.74,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 615,
+  "text": "{\"route\": \"mimi/owner-brief\", \"confidence\": 0.95, \"second\": \"\", \"language\": \"en\"}"
+ },
+ "199447b430126d546ba411dfceee77b5": {
+  "completion_tokens": 137,
+  "latency_s": 1.0,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 618,
+  "text": "{\"route\": \"collector/collections\", \"confidence\": 0.95, \"second\": \"\", \"language\": \"en\"}"
+ },
+ "1a63801ed82fca431913f7edfd1c5979": {
+  "completion_tokens": 476,
+  "latency_s": 2.44,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 745,
+  "text": "{\"route\": \"unclear\", \"confidence\": 0.1, \"second\": \"\", \"language\": \"en\"}"
+ },
+ "1adcb0d5d5ca52db971c8e2415a9b8eb": {
+  "completion_tokens": 125,
+  "latency_s": 1.571,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 752,
+  "text": "{\"route\": \"collector/payment-check\", \"confidence\": 0.95, \"second\": \"\", \"language\": \"en\"}"
+ },
+ "1aff0470b82cbfcb196cc03c603f36d3": {
+  "completion_tokens": 86,
+  "latency_s": 0.842,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 753,
+  "text": "{\"route\": \"brand/promo-info\", \"confidence\": 0.85, \"second\": \"\", \"language\": \"pcm\"}"
+ },
+ "1b6d15e8f9c3df1350e4a539a9dc0ceb": {
+  "completion_tokens": 118,
+  "latency_s": 1.156,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 751,
+  "text": "{\"route\": \"stock/stock-count\", \"confidence\": 0.95, \"second\": \"\", \"language\": \"en\"}"
+ },
+ "1e5240797964bbed72aae92e60d7ee85": {
+  "completion_tokens": 76,
+  "latency_s": 0.853,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 749,
+  "text": "{\"route\": \"order/drop-confirmation\", \"confidence\": 0.95, \"second\": \"\", \"language\": \"en\"}"
+ },
+ "1ecca1ab71e1cc98f5e2a439249b7527": {
+  "completion_tokens": 90,
+  "latency_s": 1.077,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 750,
+  "text": "{\"route\": \"collector/payment-check\", \"confidence\": 0.9, \"second\": \"\", \"language\": \"ha\"}"
+ },
+ "1ee33ab7ce8722e409e123acec3c113e": {
+  "completion_tokens": 79,
+  "latency_s": 0.938,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 620,
+  "text": "{\"route\": \"collector/chase\", \"confidence\": 0.97, \"second\": \"\", \"language\": \"en\"}"
+ },
+ "1f77e588dfe3f8adbcd1323bf5000334": {
+  "completion_tokens": 104,
+  "latency_s": 0.786,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 746,
+  "text": "{\"route\": \"mimi/chat\", \"confidence\": 1, \"second\": \"\", \"language\": \"en\"}"
+ },
+ "201fd689d8aed7a9f301223c49dcb113": {
+  "completion_tokens": 140,
+  "latency_s": 0.852,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 765,
+  "text": "{\"route\": \"collector/payment-check\", \"confidence\": 0.95, \"second\": \"\", \"language\": \"yo\"}"
+ },
+ "2036ccd31a7c72e9d016c003b0089db9": {
+  "completion_tokens": 66,
+  "latency_s": 1.275,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 746,
+  "text": "{\"route\": \"collector/collections\", \"confidence\": 0.98, \"second\": \"\", \"language\": \"en\"}"
+ },
+ "20abe5b3080494a59eb67e553618ecc9": {
+  "completion_tokens": 88,
+  "latency_s": 0.821,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 752,
+  "text": "{\"route\": \"collector/collections\", \"confidence\": 0.95, \"second\": \"\", \"language\": \"ha\"}"
+ },
+ "225d8f76f099ede58de749ba4c1d03b6": {
+  "completion_tokens": 119,
+  "latency_s": 1.144,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 749,
+  "text": "{\"route\": \"collector/payment-check\", \"confidence\": 0.95, \"second\": \"\", \"language\": \"pcm\"}"
+ },
+ "24fcb8dd3e0579387d11dc60772cd084": {
+  "completion_tokens": 91,
+  "latency_s": 1.122,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 751,
+  "text": "{\"route\": \"order/delivery-status\", \"confidence\": 0.95, \"second\": \"\", \"language\": \"ha\"}"
+ },
+ "25ab0f3eaada1f45ce85cbdd0a0c8171": {
+  "completion_tokens": 135,
+  "latency_s": 1.183,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 756,
+  "text": "{\"route\": \"order/drop-confirmation\", \"confidence\": 0.95, \"second\": \"\", \"language\": \"pcm\"}"
+ },
+ "26532e1bd0c9ab5630d006d46d625000": {
+  "completion_tokens": 111,
+  "latency_s": 0.961,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 753,
+  "text": "{\"route\": \"order/delivery-status\", \"confidence\": 0.95, \"second\": \"\", \"language\": \"yo\"}"
+ },
+ "26a2afc6c473767301a35eca759fa270": {
+  "completion_tokens": 110,
+  "latency_s": 1.009,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 749,
+  "text": "{\"route\": \"order/drop-confirmation\", \"confidence\": 0.95, \"second\": \"\", \"language\": \"pcm\"}"
+ },
+ "29f89e068cf106c6c26ffb04257ddbc8": {
+  "completion_tokens": 97,
+  "latency_s": 0.85,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 747,
+  "text": "{\"route\": \"mimi/shop-onboarding\", \"confidence\": 0.98, \"second\": \"\", \"language\": \"en\"}"
+ },
+ "2a309f8c86c446048e43a2b931db0fa1": {
+  "completion_tokens": 86,
+  "latency_s": 1.017,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 755,
+  "text": "{\"route\": \"order/order-intake\", \"confidence\": 0.99, \"second\": \"\", \"language\": \"en\"}"
+ },
+ "2bb8ed67d37d1ddd5f59869141d44468": {
+  "completion_tokens": 107,
+  "latency_s": 1.602,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 616,
+  "text": "{\"route\": \"collector/payment-check\", \"confidence\": 0.92, \"second\": \"\", \"language\": \"en\"}"
+ },
+ "2d8ff018d24c71e67ba1ad9eb6c963ab": {
+  "completion_tokens": 71,
+  "latency_s": 0.809,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 763,
+  "text": "{\"route\": \"order/delivery-status\", \"confidence\": 0.95, \"second\": \"\", \"language\": \"pcm\"}"
+ },
+ "2ec26776c906fe87cebd604911de5de9": {
+  "completion_tokens": 105,
+  "latency_s": 1.127,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 752,
+  "text": "{\"route\": \"collector/promise-to-pay\", \"confidence\": 0.95, \"second\": \"\", \"language\": \"pcm\"}"
+ },
+ "2fb9c219fc132ee2723170e98b447a21": {
+  "completion_tokens": 123,
+  "latency_s": 0.881,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 758,
+  "text": "{\"route\": \"order/order-intake\", \"confidence\": 0.98, \"second\": \"\", \"language\": \"pcm\"}"
+ },
+ "308bea8b76bd49df07ff60e290cf5e15": {
+  "completion_tokens": 95,
+  "latency_s": 0.806,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 615,
+  "text": "{\"route\": \"mimi/owner-brief\", \"confidence\": 0.97, \"second\": \"\", \"language\": \"en\"}"
+ },
+ "31c5e869507a29c69462c524b7bee733": {
+  "completion_tokens": 81,
+  "latency_s": 0.89,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 618,
+  "text": "{\"route\": \"order/delivery-status\", \"confidence\": 0.95, \"second\": \"\", \"language\": \"en\"}"
+ },
+ "320ef304a6c8f64261f71269b6584cd2": {
+  "completion_tokens": 80,
+  "latency_s": 0.782,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 617,
+  "text": "{\"route\": \"stock/low-stock-report\", \"confidence\": 0.9, \"second\": \"\", \"language\": \"en\"}"
+ },
+ "32a879de17ede9c07fd875b9d1e6d0df": {
+  "completion_tokens": 83,
+  "latency_s": 0.931,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 748,
+  "text": "{\"route\": \"order/drop-confirmation\", \"confidence\": 0.95, \"second\": \"\", \"language\": \"pcm\"}"
+ },
+ "3337133b59949631c093b7ae412a8a6c": {
+  "completion_tokens": 93,
+  "latency_s": 0.989,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 746,
+  "text": "{\"route\": \"mimi/chat\", \"confidence\": 1, \"second\": \"\", \"language\": \"en\"}"
+ },
+ "34cf8800974f19a479b5d9ad278e5f79": {
+  "completion_tokens": 82,
+  "latency_s": 0.685,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 753,
+  "text": "{\"route\": \"brand/promo-info\", \"confidence\": 0.95, \"second\": \"\", \"language\": \"en\"}"
+ },
+ "3659c75870b1298247ee81771b885f22": {
+  "completion_tokens": 91,
+  "latency_s": 0.76,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 752,
+  "text": "{\"route\": \"credit/credit-request\", \"confidence\": 0.95, \"second\": \"\", \"language\": \"pcm\"}"
+ },
+ "36d57a6d2042e125fed63dd8cf21ec36": {
+  "completion_tokens": 129,
+  "latency_s": 1.042,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 765,
+  "text": "{\"route\": \"collector/payment-check\", \"confidence\": 0.95, \"second\": \"\", \"language\": \"pcm\"}"
+ },
+ "36dd447e10db6210c28deaed09d71ea0": {
+  "completion_tokens": 133,
+  "latency_s": 1.159,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 749,
+  "text": "{\"route\": \"order/order-intake\", \"confidence\": 1, \"second\": \"\", \"language\": \"en\"}"
+ },
+ "379764469daa6d0e8fbaa6e7851aa964": {
+  "completion_tokens": 87,
+  "latency_s": 0.89,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 618,
+  "text": "{\"route\": \"collector/collections\", \"confidence\": 0.92, \"second\": \"\", \"language\": \"en\"}"
+ },
+ "37dc423f867c36f0cd7741acc1d9959b": {
+  "completion_tokens": 79,
+  "latency_s": 0.836,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 753,
+  "text": "{\"route\": \"credit/credit-request\", \"confidence\": 0.95, \"second\": \"\", \"language\": \"en\"}"
+ },
+ "37e3fefb748b702342d7fe7b78b3b4af": {
+  "completion_tokens": 105,
+  "latency_s": 1.109,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 754,
+  "text": "{\"route\": \"mimi/escalate-owner\", \"confidence\": 0.95, \"second\": \"\", \"language\": \"pcm\"}"
+ },
+ "3a5baa81eef960c765e6cd9a833b943b": {
+  "completion_tokens": 160,
+  "latency_s": 2.135,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 748,
+  "text": "{\"route\": \"collector/collections\", \"confidence\": 0.95, \"second\": \"\", \"language\": \"pcm\"}"
+ },
+ "3a5be121ec4f684b63b56c0949b5fa09": {
+  "completion_tokens": 143,
+  "latency_s": 0.996,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 766,
+  "text": "{\"route\": \"collector/payment-check\", \"confidence\": 0.95, \"second\": \"\", \"language\": \"ha\"}"
+ },
+ "3c8b3f5ed8998ebb370811a1527be5a6": {
+  "completion_tokens": 119,
+  "latency_s": 0.877,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 614,
+  "text": "{\"route\": \"mimi/chat\", \"confidence\": 1, \"second\": \"\", \"language\": \"en\"}"
+ },
+ "3d5080d0cac4fc013ff37bdca72078d4": {
+  "completion_tokens": 59,
+  "latency_s": 0.667,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 620,
+  "text": "{\"route\": \"brand/brand-email\", \"confidence\": 1.0, \"second\": \"\", \"language\": \"en\"}"
+ },
+ "3eeaa8d99ca55a83abee567d4aad2d84": {
+  "completion_tokens": 44,
+  "latency_s": 1.408,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 747,
+  "text": "{\"route\": \"collector/collections\", \"confidence\": 0.98, \"second\": \"\", \"language\": \"en\"}"
+ },
+ "4102435e4fa483d4acedb40487af3caf": {
+  "completion_tokens": 160,
+  "latency_s": 1.022,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 752,
+  "text": "{\"route\": \"collector/payment-check\", \"confidence\": 0.85, \"second\": \"\", \"language\": \"pcm\"}"
+ },
+ "43133c1851cf4c5fe99739ee7c62d893": {
+  "completion_tokens": 109,
+  "latency_s": 1.249,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 750,
+  "text": "{\"route\": \"collector/payment-check\", \"confidence\": 0.95, \"second\": \"\", \"language\": \"en\"}"
+ },
+ "4413f27a5390868d195eb730f0266e2c": {
+  "completion_tokens": 100,
+  "latency_s": 0.821,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 764,
+  "text": "{\"route\": \"order/drop-confirmation\", \"confidence\": 0.95, \"second\": \"\", \"language\": \"pcm\"}"
+ },
+ "4420f026b57f2c674a15a3c6dcce137d": {
+  "completion_tokens": 141,
+  "latency_s": 1.097,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 752,
+  "text": "{\"route\": \"collector/collections\", \"confidence\": 0.92, \"second\": \"collector/promise-to-pay\", \"language\": \"pcm\"}"
+ },
+ "45fbe1a71ea70485a1dfc594deca6481": {
+  "completion_tokens": 105,
+  "latency_s": 1.009,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 747,
+  "text": "{\"route\": \"collector/promise-to-pay\", \"confidence\": 0.95, \"second\": \"\", \"language\": \"pcm\"}"
+ },
+ "47cb2665907e7b4b8dcc208e67dc97ae": {
+  "completion_tokens": 137,
+  "latency_s": 1.226,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 753,
+  "text": "{\"route\": \"order/drop-confirmation\", \"confidence\": 0.95, \"second\": \"\", \"language\": \"yo\"}"
+ },
+ "47d42117a734ec908e3dead47b78a3ff": {
+  "completion_tokens": 130,
+  "latency_s": 1.0,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 618,
+  "text": "{\"route\": \"collector/collections\", \"confidence\": 0.95, \"second\": \"\", \"language\": \"en\"}"
+ },
+ "4906a7c3b22b311ebe06eb4e66cb4c21": {
+  "completion_tokens": 116,
+  "latency_s": 0.861,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 756,
+  "text": "{\"route\": \"order/drop-confirmation\", \"confidence\": 0.95, \"second\": \"\", \"language\": \"pcm\"}"
+ },
+ "4b0cf1d27fad2320cf0c589277174246": {
+  "completion_tokens": 117,
+  "latency_s": 0.831,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 620,
+  "text": "{\"route\": \"collector/payment-check\", \"confidence\": 0.95, \"second\": \"\", \"language\": \"en\"}"
+ },
+ "4cdeac26cfbb6d3fb1a536b9220dd534": {
+  "completion_tokens": 113,
+  "latency_s": 1.616,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 754,
+  "text": "{\"route\": \"collector/collections\", \"confidence\": 0.95, \"second\": \"\", \"language\": \"pcm\"}"
+ },
+ "4ee27c27f650bd9e25ea0db7f45b5a45": {
+  "completion_tokens": 92,
+  "latency_s": 0.751,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 616,
+  "text": "{\"route\": \"stock/low-stock-report\", \"confidence\": 0.98, \"second\": \"\", \"language\": \"en\"}"
+ },
+ "4efc952dc3279a390ac1d7dc99a2a16f": {
+  "completion_tokens": 173,
+  "latency_s": 1.116,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 756,
+  "text": "{\"route\": \"proof/fake-alert-check\", \"confidence\": 0.9, \"second\": \"collector/payment-check\", \"language\": \"en\"}"
+ },
+ "4fba0689588022c3fadfb208b2f6cf9d": {
+  "completion_tokens": 58,
+  "latency_s": 0.79,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 749,
+  "text": "{\"route\": \"credit/credit-request\", \"confidence\": 0.95, \"second\": \"\", \"language\": \"en\"}"
+ },
+ "5041747252cdcf7eb6b9f319c5801219": {
+  "completion_tokens": 103,
+  "latency_s": 0.85,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 775,
+  "text": "{\"route\": \"proof/fake-alert-check\", \"confidence\": 0.95, \"second\": \"\", \"language\": \"en\"}"
+ },
+ "512c666fe3bdef469f01d69fac86a4a3": {
+  "completion_tokens": 117,
+  "latency_s": 0.985,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 753,
+  "text": "{\"route\": \"mimi/shop-onboarding\", \"confidence\": 0.95, \"second\": \"\", \"language\": \"en\"}"
+ },
+ "5390cad03c50d4d70369417b1a021435": {
+  "completion_tokens": 153,
+  "latency_s": 1.592,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 759,
+  "text": "{\"route\": \"proof/fake-alert-check\", \"confidence\": 0.92, \"second\": \"collector/payment-check\", \"language\": \"en\"}"
+ },
+ "5394fce11875cfef7901e0fd7c879d01": {
+  "completion_tokens": 195,
+  "latency_s": 1.151,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 751,
+  "text": "{\"route\": \"mimi/escalate-owner\", \"confidence\": 0.7, \"second\": \"mimi/chat\", \"language\": \"en\"}"
+ },
+ "53f0273a3146ad422430e03e817e9341": {
+  "completion_tokens": 133,
+  "latency_s": 1.552,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 758,
+  "text": "{\"route\": \"stock/stock-count\", \"confidence\": 0.95, \"second\": \"\", \"language\": \"pcm\"}"
+ },
+ "55755f99e4dc870fbc7176709b03f29e": {
+  "completion_tokens": 236,
+  "latency_s": 1.397,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 763,
+  "text": "{\"route\": \"stock/stock-count\", \"confidence\": 0.9, \"second\": \"order/order-intake\", \"language\": \"pcm\"}"
+ },
+ "584417f95e22453a3a616af3613b5e11": {
+  "completion_tokens": 87,
+  "latency_s": 0.822,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 745,
+  "text": "{\"route\": \"mimi/chat\", \"confidence\": 1, \"second\": \"\", \"language\": \"en\"}"
+ },
+ "5ab78282c2da10cc9b54bd1899008ec8": {
+  "completion_tokens": 120,
+  "latency_s": 0.898,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 746,
+  "text": "{\"route\": \"mimi/chat\", \"confidence\": 0.95, \"second\": \"\", \"language\": \"yo\"}"
+ },
+ "5b7c8011562eec3704c45e975f376a5a": {
+  "completion_tokens": 90,
+  "latency_s": 1.435,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 755,
+  "text": "{\"route\": \"collector/collections\", \"confidence\": 0.95, \"second\": \"\", \"language\": \"yo\"}"
+ },
+ "5c410f9cf367f364368c846af5163e31": {
+  "completion_tokens": 101,
+  "latency_s": 0.914,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 745,
+  "text": "{\"route\": \"mimi/chat\", \"confidence\": 0.95, \"second\": \"\", \"language\": \"ig\"}"
+ },
+ "5d24f10b07e6465c0f9704ed0662fec2": {
+  "completion_tokens": 112,
+  "latency_s": 1.119,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 753,
+  "text": "{\"route\": \"collector/payment-check\", \"confidence\": 0.92, \"second\": \"\", \"language\": \"en\"}"
+ },
+ "5e127f6227711bd006dbb15d4be3cacd": {
+  "completion_tokens": 108,
+  "latency_s": 0.968,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 752,
+  "text": "{\"route\": \"collector/promise-to-pay\", \"confidence\": 0.97, \"second\": \"\", \"language\": \"ha\"}"
+ },
+ "5e1d0ccc70ad1760b3e6eca882b9d7b1": {
+  "completion_tokens": 107,
+  "latency_s": 0.932,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 749,
+  "text": "{\"route\": \"order/order-intake\", \"confidence\": 0.95, \"second\": \"\", \"language\": \"pcm\"}"
+ },
+ "5f293c96752b97342b7d30cc2f617ad6": {
+  "completion_tokens": 133,
+  "latency_s": 0.987,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 745,
+  "text": "{\"route\": \"mimi/chat\", \"confidence\": 1, \"second\": \"\", \"language\": \"pcm\"}"
+ },
+ "5fbd5ad5d849a3f16e6e2d9eb6dd3b4f": {
+  "completion_tokens": 86,
+  "latency_s": 0.931,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 752,
+  "text": "{\"route\": \"credit/credit-request\", \"confidence\": 0.9, \"second\": \"\", \"language\": \"yo\"}"
+ },
+ "60b12469f4c302f00f41c64d56991fc3": {
+  "completion_tokens": 120,
+  "latency_s": 0.896,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 754,
+  "text": "{\"route\": \"order/order-intake\", \"confidence\": 0.95, \"second\": \"\", \"language\": \"yo\"}"
+ },
+ "636239e486265a2bfc97fe31a1b67f95": {
+  "completion_tokens": 108,
+  "latency_s": 1.116,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 758,
+  "text": "{\"route\": \"mimi/chat\", \"confidence\": 1.0, \"second\": \"\", \"language\": \"pcm\"}"
+ },
+ "6374402b75a91832da2e2d8884cd3714": {
+  "completion_tokens": 59,
+  "latency_s": 1.062,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 752,
+  "text": "{\"route\": \"order/delivery-status\", \"confidence\": 0.95, \"second\": \"\", \"language\": \"pcm\"}"
+ },
+ "6397cbea8b958d3d10e0338cc49b134a": {
+  "completion_tokens": 128,
+  "latency_s": 0.923,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 750,
+  "text": "{\"route\": \"order/drop-confirmation\", \"confidence\": 0.92, \"second\": \"\", \"language\": \"pcm\"}"
+ },
+ "63dd784ab53ef11f8fcbbc053d991f9a": {
+  "completion_tokens": 158,
+  "latency_s": 1.109,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 749,
+  "text": "{\"route\": \"collector/promise-to-pay\", \"confidence\": 0.85, \"second\": \"\", \"language\": \"yo\"}"
+ },
+ "63def8b254fdc12d2dac953b194f7514": {
+  "completion_tokens": 89,
+  "latency_s": 0.79,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 753,
+  "text": "{\"route\": \"order/order-intake\", \"confidence\": 0.98, \"second\": \"\", \"language\": \"ha\"}"
+ },
+ "660807fb4b98c1b5d5cf27ed0778fa59": {
+  "completion_tokens": 133,
+  "latency_s": 0.782,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 755,
+  "text": "{\"route\": \"collector/promise-to-pay\", \"confidence\": 0.95, \"second\": \"\", \"language\": \"ig\"}"
+ },
+ "666b2a5114567ecdaff7f1f8c37d5258": {
+  "completion_tokens": 245,
+  "latency_s": 1.319,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 768,
+  "text": "{\"route\": \"collector/collections\", \"confidence\": 0.75, \"second\": \"collector/payment-check\", \"language\": \"pcm\"}"
+ },
+ "66f242aa96f5f85e1ced198029afa4b4": {
+  "completion_tokens": 187,
+  "latency_s": 1.299,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 750,
+  "text": "{\"route\": \"stock/stock-count\", \"confidence\": 0.9, \"second\": \"order/order-intake\", \"language\": \"yo\"}"
+ },
+ "6705aaec8394979ca094e3d1652fa82e": {
+  "completion_tokens": 63,
+  "latency_s": 0.71,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 619,
+  "text": "{\"route\": \"credit/credit-review\", \"confidence\": 0.95, \"second\": \"\", \"language\": \"en\"}"
+ },
+ "6e5af24a72f6d1e4133b1471f63a0866": {
+  "completion_tokens": 96,
+  "latency_s": 0.958,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 744,
+  "text": "{\"route\": \"mimi/chat\", \"confidence\": 1.0, \"second\": \"\", \"language\": \"en\"}"
+ },
+ "6f83d77b6249f07be885c82e06858670": {
+  "completion_tokens": 58,
+  "latency_s": 0.855,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 751,
+  "text": "{\"route\": \"order/order-intake\", \"confidence\": 0.97, \"second\": \"\", \"language\": \"en\"}"
+ },
+ "70fce16d66ee9af822392cec15b402e5": {
+  "completion_tokens": 88,
+  "latency_s": 0.803,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 745,
+  "text": "{\"route\": \"mimi/chat\", \"confidence\": 0.99, \"second\": \"\", \"language\": \"en\"}"
+ },
+ "75857dd551885571eccc69fd1d25997d": {
+  "completion_tokens": 164,
+  "latency_s": 1.471,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 750,
+  "text": "{\"route\": \"collector/payment-check\", \"confidence\": 0.92, \"second\": \"\", \"language\": \"pcm\"}"
+ },
+ "785795eaebc50723d622b980d39cf2a7": {
+  "completion_tokens": 267,
+  "latency_s": 1.639,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 745,
+  "text": "{\"route\": \"order/order-intake\", \"confidence\": 0.55, \"second\": \"brand/promo-info\", \"language\": \"en\"}"
+ },
+ "78a2333f94498d62a19fecbcc47c4e2a": {
+  "completion_tokens": 136,
+  "latency_s": 0.987,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 753,
+  "text": "{\"route\": \"collector/collections\", \"confidence\": 0.95, \"second\": \"\", \"language\": \"ha\"}"
+ },
+ "78b2f26438ff767a9cd8b9dee2a38b4e": {
+  "completion_tokens": 394,
+  "latency_s": 2.118,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 747,
+  "text": "{\"route\": \"stock/stock-count\", \"confidence\": 0.65, \"second\": \"order/order-intake\", \"language\": \"en\"}"
+ },
+ "79d3b1d429f3c50310f5b9c1b8afe67c": {
+  "completion_tokens": 220,
+  "latency_s": 2.03,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 752,
+  "text": "{\"route\": \"collector/collections\", \"confidence\": 0.55, \"second\": \"order/drop-confirmation\", \"language\": \"pcm\"}"
+ },
+ "7a2cb66044d241c6778b653057b54f58": {
+  "completion_tokens": 404,
+  "latency_s": 2.305,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 745,
+  "text": "{\"route\": \"order/drop-confirmation\", \"confidence\": 0.4, \"second\": \"mimi/chat\", \"language\": \"en\"}"
+ },
+ "7aa6ea9cd01dc8541b20b668aef3e91d": {
+  "completion_tokens": 63,
+  "latency_s": 0.878,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 749,
+  "text": "{\"route\": \"mimi/chat\", \"confidence\": 0.98, \"second\": \"\", \"language\": \"pcm\"}"
+ },
+ "7aa70ac4e10be69771208da0fcef4265": {
+  "completion_tokens": 136,
+  "latency_s": 1.759,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 757,
+  "text": "{\"route\": \"collector/payment-check\", \"confidence\": 0.95, \"second\": \"\", \"language\": \"en\"}"
+ },
+ "7cf9a43de05dbee1d2b84f9a6c7855c8": {
+  "completion_tokens": 75,
+  "latency_s": 0.729,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 750,
+  "text": "{\"route\": \"credit/credit-request\", \"confidence\": 0.95, \"second\": \"\", \"language\": \"ig\"}"
+ },
+ "833c394349b172d7dbe4ca2cc0ad268d": {
+  "completion_tokens": 93,
+  "latency_s": 0.964,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 750,
+  "text": "{\"route\": \"credit/credit-request\", \"confidence\": 0.95, \"second\": \"\", \"language\": \"en\"}"
+ },
+ "841b76bd31e167839e78ed8eacba2015": {
+  "completion_tokens": 143,
+  "latency_s": 1.121,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 748,
+  "text": "{\"route\": \"order/delivery-status\", \"confidence\": 0.95, \"second\": \"\", \"language\": \"pcm\"}"
+ },
+ "874de2e209b6c293e7ffe38967f3af1b": {
+  "completion_tokens": 82,
+  "latency_s": 0.716,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 750,
+  "text": "{\"route\": \"brand/promo-info\", \"confidence\": 0.95, \"second\": \"\", \"language\": \"en\"}"
+ },
+ "8752dbabd59ea3b561af71e8d106c330": {
+  "completion_tokens": 61,
+  "latency_s": 0.666,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 745,
+  "text": "{\"route\": \"mimi/chat\", \"confidence\": 0.99, \"second\": \"\", \"language\": \"en\"}"
+ },
+ "87c977701d930d5e402b18879172c08e": {
+  "completion_tokens": 124,
+  "latency_s": 1.117,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 616,
+  "text": "{\"route\": \"collector/payment-check\", \"confidence\": 0.9, \"second\": \"collector/collections\", \"language\": \"en\"}"
+ },
+ "8a95bc6f114ea07bbe2d080c0a767cfa": {
+  "completion_tokens": 260,
+  "latency_s": 1.279,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 752,
+  "text": "{\"route\": \"collector/payment-check\", \"confidence\": 0.9, \"second\": \"\", \"language\": \"pcm\"}"
+ },
+ "8e362e7f74a6dc989628ec5d6eb90a74": {
+  "completion_tokens": 147,
+  "latency_s": 0.972,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 749,
+  "text": "{\"route\": \"mimi/shop-onboarding\", \"confidence\": 0.9, \"second\": \"\", \"language\": \"pcm\"}"
+ },
+ "8e58a87e4ffa996d06fe467475df2a0b": {
+  "completion_tokens": 113,
+  "latency_s": 1.002,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 758,
+  "text": "{\"route\": \"credit/credit-request\", \"confidence\": 0.95, \"second\": \"\", \"language\": \"yo\"}"
+ },
+ "8efbf2fcdec2aeda4a92d73a642e8bce": {
+  "completion_tokens": 327,
+  "latency_s": 2.32,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 753,
+  "text": "{\"route\": \"order/drop-confirmation\", \"confidence\": 0.6, \"second\": \"stock/stock-count\", \"language\": \"ig\"}"
+ },
+ "8fb50790a4068f9dac27ecd834cf34f2": {
+  "completion_tokens": 180,
+  "latency_s": 1.163,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 749,
+  "text": "{\"route\": \"brand/promo-info\", \"confidence\": 0.95, \"second\": \"\", \"language\": \"yo\"}"
+ },
+ "906b208a81f153a3a2b3d9a069772cdc": {
+  "completion_tokens": 100,
+  "latency_s": 1.325,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 747,
+  "text": "{\"route\": \"order/delivery-status\", \"confidence\": 0.95, \"second\": \"\", \"language\": \"pcm\"}"
+ },
+ "90f08c71dd29a16ed7c6959389eff9ea": {
+  "completion_tokens": 84,
+  "latency_s": 0.763,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 753,
+  "text": "{\"route\": \"credit/credit-request\", \"confidence\": 0.95, \"second\": \"\", \"language\": \"pcm\"}"
+ },
+ "971623ad0d25c33edd876aeb7766bbce": {
+  "completion_tokens": 98,
+  "latency_s": 1.444,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 750,
+  "text": "{\"route\": \"order/drop-confirmation\", \"confidence\": 0.97, \"second\": \"\", \"language\": \"en\"}"
+ },
+ "985b262883bd98c79bcae055a6c03adc": {
+  "completion_tokens": 110,
+  "latency_s": 0.959,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 749,
+  "text": "{\"route\": \"stock/stock-count\", \"confidence\": 0.9, \"second\": \"\", \"language\": \"ha\"}"
+ },
+ "98be5bf7183e543546c5b33a22f2495b": {
+  "completion_tokens": 461,
+  "latency_s": 2.672,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 747,
+  "text": "{\"route\": \"order/order-intake\", \"confidence\": 0.25, \"second\": \"brand/promo-info\", \"language\": \"pcm\"}"
+ },
+ "992e743c970a3aeeb54eab7af3488654": {
+  "completion_tokens": 84,
+  "latency_s": 0.921,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 751,
+  "text": "{\"route\": \"mimi/chat\", \"confidence\": 0.99, \"second\": \"\", \"language\": \"en\"}"
+ },
+ "997dc8370aca59dbfb62f1a464f2af31": {
+  "completion_tokens": 145,
+  "latency_s": 1.737,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 751,
+  "text": "{\"route\": \"order/order-intake\", \"confidence\": 0.9, \"second\": \"\", \"language\": \"ig\"}"
+ },
+ "99b1a77086ba2acd9cf0a3f97c57ceb9": {
+  "completion_tokens": 193,
+  "latency_s": 1.102,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 748,
+  "text": "{\"route\": \"collector/payment-check\", \"confidence\": 0.85, \"second\": \"collector/collections\", \"language\": \"pcm\"}"
+ },
+ "9aba973417286afbdd4d6adc640f1a34": {
+  "completion_tokens": 358,
+  "latency_s": 1.926,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 745,
+  "text": "{\"route\": \"stock/stock-count\", \"confidence\": 0.45, \"second\": \"order/order-intake\", \"language\": \"en\"}"
+ },
+ "9b9cd88f9dcb6627c81ffcc63d4c6f51": {
+  "completion_tokens": 80,
+  "latency_s": 1.12,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 749,
+  "text": "{\"route\": \"collector/promise-to-pay\", \"confidence\": 0.95, \"second\": \"\", \"language\": \"en\"}"
+ },
+ "9ba7c066ccea5b4ec557e12079adbb47": {
+  "completion_tokens": 99,
+  "latency_s": 0.693,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 620,
+  "text": "{\"route\": \"credit/credit-review\", \"confidence\": 0.95, \"second\": \"\", \"language\": \"en\"}"
+ },
+ "9d3f1314baba2f8a4bc4740f6e3af836": {
+  "completion_tokens": 92,
+  "latency_s": 0.878,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 749,
+  "text": "{\"route\": \"order/drop-confirmation\", \"confidence\": 0.95, \"second\": \"\", \"language\": \"pcm\"}"
+ },
+ "9f4dcb4c9d83a2595fd9e5d73d8f35dc": {
+  "completion_tokens": 258,
+  "latency_s": 1.824,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 747,
+  "text": "{\"route\": \"stock/stock-count\", \"confidence\": 0.85, \"second\": \"order/order-intake\", \"language\": \"ha\"}"
+ },
+ "a04784c115c2a0a0ad98528d2095ef40": {
+  "completion_tokens": 152,
+  "latency_s": 1.209,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 619,
+  "text": "{\"route\": \"collector/payment-check\", \"confidence\": 0.92, \"second\": \"collector/collections\", \"language\": \"en\"}"
+ },
+ "a066ae62dc442165909d2fe200006af0": {
+  "completion_tokens": 99,
+  "latency_s": 1.041,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 752,
+  "text": "{\"route\": \"collector/collections\", \"confidence\": 0.9, \"second\": \"\", \"language\": \"ig\"}"
+ },
+ "a0c6170cbe7eb0f67d1ffff43f4c3d57": {
+  "completion_tokens": 115,
+  "latency_s": 0.799,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 750,
+  "text": "{\"route\": \"order/delivery-status\", \"confidence\": 0.95, \"second\": \"\", \"language\": \"pcm\"}"
+ },
+ "a52f34abf101d1a254c5e55b6db44541": {
+  "completion_tokens": 110,
+  "latency_s": 0.932,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 748,
+  "text": "{\"route\": \"brand/promo-info\", \"confidence\": 0.95, \"second\": \"\", \"language\": \"pcm\"}"
+ },
+ "a5417a5430dfcb0e058cfe83ee96f36e": {
+  "completion_tokens": 175,
+  "latency_s": 1.04,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 753,
+  "text": "{\"route\": \"order/drop-confirmation\", \"confidence\": 0.9, \"second\": \"\", \"language\": \"ig\"}"
+ },
+ "a58cd778962d0cbf3fd580c7996f1850": {
+  "completion_tokens": 174,
+  "latency_s": 1.014,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 764,
+  "text": "{\"route\": \"credit/credit-request\", \"confidence\": 0.95, \"second\": \"\", \"language\": \"pcm\"}"
+ },
+ "a639db6f249dfe39d71e4ab083b57a0c": {
+  "completion_tokens": 133,
+  "latency_s": 1.079,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 751,
+  "text": "{\"route\": \"mimi/chat\", \"confidence\": 0.95, \"second\": \"\", \"language\": \"pcm\"}"
+ },
+ "a65e9090e567d0b17015982b854962ee": {
+  "completion_tokens": 99,
+  "latency_s": 0.818,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 618,
+  "text": "{\"route\": \"credit/credit-review\", \"confidence\": 0.95, \"second\": \"\", \"language\": \"en\"}"
+ },
+ "a71bd192c5729e0a7f3b65b854454167": {
+  "completion_tokens": 150,
+  "latency_s": 0.935,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 763,
+  "text": "{\"route\": \"collector/promise-to-pay\", \"confidence\": 0.95, \"second\": \"\", \"language\": \"pcm\"}"
+ },
+ "a826c20e1673b3c75fb49d8f7655efa6": {
+  "completion_tokens": 99,
+  "latency_s": 0.888,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 757,
+  "text": "{\"route\": \"order/drop-confirmation\", \"confidence\": 0.95, \"second\": \"\", \"language\": \"ha\"}"
+ },
+ "a851ec2e712e5dc27e6e4e873be81be3": {
+  "completion_tokens": 94,
+  "latency_s": 1.651,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 755,
+  "text": "{\"route\": \"collector/payment-check\", \"confidence\": 0.95, \"second\": \"\", \"language\": \"en\"}"
+ },
+ "a9108d17cbaaea5b34753b61be6138c6": {
+  "completion_tokens": 212,
+  "latency_s": 1.198,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 748,
+  "text": "{\"route\": \"stock/stock-count\", \"confidence\": 0.85, \"second\": \"order/order-intake\", \"language\": \"ig\"}"
+ },
+ "aa20c220ac58bb4ef644407eee42a406": {
+  "completion_tokens": 103,
+  "latency_s": 1.129,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 749,
+  "text": "{\"route\": \"collector/promise-to-pay\", \"confidence\": 0.97, \"second\": \"\", \"language\": \"en\"}"
+ },
+ "aac59d5ad0c5d132d4bd5c91ca55f890": {
+  "completion_tokens": 114,
+  "latency_s": 0.995,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 752,
+  "text": "{\"route\": \"order/drop-confirmation\", \"confidence\": 0.97, \"second\": \"\", \"language\": \"ha\"}"
+ },
+ "ac31225076525e9b5a3cd05ecad8604a": {
+  "completion_tokens": 121,
+  "latency_s": 1.038,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 745,
+  "text": "{\"route\": \"unclear\", \"confidence\": 0.1, \"second\": \"\", \"language\": \"en\"}"
+ },
+ "aee2a98f3e873e7aaf08dd6cf5c2434a": {
+  "completion_tokens": 94,
+  "latency_s": 0.848,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 617,
+  "text": "{\"route\": \"mimi/owner-brief\", \"confidence\": 0.95, \"second\": \"\", \"language\": \"pcm\"}"
+ },
+ "b01f9d18e17150b3f6bd3954fddb4f69": {
+  "completion_tokens": 85,
+  "latency_s": 1.155,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 746,
+  "text": "{\"route\": \"mimi/chat\", \"confidence\": 1, \"second\": \"\", \"language\": \"yo\"}"
+ },
+ "b1ef83f91e1797b921e2d32139acf4c1": {
+  "completion_tokens": 92,
+  "latency_s": 0.702,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 750,
+  "text": "{\"route\": \"order/order-intake\", \"confidence\": 0.95, \"second\": \"\", \"language\": \"en\"}"
+ },
+ "b32a4d26f01ed2cc4120ec4303230b3b": {
+  "completion_tokens": 216,
+  "latency_s": 1.896,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 752,
+  "text": "{\"route\": \"collector/payment-check\", \"confidence\": 0.95, \"second\": \"\", \"language\": \"en\"}"
+ },
+ "b3786227aa3e084e8860e818ae66b0ef": {
+  "completion_tokens": 116,
+  "latency_s": 1.358,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 752,
+  "text": "{\"route\": \"order/order-intake\", \"confidence\": 0.95, \"second\": \"\", \"language\": \"yo\"}"
+ },
+ "b52038d64283686ce992df4114848d3c": {
+  "completion_tokens": 92,
+  "latency_s": 1.104,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 752,
+  "text": "{\"route\": \"order/order-intake\", \"confidence\": 0.95, \"second\": \"\", \"language\": \"pcm\"}"
+ },
+ "b5329e2fb7862777b33366c9e980be6d": {
+  "completion_tokens": 62,
+  "latency_s": 1.215,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 751,
+  "text": "{\"route\": \"order/order-intake\", \"confidence\": 0.95, \"second\": \"\", \"language\": \"en\"}"
+ },
+ "b6f23d3d30107226be794b8fe81a0f20": {
+  "completion_tokens": 85,
+  "latency_s": 1.263,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 749,
+  "text": "{\"route\": \"collector/collections\", \"confidence\": 0.95, \"second\": \"\", \"language\": \"en\"}"
+ },
+ "bba7a1681f32f52e2b7ddad9821bc81f": {
+  "completion_tokens": 124,
+  "latency_s": 0.812,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 618,
+  "text": "{\"route\": \"collector/collections\", \"confidence\": 0.95, \"second\": \"\", \"language\": \"en\"}"
+ },
+ "bd279ff693de423d60a4f6fbd4fc48e0": {
+  "completion_tokens": 79,
+  "latency_s": 1.113,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 750,
+  "text": "{\"route\": \"credit/credit-request\", \"confidence\": 0.95, \"second\": \"\", \"language\": \"ha\"}"
+ },
+ "be1e67f5f642581565e27833ce29d7f8": {
+  "completion_tokens": 313,
+  "latency_s": 1.973,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 750,
+  "text": "{\"route\": \"collector/collections\", \"confidence\": 0.55, \"second\": \"\", \"language\": \"ig\"}"
+ },
+ "bf2c250f701b44aff018b9d03b14bd91": {
+  "completion_tokens": 105,
+  "latency_s": 0.783,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 621,
+  "text": "{\"route\": \"brand/brand-email\", \"confidence\": 0.97, \"second\": \"\", \"language\": \"en\"}"
+ },
+ "c020563f936deda8cdb3b736244b1565": {
+  "completion_tokens": 65,
+  "latency_s": 0.637,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 618,
+  "text": "{\"route\": \"stock/low-stock-report\", \"confidence\": 0.95, \"second\": \"\", \"language\": \"en\"}"
+ },
+ "c0df0b8377a950df892af167f92db831": {
+  "completion_tokens": 109,
+  "latency_s": 1.416,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 758,
+  "text": "{\"route\": \"collector/collections\", \"confidence\": 0.85, \"second\": \"collector/payment-check\", \"language\": \"en\"}"
+ },
+ "c191caf4900c3a393259d113d94006fa": {
+  "completion_tokens": 71,
+  "latency_s": 0.69,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 748,
+  "text": "{\"route\": \"order/delivery-status\", \"confidence\": 0.97, \"second\": \"\", \"language\": \"en\"}"
+ },
+ "c272910b6248b51c10875193d3bdaca3": {
+  "completion_tokens": 113,
+  "latency_s": 0.996,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 614,
+  "text": "{\"route\": \"collector/chase\", \"confidence\": 0.95, \"second\": \"collector/collections\", \"language\": \"en\"}"
+ },
+ "c373d03e355331888ee83352a1182c04": {
+  "completion_tokens": 185,
+  "latency_s": 1.066,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 756,
+  "text": "{\"route\": \"credit/credit-request\", \"confidence\": 0.95, \"second\": \"\", \"language\": \"pcm\"}"
+ },
+ "c50aec67e6b6be366208e2fb0212d85a": {
+  "completion_tokens": 80,
+  "latency_s": 0.91,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 751,
+  "text": "{\"route\": \"collector/collections\", \"confidence\": 0.97, \"second\": \"\", \"language\": \"ig\"}"
+ },
+ "c613ee9a58aed8b6630597c126bda890": {
+  "completion_tokens": 108,
+  "latency_s": 0.946,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 747,
+  "text": "{\"route\": \"mimi/chat\", \"confidence\": 0.97, \"second\": \"\", \"language\": \"ha\"}"
+ },
+ "c66bb6d189287b3d93e6e3be8a97ee9a": {
+  "completion_tokens": 72,
+  "latency_s": 0.731,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 755,
+  "text": "{\"route\": \"order/drop-confirmation\", \"confidence\": 0.97, \"second\": \"\", \"language\": \"en\"}"
+ },
+ "c68d8f100191c18be9fd92ae307d7342": {
+  "completion_tokens": 212,
+  "latency_s": 1.359,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 749,
+  "text": "{\"route\": \"stock/stock-count\", \"confidence\": 0.82, \"second\": \"order/order-intake\", \"language\": \"en\"}"
+ },
+ "c71079e7d32d2a3354d3d53f7b6b7f3c": {
+  "completion_tokens": 412,
+  "latency_s": 1.736,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 755,
+  "text": "{\"route\": \"mimi/escalate-owner\", \"confidence\": 0.85, \"second\": \"collector/payment-check\", \"language\": \"pcm\"}"
+ },
+ "c75598e3bd4325a02f17fdda70512b63": {
+  "completion_tokens": 218,
+  "latency_s": 1.585,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 747,
+  "text": "{\"route\": \"unclear\", \"confidence\": 0.2, \"second\": \"\", \"language\": \"pcm\"}"
+ },
+ "c76247a5fc7d7702990a15e715d38c70": {
+  "completion_tokens": 98,
+  "latency_s": 0.814,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 617,
+  "text": "{\"route\": \"collector/chase\", \"confidence\": 0.98, \"second\": \"\", \"language\": \"en\"}"
+ },
+ "ca28908b81baf69063bbb769a7cf6642": {
+  "completion_tokens": 82,
+  "latency_s": 1.338,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 749,
+  "text": "{\"route\": \"collector/collections\", \"confidence\": 0.95, \"second\": \"\", \"language\": \"en\"}"
+ },
+ "cafdc918d6c8eeb48dfe343b37565f08": {
+  "completion_tokens": 121,
+  "latency_s": 1.262,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 751,
+  "text": "{\"route\": \"collector/promise-to-pay\", \"confidence\": 0.95, \"second\": \"\", \"language\": \"ha\"}"
+ },
+ "cb79df96a08fb64cc681a7807abda777": {
+  "completion_tokens": 105,
+  "latency_s": 0.858,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 756,
+  "text": "{\"route\": \"order/order-intake\", \"confidence\": 0.96, \"second\": \"\", \"language\": \"pcm\"}"
+ },
+ "cb7fc5b898330cee50fda45a75d6158c": {
+  "completion_tokens": 154,
+  "latency_s": 1.102,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 618,
+  "text": "{\"route\": \"collector/chase\", \"confidence\": 0.95, \"second\": \"\", \"language\": \"en\"}"
+ },
+ "ccf12cf67371c054a50daa01d7b6b4fb": {
+  "completion_tokens": 202,
+  "latency_s": 1.321,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 747,
+  "text": "{\"route\": \"stock/stock-count\", \"confidence\": 0.8, \"second\": \"order/order-intake\", \"language\": \"pcm\"}"
+ },
+ "cd83aec3d1d3ff853e7c8f832ec8daba": {
+  "completion_tokens": 98,
+  "latency_s": 0.823,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 751,
+  "text": "{\"route\": \"collector/payment-check\", \"confidence\": 0.92, \"second\": \"\", \"language\": \"yo\"}"
+ },
+ "cf4fb254bb1a3b932e51986ca366e1f2": {
+  "completion_tokens": 106,
+  "latency_s": 0.796,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 761,
+  "text": "{\"route\": \"order/order-intake\", \"confidence\": 0.95, \"second\": \"\", \"language\": \"pcm\"}"
+ },
+ "cfb336933fedf1a36a89276788191496": {
+  "completion_tokens": 161,
+  "latency_s": 1.046,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 754,
+  "text": "{\"route\": \"order/drop-confirmation\", \"confidence\": 0.95, \"second\": \"\", \"language\": \"en\"}"
+ },
+ "cfff9e4aeafe2ca0030565b1efead0d6": {
+  "completion_tokens": 94,
+  "latency_s": 0.813,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 765,
+  "text": "{\"route\": \"order/order-intake\", \"confidence\": 0.95, \"second\": \"\", \"language\": \"yo\"}"
+ },
+ "d378adad8b4f9c028ec072a282fed527": {
+  "completion_tokens": 53,
+  "latency_s": 1.167,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 745,
+  "text": "{\"route\": \"mimi/chat\", \"confidence\": 1.0, \"second\": \"\", \"language\": \"en\"}"
+ },
+ "d530add710a2828447b55d286cea107e": {
+  "completion_tokens": 181,
+  "latency_s": 1.285,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 750,
+  "text": "{\"route\": \"collector/promise-to-pay\", \"confidence\": 0.9, \"second\": \"\", \"language\": \"en\"}"
+ },
+ "d63dad56611c3f86c6ce722cbd0cfa98": {
+  "completion_tokens": 91,
+  "latency_s": 0.743,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 749,
+  "text": "{\"route\": \"order/order-intake\", \"confidence\": 0.99, \"second\": \"\", \"language\": \"en\"}"
+ },
+ "d6a457b7f90ac1fa41f9fac275d86ea5": {
+  "completion_tokens": 148,
+  "latency_s": 0.904,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 753,
+  "text": "{\"route\": \"order/delivery-status\", \"confidence\": 0.95, \"second\": \"\", \"language\": \"yo\"}"
+ },
+ "d6ab52f7e5ea26a784131b601c117c0f": {
+  "completion_tokens": 163,
+  "latency_s": 1.212,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 745,
+  "text": "{\"route\": \"mimi/chat\", \"confidence\": 0.7, \"second\": \"\", \"language\": \"en\"}"
+ },
+ "d722f741686cf897782fb5ab44f2a31e": {
+  "completion_tokens": 162,
+  "latency_s": 1.664,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 759,
+  "text": "{\"route\": \"credit/credit-request\", \"confidence\": 0.95, \"second\": \"stock/stock-count\", \"language\": \"pcm\"}"
+ },
+ "d8b9bb4358871371cfd72e58b038d02c": {
+  "completion_tokens": 66,
+  "latency_s": 0.887,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 620,
+  "text": "{\"route\": \"credit/credit-review\", \"confidence\": 0.92, \"second\": \"\", \"language\": \"en\"}"
+ },
+ "df9618052c892ac290c6d912415b7b99": {
+  "completion_tokens": 124,
+  "latency_s": 0.977,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 750,
+  "text": "{\"route\": \"stock/stock-count\", \"confidence\": 0.95, \"second\": \"\", \"language\": \"pcm\"}"
+ },
+ "df9a10ec8fe5186987bcd4fd419a65e8": {
+  "completion_tokens": 155,
+  "latency_s": 1.285,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 751,
+  "text": "{\"route\": \"collector/payment-check\", \"confidence\": 0.92, \"second\": \"\", \"language\": \"pcm\"}"
+ },
+ "e092cd739d6803532e2e8d5ae6fd0197": {
+  "completion_tokens": 169,
+  "latency_s": 1.097,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 752,
+  "text": "{\"route\": \"brand/promo-info\", \"confidence\": 0.85, \"second\": \"order/order-intake\", \"language\": \"ha\"}"
+ },
+ "e1e341e138302bc0442ac90bed2bb9e7": {
+  "completion_tokens": 85,
+  "latency_s": 0.792,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 612,
+  "text": "{\"route\": \"mimi/chat\", \"confidence\": 0.95, \"second\": \"\", \"language\": \"en\"}"
+ },
+ "e4d3ac5238246bda85dbf852d431bbd3": {
+  "completion_tokens": 143,
+  "latency_s": 1.204,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 748,
+  "text": "{\"route\": \"collector/payment-check\", \"confidence\": 0.92, \"second\": \"\", \"language\": \"en\"}"
+ },
+ "e4f842c9171236c61e5a92e824230259": {
+  "completion_tokens": 94,
+  "latency_s": 0.837,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 614,
+  "text": "{\"route\": \"collector/chase\", \"confidence\": 0.85, \"second\": \"collector/collections\", \"language\": \"pcm\"}"
+ },
+ "e5814b191e7112ad435e0731a0d14ba6": {
+  "completion_tokens": 317,
+  "latency_s": 1.547,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 744,
+  "text": "{\"route\": \"collector/promise-to-pay\", \"confidence\": 0.3, \"second\": \"\", \"language\": \"en\"}"
+ },
+ "e6499ff4e1a5cd63f00bc2e0fbaf7f63": {
+  "completion_tokens": 205,
+  "latency_s": 1.04,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 745,
+  "text": "{\"route\": \"unclear\", \"confidence\": 0.2, \"second\": \"\", \"language\": \"en\"}"
+ },
+ "e84e8c5f7f57973519b8d3d3b920abcd": {
+  "completion_tokens": 63,
+  "latency_s": 0.777,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 747,
+  "text": "{\"route\": \"collector/collections\", \"confidence\": 0.97, \"second\": \"\", \"language\": \"pcm\"}"
+ },
+ "e8e244ef218cccda0d04f99de7ac000e": {
+  "completion_tokens": 206,
+  "latency_s": 1.153,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 753,
+  "text": "{\"route\": \"stock/stock-count\", \"confidence\": 0.75, \"second\": \"\", \"language\": \"yo\"}"
+ },
+ "ea3464239456dd44e2c3aaa2b89caa69": {
+  "completion_tokens": 96,
+  "latency_s": 1.06,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 756,
+  "text": "{\"route\": \"order/order-intake\", \"confidence\": 0.97, \"second\": \"\", \"language\": \"ha\"}"
+ },
+ "ebbc0d5e7879c6d7adc9e5afca218e76": {
+  "completion_tokens": 107,
+  "latency_s": 0.96,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 749,
+  "text": "{\"route\": \"collector/collections\", \"confidence\": 0.92, \"second\": \"\", \"language\": \"pcm\"}"
+ },
+ "ee5cc667565bf57361dabf6a81633f9d": {
+  "completion_tokens": 56,
+  "latency_s": 0.683,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 617,
+  "text": "{\"route\": \"brand/promo-info\", \"confidence\": 0.95, \"second\": \"\", \"language\": \"en\"}"
+ },
+ "ee708132f18c885bdcc9976dc285774f": {
+  "completion_tokens": 301,
+  "latency_s": 1.784,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 749,
+  "text": "{\"route\": \"stock/stock-count\", \"confidence\": 0.75, \"second\": \"order/order-intake\", \"language\": \"ig\"}"
+ },
+ "ef4e969b7de5a664dfad6d5139235e3d": {
+  "completion_tokens": 91,
+  "latency_s": 1.03,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 745,
+  "text": "{\"route\": \"mimi/chat\", \"confidence\": 0.95, \"second\": \"\", \"language\": \"ig\"}"
+ },
+ "efb6910bbbc746df1d372038e1475af6": {
+  "completion_tokens": 89,
+  "latency_s": 0.855,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 747,
+  "text": "{\"route\": \"mimi/shop-onboarding\", \"confidence\": 0.95, \"second\": \"\", \"language\": \"en\"}"
+ },
+ "f122ccc360b2da9f3e21ac04422817a6": {
+  "completion_tokens": 232,
+  "latency_s": 1.345,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 745,
+  "text": "{\"route\": \"unclear\", \"confidence\": 0.1, \"second\": \"\", \"language\": \"pcm\"}"
+ },
+ "f17faa876ed026a7fdbc4b4afd3efb90": {
+  "completion_tokens": 162,
+  "latency_s": 1.274,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 754,
+  "text": "{\"route\": \"collector/payment-check\", \"confidence\": 0.9, \"second\": \"\", \"language\": \"en\"}"
+ },
+ "f2ec1670a6c59284ef316113efb37e7c": {
+  "completion_tokens": 84,
+  "latency_s": 1.995,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 750,
+  "text": "{\"route\": \"collector/collections\", \"confidence\": 0.97, \"second\": \"\", \"language\": \"en\"}"
+ },
+ "f471c8ede8aa398f9cfe450c40e01f21": {
+  "completion_tokens": 115,
+  "latency_s": 1.345,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 751,
+  "text": "{\"route\": \"order/drop-confirmation\", \"confidence\": 0.92, \"second\": \"\", \"language\": \"pcm\"}"
+ },
+ "f544a0b1b30731188f7c1109b10ebc51": {
+  "completion_tokens": 98,
+  "latency_s": 0.949,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 754,
+  "text": "{\"route\": \"order/delivery-status\", \"confidence\": 0.95, \"second\": \"\", \"language\": \"en\"}"
+ },
+ "f5ad89d10ae9bddf63a0bb96d23f1eeb": {
+  "completion_tokens": 97,
+  "latency_s": 0.762,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 757,
+  "text": "{\"route\": \"collector/payment-check\", \"confidence\": 0.9, \"second\": \"\", \"language\": \"ha\"}"
+ },
+ "f6e694dee302528206581607abbdca0b": {
+  "completion_tokens": 98,
+  "latency_s": 0.857,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 750,
+  "text": "{\"route\": \"credit/credit-request\", \"confidence\": 0.95, \"second\": \"\", \"language\": \"en\"}"
+ },
+ "f7830c5cdcc21ad3fb060bcf6ef853bb": {
+  "completion_tokens": 88,
+  "latency_s": 0.736,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 617,
+  "text": "{\"route\": \"collector/chase\", \"confidence\": 0.95, \"second\": \"\", \"language\": \"en\"}"
+ },
+ "f8ba35b9ff418629ed8d86365d749ad2": {
+  "completion_tokens": 57,
+  "latency_s": 0.79,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 757,
+  "text": "{\"route\": \"order/order-intake\", \"confidence\": 0.98, \"second\": \"\", \"language\": \"pcm\"}"
+ },
+ "f96036cf43d46a857810aaeb44549861": {
+  "completion_tokens": 117,
+  "latency_s": 1.706,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 760,
+  "text": "{\"route\": \"order/drop-confirmation\", \"confidence\": 0.92, \"second\": \"\", \"language\": \"pcm\"}"
+ },
+ "fb0bb11f96fd9694eda610dda8d26a6d": {
+  "completion_tokens": 133,
+  "latency_s": 1.199,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 753,
+  "text": "{\"route\": \"collector/payment-check\", \"confidence\": 0.95, \"second\": \"\", \"language\": \"yo\"}"
+ },
+ "fd18e099f2e2654f58f0208918b43719": {
+  "completion_tokens": 73,
+  "latency_s": 1.327,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 755,
+  "text": "{\"route\": \"order/order-intake\", \"confidence\": 0.97, \"second\": \"\", \"language\": \"en\"}"
+ },
+ "fdaa995c60dfae68d0a7871e3cac3fe7": {
+  "completion_tokens": 75,
+  "latency_s": 0.848,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 613,
+  "text": "{\"route\": \"mimi/owner-brief\", \"confidence\": 0.9, \"second\": \"\", \"language\": \"en\"}"
+ },
+ "fdf00e0487fc957fc07366549549c739": {
+  "completion_tokens": 80,
+  "latency_s": 1.348,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 750,
+  "text": "{\"route\": \"collector/collections\", \"confidence\": 0.95, \"second\": \"\", \"language\": \"yo\"}"
+ }
+}

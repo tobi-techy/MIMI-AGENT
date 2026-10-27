@@ -123,7 +123,17 @@ def build_turn(result: RunResult, *, shop_id: str = "owner", synthetic: bool = T
         "toolset_hash": result.toolset_hash, "registry_version": result.registry_version,
         "run_id": result.run_id, "steps": result.spend.steps,
         "spend_kobo": result.spend.kobo, "loop_overhead_ms": result.loop_overhead_ms,
+        "cached_tokens": result.cached_tokens,
     })
+    if result.route:
+        # RAI-280: the route decision and its confidence on every trace.
+        turn.metadata["route"] = result.route
+        turn.score("route_confidence", float(result.route.get("confidence", 0.0)), "NUMERIC")
+    if result.context:
+        # RAI-281: the manifest and the section hashes on every trace.
+        turn.metadata.update(result.context)
+        turn.score("context_tokens", float(result.context.get("context_tokens", 0)), "NUMERIC")
+        turn.score("manifest_present", True, "BOOLEAN")
     turn.observations.extend(run_observations(evs))
     turn.score("run_status", result.status, "CATEGORICAL")
     turn.score("stopped_budget", result.status == "stopped_budget", "BOOLEAN")
@@ -132,6 +142,81 @@ def build_turn(result: RunResult, *, shop_id: str = "owner", synthetic: bool = T
     turn.score("model_calls", float(result.model_calls), "NUMERIC")
     turn.score("intents", float(len(result.intents)), "NUMERIC")
     return turn
+
+
+@dataclass
+class RouteTurn(Turn):
+    """A routing decision on its own (rules, phrases or the model)."""
+
+    layer: str = ""
+    skill: str = ""
+
+    @property
+    def name(self) -> str:  # type: ignore[override]
+        return "route"
+
+    @property
+    def feature(self) -> str:  # type: ignore[override]
+        return "router"
+
+    @property
+    def session_id(self) -> str:  # type: ignore[override]
+        return self.thread_id
+
+    @property
+    def tags(self) -> list[str]:  # type: ignore[override]
+        return ["router", f"layer:{self.layer}", f"skill:{self.skill}",
+                "distributor:coral-lane"]
+
+
+def build_route_turn(decision: Any, *, synthetic: bool = True) -> RouteTurn:
+    """``decision`` is a ``mimi.harness.router.RouteDecision``."""
+    at = decision.events[0].at if decision.events else None
+    start = int(at.timestamp() * 1e9) if at else 0
+    end = start + int(decision.latency_ms * 1e6)
+    t = RouteTurn(job_id=f"route:{decision.external_id}", flow="receipt_reply",
+                  shop_id="router", thread_id=decision.thread_id, started_ns=start,
+                  ended_ns=end, synthetic=synthetic, layer=decision.layer,
+                  skill=decision.skill)
+    t.verdict = decision.status
+    t.language = decision.language
+    t.input = {"source": decision.source, "external_id": decision.external_id}
+    t.output = {"status": decision.status, "helper": decision.helper, "skill": decision.skill,
+                "clarify_question": decision.clarify_question,
+                "options": list(decision.options)}
+    t.metadata.update({
+        "route": {"helper": decision.helper, "skill": decision.skill,
+                  "confidence": decision.confidence, "layer": decision.layer,
+                  "rule": decision.rule, "lane": decision.lane,
+                  "secondary": list(decision.secondary),
+                  "injection": list(decision.injection),
+                  "downgraded_from": decision.downgraded_from},
+        "thresholds": decision.thresholds, "catalogue_version": decision.catalogue_version,
+        "prompt_version": decision.prompt_version, "latency_ms": decision.latency_ms,
+        "local_ms": decision.local_ms, "model_ms": decision.model_ms})
+    if decision.model_called:
+        t.observations.append(Observation(
+            "generation", f"model {decision.model}", start,
+            duration_ns=int(decision.model_ms * 1e6), model=decision.model,
+            usage={"input": decision.prompt_tokens, "output": decision.completion_tokens},
+            output={"skill": decision.skill}, metadata={"cost_kobo": decision.cost_kobo}))
+    t.score("route_confidence", float(decision.confidence), "NUMERIC")
+    t.score("route_layer", decision.layer, "CATEGORICAL")
+    t.score("route_clarified", decision.status == "clarify", "BOOLEAN")
+    t.score("injection_seen", bool(decision.injection), "BOOLEAN")
+    return t
+
+
+def trace_route(decision: Any, exporter: TurnExporter, **kw: Any) -> RouteTurn | None:
+    """Export one routing decision (no-op when the exporter is off). Never raises."""
+    if not getattr(exporter, "enabled", False):
+        return None
+    try:
+        t = build_route_turn(decision, **kw)
+        exporter.export(t)
+        return t
+    except Exception:
+        return None
 
 
 def trace_run(result: RunResult, exporter: TurnExporter, **kw: Any) -> HarnessTurn | None:

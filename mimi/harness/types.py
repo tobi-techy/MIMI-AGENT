@@ -66,6 +66,7 @@ EventType = Literal[
     "kill_switch",
     "step_finished",
     "run_finished",
+    "artifact_stored",
 ]
 
 
@@ -190,6 +191,10 @@ class RunResult(_Frozen):
     registry_version: str = ""
     model_calls: int = 0
     loop_overhead_ms: float = 0.0
+    # The router's decision (RAI-280) and the context manifest (RAI-281).
+    route: dict[str, Any] = Field(default_factory=dict)
+    context: dict[str, Any] = Field(default_factory=dict)
+    cached_tokens: int = 0
 
 
 class StepResult(_Frozen):

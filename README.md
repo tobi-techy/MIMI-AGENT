@@ -246,6 +246,39 @@ python -m mimi.harness.eval                         # every harness suite, offli
 python -m mimi.harness.eval --live --record-only    # re-record Muse Spark on the 50 scenarios
 ```
 
+### Router and context builder
+
+Mimi is Chief of Staff: every wake-up comes through one front door (dedupe on
+the provider's message id, one turn per thread, a burst of messages is one
+turn, the owner's messages and "stop" on a fast lane) and the router picks
+the helper and skill: rules first, then multilingual phrase rules (English,
+Pidgin, Yoruba, Hausa, Igbo), then a small classifier distilled from Muse
+Spark, then Muse Spark itself only when those cannot settle it. Unsure means
+one plain question, never a guess; text inside a shop's message can never
+steer the route. The context builder gives each run only what its skill
+needs: a pinned, cache-friendly prefix (rules + one skill, tools, memory,
+routines, environment), the thread so far, and the shop's consent-checked
+slice of the book on the newest message, with a manifest on every trace.
+
+| Router, 300 labelled messages | Accuracy | Clarify | Money misroutes | p95 latency |
+|---|---|---|---|---|
+| Pass mark | >= 95% | <= 8% | 0 | < 800 ms |
+| Rules -> phrases -> fast classifier -> Muse Spark | **98.7%** | 4.3% | **0** | 4 ms (Muse Spark on 5% of messages) |
+| Muse Spark for every text | 97.0% | 6.0% | 0 | 1,737 ms |
+
+| Context builder, 50 Collector scenarios on live Muse Spark | Task success | Median input tokens per run | Cached input tokens |
+|---|---|---|---|
+| Full-history baseline | 46/50 | 54,432 | 34% |
+| **Builder** | **50/50** | **10,179 (-81%)** | **81%** |
+
+0 cross-distributor leaks with two distributors sharing a shop. Details:
+[`docs/HARNESS.md`](docs/HARNESS.md).
+
+```bash
+python -m mimi.harness.router_eval      # router eval, recorded Muse Spark answers (CI)
+python -m mimi.harness.context_eval     # context eval, both arms recorded (CI)
+```
+
 ## Eval: stock estimate and one-tap counts
 
 **Backtest** (no model calls): every morning for six weeks, the production
@@ -327,7 +360,7 @@ Hobby plan has no alerts API). Details: [`docs/RUN.md`](docs/RUN.md#3e-langfuse-
 
 | Package | What it does |
 |---|---|
-| `mimi/harness` | The agent loop (step, time and naira budgets, daily cap, kill switches, one repair then fail safe, model fallback, ordered events), the typed tool registry (scope, Go-policy risk tier, idempotency keys, dry runs), Collector's 13 tools, durable steps, Langfuse traces, the harness evals |
+| `mimi/harness` | The agent loop (step, time and naira budgets, daily cap, kill switches, one repair then fail safe, model fallback, ordered events), the typed tool registry (scope, Go-policy risk tier, idempotency keys, dry runs), Collector's 13 tools, durable steps, Langfuse traces, the harness evals; the front door and router (RAI-280) and the context builder (RAI-281) with their evals |
 | `mimi/runtime` | Always-on durable jobs: state machine, leases with heartbeat and takeover after a crash, outbox with idempotency keys so nothing is sent twice, step, time and naira budgets, owner messages taken at the next step |
 | `mimi/world` | The synthetic distributor: 40 shops, 30 invented SKUs, 8 weeks of deliveries, payments, bank feed and fake transfer alerts, from a fixed seed |
 | `mimi/models` | Meta Model API client, FakeModel, record and replay cache |
