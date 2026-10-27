@@ -49,13 +49,15 @@ text to speech.
 | `pytest` | MIT | tests |
 | `ruff`, `mypy` | MIT | lint and type checks |
 | `detect-secrets` 1.5.0 | Apache-2.0 | CI secret scan, `make secrets` |
+| `pillow` >= 10.1 | MIT-CMU (HPND) | draws the synthetic payment screenshots (`mimi/proof/render.py`, `scripts/make_proof_fixtures.py`, sim `--screenshots`); Mimi itself never draws or stores an image |
+| DejaVu fonts (system package, e.g. `fonts-dejavu-core`) | Bitstream Vera / DejaVu free licence | text in the drawn screenshots; not copied into the repo (Pillow's default font is the fallback) |
 | `gitleaks` | MIT | CI history scan (binary downloaded in the workflow) |
 
 ## Services
 
-Meta Model API (`https://api.meta.ai/v1`): `muse-spark-1.3`,
-`muse-spark-1.3-contributor` and `muse-voice-transcribe-1.0`, used under
-Meta's terms for the hackathon.
+Meta Model API (`https://api.meta.ai/v1`): `muse-spark-1.3` (text, and
+vision input for payment screenshots), `muse-spark-1.3-contributor` and
+`muse-voice-transcribe-1.0`, used under Meta's terms for the hackathon.
 
 Spitch (`https://api.spitch.app/v1`), a third-party paid API, usage-based:
 speech to text (USD 0.00042 per second of audio) for voice notes, and text to

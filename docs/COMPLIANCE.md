@@ -68,6 +68,16 @@ modify or distribute it is granted without written permission.
   and hand-written; every case carries `"synthetic": true`.
 * The recorded model answers are Muse Spark's outputs on those synthetic
   cases.
+* Payment screenshots (`eval/proof/screens/`, 40 JPEGs) are synthetic:
+  drawn with Pillow by `scripts/make_proof_fixtures.py` for four fictional
+  banks (Kestrel Bank, Harmattan MFB, Lagoonpay, Ironleaf Bank) with logos
+  drawn from plain shapes, the world's fictional shops and owners, account
+  numbers starting 999 and `+2340000...` phones. No real bank's name, logo,
+  layout or customer data, and no real screenshot. The sim draws the same
+  kind on the fly. Real screenshots, if ever used, only with the shop's
+  consent, reported separately and kept out of this public repo.
+* In the product, Mimi keeps what it read off a screenshot plus the image's
+  SHA-256 and size (`payment_proofs`, alembic `0005`), never the image.
 
 ## Voices
 
@@ -97,10 +107,22 @@ modify or distribute it is granted without written permission.
   books) only after the shop's YES to that read-back. An unclear amount or
   day gets a question and records nothing. The intent carries no money verb
   and the runtime refuses any that does.
+* A payment screenshot never makes a payment verified or received. Passing
+  the code checks makes it `likely` (`RecordPaymentProof`, level fixed to
+  `likely` in its type); only a credit in the distributor's own bank feed
+  (a read-only port) makes it verified (`RecordBankWitness`, with the rep's,
+  the shop's and the bank's witness). A screenshot that looks wrong goes to
+  the owner's approvals with the failed rules named (`ProofForApproval`);
+  the shop is told, neutrally, that it was sent to the distributor to
+  confirm with the bank, and nothing on its book changes. Mimi never accuses
+  a shop, never moves money and never changes credit.
 
 ## Assets
 
-No third-party images, logos or fonts are in this repo. Shelf photos for the
+No third-party images, logos or fonts are in this repo. The synthetic
+payment screenshots are drawn by our own code; their text is rendered with
+the system's DejaVu fonts (free licence), which are not copied into the
+repo. The bank logos are our own plain shapes for invented banks. Shelf photos for the
 demo, if added, will be taken by the participant with the shop owner's
 permission and no faces in frame, and each will be listed here.
 
@@ -120,6 +142,11 @@ permission and no faces in frame, and each will be listed here.
   The transcript goes to Muse Spark like any typed reply. Measured on a
   50-clip synthetic voice eval (with and without language hints), recorded
   live.
+* **Muse Spark 1.3 with vision input** reads payment screenshots
+  (`read_payment_image`, `mimi/proof/reading.py`): the image goes as an
+  `image_url` content part and the fields come back through a JSON schema
+  response format; code does every check (`mimi/proof/checks.py`). Measured
+  on a 40-screenshot synthetic eval, recorded live (`docs/PROOF.md`).
 * Planned during the window: **SAM 3.1** for shelf-photo segmentation.
 
 ## Pre-submit checklist
@@ -132,4 +159,5 @@ permission and no faces in frame, and each will be listed here.
 - [ ] Hosted demo (if any): judge access and step-by-step instructions.
 - [ ] Shelf photos (if any) added with the permission note above.
 - [x] Voice fixtures are synthetic-generated and labelled; no real voices.
+- [x] Payment screenshots are synthetic, fictional banks only; no real screenshots.
 - [ ] Read the submit form and add anything it asks for here.

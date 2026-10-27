@@ -8,7 +8,11 @@ whatever language the shop writes or speaks (English, Pidgin, Yoruba, Igbo,
 Hausa or a mix, typed or as a voice note), records the shop's confirmation,
 and flags any dispute to the owner with the shop's own words. When a shop
 promises to pay ("I go pay 20k tomorrow"), Mimi reads the amount and the day
-back and notes the promise only after the shop says YES.
+back and notes the promise only after the shop says YES. When a shop sends a
+screenshot of a bank transfer as proof it paid, Mimi reads it, checks it in
+code, matches it to the open invoice and marks it **likely** paid until the
+distributor's own bank feed shows the money; one that looks wrong goes to the
+owner, without a word of blame to the shop.
 
 This demo does that end to end on a synthetic distributor: it confirms
 deliveries with shops in any language and flags disputes. The money maths is
@@ -26,7 +30,7 @@ person, brand, phone number and account in it. The model calls are real.
 
 | Model | Role |
 |---|---|
-| `muse-spark-1.3` | Mimi's reasoning: reads each shop's reply burst in context and returns a typed verdict (confirmed, disputed, partial, unclear, unrelated) with the language, a confidence and the exact quote it relied on |
+| `muse-spark-1.3` | Mimi's reasoning: reads each shop's reply burst in context and returns a typed verdict (confirmed, disputed, partial, unclear, unrelated) with the language, a confidence and the exact quote it relied on. With vision input, it also reads payment screenshots into typed fields |
 | `muse-spark-1.3-contributor` | The shop simulator: each fictional shop replies in its own voice |
 | `muse-voice-transcribe-1.0` | Speech to text for WhatsApp voice notes: first choice for English notes, fallback for the rest |
 | `sam-3.1` (planned) | Shelf photos, to check stock against what was delivered |
@@ -56,6 +60,19 @@ October 2026 ... Reply YES if that is right") and records the promise only
 after the shop's YES. An unclear amount or day, or a doubtful transcript,
 gets one question and records nothing. Mimi never moves money.
 
+Payment screenshots: Muse Spark copies the amount, sender, recipient, bank,
+date and time, reference and status off the image exactly as printed (and
+the typeface of each key value). Code turns the amount into integer kobo and
+the time into Africa/Lagos and checks it: the amount against the open
+invoice, the recipient against Coral Lane's account, a time that is real,
+not in the future, not before the delivery and not weeks old, the bank's
+reference format, a reference or image already used by any shop, amount plus
+fee against the total, and any editing the model points at. The verdict is
+`likely_genuine`, `looks_fake` or `cannot_tell` (one clear ask for a clearer
+screenshot). A screenshot never makes a payment verified: only the bank's
+credit does, when the rep's delivery, the shop's proof and the bank agree.
+See [`docs/PROOF.md`](docs/PROOF.md).
+
 Voice replies are off unless the shop itself sends `VOICE ON`; that message
 is kept as its consent. Then Mimi's short replies also go as a voice note in
 the shop's language (Spitch speech; Pidgin through an English-language
@@ -82,6 +99,8 @@ META_API_KEY= python -m mimi.sim --shops 3 --transcript   # one simulated day, 3
 META_API_KEY= python -m mimi.voice.eval                 # voice eval, replaying recorded answers
 META_API_KEY= python -m mimi.sim --shops 3 --transcript --voice 1   # shops send voice notes
 META_API_KEY= SPITCH_API_KEY= python -m mimi.sim --shops 3 --transcript --voice 1 --promises 1 --voice-replies
+META_API_KEY= python -m mimi.proof.eval                 # screenshot eval, replaying recorded answers
+META_API_KEY= python -m mimi.sim --shop-ids shop-019,shop-037,shop-025 --transcript --screenshots 1 --fakes 0.4
 ```
 
 **Live** (real Muse Spark calls):
@@ -93,6 +112,8 @@ python -m mimi.sim --shops 3 --transcript
 python -m mimi.receipts.eval --live
 python -m mimi.voice.eval --live
 python -m mimi.sim --shops 3 --transcript --voice 1 --promises 1 --voice-replies
+python -m mimi.proof.eval --live
+python -m mimi.sim --shop-ids shop-019,shop-037,shop-025 --transcript --screenshots 1 --fakes 0.4
 ```
 
 A live 3-shop day prints the WhatsApp transcript (receipts, shop replies,
@@ -150,6 +171,28 @@ and then flags the owner. Recording the eval cost about USD 0.40 of Spitch
 credit. Per-language table, API shapes, the promise rules and the router
 policy: [`docs/VOICE.md`](docs/VOICE.md).
 
+## Eval: payment screenshots
+
+40 synthetic screenshots (fictional banks and logos, drawn with Pillow): 20
+genuine, 16 fakes (edited amount, wrong recipient, duplicated reference,
+impossible time, "Pending" shown as success, mismatched fonts, an old
+screenshot reused) and 4 that cannot be read, with JPEG compression, crops,
+status bars, rotation and blur. Each runs through the production desk and
+flow. Recorded live on Muse Spark 1.3 and replayed in CI.
+
+| Reader | Field exact match | Fakes caught | False "likely genuine" on fakes | Real marked fake | Invoice match | Verified from a screenshot |
+|---|---|---|---|---|---|---|
+| Muse Spark + code checks | **100%** | **16 of 16** | **0** | **0** | **20 of 20** | **0** |
+| No-reading baseline | n/a | 0 of 16 | 16 | 0 | n/a | n/a |
+
+All 4 unreadable ones get one clear ask. About 2,800 tokens and 5 s (p95
+8.3 s) per screenshot. Two fakes are caught only by what the model sees
+(values typed over in another font); the rest by code on the copied fields.
+These are synthetic renders, so real screenshots will be harder; a forgery
+that keeps every printed figure consistent is caught by the bank witness,
+which is why a screenshot alone only ever means "likely". Failures, fixes
+and limits: [`docs/PROOF.md`](docs/PROOF.md).
+
 ## What is in this repo
 
 | Package | What it does |
@@ -159,12 +202,14 @@ policy: [`docs/VOICE.md`](docs/VOICE.md).
 | `mimi/models` | Meta Model API client, FakeModel, record and replay cache |
 | `mimi/receipts` | The delivery receipt flow, the reply reader and its guards, payment-promise read-back, voice-reply scripts, the eval |
 | `mimi/voice` | Voice notes: a transcription port with Spitch and Muse Voice Transcribe adapters, a router, audio checks and ffmpeg conversion, money and date reading, voice-reply consent and text to speech, fakes, record and replay, the voice eval |
-| `mimi/sim` | Shop personas and a one-day simulator |
+| `mimi/proof` | Payment screenshots: the `read_payment_image` tool (Muse Spark vision), code checks, verdicts and invoice match, the bank witness, the proof ledger, the synthetic screenshot renderer, the eval |
+| `mimi/sim` | Shop personas and a one-day simulator (shops can pay by screenshot) |
 | `mimi/types.py` | `ShopScope` and the kobo money unit |
 
 Docs: [`docs/HACKATHON.md`](docs/HACKATHON.md) (what was built when),
 [`docs/RUNTIME.md`](docs/RUNTIME.md), [`docs/WORLD.md`](docs/WORLD.md),
 [`docs/RUN.md`](docs/RUN.md), [`docs/VOICE.md`](docs/VOICE.md),
+[`docs/PROOF.md`](docs/PROOF.md),
 [`docs/COMPLIANCE.md`](docs/COMPLIANCE.md),
 [`docs/DEPENDENCIES.md`](docs/DEPENDENCIES.md).
 

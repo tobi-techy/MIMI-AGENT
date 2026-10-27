@@ -154,6 +154,54 @@ python scripts/make_voice_fixtures.py          # missing clips only
 python scripts/make_voice_fixtures.py --force
 ```
 
+## 3d. Payment screenshots
+
+```bash
+# The 40-screenshot eval: replay (offline, what CI runs), live, oracle, baseline
+python -m mimi.proof.eval
+python -m mimi.proof.eval --live            # resumes from eval/proof/screens.cache.json
+python -m mimi.proof.eval --live --fresh    # every case a new call (about 113k tokens)
+python -m mimi.proof.eval --fake            # perfect reader: the code checks vs the labels
+python -m mimi.proof.eval --baseline
+
+# Redraw the 40 fixtures and labels (Pillow; deterministic for the seed, but
+# JPEG bytes can change with the Pillow version, so re-record after)
+python scripts/make_proof_fixtures.py
+
+# Shops pay by screenshot in the sim: --screenshots SHARE of the transfer
+# shops send one for the day's delivery, --fakes SHARE of those a fake one.
+# The first three live shops pay cash, so name transfer shops with --shop-ids.
+META_API_KEY= python -m mimi.sim --shop-ids shop-019,shop-037,shop-025 --transcript \
+  --screenshots 1 --fakes 0.4
+# the live smoke (Muse Spark reads the screenshots too)
+python -m mimi.sim --shop-ids shop-019,shop-037,shop-025 --transcript \
+  --screenshots 1 --fakes 0.4 --cache /tmp/smoke/proof
+```
+
+The transcript shows each screenshot (with the sim's truth for a fake), what
+Muse Spark copied off it (`Mimi (reads screenshot)`), the code verdict and
+failed rules (`Mimi (checks)`), Mimi's reply, and later the bank's
+confirmation. The report adds `proof_verdicts`, `proofs_likely_recorded`,
+`proofs_to_approvals`, `proof_approval_rules`, `proofs_verified_by_bank`,
+`verified_without_bank_credit` (always 0), `fakes_marked_likely` and the
+reader's tokens. Offline, the reader is a fake that looks up the renderer's
+own record of each image (by SHA-256); it does not read pixels.
+
+Live smoke, 27 Oct 2026 (`muse-spark-1.3` for Mimi and the screenshots,
+`muse-spark-1.3-contributor` for the shops): 3 shops, 3 receipts confirmed,
+4 screenshots. Moji Kiosk's Harmattan MFB receipt (N139,300) and Kunle POS &
+Provisions' Ironleaf SMS alert (N13,600) were read exactly, matched their
+invoices (`exact`), recorded as likely and confirmed by the sim's bank feed
+within two hours (verified, three witnesses). Kunle's second send of the
+same image got "I already have this screenshot", with no model call and
+no second match. Titi POS & Provisions' fake (a Lagoonpay receipt to an
+account ending 9917) went to approvals with `recipient` named (Muse Spark also
+reported a typeface difference on it, so `editing_signs` failed too), and the shop got the neutral "sent to Coral Lane
+Trading to confirm with the bank". 0 fakes marked likely, 0 verified without
+a bank credit. Screenshot reading: 5,918 prompt and 3,159 completion tokens
+for 3 reads; 9 live calls in all (with the receipt reader and the shops),
+49 s.
+
 ## 4. Clock modes and persistence
 
 ```bash
@@ -163,22 +211,23 @@ python -m mimi.sim --hours 26
 # Real time for a demo: 1 = wall clock, 60 = one sim hour per minute
 python -m mimi.sim --shops 3 --realtime 60 --transcript
 
-# Persist jobs, shop replies and voice-reply consents (SQLite creates the tables)
+# Persist jobs, shop replies, voice-reply consents and payment proofs (SQLite creates the tables)
 python -m mimi.sim --db sqlite:////tmp/mimi-sim.db
 
 # Postgres: install the extra, then create the tables with alembic first
-# (revisions 0001 to 0004). MIMI_DB_URL is a SQLAlchemy URL for your own
+# (revisions 0001 to 0005). MIMI_DB_URL is a SQLAlchemy URL for your own
 # local database, set in your shell (never written into a file in this repo).
 # Revision 0003 adds the voice-note columns (transcript, never audio);
-# 0004 the shops' voice-reply choices, each with its consent message.
+# 0004 the shops' voice-reply choices, each with its consent message;
+# 0005 payment screenshots as fields (SHA-256 and size, never the image).
 pip install -e '.[postgres]'
 alembic upgrade head
 python -m mimi.sim --db "$MIMI_DB_URL"
 ```
 
 Jobs land in `runtime_jobs` (the durable state machine, readable by the
-console), shop replies in `shop_inbox` and voice-reply choices in
-`shop_voice_consent`.
+console), shop replies in `shop_inbox`, voice-reply choices in
+`shop_voice_consent` and payment screenshots, as fields, in `payment_proofs`.
 
 ## 5. Tests
 
