@@ -13,8 +13,8 @@ starts with no intent types of its own. The module rules test
 |---|---|---|
 | `sqlalchemy` | MIT | `mimi/runtime/sql_store.py`, `mimi/receipts/inbox.py`, `mimi/voice/prefs.py`, sim `--db` |
 | `alembic` | MIT | migrations `0001_runtime_jobs` to `0005_payment_proofs` |
-| `httpx` | BSD-3-Clause | `mimi/models/meta.py` (Meta Model API client), `mimi/voice/` (Spitch and Muse Voice Transcribe clients) |
-| `pydantic` | MIT | `mimi/receipts/verdict.py` (typed verdict), `mimi/proof/reading.py`, `mimi/stock/answers.py` (typed stock answer) |
+| `httpx` | BSD-3-Clause | `mimi/models/meta.py` (Meta Model API client), `mimi/harness/gateway.py` (tool-calling client), `mimi/voice/` (Spitch and Muse Voice Transcribe clients) |
+| `pydantic` | MIT | `mimi/receipts/verdict.py` (typed verdict), `mimi/proof/reading.py`, `mimi/stock/answers.py` (typed stock answer), `mimi/harness/` (tool inputs and outputs, events, intents, run results) |
 
 Optional extras:
 

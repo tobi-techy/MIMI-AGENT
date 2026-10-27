@@ -56,6 +56,14 @@ Anything else raises `IllegalTransition`.
 All run against the in-memory store and the SQL store (SQLite in CI;
 Postgres in production through alembic revision 0001).
 
+## Helper state between steps
+
+`Job.scratch` is a JSON object a helper's step keeps between steps (the agent
+harness saves its loop state there: transcript, step log, spend, proposals).
+The step gets it as `StepContext.scratch` and returns the new one as
+`StepOutcome.scratch`; it is saved in the same compare-and-set as the step,
+so it can never run ahead of the job. Old job bodies without it load as `{}`.
+
 ## Guardrails
 
 * Mimi never moves money. Steps return typed intents only, and only the types
@@ -73,7 +81,10 @@ Postgres in production through alembic revision 0001).
 
 * Workers next to the system of record: today the worker is Python. The job
   table can move behind another service's API without changing the runner.
-* Daily naira cap per distributor and kill switch per helper.
+* Daily naira cap per distributor and kill switch per helper: done in the
+  harness (`mimi/harness/`, checked before every harness step through the
+  control-plane port); the runner itself does not check them for non-harness
+  steps.
 * A soak test of 40 simulated shops for 6+ hours.
 * The claim query filters in Python; at pilot scale that is fine, beyond it
   move to `FOR UPDATE SKIP LOCKED`.

@@ -212,6 +212,40 @@ that keeps every printed figure consistent is caught by the bank witness,
 which is why a screenshot alone only ever means "likely". Failures, fixes
 and limits: [`docs/PROOF.md`](docs/PROOF.md).
 
+## The agent harness
+
+Every helper runs on one in-house loop (`mimi/harness/`): think, call typed
+tools, observe, repeat, until done, parked for the owner or out of budget.
+Model-agnostic OpenAI-style tool calling (Muse Spark 1.3 here, with a
+fallback model on a provider error). Budgets per run (12 steps, 60 s, N50 of
+model spend, with the next call's worst case reserved), a daily naira cap per
+distributor and kill switches are checked in code before every step. Tools
+are declared with typed inputs and outputs, a consent scope, a risk tier read
+from policy (never from the model), idempotency fields and a dry run; write
+tools only return intents, high-risk ones wait in the owner's approvals, and
+moving money or changing bank details cannot be put in any helper's toolset.
+Replying is a tool: the model's own text is private.
+
+Collector, the first hire, has its 13 tools. On 50 synthetic Collector
+scenarios (chase everyone over 50k, balance asks, payments with and without a
+bank credit, promises, quiet routines, disputes):
+
+| | Task completion | Side effects from inside the loop | Over budget without stopping | Median model calls per turn |
+|---|---|---|---|---|
+| Live `muse-spark-1.3` (recorded, replayed in CI) | **50 of 50** | 0 | 0 | 2 |
+| Scripted policy with injected faults (5xx, bad arguments, tier spoofing) | **50 of 50** | 0 | 0 | 2 |
+
+Security suite: 41 of 41 refused (cross-distributor reads, missing consent,
+tool names injected by shop text, tier spoofing, never-tier tools). 200
+replayed retries and crashes: 0 duplicate side effects. An idle distributor
+makes no model calls for 24 hours apart from its routine. Loop overhead is
+about 13 ms at p95. Details: [`docs/HARNESS.md`](docs/HARNESS.md).
+
+```bash
+python -m mimi.harness.eval                         # every harness suite, offline (CI)
+python -m mimi.harness.eval --live --record-only    # re-record Muse Spark on the 50 scenarios
+```
+
 ## Eval: stock estimate and one-tap counts
 
 **Backtest** (no model calls): every morning for six weeks, the production
@@ -293,6 +327,7 @@ Hobby plan has no alerts API). Details: [`docs/RUN.md`](docs/RUN.md#3e-langfuse-
 
 | Package | What it does |
 |---|---|
+| `mimi/harness` | The agent loop (step, time and naira budgets, daily cap, kill switches, one repair then fail safe, model fallback, ordered events), the typed tool registry (scope, Go-policy risk tier, idempotency keys, dry runs), Collector's 13 tools, durable steps, Langfuse traces, the harness evals |
 | `mimi/runtime` | Always-on durable jobs: state machine, leases with heartbeat and takeover after a crash, outbox with idempotency keys so nothing is sent twice, step, time and naira budgets, owner messages taken at the next step |
 | `mimi/world` | The synthetic distributor: 40 shops, 30 invented SKUs, 8 weeks of deliveries, payments, bank feed and fake transfer alerts, from a fixed seed |
 | `mimi/models` | Meta Model API client, FakeModel, record and replay cache |
@@ -305,7 +340,8 @@ Hobby plan has no alerts API). Details: [`docs/RUN.md`](docs/RUN.md#3e-langfuse-
 | `mimi/types.py` | `ShopScope` and the kobo money unit |
 
 Docs: [`docs/HACKATHON.md`](docs/HACKATHON.md) (what was built when),
-[`docs/RUNTIME.md`](docs/RUNTIME.md), [`docs/WORLD.md`](docs/WORLD.md),
+[`docs/RUNTIME.md`](docs/RUNTIME.md), [`docs/HARNESS.md`](docs/HARNESS.md),
+[`docs/WORLD.md`](docs/WORLD.md),
 [`docs/RUN.md`](docs/RUN.md), [`docs/VOICE.md`](docs/VOICE.md),
 [`docs/PROOF.md`](docs/PROOF.md), [`docs/STOCK.md`](docs/STOCK.md),
 [`docs/COMPLIANCE.md`](docs/COMPLIANCE.md),
