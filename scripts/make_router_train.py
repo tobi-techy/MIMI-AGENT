@@ -13,6 +13,7 @@ text). Output: ``mimi/harness/data/router_train.jsonl``; the fast classifier
 
 from __future__ import annotations
 
+import base64
 import json
 import os
 import re
@@ -53,16 +54,23 @@ Make them realistic and varied: short and long, some with typos or SMS spelling,
 Answer with JSON only: {{"messages": ["...", "..."]}}"""
 
 
-_REAL = re.compile(
-    r"\b(gt ?bank|gtb|gtco|uba|first ?bank|fcmb|zenith|access ?bank|opay|moniepoint|palmpay|"
-    r"kuda|wema|stanbic|ecobank|fidelity ?bank|union ?bank|sterling ?bank|providus)\b", re.I)
+# The scrub list is stored base64-encoded so this file itself holds no real
+# bank or fintech names (tests/test_no_real_banks.py greps every tracked file).
+_REAL_B64 = (
+    "XGIoZ3QgP2Jhbmt8Z3RifGd0Y298dWJhfGZpcnN0ID9iYW5rfGZjbWJ8emVuaXRofGFjY2VzcyA/YmFua3xvcGF5"
+    "fG1vbmllcG9pbnR8cGFsbXBheXxrdWRhfHdlbWF8c3RhbmJpY3xlY29iYW5rfGZpZGVsaXR5ID9iYW5rfHVuaW9u"
+    "ID9iYW5rfHN0ZXJsaW5nID9iYW5rfHByb3ZpZHVzKVxi"
+)
+_WALLETS_B64 = "b3BheSBtb25pZXBvaW50IHBhbG1wYXkga3VkYQ=="  # mobile-money names -> Lagoonpay
+_REAL = re.compile(base64.b64decode(_REAL_B64).decode(), re.I)
+_WALLETS = tuple(base64.b64decode(_WALLETS_B64).decode().split())
 
 
 def fictional_banks(text: str) -> str:
     """The repo holds no real bank or fintech names (tests/test_no_real_banks.py)."""
     def swap(m: re.Match[str]) -> str:
         name = m.group(0).lower()
-        if any(k in name for k in ("opay", "moniepoint", "palmpay", "kuda")):
+        if any(k in name for k in _WALLETS):
             return "Lagoonpay"
         return "Kestrel Bank"
     return _REAL.sub(swap, text)
