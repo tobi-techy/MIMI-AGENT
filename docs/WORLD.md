@@ -54,14 +54,16 @@ Behaviour
   round number (N50,000 against a N53,450 bill) and sometimes the rest later;
   disputing shops pay a round-number part.
 * Methods: cash to the rep (more common for small shops) or transfer from
-  Moniepoint, OPay, PalmPay, GTBank, First Bank or Access. About a quarter of
+  one of six fictional banks: Lagoonpay, Harmattan MFB or Kestrel Bank (app
+  banks), or Ironleaf Bank, Ashgrove Bank or Marlwood Bank (SMS banks). Every
+  bank name in the world is invented; none is a real bank. About a quarter of
   large on-time transfers are split across two transfers.
 * Two historic disputes ("I didn't collect the 2 cartons").
 * Exactly 4 fake transfer alerts, each with telltales: the narration in the
   wrong format for that bank, an amount that never appears in Coral Lane's
   bank feed, and often an odd timestamp (2 to 4 am).
-* Alerts follow the usual layouts (SMS debit alerts for GTBank, First Bank and
-  Access; in-app receipts for the fintechs) with masked, fictional account
+* Alerts follow the usual layouts (SMS debit alerts for Ironleaf, Ashgrove and
+  Marlwood; in-app receipts for the app banks) with masked, fictional account
   numbers and session ids that start `999`. The layouts are approximations.
 
 Money

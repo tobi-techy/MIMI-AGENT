@@ -1,14 +1,15 @@
-"""The fictional banks in the synthetic screenshots, and Coral Lane's account.
+"""The fictional banks of the demo world, and Coral Lane's account.
 
 Every bank here is invented for the demo (no real bank's name, logo or
-layout): Kestrel Bank, Harmattan MFB, Lagoonpay and Ironleaf Bank. Each has
+layout): Kestrel Bank, Harmattan MFB and Lagoonpay (app receipts), and
+Ironleaf Bank, Ashgrove Bank and Marlwood Bank (SMS debit alerts). Each has
 a fixed layout, reference format and date format, which the code checks in
 ``checks.py`` use. Account numbers start with ``999`` so they can never be
 mistaken for real ones.
 
-The world fixture names the bank a shop pays from with its usual app or bank
-(``Shop.bank``); ``fictional_bank`` maps that to one of these for the
-screenshots, so a rendered image never shows a real brand.
+The world fixture names a shop's bank (``Shop.bank``) with one of these
+names directly, so the world, its alerts and the screenshots all show the
+same fictional bank.
 """
 
 from __future__ import annotations
@@ -69,6 +70,22 @@ BANKS: tuple[FictionalBank, ...] = (
         time_formats=("%d/%m/%Y %H:%M",),
         aliases=("ironleaf", "ironleafbnk", "ironleaf bank"),
     ),
+    FictionalBank(
+        name="Ashgrove Bank",
+        short="AG",
+        layout="sms_alert",
+        reference_re=r"AG/TRF/\d{9}",
+        time_formats=("%d/%m/%Y %H:%M",),
+        aliases=("ashgrove", "ashgrovebnk", "ashgrove bank"),
+    ),
+    FictionalBank(
+        name="Marlwood Bank",
+        short="MW",
+        layout="sms_alert",
+        reference_re=r"MW/TRF/\d{9}",
+        time_formats=("%d %b %Y %H:%M",),
+        aliases=("marlwood", "marlwoodbnk", "marlwood bank"),
+    ),
 )
 
 # Every format any of the banks prints; a printed date that fits none of
@@ -80,16 +97,6 @@ ALL_TIME_FORMATS: tuple[str, ...] = tuple(f for b in BANKS for f in b.time_forma
     "%Y-%m-%d %H:%M",
     "%d/%m/%Y %H:%M:%S",
 )
-
-# The world names a shop's usual app or bank; screenshots use these instead.
-_WORLD_TO_FICTIONAL = {
-    "Moniepoint": "Lagoonpay",
-    "OPay": "Harmattan MFB",
-    "PalmPay": "Kestrel Bank",
-    "GTBank": "Ironleaf Bank",
-    "First Bank": "Ironleaf Bank",
-    "Access": "Ironleaf Bank",
-}
 
 
 @dataclass(frozen=True)
@@ -124,8 +131,9 @@ def bank_named(name: str | None) -> FictionalBank | None:
     return None
 
 
-def fictional_bank(world_bank: str) -> FictionalBank:
-    name = _WORLD_TO_FICTIONAL.get(world_bank, "Kestrel Bank")
-    found = bank_named(name)
-    assert found is not None
-    return found
+def bank_for(name: str) -> FictionalBank:
+    """The fictional bank with exactly this name (a world ``Shop.bank``)."""
+    for b in BANKS:
+        if b.name == name:
+            return b
+    raise KeyError(f"not one of the fictional banks: {name!r}")

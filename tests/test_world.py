@@ -12,6 +12,7 @@ from mimi.world import (
     stats,
     world_hash,
 )
+from mimi.world.catalogue import BANKS
 from mimi.world.generator import FAKE_ALERTS, is_market_day
 
 WORLD = generate_world(DEFAULT_SEED)
@@ -69,7 +70,7 @@ def test_payment_behaviour_is_mixed() -> None:
     assert any(not p.kept for p in WORLD.promises)
     assert len(WORLD.disputes) == 2
     banks = {p.alert.bank for p in real if p.alert}
-    assert banks <= {"Moniepoint", "OPay", "PalmPay", "GTBank", "First Bank", "Access"}
+    assert banks <= set(BANKS)
 
 
 def test_fake_alerts_are_known_and_never_paid() -> None:

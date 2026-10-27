@@ -77,7 +77,7 @@ Code (`parse.py`, `checks.py`) decides everything:
 | `time_not_future` | after the message arrived (5 minutes of phone-clock slack) |
 | `time_recent` | more than 14 days before the message |
 | `time_after_delivery` | before the delivery it would pay (the matched invoice, or the oldest open one) |
-| `reference_format` | not the bank's format (`KST` + 12 digits, `HMF-` + 10, a 30-digit `999` session id, `IL/TRF/` + 9 digits); a session id one or two digits off is only a warning (a likely misread) |
+| `reference_format` | not the bank's format (`KST` + 12 digits, `HMF-` + 10, a 30-digit `999` session id, `IL/TRF/`, `AG/TRF/` or `MW/TRF/` + 9 digits); a session id one or two digits off is only a warning (a likely misread) |
 | `reference_unique` | the reference or session id is already in the ledger (another shop's, or this shop's old one) |
 | `same_image` | another shop already sent the same file |
 | `arithmetic` | amount + fee is not the total printed |
@@ -97,10 +97,13 @@ credit not already used. The feed is a read-only port.
 
 `scripts/make_proof_fixtures.py` draws 40 screenshots with Pillow
 (`mimi/proof/render.py`) in the style of mobile bank-app receipts and SMS
-alerts, for four **fictional** banks with invented logos drawn from plain
+alerts, for **fictional** banks with invented logos drawn from plain
 shapes: Kestrel Bank (purple app receipt, fee and total), Harmattan MFB
 (orange app receipt), Lagoonpay (teal app receipt, 30-digit session id) and
-Ironleaf Bank (SMS debit alert). No real bank's name, logo or layout. Shops
+Ironleaf Bank (SMS debit alert). The world's other two SMS banks, Ashgrove
+Bank and Marlwood Bank, draw the same SMS layout with their own name and logo
+in the sim. These are the same banks the world fixture names, with no
+mapping: no real bank's name, logo or layout anywhere. Shops
 and owners are the synthetic Coral Lane world's; every account number starts
 with 999; phones are `+2340000...`. Realism: phone status bars, JPEG quality
 25 to 82, crops, rotation of up to 3 degrees, blur, downscaling.
