@@ -1,6 +1,6 @@
 PY ?= python
 
-.PHONY: install test eval eval-live eval-fake voice-eval voice-eval-live voice-fixtures proof-eval proof-eval-live proof-fixtures sim sim-live sim-voice sim-voice-v2 sim-screens trace-smoke langfuse-setup langfuse-monitor langfuse-datasets proof-experiment voice-experiment receipts-experiment judge-calibration world-check lint typecheck secrets provenance migrate check
+.PHONY: install test eval eval-live eval-fake voice-eval voice-eval-live voice-fixtures proof-eval proof-eval-live proof-fixtures sim sim-live sim-voice sim-voice-v2 sim-screens trace-smoke langfuse-setup langfuse-monitor langfuse-datasets proof-experiment voice-experiment receipts-experiment judge-calibration world-check lint typecheck secrets provenance migrate check harness-eval harness-eval-live trace-harness
 
 install:            ## editable install with dev tools
 	$(PY) -m pip install -e '.[dev,otel,langfuse]'
@@ -62,7 +62,7 @@ provenance:         ## every commit was made in the hackathon window
 migrate:            ## create Mimi's tables; set MIMI_DB_URL first
 	alembic upgrade head
 
-check: lint typecheck test eval voice-eval proof-eval world-check secrets provenance
+check: lint typecheck test eval voice-eval proof-eval harness-eval world-check secrets provenance
 
 sim-voice-v2:       ## offline sim: voice notes, payment promises, voice replies
 	META_API_KEY= SPITCH_API_KEY= $(PY) -m mimi.sim --shops 3 --transcript --voice 1 --promises 1 --voice-replies
@@ -95,3 +95,14 @@ receipts-experiment: ## reply-reader eval as a Langfuse experiment (replayed ans
 
 judge-calibration:  ## calibrate the reply-tone LLM judge on 8 labelled replies (Muse, cached)
 	$(PY) -m mimi.observe.experiments calibrate-judge
+
+# --- Agent harness (RAI-278, RAI-279) ---
+
+harness-eval:       ## every harness suite offline: 50 Collector scenarios (scripted + recorded Muse Spark), security, retries, runaway budgets, idle
+	META_API_KEY= $(PY) -m mimi.harness.eval
+
+harness-eval-live:  ## re-record Muse Spark on the 50 Collector scenarios (needs META_API_KEY); then run harness-eval
+	$(PY) -m mimi.harness.eval --live --record-only
+
+trace-harness:      ## four replayed Collector runs traced to Langfuse (demo env; no model cost); --public link
+	$(PY) scripts/trace_harness.py --public

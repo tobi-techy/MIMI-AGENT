@@ -48,6 +48,8 @@ jobs:
         run: python -m mimi.voice.eval
       - name: Payment-screenshot eval, 40 synthetic alerts (recorded Muse Spark answers; fails on a fake marked likely)
         run: python -m mimi.proof.eval
+      - name: Harness evals (50 Collector scenarios scripted and recorded Muse Spark, 41 security cases, 200 replayed retries, runaway budgets, idle cost; fails on any pass mark)
+        run: python -m mimi.harness.eval --no-write
       - name: Offline 3-shop sim
         run: python -m mimi.sim --shops 3 --transcript
       - name: Offline 3-shop sim with voice notes
