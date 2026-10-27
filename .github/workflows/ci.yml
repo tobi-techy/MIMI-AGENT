@@ -27,13 +27,19 @@ jobs:
           cache: pip
       - name: ffmpeg (voice-note conversion tests)
         run: sudo apt-get update -q && sudo apt-get install -y -q --no-install-recommends ffmpeg
-      - run: python -m pip install -e '.[dev,otel]'
+      # The langfuse extra is installed so the tracing tests run against the
+      # real SDK; with no LANGFUSE_* keys (and CI set) tracing is a no-op.
+      - run: python -m pip install -e '.[dev,otel,langfuse]'
       - name: Lint
         run: python -m ruff check .
       - name: Type check
         run: python -m mypy
-      - name: Tests
+      - name: Tests (tracing tests use a mock client and a socket guard)
         run: python -m pytest
+      - name: No Langfuse key or trace leaves CI
+        run: |
+          test -z "${LANGFUSE_SECRET_KEY:-}" && test -z "${LANGFUSE_PUBLIC_KEY:-}"
+          python -c "from mimi.observe.langfuse_export import exporter_from_env as e; import sys; sys.exit(0 if not e().enabled else 1)"
       - name: World fixture matches its seed
         run: python -m mimi.world --check
       - name: Reply-reader eval (recorded Muse Spark answers)

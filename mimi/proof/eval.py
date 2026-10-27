@@ -53,6 +53,7 @@ from mimi.models import FakeModel, from_env, has_key
 from mimi.models.base import ChatModel
 from mimi.models.cache import CachedModel
 from mimi.models.env import DEFAULT_MODELS
+from mimi.observe.turns import TracedModel, TurnBook, TurnStepTracer, observe_step
 from mimi.proof.banks import bank_named
 from mimi.proof.checks import OpenInvoice
 from mimi.proof.copy import figures_in
@@ -136,22 +137,32 @@ def _seed(ledger: InMemoryProofLedger, case: dict[str, Any]) -> None:
         )
 
 
-def run_case(case: dict[str, Any], model: ChatModel) -> dict[str, Any]:
-    """One screenshot through the desk and the flow's first step."""
+def run_case(
+    case: dict[str, Any], model: ChatModel, turns: TurnBook | None = None
+) -> dict[str, Any]:
+    """One screenshot through the desk and the flow's first step (traced into
+    ``turns`` when given: the Langfuse experiment, ``mimi.observe.experiments``)."""
     store = InMemoryJobStore()
     ledger = InMemoryProofLedger()
     _seed(ledger, case)
     received = datetime.fromisoformat(case["received_at"])
     invoices = _invoices(case)
-    reader = ScreenshotReader(model)
-    desk = ProofDesk(store, ledger, TENANT, reader)
+    traced = turns is not None and turns.enabled
+    reader = ScreenshotReader(TracedModel(model) if traced else model)
+    desk = ProofDesk(store, ledger, TENANT, reader, turns=turns)
     flow = ProofFlow(ledger, lambda shop_id, now: invoices, ListBankFeed(), DISTRIBUTOR)
+    tracer: Any = RecordingStepTracer()
+    steps: dict[str, Any] = {PROOF_HELPER: flow}
+    if traced:
+        assert turns is not None
+        tracer = TurnStepTracer(tracer, turns)
+        steps = {PROOF_HELPER: observe_step(flow)}
     sink = Sink()
     runner = JobRunner(
         store=store,
         sink=sink,
-        tracer=RecordingStepTracer(),
-        steps={PROOF_HELPER: flow},
+        tracer=tracer,
+        steps=steps,
         worker_id="eval",
         clock=lambda: received,
         intent_types=ALL_INTENTS,

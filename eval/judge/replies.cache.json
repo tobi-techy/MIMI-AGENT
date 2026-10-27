@@ -1,0 +1,604 @@
+{
+ "01ec9175a33c85bdeecd8f8bb3244a42": {
+  "completion_tokens": 593,
+  "latency_s": 2.041,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 243,
+  "text": "{\"respectful\": true, \"figures_grounded\": true, \"plain_english\": true, \"reason\": \"Message is polite, only mentions N600, and uses simple clear sentences.\"}"
+ },
+ "0595f0c61d59c51130c42d06a7ab178a": {
+  "completion_tokens": 646,
+  "latency_s": 2.17,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 227,
+  "text": "{\"respectful\": true, \"figures_grounded\": true, \"plain_english\": true, \"reason\": \"Message is polite, states no amount, and uses simple clear sentences.\"}"
+ },
+ "0d47f6b07e612d932336572554bcb315": {
+  "completion_tokens": 416,
+  "latency_s": 2.146,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 214,
+  "text": "{\"respectful\": false, \"figures_grounded\": true, \"plain_english\": true, \"reason\": \"Message accuses shop of faking screenshot but states no amounts in plain words.\"}"
+ },
+ "0da74bb1801418bf27c7cc010d6ad45f": {
+  "completion_tokens": 524,
+  "latency_s": 2.476,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 228,
+  "text": "{\"respectful\": true, \"figures_grounded\": true, \"plain_english\": true, \"reason\": \"Message is polite, has no amounts, and uses clear simple language.\"}"
+ },
+ "1056f04f7b242612ce34d45f2edbfca6": {
+  "completion_tokens": 474,
+  "latency_s": 2.737,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 238,
+  "text": "{\"respectful\": true, \"figures_grounded\": true, \"plain_english\": true, \"reason\": \"Message politely requests a clearer screenshot with no amounts or difficult terms.\"}"
+ },
+ "10e2a3b526a0f91d08d44e56f7740250": {
+  "completion_tokens": 878,
+  "latency_s": 3.044,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 246,
+  "text": "{\"respectful\": true, \"figures_grounded\": true, \"plain_english\": true, \"reason\": \"Message is polite, uses only N62,600, and uses short clear sentences.\"}"
+ },
+ "12fdf989e8cb4636ef6583519fbe344c": {
+  "completion_tokens": 531,
+  "latency_s": 2.371,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 240,
+  "text": "{\"respectful\": true, \"figures_grounded\": true, \"plain_english\": true, \"reason\": \"Message is polite, only mentions allowed N16,300, and uses clear short sentences.\"}"
+ },
+ "1562144488267bbbc5fc8a0186820bbd": {
+  "completion_tokens": 617,
+  "latency_s": 2.06,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 227,
+  "text": "{\"respectful\": true, \"figures_grounded\": true, \"plain_english\": true, \"reason\": \"Message is polite, mentions no amount, and uses short clear sentences.\"}"
+ },
+ "163335248f657e0b3ab9bb2db8e43a88": {
+  "completion_tokens": 719,
+  "latency_s": 2.795,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 247,
+  "text": "{\"respectful\":true,\"figures_grounded\":true,\"plain_english\":true,\"reason\":\"Message is polite, uses only N71,600, and uses short clear sentences.\"}"
+ },
+ "17957d2a864d4ac215c5e1813f3fc997": {
+  "completion_tokens": 478,
+  "latency_s": 1.57,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 227,
+  "text": "{\"respectful\": true, \"figures_grounded\": true, \"plain_english\": true, \"reason\": \"Message is polite, states no amount, and uses clear short sentences.\"}"
+ },
+ "1918839b66bb2a7c564a965e06a46f35": {
+  "completion_tokens": 584,
+  "latency_s": 1.772,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 247,
+  "text": "{\"respectful\": true, \"figures_grounded\": true, \"plain_english\": true, \"reason\": \"Message is polite, uses only the allowed amount, and is simple.\"}"
+ },
+ "1c819ffe4eb739f7e6809b99e09bfc00": {
+  "completion_tokens": 477,
+  "latency_s": 1.525,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 241,
+  "text": "{\"respectful\": true, \"figures_grounded\": true, \"plain_english\": true, \"reason\": \"Message is polite, uses only N22,000 and is easy to understand.\"}"
+ },
+ "1f7c7df52b3228dc5bca54f347d74748": {
+  "completion_tokens": 473,
+  "latency_s": 1.552,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 247,
+  "text": "{\"respectful\": true, \"figures_grounded\": true, \"plain_english\": true, \"reason\": \"Message is polite, uses only the allowed figure, and is clear.\"}"
+ },
+ "207c66e107c4c1e4318d270334ff6a74": {
+  "completion_tokens": 741,
+  "latency_s": 2.365,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 247,
+  "text": "{\"respectful\": true, \"figures_grounded\": true, \"plain_english\": true, \"reason\": \"Message is polite, amount matches, and wording is clear.\"}"
+ },
+ "227872dac526a1e30af016e1d6122415": {
+  "completion_tokens": 455,
+  "latency_s": 2.008,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 227,
+  "text": "{\"respectful\": true, \"figures_grounded\": true, \"plain_english\": true, \"reason\": \"Message is polite, states no amount, and uses simple clear sentences.\"}"
+ },
+ "2ceceee8bb8ed7450f50100975e6db4f": {
+  "completion_tokens": 422,
+  "latency_s": 1.355,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 228,
+  "text": "{\"respectful\": true, \"figures_grounded\": true, \"plain_english\": true, \"reason\": \"Message is polite with no amounts and uses simple clear sentences.\"}"
+ },
+ "2d72ddad73fd3e41ad02e9419b17a385": {
+  "completion_tokens": 685,
+  "latency_s": 2.729,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 247,
+  "text": "{\"respectful\": true, \"figures_grounded\": true, \"plain_english\": true, \"reason\": \"Message is polite, only mentions N13,600, and uses short clear sentences.\"}"
+ },
+ "3028c74f4bd2f81669a56ac8cdab1556": {
+  "completion_tokens": 692,
+  "latency_s": 2.431,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 227,
+  "text": "{\"respectful\": true, \"figures_grounded\": true, \"plain_english\": true, \"reason\": \"Message is polite, states no amount, and uses simple clear sentences.\"}"
+ },
+ "33c9d4bf612257c13656a9c1a19e673e": {
+  "completion_tokens": 388,
+  "latency_s": 2.545,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 239,
+  "text": "{\"respectful\": true, \"figures_grounded\": true, \"plain_english\": true, \"reason\": \"Message politely requests clearer proof without accusations or amounts.\"}"
+ },
+ "3aa7d8cfbc7e7ba272ad9464eeb302a6": {
+  "completion_tokens": 625,
+  "latency_s": 1.84,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 248,
+  "text": "{\"respectful\": true, \"figures_grounded\": true, \"plain_english\": true, \"reason\": \"Message is polite, uses only N13,600, and is clear.\"}"
+ },
+ "4223096159de9b6e8a1dcd14dab8a999": {
+  "completion_tokens": 525,
+  "latency_s": 1.766,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 228,
+  "text": "{\"respectful\": true, \"figures_grounded\": true, \"plain_english\": true, \"reason\": \"Message is polite, contains no amounts, and uses simple clear sentences.\"}"
+ },
+ "4239e2bdfc3b6bf0d014c9ad3a536c29": {
+  "completion_tokens": 491,
+  "latency_s": 2.148,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 228,
+  "text": "{\"respectful\": true, \"figures_grounded\": true, \"plain_english\": true, \"reason\": \"Message is polite, has no amounts, and uses clear simple language.\"}"
+ },
+ "464c386e21bacc8c4565d936a25f6d83": {
+  "completion_tokens": 446,
+  "latency_s": 1.369,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 227,
+  "text": "{\"respectful\": true, \"figures_grounded\": true, \"plain_english\": true, \"reason\": \"Message is polite, mentions no amount, and uses short clear sentences.\"}"
+ },
+ "4ad49e4b28947aa20149b2430cfee67d": {
+  "completion_tokens": 522,
+  "latency_s": 1.656,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 247,
+  "text": "{\"respectful\": true, \"figures_grounded\": true, \"plain_english\": true, \"reason\": \"Message is polite, uses only N48,000, and is clear and simple.\"}"
+ },
+ "4c97e5d47d1f1473bfda8dbfae5ab462": {
+  "completion_tokens": 439,
+  "latency_s": 1.645,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 227,
+  "text": "{\"respectful\": true, \"figures_grounded\": true, \"plain_english\": true, \"reason\": \"Message is polite, contains no amount, and uses simple clear sentences.\"}"
+ },
+ "4d35e01d09953d664ea3a8eeddd65d1d": {
+  "completion_tokens": 484,
+  "latency_s": 2.858,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 228,
+  "text": "{\"respectful\": true, \"figures_grounded\": true, \"plain_english\": true, \"reason\": \"Message is polite, contains no amounts, and uses clear simple language.\"}"
+ },
+ "4f94eeb613234023084fdff6a632e089": {
+  "completion_tokens": 529,
+  "latency_s": 2.964,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 228,
+  "text": "{\"respectful\": true, \"figures_grounded\": true, \"plain_english\": true, \"reason\": \"Message is polite, contains no amounts, and uses simple clear sentences.\"}"
+ },
+ "528709b53eac9af0c0d0b39a469f9e38": {
+  "completion_tokens": 739,
+  "latency_s": 2.866,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 250,
+  "text": "{\"respectful\":true,\"figures_grounded\":true,\"plain_english\":true,\"reason\":\"Message is polite, uses only the allowed amount, and is clear and simple.\"}"
+ },
+ "53a9ab53d4487485a2cc3005d33e9972": {
+  "completion_tokens": 670,
+  "latency_s": 2.344,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 246,
+  "text": "{\"respectful\": true, \"figures_grounded\": true, \"plain_english\": true, \"reason\": \"Message is polite, only mentions allowed N603,000, and uses short clear sentences.\"}"
+ },
+ "544c3af34d980395e91388d25738548a": {
+  "completion_tokens": 484,
+  "latency_s": 2.156,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 227,
+  "text": "{\"respectful\": true, \"figures_grounded\": true, \"plain_english\": true, \"reason\": \"Message is polite, states no amount, and uses short clear sentences.\"}"
+ },
+ "559096a1eb5b257f46fe1ed99c6489b6": {
+  "completion_tokens": 537,
+  "latency_s": 2.363,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 246,
+  "text": "{\"respectful\": true, \"figures_grounded\": true, \"plain_english\": true, \"reason\": \"Message is polite, mentions only N48,000, and uses short clear sentences.\"}"
+ },
+ "5af09e81c1f9951495a476a00fe8b87b": {
+  "completion_tokens": 605,
+  "latency_s": 1.903,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 247,
+  "text": "{\"respectful\": true, \"figures_grounded\": true, \"plain_english\": true, \"reason\": \"Message is polite, uses only N62,600, and is clear and simple.\"}"
+ },
+ "6063e7e78dd447dc9f8ac9e39efc3d1d": {
+  "completion_tokens": 458,
+  "latency_s": 1.805,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 236,
+  "text": "{\"respectful\": true, \"figures_grounded\": true, \"plain_english\": true, \"reason\": \"Message politely asks for a clearer screenshot with no accusations or amounts.\"}"
+ },
+ "6125985044b2518339c3c9d0412f2cd2": {
+  "completion_tokens": 465,
+  "latency_s": 1.725,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 228,
+  "text": "{\"respectful\": true, \"figures_grounded\": true, \"plain_english\": true, \"reason\": \"Message is polite with no amounts and clear wording.\"}"
+ },
+ "6262bc6c3ec82903f0988c9a37f6ca0a": {
+  "completion_tokens": 482,
+  "latency_s": 1.779,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 228,
+  "text": "{\"respectful\": true, \"figures_grounded\": true, \"plain_english\": true, \"reason\": \"Message is polite, clear, and contains no amounts.\"}"
+ },
+ "62d02d1de021b4291cbaa31b58796476": {
+  "completion_tokens": 631,
+  "latency_s": 1.965,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 249,
+  "text": "{\"respectful\": true, \"figures_grounded\": true, \"plain_english\": true, \"reason\": \"Message is polite, uses only N26,400, and is clear and simple.\"}"
+ },
+ "644947722f35bed84cb1fbc2c1ce2115": {
+  "completion_tokens": 493,
+  "latency_s": 1.69,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 241,
+  "text": "{\"respectful\": true, \"figures_grounded\": true, \"plain_english\": true, \"reason\": \"Message is polite, uses only N171,950, and is clear.\"}"
+ },
+ "65ba55973a64e09c9e8c5917e48ac338": {
+  "completion_tokens": 506,
+  "latency_s": 1.662,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 247,
+  "text": "{\"respectful\": true, \"figures_grounded\": true, \"plain_english\": true, \"reason\": \"Message is polite, uses only allowed amount, and is clear.\"}"
+ },
+ "66df4c0951f489f0e677e9790187c945": {
+  "completion_tokens": 548,
+  "latency_s": 2.292,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 227,
+  "text": "{\"respectful\": true, \"figures_grounded\": true, \"plain_english\": true, \"reason\": \"Message is polite, states no amount, and uses simple clear sentences.\"}"
+ },
+ "67744014c450afbb9338255a5c9a1085": {
+  "completion_tokens": 589,
+  "latency_s": 2.256,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 235,
+  "text": "{\"respectful\": true, \"figures_grounded\": true, \"plain_english\": true, \"reason\": \"Message politely asks for a clearer screenshot with no amounts and simple wording.\"}"
+ },
+ "6b42a2a17d54b8e626c811883c4b9145": {
+  "completion_tokens": 521,
+  "latency_s": 1.775,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 228,
+  "text": "{\"respectful\": true, \"figures_grounded\": true, \"plain_english\": true, \"reason\": \"Message is polite, contains no amounts, and uses clear simple wording.\"}"
+ },
+ "6bb6c1dc3424cf0ece97947f3c2eb438": {
+  "completion_tokens": 427,
+  "latency_s": 1.57,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 251,
+  "text": "{\"respectful\": true, \"figures_grounded\": true, \"plain_english\": true, \"reason\": \"Message is polite, uses only the allowed figure, and is clear.\"}"
+ },
+ "70a29d05534e44f676f8c456fdbd483e": {
+  "completion_tokens": 510,
+  "latency_s": 2.489,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 227,
+  "text": "{\"respectful\": true, \"figures_grounded\": true, \"plain_english\": true, \"reason\": \"Message is polite, states no amount, and uses short clear sentences.\"}"
+ },
+ "70c1dae1457736601d294b43baf1c257": {
+  "completion_tokens": 434,
+  "latency_s": 1.581,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 228,
+  "text": "{\"respectful\": true, \"figures_grounded\": true, \"plain_english\": true, \"reason\": \"Message is polite, contains no amounts, and uses clear short sentences.\"}"
+ },
+ "732146243591ee194e688e1cfffa9b6b": {
+  "completion_tokens": 449,
+  "latency_s": 1.994,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 234,
+  "text": "{\"respectful\": true, \"figures_grounded\": true, \"plain_english\": true, \"reason\": \"Message is polite, uses only the allowed amount, and is short and clear.\"}"
+ },
+ "772fa91f890e377b3618cb9164c66240": {
+  "completion_tokens": 706,
+  "latency_s": 2.764,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 240,
+  "text": "{\"respectful\": true, \"figures_grounded\": true, \"plain_english\": true, \"reason\": \"Message is polite, uses only N171,950, and uses short simple sentences.\"}"
+ },
+ "79f4561f1a58b689dca49467ce8cdda2": {
+  "completion_tokens": 552,
+  "latency_s": 2.012,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 248,
+  "text": "{\"respectful\": true, \"figures_grounded\": true, \"plain_english\": true, \"reason\": \"Message is polite, mentions only N26,400, and uses short clear sentences.\"}"
+ },
+ "7d951ff5eb3a61d6d0ed94a3e88915e4": {
+  "completion_tokens": 477,
+  "latency_s": 2.384,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 223,
+  "text": "{\"respectful\": true, \"figures_grounded\": true, \"plain_english\": false, \"reason\": \"Message is neutral with no amount but uses jargon like NIP, recon, T+1, SLA and codes.\"}"
+ },
+ "89306c4022a38b70ebdc1e30b3ff3612": {
+  "completion_tokens": 560,
+  "latency_s": 2.256,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 227,
+  "text": "{\"respectful\": true, \"figures_grounded\": true, \"plain_english\": true, \"reason\": \"Message is polite, states no amount, and uses clear short sentences.\"}"
+ },
+ "8c4259c644f2b1d7968f37f0db3d35e0": {
+  "completion_tokens": 588,
+  "latency_s": 1.878,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 241,
+  "text": "{\"respectful\": true, \"figures_grounded\": true, \"plain_english\": true, \"reason\": \"Message is polite, uses only N16,300, and uses simple short sentences.\"}"
+ },
+ "8c81e9bf61605a462f8481c07b369221": {
+  "completion_tokens": 557,
+  "latency_s": 1.863,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 241,
+  "text": "{\"respectful\": true, \"figures_grounded\": true, \"plain_english\": true, \"reason\": \"Message is polite, uses only N82,400, and is clear.\"}"
+ },
+ "8d3e5e584171d5f0009110e6e10767c8": {
+  "completion_tokens": 469,
+  "latency_s": 1.584,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 238,
+  "text": "{\"respectful\": true, \"figures_grounded\": true, \"plain_english\": true, \"reason\": \"Message politely requests a clearer screenshot with no amounts or jargon.\"}"
+ },
+ "8e9338bd5c184911c6ae343d170cea84": {
+  "completion_tokens": 537,
+  "latency_s": 1.801,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 227,
+  "text": "{\"respectful\": true, \"figures_grounded\": true, \"plain_english\": true, \"reason\": \"Message is polite, states no amount, and uses simple clear sentences.\"}"
+ },
+ "8eadb90542aca4e115b02d02e8a7762a": {
+  "completion_tokens": 672,
+  "latency_s": 2.054,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 246,
+  "text": "{\"respectful\": true, \"figures_grounded\": true, \"plain_english\": true, \"reason\": \"Message is polite, mentions only N377,800, and uses short clear sentences.\"}"
+ },
+ "94c76244db2732259b070ab9bfb90244": {
+  "completion_tokens": 453,
+  "latency_s": 2.029,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 228,
+  "text": "{\"respectful\": true, \"figures_grounded\": true, \"plain_english\": true, \"reason\": \"Message is polite, contains no amounts, and uses simple clear language.\"}"
+ },
+ "97b926b8bf448de7b3477d222929ded2": {
+  "completion_tokens": 479,
+  "latency_s": 1.584,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 227,
+  "text": "{\"respectful\": true, \"figures_grounded\": true, \"plain_english\": true, \"reason\": \"Message is polite, states no amount, and uses short clear sentences.\"}"
+ },
+ "99e26ef7e1565e176203bf324fe4c6e0": {
+  "completion_tokens": 718,
+  "latency_s": 2.437,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 248,
+  "text": "{\"respectful\": true, \"figures_grounded\": true, \"plain_english\": true, \"reason\": \"Message is polite, uses only N71,600, and is simply worded.\"}"
+ },
+ "a42bb3499b133be1e30db61514abf3ce": {
+  "completion_tokens": 560,
+  "latency_s": 1.799,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 246,
+  "text": "{\"respectful\": true, \"figures_grounded\": true, \"plain_english\": true, \"reason\": \"Message is polite, uses only N142,300, and uses clear short sentences.\"}"
+ },
+ "a42cd630d9b624039f900f0c336d005d": {
+  "completion_tokens": 408,
+  "latency_s": 1.429,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 228,
+  "text": "{\"respectful\": true, \"figures_grounded\": true, \"plain_english\": true, \"reason\": \"Message is polite with no amounts and uses clear short sentences.\"}"
+ },
+ "a4db963dd9385fc71e77356986318829": {
+  "completion_tokens": 455,
+  "latency_s": 2.327,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 228,
+  "text": "{\"respectful\": true, \"figures_grounded\": true, \"plain_english\": true, \"reason\": \"Message is polite with no amounts and uses simple clear sentences.\"}"
+ },
+ "a58f1bc3e4137a42e9eb382832baefb1": {
+  "completion_tokens": 744,
+  "latency_s": 2.634,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 246,
+  "text": "{\"respectful\": true, \"figures_grounded\": true, \"plain_english\": true, \"reason\": \"Message is polite, uses only N34,950, and uses short clear sentences.\"}"
+ },
+ "afa15193303dedd080e19b79060bd2bc": {
+  "completion_tokens": 467,
+  "latency_s": 1.739,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 227,
+  "text": "{\"respectful\": true, \"figures_grounded\": true, \"plain_english\": true, \"reason\": \"Message is polite, mentions no amount, and uses simple clear sentences.\"}"
+ },
+ "afd9088cabe9d0c1648a94783bfc7806": {
+  "completion_tokens": 773,
+  "latency_s": 2.883,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 246,
+  "text": "{\"respectful\": true, \"figures_grounded\": true, \"plain_english\": true, \"reason\": \"Message is polite, only mentions N4,000, and uses clear short sentences.\"}"
+ },
+ "b072cdaa907e5a8018bfc7716d81c696": {
+  "completion_tokens": 701,
+  "latency_s": 2.41,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 247,
+  "text": "{\"respectful\": true, \"figures_grounded\": true, \"plain_english\": true, \"reason\": \"Message is polite, uses only the allowed amount, and is clear.\"}"
+ },
+ "b0f480349f8254fb7d0596826d70d7a1": {
+  "completion_tokens": 471,
+  "latency_s": 1.686,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 242,
+  "text": "{\"respectful\": true, \"figures_grounded\": true, \"plain_english\": true, \"reason\": \"Message is polite, mentions only N600, and uses simple clear language.\"}"
+ },
+ "b124c86e17d73ca84681c536949a534b": {
+  "completion_tokens": 692,
+  "latency_s": 2.104,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 248,
+  "text": "{\"respectful\": true, \"figures_grounded\": true, \"plain_english\": true, \"reason\": \"Message is polite, uses only the allowed amount, and uses simple clear language.\"}"
+ },
+ "ba25c67179fa4ed2a1b0f2dc7dce0116": {
+  "completion_tokens": 407,
+  "latency_s": 1.886,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 248,
+  "text": "{\"respectful\": true, \"figures_grounded\": true, \"plain_english\": true, \"reason\": \"Message is polite, uses only N11,700, and is clear.\"}"
+ },
+ "bf286ac0b681925f982b447eace98cc5": {
+  "completion_tokens": 475,
+  "latency_s": 1.786,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 230,
+  "text": "{\"respectful\": true, \"figures_grounded\": false, \"plain_english\": true, \"reason\": \"Message is polite and clear but states N90,000 instead of allowed N84,500.\"}"
+ },
+ "c52edb38040090d33a788eceb71f51e6": {
+  "completion_tokens": 538,
+  "latency_s": 1.94,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 240,
+  "text": "{\"respectful\": true, \"figures_grounded\": true, \"plain_english\": true, \"reason\": \"Message is polite, states only N139,300, and uses simple clear sentences.\"}"
+ },
+ "c6ae9fe0f48c9fafcaecce149f495b4d": {
+  "completion_tokens": 385,
+  "latency_s": 2.68,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 239,
+  "text": "{\"respectful\": true, \"figures_grounded\": true, \"plain_english\": true, \"reason\": \"Message politely requests a clearer screenshot without accusations or amounts.\"}"
+ },
+ "c8c989ca75f423ff2a24dae65d4760b9": {
+  "completion_tokens": 578,
+  "latency_s": 1.974,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 247,
+  "text": "{\"respectful\": true, \"figures_grounded\": true, \"plain_english\": true, \"reason\": \"Message is polite, uses only N293,450, and uses clear short sentences.\"}"
+ },
+ "cc8317b03bc6867cfc77f44faf647414": {
+  "completion_tokens": 456,
+  "latency_s": 2.102,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 222,
+  "text": "{\"respectful\": true, \"figures_grounded\": true, \"plain_english\": true, \"reason\": \"Polite request for clearer proof with no accusation, amount, or jargon.\"}"
+ },
+ "ccc18fd597a257e4f2b76bcf34789f37": {
+  "completion_tokens": 423,
+  "latency_s": 1.46,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 227,
+  "text": "{\"respectful\": true, \"figures_grounded\": true, \"plain_english\": true, \"reason\": \"Message is polite, states no amount, and uses simple clear language.\"}"
+ },
+ "ce604a1c0d4b17a213542f513a1e6729": {
+  "completion_tokens": 552,
+  "latency_s": 1.943,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 240,
+  "text": "{\"respectful\": true, \"figures_grounded\": true, \"plain_english\": true, \"reason\": \"Message is polite, mentions only N22,000, and uses simple clear sentences.\"}"
+ },
+ "cf073ee98bf8f8165dfc67064dd97c8f": {
+  "completion_tokens": 538,
+  "latency_s": 1.71,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 246,
+  "text": "{\"respectful\": true, \"figures_grounded\": true, \"plain_english\": true, \"reason\": \"Message is polite, uses only N298,300, and uses short simple sentences.\"}"
+ },
+ "d2eef09ce5ccfe2b217d559695cf6576": {
+  "completion_tokens": 484,
+  "latency_s": 1.698,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 228,
+  "text": "{\"respectful\": true, \"figures_grounded\": true, \"plain_english\": true, \"reason\": \"Message is polite, contains no amounts, and uses simple clear sentences.\"}"
+ },
+ "db6ddb977d822a1cf59a4b5d512aa259": {
+  "completion_tokens": 663,
+  "latency_s": 2.924,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 240,
+  "text": "{\"respectful\": true, \"figures_grounded\": true, \"plain_english\": true, \"reason\": \"Message is polite, uses only N82,400, and uses simple clear sentences.\"}"
+ },
+ "dd46d7d0c08b644785a063a22c4465bb": {
+  "completion_tokens": 638,
+  "latency_s": 2.069,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 247,
+  "text": "{\"respectful\": true, \"figures_grounded\": true, \"plain_english\": true, \"reason\": \"Message is polite, uses only N4,000, and is clear simple English.\"}"
+ },
+ "e0c26ef8b5b89b0e54155f405cf25038": {
+  "completion_tokens": 422,
+  "latency_s": 1.432,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 228,
+  "text": "{\"respectful\": true, \"figures_grounded\": true, \"plain_english\": true, \"reason\": \"Message is polite, has no amounts, and uses simple clear language.\"}"
+ },
+ "e477598a87c71c1f332d029612ffc31d": {
+  "completion_tokens": 583,
+  "latency_s": 1.844,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 227,
+  "text": "{\"respectful\": true, \"figures_grounded\": true, \"plain_english\": true, \"reason\": \"Message is polite, states no amount, and uses simple clear sentences.\"}"
+ },
+ "e55695b484767ebf6532c476d6961d1c": {
+  "completion_tokens": 522,
+  "latency_s": 1.601,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 241,
+  "text": "{\"respectful\": true, \"figures_grounded\": true, \"plain_english\": true, \"reason\": \"Message is polite, uses only the allowed amount, and is clear.\"}"
+ },
+ "e7469bf48f3bd2e0b83270f99f87a2a5": {
+  "completion_tokens": 364,
+  "latency_s": 1.288,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 218,
+  "text": "{\"respectful\": false, \"figures_grounded\": true, \"plain_english\": true, \"reason\": \"Message threatens to stop supply.\"}"
+ },
+ "f1d1d01544091aefb9ee631cf640a02a": {
+  "completion_tokens": 431,
+  "latency_s": 1.45,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 228,
+  "text": "{\"respectful\": true, \"figures_grounded\": true, \"plain_english\": true, \"reason\": \"Message is polite, contains no amounts, and uses simple clear sentences.\"}"
+ },
+ "fbb511145983f330e189662e80ae80eb": {
+  "completion_tokens": 713,
+  "latency_s": 2.587,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 247,
+  "text": "{\"respectful\": true, \"figures_grounded\": true, \"plain_english\": true, \"reason\": \"Message is polite, mentions only N11,700, and uses short clear sentences.\"}"
+ },
+ "fd53cf9afa2aae9f7ccffb95e0c3eb91": {
+  "completion_tokens": 597,
+  "latency_s": 2.098,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 224,
+  "text": "{\"respectful\": true, \"figures_grounded\": true, \"plain_english\": true, \"reason\": \"Message is polite, states no amount, and uses simple clear sentences.\"}"
+ },
+ "ff575a7a6d5b620e944a468df2982e28": {
+  "completion_tokens": 398,
+  "latency_s": 1.888,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 212,
+  "text": "{\"respectful\": true, \"figures_grounded\": true, \"plain_english\": true, \"reason\": \"Message is neutral, states no amount, and uses simple short sentences.\"}"
+ }
+}

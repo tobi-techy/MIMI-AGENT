@@ -61,3 +61,14 @@ def test_proof_does_not_import_the_sim_and_only_render_draws() -> None:
             assert not name.startswith("mimi.sim"), (path, name)
         if path.name != "render.py":
             assert not any(n.split(".")[0] == "PIL" for n in names), path
+
+
+def test_observe_sits_beside_the_runtime() -> None:
+    """Tracing may read the runtime and the model port, never the flows."""
+    for path in (ROOT / "observe").rglob("*.py"):
+        if path.name == "experiments.py":  # the eval driver, like voice/eval.py
+            continue
+        for name in _imports(path):
+            if name.startswith("mimi."):
+                assert name.startswith(("mimi.observe", "mimi.runtime", "mimi.models",
+                                        "mimi.types")), (path, name)

@@ -26,6 +26,10 @@
                        and Mimi's short replies also go as a voice note
                        (Spitch speech with SPITCH_API_KEY, else the fake)
 
+Tracing: with ``LANGFUSE_PUBLIC_KEY`` and ``LANGFUSE_SECRET_KEY`` set (and
+not in CI) every shop turn is sent to Langfuse (``mimi.observe.langfuse_export``;
+needs the ``langfuse`` extra). Without them nothing leaves the machine.
+
 Models come from the environment (``META_API_KEY``, ``MIMI_MODEL``,
 ``SIM_MODEL``); with no key both sides use the deterministic FakeModel. The
 transcriber comes from ``mimi.voice.env`` (``SPITCH_API_KEY``,
@@ -42,6 +46,8 @@ from typing import Any
 
 from mimi.models import from_env
 from mimi.models.cache import CachedModel
+from mimi.observe.langfuse_export import exporter_from_env
+from mimi.observe.turns import TurnBook, TurnExporter
 from mimi.receipts.verdict import fake_verdict
 from mimi.sim.engine import Simulator
 from mimi.sim.persona import fake_shop
@@ -49,7 +55,7 @@ from mimi.voice.env import speaker_from_env, transcriber_from_env
 from mimi.world import load_world
 
 
-def main(argv: list[str] | None = None) -> int:
+def main(argv: list[str] | None = None, *, exporter: TurnExporter | None = None) -> int:
     ap = argparse.ArgumentParser(prog="python -m mimi.sim")
     ap.add_argument("--shops", type=int, default=None)
     ap.add_argument("--hours", type=float, default=26.0)
@@ -104,6 +110,8 @@ def main(argv: list[str] | None = None) -> int:
     speaker = None
     if args.voice_replies:
         speaker = speaker_from_env(cache=(args.cache + ".tts") if args.cache else None)
+    exporter = exporter or exporter_from_env()
+    turns = TurnBook(exporter, synthetic=True)
     started = time.monotonic()
     runner = Simulator(
         world,
@@ -120,9 +128,15 @@ def main(argv: list[str] | None = None) -> int:
         speaker=speaker,
         screenshot_share=args.screenshots,
         fake_share=args.fakes,
+        turns=turns,
         **extra,
     )
-    report = runner.run()
+    try:
+        report = runner.run()
+    finally:
+        exporter.close(timeout_s=30.0)
+    if turns.enabled:
+        report["traces_exported"] = turns.exported
     report["mimi_model"] = mimi.name
     report["sim_model"] = sim.name
     if transcriber is not None:

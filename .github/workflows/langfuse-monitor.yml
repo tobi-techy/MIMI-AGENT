@@ -1,0 +1,30 @@
+# Optional: scheduled Langfuse monitor checks (scripts/langfuse_monitor.py).
+# OFF by default: the job runs only when the repository variable
+# LANGFUSE_MONITOR is "true" and the LANGFUSE_* secrets exist. It fails (and
+# GitHub notifies) when a critical invariant breaks or error rate, p95
+# latency or daily cost go over their limits.
+name: Langfuse monitor (optional)
+
+on:
+  schedule:
+    - cron: "17 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  monitor:
+    if: ${{ vars.LANGFUSE_MONITOR == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python -m pip install httpx
+      - run: python scripts/langfuse_monitor.py --hours 24
+        env:
+          LANGFUSE_PUBLIC_KEY: ${{ secrets.LANGFUSE_PUBLIC_KEY }}
+          LANGFUSE_SECRET_KEY: ${{ secrets.LANGFUSE_SECRET_KEY }}
+          LANGFUSE_HOST: https://cloud.langfuse.com

@@ -242,7 +242,7 @@ class ScreenshotReader:
         image = ImageInput(data, mime)
         sha = image.sha256
         messages = build_messages(image)
-        meta = {"script": "proof_read", "image_sha256": sha}
+        meta = {"script": "proof_read", "image_sha256": sha, "prompt_version": PROMPT_VERSION}
         try:
             res = self.model.complete(
                 messages, max_tokens=self.max_tokens, meta=meta, response_format=RESPONSE_FORMAT

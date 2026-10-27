@@ -28,6 +28,9 @@ dependencies = [
 [project.optional-dependencies]
 # OtelStepTracer only; the sim and the tests use RecordingStepTracer.
 otel = ["opentelemetry-api>=1.23.0"]
+# Langfuse tracing, datasets and experiments (mimi.observe); off unless the
+# LANGFUSE_* keys are set. Pinned: the exporter is written against this SDK.
+langfuse = ["langfuse==5.0.4"]
 # Only when the sim or alembic points at Postgres.
 postgres = ["psycopg2-binary>=2.9.9"]
 dev = [
