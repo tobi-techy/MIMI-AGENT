@@ -1,6 +1,6 @@
 PY ?= python
 
-.PHONY: install test eval eval-live eval-fake voice-eval voice-eval-live voice-fixtures sim sim-live sim-voice sim-voice-v2 world-check lint typecheck secrets provenance migrate check
+.PHONY: install test eval eval-live eval-fake voice-eval voice-eval-live voice-fixtures proof-eval proof-eval-live proof-fixtures sim sim-live sim-voice sim-voice-v2 sim-screens world-check lint typecheck secrets provenance migrate check
 
 install:            ## editable install with dev tools
 	$(PY) -m pip install -e '.[dev,otel]'
@@ -25,6 +25,15 @@ voice-eval-live:    ## call Spitch, Muse Voice Transcribe and Muse Spark (needs 
 
 voice-fixtures:     ## make missing synthetic clips with Spitch TTS (needs SPITCH_API_KEY)
 	$(PY) scripts/make_voice_fixtures.py
+
+proof-eval:         ## payment-screenshot eval, replaying the recorded Muse Spark answers
+	META_API_KEY= $(PY) -m mimi.proof.eval
+
+proof-eval-live:    ## call Muse Spark on the 40 screenshots (needs META_API_KEY); resumes from the cache
+	$(PY) -m mimi.proof.eval --live
+
+proof-fixtures:     ## redraw the 40 synthetic screenshots and their labels (Pillow)
+	$(PY) scripts/make_proof_fixtures.py
 
 sim:                ## offline one-day sim, 3 shops, with the transcript
 	META_API_KEY= $(PY) -m mimi.sim --shops 3 --transcript
@@ -53,7 +62,10 @@ provenance:         ## every commit was made in the hackathon window
 migrate:            ## create Mimi's tables; set MIMI_DB_URL first
 	alembic upgrade head
 
-check: lint typecheck test eval voice-eval world-check secrets provenance
+check: lint typecheck test eval voice-eval proof-eval world-check secrets provenance
 
 sim-voice-v2:       ## offline sim: voice notes, payment promises, voice replies
 	META_API_KEY= SPITCH_API_KEY= $(PY) -m mimi.sim --shops 3 --transcript --voice 1 --promises 1 --voice-replies
+
+sim-screens:        ## offline sim: shops pay by screenshot, some fake, one resend
+	META_API_KEY= $(PY) -m mimi.sim --shop-ids shop-019,shop-037,shop-025 --transcript --screenshots 1 --fakes 0.4

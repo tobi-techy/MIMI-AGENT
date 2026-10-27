@@ -39,6 +39,20 @@ from time import sleep
 from typing import Any
 
 from mimi.models.base import ChatModel
+from mimi.models.fake import FakeModel
+from mimi.proof import (
+    ALL_INTENTS,
+    PROOF_HELPER,
+    ImageWebhook,
+    InMemoryProofLedger,
+    ProofDesk,
+    ProofFlow,
+    ScreenshotReader,
+    fake_reader,
+)
+from mimi.proof.flow import world_book
+from mimi.proof.ledger import ProofLedger
+from mimi.proof.witness import ListBankFeed
 from mimi.receipts import (
     HELPER,
     RECEIPT_INTENTS,
@@ -54,6 +68,7 @@ from mimi.runtime.runner import JobRunner
 from mimi.runtime.store import InMemoryJobStore, JobStore
 from mimi.runtime.tracing import RecordingStepTracer
 from mimi.sim.persona import ShopPersona, _rng, voice_for
+from mimi.sim.screens import SimScreenshot, plan_screenshot
 from mimi.voice.base import Transcriber, VoiceContext
 from mimi.voice.fixtures import clip_bytes, load_clips
 from mimi.voice.prefs import InMemoryVoicePrefs, VoicePrefs
@@ -127,6 +142,9 @@ class SimGo:
     consents: dict[str, dict[str, Any]] = field(default_factory=dict)
     flags: list[dict[str, Any]] = field(default_factory=list)
     promises: dict[str, dict[str, Any]] = field(default_factory=dict)
+    proofs: dict[str, dict[str, Any]] = field(default_factory=dict)
+    approvals: list[dict[str, Any]] = field(default_factory=list)
+    witnessed: dict[str, dict[str, Any]] = field(default_factory=dict)
 
     def submit(
         self, tenant_id: str, idempotency_key: str, kind: str, payload: dict[str, Any]
@@ -143,6 +161,12 @@ class SimGo:
             self.flags.append(payload)
         elif kind == "record_payment_promise":
             self.promises[payload["delivery_id"]] = payload
+        elif kind == "record_payment_proof":
+            self.proofs[payload["proof_id"]] = payload
+        elif kind == "proof_for_approval":
+            self.approvals.append(payload)
+        elif kind == "record_bank_witness":
+            self.witnessed[payload["proof_id"]] = payload
         return idempotency_key
 
 
@@ -173,6 +197,10 @@ class Simulator:
         voice_replies: bool = False,
         speaker: Speaker | None = None,
         voice_prefs: VoicePrefs | None = None,
+        screenshot_share: float = 0.0,
+        fake_share: float = 0.0,
+        proof_model: ChatModel | None = None,
+        proof_ledger: ProofLedger | None = None,
     ) -> None:
         self.world = world
         self.deliveries: list[Delivery] = [
@@ -205,15 +233,40 @@ class Simulator:
         self.judge = ReceiptJudge(mimi_model)
         self.verdicts: list[Judged] = []
         self.flow = ReceiptFlow(world, self.inbox, self._judge, voice_prefs=self.voice_prefs)
+        # Payment screenshots (mimi.proof): reader, ledger, bank feed stand-in.
+        self.screenshot_share = screenshot_share
+        self.fake_share = fake_share
+        self.screen_truth: dict[str, dict[str, Any]] = {}
+        self.screens: list[SimScreenshot] = []
+        self.logged: set[str] = set()
+        self.bank = ListBankFeed()
+        self.ledger: ProofLedger = proof_ledger or InMemoryProofLedger()
+        if proof_model is None:
+            proof_model = (
+                FakeModel(fake_reader(self.screen_truth), name="fake:proof")
+                if mimi_model.name.startswith("fake")
+                else mimi_model
+            )
+        self.proof_model = proof_model
+        self.proof_desk = ProofDesk(
+            self.store, self.ledger, world.tenant_id, ScreenshotReader(proof_model)
+        )
+        self.proof_flow = ProofFlow(
+            self.ledger,
+            world_book(world, lambda: set(self.logged)),
+            self.bank,
+            world.distributor,
+        )
         self.tracer = RecordingStepTracer()
+        steps: dict[str, Any] = {HELPER: self.flow, PROOF_HELPER: self.proof_flow}
         self.runner = JobRunner(
             store=self.store,
             sink=self.go,
             tracer=self.tracer,
-            steps={HELPER: self.flow},
+            steps=steps,
             worker_id="sim-worker",
             clock=self.clock.now,
-            intent_types=RECEIPT_INTENTS,
+            intent_types=ALL_INTENTS if screenshot_share > 0 else RECEIPT_INTENTS,
         )
         self.personas = {
             d.shop_id: ShopPersona(world, world.shop(d.shop_id), sim_model, seed)
@@ -278,9 +331,11 @@ class Simulator:
         for msg in self.go.to_shops[self._handed :]:
             self._handed += 1
             shop_id = msg["scope"]["shop_id"]
-            delivery = self.world.delivery(msg["delivery_id"])
             now = self.clock.now()
             self.transcript.add(now, f"Mimi -> {shop_id}", msg["text"].replace("\n", " | "))
+            if msg["purpose"].startswith("proof_"):
+                continue  # the shop needs nothing more; no persona turn
+            delivery = self.world.delivery(msg["delivery_id"])
             if msg.get("voice_script"):
                 audio, why = speak_reply(msg["voice_script"], msg["voice_language"], self.speaker)
                 if audio is not None:
@@ -310,9 +365,24 @@ class Simulator:
         if self.voice_replies:
             for d in self.deliveries:
                 self._push(self.start, "voice_on", d.shop_id)
+        used_refs: list[str] = []
+        payers = 0
         for d in self.deliveries:
             when = datetime.combine(self.start.date(), time(d.minute // 60, d.minute % 60), WAT)
             self._push(when, "log", d)
+            shop = self.world.shop(d.shop_id)
+            seed = self.personas[d.shop_id].seed
+            if (
+                self.screenshot_share > 0
+                and shop.bank
+                and _rng("pays-by-screenshot", d.shop_id, seed).random() < self.screenshot_share
+            ):
+                fake = _rng("fake-screenshot", d.shop_id, seed).random() < self.fake_share
+                for shot in plan_screenshot(
+                    shop, d, when, seed=seed, fake=fake, n=payers, used_refs=used_refs
+                ):
+                    self._push(shot.at, "screenshot", shot)
+                payers += 1
         tick = self.start
         while tick <= self.end:
             self._push(tick, "tick", None)
@@ -329,7 +399,10 @@ class Simulator:
                     ShopWebhook(f"wamid.voice-on-{payload}", payload, shop.phone, "VOICE ON", when)
                 )
             elif kind == "log":
+                self.logged.add(payload.delivery_id)
                 self.desk.open_receipt(payload.delivery_id, payload.shop_id)
+            elif kind == "screenshot":
+                self._screenshot(when, payload)
             elif kind == "reply":
                 shop_id, mid, body = payload
                 shop = self.world.shop(shop_id)
@@ -365,6 +438,77 @@ class Simulator:
                 self._push(when + self.flow.burst_settle + timedelta(seconds=1), "tick", None)
             self._drain()
         return self.report()
+
+    def _screenshot(self, when: datetime, shot: SimScreenshot) -> None:
+        shop = self.world.shop(shot.shop_id)
+        from hashlib import sha256
+
+        self.screen_truth[sha256(shot.image).hexdigest()] = shot.truth
+        self.screens.append(shot)
+        self.webhooks += 1
+        label = shot.truth.get("bank_name") or "image"
+        what = "the same screenshot again" if shot.resend else f"synthetic {label} screenshot"
+        tag = f", sim truth: fake {shot.fake_kind}" if shot.fake_kind else ""
+        self.transcript.add(when, shop.name, f"[payment {what}, {len(shot.image)} bytes{tag}]")
+        if shot.credit is not None:
+            self.bank.add(shot.credit)
+        mid = f"wamid.shot-{shot.shop_id}-{len(self.screens)}"
+        self.proof_desk.receive(ImageWebhook(mid, shot.shop_id, shop.phone, when, shot.image))
+        r = self.proof_desk.reads[-1]
+        rd = r.reading
+        self.transcript.add(
+            when,
+            "Mimi (reads screenshot)",
+            f"{rd.bank_name} {rd.amount_as_printed} to {rd.recipient_name} "
+            f"{rd.recipient_account_as_printed or ''} at {rd.date_time_as_printed} "
+            f"ref {rd.reference} via={r.via}",
+        )
+        self._drain_proofs_note(mid)
+
+    def _drain_proofs_note(self, mid: str) -> None:
+        self._drain()
+        for pid, a in self.proof_flow.assessments:
+            if pid == mid:
+                failed = ",".join(c.name for c in a.failed) or "none"
+                self.transcript.add(
+                    self.clock.now(),
+                    "Mimi (checks)",
+                    f"{a.verdict} failed={failed} match={a.match.kind}"
+                    + (f" {','.join(a.match.delivery_ids)}" if a.match.delivery_ids else "")
+                    + (f" duplicate_of={a.duplicate_of}" if a.duplicate_of else ""),
+                )
+
+    def proof_report(self) -> dict[str, Any]:
+        verdicts: dict[str, int] = {}
+        for _, a in self.proof_flow.assessments:
+            key = "duplicate" if a.duplicate_of else a.verdict
+            verdicts[key] = verdicts.get(key, 0) + 1
+        fake_ids = set()
+        for i, s in enumerate(self.screens, start=1):
+            if s.fake_kind:
+                fake_ids.add(f"wamid.shot-{s.shop_id}-{i}")
+        likely_fakes = [p for p in self.go.proofs if p in fake_ids]
+        return {
+            "screenshots_sent": len(self.screens),
+            "screenshot_fakes_sent": sum(1 for s in self.screens if s.fake_kind),
+            "screenshot_fake_kinds": sorted(s.fake_kind for s in self.screens if s.fake_kind),
+            "screenshot_resends": sum(1 for s in self.screens if s.resend),
+            "proof_verdicts": verdicts,
+            "proofs_likely_recorded": len(self.go.proofs),
+            "proofs_to_approvals": len(self.go.approvals),
+            "proof_approval_rules": sorted(
+                {r for a in self.go.approvals for r in a.get("failed_rules", [])}
+            ),
+            "proofs_verified_by_bank": len(self.go.witnessed),
+            "verified_without_bank_credit": sum(
+                1 for w in self.go.witnessed.values() if not w.get("credit_id")
+            ),
+            "fakes_marked_likely": len(likely_fakes),
+            "proof_asks_sent": sum(1 for m in self.go.to_shops if m["purpose"] == "proof_ask"),
+            "proof_prompt_tokens": sum(r.prompt_tokens for r in self.proof_desk.reads),
+            "proof_completion_tokens": sum(r.completion_tokens for r in self.proof_desk.reads),
+            "proof_reader": self.proof_model.name,
+        }
 
     def report(self) -> dict[str, Any]:
         results: dict[str, int] = {}
@@ -462,4 +606,5 @@ class Simulator:
             "sim_prompt_tokens": sum(p.prompt_tokens for p in self.personas.values()),
             "sim_completion_tokens": sum(p.completion_tokens for p in self.personas.values()),
             "sim_clock_end": self.clock.now().isoformat(),
+            **(self.proof_report() if self.screenshot_share > 0 else {}),
         }
