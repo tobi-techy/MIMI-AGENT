@@ -223,6 +223,14 @@ def test_guards_quote_confidence_and_agreement() -> None:
     assert (b, exact) == ("0-2", 2)
 
 
+def test_a_count_or_range_in_an_unknown_unit_is_not_accepted() -> None:
+    assert decide(_reading(unit_as_stated="unknown", evidence_quote="na 4"), NOODLES, ["na 4 crates"])[0] is None
+    assert decide(_reading(answer_kind="range", range_low=3, range_high=4, unit_as_stated="unknown",
+                           evidence_quote="3 or 4"), NOODLES, ["3 or 4 crates"])[0] is None
+    assert decide(_reading(answer_kind="range", range_low=3, range_high=4,
+                           evidence_quote="3 or 4"), NOODLES, ["3 or 4"])[0] == "3-5"
+
+
 def test_items_names_and_packs() -> None:
     assert display_name(NOODLES) == "Sunrise Instant Noodles 70g"
     assert pack_size(NOODLES) == 40 and pack_size("Palmside Vegetable Oil 5L") is None
@@ -393,6 +401,57 @@ def test_burst_is_read_once_it_settles() -> None:
         pass
     assert r["flow"].answers[-1][1].bucket == "3-5"
     assert r["desk"].receive("m2", "shop-007", "na 4", now) in ("duplicate", "unrouted")
+
+
+def test_a_reply_that_lands_while_reading_is_read_next() -> None:
+    r = _rig()
+    r["desk"].morning_check(r["clock"]["now"])
+    r["runner"].run_once()
+    reader = r["flow"].reader
+
+    def slow_reader(**kw: Any) -> Any:
+        # The shop sends its count while the first (unclear) message is being read.
+        if not r["flow"].answers:
+            r["desk"].receive("m2", "shop-007", "3-5", r["clock"]["now"])
+        return reader(**kw)
+
+    r["flow"].reader = slow_reader
+    _say(r, "small small", 1)
+    r["clock"]["now"] += timedelta(minutes=3)
+    while r["runner"].run_once() is not None:
+        pass
+    assert "record_stock_count" in _kinds(r)
+
+
+def test_a_blocked_job_frees_its_shop_and_ends_quietly_if_requeued() -> None:
+    from mimi.runtime.states import JobState
+
+    r = _rig()
+    [job_id] = r["desk"].morning_check(r["clock"]["now"])
+    r["runner"].run_once()
+
+    def broken(**kw: Any) -> Any:
+        raise RuntimeError("reader down")
+
+    r["flow"].reader = broken
+    for n in range(3):
+        _say(r, f"try {n}", n)
+        r["store"].wake(job_id)
+        while r["runner"].run_once() is not None:
+            pass
+    assert r["store"].get(job_id).state is JobState.BLOCKED
+    # Later messages are not swallowed by the parked job, and the shop is free.
+    assert r["desk"].receive("m9", "shop-007", "3-5", r["clock"]["now"]) == "unrouted"
+    assert "shop-007" not in r["desk"].open_job
+    assert "shop-007" not in r["desk"].book.open_shops
+    # A human requeues it: it ends without asking again or reading anything.
+    sent = len(_texts(r))
+    r["store"]._jobs[job_id].state = JobState.QUEUED
+    r["store"]._jobs[job_id].failures = 0
+    while r["runner"].run_once() is not None:
+        pass
+    assert r["store"].get(job_id).result == "closed_while_blocked"
+    assert len(_texts(r)) == sent and "record_stock_count" not in _kinds(r)
 
 
 def test_stock_turns_are_traced() -> None:

@@ -234,11 +234,13 @@ def decide(reading: StockReading, item_name: str, texts: Sequence[str]) -> tuple
                 return None, None, "smaller units, but no pack size for this item"
             exact = q // per
             return bucket_of(exact), exact, f"{q} smaller units = {exact} whole (pack of {per})"
+        if reading.unit_as_stated == "unknown":
+            return None, None, "count in a unit that is not the unit asked"
         exact = q
         code_bucket = bucket_of(q)
     elif reading.answer_kind == "range":
         lo, hi = reading.range_low, reading.range_high
-        if lo is None or hi is None or lo < 0 or hi < lo or reading.unit_as_stated == "smaller_unit":
+        if lo is None or hi is None or lo < 0 or hi < lo or reading.unit_as_stated in ("smaller_unit", "unknown"):
             return None, None, "range not usable"
         if bucket_of(lo) != bucket_of(hi):
             return None, None, "range crosses buckets"
