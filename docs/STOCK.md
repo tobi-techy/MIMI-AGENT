@@ -61,17 +61,20 @@ A pure function: `estimate(history, counts, as_of_day)`. No clock, no
 randomness, no model. Same inputs, same estimate (tested, and the backtest's
 digest is checked twice).
 
-* **Sell rate**, from the last 4 weeks of deliveries and reorder gaps: the
-  units delivered between the first and last delivery of the window (plus the
-  one just before it) over the days between them; "10 cartons every 5 days
-  is about 2 a day". Two counts at least 5 days apart blend in the sales they
+* **Sell rate**, from the last 4 weeks of deliveries and reorder gaps. A
+  shop reorders to replace what it sold since its last reorder, so the units
+  sold between the first and last delivery of the window (plus the one just
+  before it) are the units of every delivery after the first, over the days
+  between them; "10 cartons every 5 days is about 2 a day". Two counts at least 5 days apart blend in the sales they
   imply. A single delivery: its units over 28 days, low confidence.
 * **Units left**: from the latest count when it is newer than the last
   delivery (a count overrides the estimate; a typed exact number keeps
   anchoring after later deliveries too). Otherwise from the last delivery: a
-  shop restocks to last until its next usual reorder plus about a day, so the
-  shelf after a delivery is the larger of what came and the sell rate x (the
-  usual reorder gap + 1 day). Then minus the sell rate x the days since.
+  shop restocks to last until the next van plus about a day, so the shelf
+  after a delivery is the larger of what came and the sell rate x (the days
+  to the next van + 1 day). The days to the next van are the shop's visit
+  cadence from the route (`ItemHistory.visit_days`, 7 or 14), else the
+  item's usual reorder gap. Then minus the sell rate x the days since.
 * A **WhatsApp reorder** between van visits ("e don finish, send 6 cartons")
   is an implied count of 0 on the next morning.
 * **Days to run out** = units left / sell rate. **Confidence** from data
@@ -79,7 +82,7 @@ digest is checked twice).
   medium, high.
 
 Every estimate is logged with its inputs (`StockLedger.runs`; traced as the
-`estimate-stock` tool step) with `policy_version` `stock-estimator-v0.1`.
+`estimate-stock` tool step) with `policy_version` `stock-estimator-v0.2`.
 
 ## Trigger and caps (`mimi/stock/trigger.py`)
 
@@ -158,46 +161,74 @@ nothing more delivered, empties within 7 days (the restock planning week).
 
 | Metric | Mark | Reorders, held-out seed 7 | Reorders, dev seed 2610 | World deliveries (stress) |
 |---|---|---|---|---|
-| **Run-out within 2 days** (true run-out within 7 days) | >= 70% (proposed) | **67.5%** (not met) | 66.8% | 26.1% |
-| ... true run-out within 3 days | | 72.4% | 70.7% | 42.9% |
-| ... true run-out within 14 days | | 53.5% | 55.1% | 17.8% |
-| ... confidence high / medium / low | | 80.2% / 68.9% / 38.2% | 75.4% / 71.4% / 39.5% | 33.3% / 38.0% / 21.0% |
-| Baseline: same estimator, never asks | | 65.7% | 65.0% | 30.7% |
+| **Run-out within 2 days** (true run-out within 7 days) | >= 70% (proposed) | **73.9%** (met) | 72.7% | 34.5% |
+| ... true run-out within 3 days | | 81.6% | 81.1% | 54.1% |
+| ... true run-out within 14 days | | 58.1% | 59.2% | 21.3% |
+| ... confidence high / medium / low | | 80.8% / 76.4% / 50.4% | 79.9% / 73.6% / 58.1% | 35.3% / 46.9% / 28.7% |
+| Baseline: same estimator, never asks | | 71.2% | 71.0% | 34.9% |
 | Baseline: naive (last delivery, 28-day units-in rate) | | 58.0% | 53.2% | 22.6% |
-| "Likely low" flag precision / recall | | 46.8% / 40.6% | 47.4% / 40.7% | 5.5% / 34.3% |
-| Questions asked (202 lines, 6 weeks) | | 377 | 343 | 468 |
+| "Likely low" flag precision / recall | | 47.3% / 46.1% | 47.4% / 48.6% | 6.3% / 43.8% |
+| Questions asked (202 lines, 6 weeks) | | 358 | 335 | 464 |
 | Max questions per item per week | <= 1 | 1 | 1 | 1 |
 | Max questions per shop per week | <= 3 | 3 | 3 | 3 |
-| Restock drafts | | 356 | 322 | 279 |
+| Restock drafts | | 344 | 325 | 286 |
 | Drafts without the shop's count | 0 | 0 | 0 | 0 |
 | Orders placed | 0 | 0 | 0 | 0 |
 
+Spread over six more reorder seeds that were never used for tuning (11, 42,
+99, 123, 2027, 31337; run after v0.2 was chosen; reported, not gated):
+
+| | v0.1 | v0.2 |
+|---|---|---|
+| Mean run-out within 2 days | 67.6% | **71.5%** |
+| Range | 64.2% to 72.7% | 69.1% to 74.5% |
+| Seeds at or over 70% | 1 of 6 | 3 of 6 |
+
 Read honestly:
 
-* **The proposed 70% bar is not met**: 67.5% on the held-out seed. It is met
-  for high-confidence items (80%) and for items about to run out within 3
-  days (72%), which is when Mimi asks; it is missed on low-confidence lines
-  (small shops restocked every two weeks, 1 or 2 deliveries in the window),
-  where one unit is 2 to 4 days of sales. That is why the distributor sees the
-  confidence next to every "likely to run low".
-* With the true shelf and the true recent sales rate, the same scoring gives
-  about 92%; with the true shelf and the estimated rate, about 84%. Most of
-  the remaining error is the units left between counts, not the rate.
-* Counts help a little on the reorder history (65.7% to 67.5%). Tapped
+* **The proposed 70% bar is met on the held-out seed**: 73.9% (v0.1 was
+  67.5%). Across six more unseen seeds the mean is 71.5%, and three of six
+  sit just under 70% (69.1%, 69.8%, 69.9%). So the bar holds on average, not
+  on every seed. High-confidence items are at 80% or more, and items about
+  to run out within 3 days, which is when Mimi asks, at 82%.
+* **What changed from v0.1 to v0.2** (chosen on the dev seed only, then read
+  once on the held-out seed). A diagnosis on the dev seed showed predictions
+  ran +1.4 days late on average, mostly on shops with a 14-day van (about 50% vs
+  74% on 7-day routes), where the sell rate ran 0.85x the true sales. Two
+  fixes, each from how a shop restocks rather than from a fitted number:
+  1. The rate counts the deliveries after the first in the window, not the
+     ones before the last: each reorder replaces what sold since the one
+     before it. v0.1's sum assumed an empty shelf at every delivery and
+     under-read the rate when the first delivery in a long window was a
+     small top-up. Dev seed 66.8% to 72.4%.
+  2. The shelf after a delivery covers the days to the **next van** (the
+     shop's visit cadence), not the item's own reorder gap. A line that
+     skipped two weekly vans had a 21-day "usual gap", so v0.1 assumed 22
+     days of stock on a 2-unit delivery. Dev 72.4% to 72.7%.
+  Tried on the dev seed and not kept: averaging both sums (71%), the larger
+  of the two sums (75% on dev, dropped as a fitted bias towards early
+  run-outs rather than a model of the shop), 1.5 or 2 extra cover days (no
+  gain, fewer questions), and clamping a tapped bucket to the prior
+  estimate (worse).
+* Most of the remaining error is the units left between counts, and
+  low-confidence lines (50% on the held-out seed): slow lines at small shops,
+  where one unit is days of sales.
+* Counts help a little on the reorder history (71.2% to 73.9%). Tapped
   buckets are coarse ("6+" says little), and one question a week per item is
-  the cap. On the world's random-basket deliveries, counts do not help (30.7%
-  to 26.1%): with no reorder rhythm the sell rate itself is wrong, and a
+  the cap. On the world's random-basket deliveries, counts do not help (34.9%
+  vs 34.5%): with no reorder rhythm the sell rate itself is wrong, and a
   bucket cannot fix that. The world's deliveries are not a fair test of an
   estimator built on reorder rhythm, which is why it carries no mark.
-* What was tried on the dev seed and kept or dropped: anchoring on the last
-  delivery with zero left before it (47%, dropped), the "restock to cover the
-  usual gap + 1 day" assumption (65%, kept), counts anchoring past later
-  deliveries (worse with buckets, kept only for typed numbers), longer rate
-  windows, calendar-aware run-out projection, asking low-confidence items
-  earlier (no gain, dropped).
+* Earlier (v0.1, dev seed): anchoring on the last delivery with zero left
+  before it (47%, dropped), the "restock to cover the gap + 1 day"
+  assumption (65%, kept), counts anchoring past later deliveries (worse with
+  buckets, kept only for typed numbers), longer rate windows,
+  calendar-aware run-out projection, asking low-confidence items earlier (no
+  gain, dropped).
 * `python -m mimi.stock.backtest` exits non-zero on any cap or draft safety
   mark, or if the headline drops more than 2 points from the committed
-  report; `--strict` also fails on the proposed 70% bar.
+  report; `--strict` also fails under the proposed 70% bar on the held-out
+  seed. CI and `make stock-backtest` run `--strict`.
 
 Report: `eval/stock/backtest.report.json`.
 
@@ -244,14 +275,15 @@ lowest item, the shop's persona (`muse-spark-1.3-contributor` live, a script
 offline) answers from its true shelf in its own voice, and Mimi reads,
 records, re-estimates and drafts.
 
-Live smoke, 27 Oct 2026 (`muse-spark-1.3` reading, contributor tier for the
-shops, `--stock-words`): 3 questions, 3 typed answers read by Muse Spark,
-all 3 in the bucket the shelf was in, exact numbers kept: "Na 1 pack
-remain" (Fizzup Cola, 0-2, 1), "na 7 remain o" (Palmside oil 1L, 6+, 7),
-"2 packs lo ku o" (Amber sugar 1kg, 0-2, 2). 3 drafts in approvals (25 packs
-N135,000; 18 bottles N65,700; 6 packs N12,600), 0 orders, the distributor
-saw only "under 3 days, medium". 6 live calls (3 reads: 2,835 prompt and
-1,418 completion tokens; 3 shop replies).
+Live smoke, 27 Oct 2026, estimator v0.2 (`muse-spark-1.3` reading,
+contributor tier for the shops, `--stock-words`): 3 questions, 3 typed
+answers read by Muse Spark, all 3 in the bucket the shelf was in, exact
+numbers kept: "Na 10 packs remain" (Vita-Malt 400g, 6+, 10), "7 bottles
+dey" (Palmside oil 1L, 6+, 7), "O ku 2 packs" (Amber sugar 1kg, 0-2, 2). 3
+drafts in approvals (28 packs N103,600; 18 bottles N65,700; 7 packs
+N14,700), 0 orders, the distributor saw only "under 3 days, medium". 6 live
+calls (3 reads: 2,838 prompt and 1,286 completion tokens; 3 shop replies),
+23 s wall.
 
 ## Tracing
 

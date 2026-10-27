@@ -223,17 +223,19 @@ reported on a held-out seed it never saw.
 
 | | Mark | Held-out seed | Same estimator, never asks | Naive baseline |
 |---|---|---|---|---|
-| Run-out within 2 days (true run-out within 7 days) | >= 70% (proposed) | **67.5%** | 65.7% | 58.0% |
-| ... high-confidence items | | 80.2% | | |
-| ... true run-out within 3 days | | 72.4% | | |
+| Run-out within 2 days (true run-out within 7 days) | >= 70% (proposed) | **73.9%** | 71.2% | 58.0% |
+| ... high-confidence items | | 80.8% | | |
+| ... true run-out within 3 days | | 81.6% | | |
 | Max questions per item per week | <= 1 | **1** | | |
 | Restock drafts without the shop's count / orders placed | 0 | **0 / 0** | | |
 
-The proposed 70% bar is **not met** overall: slow lines at small shops (one
-or two deliveries a month) miss, where one unit is days of sales; that is
-why every "likely to run low" carries a confidence. On the world's own
-random-basket deliveries, which carry no reorder rhythm, it is 26% (a stress
-test, no mark).
+The proposed 70% bar is **met** on the held-out seed (estimator v0.2; v0.1
+was 67.5%). It is not met everywhere: over six more unseen seeds the mean is
+71.5% (69.1% to 74.5%; three of six just under 70%), and slow lines at small
+shops (one or two deliveries a month) still miss most, where one unit is
+days of sales. That is why every "likely to run low" carries a confidence.
+On the world's own random-basket deliveries, which carry no reorder rhythm,
+it is 34% (a stress test, no mark).
 
 **Answer reading**: 30 synthetic answers (taps, numbers, number words,
 Pidgin, Yoruba, Igbo, Hausa, packets of a carton, ranges, a burst, vague
