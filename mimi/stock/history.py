@@ -85,6 +85,10 @@ class ItemHistory:
     name: str
     unit: str
     stock_in: tuple[StockIn, ...]
+    # Days between the rep's van visits to this shop (route data the
+    # distributor already has). A shop restocks to last until the next van, so
+    # the estimator uses this, when known, for the shelf after a delivery.
+    visit_days: int | None = None
 
 
 def item_histories(
@@ -104,6 +108,8 @@ def item_histories(
             rows[(d.shop_id, line.sku)].append(StockIn(d.day, line.quantity, d.delivery_id))
             names[line.sku] = (line.name, line.unit)
     return {
-        key: ItemHistory(key[0], key[1], *names[key[1]], tuple(sorted(v, key=lambda s: (s.day, s.delivery_id))))
+        key: ItemHistory(key[0], key[1], *names[key[1]],
+                         tuple(sorted(v, key=lambda s: (s.day, s.delivery_id))),
+                         visit_days=world.shop(key[0]).restock_days)
         for key, v in sorted(rows.items())
     }

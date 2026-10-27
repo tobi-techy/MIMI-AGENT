@@ -75,7 +75,7 @@ def generate_reorders(world: World, seed: int = DEV_SEED) -> ReorderWorld:
             h, t = _line(world, shop.shop_id, shop.size, shop.pays, sku, bulk[sku],
                          cycle, visits, seed)
             histories[(shop.shop_id, sku)] = ItemHistory(
-                shop.shop_id, sku, skus[sku].name, skus[sku].unit, h
+                shop.shop_id, sku, skus[sku].name, skus[sku].unit, h, visit_days=cycle
             )
             truth[(shop.shop_id, sku)] = t
     return ReorderWorld(seed, histories, truth)

@@ -3,10 +3,11 @@
 ``estimate(history, counts, as_of_day)`` is a pure function: no clock, no
 randomness, no model. The same inputs always give the same estimate.
 
-* **Sell rate** from the last 4 weeks of deliveries and reorder gaps: the
-  units delivered between the first and the last delivery in the window
-  (plus the one just before it), over the days between them ("10 cartons
-  every 5 days is about 2 a day"). With two counts at least 5 days apart,
+* **Sell rate** from the last 4 weeks of deliveries and reorder gaps: a
+  shop reorders to replace what it sold since the last reorder, so the units
+  delivered after the first delivery in the window (plus the one just before
+  it), up to and including the last, over the days between the first and the
+  last ("10 cartons every 5 days is about 2 a day"). With two counts at least 5 days apart,
   the sales the counts imply (count, plus deliveries, minus the next count)
   are blended in. One delivery and nothing else: its units over 28 days
   (low confidence).
@@ -14,7 +15,9 @@ randomness, no model. The same inputs always give the same estimate.
   days (the count overrides the estimate), else from the last delivery: a
   shop restocks to last until its next usual reorder plus about a day, so
   the shelf after a delivery is the larger of what came and the sell rate
-  times (the usual reorder gap + 1 day). Plus deliveries since the anchor,
+  times (the days to the next van + 1 day). The days to the next van are the
+  shop's visit cadence when the route gives it, else the item's usual
+  reorder gap. Plus deliveries since the anchor,
   minus the sell rate times the days since. A tapped count anchors until the
   next delivery; a typed exact number anchors after deliveries too.
 * **Days to run out**: units left over the sell rate.
@@ -35,7 +38,7 @@ from typing import Any, Literal
 from mimi.stock.history import ItemHistory, StockCount, StockIn
 
 Confidence = Literal["low", "medium", "high"]
-POLICY_VERSION = "stock-estimator-v0.1"
+POLICY_VERSION = "stock-estimator-v0.2"
 WINDOW_DAYS = 28
 MIN_GAP_DAYS = 3
 MIN_REORDERS = 3
@@ -63,6 +66,9 @@ class StockEstimate:
     # The shelf assumed right after the anchoring delivery (>= what came).
     assumed_after_anchor: float
     usual_gap_days: float | None
+    # The days the shelf after a delivery is assumed to cover, before the
+    # extra day: the shop's van cadence when known, else ``usual_gap_days``.
+    cover_gap_days: float | None
     units_in_since_anchor: int
     estimated_units_left: int
     days_to_run_out: float | None
@@ -105,7 +111,13 @@ def reorder_rate(stock_in: Sequence[StockIn], as_of_day: int) -> tuple[float, st
         merged[s.day] = merged.get(s.day, 0) + s.quantity
     days = sorted(merged)
     if len(days) >= 2 and days[-1] - days[0] >= MIN_GAP_DAYS:
-        sold = sum(merged[d] for d in days[:-1])
+        # Each reorder replaces what sold since the one before it, so the
+        # units sold between the first and last delivery are the units of
+        # every delivery after the first. (v0.1 summed every delivery but the
+        # last, which assumes an empty shelf at each delivery; it ran 0.85x
+        # the true rate on 14-day routes, where the first delivery in a long
+        # window is often a small top-up. Dev seed only, docs/STOCK.md.)
+        sold = sum(merged[d] for d in days[1:])
         return sold / (days[-1] - days[0]), "reorder_gaps"
     if days:
         return sum(merged.values()) / WINDOW_DAYS, "one_delivery"
@@ -199,6 +211,7 @@ def estimate(
         rate, source = crate, "counts"
     last_count = counts[-1] if counts else None
     gap = usual_gap(seen, as_of_day)
+    cover_gap = float(history.visit_days) if history.visit_days else gap
     last_delivery_day = seen[-1].day
     count_is_latest = last_count is not None and (
         last_count.day > last_delivery_day
@@ -218,8 +231,8 @@ def estimate(
         anchor, anchor_day = "last_delivery", last.day
         anchor_units = sum(s.quantity for s in same_day)
         after = float(anchor_units)
-        if gap is not None and rate > 0:
-            after = max(after, rate * (gap + COVER_EXTRA_DAYS))
+        if cover_gap is not None and rate > 0:
+            after = max(after, rate * (cover_gap + COVER_EXTRA_DAYS))
         since = []
     units_since = sum(s.quantity for s in since)
     left = after + units_since - rate * (as_of_day - anchor_day)
@@ -239,6 +252,7 @@ def estimate(
         anchor_units=anchor_units,
         assumed_after_anchor=round(after, 3),
         usual_gap_days=gap,
+        cover_gap_days=cover_gap,
         units_in_since_anchor=units_since,
         estimated_units_left=int(math.floor(left + 0.5)),
         days_to_run_out=days,

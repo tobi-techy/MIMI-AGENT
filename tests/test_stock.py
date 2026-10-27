@@ -64,6 +64,37 @@ def test_reorder_rhythm_ten_every_five_days_is_two_a_day() -> None:
     assert source == "reorder_gaps" and rate == pytest.approx(2.0)
 
 
+def test_rate_counts_what_the_later_reorders_replaced() -> None:
+    # A small first top-up, then 10 every 7 days: each reorder replaces what
+    # sold since the one before, so the rate is 20 over 14 days, not 12 / 14.
+    rate, source = reorder_rate(hist((0, 2), (7, 10), (14, 10)).stock_in, 15)
+    assert source == "reorder_gaps" and rate == pytest.approx(20 / 14)
+
+
+def test_van_cadence_sets_the_shelf_after_a_delivery() -> None:
+    # The line skipped two weekly vans, so its own reorder gap is 21 days; the
+    # shop still only stocks to last until the next van (7 days) plus a day.
+    rows = (StockIn(1, 13, "a"), StockIn(22, 2, "b"))
+    by_item = estimate(ItemHistory("shop-007", "MALTED-400", "Malt 400g", "tin", rows), [], 28)
+    by_van = estimate(ItemHistory("shop-007", "MALTED-400", "Malt 400g", "tin", rows, visit_days=7), [], 28)
+    assert by_item is not None and by_van is not None
+    assert by_item.usual_gap_days == by_van.usual_gap_days == 21.0
+    assert by_item.cover_gap_days == 21.0 and by_van.cover_gap_days == 7.0
+    assert by_van.assumed_after_anchor == pytest.approx(max(2, by_van.sell_rate_per_day * 8), abs=1e-3)
+    assert by_item.assumed_after_anchor == pytest.approx(max(2, by_item.sell_rate_per_day * 22), abs=1e-3)
+    assert by_van.days_to_run_out is not None and by_item.days_to_run_out is not None
+    assert by_van.days_to_run_out < by_item.days_to_run_out
+
+
+def test_histories_carry_the_shop_van_cadence() -> None:
+    world = load_world()
+    from mimi.stock.history import item_histories
+
+    for histories in (item_histories(world), generate_reorders(world, 7).histories):
+        for (shop_id, _), h in histories.items():
+            assert h.visit_days == world.shop(shop_id).restock_days
+
+
 def test_same_inputs_same_estimate() -> None:
     h = hist((0, 10), (7, 12), (14, 9), (21, 11))
     counts = [StockCount(18, "3-5", 4)]
