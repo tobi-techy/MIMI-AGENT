@@ -413,3 +413,61 @@ def test_a_strangers_owner_channel_text_reaches_the_model_untrusted() -> None:
     runner(turn)
     assert seen and "<owner_message>" not in seen[0]
     assert 'untrusted="true"' in seen[0]
+
+
+# ------------------------------------------------ steering never goes missing
+
+
+def test_owner_steering_the_turn_never_read_starts_the_next_turn() -> None:
+    # CodeRabbit on PR #10: a message steered in during the last step was
+    # dropped when the turn ended.
+    gate = threading.Event()
+    seen: list[Turn] = []
+
+    def run(t: Turn) -> str:
+        seen.append(t)
+        if len(seen) == 1:
+            gate.wait(2)  # the turn's last model call; steering is not read again
+        return "done"
+
+    clk = Clock()
+    d = door(run, clk, workers=1)
+    d.submit(owner_msg("how are we doing today", "o1"))
+    d.pump()
+    time.sleep(0.05)
+    adm = d.submit(owner_msg("also chase everyone over 50k", "o2"))
+    assert adm.reason == "steering the running turn"
+    gate.set()
+    d.drain()
+    assert [t.run_id for t in seen] == ["turn_000001"]
+    d.pump(wait=True)
+    assert len(seen) == 2 and [e.external_id for e in seen[1].events] == ["o2"]
+    assert seen[1].lane == "fast"
+    d.close()
+
+
+def test_stop_cancels_earlier_steering_and_a_later_message_waits_for_a_new_turn() -> None:
+    gate = threading.Event()
+    seen: list[Turn] = []
+
+    def run(t: Turn) -> str:
+        seen.append(t)
+        if len(seen) == 1:
+            gate.wait(2)
+        return "stopped_by_owner" if t.stop.is_set() else "done"
+
+    clk = Clock()
+    d = door(run, clk, workers=1)
+    d.submit(owner_msg("chase everyone over 50k", "o1"))
+    d.pump()
+    time.sleep(0.05)
+    assert d.submit(owner_msg("and the ones over 20k", "o2")).reason == \
+        "steering the running turn"
+    assert d.submit(owner_msg("stop", "o3")).reason == "stop: running turns interrupted"
+    assert d.cancelled_by_stop == [(W.tenant_id, "o2")]
+    assert d.submit(owner_msg("how much came in today", "o4")).reason == "queued"
+    gate.set()
+    d.drain()
+    d.pump(wait=True)
+    assert [e.external_id for e in seen[1].events] == ["o4"]
+    d.close()

@@ -157,6 +157,8 @@ class FrontDoor:
         self._futures: list[Future[None]] = []
         self.rows: list[RunRow] = []
         self.dropped: list[tuple[str, str]] = []
+        # Owner steering a "stop" cancelled before the turn read it.
+        self.cancelled_by_stop: list[tuple[str, str]] = []
         self.stops: list[float] = []  # seconds from "stop" arriving to interrupts set
         self._seq = 0
 
@@ -180,8 +182,8 @@ class FrontDoor:
             return Admission(True, "stop: running turns interrupted", thread_id, "fast")
         with self._lock:
             th = self._threads.setdefault((inbound.org_id, thread_id), _Thread())
-            if (owner and th.running is not None
-                    and th.running.lane == "fast"):
+            if (owner and th.running is not None and th.running.lane == "fast"
+                    and not th.running.stop.is_set()):
                 # Fast lane: the owner's next message reaches the running turn
                 # at its next step instead of waiting for a new one.
                 th.running.steering.append(inbound)
@@ -275,6 +277,13 @@ class FrontDoor:
             with self._lock:
                 th = self._threads[(turn.org_id, turn.thread_id)]
                 th.running = None
+                if turn.steering:
+                    # Owner messages that came in after the turn's last step
+                    # read its steering: accepted and deduped, so they must
+                    # not be lost. They start the thread's next turn.
+                    now = self.clock()
+                    th.pending[:0] = [(now, e) for e in turn.steering]
+                    turn.steering.clear()
                 d = turn.decision
                 if d is not None and d.status == "clarify":
                     th.state = ThreadState(clarify_options=d.options,
@@ -304,6 +313,10 @@ class FrontDoor:
                 if t is not None and t.org_id == inbound.org_id:
                     t.stop.set()
                     t.interrupted_at = self.clock()
+                    # Steering sent before the stop is what the owner stopped.
+                    self.cancelled_by_stop.extend(
+                        (e.org_id, e.external_id) for e in t.steering)
+                    t.steering.clear()
             self.stops.append(self.clock() - now)
             decision = self.router.route(inbound, d)
             self._seq += 1

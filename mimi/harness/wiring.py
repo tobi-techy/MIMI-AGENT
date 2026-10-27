@@ -95,8 +95,11 @@ class TurnRunner:
                 # The owner said stop: end at this step boundary; the saved
                 # state keeps everything proposed so far.
                 return "stopped_by_owner"
-            owner = [e.text for e in turn.steering]
-            turn.steering.clear()
+            # pop one at a time: the door may append while we read, and a
+            # copy-then-clear would drop a message landing in between.
+            owner: list[str] = []
+            while turn.steering:
+                owner.append(turn.steering.pop(0).text)
             state = LoopState.model_validate(
                 self.harness.step(state, helper, owner_messages=owner).state)
         result = state.finished
