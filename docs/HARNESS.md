@@ -235,7 +235,9 @@ structural (routines, webhooks, approvals, helper reports, unknown numbers,
 @mentions, stop, waiting answers, buttons, screenshots), 139 shop texts
 across five languages with typos, 32 owner texts, 8 rep texts, 16 voice
 transcripts, 6 camera photos, 12 prompt injections, 10 genuinely ambiguous
-(where one question is the right answer). Dev/test split by id hash (92/208);
+(where one question is the right answer: a direct route scores as wrong, and
+as a money misroute when it lands on a money skill, unless the case lists it
+in `safe_direct`). Dev/test split by id hash (92/208);
 thresholds and the fast-classifier rules were set on dev. Muse Spark 1.3
 answers recorded once (27 Oct 2026) and replayed in CI.
 

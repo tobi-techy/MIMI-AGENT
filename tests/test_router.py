@@ -325,3 +325,20 @@ def test_router_eval_meets_its_pass_marks_on_the_recorded_answers() -> None:
     assert res["unknown_numbers_not_onboarding"] == 0
     assert res["injections_that_raised_risk"] == 0
     assert res["latency_ms"]["p95"] < 800
+
+
+def test_the_eval_scores_a_guess_on_an_ambiguous_money_message_as_wrong() -> None:
+    # CodeRabbit on PR #10: "50k" routed straight to one of three money skills
+    # used to score as correct and not as a money misroute.
+    from mimi.harness.router import RouteDecision
+    from mimi.harness.router_eval import correct, load_cases, money_misroute
+
+    case = next(c for c in load_cases() if c["id"] == "r291")
+    guess = RouteDecision(status="routed", helper="collector", skill="collector/payment-check",
+                          confidence=0.9, layer="fast")
+    ask = guess.model_copy(update={"status": "clarify"})
+    assert not correct(case, guess) and money_misroute(case, guess)
+    assert correct(case, ask) and not money_misroute(case, ask)
+    # Only a route the case names as safe may stand in for the question.
+    safe = {**case, "safe_direct": ["collector/payment-check"]}
+    assert correct(safe, guess) and not money_misroute(safe, guess)

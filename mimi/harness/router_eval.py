@@ -85,17 +85,27 @@ def thread_state(case: dict[str, Any]) -> ThreadState:
 
 
 def correct(case: dict[str, Any], d: RouteDecision) -> bool:
-    ok = set(case.get("acceptable") or ())
+    """An ambiguous case is right only when the router asks.
+
+    ``acceptable`` on an ambiguous case lists what the shop might mean (the
+    question's options), not routes to take: guessing one of three money
+    skills for "50k" is a guess. A direct route counts only when the case
+    names it in ``safe_direct``.
+    """
     if case.get("ambiguous"):
-        return d.status == "clarify" or (d.status == "routed" and d.skill in ok)
+        safe = set(case.get("safe_direct") or ())
+        return d.status == "clarify" or (d.status == "routed" and d.skill in safe)
+    ok = set(case.get("acceptable") or ())
     return d.status == "routed" and d.skill in ({case["gold"]} | ok)
 
 
 def money_misroute(case: dict[str, Any], d: RouteDecision) -> bool:
     if d.status != "routed" or d.skill not in MONEY_SKILLS:
         return False
+    if case.get("ambiguous"):
+        return d.skill not in set(case.get("safe_direct") or ())
     ok = set(case.get("acceptable") or ())
-    return d.skill not in (ok if case.get("ambiguous") else ok | {case["gold"]})
+    return d.skill not in ok | {case["gold"]}
 
 
 def run(world: World, cases: list[dict[str, Any]], router: Router,
