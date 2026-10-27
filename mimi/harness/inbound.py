@@ -135,10 +135,15 @@ class Directory(BaseModel):
 
     def thread_for(self, inbound: Inbound) -> tuple[str, str]:
         """(thread_id, note). Unclear events go to the owner thread with a note."""
-        if inbound.thread_id:
-            return inbound.thread_id, ""
         owner = self.owner_thread or f"{self.org_id}:owner"
         p = inbound.payload
+        people = ("owner_message", "shop_message", "rep_message")
+        if inbound.thread_id and inbound.source not in people \
+                and inbound.thread_id.startswith(f"{self.org_id}:"):
+            # A system event may name its thread, inside this distributor only.
+            # A person's thread always comes from their number, so no envelope
+            # can put a stranger on the owner's (or another shop's) thread.
+            return inbound.thread_id, ""
         if inbound.source == "owner_message":
             if self.is_owner(inbound):
                 return owner, ""

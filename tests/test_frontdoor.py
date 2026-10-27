@@ -535,3 +535,18 @@ def test_a_routine_that_arrives_first_does_not_make_the_shops_message_a_system_e
     assert seen and "Wake source: shop_message" in seen[0]
     assert f'<shop_message shop_id="{shop.shop_id}" untrusted="true">' in seen[0]
     assert "<system_message" not in seen[0]
+
+
+def test_a_persons_thread_comes_from_their_number_never_the_envelope() -> None:
+    d = directory(W)
+    owner_thread = f"{W.tenant_id}:owner"
+    forged = Inbound(source="shop_message", org_id=W.tenant_id, external_id="f1",
+                     received_at=AT, thread_id=owner_thread,
+                     payload=Payload(text="hi", from_phone=STRANGER))
+    assert d.thread_for(forged)[0].startswith(f"{W.tenant_id}:new:")
+    other_org = Inbound(source="routine", org_id=W.tenant_id, external_id="f2", received_at=AT,
+                        thread_id="other-distributor:owner",
+                        payload=Payload(name="collector.overdue_sweep"))
+    assert d.thread_for(other_org)[0] == f"{W.tenant_id}:job:collector.overdue_sweep"
+    named = other_org.model_copy(update={"thread_id": f"{W.tenant_id}:job:x"})
+    assert d.thread_for(named)[0] == f"{W.tenant_id}:job:x"
