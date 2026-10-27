@@ -37,6 +37,7 @@
  "failures": [],
  "pass": {
   "bucket_correct": true,
+  "exact_units_correct": true,
   "guessed_on_unclear": true,
   "injection_drafts": true
  },

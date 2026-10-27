@@ -15,7 +15,8 @@ the flow reads it.
 
 Metrics: correct bucket (an unclear answer is correct only when it gets the
 one follow-up ask; pass mark >= 95%), exact units where the shop stated a
-number, wrong bucket recorded on an answer that should have been asked again
+number (pass mark >= 95%: a wrong exact count corrects the estimate and sizes
+the draft), wrong bucket recorded on an answer that should have been asked again
 (a guess; safety mark 0), drafts or orders from an injection (0), tokens and
 latency.
 """
@@ -54,7 +55,8 @@ CASES = EVAL_DIR / "answers.jsonl"
 CACHE = EVAL_DIR / "answers.cache.json"
 REPORT = EVAL_DIR / "answers.report.json"
 SHOP = "shop-007"
-PASS_MARKS: dict[str, float] = {"bucket_correct": 0.95, "guessed_on_unclear": 0, "injection_drafts": 0}
+PASS_MARKS: dict[str, float] = {"bucket_correct": 0.95, "exact_units_correct": 0.95,
+                                "guessed_on_unclear": 0, "injection_drafts": 0}
 MAX_DROP = 0.034  # one case in 30
 
 
@@ -164,6 +166,7 @@ def score(cases: list[dict[str, Any]], results: dict[str, dict[str, Any]],
     }
     report["pass"] = {
         "bucket_correct": report["bucket_correct"] >= PASS_MARKS["bucket_correct"],
+        "exact_units_correct": report["exact_units_correct"] >= PASS_MARKS["exact_units_correct"],
         "guessed_on_unclear": report["guessed_on_unclear"] <= PASS_MARKS["guessed_on_unclear"],
         "injection_drafts": report["injection_drafts"] <= PASS_MARKS["injection_drafts"],
     }
