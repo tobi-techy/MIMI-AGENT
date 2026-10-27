@@ -40,7 +40,7 @@ from dataclasses import dataclass, field
 from typing import Literal, Protocol
 
 from mimi.harness.inbound import Directory, Inbound
-from mimi.harness.router import PRIORITY, RouteDecision, Router, ThreadState
+from mimi.harness.router import PRIORITY, RouteDecision, Router, ThreadState, lead_of
 
 
 class DedupeIndex(Protocol):
@@ -98,7 +98,7 @@ class Turn:
     def source(self) -> str:
         if self.decision is not None:
             return self.decision.source
-        return min(self.events, key=lambda e: PRIORITY.get(e.source, 3)).source
+        return lead_of(self.events).source
 
     @property
     def external_ids(self) -> tuple[str, ...]:
@@ -208,7 +208,7 @@ class FrontDoor:
                 if th.running is not None or not th.pending:
                     continue
                 first, last = th.pending[0][0], th.pending[-1][0]
-                lead = min(th.pending, key=lambda x: PRIORITY.get(x[1].source, 3))[1]
+                lead = lead_of([e for _, e in th.pending])
                 fast = lead.source == "owner_message"
                 ready = fast or now - last >= self.quiet_s or now - first >= self.max_wait_s
                 if ready:
@@ -256,7 +256,7 @@ class FrontDoor:
             batch = [e for _, e in th.pending]
             th.pending = []
             self._seq += 1
-            lead = min(batch, key=lambda e: PRIORITY.get(e.source, 3))
+            lead = lead_of(batch)
             turn = Turn(run_id=f"turn_{self._seq:06d}", org_id=org, thread_id=tid,
                         events=batch, lane="fast" if lead.source == "owner_message" else "batch",
                         started_at=self.clock())

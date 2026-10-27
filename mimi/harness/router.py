@@ -79,6 +79,17 @@ PRIORITY = {"owner_message": 0, "approval_answered": 1, "shop_message": 1,
             "rep_message": 1, "webhook": 2, "helper_finished": 2, "routine": 3,
             "scheduled_check_in": 3}
 
+
+
+def lead_of(events: Sequence[Inbound]) -> Inbound:
+    """The event a batch is routed on: highest priority, then the earliest.
+
+    The router, the front door's lane and the turn runner all use this one,
+    so the turn is run as the sender the router decided for.
+    """
+    return min(events, key=lambda e: (PRIORITY.get(e.source, 3), e.received_at))
+
+
 ROUTINES: dict[str, str] = {
     "collector.overdue_sweep": "collector/chase",
     "collector.promise_check": "collector/promise-to-pay",
@@ -243,8 +254,7 @@ class Router:
         """One decision for a burst of events on one thread (they make one turn)."""
         t0 = self.perf()
         thread = thread or ThreadState()
-        ordered = sorted(batch, key=lambda e: (PRIORITY.get(e.source, 3), e.received_at))
-        lead = ordered[0]
+        lead = lead_of(batch)
         thread_id, note = directory.thread_for(lead)
         text = "\n".join(e.text for e in batch if e.text).strip()
         base = {"source": lead.source, "external_id": lead.external_id,

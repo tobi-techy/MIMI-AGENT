@@ -31,7 +31,7 @@ from mimi.harness.context import ContextBuilder
 from mimi.harness.frontdoor import Turn
 from mimi.harness.inbound import Directory
 from mimi.harness.loop import Harness, Helper, LoopState
-from mimi.harness.router import ThreadState
+from mimi.harness.router import ThreadState, lead_of
 from mimi.harness.types import RunEvent, RunResult
 
 
@@ -59,7 +59,10 @@ class TurnRunner:
         helper = self.helpers.get(d.helper)
         if helper is None:
             return f"no_helper_yet:{d.helper}"
-        lead = turn.events[0]
+        # The router's lead (owner, then people, then systems; earliest
+        # first), not the first to arrive: a routine that shares a shop's
+        # thread must not turn the shop's message into a system event.
+        lead = lead_of(turn.events)
         shop_id = ""
         if lead.source in ("shop_message", "rep_message"):
             dirs = self.directories.get(turn.org_id)

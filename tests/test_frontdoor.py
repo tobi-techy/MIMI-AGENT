@@ -506,3 +506,32 @@ def test_production_without_a_pseudonym_key_fails_closed(monkeypatch: Any) -> No
         _tail(STRANGER)
     monkeypatch.setenv("MIMI_PHONE_PSEUDONYM_KEY", "server-secret")
     assert len(_tail(STRANGER)) == 12
+
+
+def test_a_routine_that_arrives_first_does_not_make_the_shops_message_a_system_event() -> None:
+    # CodeRabbit on PR #10: TurnRunner took events[0] as the lead, the router
+    # took the highest-priority event; on a mixed batch they disagreed.
+    go = FakeGo(W)
+    seen: list[str] = []
+
+    def mimi(messages: Any, tools: Any) -> Any:
+        seen.append(messages[-1]["content"])
+        return say("nothing to add")
+
+    h = Harness(book=go, control=go, events=go, gateway=Gateway([ScriptedModel(mimi)]),
+                policy=GoPolicy(), clock=lambda: AT)
+    helper = collector_helper(default_registry(), GoPolicy())
+    runner = TurnRunner(h, ContextBuilder(book=go), {"collector": helper},
+                        directories={W.tenant_id: directory(W)})
+    shop = W.shops[0]
+    routine = Inbound(source="routine", org_id=W.tenant_id, external_id="r1", received_at=AT,
+                      payload=Payload(name="collector.overdue_sweep", shop_id=shop.shop_id))
+    msg = shop_msg("abeg wetin I owe", "s1", at=AT + timedelta(seconds=1))
+    turn = Turn(run_id="t1", org_id=W.tenant_id, thread_id=f"{W.tenant_id}:shop:{shop.shop_id}",
+                events=[routine, msg], lane="batch")
+    turn.decision = Router(fast=fastclass.model()).route_batch(turn.events, directory(W))
+    assert turn.decision.source == "shop_message"
+    runner(turn)
+    assert seen and "Wake source: shop_message" in seen[0]
+    assert f'<shop_message shop_id="{shop.shop_id}" untrusted="true">' in seen[0]
+    assert "<system_message" not in seen[0]
