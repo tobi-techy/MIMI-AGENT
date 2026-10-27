@@ -162,6 +162,13 @@ Inbound {source, org_id, thread_id?, external_id, received_at, payload}
    |  (shop, owner or job thread; unclear -> owner thread with a note); queue it
    |  fast lane: owner 1:1 messages start at once, steer a running owner turn,
    |             "stop" interrupts every running turn of that distributor
+   |             (owner = no number (console) or a number on owner_phones; an
+   |             owner-channel message from any other number is a stranger:
+   |             no stop, no steering, its own new:<pseudonym> thread, untrusted
+   |             in the prompt). Steering the turn never read starts the next
+   |             turn; a stop cancels steering sent before it.
+   |  unknown numbers: thread id new:<HMAC-SHA256 of the digits, 12 hex>, keyed
+   |             by MIMI_PHONE_PSEUDONYM_KEY (required when MIMI_ENV=production)
    |  batch lane: 1.5 s quiet window (6 s at most); a burst is one turn
    |  one turn per thread at a time; threads run in parallel; owner first
    v

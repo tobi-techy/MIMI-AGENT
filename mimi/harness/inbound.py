@@ -19,6 +19,8 @@ followed.
 from __future__ import annotations
 
 import hashlib
+import hmac
+import os
 from datetime import datetime
 from typing import Literal
 
@@ -161,9 +163,29 @@ class Directory(BaseModel):
         return owner, f"no thread for this {inbound.source}; put on the owner thread"
 
 
+# Dev and CI only: a fixed key keeps thread ids stable across runs. A plain
+# hash of a phone number is not a pseudonym (about 10^10 Nigerian mobiles can
+# be brute-forced in minutes), so production must set its own secret.
+_DEV_PSEUDONYM_KEY = b"mimi-dev-only-not-a-secret"
+
+
+def _pseudonym_key() -> bytes:
+    key = os.environ.get("MIMI_PHONE_PSEUDONYM_KEY", "").strip()
+    if key:
+        return key.encode()
+    if os.environ.get("MIMI_ENV", "").strip().lower() in ("prod", "production"):
+        raise RuntimeError("MIMI_PHONE_PSEUDONYM_KEY is not set: refusing to make "
+                           "thread ids from phone numbers without a secret key")
+    return _DEV_PSEUDONYM_KEY
+
+
 def _tail(phone: str) -> str:
-    """A stable pseudonym for an unknown number (never the number itself)."""
+    """A stable pseudonym for an unknown number (never the number itself).
+
+    Keyed (HMAC-SHA256 with a server-side secret), so a thread id that leaks
+    into a prompt, a run row or a trace does not give the number back.
+    """
     digits = "".join(c for c in phone if c.isdigit())
     if not digits:
         return "unknown"
-    return hashlib.sha256(digits.encode()).hexdigest()[:12]
+    return hmac.new(_pseudonym_key(), digits.encode(), hashlib.sha256).hexdigest()[:12]

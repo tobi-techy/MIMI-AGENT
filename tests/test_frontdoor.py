@@ -471,3 +471,38 @@ def test_stop_cancels_earlier_steering_and_a_later_message_waits_for_a_new_turn(
     d.pump(wait=True)
     assert [e.external_id for e in seen[1].events] == ["o4"]
     d.close()
+
+
+# ------------------------------------------------ unknown-number pseudonyms
+
+
+def test_unknown_number_thread_ids_are_keyed_not_a_plain_hash(monkeypatch: Any) -> None:
+    # CodeRabbit on PR #10: an unsalted SHA-256 of ~10^10 numbers is reversible.
+    import hashlib
+
+    from mimi.harness.inbound import _tail
+
+    digits = STRANGER.lstrip("+")
+    monkeypatch.delenv("MIMI_PHONE_PSEUDONYM_KEY", raising=False)
+    monkeypatch.delenv("MIMI_ENV", raising=False)
+    dev = _tail(STRANGER)
+    assert len(dev) == 12 and dev != hashlib.sha256(digits.encode()).hexdigest()[:12]
+    assert _tail(STRANGER) == dev  # stable: the same number is the same thread
+    monkeypatch.setenv("MIMI_PHONE_PSEUDONYM_KEY", "server-secret-1")
+    k1 = _tail(STRANGER)
+    monkeypatch.setenv("MIMI_PHONE_PSEUDONYM_KEY", "server-secret-2")
+    assert k1 != _tail(STRANGER) and k1 != dev
+    assert digits not in k1
+
+
+def test_production_without_a_pseudonym_key_fails_closed(monkeypatch: Any) -> None:
+    import pytest
+
+    from mimi.harness.inbound import _tail
+
+    monkeypatch.delenv("MIMI_PHONE_PSEUDONYM_KEY", raising=False)
+    monkeypatch.setenv("MIMI_ENV", "production")
+    with pytest.raises(RuntimeError, match="MIMI_PHONE_PSEUDONYM_KEY"):
+        _tail(STRANGER)
+    monkeypatch.setenv("MIMI_PHONE_PSEUDONYM_KEY", "server-secret")
+    assert len(_tail(STRANGER)) == 12
