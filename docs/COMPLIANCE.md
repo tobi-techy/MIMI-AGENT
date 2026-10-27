@@ -22,7 +22,7 @@ Build window: 26 Oct 2026 12:00 PM ET (16:00 UTC, 17:00 WAT) to 4 Nov 2026
 | No infringement of IP, privacy or other rights | Data is fully synthetic (below). Brands are invented. Bank and fintech names appear only as text in fake alert layouts, never with logos. No real person, phone number or account number. |
 | Build window | Every commit in this repo is authored and committed after 26 Oct 2026 16:00 UTC. `scripts/hackathon_provenance.py` prints each one in WAT and fails CI if one is earlier. |
 | Pre-existing work kept separate | This is a fresh repo with only window work. Pre-existing work is named in `HACKATHON.md` and the README and is not here. The demo video opens with one line naming what was pre-existing and what was built this week. |
-| Hosted demo gives judges access and instructions | If a hosted demo is submitted: judge access and a short how-to in the README. |
+| Hosted demo gives judges access and instructions | If a hosted demo is submitted: a judge login and a short how-to in the README. |
 | Judging: use of Meta AI tooling | See "Meta tooling" below. |
 
 ## Provenance
@@ -81,7 +81,8 @@ modify or distribute it is granted without written permission.
   cases.
 * Payment screenshots (`eval/proof/screens/`, 40 JPEGs) are synthetic:
   drawn with Pillow by `scripts/make_proof_fixtures.py` for four fictional
-  banks (Kestrel Bank, Harmattan MFB, Lagoonpay, Ironleaf Bank) with logos
+  banks (Kestrel Bank, Harmattan MFB, Lagoonpay, Ironleaf Bank; the world
+  adds two more, Ashgrove Bank and Marlwood Bank, all invented) with logos
   drawn from plain shapes, the world's fictional shops and owners, account
   numbers starting 999 and `+2340000...` phones. No real bank's name, logo,
   layout or customer data, and no real screenshot. The sim draws the same
@@ -196,7 +197,7 @@ permission and no faces in frame, and each will be listed here.
 - [x] README: synthetic data note, offline and live quickstart, eval command.
 - [ ] Demo video opens with one line on what was pre-existing and what was
       built this week.
-- [ ] Hosted demo (if any): judge access and step-by-step instructions.
+- [ ] Hosted demo (if any): a judge login and step-by-step instructions.
 - [ ] Shelf photos (if any) added with the permission note above.
 - [x] Voice fixtures are synthetic-generated and labelled; no real voices.
 - [x] Payment screenshots are synthetic, fictional banks only; no real screenshots.

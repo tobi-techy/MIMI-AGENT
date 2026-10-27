@@ -61,9 +61,11 @@ BRAND_COLOR: dict[str, tuple[int, int, int]] = {
     "Harmattan MFB": (214, 112, 24),
     "Lagoonpay": (14, 124, 134),
     "Ironleaf Bank": (47, 107, 58),
+    "Ashgrove Bank": (88, 96, 112),
+    "Marlwood Bank": (128, 38, 52),
 }
 BRAND_LOGO = {"Kestrel Bank": "kestrel", "Harmattan MFB": "sun", "Lagoonpay": "wave",
-              "Ironleaf Bank": "leaf"}
+              "Ironleaf Bank": "leaf", "Ashgrove Bank": "tree", "Marlwood Bank": "diamond"}
 
 
 def naira_printed(kobo: int, style: str = "sign") -> str:
@@ -170,6 +172,12 @@ def _logo(d: ImageDraw.ImageDraw, kind: str, x: int, y: int, s: int, color: Any)
                   width=4)
             d.arc([x + s // 2, y + k * s // 4, x + s, y + s // 2 + k * s // 4], 0, 180,
                   fill=color, width=4)
+    elif kind == "tree":
+        d.polygon([(x + s // 2, y), (x + s, y + s * 3 // 4), (x, y + s * 3 // 4)], fill=color)
+        d.rectangle([x + s // 2 - 3, y + s * 3 // 4, x + s // 2 + 3, y + s], fill=color)
+    elif kind == "diamond":
+        d.polygon([(x + s // 2, y), (x + s, y + s // 2), (x + s // 2, y + s), (x, y + s // 2)],
+                  fill=color)
     else:  # leaf
         d.ellipse([x, y + s // 4, x + s, y + s * 3 // 4], fill=color)
         d.line([(x + 4, y + s // 2), (x + s - 4, y + s // 2)], fill=(255, 255, 255), width=2)
@@ -298,7 +306,7 @@ def _sms_lines(spec: ScreenSpec) -> list[tuple[str, str]]:
     total = spec.printed_total()
     amt = naira_printed(spec.amount_kobo, "ngn")
     lines = [
-        ("title", "Ironleaf Bank Debit Alert"),
+        ("title", f"{spec.bank} Debit Alert"),
         ("account", f"Acct: {spec.sender_account[:2]}******{spec.sender_account[-4:]}"),
         ("amount", f"Amt: {amt} DR"),
     ]
@@ -320,10 +328,10 @@ def _sms(spec: ScreenSpec, rng: random.Random) -> Image.Image:
     d = ImageDraw.Draw(img)
     _status_bar(d, w, spec.status_bar_time or spec.paid_at.strftime("%H:%M"), False)
     d.text((22, 62), "\u2190", font=font("bold", 28), fill=(40, 40, 40))
-    color = BRAND_COLOR["Ironleaf Bank"]
+    color = BRAND_COLOR[spec.bank]
     d.ellipse([66, 54, 112, 100], fill=color)
-    _logo(d, "leaf", 74, 62, 30, (255, 255, 255))
-    d.text((124, 64), "IRONLEAF", font=font("bold", 24), fill=(30, 30, 30))
+    _logo(d, BRAND_LOGO[spec.bank], 74, 62, 30, (255, 255, 255))
+    d.text((124, 64), spec.bank.split()[0].upper(), font=font("bold", 24), fill=(30, 30, 30))
     d.line([(0, 116), (w, 116)], fill=(230, 230, 230), width=2)
     chip = spec.paid_at.strftime("%a, %d %b") if not spec.time_text else "Today"
     cf = font("sans", 16)

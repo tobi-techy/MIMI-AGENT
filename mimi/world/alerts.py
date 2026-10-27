@@ -1,7 +1,8 @@
 """Bank alert and transfer receipt text, in the layouts Nigerian shops forward.
 
-The layouts approximate what each bank or app sends (SMS debit alerts for the
-older banks, in-app "Transaction Successful" receipts for the fintechs). Every
+Every bank here is fictional (``mimi.proof.banks``). The layouts follow the
+usual shapes (SMS debit alerts for the SMS banks, in-app "Transaction
+Successful" receipts for the app banks). Every
 account number is fictional and masked; session ids start with ``999`` so a
 synthetic one can never be confused with a real one.
 
@@ -19,7 +20,7 @@ from mimi.world.model import BankAlert
 
 PAYEE = "CORAL LANE TRADING"
 PAYEE_ACCOUNT = "00****0000"
-APP_BANKS = frozenset({"Moniepoint", "OPay", "PalmPay"})
+APP_BANKS = frozenset({"Lagoonpay", "Harmattan MFB", "Kestrel Bank"})
 
 
 def naira(kobo: int) -> str:
@@ -46,27 +47,27 @@ def alert_text(
     balance_kobo: int,
 ) -> str:
     amt = naira(amount_kobo)
-    if bank == "GTBank":
+    if bank == "Ashgrove Bank":
         return (
             f"Acct: {_acct(rng)}\nAmt: NGN{amt} DR\n"
             f"Desc: TRF/{PAYEE}/{reference}\n"
             f"Time: {at:%d/%m/%Y %H:%M}\nAvail Bal: NGN{naira(balance_kobo)}"
         )
-    if bank == "First Bank":
+    if bank == "Marlwood Bank":
         return (
             f"Debit\nAmt: NGN{amt}\n"
             f"Acc: {rng.randint(300, 399)}XXXX{rng.randint(100, 999)}\n"
             f"Desc: {PAYEE}/TRF/{reference}\n"
             f"DT: {at:%d%b%y %H:%M}\nBal: NGN{naira(balance_kobo)}".upper()
         )
-    if bank == "Access":
+    if bank == "Ironleaf Bank":
         return (
             f"Debit\nAmt: NGN{amt}\n"
             f"Acc: 0{rng.randint(1, 9)}XXXXX{rng.randint(100, 999)}\n"
             f"Desc: NIP TRF TO {PAYEE} {reference}\n"
             f"Date: {at:%d/%m/%Y %H:%M}\nBal: NGN{naira(balance_kobo)}"
         )
-    # Moniepoint, OPay, PalmPay: an in-app receipt.
+    # Lagoonpay, Harmattan MFB, Kestrel Bank: an in-app receipt.
     return (
         f"{bank} Transaction Receipt\nTransaction Successful\n\u20a6{amt}\n"
         f"Recipient: {PAYEE} | Demo Bank {PAYEE_ACCOUNT}\n"

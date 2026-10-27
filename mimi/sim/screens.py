@@ -22,7 +22,7 @@ from dataclasses import dataclass, replace
 from datetime import datetime, timedelta
 from typing import Any
 
-from mimi.proof.banks import fictional_bank
+from mimi.proof.banks import bank_for
 from mimi.world.model import Delivery, FeedCredit, Shop
 
 FAKE_KINDS = ("edited_amount", "wrong_recipient", "pending_as_success", "future_time", "reused_reference")
@@ -40,7 +40,8 @@ def _reference(bank: str, rng: random.Random) -> str:
         return "HMF-" + "".join(rng.choice(string.ascii_uppercase + string.digits) for _ in range(10))
     if bank == "Lagoonpay":
         return "999" + d(27)
-    return "IL/TRF/" + d(9)
+    # The SMS banks: Ironleaf Bank (IL), Ashgrove Bank (AG), Marlwood Bank (MW).
+    return f"{bank_for(bank).short}/TRF/" + d(9)
 
 
 @dataclass(frozen=True)
@@ -71,7 +72,7 @@ def plan_screenshot(
     from mimi.proof.render import ScreenSpec, render
 
     rng = _rng("screenshot", shop.shop_id, seed)
-    fb = fictional_bank(shop.bank)
+    fb = bank_for(shop.bank)
     at = delivered_at + timedelta(minutes=rng.randint(60, 240), seconds=rng.randint(0, 59))
     paid = at - timedelta(minutes=rng.randint(3, 20), seconds=rng.randint(0, 59))
     ref = _reference(fb.name, rng)

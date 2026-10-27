@@ -18,7 +18,7 @@ from mimi.models.base import ChatMessage, ImageInput
 from mimi.models.cache import CachedModel, cache_key
 from mimi.models.meta import MetaChatModel
 from mimi.proof import copy
-from mimi.proof.banks import BANKS, CORAL_LANE_ACCOUNT, bank_named, fictional_bank
+from mimi.proof.banks import BANKS, CORAL_LANE_ACCOUNT, bank_for, bank_named
 from mimi.proof.checks import OpenInvoice, assess, match_invoice
 from mimi.proof.eval import CACHE, EVAL_DIR, load_cases, run_case, score
 from mimi.proof.flow import PROOF_HELPER, ImageWebhook, ProofDesk, ProofFlow, less_prior_proofs
@@ -31,15 +31,18 @@ from mimi.proof.intents import (
 from mimi.proof.ledger import InMemoryProofLedger, ProofRecord, SqlProofLedger
 from mimi.proof.parse import LAGOS, amount_kobo, last_digits, parse_time
 from mimi.proof.reading import ProofReading, ScreenshotReader, fake_reader, parse_reading
+from mimi.proof.render import ScreenSpec, render
 from mimi.proof.witness import ListBankFeed
 from mimi.receipts.intents import SendShopMessage
 from mimi.runtime.outbox import MONEY_VERBS
 from mimi.runtime.runner import JobRunner
 from mimi.runtime.store import InMemoryJobStore
 from mimi.runtime.tracing import RecordingStepTracer
+from mimi.world import load_world
 from mimi.world.model import FeedCredit
 
 CASES = load_cases()
+WORLD = load_world()
 BY_ID = {c["id"]: c for c in CASES}
 T0 = datetime(2026, 10, 26, 15, 0, tzinfo=LAGOS)
 DELIVERED = datetime(2026, 10, 26, 10, 0, tzinfo=LAGOS)
@@ -113,13 +116,25 @@ def test_times_are_lagos_and_impossible_ones_are_named() -> None:
     assert last_digits("******4471") == "4471"
 
 
-def test_banks_are_fictional_and_cover_every_world_bank() -> None:
-    real_brands = ("opay", "moniepoint", "palmpay", "gtbank", "first bank", "access", "zenith")
-    for b in BANKS:
-        assert not any(r in b.name.lower() for r in real_brands)
-    for world_bank in ("Moniepoint", "OPay", "PalmPay", "GTBank", "First Bank", "Access"):
-        assert fictional_bank(world_bank) in BANKS
+def test_every_world_bank_is_one_of_the_fictional_banks() -> None:
+    world_banks = {s.bank for s in WORLD.shops if s.bank}
+    assert world_banks == {b.name for b in BANKS}
+    for name in world_banks:
+        assert bank_for(name) in BANKS
+        assert bank_named(name) is bank_for(name)
     assert CORAL_LANE_ACCOUNT.number.startswith("999")
+
+
+def test_an_sms_bank_draws_its_own_name() -> None:
+    for name in ("Ironleaf Bank", "Ashgrove Bank", "Marlwood Bank"):
+        b = bank_for(name)
+        ref = f"{b.short}/TRF/123456789"
+        spec = ScreenSpec(bank=name, amount_kobo=1_360_000,
+                          paid_at=datetime(2026, 10, 26, 14, 2, tzinfo=LAGOS),
+                          sender="KUNLE", reference=ref)
+        _, truth = render(spec)
+        assert truth["layout"] == "sms_alert" and truth["bank_name"] == name
+        assert b.reference_ok(ref)
 
 
 # --------------------------------------------------------------- checks

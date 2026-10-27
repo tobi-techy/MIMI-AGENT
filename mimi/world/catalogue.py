@@ -107,13 +107,15 @@ SHOP_TYPES_BY_SIZE: dict[str, tuple[str, ...]] = {
     "small": ("kiosk", "provision store", "POS-plus-provisions", "kiosk"),
 }
 
+# The bank or app a transfer shop pays from. Every name is invented for the
+# demo (see ``mimi.proof.banks``): three app receipts, then three SMS alerts.
 BANKS: tuple[str, ...] = (
-    "Moniepoint",
-    "OPay",
-    "PalmPay",
-    "GTBank",
-    "First Bank",
-    "Access",
+    "Lagoonpay",
+    "Harmattan MFB",
+    "Kestrel Bank",
+    "Ashgrove Bank",
+    "Marlwood Bank",
+    "Ironleaf Bank",
 )
 
 # (sku, name, brand, unit, price in naira, bulk, rises mid-period)

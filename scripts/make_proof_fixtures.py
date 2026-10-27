@@ -36,7 +36,7 @@ from typing import Any
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
-from mimi.proof.banks import CORAL_LANE_ACCOUNT, fictional_bank  # noqa: E402
+from mimi.proof.banks import CORAL_LANE_ACCOUNT, bank_for  # noqa: E402
 from mimi.proof.checks import match_invoice  # noqa: E402
 from mimi.proof.flow import world_book  # noqa: E402
 from mimi.proof.parse import LAGOS, norm_name  # noqa: E402
@@ -58,7 +58,7 @@ def reference_for(bank: str, rng: random.Random) -> str:
         return "HMF-" + "".join(rng.choice(string.ascii_uppercase + string.digits) for _ in range(10))
     if bank == "Lagoonpay":
         return "999" + digits(rng, 27)
-    return "IL/TRF/" + digits(rng, 9)
+    return f"{bank_for(bank).short}/TRF/" + digits(rng, 9)
 
 
 def sender_as(bank: str, owner: str) -> str:
@@ -82,7 +82,7 @@ def main() -> int:
 
     def base(shop_id: str, bank: str | None = None, hours: float | None = None):
         shop = world.shop(shop_id)
-        fb = fictional_bank(shop.bank) if bank is None else fictional_bank_by(bank)
+        fb = bank_for(shop.bank) if bank is None else fictional_bank_by(bank)
         received = delivered(shop_id) + timedelta(hours=hours if hours is not None else rng.uniform(1.5, 7))
         received = received.replace(second=rng.randint(0, 59), microsecond=0)
         paid = received - timedelta(minutes=rng.randint(2, 40), seconds=rng.randint(0, 59))
