@@ -72,3 +72,12 @@ def test_observe_sits_beside_the_runtime() -> None:
             if name.startswith("mimi."):
                 assert name.startswith(("mimi.observe", "mimi.runtime", "mimi.models",
                                         "mimi.types")), (path, name)
+
+
+def test_stock_does_not_import_the_sim_or_other_flows() -> None:
+    """The stock helper reads the world and the runtime; it never imports the
+    sim, and nothing it imports could move money."""
+    for path in (ROOT / "stock").rglob("*.py"):
+        for name in _imports(path):
+            assert not name.startswith(("mimi.sim", "mimi.receipts", "mimi.proof", "mimi.voice")), (
+                path, name)

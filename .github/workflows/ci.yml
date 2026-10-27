@@ -26,7 +26,16 @@ jobs:
           python-version: ${{ matrix.python }}
           cache: pip
       - name: ffmpeg (voice-note conversion tests)
-        run: sudo apt-get update -q && sudo apt-get install -y -q --no-install-recommends ffmpeg
+        # apt mirrors sometimes hang on a runner: bound each try and retry.
+        timeout-minutes: 12
+        run: |
+          for i in 1 2 3; do
+            timeout 180 sudo apt-get update -q \
+              && timeout 300 sudo apt-get install -y -q --no-install-recommends ffmpeg \
+              && exit 0
+            echo "apt try $i failed or hung; retrying"; sleep 10
+          done
+          exit 1
       # The langfuse extra is installed so the tracing tests run against the
       # real SDK; with no LANGFUSE_* keys (and CI set) tracing is a no-op.
       - run: python -m pip install -e '.[dev,otel,langfuse]'
@@ -48,6 +57,12 @@ jobs:
         run: python -m mimi.voice.eval
       - name: Payment-screenshot eval, 40 synthetic alerts (recorded Muse Spark answers; fails on a fake marked likely)
         run: python -m mimi.proof.eval
+      - name: Stock backtest, estimator v0.2 with one-tap counts (no model; caps and drafts gated)
+        run: python -m mimi.stock.backtest --strict
+      - name: Stock answer eval, 30 synthetic answers (recorded Muse Spark answers; fails under 95%)
+        run: python -m mimi.stock.eval
+      - name: Offline low-stock scene
+        run: python -m mimi.sim --stock --transcript
       - name: Harness evals (50 Collector scenarios scripted and recorded Muse Spark, 41 security cases, 200 replayed retries, runaway budgets, idle cost; fails on any pass mark)
         run: python -m mimi.harness.eval --no-write
       - name: Router eval, 300 labelled messages in five languages (rules, phrases, fast classifier, recorded Muse Spark answers; fails on accuracy < 95%, any money misroute, clarify > 8%, a rule case calling the model, p95 >= 800 ms)

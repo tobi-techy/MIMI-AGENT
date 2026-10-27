@@ -202,6 +202,42 @@ a bank credit. Screenshot reading: 5,918 prompt and 3,159 completion tokens
 for 3 reads; 9 live calls in all (with the receipt reader and the shops),
 49 s.
 
+## 3f. Stock: backtest, answer eval and the low-stock scene
+
+```bash
+# Backtest: estimator v0.2 with the one-tap loop, day by day, no model calls.
+# Reorder history on the dev seed (tuned) and the held-out seed (the mark),
+# plus the world's own deliveries as a stress test. Compares to the report.
+python -m mimi.stock.backtest
+python -m mimi.stock.backtest --write     # rewrite eval/stock/backtest.report.json
+python -m mimi.stock.backtest --strict    # also fail under the proposed 70% bar
+
+# The 30-answer reading eval: replay (offline, what CI runs), live, fake, baseline
+python -m mimi.stock.eval
+python -m mimi.stock.eval --live          # resumes from eval/stock/answers.cache.json
+python -m mimi.stock.eval --live --fresh  # every case a new call (about 37k tokens)
+python -m mimi.stock.eval --fake          # keyword FakeModel (plumbing)
+python -m mimi.stock.eval --baseline      # code only: taps and bare numbers
+
+# The low-stock scene: Mon 26 Oct 07:30 WAT stock check for shop-007,
+# shop-004 and shop-002 (or --shop-ids / --shops N), one-tap questions, the
+# shops' answers from their true shelf, reads, counts, restock drafts
+META_API_KEY= python -m mimi.sim --stock --transcript
+python -m mimi.sim --stock --transcript --cache /tmp/smoke/stock              # live
+python -m mimi.sim --stock --stock-words --transcript --cache /tmp/smoke/stock # shops type
+python -m mimi.sim --stock --stock-history route --shop-ids shop-001 --transcript
+```
+
+The scene's transcript shows Mimi's estimate for each item it asks about
+(`Mimi (estimates)`: units in, sell rate, units left, days, confidence), the
+question with its buttons, the shop's answer, how it was read
+(`Mimi (reads)`: bucket, exact number, tap / typed / model, the guard's
+reason) and the thanks. The report lists the drafts (quantity, amount in
+kobo, `status: draft`, `places_order: false`), what the distributor sees
+(band and confidence only) and the tokens. With Langfuse on,
+`make trace-stock` runs it with `--stock-words` and prints a public link to
+one draft trace. Live smoke numbers: [`docs/STOCK.md`](STOCK.md#the-low-stock-scene).
+
 ## 3e. Langfuse tracing and experiments (optional)
 
 Off unless `LANGFUSE_PUBLIC_KEY` and `LANGFUSE_SECRET_KEY` are both set, and
@@ -308,7 +344,7 @@ console), shop replies in `shop_inbox`, voice-reply choices in
 
 ```bash
 META_API_KEY= pytest          # the whole suite, offline
-make check                    # lint, types, tests, the three evals, world, secrets, provenance
+make check                    # lint, types, tests, the five evals, world, secrets, provenance
 ```
 
 The tracing tests (`tests/test_observe.py`) use a recording exporter and a
