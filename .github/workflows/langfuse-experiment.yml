@@ -1,0 +1,34 @@
+# Optional: the proof eval as a gated Langfuse experiment (langfuse/experiment-action).
+# OFF by default. It runs only when started by hand (workflow_dispatch) AND the
+# repository variable LANGFUSE_EXPERIMENTS is "true" AND the LANGFUSE_* secrets
+# exist. Pull requests never trigger it (public repo: forks get no secrets).
+# The CI gate stays the offline replay evals in ci.yml.
+name: Langfuse experiment (optional)
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: write
+  actions: read
+
+jobs:
+  proof-experiment:
+    if: ${{ vars.LANGFUSE_EXPERIMENTS == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python -m pip install -e '.[langfuse]'
+      - uses: langfuse/experiment-action@c7c4efe432e37d4e3693a018de469233c0018de4 # v1.0.12
+        with:
+          langfuse_public_key: ${{ secrets.LANGFUSE_PUBLIC_KEY }}
+          langfuse_secret_key: ${{ secrets.LANGFUSE_SECRET_KEY }}
+          langfuse_base_url: https://cloud.langfuse.com
+          experiment_path: experiments/proof_experiment.py
+          dataset_name: mimi/proof-screenshots
+          should_skip_sdk_installation: true
+          github_token: ${{ github.token }}

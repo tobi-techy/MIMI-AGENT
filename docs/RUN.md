@@ -202,6 +202,81 @@ a bank credit. Screenshot reading: 5,918 prompt and 3,159 completion tokens
 for 3 reads; 9 live calls in all (with the receipt reader and the shops),
 49 s.
 
+## 3e. Langfuse tracing and experiments (optional)
+
+Off unless `LANGFUSE_PUBLIC_KEY` and `LANGFUSE_SECRET_KEY` are both set, and
+always off in CI (`CI` / `GITHUB_ACTIONS`). Keys come from your shell, never
+from a file in the repo.
+
+```bash
+pip install -e '.[langfuse]'
+export LANGFUSE_PUBLIC_KEY=...                      # never commit either key
+export LANGFUSE_SECRET_KEY=...
+export LANGFUSE_HOST=https://cloud.langfuse.com     # EU; US is https://us.cloud.langfuse.com
+# optional
+export LANGFUSE_TRACING_ENVIRONMENT=dev             # default dev; trace-smoke uses demo
+export LANGFUSE_RELEASE=...                         # default: the git sha
+export MIMI_TRACE_MEDIA=0                           # do not attach even synthetic media
+```
+
+**Traces.** Any sim run traces once the keys are set. `make trace-smoke`
+runs the 3-shop screenshot day (shop-019, shop-037, shop-025: a genuine
+screenshot, a fake the checks catch, a resend) in environment `demo`,
+records the model answers in `.cache/trace-smoke.*.json` (git-ignored) so a
+rerun costs nothing, and makes the first caught fake's trace public. Example:
+https://cloud.langfuse.com/project/cmuqt408400qvad0cm8p0tgms/traces/9202edc3b9f02645a01a26081c22d3d0
+
+One trace per shop turn: the turn root (`agent`), generations for each model
+call (Muse Spark, Muse Voice Transcribe, Spitch) with usage and cost, a span
+for the screenshot read, `decide-next-action` (chain) and each code check
+(`check-*`, tool). `user_id` = shop id, `session_id` = shop plus the
+delivery or payment thread, tags = feature, `verdict:*`, `language:*`,
+distributor. Scores on the trace: `turn_error`, `shop_reply`,
+`clarification_asked`, `fake_caught`, `fake_ended_likely`,
+`dispute_ended_in_consent`, `promise_recorded`; `bank_confirmed` arrives
+later as feedback when the bank feed confirms or misses a "likely" payment.
+
+**Datasets and experiments.** The three evals run as Langfuse experiments on
+the same production code as the offline evals, replaying the recorded
+answers (a cache miss fails the item, so there is no new model spend).
+
+```bash
+make langfuse-datasets      # mimi/proof-screenshots (40), mimi/voice-notes (50), mimi/receipt-replies (84)
+make proof-experiment       # add JUDGE=1 for the reply-tone judge scores
+make voice-experiment
+make receipts-experiment
+make judge-calibration      # the reply-tone judge on 8 labelled replies (cached Muse answers)
+```
+
+Code evaluators: `verdict_correct`, `fake_caught`, `false_likely_genuine`,
+`false_confirm`, `field_accuracy`, `tokens`, `latency_s`, plus run-level
+rates. The judge adds `reply_respectful`, `reply_figures_grounded` and
+`reply_plain_english`.
+
+**Project setup and monitors.** `make langfuse-setup` (idempotent) adds the
+model prices in `ops/langfuse/models/`, the code evaluator
+`reply-accusation-free` with an enabled rule on turn roots, the LLM judge
+`reply-tone` and its rule **disabled**, and a "Mimi monitors" dashboard.
+`make langfuse-monitor` checks five things over the last 24 h from the
+Metrics API and exits 1 on a breach: fake ended likely, bank rejected a
+likely payment, dispute ended in consent (all critical), error rate over 5%,
+generation p95 over 20 s, daily cost over USD 2. Two optional workflows,
+both off by default: `.github/workflows/langfuse-monitor.yml` (hourly, needs
+the repo variable `LANGFUSE_MONITOR=true` and the `LANGFUSE_*` secrets) and
+`.github/workflows/langfuse-experiment.yml` (manual only, needs
+`LANGFUSE_EXPERIMENTS=true`; pull requests never trigger it).
+
+**Two manual steps in the Langfuse UI:**
+
+1. **LLM connection for the reply-tone judge.** Project settings, LLM
+   connections: add one, then enable the `reply-tone` evaluator rule that
+   `make langfuse-setup` left disabled (after checking the judge calibration
+   run).
+2. **Two critical alerts.** The Hobby plan allows two alerts per
+   organisation and they can only be made in the UI: one on any
+   `fake_ended_likely` score true, one on any `dispute_ended_in_consent`
+   score true. The other checks run in `make langfuse-monitor`.
+
 ## 4. Clock modes and persistence
 
 ```bash
@@ -233,4 +308,8 @@ console), shop replies in `shop_inbox`, voice-reply choices in
 
 ```bash
 META_API_KEY= pytest          # the whole suite, offline
+make check                    # lint, types, tests, the three evals, world, secrets, provenance
 ```
+
+The tracing tests (`tests/test_observe.py`) use a recording exporter and a
+mock Langfuse client behind a socket guard, so they never reach the network.

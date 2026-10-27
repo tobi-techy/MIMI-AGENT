@@ -40,6 +40,7 @@ from typing import Any
 
 from mimi.models.base import ChatModel
 from mimi.models.fake import FakeModel
+from mimi.observe.turns import TracedModel, TurnBook, TurnStepTracer, observe_step
 from mimi.proof import (
     ALL_INTENTS,
     PROOF_HELPER,
@@ -201,6 +202,7 @@ class Simulator:
         fake_share: float = 0.0,
         proof_model: ChatModel | None = None,
         proof_ledger: ProofLedger | None = None,
+        turns: TurnBook | None = None,
     ) -> None:
         self.world = world
         self.deliveries: list[Delivery] = [
@@ -218,6 +220,10 @@ class Simulator:
         self.voice_replies = voice_replies
         self.speaker = speaker
         self.voice_prefs: VoicePrefs = voice_prefs or InMemoryVoicePrefs()
+        # Tracing (off unless the book has a real exporter): sim data is synthetic.
+        self.turns = turns or TurnBook()
+        if self.turns.enabled:
+            mimi_model = TracedModel(mimi_model)
         self.desk = ReceiptDesk(
             self.store,
             self.inbox,
@@ -226,6 +232,7 @@ class Simulator:
             voice_context=self._voice_context,
             voice_prefs=self.voice_prefs,
             shop_language=self._shop_language,
+            turns=self.turns,
         )
         self.voice_sent: list[str] = []
         self.spoken: list[SpokenAudio] = []
@@ -247,9 +254,12 @@ class Simulator:
                 if mimi_model.name.startswith("fake")
                 else mimi_model
             )
+        if self.turns.enabled and not isinstance(proof_model, TracedModel):
+            proof_model = TracedModel(proof_model)
         self.proof_model = proof_model
         self.proof_desk = ProofDesk(
-            self.store, self.ledger, world.tenant_id, ScreenshotReader(proof_model)
+            self.store, self.ledger, world.tenant_id, ScreenshotReader(proof_model),
+            turns=self.turns,
         )
         self.proof_flow = ProofFlow(
             self.ledger,
@@ -259,10 +269,12 @@ class Simulator:
         )
         self.tracer = RecordingStepTracer()
         steps: dict[str, Any] = {HELPER: self.flow, PROOF_HELPER: self.proof_flow}
+        if self.turns.enabled:
+            steps = {k: observe_step(v) for k, v in steps.items()}
         self.runner = JobRunner(
             store=self.store,
             sink=self.go,
-            tracer=self.tracer,
+            tracer=TurnStepTracer(self.tracer, self.turns),
             steps=steps,
             worker_id="sim-worker",
             clock=self.clock.now,
@@ -437,6 +449,7 @@ class Simulator:
                 # Wake again once the burst could have settled.
                 self._push(when + self.flow.burst_settle + timedelta(seconds=1), "tick", None)
             self._drain()
+        self.turns.close_all()
         return self.report()
 
     def _screenshot(self, when: datetime, shot: SimScreenshot) -> None:
@@ -453,6 +466,8 @@ class Simulator:
         if shot.credit is not None:
             self.bank.add(shot.credit)
         mid = f"wamid.shot-{shot.shop_id}-{len(self.screens)}"
+        self.turns.annotate(f"proof-{mid}", sim_fake=bool(shot.fake_kind),
+                            sim_fake_kind=shot.fake_kind or "", sim_resend=bool(shot.resend))
         self.proof_desk.receive(ImageWebhook(mid, shot.shop_id, shop.phone, when, shot.image))
         r = self.proof_desk.reads[-1]
         rd = r.reading

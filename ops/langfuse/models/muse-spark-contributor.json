@@ -1,0 +1,18 @@
+{
+ "modelName": "muse-spark-1.3-contributor",
+ "matchPattern": "(?i)^(meta/)?muse-spark-1\\.[23]-contributor$",
+ "unit": "TOKENS",
+ "pricingTiers": [
+  {
+   "name": "Standard",
+   "isDefault": true,
+   "priority": 0,
+   "conditions": [],
+   "prices": {
+    "input": 1e-07,
+    "output": 2e-07,
+    "input_cached_tokens": 2e-09
+   }
+  }
+ ]
+}

@@ -1,0 +1,16 @@
+{
+ "modelName": "spitch-stt",
+ "matchPattern": "(?i)^spitch-stt$",
+ "unit": "MILLISECONDS",
+ "pricingTiers": [
+  {
+   "name": "Standard",
+   "isDefault": true,
+   "priority": 0,
+   "conditions": [],
+   "prices": {
+    "audio_ms": 4.2e-07
+   }
+  }
+ ]
+}

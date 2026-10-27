@@ -21,10 +21,12 @@ message as consent (``voice_prefs``) and does not route it to a receipt.
 
 from __future__ import annotations
 
+import time
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import datetime
 
+from mimi.observe.turns import Media, Observation, TurnBook, audio_cost, note, sniff_mime
 from mimi.receipts.flow import HELPER
 from mimi.receipts.inbox import ShopInbox, ShopReply
 from mimi.runtime.budgets import Budget
@@ -40,6 +42,9 @@ from mimi.voice.prefs import (
     parse_voice_command,
 )
 from mimi.voice.reader import read_voice_note
+
+# Model names for speech-to-text in traces (Langfuse prices them by name).
+_STT_MODEL = {"spitch": "spitch-stt", "muse": "muse-voice-transcribe"}
 
 VoiceContextFor = Callable[[str, str], VoiceContext]
 # shop_id -> the language the shop usually writes in ("english", "pidgin", ...)
@@ -73,6 +78,8 @@ class ReceiptDesk:
     transcripts: list[Transcript] = field(default_factory=list)
     voice_prefs: VoicePrefs | None = None
     shop_language: ShopLanguageFor | None = None
+    # Optional tracing (``mimi.observe.turns``); off unless an exporter is set.
+    turns: TurnBook | None = None
 
     def open_receipt(self, delivery_id: str, shop_id: str) -> str:
         job_id = f"rcpt-{delivery_id}"
@@ -152,6 +159,42 @@ class ReceiptDesk:
             return "duplicate"
         return "voice_on" if on else "voice_off"
 
+    def _transcribe(self, hook: ShopWebhook, job_id: str, ctx: VoiceContext) -> Transcript:
+        assert hook.audio is not None
+        if self.turns is None or not self.turns.enabled:
+            return read_voice_note(hook.audio, self.transcriber, ctx, declared=hook.audio_mime)
+        with self.turns.prelude(job_id, flow="voice_note", shop_id=hook.shop_id,
+                                thread_id=f"wa-{hook.shop_id}"):
+            started = time.time_ns()
+            t0 = time.monotonic_ns()
+            t = read_voice_note(hook.audio, self.transcriber, ctx, declared=hook.audio_mime)
+            wall = time.monotonic_ns() - t0
+            sha = audio_sha256(hook.audio)
+            mime = sniff_mime(hook.audio, hook.audio_mime or "audio/ogg")
+            note(
+                Observation(
+                    "generation",
+                    "transcribe-voice-note",
+                    started,
+                    int(t.latency_s * 1e9) if t.latency_s else wall,
+                    model=_STT_MODEL.get(t.provider.split(":")[0], t.provider),
+                    usage={"audio_ms": int((t.duration_s or 0.0) * 1000)},
+                    cost_usd=audio_cost(t.provider, t.duration_s),
+                    input={"audio": f"audio:{sha}", "audio_sha256": sha,
+                           "bytes": len(hook.audio), "language_hint": ctx.language_hint,
+                           "keywords": list(ctx.keywords)},
+                    output={"text": t.text, "status": t.status, "language": t.language,
+                            "confidence": t.confidence, "reason": t.reason},
+                    metadata={"message_kind": "voice_note", "tried": list(t.tried),
+                              "duration_s": t.duration_s, "fake": t.fake,
+                              "latency_ms": round(t.latency_s * 1000, 1)},
+                    level="WARNING" if t.status != "ok" else "DEFAULT",
+                    status_message=t.reason,
+                    media={f"audio:{sha}": Media(hook.audio, mime)},
+                )
+            )
+        return t
+
     def _voice_reply(self, reply: ShopReply, hook: ShopWebhook, job_id: str) -> ShopReply:
         assert hook.audio is not None
         ctx = (
@@ -159,7 +202,7 @@ class ReceiptDesk:
             if self.voice_context is not None
             else VoiceContext()
         )
-        t = read_voice_note(hook.audio, self.transcriber, ctx, declared=hook.audio_mime)
+        t = self._transcribe(hook, job_id, ctx)
         self.transcripts.append(t)
         return ShopReply(
             message_id=reply.message_id,

@@ -37,10 +37,12 @@ from __future__ import annotations
 
 import hashlib
 import json
+import time
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 
+from mimi.observe.turns import Media, Observation, TurnBook, nested, sniff_mime
 from mimi.proof import copy
 from mimi.proof.checks import Assessment, OpenInvoice, assess
 from mimi.proof.intents import ProofForApproval, RecordBankWitness, RecordPaymentProof
@@ -131,6 +133,8 @@ class ProofDesk:
     reader: Reader
     duplicates: int = 0
     reads: list[ReadResult] = field(default_factory=list)
+    # Optional tracing (``mimi.observe.turns``); off unless an exporter is set.
+    turns: TurnBook | None = None
 
     def receive(self, hook: ImageWebhook) -> str:
         """Returns "routed" or "duplicate" (a webhook retry)."""
@@ -141,7 +145,7 @@ class ProofDesk:
         else:
             self.duplicates += 1
             return "duplicate"
-        res = self._same_image(hook) or self.reader(hook.image, hook.mime)
+        res = self._read(hook)
         self.reads.append(res)
         added = self.ledger.add(
             ProofRecord(
@@ -175,6 +179,28 @@ class ProofDesk:
         )
         return "routed"
 
+
+    def _read(self, hook: ImageWebhook) -> ReadResult:
+        """Read the screenshot (or reuse a reading), inside its turn's trace."""
+        if self.turns is None or not self.turns.enabled:
+            return self._same_image(hook) or self.reader(hook.image, hook.mime)
+        job_id = f"proof-{hook.message_id}"
+        with self.turns.prelude(job_id, flow="payment_screenshot", shop_id=hook.shop_id,
+                                thread_id=f"wa-{hook.shop_id}"):
+            span = Observation("span", "read-payment-screenshot", time.time_ns(),
+                               metadata={"message_kind": "payment_screenshot"})
+            t0 = time.monotonic_ns()
+            with nested(span):
+                res = self._same_image(hook) or self.reader(hook.image, hook.mime)
+                span.duration_ns = time.monotonic_ns() - t0
+                span.input = {"image": f"image:{res.image_sha256}", "mime": sniff_mime(hook.image, hook.mime),
+                              "image_sha256": res.image_sha256, "bytes": len(hook.image),
+                              "caption": hook.caption}
+                span.output = {"read_via": res.via, **res.reading.model_dump(mode="json")}
+                span.metadata.update({"model": res.model, "prompt_tokens": res.prompt_tokens,
+                                      "completion_tokens": res.completion_tokens})
+                span.media = {f"image:{res.image_sha256}": Media(hook.image, sniff_mime(hook.image, hook.mime))}
+        return res
 
     def _same_image(self, hook: ImageWebhook) -> ReadResult | None:
         """The same file again from the same shop: reuse its reading, so a
@@ -263,7 +289,7 @@ class ProofFlow:
             self.ledger.update(rec.proof_id, level="duplicate", verdict=a.verdict,
                                reasons_json=json.dumps([f"same image as {a.duplicate_of}"]))
             msg = self._say(scope, rec, "proof_duplicate", copy.duplicate_text(), [])
-            return StepOutcome(kind="done", intents=(msg,), result="duplicate", trace=trace)
+            return StepOutcome(kind="done", intents=(msg,), result="duplicate", trace={**trace, "result": "duplicate"})
         if a.verdict == "likely_genuine":
             assert a.amount_kobo is not None and a.paid_at is not None
             self.ledger.update(
@@ -303,13 +329,13 @@ class ProofFlow:
                 intents=(proof, msg),
                 working_note=json.dumps(note),
                 sleep_until=min(ctx.now + self.check_every, deadline),
-                trace=trace,
+                trace={**trace, "result": "likely"},
             )
         if a.verdict == "looks_fake":
             self.ledger.update(rec.proof_id, level="review", **common)
             flag = self._approval(scope, rec, a, "looks_fake")
             msg = self._say(scope, rec, "proof_review", copy.review_text(self.distributor), [])
-            return StepOutcome(kind="done", intents=(flag, msg), result="review", trace=trace)
+            return StepOutcome(kind="done", intents=(flag, msg), result="review", trace={**trace, "result": "review"})
         # cannot_tell: one ask a day per shop, then the owner.
         now = ctx.now
         asked_recently = any(
@@ -322,10 +348,10 @@ class ProofFlow:
             msg = self._say(
                 scope, rec, "proof_review", copy.unreadable_again_text(self.distributor), []
             )
-            return StepOutcome(kind="done", intents=(flag, msg), result="review", trace=trace)
+            return StepOutcome(kind="done", intents=(flag, msg), result="review", trace={**trace, "result": "review"})
         self.ledger.update(rec.proof_id, level="ask", **common)
         msg = self._say(scope, rec, "proof_ask", copy.ask_text(), [])
-        return StepOutcome(kind="done", intents=(msg,), result="asked", trace=trace)
+        return StepOutcome(kind="done", intents=(msg,), result="asked", trace={**trace, "result": "asked"})
 
     def _approval(
         self, scope: ShopScope, rec: ProofRecord, a: Assessment, reason: str
@@ -407,7 +433,12 @@ class ProofFlow:
                 image_sha256=rec.image_sha256,
                 shop_message_id=rec.proof_id,
             )
-            return StepOutcome(kind="done", intents=(flag,), result="likely_unwitnessed")
+            return StepOutcome(
+                kind="done",
+                intents=(flag,),
+                result="likely_unwitnessed",
+                trace={"bank_credit": "none_by_deadline"},
+            )
         return StepOutcome(
             kind="sleep",
             working_note=json.dumps(state),

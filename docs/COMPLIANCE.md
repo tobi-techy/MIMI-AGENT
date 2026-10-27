@@ -50,6 +50,17 @@ Build window: 26 Oct 2026 12:00 PM ET (16:00 UTC, 17:00 WAT) to 4 Nov 2026
   keys are SHA-256 hashes. They hold transcript text of synthetic clips
   only, never audio. Database URLs come from
   the shell (`MIMI_DB_URL`), never from a file in the repo.
+* The recorded reply-judge answers (`eval/judge/replies.cache.json`) are
+  excluded from the detect-secrets scan for the same reason: their keys are
+  hashes of the requests, and the values are the judge's JSON on synthetic
+  replies. Test keys in `tests/test_observe.py` are fake (`sk-lf-test`, a
+  made-up hash) and marked `pragma: allowlist secret`.
+* `LANGFUSE_PUBLIC_KEY` and `LANGFUSE_SECRET_KEY` come from the shell only,
+  are read only in `mimi/observe/langfuse_export.py` and the
+  `scripts/langfuse_*.py` / `scripts/trace_smoke.py` scripts, and are never
+  logged, printed or committed. CI checks that neither is set and that the
+  exporter is off there; the two optional Langfuse workflows read them from
+  repository secrets and never run on pull requests.
 
 ## Ownership
 
@@ -78,6 +89,32 @@ modify or distribute it is granted without written permission.
   consent, reported separately and kept out of this public repo.
 * In the product, Mimi keeps what it read off a screenshot plus the image's
   SHA-256 and size (`payment_proofs`, alembic `0005`), never the image.
+
+## Observability (Langfuse, optional)
+
+Tracing is off without both Langfuse keys and always off in CI. When it is
+on, every value goes through `mimi/observe/redact.py` before it reaches the
+SDK, and the SDK's `mask` hook runs the same redaction again:
+
+* **Phone numbers:** only the last 4 digits stay (`+234******4567`,
+  `0*******4567`).
+* **Any run of 10 or more digits** (account numbers, session ids): only the
+  last 4 digits stay. Fields named like `account`, `phone`, `msisdn`,
+  `nuban` are masked to the last 4 whatever their shape.
+* **Keys and tokens** (`Bearer ...`, `sk-...`, `pk-lf-...`/`sk-lf-...`,
+  `api_key=`, `secret:`, `password=`, `token=`, `authorization`):
+  replaced by `[redacted]`.
+* **Raw media** (image or audio bytes, `data:...;base64,...` URLs) never
+  leaves; it becomes its SHA-256 and size.
+* **Only synthetic media is attached** (the drawn screenshot, the generated
+  voice clip), and only when the turn is marked synthetic and
+  `MIMI_TRACE_MEDIA` is not `0`. A real shop's image or audio is never sent.
+* `user_id` is the shop id, which is pseudonymous; no names or phones are in
+  trace attributes. The datasets leave phone numbers out.
+
+The redaction is tested in `tests/test_observe.py` (it never raises, whatever
+it is given). Langfuse Cloud (EU) is a third-party service used under its
+terms; every trace and dataset in the project is synthetic.
 
 ## Voices
 
@@ -142,6 +179,9 @@ permission and no faces in frame, and each will be listed here.
   The transcript goes to Muse Spark like any typed reply. Measured on a
   50-clip synthetic voice eval (with and without language hints), recorded
   live.
+* Muse Spark 1.3 also judges the tone of Mimi's shop-facing replies in the
+  optional Langfuse experiments (`reply-tone`, calibrated on 8 labelled
+  replies, answers cached).
 * **Muse Spark 1.3 with vision input** reads payment screenshots
   (`read_payment_image`, `mimi/proof/reading.py`): the image goes as an
   `image_url` content part and the fields come back through a JSON schema
@@ -160,4 +200,5 @@ permission and no faces in frame, and each will be listed here.
 - [ ] Shelf photos (if any) added with the permission note above.
 - [x] Voice fixtures are synthetic-generated and labelled; no real voices.
 - [x] Payment screenshots are synthetic, fictional banks only; no real screenshots.
+- [x] Langfuse tracing off without keys and in CI; redaction tested; only synthetic media attached.
 - [ ] Read the submit form and add anything it asks for here.

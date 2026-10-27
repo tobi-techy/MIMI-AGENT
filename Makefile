@@ -1,9 +1,9 @@
 PY ?= python
 
-.PHONY: install test eval eval-live eval-fake voice-eval voice-eval-live voice-fixtures proof-eval proof-eval-live proof-fixtures sim sim-live sim-voice sim-voice-v2 sim-screens world-check lint typecheck secrets provenance migrate check
+.PHONY: install test eval eval-live eval-fake voice-eval voice-eval-live voice-fixtures proof-eval proof-eval-live proof-fixtures sim sim-live sim-voice sim-voice-v2 sim-screens trace-smoke langfuse-setup langfuse-monitor langfuse-datasets proof-experiment voice-experiment receipts-experiment judge-calibration world-check lint typecheck secrets provenance migrate check
 
 install:            ## editable install with dev tools
-	$(PY) -m pip install -e '.[dev,otel]'
+	$(PY) -m pip install -e '.[dev,otel,langfuse]'
 
 test:               ## full test suite, offline (FakeModel + recorded answers)
 	META_API_KEY= SPITCH_API_KEY= $(PY) -m pytest
@@ -69,3 +69,29 @@ sim-voice-v2:       ## offline sim: voice notes, payment promises, voice replies
 
 sim-screens:        ## offline sim: shops pay by screenshot, some fake, one resend
 	META_API_KEY= $(PY) -m mimi.sim --shop-ids shop-019,shop-037,shop-025 --transcript --screenshots 1 --fakes 0.4
+
+# --- Langfuse (optional; every target needs LANGFUSE_PUBLIC_KEY and LANGFUSE_SECRET_KEY) ---
+
+trace-smoke:        ## 3-shop screenshot sim traced to Langfuse (demo env); replays recorded answers on a rerun
+	$(PY) scripts/trace_smoke.py --public
+
+langfuse-setup:     ## model prices, code evaluator + rule, LLM judge (disabled), monitor dashboard
+	$(PY) scripts/langfuse_setup.py
+
+langfuse-monitor:   ## the five monitor checks over the last 24 h (exit 1 on a breach)
+	$(PY) scripts/langfuse_monitor.py --hours 24
+
+langfuse-datasets:  ## upload the three eval sets as Langfuse datasets (synthetic media included)
+	$(PY) -m mimi.observe.experiments upload all
+
+proof-experiment:   ## proof eval as a Langfuse experiment (replayed answers; add JUDGE=1 for the reply judge)
+	$(PY) -m mimi.observe.experiments run proof $(if $(JUDGE),--judge,)
+
+voice-experiment:   ## voice eval as a Langfuse experiment (replayed transcripts and verdicts)
+	$(PY) -m mimi.observe.experiments run voice
+
+receipts-experiment: ## reply-reader eval as a Langfuse experiment (replayed answers)
+	$(PY) -m mimi.observe.experiments run receipts
+
+judge-calibration:  ## calibrate the reply-tone LLM judge on 8 labelled replies (Muse, cached)
+	$(PY) -m mimi.observe.experiments calibrate-judge

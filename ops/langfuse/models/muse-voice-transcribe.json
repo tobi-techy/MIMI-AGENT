@@ -1,0 +1,16 @@
+{
+ "modelName": "muse-voice-transcribe",
+ "matchPattern": "(?i)^muse-voice-transcribe$",
+ "unit": "MILLISECONDS",
+ "pricingTiers": [
+  {
+   "name": "Standard",
+   "isDefault": true,
+   "priority": 0,
+   "conditions": [],
+   "prices": {
+    "audio_ms": 5e-08
+   }
+  }
+ ]
+}
