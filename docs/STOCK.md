@@ -191,8 +191,9 @@ Read honestly:
 * **The proposed 70% bar is met on the held-out seed**: 74.3% (v0.1 was
   67.5%). Across six more unseen seeds the mean is 72.3%, and all six are at
   or just over 70% (lowest 70.2%), so the margin is thin. High-confidence
-  items are at 80% or more, and items about to run out within 3 days, which
-  is when Mimi asks, at 81.5%. (v0.1 numbers, and the v0.2 numbers first
+  items are at 80% or more, and items whose true run-out is within 3 days
+  at 81.5% (the trigger itself uses the estimated run-out under 3 days, and
+  the weekly caps can still hold a question back). (v0.1 numbers, and the v0.2 numbers first
   published here, left out item-days that start on an empty shelf; those
   were 73.9% held-out and 71.5% mean. v0.1 was not re-scored.)
 * **What changed from v0.1 to v0.2** (chosen on the dev seed only, then read

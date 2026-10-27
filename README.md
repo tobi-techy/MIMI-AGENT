@@ -230,7 +230,7 @@ reported on a held-out seed it never saw.
 | Restock drafts without the shop's count / orders placed | 0 | **0 / 0** | | |
 
 The proposed 70% bar is **met** on the held-out seed (estimator v0.2; v0.1
-was 67.5%). It is not met everywhere: over six more unseen seeds the mean is
+was 67.5%). The margin is thin: over six more unseen seeds the mean is
 72.3% (70.2% to 75.1%; all six at or just over 70%), and slow lines at small
 shops (one or two deliveries a month) still miss most, where one unit is
 days of sales. That is why every "likely to run low" carries a confidence.
