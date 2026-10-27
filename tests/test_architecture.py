@@ -50,3 +50,14 @@ def test_voice_does_not_import_the_flow() -> None:
             continue
         for name in _imports(path):
             assert not name.startswith(("mimi.receipts", "mimi.sim")), (path, name)
+
+
+def test_proof_does_not_import_the_sim_and_only_render_draws() -> None:
+    """Mimi reads screenshots; it never draws or keeps one. Pillow is only for
+    the synthetic fixtures (``render.py``) and the sim's on-the-fly images."""
+    for path in (ROOT / "proof").rglob("*.py"):
+        names = _imports(path)
+        for name in names:
+            assert not name.startswith("mimi.sim"), (path, name)
+        if path.name != "render.py":
+            assert not any(n.split(".")[0] == "PIL" for n in names), path
