@@ -193,6 +193,47 @@ that keeps every printed figure consistent is caught by the bank witness,
 which is why a screenshot alone only ever means "likely". Failures, fixes
 and limits: [`docs/PROOF.md`](docs/PROOF.md).
 
+## Tracing and experiments with Langfuse (optional)
+
+Langfuse is optional and **off unless both `LANGFUSE_PUBLIC_KEY` and
+`LANGFUSE_SECRET_KEY` are set**. Without them (and always in CI) the
+exporter is a no-op: no client, no thread, no network call. The offline
+replay evals stay the CI gate.
+
+With it on, every shop turn becomes one trace (`handle-receipt-reply`,
+`handle-voice-note`, `check-payment-screenshot`, ...) with the model calls as
+generations (tokens, latency, cost), each code check as a tool step and the
+flow's decision as a chain step. `user_id` is the shop id (pseudonymous),
+`session_id` the shop's delivery or payment thread, tags carry feature,
+verdict, language and distributor, and every trace has an environment and a
+release (git sha). Scores: `turn_error`, `shop_reply`, `clarification_asked`,
+`fake_caught`, `fake_ended_likely`, `dispute_ended_in_consent`,
+`promise_recorded`, and later `bank_confirmed` when the bank feed answers.
+Phone numbers, account numbers and keys are redacted before anything is
+sent, and only synthetic media is ever attached
+([`docs/COMPLIANCE.md`](docs/COMPLIANCE.md)).
+
+```bash
+pip install -e '.[langfuse]'      # langfuse==5.0.4, pinned
+export LANGFUSE_PUBLIC_KEY=...    # from your Langfuse project; never commit either
+export LANGFUSE_SECRET_KEY=...
+export LANGFUSE_HOST=https://cloud.langfuse.com   # EU (default)
+
+make trace-smoke          # 3-shop screenshot sim traced (env demo); prints a public trace link
+make langfuse-datasets    # upload the three evals as datasets (synthetic media included)
+make proof-experiment     # proof eval as an experiment on recorded answers (JUDGE=1 adds the reply judge)
+make voice-experiment
+make receipts-experiment
+make judge-calibration    # calibrate the reply-tone judge on 8 labelled replies
+make langfuse-setup       # model prices, code evaluator, judge (disabled), dashboard
+make langfuse-monitor     # the five monitor checks over the last 24 h
+```
+
+Experiments replay the recorded model answers, so they cost no new model
+calls. Two steps are manual, in the Langfuse UI: add an LLM connection to
+switch on the reply-tone judge, and create the two critical alerts (the
+Hobby plan has no alerts API). Details: [`docs/RUN.md`](docs/RUN.md#3e-langfuse-tracing-and-experiments-optional).
+
 ## What is in this repo
 
 | Package | What it does |
@@ -203,6 +244,7 @@ and limits: [`docs/PROOF.md`](docs/PROOF.md).
 | `mimi/receipts` | The delivery receipt flow, the reply reader and its guards, payment-promise read-back, voice-reply scripts, the eval |
 | `mimi/voice` | Voice notes: a transcription port with Spitch and Muse Voice Transcribe adapters, a router, audio checks and ffmpeg conversion, money and date reading, voice-reply consent and text to speech, fakes, record and replay, the voice eval |
 | `mimi/proof` | Payment screenshots: the `read_payment_image` tool (Muse Spark vision), code checks, verdicts and invoice match, the bank witness, the proof ledger, the synthetic screenshot renderer, the eval |
+| `mimi/observe` | Optional Langfuse tracing: turn traces, redaction, the evals as datasets and experiments (off without keys) |
 | `mimi/sim` | Shop personas and a one-day simulator (shops can pay by screenshot) |
 | `mimi/types.py` | `ShopScope` and the kobo money unit |
 

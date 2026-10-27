@@ -12,7 +12,7 @@ starts with no intent types of its own. The module rules test
 | Package | Licence | Used by |
 |---|---|---|
 | `sqlalchemy` | MIT | `mimi/runtime/sql_store.py`, `mimi/receipts/inbox.py`, `mimi/voice/prefs.py`, sim `--db` |
-| `alembic` | MIT | migrations `0001_runtime_jobs` to `0004_voice_consent` |
+| `alembic` | MIT | migrations `0001_runtime_jobs` to `0005_payment_proofs` |
 | `httpx` | BSD-3-Clause | `mimi/models/meta.py` (Meta Model API client), `mimi/voice/` (Spitch and Muse Voice Transcribe clients) |
 | `pydantic` | MIT | `mimi/receipts/verdict.py` (typed verdict) |
 
@@ -21,6 +21,7 @@ Optional extras:
 | Package | Extra | Licence | Used by |
 |---|---|---|---|
 | `opentelemetry-api` | `otel` | Apache-2.0 | `mimi/runtime/tracing.py` `OtelStepTracer`, imported only when that tracer is built; the sim and tests use `RecordingStepTracer` |
+| `langfuse` 5.0.4 (pinned) | `langfuse` | MIT | `mimi/observe/` (traces, datasets, experiments), `scripts/trace_smoke.py`, `experiments/proof_experiment.py`; imported only when the `LANGFUSE_*` keys are set (the tests use a mock client) |
 | `psycopg2-binary` | `postgres` | LGPL with exceptions (dynamic use only, unmodified) | only when the sim or alembic points at Postgres |
 
 Their transitive packages: `httpcore` (BSD-3-Clause), `h11` (MIT), `anyio`
@@ -28,6 +29,17 @@ Their transitive packages: `httpcore` (BSD-3-Clause), `h11` (MIT), `anyio`
 `annotated-types` (MIT), `typing-extensions` (PSF-2.0), `typing-inspection`
 (MIT), `greenlet` (MIT AND PSF-2.0), `mako` (MIT), `markupsafe`
 (BSD-3-Clause).
+
+The `langfuse` extra brings: `opentelemetry-api`, `opentelemetry-sdk`,
+`opentelemetry-exporter-otlp-proto-http`, `opentelemetry-exporter-otlp-proto-common`,
+`opentelemetry-exporter-otlp-common`, `opentelemetry-exporter-http-transport`,
+`opentelemetry-proto` and `opentelemetry-semantic-conventions` (all
+Apache-2.0), `protobuf` (BSD-3-Clause), `googleapis-common-protos`
+(Apache-2.0), `requests` (Apache-2.0) with `urllib3` and
+`charset-normalizer` (MIT), `backoff` (MIT), `wrapt` (BSD-2-Clause) and
+`packaging` (Apache-2.0 OR BSD-2-Clause), besides `httpx` and `pydantic`
+above. `scripts/langfuse_monitor.py` and `scripts/langfuse_setup.py` use only
+`httpx`.
 
 ## System tools
 
@@ -65,6 +77,12 @@ speech (USD 0.0014 per second) for the synthetic fixtures and for voice
 replies to shops that opted in. Every
 call sends `X-Data-Retention: false`, so Spitch stores no copy of the audio
 or the output. Key: `SPITCH_API_KEY`, from the shell only.
+
+Langfuse Cloud (EU, `https://cloud.langfuse.com`), optional: traces,
+datasets, experiments, evaluators and a dashboard for the project, on the
+Hobby plan. Keys: `LANGFUSE_PUBLIC_KEY` and `LANGFUSE_SECRET_KEY`, from the
+shell only. The optional `langfuse/experiment-action` GitHub Action is
+pinned by commit (v1.0.12) in a manual, off-by-default workflow.
 
 Offline runs and CI use the deterministic FakeModel, the fake transcriber
 and the recorded answers, and make no network call.
