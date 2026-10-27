@@ -90,6 +90,11 @@ modify or distribute it is granted without written permission.
   consent, reported separately and kept out of this public repo.
 * In the product, Mimi keeps what it read off a screenshot plus the image's
   SHA-256 and size (`payment_proofs`, alembic `0005`), never the image.
+* The stock backtest's reorder history and shelf truth (`mimi/stock/reorders.py`,
+  `truth.py`) are generated in code from seeds; the 30 stock answers
+  (`eval/stock/answers.jsonl`) are synthetic and hand-written. A shop's
+  counts are kept for Mimi's estimate only (`RecordStockCount`, visibility
+  fixed to `mimi_only`); the distributor sees a band and a confidence.
 
 ## Observability (Langfuse, optional)
 
@@ -154,6 +159,11 @@ terms; every trace and dataset in the project is synthetic.
   the shop is told, neutrally, that it was sent to the distributor to
   confirm with the bank, and nothing on its book changes. Mimi never accuses
   a shop, never moves money and never changes credit.
+* A restock is only ever a draft in the distributor's approvals
+  (`RestockDraftForApproval`, `status` fixed to `draft` and `places_order` to
+  `False` in its type; quantity and amount in code, checked by a verifier).
+  Nothing is ordered until the distributor approves, and the distributor
+  sets any credit.
 
 ## Assets
 
@@ -188,6 +198,11 @@ permission and no faces in frame, and each will be listed here.
   `image_url` content part and the fields come back through a JSON schema
   response format; code does every check (`mimi/proof/checks.py`). Measured
   on a 40-screenshot synthetic eval, recorded live (`docs/PROOF.md`).
+* **Muse Spark 1.3** reads shops' free-text answers to the one-tap stock
+  question into a typed reading through a JSON schema response format
+  (`mimi/stock/answers.py`); taps and numbers are read in code, and code
+  decides the bucket and every quantity. Measured on a 30-answer synthetic
+  eval, recorded live (`docs/STOCK.md`).
 * Planned during the window: **SAM 3.1** for shelf-photo segmentation.
 
 ## Pre-submit checklist
