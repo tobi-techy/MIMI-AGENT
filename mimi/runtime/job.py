@@ -69,6 +69,10 @@ class Job:
     plan: list[str] = field(default_factory=list)
     todo: list[str] = field(default_factory=list)
     working_note: str = ""
+    # Opaque, JSON-safe state a helper's step keeps between steps (the
+    # harness keeps its transcript and step log here). Saved in the same
+    # compare-and-set as the step, so it can never run ahead of the job.
+    scratch: dict[str, Any] = field(default_factory=dict)
     budget: Budget = field(default_factory=Budget)
     # What one owner "yes, keep going" adds on top of ``budget``.
     budget_grant: Budget = field(default_factory=Budget)
@@ -107,6 +111,7 @@ class Job:
             "plan": list(self.plan),
             "todo": list(self.todo),
             "working_note": self.working_note,
+            "scratch": self.scratch,
             "budget": self.budget.to_dict(),
             "budget_grant": self.budget_grant.to_dict(),
             "spend": self.spend.to_dict(),
@@ -137,6 +142,7 @@ class Job:
             plan=list(raw["plan"]),
             todo=list(raw["todo"]),
             working_note=raw["working_note"],
+            scratch=dict(raw.get("scratch") or {}),
             budget=Budget.from_dict(raw["budget"]),
             budget_grant=Budget.from_dict(raw["budget_grant"]),
             spend=Spend.from_dict(raw["spend"]),

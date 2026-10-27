@@ -600,3 +600,29 @@ def test_sql_claim_race_has_one_winner(tmp_path: Any) -> None:
     assert sql.get("job-1").lease_owner == "A"
     assert sql.claim("B", T0, 30) is None
     engine.dispose()
+
+
+def test_step_scratch_is_saved_with_the_step_and_handed_to_the_next(store: Any) -> None:
+    """A helper's own state (the harness loop state) survives between steps."""
+    clock = Clock()
+    seen: list[dict[str, Any]] = []
+
+    def step(ctx: StepContext) -> StepOutcome:
+        seen.append(dict(ctx.scratch))
+        n = int(ctx.scratch.get("n", 0)) + 1
+        return StepOutcome(kind="done" if n == 3 else "continue", scratch={"n": n})
+
+    new_job(store)
+    r = JobRunner(store=store, sink=RecordingIntentSink(), tracer=RecordingStepTracer(),
+                  steps={"collector": step}, worker_id="w1", clock=clock,
+                  intent_types=TEST_INTENTS)
+    assert r.run_once() is not None
+    assert seen == [{}, {"n": 1}, {"n": 2}]
+    assert store.get("job-1").scratch == {"n": 3}
+
+
+def test_old_job_bodies_without_scratch_still_load() -> None:
+    raw = Job(job_id="j", tenant_id="t", helper="h", thread_id="th", wake_source="routine",
+              goal="g").to_dict()
+    raw.pop("scratch")
+    assert Job.from_dict(raw).scratch == {}

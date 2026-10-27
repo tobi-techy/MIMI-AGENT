@@ -28,6 +28,10 @@ class StepContext:
     # Owner messages taken at this boundary come first: they steer the step.
     new_owner_messages: tuple[str, ...]
     now: datetime
+    thread_id: str = ""
+    wake_source: str = ""
+    # The helper's own saved state from the previous step (``Job.scratch``).
+    scratch: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass(frozen=True)
@@ -41,6 +45,8 @@ class StepOutcome:
     plan: tuple[str, ...] | None = None
     todo: tuple[str, ...] | None = None
     working_note: str | None = None
+    # Replaces ``Job.scratch`` when set; saved with the step.
+    scratch: dict[str, Any] | None = None
     question: str | None = None
     sleep_until: datetime | None = None
     result: str | None = None

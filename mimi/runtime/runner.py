@@ -192,6 +192,9 @@ class JobRunner:
             working_note=job.working_note,
             new_owner_messages=texts,
             now=started,
+            thread_id=job.thread_id,
+            wake_source=job.wake_source,
+            scratch=job.copy().scratch,
         )
         with self.tracer.step(
             job_id=job.job_id,
@@ -231,6 +234,8 @@ class JobRunner:
             job.todo = list(outcome.todo)
         if outcome.working_note is not None:
             job.working_note = outcome.working_note
+        if outcome.scratch is not None:
+            job.scratch = dict(outcome.scratch)
         if outcome.kind != "continue":
             job.after_flush = {
                 "kind": outcome.kind,
