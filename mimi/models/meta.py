@@ -4,6 +4,8 @@ Plain httpx, no SDK: one POST to ``{base}/chat/completions``, a timeout, and
 one retry on a timeout, a connection error, 429 or 5xx. Muse Spark is a
 reasoning model, so this sends no ``temperature`` or ``stop`` (the docs advise
 default sampling and reject ``stop``) and uses ``max_completion_tokens``.
+A message with images is sent as content parts (``text`` then ``image_url``
+with a base64 data URL), the OpenAI-compatible vision shape Muse Spark takes.
 The key comes from the caller (``env.from_env`` reads ``META_API_KEY``); it is
 never logged or put in an error message.
 """
@@ -20,6 +22,15 @@ from mimi.models.base import ChatMessage, ChatResult, ModelError
 
 DEFAULT_BASE = "https://api.meta.ai/v1"
 _RETRY_STATUS = frozenset({429, 500, 502, 503, 504})
+
+
+def _message(m: ChatMessage) -> dict[str, Any]:
+    """A plain text message, or text plus images as content parts (vision)."""
+    if not m.images:
+        return {"role": m.role, "content": m.content}
+    parts: list[dict[str, Any]] = [{"type": "text", "text": m.content}]
+    parts += [{"type": "image_url", "image_url": {"url": im.data_url()}} for im in m.images]
+    return {"role": m.role, "content": parts}
 
 
 class MetaChatModel:
@@ -59,7 +70,7 @@ class MetaChatModel:
     ) -> ChatResult:
         body: dict[str, Any] = {
             "model": self.name,
-            "messages": [{"role": m.role, "content": m.content} for m in messages],
+            "messages": [_message(m) for m in messages],
             "max_completion_tokens": max_tokens,
         }
         if self._effort:

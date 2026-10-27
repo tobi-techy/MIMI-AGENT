@@ -4,6 +4,7 @@ from mimi.models.base import (
     ChatMessage,
     ChatModel,
     ChatResult,
+    ImageInput,
     ModelError,
 )
 from mimi.models.cache import CachedModel, CacheMiss
@@ -19,6 +20,7 @@ __all__ = [
     "ChatModel",
     "ChatResult",
     "FakeModel",
+    "ImageInput",
     "MetaChatModel",
     "ModelError",
     "from_env",
