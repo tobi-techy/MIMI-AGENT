@@ -1,0 +1,177 @@
+{
+ "policy_version": "stock-estimator-v0.2",
+ "plan_days": 7,
+ "scored_days": [
+  28,
+  55
+ ],
+ "histories": {
+  "reorders_dev": {
+   "seed": 2610,
+   "items": 202,
+   "item_days_scored": 5656,
+   "item_days_true_run_out_within_7": 2766,
+   "run_out_within_2_days": 0.7317,
+   "run_out_within_2_days_by_horizon": {
+    "within_3_days": 0.8119,
+    "within_7_days": 0.7317,
+    "within_14_days": 0.599
+   },
+   "run_out_within_2_days_by_confidence": {
+    "low": {
+     "share": 0.5815,
+     "n": 454
+    },
+    "medium": {
+     "share": 0.7405,
+     "n": 1607
+    },
+    "high": {
+     "share": 0.8085,
+     "n": 705
+    }
+   },
+   "likely_low_flag_precision": 0.5417,
+   "likely_low_flag_recall": 0.5338,
+   "questions": 335,
+   "questions_per_item_week": {
+    "1": 335
+   },
+   "max_questions_per_item_week": 1,
+   "max_questions_per_shop_week": 3,
+   "intents": {
+    "low_stock_signal": 335,
+    "send_stock_message": 670,
+    "record_stock_count": 335,
+    "restock_draft_for_approval": 325
+   },
+   "restock_drafts": 325,
+   "drafts_without_count": 0,
+   "orders_placed": 0,
+   "signals_with_counts": 0,
+   "baseline_no_counts": 0.718,
+   "baseline_naive": 0.5463
+  },
+  "reorders_held_out": {
+   "seed": 7,
+   "items": 202,
+   "item_days_scored": 5656,
+   "item_days_true_run_out_within_7": 2759,
+   "run_out_within_2_days": 0.7434,
+   "run_out_within_2_days_by_horizon": {
+    "within_3_days": 0.8154,
+    "within_7_days": 0.7434,
+    "within_14_days": 0.5887
+   },
+   "run_out_within_2_days_by_confidence": {
+    "low": {
+     "share": 0.5039,
+     "n": 387
+    },
+    "medium": {
+     "share": 0.7665,
+     "n": 1640
+    },
+    "high": {
+     "share": 0.8183,
+     "n": 732
+    }
+   },
+   "likely_low_flag_precision": 0.5471,
+   "likely_low_flag_recall": 0.5144,
+   "questions": 358,
+   "questions_per_item_week": {
+    "1": 358
+   },
+   "max_questions_per_item_week": 1,
+   "max_questions_per_shop_week": 3,
+   "intents": {
+    "low_stock_signal": 358,
+    "send_stock_message": 716,
+    "record_stock_count": 358,
+    "restock_draft_for_approval": 344
+   },
+   "restock_drafts": 344,
+   "drafts_without_count": 0,
+   "orders_placed": 0,
+   "signals_with_counts": 0,
+   "baseline_no_counts": 0.7202,
+   "baseline_naive": 0.5937
+  },
+  "route_stress": {
+   "seed": 2610,
+   "items": 686,
+   "item_days_scored": 16356,
+   "item_days_true_run_out_within_7": 2200,
+   "run_out_within_2_days": 0.4182,
+   "run_out_within_2_days_by_horizon": {
+    "within_3_days": 0.5182,
+    "within_7_days": 0.4182,
+    "within_14_days": 0.285
+   },
+   "run_out_within_2_days_by_confidence": {
+    "low": {
+     "share": 0.4062,
+     "n": 1546
+    },
+    "medium": {
+     "share": 0.4464,
+     "n": 634
+    },
+    "high": {
+     "share": 0.45,
+     "n": 20
+    }
+   },
+   "likely_low_flag_precision": 0.1868,
+   "likely_low_flag_recall": 0.4629,
+   "questions": 464,
+   "questions_per_item_week": {
+    "1": 464
+   },
+   "max_questions_per_item_week": 1,
+   "max_questions_per_shop_week": 3,
+   "intents": {
+    "low_stock_signal": 464,
+    "send_stock_message": 928,
+    "record_stock_count": 464,
+    "restock_draft_for_approval": 286
+   },
+   "restock_drafts": 286,
+   "drafts_without_count": 0,
+   "orders_placed": 0,
+   "signals_with_counts": 0,
+   "baseline_no_counts": 0.5141,
+   "baseline_naive": 0.2173
+  }
+ },
+ "robustness": {
+  "seeds": {
+   "11": 0.7051,
+   "42": 0.7087,
+   "99": 0.7481,
+   "123": 0.7513,
+   "2027": 0.7025,
+   "31337": 0.7232
+  },
+  "mean": 0.7231,
+  "min": 0.7025,
+  "max": 0.7513,
+  "at_or_over_bar": 6
+ },
+ "headline": {
+  "run_out_within_2_days": 0.7434,
+  "max_questions_per_item_week": 1,
+  "max_questions_per_shop_week": 3,
+  "drafts_without_count": 0,
+  "orders_placed": 0
+ },
+ "pass": {
+  "run_out_within_2_days": true,
+  "max_questions_per_item_week": true,
+  "max_questions_per_shop_week": true,
+  "drafts_without_count": true,
+  "orders_placed": true
+ },
+ "digest": "f66dce36587877df896fd49879e4a3d3d05c5f79ee217fc0ff147a957ad412f1"
+}

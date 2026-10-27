@@ -30,7 +30,7 @@ person, brand, phone number and account in it. The model calls are real.
 
 | Model | Role |
 |---|---|
-| `muse-spark-1.3` | Mimi's reasoning: reads each shop's reply burst in context and returns a typed verdict (confirmed, disputed, partial, unclear, unrelated) with the language, a confidence and the exact quote it relied on. With vision input, it also reads payment screenshots into typed fields |
+| `muse-spark-1.3` | Mimi's reasoning: reads each shop's reply burst in context and returns a typed verdict (confirmed, disputed, partial, unclear, unrelated) with the language, a confidence and the exact quote it relied on. With vision input, it also reads payment screenshots into typed fields. It reads free-text answers to the one-tap stock question ("e don finish", "about 25 sachets") into a typed reading |
 | `muse-spark-1.3-contributor` | The shop simulator: each fictional shop replies in its own voice |
 | `muse-voice-transcribe-1.0` | Speech to text for WhatsApp voice notes: first choice for English notes, fallback for the rest |
 | `sam-3.1` (planned) | Shelf photos, to check stock against what was delivered |
@@ -73,6 +73,20 @@ screenshot). A screenshot never makes a payment verified: only the bank's
 credit does, when the rep's delivery, the shop's proof and the bank agree.
 See [`docs/PROOF.md`](docs/PROOF.md).
 
+Stock: the shop never counts or keeps a book. Mimi estimates every item
+from exact stock in (the rep's deliveries) minus estimated sales (the
+reorder rhythm), all in code, and when an item is likely to run out within 3
+days asks one question the shop answers with a tap: "Sunrise Instant
+Noodles 70g left? Cartons: 0-2 | 3-5 | 6+". Taps and numbers are read in
+code; words ("two", "e don finish", "mo ni meji") by Muse Spark into a typed
+reading that code turns into a bucket. The count resets the estimate, and
+when the shelf will not last to the next van a restock draft goes to the
+distributor's approvals ("Thanks. I've asked Coral Lane Trading to prepare
+10 cartons for you. They'll confirm before delivery."). At most one question
+per item per week; the distributor sees "likely to run low" with a
+confidence, never the shop's counts; nothing is ordered until the
+distributor approves. See [`docs/STOCK.md`](docs/STOCK.md).
+
 Voice replies are off unless the shop itself sends `VOICE ON`; that message
 is kept as its consent. Then Mimi's short replies also go as a voice note in
 the shop's language (Spitch speech; Pidgin through an English-language
@@ -101,6 +115,9 @@ META_API_KEY= python -m mimi.sim --shops 3 --transcript --voice 1   # shops send
 META_API_KEY= SPITCH_API_KEY= python -m mimi.sim --shops 3 --transcript --voice 1 --promises 1 --voice-replies
 META_API_KEY= python -m mimi.proof.eval                 # screenshot eval, replaying recorded answers
 META_API_KEY= python -m mimi.sim --shop-ids shop-019,shop-037,shop-025 --transcript --screenshots 1 --fakes 0.4
+python -m mimi.stock.backtest                           # stock estimator backtest (no model)
+META_API_KEY= python -m mimi.stock.eval                 # stock answer eval, replaying recorded answers
+META_API_KEY= python -m mimi.sim --stock --transcript   # the low-stock scene
 ```
 
 **Live** (real Muse Spark calls):
@@ -114,6 +131,8 @@ python -m mimi.voice.eval --live
 python -m mimi.sim --shops 3 --transcript --voice 1 --promises 1 --voice-replies
 python -m mimi.proof.eval --live
 python -m mimi.sim --shop-ids shop-019,shop-037,shop-025 --transcript --screenshots 1 --fakes 0.4
+python -m mimi.stock.eval --live
+python -m mimi.sim --stock --stock-words --transcript
 ```
 
 A live 3-shop day prints the WhatsApp transcript (receipts, shop replies,
@@ -193,6 +212,40 @@ that keeps every printed figure consistent is caught by the bank witness,
 which is why a screenshot alone only ever means "likely". Failures, fixes
 and limits: [`docs/PROOF.md`](docs/PROOF.md).
 
+## Eval: stock estimate and one-tap counts
+
+**Backtest** (no model calls): every morning for six weeks, the production
+stock check, questions, taps and drafts run day by day on a synthetic
+reorder history for the 40 Coral Lane shops' regular lines (shops reorder
+when low, with demand drift, market days, stock-outs and stock bought
+elsewhere that Mimi never sees). The estimator was tuned on one seed and is
+reported on a held-out seed it never saw.
+
+| | Mark | Held-out seed | Same estimator, never asks | Naive baseline |
+|---|---|---|---|---|
+| Run-out within 2 days (true run-out within 7 days) | >= 70% (proposed) | **74.3%** | 72.0% | 59.4% |
+| ... high-confidence items | | 81.8% | | |
+| ... true run-out within 3 days | | 81.5% | | |
+| Max questions per item per week | <= 1 | **1** | | |
+| Restock drafts without the shop's count / orders placed | 0 | **0 / 0** | | |
+
+The proposed 70% bar is **met** on the held-out seed (estimator v0.2; v0.1
+was 67.5%). The margin is thin: over six more unseen seeds the mean is
+72.3% (70.2% to 75.1%; all six at or just over 70%), and slow lines at small
+shops (one or two deliveries a month) still miss most, where one unit is
+days of sales. That is why every "likely to run low" carries a confidence.
+On the world's own random-basket deliveries, which carry no reorder rhythm,
+it is 42% (a stress test, no mark). Item-days that start on an empty shelf
+are scored too: a stock-out is the miss that matters most.
+
+**Answer reading**: 30 synthetic answers (taps, numbers, number words,
+Pidgin, Yoruba, Igbo, Hausa, packets of a carton, ranges, a burst, vague
+answers, an injection), through the production flow, recorded live on Muse
+Spark 1.3 and replayed in CI: **30 of 30** correct bucket (mark 95%; code
+only: 33%), 18 of 18 exact numbers, all 6 unclear answers got one follow-up
+and no guess, nothing drafted from the injection. Details and limits:
+[`docs/STOCK.md`](docs/STOCK.md).
+
 ## Tracing and experiments with Langfuse (optional)
 
 Langfuse is optional and **off unless both `LANGFUSE_PUBLIC_KEY` and
@@ -201,7 +254,8 @@ exporter is a no-op: no client, no thread, no network call. The offline
 replay evals stay the CI gate.
 
 With it on, every shop turn becomes one trace (`handle-receipt-reply`,
-`handle-voice-note`, `check-payment-screenshot`, ...) with the model calls as
+`handle-voice-note`, `check-payment-screenshot`, `check-shop-stock`,
+`handle-stock-answer`, ...) with the model calls as
 generations (tokens, latency, cost), each code check as a tool step and the
 flow's decision as a chain step. `user_id` is the shop id (pseudonymous),
 `session_id` the shop's delivery or payment thread, tags carry feature,
@@ -220,6 +274,7 @@ export LANGFUSE_SECRET_KEY=...
 export LANGFUSE_HOST=https://cloud.langfuse.com   # EU (default)
 
 make trace-smoke          # 3-shop screenshot sim traced (env demo); prints a public trace link
+make trace-stock          # low-stock scene traced (env demo); prints a public link to a draft trace
 make langfuse-datasets    # upload the three evals as datasets (synthetic media included)
 make proof-experiment     # proof eval as an experiment on recorded answers (JUDGE=1 adds the reply judge)
 make voice-experiment
@@ -244,14 +299,15 @@ Hobby plan has no alerts API). Details: [`docs/RUN.md`](docs/RUN.md#3e-langfuse-
 | `mimi/receipts` | The delivery receipt flow, the reply reader and its guards, payment-promise read-back, voice-reply scripts, the eval |
 | `mimi/voice` | Voice notes: a transcription port with Spitch and Muse Voice Transcribe adapters, a router, audio checks and ffmpeg conversion, money and date reading, voice-reply consent and text to speech, fakes, record and replay, the voice eval |
 | `mimi/proof` | Payment screenshots: the `read_payment_image` tool (Muse Spark vision), code checks, verdicts and invoice match, the bank witness, the proof ledger, the synthetic screenshot renderer, the eval |
+| `mimi/stock` | Stock: estimator v0.2 (stock in minus estimated sales, with confidence), trigger and weekly caps, one-tap question and answer reading (code for taps, Muse Spark for words), restock draft and verifier, the backtest and the answer eval |
 | `mimi/observe` | Optional Langfuse tracing: turn traces, redaction, the evals as datasets and experiments (off without keys) |
-| `mimi/sim` | Shop personas and a one-day simulator (shops can pay by screenshot) |
+| `mimi/sim` | Shop personas and a one-day simulator (shops can pay by screenshot), and the low-stock scene |
 | `mimi/types.py` | `ShopScope` and the kobo money unit |
 
 Docs: [`docs/HACKATHON.md`](docs/HACKATHON.md) (what was built when),
 [`docs/RUNTIME.md`](docs/RUNTIME.md), [`docs/WORLD.md`](docs/WORLD.md),
 [`docs/RUN.md`](docs/RUN.md), [`docs/VOICE.md`](docs/VOICE.md),
-[`docs/PROOF.md`](docs/PROOF.md),
+[`docs/PROOF.md`](docs/PROOF.md), [`docs/STOCK.md`](docs/STOCK.md),
 [`docs/COMPLIANCE.md`](docs/COMPLIANCE.md),
 [`docs/DEPENDENCIES.md`](docs/DEPENDENCIES.md).
 

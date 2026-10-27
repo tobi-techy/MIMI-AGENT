@@ -154,7 +154,7 @@ class SimGo:
         if idempotency_key in self.accepted:
             return idempotency_key
         self.accepted[idempotency_key] = (kind, payload)
-        if kind == "send_shop_message":
+        if kind in ("send_shop_message", "send_stock_message"):
             self.to_shops.append(payload)
         elif kind == "record_delivery_consent":
             self.consents[payload["delivery_id"]] = payload

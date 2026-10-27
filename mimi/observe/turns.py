@@ -47,7 +47,8 @@ from mimi.runtime.tracing import AttrValue, StepSpan, StepTracer
 
 log = logging.getLogger(__name__)
 
-Flow = Literal["receipt_reply", "voice_note", "payment_screenshot", "promise_reply"]
+Flow = Literal["receipt_reply", "voice_note", "payment_screenshot", "promise_reply",
+               "stock_check", "stock_answer"]
 ObsKind = Literal["generation", "span", "tool", "evaluator", "agent", "chain", "retriever"]
 ScoreType = Literal["BOOLEAN", "CATEGORICAL", "NUMERIC"]
 
@@ -57,6 +58,8 @@ FEATURE: dict[str, str] = {
     "voice_note": "voice",
     "payment_screenshot": "proof",
     "promise_reply": "promise",
+    "stock_check": "stock",
+    "stock_answer": "stock",
 }
 DISTRIBUTOR_TAG = "distributor:coral-lane"
 
@@ -208,6 +211,8 @@ class Turn:
             "voice_note": "handle-voice-note",
             "payment_screenshot": "check-payment-screenshot",
             "promise_reply": "handle-promise-reply",
+            "stock_check": "check-shop-stock",
+            "stock_answer": "handle-stock-answer",
         }[self.flow]
 
     def add(self, obs: Observation) -> None:
@@ -425,6 +430,7 @@ class _TeeSpan:
 
 
 PROOF_HELPER_NAME = "payment_proof"
+STOCK_HELPER_NAME = "stock_check"
 _CLARIFY_STAGES = frozenset({"clarified", "asked_to_type"})
 
 
@@ -453,7 +459,11 @@ class TurnStepTracer:
             with cm as span:
                 yield span
             return
-        flow: Flow = "payment_screenshot" if helper == PROOF_HELPER_NAME else "receipt_reply"
+        flow: Flow = (
+            "payment_screenshot" if helper == PROOF_HELPER_NAME
+            else "stock_answer" if helper == STOCK_HELPER_NAME
+            else "receipt_reply"
+        )
         turn = self.book.turn_for(
             job_id, flow=flow, shop_id=_shop_of(thread_id), thread_id=thread_id
         )
@@ -500,6 +510,8 @@ class TurnStepTracer:
             turn.flow = "voice_note"
         if "promise_action" in attrs:
             turn.flow = "promise_reply"
+        if "stock_action" in attrs:
+            turn.flow = "stock_check" if attrs["stock_action"] == "asked" else "stock_answer"
         turn.language = str(attrs.get("language", "") or "")
         stage = str(attrs.get("stage", ""))
         turn.add(self._decision(helper, step_index, started, duration, attrs, verdict))
@@ -508,7 +520,7 @@ class TurnStepTracer:
         turn.input = turn.input or self._input(turn)
         turn.output = self._output(turn, attrs, verdict)
         turn.metadata.update({"helper": helper, "step_index": step_index,
-                              "action": attrs.get("action", attrs.get("result", "")),
+                              "action": attrs.get("action", attrs.get("stock_action", attrs.get("result", ""))),
                               "stage": stage})
         self._scores(turn, attrs, verdict, stage, failed or "error" in attrs)
         self.book.close(turn.job_id, verdict)
@@ -540,7 +552,8 @@ class TurnStepTracer:
                     **{k: attrs[k] for k in ("action", "confidence", "language", "match",
                                              "held_back", "evidence_found", "stage",
                                              "promise_action", "promise_reason", "intents",
-                                             "outcome") if k in attrs}},
+                                             "outcome", "stock_action", "draft_quantity",
+                                             "answer_via") if k in attrs}},
             metadata={**keep, "helper": helper, "step_index": step_index},
             level="ERROR" if "error" in attrs else "DEFAULT",
             status_message=str(attrs.get("error", "")),
@@ -587,6 +600,16 @@ class TurnStepTracer:
         """What the shop sent: the screenshot or voice note (with its reading),
         or the typed messages Mimi judged."""
         for obs in turn.observations:
+            if obs.name == "read-stock-answer" and isinstance(obs.input, dict):
+                return {"shop_messages": obs.input.get("shop_messages"),
+                        "question": obs.input.get("question")}
+            if obs.name == "estimate-stock" and isinstance(obs.input, dict):
+                out = obs.output if isinstance(obs.output, dict) else {}
+                return {"stock_check": {"shop_id": obs.input.get("shop_id"),
+                                        "sku": obs.input.get("sku"),
+                                        "as_of_day": obs.input.get("as_of_day"),
+                                        "days_to_run_out": out.get("days_to_run_out"),
+                                        "confidence": out.get("confidence")}}
             if obs.name == "read-payment-screenshot" and isinstance(obs.input, dict):
                 return {"shop_message": "payment screenshot", "image": obs.input.get("image"),
                         "caption": obs.input.get("caption", "")}
@@ -606,7 +629,7 @@ class TurnStepTracer:
     def _output(turn: Turn, attrs: Mapping[str, AttrValue], verdict: str) -> Any:
         out: dict[str, Any] = {
             "verdict": verdict,
-            "action": attrs.get("action", attrs.get("result", "")),
+            "action": attrs.get("action", attrs.get("stock_action", attrs.get("result", ""))),
             "intents": turn.metadata.pop("proposed_intents", []),
         }
         replies = turn.metadata.pop("reply_to_shop", [])
@@ -618,6 +641,7 @@ class TurnStepTracer:
     def _scores(turn: Turn, attrs: Mapping[str, AttrValue], verdict: str, stage: str,
                 errored: bool) -> None:
         turn.score("turn_error", errored, "BOOLEAN")
+        kinds = turn.metadata.pop("proposed_intents_seen", [])
         if turn.flow in ("receipt_reply", "voice_note"):
             turn.score("shop_reply", verdict, "CATEGORICAL",
                        "the shop's own answer to the receipt, as Mimi read it")
@@ -635,6 +659,16 @@ class TurnStepTracer:
                     turn.score("fake_caught", verdict == "looks_fake", "BOOLEAN")
         elif turn.flow == "promise_reply":
             turn.score("promise_recorded", attrs.get("promise_action") == "record", "BOOLEAN")
+        elif turn.flow == "stock_answer":
+            action = str(attrs.get("stock_action", ""))
+            turn.score("clarification_asked", action == "asked_again", "BOOLEAN")
+            turn.score("restock_drafted", action == "draft", "BOOLEAN")
+            turn.score("draft_without_count",
+                       "RestockDraftForApproval" in kinds and "RecordStockCount" not in kinds,
+                       "BOOLEAN", "critical: a restock draft must come from the shop's own count")
+            if "sim_true_bucket" in turn.metadata and attrs.get("verdict") in ("0-2", "3-5", "6+"):
+                turn.score("bucket_correct", attrs["verdict"] == turn.metadata["sim_true_bucket"],
+                           "BOOLEAN", "the shop's answer read into the bucket the sim shop meant")
 
     def _bank(self, turn: Turn, attrs: Mapping[str, AttrValue]) -> None:
         """The bank feed checked a "likely" payment: ground truth for the read."""
@@ -661,6 +695,7 @@ def observe_step(fn: Any) -> Any:
                 texts = [str(t) for t in (getattr(i, "text", None) for i in out.intents) if t]
                 kinds = [type(i).__name__ for i in out.intents]
                 turn.metadata["proposed_intents"] = kinds
+                turn.metadata["proposed_intents_seen"] = kinds
                 if texts:
                     turn.metadata["reply_to_shop"] = texts
             except Exception:  # pragma: no cover - defensive
@@ -776,4 +811,5 @@ class TracedModel:
     def _purpose(meta: Mapping[str, str] | None) -> str:
         script = (meta or {}).get("script", "")
         return {"verdict": "judge-receipt-reply", "proof_read": "read-payment-screenshot-fields",
+                "stock_answer": "read-stock-answer-words",
                 }.get(script, f"run-{script}" if script else "call-model")
