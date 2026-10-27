@@ -66,9 +66,11 @@ ANSWER_WINDOW = timedelta(hours=24)
 BURST_SETTLE = timedelta(seconds=90)
 Key = tuple[str, str]
 # A job in one of these states no longer holds its shop's question: DONE is
-# finished, and BLOCKED is parked for a human. A shop must not stay muted, or
-# have its later messages swallowed, because one job broke.
-QUESTION_CLOSED: frozenset[JobState] = frozenset({JobState.DONE, JobState.BLOCKED})
+# finished, BLOCKED is parked for a human, WAITING_ON_OWNER is parked on a
+# budget or a stop (stock never asks the owner anything). A shop must not stay
+# muted, or have its later messages swallowed, because one job is parked.
+QUESTION_CLOSED: frozenset[JobState] = frozenset(
+    {JobState.DONE, JobState.BLOCKED, JobState.WAITING_ON_OWNER})
 # world day -> every (shop, sku) history with deliveries before that day
 HistoriesFor = Callable[[int], dict[Key, ItemHistory]]
 
@@ -92,8 +94,8 @@ class StockLedger:
     runs: list[dict[str, Any]] = field(default_factory=list)
     replies: dict[str, list[StockReply]] = field(default_factory=lambda: defaultdict(list))
     seen_ids: set[str] = field(default_factory=set)
-    # Jobs whose question was closed while they were BLOCKED. If a human
-    # requeues one, it ends quietly: it does not ask again and does not read
+    # Jobs whose question was closed while they were parked (BLOCKED or
+    # WAITING_ON_OWNER). If one is requeued, it ends quietly: it does not ask again and does not read
     # replies that came in for a later question.
     closed_jobs: set[str] = field(default_factory=set)
 
@@ -116,7 +118,7 @@ class StockDesk:
 
     def question_open(self, shop_id: str) -> str | None:
         """The shop's job that still holds its question, closing any that no
-        longer does (DONE or BLOCKED). The one predicate ``morning_check`` and
+        longer does (see ``QUESTION_CLOSED``). The one predicate ``morning_check`` and
         ``receive`` share."""
         job_id = self.open_job.get(shop_id)
         if job_id is None:
@@ -255,13 +257,14 @@ class StockFlow:
         # reader runs must still be read on the next step.
         seen = state["seen"] + len(new)
         late = self.ledger.replies.get(ctx.goal, [])[seen:]
-        if ans.bucket is None and late:
-            # The shop wrote again while this was being read: read it all as
-            # one burst once it settles, instead of asking again over it.
+        if late:
+            # The shop wrote again while this was being read ("3" ... "no, 1"):
+            # read it all as one burst once it settles, instead of recording a
+            # count it may have corrected or asking again over its answer.
             settled = datetime.fromisoformat(late[-1].received_at) + BURST_SETTLE
             return StepOutcome(kind="sleep", sleep_until=max(settled, ctx.now + timedelta(seconds=1)),
                                working_note=json.dumps(state),
-                               trace=self._attrs("unclear", "read_again", est, ans))
+                               trace=self._attrs(ans.bucket or "unclear", "read_again", est, ans))
         if ans.bucket is None:
             if state["stage"] == "asked":
                 msg = SendStockMessage(scope, est.sku, "stock_ask_again",

@@ -233,7 +233,12 @@ def decide(reading: StockReading, item_name: str, texts: Sequence[str]) -> tuple
             if not per:
                 return None, None, "smaller units, but no pack size for this item"
             exact = q // per
-            return bucket_of(exact), exact, f"{q} smaller units = {exact} whole (pack of {per})"
+            converted = bucket_of(exact)
+            # The prompt asks for bucket "none" here; a bucket that disagrees
+            # with the conversion is a misreading, not a count.
+            if reading.bucket != "none" and reading.bucket != converted:
+                return None, None, f"model bucket {reading.bucket} disagrees with code {converted}"
+            return converted, exact, f"{q} smaller units = {exact} whole (pack of {per})"
         if reading.unit_as_stated == "unknown":
             return None, None, "count in a unit that is not the unit asked"
         exact = q

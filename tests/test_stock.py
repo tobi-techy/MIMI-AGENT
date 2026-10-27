@@ -423,6 +423,31 @@ def test_a_reply_that_lands_while_reading_is_read_next() -> None:
     assert "record_stock_count" in _kinds(r)
 
 
+def test_a_correction_that_lands_while_reading_is_read_with_the_burst() -> None:
+    r = _rig()
+    r["desk"].morning_check(r["clock"]["now"])
+    r["runner"].run_once()
+    reader = r["flow"].reader
+
+    def slow_reader(**kw: Any) -> Any:
+        if not r["flow"].answers:
+            r["desk"].receive("m2", "shop-007", "sorry na 1", r["clock"]["now"])
+        return reader(**kw)
+
+    r["flow"].reader = slow_reader
+    _say(r, "4", 1)
+    r["clock"]["now"] += timedelta(minutes=3)
+    while r["runner"].run_once() is not None:
+        pass
+    counts = [p for k, p in r["sink"].accepted.values() if k == "record_stock_count"]
+    assert len(counts) == 1 and counts[0]["bucket"] == "0-2"
+
+
+def test_a_smaller_unit_count_with_a_disagreeing_bucket_is_not_accepted() -> None:
+    assert decide(_reading(quantity_as_stated=80, unit_as_stated="smaller_unit", bucket="6+",
+                           evidence_quote="80 packets"), NOODLES, ["80 packets"])[0] is None
+
+
 def test_a_blocked_job_frees_its_shop_and_ends_quietly_if_requeued() -> None:
     from mimi.runtime.states import JobState
 
