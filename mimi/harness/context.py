@@ -454,6 +454,9 @@ class ContextBuilder:
         # ---- 7: the newest message (built first so history can be trimmed to fit)
         slice_data, read_at = self._slice(event, skill, shop_id, man)
         man.slice_read_at = read_at
+        # _slice writes its own notes (a new shop with nothing open) to the
+        # manifest; keep them, or the prompt never says "nothing open".
+        notes.extend(n for n in man.notes if n not in notes)
         focus = SKILL_FOCUS.get(skill, "")
         if focus:
             notes = [f"routed to {skill}: {focus}", *notes]
@@ -634,7 +637,9 @@ class ContextBuilder:
         if len(data) <= 2:
             man.omitted.append(Omitted(name="book slice", reason="nothing shared to show"))
             return {}, read_at
-        if not any(k in data for k in ("open_invoices", "recent_payments", "promises")) and \
+        # Empty lists count as nothing open: a shop with no rows still gets
+        # the note, so the model never guesses at a history that is not there.
+        if not any(data.get(k) for k in ("open_invoices", "recent_payments", "promises")) and \
                 not (data.get("balance") or {}).get("open_invoices"):
             man.notes.append("new shop or no history: nothing open on the book")
         return _with_naira(data), read_at

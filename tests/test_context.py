@@ -255,3 +255,19 @@ def test_context_eval_meets_its_pass_marks_on_the_recorded_answers(
         monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("META_API_KEY", "")
     assert ce.main(["--no-write"]) == 0
+
+
+def test_a_shop_with_nothing_open_gets_the_note_in_the_manifest_and_the_prompt() -> None:
+    # CodeRabbit on PR #10: build() overwrote the note _slice adds, and empty
+    # rows counted as history, so "nothing open" never reached the model.
+    quiet = next(s.shop_id for s in W.shops
+                 if not any(r.shop_id == s.shop_id and r.outstanding_kobo > 0
+                            for r in W.receivables))
+    b, _, helper = builder()
+    ctx = b.build(ev(shop=quiet), helper, "collector/promise-to-pay")
+    note = "new shop or no history: nothing open on the book"
+    assert note in ctx.manifest.notes
+    assert f"Note: {note}" in ctx.messages[-1]["content"]
+    # A shop with open invoices does not get it.
+    busy = b.build(ev(shop="shop-001", thread="t2"), helper, "collector/collections")
+    assert note not in busy.manifest.notes
