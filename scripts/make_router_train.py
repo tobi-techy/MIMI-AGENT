@@ -96,6 +96,21 @@ def jobs() -> list[tuple[str, str, str]]:
     return out
 
 
+def parse_messages(raw: str) -> list[str]:
+    """The generator's messages, or nothing when the answer is not the shape asked for.
+
+    ``{"messages": "hello"}`` would otherwise become five one-letter rows
+    with the requested label, so anything but a list of strings is dropped.
+    """
+    try:
+        msgs = json.loads(raw[raw.find("{"):raw.rfind("}") + 1])["messages"]
+    except (ValueError, KeyError, TypeError):
+        return []
+    if not isinstance(msgs, list) or not all(isinstance(m, str) for m in msgs):
+        return []
+    return [m.strip() for m in msgs if m.strip()]
+
+
 def main() -> int:
     key = os.environ.get("META_API_KEY", "").strip()
     inner = MetaChatModel(api_key=key, model=MODEL, reasoning_effort="minimal",
@@ -114,12 +129,8 @@ def main() -> int:
                              lang=LANG_NAMES[lang])
         res = model.complete([ChatMessage("user", text)], max_tokens=3000,
                              response_format={"type": "json_object"})
-        try:
-            msgs = json.loads(res.text[res.text.find("{"):res.text.rfind("}") + 1])["messages"]
-        except (ValueError, KeyError, TypeError):
-            return []
-        return [{"text": str(m).strip(), "skill": skill, "sender": sender, "lang": lang}
-                for m in msgs if str(m).strip()]
+        return [{"text": m, "skill": skill, "sender": sender, "lang": lang}
+                for m in parse_messages(res.text)]
 
     with ThreadPoolExecutor(10) as ex:
         rows = [r for batch in ex.map(one, jobs()) for r in batch]
