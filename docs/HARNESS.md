@@ -209,8 +209,10 @@ The fast classifier is trusted when it agrees with phrase evidence (prob
 >= 0.9), or, with no phrase evidence, when it is >= 0.99 sure of a non-money
 skill on a message of three or more words in English or Pidgin (its Yoruba,
 Hausa and Igbo lines are too thin to trust alone). A one- or two-word message
-nothing matched is "too short to tell": one question, buttons from its best
-non-money guesses.
+nothing matched is "too short to tell": one question, with buttons from what
+the message is made of ("50k": a payment you made or when you will pay;
+"Friday": when you will pay or a late delivery; "Indomie", "2 carton": an
+order or what is left on the shelf), else the classifier's two best guesses.
 
 `wiring.TurnRunner` turns a routed turn into a harness run: system events to
 the feed, the clarifying question when there is one, the context built for

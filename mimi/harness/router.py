@@ -521,10 +521,12 @@ class Router:
                 and lang in FAST_LANGS):
             return top, second, "fast_non_money"
         if lx.top_score == 0 and words <= 2:
-            # The buttons offer its best non-money guesses: a two-word message
-            # is not where a payment or credit flow should start.
-            safe = [k for k, _ in pr if k not in MONEY_SKILLS][:2]
-            a, b = (safe + [top, second])[:2]
+            # Ask. The buttons come from what the message is made of (an
+            # amount, a day, a product or a count), else the classifier's two
+            # best guesses. A tap is the shop's own choice.
+            a, b = _short_options(clean) or (top, second)
+            if a not in allowed or b not in allowed:
+                a, b = top, second
             return a, b, "too_short_to_tell"
         return None
 
@@ -591,6 +593,24 @@ class Router:
 
 
 FAST_LANGS = frozenset({"en", "pcm"})
+
+_AMOUNT = re.compile(r"^(?:n|₦|ngn)?\s?\d[\d,]*(?:\.\d+)?\s?k?$|\bmoney\b|\bkudi\b|\bowo\b|\bego\b",
+                     re.I)
+_DAY = re.compile(r"\b(?:monday|tuesday|wednesday|thursday|friday|saturday|sunday|tomorrow|"
+                  r"today|next week|month end|lola|gobe|echi)\b", re.I)
+_GOODS = re.compile(r"\b(?:\d+\s?(?:carton|ctn|bag|pack|crate)s?|indomie|peak|milo|golden penny|"
+                    r"dangote|coke|hollandia|semo|semovita|sugar|milk|noodles?|detergent)\b", re.I)
+
+
+def _short_options(text: str) -> tuple[str, str] | None:
+    t = lexicon.normalise(text)
+    if _AMOUNT.search(t):
+        return "collector/payment-check", "collector/promise-to-pay"
+    if _DAY.search(t):
+        return "collector/promise-to-pay", "order/delivery-status"
+    if _GOODS.search(t):
+        return "order/order-intake", "stock/stock-count"
+    return None
 
 
 def helper_of(key: str) -> str:
