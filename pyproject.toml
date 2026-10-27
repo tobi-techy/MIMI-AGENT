@@ -47,6 +47,7 @@ include = ["mimi*"]
 
 [tool.setuptools.package-data]
 "mimi.world" = ["fixtures/*.json"]
+"mimi.harness" = ["data/*.jsonl"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
