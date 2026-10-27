@@ -199,11 +199,23 @@ class StockScene:
                                     f"bucket={ans.bucket} exact={ans.exact_units} via={ans.via} "
                                     f"({ans.reason})")
             handed = self._drain(handed, queue)
-        self.clock["now"] = self.start + timedelta(hours=26)
+        # Past every answer deadline still pending (a follow-up ask can end
+        # after the first day), so unanswered jobs close and are reported.
+        self.clock["now"] = max([self.start + timedelta(hours=26), *self._deadlines(jobs)])
         while self.runner.run_once() is not None:
             pass
         self.turns.close_all()
         return self.report(jobs)
+
+    def _deadlines(self, jobs: list[str]) -> list[datetime]:
+        out = []
+        for j in jobs:
+            job = self.store.get(j)
+            if job.result is None and job.working_note:
+                deadline = json.loads(job.working_note).get("deadline")
+                if deadline:
+                    out.append(datetime.fromisoformat(deadline) + timedelta(minutes=1))
+        return out
 
     def report(self, jobs: list[str]) -> dict[str, Any]:
         kinds: dict[str, int] = {}
