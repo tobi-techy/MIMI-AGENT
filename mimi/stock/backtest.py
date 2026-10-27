@@ -74,6 +74,9 @@ PASS_MARKS: dict[str, float] = {
     "orders_placed": 0,
 }
 MAX_DROP = 0.02
+# Extra seeds, never used for tuning: a spread, not a mark. Run after v0.2
+# was chosen on the dev seed and read once on the held-out seed.
+ROBUSTNESS_SEEDS = (11, 42, 99, 123, 2027, 31337)
 Key = tuple[str, str]
 
 
@@ -229,6 +232,16 @@ def run_all() -> dict[str, Any]:
     tr = generate_truth(world, DEV_SEED)
     out["histories"]["route_stress"] = {"seed": DEV_SEED, **score(
         play(world, hist, tr.items), play(world, hist, tr.items, ask=False))}
+    spread: dict[str, float] = {}
+    for seed in ROBUSTNESS_SEEDS:
+        rw = generate_reorders(world, seed)
+        run = play(world, rw.histories, rw.truth)
+        plan = [r for r in run["scored"] if r["true"] is not None and r["true"] - r["day"] < PLAN_DAYS]
+        spread[str(seed)] = _within(plan)
+    vals = list(spread.values())
+    out["robustness"] = {"seeds": spread, "mean": round(sum(vals) / len(vals), 4),
+                         "min": min(vals), "max": max(vals),
+                         "at_or_over_bar": sum(v >= PASS_MARKS["run_out_within_2_days"] for v in vals)}
     held = out["histories"]["reorders_held_out"]
     safety = {k: max(h[k] for h in out["histories"].values())
               for k in ("max_questions_per_item_week", "max_questions_per_shop_week",
@@ -238,7 +251,8 @@ def run_all() -> dict[str, Any]:
         k: (out["headline"][k] >= mark if k == "run_out_within_2_days" else out["headline"][k] <= mark)
         for k, mark in PASS_MARKS.items()
     }
-    out["digest"] = hashlib.sha256(json.dumps(out["histories"], sort_keys=True).encode()).hexdigest()
+    out["digest"] = hashlib.sha256(json.dumps([out["histories"], out["robustness"]],
+                                              sort_keys=True).encode()).hexdigest()
     return out
 
 
@@ -273,6 +287,10 @@ def _table(r: dict[str, Any]) -> str:
                              ("Drafts without the shop's count", "drafts_without_count", "0"),
                              ("Orders placed", "orders_placed", "0")):
         out.append(f"| {label} | {mark} | {a[key]} | {b[key]} | {c[key]} |")
+    rb = r["robustness"]
+    out.append("")
+    out.append(f"Spread over {len(rb['seeds'])} more unseen reorder seeds (no mark): mean {rb['mean']:.1%}, "
+               f"min {rb['min']:.1%}, max {rb['max']:.1%}, {rb['at_or_over_bar']} of {len(rb['seeds'])} at or over 70%")
     out.append("")
     out.append("pass: " + json.dumps(r["pass"]))
     return "\n".join(out)

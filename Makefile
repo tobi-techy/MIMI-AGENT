@@ -36,7 +36,7 @@ proof-fixtures:     ## redraw the 40 synthetic screenshots and their labels (Pil
 	$(PY) scripts/make_proof_fixtures.py
 
 stock-backtest:     ## stock estimator backtest with the one-tap loop (no model; compares to the report)
-	$(PY) -m mimi.stock.backtest
+	$(PY) -m mimi.stock.backtest --strict
 
 stock-eval:         ## stock answer-reading eval, 30 cases, replaying the recorded Muse Spark answers
 	META_API_KEY= $(PY) -m mimi.stock.eval

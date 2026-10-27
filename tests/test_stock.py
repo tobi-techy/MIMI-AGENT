@@ -425,6 +425,10 @@ def test_backtest_is_deterministic_and_keeps_the_caps() -> None:
         assert a["pass"][k], k
     held = a["histories"]["reorders_held_out"]
     assert held["run_out_within_2_days"] > held["baseline_naive"]
+    # The RAI-270 bar (proposed): run-out within 2 days for >= 70% on the
+    # held-out seed. The spread over more unseen seeds is reported, not gated.
+    assert a["pass"]["run_out_within_2_days"], held["run_out_within_2_days"]
+    assert set(a["robustness"]["seeds"]) == {"11", "42", "99", "123", "2027", "31337"}
 
 
 def test_reorder_history_is_seeded() -> None:

@@ -49,7 +49,7 @@ jobs:
       - name: Payment-screenshot eval, 40 synthetic alerts (recorded Muse Spark answers; fails on a fake marked likely)
         run: python -m mimi.proof.eval
       - name: Stock backtest, estimator v0 with one-tap counts (no model; caps and drafts gated)
-        run: python -m mimi.stock.backtest
+        run: python -m mimi.stock.backtest --strict
       - name: Stock answer eval, 30 synthetic answers (recorded Muse Spark answers; fails under 95%)
         run: python -m mimi.stock.eval
       - name: Offline low-stock scene
