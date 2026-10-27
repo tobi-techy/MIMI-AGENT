@@ -119,6 +119,18 @@ class Directory(BaseModel):
     def shop_for(self, phone: str) -> str:
         return self.shop_phones.get(phone, "")
 
+    def is_owner(self, inbound: Inbound) -> bool:
+        """An owner message is the owner only from a number Go knows as theirs.
+
+        No number means the console (Go signed the owner in); an owner-channel
+        message from any other number is a stranger and is treated as one by
+        the front door (no stop, no steering, no owner thread) and the router.
+        """
+        if inbound.source != "owner_message":
+            return False
+        phone = inbound.payload.from_phone
+        return not phone or phone in self.owner_phones
+
     def thread_for(self, inbound: Inbound) -> tuple[str, str]:
         """(thread_id, note). Unclear events go to the owner thread with a note."""
         if inbound.thread_id:
@@ -126,7 +138,11 @@ class Directory(BaseModel):
         owner = self.owner_thread or f"{self.org_id}:owner"
         p = inbound.payload
         if inbound.source == "owner_message":
-            return owner, ""
+            if self.is_owner(inbound):
+                return owner, ""
+            # Not the owner: never the owner thread (its history and batch).
+            return f"{self.org_id}:new:{_tail(p.from_phone)}", \
+                "an owner-channel message from a number not on the owner list"
         if inbound.source == "shop_message":
             shop = self.shop_for(p.from_phone)
             if shop:

@@ -171,20 +171,23 @@ class FrontDoor:
             return Admission(False, "duplicate external_id")
         thread_id, _ = d.thread_for(inbound)
         now = self.clock()
-        if inbound.source == "owner_message" and self._is_stop(inbound, d):
+        # Stop and steering are the owner's alone: the same check the router
+        # makes, so a stranger on the owner channel can neither halt work nor
+        # put words into a running turn.
+        owner = d.is_owner(inbound)
+        if owner and self._is_stop(inbound, d):
             self._stop(inbound, d, thread_id, now)
             return Admission(True, "stop: running turns interrupted", thread_id, "fast")
         with self._lock:
             th = self._threads.setdefault((inbound.org_id, thread_id), _Thread())
-            if (inbound.source == "owner_message" and th.running is not None
+            if (owner and th.running is not None
                     and th.running.lane == "fast"):
                 # Fast lane: the owner's next message reaches the running turn
                 # at its next step instead of waiting for a new one.
                 th.running.steering.append(inbound)
                 return Admission(True, "steering the running turn", thread_id, "fast")
             th.pending.append((now, inbound))
-        lane: Literal["fast", "batch"] = (
-            "fast" if inbound.source == "owner_message" else "batch")
+        lane: Literal["fast", "batch"] = "fast" if owner else "batch"
         return Admission(True, "queued", thread_id, lane)
 
     def set_thread_state(self, org_id: str, thread_id: str, state: ThreadState) -> None:

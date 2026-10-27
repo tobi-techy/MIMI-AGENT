@@ -307,7 +307,7 @@ class Router:
         # ---- people
         lang = lexicon.language(text) if text else "en"
         if sender == "owner":
-            if p.from_phone and p.from_phone not in directory.owner_phones:
+            if not directory.is_owner(lead):
                 # A console or owner-channel message from a number Go does not
                 # know as the owner is not the owner.
                 return rule("mimi/shop-onboarding", "owner_channel_unknown_number",

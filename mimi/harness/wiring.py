@@ -68,6 +68,13 @@ class TurnRunner:
         text = "\n".join(e.text for e in turn.events if e.text)
         sender = {"owner_message": "owner", "shop_message": "shop",
                   "rep_message": "rep"}.get(lead.source, "system")
+        if sender == "owner":
+            dirs = self.directories.get(turn.org_id)
+            known = dirs.is_owner(lead) if dirs else not lead.payload.from_phone
+            if not known:
+                # A stranger on the owner channel: its words are untrusted
+                # shop text in the prompt, never an <owner_message>.
+                sender = "shop"
         event = RunEvent(
             event_id=f"{turn.org_id}:{'+'.join(turn.external_ids)}",
             tenant_id=turn.org_id, thread_id=turn.thread_id,
