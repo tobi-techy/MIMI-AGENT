@@ -26,7 +26,16 @@ jobs:
           python-version: ${{ matrix.python }}
           cache: pip
       - name: ffmpeg (voice-note conversion tests)
-        run: sudo apt-get update -q && sudo apt-get install -y -q --no-install-recommends ffmpeg
+        # apt mirrors sometimes hang on a runner: bound each try and retry.
+        timeout-minutes: 12
+        run: |
+          for i in 1 2 3; do
+            timeout 180 sudo apt-get update -q \
+              && timeout 300 sudo apt-get install -y -q --no-install-recommends ffmpeg \
+              && exit 0
+            echo "apt try $i failed or hung; retrying"; sleep 10
+          done
+          exit 1
       # The langfuse extra is installed so the tracing tests run against the
       # real SDK; with no LANGFUSE_* keys (and CI set) tracing is a no-op.
       - run: python -m pip install -e '.[dev,otel,langfuse]'
