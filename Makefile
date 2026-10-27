@@ -1,6 +1,6 @@
 PY ?= python
 
-.PHONY: install test eval eval-live eval-fake voice-eval voice-eval-live voice-fixtures proof-eval proof-eval-live proof-fixtures sim sim-live sim-voice sim-voice-v2 sim-screens trace-smoke langfuse-setup langfuse-monitor langfuse-datasets proof-experiment voice-experiment receipts-experiment judge-calibration world-check lint typecheck secrets provenance migrate check harness-eval harness-eval-live trace-harness
+.PHONY: install test eval eval-live eval-fake voice-eval voice-eval-live voice-fixtures proof-eval proof-eval-live proof-fixtures sim sim-live sim-voice sim-voice-v2 sim-screens trace-smoke langfuse-setup langfuse-monitor langfuse-datasets proof-experiment voice-experiment receipts-experiment judge-calibration world-check lint typecheck secrets provenance migrate check harness-eval harness-eval-live trace-harness router-eval router-eval-live context-eval context-eval-live router-train trace-router
 
 install:            ## editable install with dev tools
 	$(PY) -m pip install -e '.[dev,otel,langfuse]'
@@ -62,7 +62,7 @@ provenance:         ## every commit was made in the hackathon window
 migrate:            ## create Mimi's tables; set MIMI_DB_URL first
 	alembic upgrade head
 
-check: lint typecheck test eval voice-eval proof-eval harness-eval world-check secrets provenance
+check: lint typecheck test eval voice-eval proof-eval harness-eval router-eval context-eval world-check secrets provenance
 
 sim-voice-v2:       ## offline sim: voice notes, payment promises, voice replies
 	META_API_KEY= SPITCH_API_KEY= $(PY) -m mimi.sim --shops 3 --transcript --voice 1 --promises 1 --voice-replies
@@ -106,3 +106,23 @@ harness-eval-live:  ## re-record Muse Spark on the 50 Collector scenarios (needs
 
 trace-harness:      ## four replayed Collector runs traced to Langfuse (demo env; no model cost); --public link
 	$(PY) scripts/trace_harness.py --public
+
+# --- Router and context builder (RAI-280, RAI-281) ---
+
+router-eval:        ## router on 300 labelled messages, replaying recorded Muse Spark answers; pass marks
+	META_API_KEY= $(PY) -m mimi.harness.router_eval
+
+router-eval-live:   ## record the router's Muse Spark calls (needs META_API_KEY; about N520 from empty)
+	$(PY) -m mimi.harness.router_eval --live
+
+context-eval:       ## context builder vs full history on the 50 Collector scenarios, replayed; pass marks
+	META_API_KEY= $(PY) -m mimi.harness.context_eval
+
+context-eval-live:  ## record both arms (needs META_API_KEY; about N1,200 builder + N5,300 baseline from empty; resumable)
+	$(PY) -m mimi.harness.context_eval --live
+
+router-train:       ## regenerate the fast classifier's synthetic training set (contributor tier; resumable)
+	$(PY) scripts/make_router_train.py
+
+trace-router:       ## eight routing decisions and four context-built runs traced to Langfuse (replayed; no model cost)
+	$(PY) scripts/trace_router_context.py --public

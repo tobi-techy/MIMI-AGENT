@@ -51,6 +51,11 @@ helper flag), `failed`.
 | `durable.py` | `harness_steps(...)`: the loop as a step of the always-on `JobRunner` |
 | `tracing.py` | One Langfuse trace per run, a span per step |
 | `scenarios.py`, `eval.py` | The 50 Collector scenarios and every suite with its pass mark |
+| `inbound.py`, `frontdoor.py` | The front-door envelope, the directory, dedupe, threads, lanes, batching, run rows (RAI-280) |
+| `router.py`, `lexicon.py`, `fastclass.py`, `skills.py` | The router: rules, multilingual phrases, the distilled fast classifier, Muse Spark, guards, clarify templates; the skill catalogue (RAI-280) |
+| `context.py` | The context builder: pinned prefix, history window, book slices, budgets, manifest, artifacts, image guard (RAI-281) |
+| `wiring.py` | A routed turn to a harness run with its built context |
+| `router_eval.py`, `context_eval.py` | The router and context evals with their pass marks |
 
 ## Tools
 
@@ -146,12 +151,196 @@ carries the wake source, toolset hash, registry and skill versions.
 mode the runtime's step spans carry `tool`, `short`, `duration_ms`,
 `cost_kobo` and `wake_source`.
 
+## Router (RAI-280): the front door and the pick
+
+Built 27 Oct 2026. `mimi/harness/inbound.py`, `frontdoor.py`, `router.py`,
+`lexicon.py`, `fastclass.py`, `skills.py`, `wiring.py`.
+
+```
+Inbound {source, org_id, thread_id?, external_id, received_at, payload}
+   |  FrontDoor.submit: drop a repeated (org_id, external_id); pick the thread
+   |  (shop, owner or job thread; unclear -> owner thread with a note); queue it
+   |  fast lane: owner 1:1 messages start at once, steer a running owner turn,
+   |             "stop" interrupts every running turn of that distributor
+   |  batch lane: 1.5 s quiet window (6 s at most); a burst is one turn
+   |  one turn per thread at a time; threads run in parallel; owner first
+   v
+Router.route_batch(events, directory, thread_state) -> RouteDecision
+   1 rules (plain code)   unknown number -> onboarding; routine / check-in /
+                          webhook / helper report / approval -> its helper;
+                          owner "stop"; owner @Helper; answer to a waiting
+                          question (0-2 | 3-5 | 6+, YES, a number); quick-reply
+                          button; shop STOP; screenshot -> Proof
+   2 phrases              multilingual phrase rules (en, pcm, yo, ha, ig) +
+                          SMS spellings; trusted when one skill clearly leads
+   3 fast classifier      naive Bayes on char n-grams, distilled from 2,708
+                          Muse Spark-written messages; trusted only where safe
+   4 Muse Spark           JSON over the sender's skill catalogue, the message
+                          in untrusted tags (reasoning_effort=minimal)
+   guards: injected sentences and shop @mentions removed before routing;
+           with an injection the model cannot lift the route above what the
+           shop's own words support; per-helper thresholds (money higher);
+           below -> one question with two buttons, thread parked; a second
+           unclear answer goes to the owner, never a second question
+   v
+{helper, skill, confidence, clarify_question?, options, layer, rule, language,
+ secondary, lane, source, external_id, latency, model spend, events}
+   events: "Handed to Collector" (handed_to), asked_to_clarify, stopped,
+           security - the console shows them centred and grey
+```
+
+Helpers and skills (`skills.py`, 20 skills): Order (`order-intake`,
+`drop-confirmation`, `delivery-status`), Collector (`collections`,
+`payment-check`, `promise-to-pay`, `chase`), Proof (`fake-alert-check`,
+`bank-credit`), Credit (`credit-request`, `credit-review`), Stock
+(`stock-count`, `low-stock-report`; PR #7's one-tap answers route here by
+rule), Brand (`promo-info`, `brand-email`), Mimi (`shop-onboarding`,
+`owner-brief`, `chat`, `escalate-owner`, `stop`). Money skills (balance,
+payment, promise, chase, Proof, Credit) are where a misroute counts as a
+money misroute. Helper risk for the injection guard: Mimi 0, Brand and Stock
+1, Order 2, Proof and Collector 3, Credit 4.
+
+Thresholds (`THRESHOLDS["v1"]`): Mimi 0.5, Brand and Stock 0.6, Order 0.65,
+Proof and Collector 0.7, Credit 0.75. A new set ships behind
+`MIMI_ROUTER_THRESHOLDS`; the fast classifier is on unless the router is
+built without it.
+
+The fast classifier is trusted when it agrees with phrase evidence (prob
+>= 0.9), or, with no phrase evidence, when it is >= 0.99 sure of a non-money
+skill on a message of three or more words in English or Pidgin (its Yoruba,
+Hausa and Igbo lines are too thin to trust alone). A one- or two-word message
+nothing matched is "too short to tell": one question, buttons from its best
+non-money guesses.
+
+`wiring.TurnRunner` turns a routed turn into a harness run: system events to
+the feed, the clarifying question when there is one, the context built for
+the routed skill with the wake source and every external id on the run, the
+loop, the turn's messages into history, and the thread left waiting when the
+helper asked a question. Helpers not hired yet get the handoff event and the
+turn reports `no_helper_yet:<helper>`.
+
+### Router eval (`python -m mimi.harness.router_eval`)
+
+300 hand-written synthetic messages (`eval/router/messages.jsonl`): 77
+structural (routines, webhooks, approvals, helper reports, unknown numbers,
+@mentions, stop, waiting answers, buttons, screenshots), 139 shop texts
+across five languages with typos, 32 owner texts, 8 rep texts, 16 voice
+transcripts, 6 camera photos, 12 prompt injections, 10 genuinely ambiguous
+(where one question is the right answer). Dev/test split by id hash (92/208);
+thresholds and the fast-classifier rules were set on dev. Muse Spark 1.3
+answers recorded once (27 Oct 2026) and replayed in CI.
+
+| | Accuracy | Clarify rate | Money misroutes | Model share | p95 latency |
+|---|---|---|---|---|---|
+| Pass mark | >= 95% | <= 8% | 0 | | < 800 ms |
+| **Cascade (ships)** | **98.7%** (dev 92/92, test 204/208 = 98.1%) | **4.3%** | **0** | 5.0% | **4 ms** |
+| Model only (rules + Muse Spark for every text) | 97.0% | 6.0% | 0 | 73% | 1,737 ms |
+| Rules + phrases, no model | 90.7% | 12.7% | 0 | 0 | 0.4 ms |
+| Rules + phrases + fast classifier, no model | 95.3% | 8.0% | 0 | 0 | 0.8 ms |
+
+Also gated: rules cases never call the model (0 of 77 did); unknown numbers
+always onboarding (10 of 10); no injection raised the route's risk (0 of 12).
+Model-path latencies are the recorded live ones (median about 1.0 s, so the
+p95 holds only because 95% of decisions never wait on the model; the margin is
+thin: 15 of 300 decisions called the model). The four misses: a Yoruba
+"not complete, two cartons remain" the model read as a stock count, a
+two-word Igbo stock message that asked, and two injection cases the guard
+turned into a question (safe, but counted as misses).
+
+## Context builder (RAI-281): the minimum context per run
+
+`mimi/harness/context.py`. `ContextBuilder.build(event, helper, skill)` ->
+`Context {messages, tools, manifest, prefix}`, in this order:
+
+1. system prompt: core rules + the helper's one skill
+2. tool definitions (the API's `tools`)
+3. memory snapshot (owner style, the shop's habits; `MemoryAPI`, RAI-236)
+4. routines list
+5. environment: distributor, helper, thread, shop, the day the thread opened, tool names
+6. history, append only from a window start that jumps forward in one big
+   step when the budget is reached (never one turn at a time), plus the
+   thread summary from compaction (RAI-285) when there is one
+7. newest message: the time (WAT), the routed skill's one-line focus, notes
+   on what changed since the last turn, the consent-checked book slice read
+   now through Go, other helpers' verdicts (text only), then the input
+
+Sections 1 to 5 are pinned per (tenant, thread, helper) in `PrefixStore` and
+stay byte-identical until compaction; a deploy that changes a tool
+description leaves a running thread on its old prefix with a note on the
+newest message ("tools updated since this thread began: ..."), and new
+threads get the new prefix. Each section is hashed; the hashes ride on
+`run_started` and every `model_called` event and on the trace.
+
+Book slices per skill (`SLICES`): collections reads balance, open invoices,
+recent payments and promises; payment-check balance, invoices, payments;
+promise-to-pay balance, invoices, promises; fake-alert-check invoices and
+payments; credit-request balance, payments, promises; order-intake balance;
+drop-confirmation open invoices. Everything else reads through its tools.
+Each read is checked against the shop's grant; a missing grant is listed in
+the manifest as omitted. Budget: 8,000 input tokens per helper by default;
+history is trimmed first, then slice rows, then the slice; a pinned prefix
+that does not fit fails safe (`ContextError`).
+
+Pointers, not payloads: in the loop (`Harness(artifacts=ArtifactStore())`) a
+read result over 2,000 tokens is stored and only its pointer, a three-line
+summary and its headline scalar fields (totals, counts, `*_kobo` with
+`*_naira`) enter the transcript (`artifact_stored` event).
+`assert_no_image_bytes` refuses data URLs, base64 blobs and image content
+parts in the main context; screenshots and shelf photos go to Proof or
+Stock and only their verdict enters.
+
+### Context eval (`python -m mimi.harness.context_eval`)
+
+The 50 Collector scenarios, routed first, on live Muse Spark 1.3 (recorded
+once, replayed in CI), against a full-history baseline: the core rules and
+skill, the tools, then the whole eight-week thread history (deliveries,
+payments, promises, the Collector's ladder reminders, weekly stock counts;
+on the owner's thread a daily brief and the whole distributor's book), the
+shop's whole book, every memory note and routine. The builder arm is a real
+multi-turn replay: the owner's asks share four owner threads of six turns,
+shops with several scenarios share their thread, routines run on their job
+thread.
+
+| | Pass mark | Builder | Full-history baseline |
+|---|---|---|---|
+| Task success | builder >= baseline | **50/50** | 46/50 (needed an N300 run budget; 50/50 runs cost over N50) |
+| Median input tokens per run | down >= 50% | **10,179** | 54,432 (**-81%**) |
+| Median first-call tokens | | 4,808 | 21,252 |
+| Model spend, all 50 | | N1,177 | N5,332 |
+| Provider-reported cached input tokens | >= 80% | **81.4%** | 34.4% |
+| Prefix-cache estimate, 50 scenarios as 22 multi-turn threads | >= 80% | **88.7%** (72.6% same-thread only) | |
+| Context over budget | 0 | **0** (max 7,942 of 8,000) | |
+| Manifest on runs | 100% | **50/50** | |
+
+Offline marks, all passing: cross-distributor leakage with two distributors
+sharing one shop (26 cases, 0 leaks; a negative-control test proves the
+check catches a leak); sections 1 to 5 identical across 20 turns; a deploy
+keeps the running thread's prefix, notes it, and new threads get the new
+one; a 400-row tool output enters as a 95-token pointer; image bytes and
+image parts refused; a shop with nothing open, a shop that shares nothing,
+an unknown shop and a run with no shop each get a valid context.
+
+A second, independent live recording of the builder arm (not committed) also
+scored 50/50 with 85.5% provider cache hits, so the result is not one lucky
+sample. The two Collector-routed-elsewhere cases are delivery disputes
+("the last delivery was short", "the cartons were damaged") that the router
+sends to Order, which is arguably right; the scenarios still run Collector.
+
 ## Not yet
 
 * Go itself: `FakeGo` stands in for the consent-checked book, the policy
-  endpoint, the event log and the intent API. The ports are the contract.
-* Router (RAI-280) and context builder (RAI-281): the event's text goes in
-  as is; the owner names the shop id.
+  endpoint, the event log, the intent API and the dedupe index. The ports
+  are the contract; the front door's queue, thread lock and dedupe are
+  in-process stand-ins for Postgres (advisory lock or a River unique job per
+  thread) and Go's unique index.
+* Compaction (RAI-285): the builder has the hook (`PrefixStore.compact`,
+  `HistoryStore.set_summary`) and the eval seeds a code-written summary; no
+  model writes summaries yet.
+* Memory (RAI-236): `MemoryAPI` is a port; the eval uses notes derived from
+  the synthetic world.
+* Only the Collector is a full hire; Proof is a minimal config. The other
+  helpers are routed to and get the handoff event, then report
+  `no_helper_yet` until RAI-272 moves the Day 2 to 6 handlers behind the
+  router as skills.
 * The kill switch and daily cap live in the control-plane port; there is no
   console toggle yet.
-* Only the Collector is a full hire; Proof is a minimal config.
