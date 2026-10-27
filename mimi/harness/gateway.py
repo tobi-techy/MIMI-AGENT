@@ -81,6 +81,8 @@ class ModelTurn:
     # "length" means the completion cap cut the answer off (reasoning models
     # can spend it all thinking); the loop treats that as invalid output.
     finish_reason: str = ""
+    # Prompt tokens the provider served from its prompt cache.
+    cached_tokens: int = 0
 
 
 class ProviderError(RuntimeError):
@@ -171,6 +173,7 @@ def parse_turn(data: dict[str, Any], model: str, latency: float = 0.0) -> ModelT
         completion_tokens=int(usage.get("completion_tokens") or 0),
         latency_s=latency,
         finish_reason=str(data["choices"][0].get("finish_reason") or ""),
+        cached_tokens=int((usage.get("prompt_tokens_details") or {}).get("cached_tokens") or 0),
     )
 
 
@@ -317,7 +320,7 @@ class RecordedToolModel:
 def _turn_to(t: ModelTurn) -> dict[str, Any]:
     return {"content": t.content, "model": t.model, "prompt_tokens": t.prompt_tokens,
             "completion_tokens": t.completion_tokens, "latency_s": round(t.latency_s, 3),
-            "finish_reason": t.finish_reason,
+            "finish_reason": t.finish_reason, "cached_tokens": t.cached_tokens,
             "tool_calls": [{"id": c.id, "name": c.name, "arguments": c.arguments}
                            for c in t.tool_calls]}
 
@@ -331,4 +334,5 @@ def _turn_from(d: dict[str, Any]) -> ModelTurn:
         completion_tokens=int(d["completion_tokens"]),
         latency_s=float(d.get("latency_s", 0.0)),
         finish_reason=str(d.get("finish_reason", "")),
+        cached_tokens=int(d.get("cached_tokens", 0)),
     )

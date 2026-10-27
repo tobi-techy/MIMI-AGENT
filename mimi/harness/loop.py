@@ -56,6 +56,7 @@ from zoneinfo import ZoneInfo
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
+from mimi.harness.context import pointer
 from mimi.harness.errors import ConnectorDown, ToolError, error_text
 from mimi.harness.gateway import AllModelsFailed, Gateway, worst_case_kobo
 from mimi.harness.go import BookAPI, ControlPlane, CrossTenant, EventLog, NoConsent
@@ -160,6 +161,16 @@ class LoopState(BaseModel):
     overhead_ms: float = 0.0
     toolset_hash: str = ""
     registry_version: str = ""
+    # Set when the context builder (RAI-281) made the opening: the thread's
+    # pinned tool definitions, how many messages are the pinned prefix and the
+    # history, the manifest, and the route that sent the run here (RAI-280).
+    tools: list[dict[str, Any]] = Field(default_factory=list)
+    prefix_len: int = 0
+    history_len: int = 0
+    context: dict[str, Any] = Field(default_factory=dict)
+    route: dict[str, Any] = Field(default_factory=dict)
+    # The provider's cached prompt tokens, summed over the run's calls.
+    cached_tokens: int = 0
     finished: RunResult | None = None
 
 
@@ -189,6 +200,7 @@ class Harness:
         clock: Callable[[], datetime] = lambda: datetime.now(UTC),
         perf: Callable[[], float] = time.perf_counter,
         max_repairs: int = 1,
+        artifacts: Any = None,
     ) -> None:
         self.book = book
         self.control = control
@@ -198,6 +210,9 @@ class Harness:
         self.clock = clock
         self.perf = perf
         self.max_repairs = max_repairs
+        # ``mimi.harness.context.ArtifactStore``: read outputs over 2,000
+        # tokens are stored there and only a pointer enters the transcript.
+        self.artifacts = artifacts
 
     # ================================================================== API
 
@@ -209,9 +224,23 @@ class Harness:
         plan: Sequence[str] = (),
         todo: Sequence[str] = (),
         note: str = "",
+        context: Any = None,
+        route: dict[str, Any] | None = None,
     ) -> LoopState:
+        """``context`` is a ``mimi.harness.context.Context`` (RAI-281): its
+        messages and pinned tools replace the default opening."""
         run_id = "run_" + _h(event.event_id, helper.name, event.tenant_id)[:16]
         job_id = event.job_id or run_id
+        if context is not None:
+            opening = [dict(m) for m in context.messages]
+            if plan or todo or note:
+                opening[-1] = {"role": "user", "content": opening[-1]["content"] + "\n" +
+                               self._plan_lines(plan, todo, note)}
+        else:
+            opening = [
+                {"role": "system", "content": helper.system_prompt()},
+                {"role": "user", "content": self._opening(event, plan, todo, note)},
+            ]
         state = LoopState(
             run_id=run_id,
             job_id=job_id,
@@ -220,10 +249,7 @@ class Harness:
             helper=helper.name,
             wake_source=event.wake_source,
             started_at=event.at,
-            messages=[
-                {"role": "system", "content": helper.system_prompt()},
-                {"role": "user", "content": self._opening(event, plan, todo, note)},
-            ],
+            messages=opening,
             plan=list(plan),
             todo=list(todo),
             note=note,
@@ -231,17 +257,42 @@ class Harness:
             registry_version=helper.toolset.registry_version,
             must_speak=bool(event.text) and event.wake_source in (
                 "owner_message", "shop_message", "rep_message"),
+            route=dict(route or {}),
         )
+        if context is not None:
+            state.tools = [dict(t) for t in context.tools]
+            state.prefix_len = 2
+            state.history_len = len(context.messages) - 3
+            state.context = context.manifest.trace_metadata()
+        data: dict[str, Any] = {
+            "wake_source": event.wake_source, "toolset_hash": state.toolset_hash,
+            "registry_version": state.registry_version, "skill_version": helper.skill_version,
+            "model": self.gateway.primary}
+        if state.route:
+            data["route"] = state.route
+        if state.context:
+            data.update({"prefix_hash": state.context.get("prefix_hash", ""),
+                         "section_hashes": state.context.get("section_hashes", {}),
+                         "context_tokens": state.context.get("context_tokens", 0)})
         self._emit(state, "run_started", short=f"{helper.name} woke on {event.wake_source}",
-                   data={"wake_source": event.wake_source, "toolset_hash": state.toolset_hash,
-                         "registry_version": state.registry_version,
-                         "skill_version": helper.skill_version,
-                         "model": self.gateway.primary})
+                   data=data)
         return state
 
-    def run(self, event: RunEvent, helper: Helper) -> RunResult:
+    @staticmethod
+    def _plan_lines(plan: Sequence[str], todo: Sequence[str], note: str) -> str:
+        lines = []
+        if plan:
+            lines.append("Saved plan: " + " | ".join(plan))
+        if todo:
+            lines.append("To-do: " + " | ".join(todo))
+        if note:
+            lines.append("Working note: " + note)
+        return "\n".join(lines)
+
+    def run(self, event: RunEvent, helper: Helper, *, context: Any = None,
+            route: dict[str, Any] | None = None) -> RunResult:
         """One turn: step until done, parked or out of budget."""
-        state = self.start(event, helper)
+        state = self.start(event, helper, context=context, route=route)
         while state.finished is None:
             state = LoopState.model_validate(self.step(state, helper).state)
         return state.finished
@@ -295,7 +346,7 @@ class Harness:
             })
         self._emit(state, "step_started", short=f"step {state.step + 1}")
 
-        tools = helper.toolset.schemas()
+        tools = state.tools or helper.toolset.schemas()
         tm = self.perf()
         try:
             reply = self.gateway.chat(state.messages, tools)
@@ -314,12 +365,16 @@ class Harness:
         state.max_call_kobo = max(state.max_call_kobo, reply.cost_kobo)
         state.spend.prompt_tokens += turn.prompt_tokens
         state.spend.completion_tokens += turn.completion_tokens
+        state.cached_tokens += turn.cached_tokens
         self.control.add_spend(state.tenant_id, helper.name, day, reply.cost_kobo)
         self._emit(state, "model_called", model=turn.model, cost_kobo=reply.cost_kobo,
                    duration_ms=model_s * 1000,
                    short=", ".join(c.name for c in turn.tool_calls) or "final",
                    data={"prompt_tokens": turn.prompt_tokens,
                          "completion_tokens": turn.completion_tokens,
+                         "cached_tokens": turn.cached_tokens,
+                         **({"section_hashes": state.context.get("section_hashes", {})}
+                            if state.context else {}),
                          "tool_calls": len(turn.tool_calls),
                          # Private reasoning: trace only, never a person.
                          "private_text": turn.content[:400]})
@@ -449,7 +504,8 @@ class Harness:
         else:
             reserve = max(state.max_call_kobo, worst_case_kobo(
                 self.gateway.primary,
-                len(json.dumps(state.messages)) + len(json.dumps(helper.toolset.schemas())),
+                len(json.dumps(state.messages))
+                + len(json.dumps(state.tools or helper.toolset.schemas())),
                 self.gateway.max_tokens,
             ))
             if state.spend.kobo >= b.max_kobo or state.spend.kobo + reserve > b.max_kobo:
@@ -530,6 +586,9 @@ class Harness:
             registry_version=state.registry_version,
             model_calls=state.spend.model_calls,
             loop_overhead_ms=round(state.overhead_ms, 3),
+            route=state.route,
+            context=state.context,
+            cached_tokens=state.cached_tokens,
         )
 
     def _emit(self, state: LoopState, type_: EventType, **kw: Any) -> Event:
@@ -708,9 +767,14 @@ class Harness:
             ms = (self.perf() - t) * 1000
             self._emit(state, "tool_result", tool=name, scope=scope, tier=tier_seen,
                        short=short, duration_ms=ms)
+            data = with_naira(out.model_dump(mode="json"))
+            if self.artifacts is not None:
+                data, path = pointer(self.artifacts, state.tenant_id, data)
+                if path:
+                    self._emit(state, "artifact_stored", tool=name, scope=scope,
+                               short=f"long result stored: {path}", data={"path": path})
             state.messages.append(self._tool_msg(call_id, json.dumps(
-                {"ok": True, "data": with_naira(out.model_dump(mode="json"))},
-                ensure_ascii=False)))
+                {"ok": True, "data": data}, ensure_ascii=False)))
             return short, ms
         if spec.name in SPEAKING_TOOLS:
             text = str(getattr(parsed, "body", "") or getattr(parsed, "question", ""))
@@ -868,6 +932,7 @@ def with_naira(node: Any) -> Any:
 INTERNAL_TOOLS = frozenset({"update_plan"})
 SPEAKING_TOOLS = frozenset({"send_to_user", "ask_question"})
 _NAIRA_IN_TEXT = re.compile(r"(?:\bN|₦|NGN\s?)\s?(\d[\d,]*(?:\.\d{1,2})?)\s?(k|m)?\b", re.I)
+_SLICE = re.compile(r"<book_slice[^>]*>\s*(\{.*?\})\s*</book_slice>", re.S)
 _OWNER_NUM = re.compile(r"(?:N|₦)?\s?(\d[\d,]*(?:\.\d+)?)\s?(k|m)?\b", re.I)
 
 
@@ -900,6 +965,12 @@ def _known_kobo(messages: Sequence[dict[str, Any]]) -> set[int]:
             except ValueError:
                 continue
         elif m.get("role") == "user":
+            # The book slice the context builder read from Go (RAI-281).
+            for block in _SLICE.findall(str(m.get("content") or "")):
+                try:
+                    walk(json.loads(block))
+                except ValueError:
+                    pass
             # The owner's own figures ("over 50k") may be repeated back.
             for hit in _OWNER_NUM.finditer(str(m.get("content") or "")):
                 try:
