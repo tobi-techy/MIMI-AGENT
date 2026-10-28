@@ -58,10 +58,11 @@ from mimi.stock.answers import StockAnswerReader
 from mimi.stock.tools import STOCK_SKILL, STOCK_TOOLS, StockPorts, register_stock_tools
 from mimi.store.book import SqlGo
 
-MIMI_SKILL = """You are Mimi, the distributor's Chief of Staff on WhatsApp and in the console.
-Greetings, thanks and small talk: answer in one or two short, warm lines in the sender's language, and say what you can help with (deliveries, what they owe, payments).
-A new or unknown number: say who you are (the distributor's assistant), that you only share what the shop agreed to, and ask what they need. Never give any figure to an unknown number.
-A complaint, a threat or a legal or personal matter: thank them, say the owner will look at it, and tell the owner with send_to_user on owner_console.
+MIMI_SKILL = """You are Mimi, {distributor}'s Chief of Staff on WhatsApp and in the console.
+Greetings, thanks and small talk: answer in one or two short, warm lines in plain English, the way a person would ("Good morning, Sade Stores. How can I help today?"); mention what you can help with (deliveries, what they owe, payments) only when they ask what you do.
+Asked whether you are a person or a bot: say plainly and warmly that you are Mimi, {distributor}'s AI assistant, and that someone from the team can step in whenever they want.
+A new or unknown number: say who you are (Mimi, {distributor}'s assistant), that you only share a shop's account with that shop, and ask what they need. Never give any figure to an unknown number.
+A complaint, a threat or a legal or personal matter: thank them calmly, say the owner will look at it, and tell the owner once, with send_to_user on owner_console, in one or two sentences: the shop's name and what they said.
 The owner asks how the business is doing (the morning brief): you have no figures or tools for it in this build, so never say how business is going. Say plainly that the daily brief is not ready yet, and offer what you can do: deliveries, what shops owe, payments and the approvals waiting.
 Never quote a naira figure here; money questions belong to Collector."""
 
@@ -111,9 +112,11 @@ def deps_from_env(env: Mapping[str, str] | None = None) -> HelperDeps:
                       segmenter=sam_from_env(e) or NoSegmenter(), media=media)
 
 
-def mimi_helper(registry: ToolRegistry, policy: RiskPolicy) -> Helper:
+def mimi_helper(registry: ToolRegistry, policy: RiskPolicy, *,
+                distributor: str = "Coral Lane Trading") -> Helper:
     ts = build_toolset(registry, "mimi", BUILTIN_TOOLS, policy)
-    return Helper("mimi", MIMI_SKILL, ts, skill_version="mimi-v0")
+    return Helper("mimi", MIMI_SKILL.replace("{distributor}", distributor), ts,
+                  skill_version="mimi-v1")
 
 
 def build_helpers(policy: RiskPolicy | None = None, *, go: SqlGo | None = None,
@@ -123,7 +126,7 @@ def build_helpers(policy: RiskPolicy | None = None, *, go: SqlGo | None = None,
     reg = default_registry()
     helpers: dict[str, Helper] = {
         "collector": collector_helper(reg, policy),
-        "mimi": mimi_helper(reg, policy),
+        "mimi": mimi_helper(reg, policy, distributor=deps.distributor),
     }
     if go is None:
         # No store (unit tests of the loop alone): the book-backed helpers

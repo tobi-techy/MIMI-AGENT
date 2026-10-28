@@ -1,0 +1,2982 @@
+{
+ "0048ea4c865b589a04a02d1c45665316a8cb46debd352ead41dd5fd204c03d89": {
+  "cached_tokens": 0,
+  "completion_tokens": 1537,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"It plainly asks for the one shelf photo needed next.\"}",
+  "finish_reason": "stop",
+  "latency_s": 7.073,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 461,
+  "tool_calls": []
+ },
+ "01109bf2b575ac72d3137b1440bdb144fdb6806d1f7df2e6aef94604b30ddf8e": {
+  "cached_tokens": 0,
+  "completion_tokens": 1468,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"Gives correct N74,200.50 balance briefly and politely with no overdue.\"}",
+  "finish_reason": "stop",
+  "latency_s": 7.237,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 609,
+  "tool_calls": []
+ },
+ "01e7afa1aedbe6ec4496e46ee4b8e5fe62ac7bd0014305d500c4305edf998206": {
+  "cached_tokens": 0,
+  "completion_tokens": 1233,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"Firmly warns against sharing PIN while staying warm and giving a clear next step.\"}",
+  "finish_reason": "stop",
+  "latency_s": 7.196,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 502,
+  "tool_calls": []
+ },
+ "0212d397037c0088909fe6d50e425e958a91dc4c4c9c79c9992236e097f29e49": {
+  "cached_tokens": 0,
+  "completion_tokens": 668,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"Short owner note gives facts, recommends hold, and leaves the N100k decision to the owner.\"}",
+  "finish_reason": "stop",
+  "latency_s": 2.975,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 672,
+  "tool_calls": []
+ },
+ "025c6c139a88eb5d09811a66b3e62a3e3d2bac031f493f5a0b83aa52faa5e07e": {
+  "cached_tokens": 0,
+  "completion_tokens": 1004,
+  "content": "{\"natural\": false, \"professional\": true, \"clear\": false, \"plain_english\": true, \"on_point\": true, \"reason\": \"It deflects to the rep without warmth or a clear next step.\"}",
+  "finish_reason": "stop",
+  "latency_s": 6.044,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 383,
+  "tool_calls": []
+ },
+ "02f2b52cb7489ccc0855cff10d6d72ed462fcc7678b04dc662adcb3df7503e0c": {
+  "cached_tokens": 0,
+  "completion_tokens": 1475,
+  "content": "{\"natural\": false, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": false, \"reason\": \"Sounds system-generated with full store name and omits the INV-0412 reference needed here.\"}",
+  "finish_reason": "stop",
+  "latency_s": 8.284,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 735,
+  "tool_calls": []
+ },
+ "03195499d29ba22f0fb5181c49b5d917c7d35f318067dbb3a7b5dc76d48d98ec": {
+  "cached_tokens": 0,
+  "completion_tokens": 564,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"It gives the exact bank details plainly and tells the shop what to do next.\"}",
+  "finish_reason": "stop",
+  "latency_s": 2.584,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 523,
+  "tool_calls": []
+ },
+ "032ef716d972269eb6716ceed3de623cccd788a3a34e7a8d9281613770303293": {
+  "cached_tokens": 0,
+  "completion_tokens": 1332,
+  "content": "{\"natural\": false, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"It states the correct balance but sounds blunt and system-like with no greeting or warmth.\"}",
+  "finish_reason": "stop",
+  "latency_s": 10.074,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 602,
+  "tool_calls": []
+ },
+ "04193a8e0622435fb04050aeaad3c218d6cb23c05fee6048c733cfd872d128ca": {
+  "cached_tokens": 0,
+  "completion_tokens": 776,
+  "content": "{\"natural\": false, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"No person says you are owing N0 instead of you owe nothing.\"}",
+  "finish_reason": "stop",
+  "latency_s": 3.787,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 480,
+  "tool_calls": []
+ },
+ "04306e6fb36a1a475a9983d930e951348e67731b575425eaeac23212359c9b68": {
+  "cached_tokens": 0,
+  "completion_tokens": 706,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"Gives the exact balance briefly in plain polite English with no errors.\"}",
+  "finish_reason": "stop",
+  "latency_s": 3.583,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 602,
+  "tool_calls": []
+ },
+ "0551b10bbdfdc2cd45a5dc886338bf5ec1dd1b60e25d96e46f706a33b649008c": {
+  "cached_tokens": 0,
+  "completion_tokens": 754,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": false, \"reason\": \"It is calm but misses the needed today commitment for a police threat.\"}",
+  "finish_reason": "stop",
+  "latency_s": 3.5,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 485,
+  "tool_calls": []
+ },
+ "0646c496c993a2143e34614984484b3c3f3b845f0fef4196c7a101171ac7d251": {
+  "cached_tokens": 0,
+  "completion_tokens": 867,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"Reads back the correct amount, day and ref and asks for YES clearly.\"}",
+  "finish_reason": "stop",
+  "latency_s": 4.526,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 513,
+  "tool_calls": []
+ },
+ "066f0e3ba7dbbf43df0fba6e0cfbc33fa1396b86a212ef4af02bad1f0caa51a4": {
+  "cached_tokens": 0,
+  "completion_tokens": 624,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"Gentle tone states the correct amount and date and asks for a pay date.\"}",
+  "finish_reason": "stop",
+  "latency_s": 2.841,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 527,
+  "tool_calls": []
+ },
+ "06ce9bf0f4d4f82bdb06784fe6ac162332ffe03d0f3707e0094458b3a64172db": {
+  "cached_tokens": 0,
+  "completion_tokens": 407,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"It thanks them and confirms tomorrow morning simply with no pressure.\"}",
+  "finish_reason": "stop",
+  "latency_s": 2.512,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 530,
+  "tool_calls": []
+ },
+ "06fbd0bd0faee0e5241cfbbcc834558267e5285fce52cb837fd98337bafde61b": {
+  "cached_tokens": 0,
+  "completion_tokens": 1056,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"Gives correct balance and overdue with clear action in short plain words.\"}",
+  "finish_reason": "stop",
+  "latency_s": 6.18,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 506,
+  "tool_calls": []
+ },
+ "0710bae4ed8cadee430a2323a7bf35701286663e3ddf50b75e1a304e48f9dbc7": {
+  "cached_tokens": 0,
+  "completion_tokens": 932,
+  "content": "{\"natural\": false, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": false, \"reason\": \"It outs itself as AI and deflects instead of answering the shop.\"}",
+  "finish_reason": "stop",
+  "latency_s": 3.53,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 383,
+  "tool_calls": []
+ },
+ "072635cdb575536c9fa3446ec074b4414fb599863d814ce799e22b9ca2cf0b35": {
+  "cached_tokens": 0,
+  "completion_tokens": 915,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"It is a short polite human re-ask that tells the shop exactly what to send.\"}",
+  "finish_reason": "stop",
+  "latency_s": 5.397,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 483,
+  "tool_calls": []
+ },
+ "081bcd24ec4e62df482dcb15fbb1c6e226f5528339345cbdb432983569463467": {
+  "cached_tokens": 0,
+  "completion_tokens": 782,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"It thanks the shop, confirms N60,000, and says receipt follows.\"}",
+  "finish_reason": "stop",
+  "latency_s": 3.077,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 515,
+  "tool_calls": []
+ },
+ "097bd2fa895cb948418b50418fad20e7871a24ff90a83668aec3050cd6505305": {
+  "cached_tokens": 0,
+  "completion_tokens": 607,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"It clearly tells them never to send OTP and asks what they need.\"}",
+  "finish_reason": "stop",
+  "latency_s": 2.761,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 486,
+  "tool_calls": []
+ },
+ "09f0f043b359ea45c3160e27f591106f8f8fe67932ae5100794225ac1ac0b8d4": {
+  "cached_tokens": 0,
+  "completion_tokens": 1653,
+  "content": "{\"natural\": false, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"A real officer would not refer to her own firm in third person to a shop.\"}",
+  "finish_reason": "stop",
+  "latency_s": 7.263,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 455,
+  "tool_calls": []
+ },
+ "0e0b5feb0b3977ae1dbb644906f662dfd87e5f41a5b3c46ca26a0dcc2e4f0638": {
+  "cached_tokens": 0,
+  "completion_tokens": 665,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": false, \"reason\": \"It gives only the N90,000 overdue and omits the N140,000 total owed.\"}",
+  "finish_reason": "stop",
+  "latency_s": 3.769,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 606,
+  "tool_calls": []
+ },
+ "0e27c4c104cefd6eb786083291c5e8b5a25eeea01c9af47a35d90c22a7829c70": {
+  "cached_tokens": 0,
+  "completion_tokens": 599,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"It briefly thanks the shop and confirms the owner will check both issues.\"}",
+  "finish_reason": "stop",
+  "latency_s": 3.493,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 397,
+  "tool_calls": []
+ },
+ "0e75b69c6993d67c81e7e89eb40e68fd78850240638bbf28eb9a2504287593a2": {
+  "cached_tokens": 0,
+  "completion_tokens": 1427,
+  "content": "{\"natural\": false, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"Greeting says afternoon to an evening message and sounds blunt, not warm.\"}",
+  "finish_reason": "stop",
+  "latency_s": 8.032,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 580,
+  "tool_calls": []
+ },
+ "0eb8371d9a44838c1be922b231bc795b56a8e2bf2b6b3991ad2fc0fa9947ffe7": {
+  "cached_tokens": 0,
+  "completion_tokens": 668,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"It calmly states payment is pending and asks for proof to confirm.\"}",
+  "finish_reason": "stop",
+  "latency_s": 4.259,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 532,
+  "tool_calls": []
+ },
+ "0f9a27d989f9443f1c9a890e143d043b835d8e4e07e16119ebe4f09b6b6863a9": {
+  "cached_tokens": 0,
+  "completion_tokens": 741,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"It plainly says the brief is not ready and offers clear next options.\"}",
+  "finish_reason": "stop",
+  "latency_s": 2.979,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 397,
+  "tool_calls": []
+ },
+ "109a72c4368235b22ca6558bcf2fff3d9570c0d8a92787c6a58f07308610e7e2": {
+  "cached_tokens": 0,
+  "completion_tokens": 660,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"Gives the correct figures first in a short plain note to the owner.\"}",
+  "finish_reason": "stop",
+  "latency_s": 3.847,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 606,
+  "tool_calls": []
+ },
+ "111462bce1c06f4f46ddbe447dfefee7dd71bad538de82fca7d28dcfe08e8f51": {
+  "cached_tokens": 0,
+  "completion_tokens": 1490,
+  "content": "{\"natural\": false, \"professional\": true, \"clear\": true, \"plain_english\": false, \"on_point\": true, \"reason\": \"It gives correct figures but uses accounting terms like outstanding instead of plain words and sounds templated with no warmth.\"}",
+  "finish_reason": "stop",
+  "latency_s": 9.993,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 505,
+  "tool_calls": []
+ },
+ "1293e266fd49a1aa1474b1334968247f203337cbc8dc4e05e709ddfecca936de": {
+  "cached_tokens": 0,
+  "completion_tokens": 941,
+  "content": "{\"natural\": false, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"It gives the right next step but reads stiff and templated with no warm greeting.\"}",
+  "finish_reason": "stop",
+  "latency_s": 6.123,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 476,
+  "tool_calls": []
+ },
+ "129b1eb761820e9de0222f7b6a336f00a67334381adc539c05123f16a99d6eaf": {
+  "cached_tokens": 0,
+  "completion_tokens": 1168,
+  "content": "{\"natural\": false, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"It routes to the owner correctly but 'Noted that you dispute' sounds like a template, not a warm person.\"}",
+  "finish_reason": "stop",
+  "latency_s": 6.31,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 620,
+  "tool_calls": []
+ },
+ "139aa7b05f78a0640a1cbf3af067177fbb95d54cf36c456e636a9edd64f4fa3a": {
+  "cached_tokens": 0,
+  "completion_tokens": 676,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"Short hold note gives the overdue, promises and dispute facts with clear next step.\"}",
+  "finish_reason": "stop",
+  "latency_s": 3.519,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 664,
+  "tool_calls": []
+ },
+ "15686f28671467957c89d3251fa8cf594ec4d37fd97d362a8e71543123c52858": {
+  "cached_tokens": 99,
+  "completion_tokens": 626,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"Calmly states payment is still pending, avoids claiming receipt, and asks for trace details.\"}",
+  "finish_reason": "stop",
+  "latency_s": 4.486,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 589,
+  "tool_calls": []
+ },
+ "15f0d2e904d0545774cf1cf5c1175f321592f1242178e2fcd53291add1e03c7e": {
+  "cached_tokens": 0,
+  "completion_tokens": 595,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"It politely directs the shop to the rep without claiming the order was cancelled.\"}",
+  "finish_reason": "stop",
+  "latency_s": 3.036,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 476,
+  "tool_calls": []
+ },
+ "164e8f2add816a329d11ae35ebd62f2693e574b1e977c4bde12c137cd72bbbcc": {
+  "cached_tokens": 0,
+  "completion_tokens": 452,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"It reassures briefly and gives the correct account details.\"}",
+  "finish_reason": "stop",
+  "latency_s": 2.303,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 528,
+  "tool_calls": []
+ },
+ "16c89f4680b79ea36a0cf8a2caed5510272c8d5b5a4fe0984736edaf90a2424d": {
+  "cached_tokens": 0,
+  "completion_tokens": 397,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"It is a short warm greeting that fits the shop's hello.\"}",
+  "finish_reason": "stop",
+  "latency_s": 2.068,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 448,
+  "tool_calls": []
+ },
+ "17c09a4509fba8eb1dcda2b7db108995af1cd3c7dcb579e99831b1bec933a741": {
+  "cached_tokens": 0,
+  "completion_tokens": 1195,
+  "content": "{\"natural\": false, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"It reads like a template with the shop name inserted, not a real chat.\"}",
+  "finish_reason": "stop",
+  "latency_s": 4.972,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 463,
+  "tool_calls": []
+ },
+ "19099275f729d069cfc8bf5b2504a69a4ea8ed9e6f61ad9b2d4fdfd0c432837a": {
+  "cached_tokens": 0,
+  "completion_tokens": 658,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"Gives the correct bank, number and name clearly with next step.\"}",
+  "finish_reason": "stop",
+  "latency_s": 3.03,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 523,
+  "tool_calls": []
+ },
+ "190b68910f12c1fbe8f21a0648c85240654b3a53bcc3d9371d71f01d95b767a6": {
+  "cached_tokens": 0,
+  "completion_tokens": 1454,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": false, \"reason\": \"Says good afternoon to an evening message and promises a reminder not in the data.\"}",
+  "finish_reason": "stop",
+  "latency_s": 8.557,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 589,
+  "tool_calls": []
+ },
+ "19cacc630c6b3cd2394ff965967f9b30bff84c73ec6de0b7c7dea071f476f014": {
+  "cached_tokens": 0,
+  "completion_tokens": 1145,
+  "content": "{\"natural\":true,\"professional\":true,\"clear\":true,\"plain_english\":true,\"on_point\":true,\"reason\":\"It politely sends the price question to the rep without inventing a price.\"}",
+  "finish_reason": "stop",
+  "latency_s": 6.297,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 474,
+  "tool_calls": []
+ },
+ "1a63ad2e54e19ec794c347deaea5f19cb35c9eec1861ffacad75ac14c6221cb9": {
+  "cached_tokens": 0,
+  "completion_tokens": 1060,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": false, \"plain_english\": true, \"on_point\": false, \"reason\": \"It thanks but never confirms the N20,000 was received.\"}",
+  "finish_reason": "stop",
+  "latency_s": 5.279,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 608,
+  "tool_calls": []
+ },
+ "1aa6aad3081f5cb772c21f2c7c64d664ca7dc4f1692310d6af43d872a9819cbe": {
+  "cached_tokens": 0,
+  "completion_tokens": 957,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"It states not now with the exact limit and history reasons and defers to the owner.\"}",
+  "finish_reason": "stop",
+  "latency_s": 5.352,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 578,
+  "tool_calls": []
+ },
+ "1aad9867034a5c5671d128502255ea72953696c60fbb6219f4a87b8c4e4cb232": {
+  "cached_tokens": 0,
+  "completion_tokens": 489,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"Warm short greeting that mirrors the shop's message with nothing extra.\"}",
+  "finish_reason": "stop",
+  "latency_s": 2.464,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 463,
+  "tool_calls": []
+ },
+ "1b2ac8b252f833e304f8baf3866fb9337e644dad72ed84dc6f24ed07cb56b9b3": {
+  "cached_tokens": 0,
+  "completion_tokens": 1960,
+  "content": "{\"natural\": false, \"professional\": false, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"Correct balance and greeting but 'Adunni Mini Mart, you owe' is blunt and templated, not warm officer tone.\"}",
+  "finish_reason": "stop",
+  "latency_s": 14.681,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 580,
+  "tool_calls": []
+ },
+ "1bced68681cf2c3a33688daffc80125c20a861ba9932cea702f54edb7935bd62": {
+  "cached_tokens": 0,
+  "completion_tokens": 710,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"It politely hands the price question to the rep as required.\"}",
+  "finish_reason": "stop",
+  "latency_s": 3.11,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 469,
+  "tool_calls": []
+ },
+ "1c3c1949d219e2150752025cf4dc5ee5c31ba42efe7c1e5f3f41611ed48ae5bf": {
+  "cached_tokens": 0,
+  "completion_tokens": 612,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"Firm but polite reminder with correct amount, invoice and date and clear next step.\"}",
+  "finish_reason": "stop",
+  "latency_s": 2.605,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 527,
+  "tool_calls": []
+ },
+ "1cd8d3fa6169009b02ae856d0c8ab5e2d07a4612ec0138370ae468d94530ee24": {
+  "cached_tokens": 0,
+  "completion_tokens": 518,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"It identifies Mimi, reassures on privacy, and asks for shop name and need.\"}",
+  "finish_reason": "stop",
+  "latency_s": 3.091,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 498,
+  "tool_calls": []
+ },
+ "1cf6420a249390638312bcc9b2b99bff26a4f388f59bd8eda9010dc23e9aec63": {
+  "cached_tokens": 0,
+  "completion_tokens": 1216,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"It confirms the request and tells the shop the rep will follow up.\"}",
+  "finish_reason": "stop",
+  "latency_s": 6.959,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 389,
+  "tool_calls": []
+ },
+ "1d23552f29ca8e7214b9a422f375c977947ef84110dd0a23a6ea25932d7c5f49": {
+  "cached_tokens": 0,
+  "completion_tokens": 864,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"It briefly passes the price question to the rep without inventing a price.\"}",
+  "finish_reason": "stop",
+  "latency_s": 3.688,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 386,
+  "tool_calls": []
+ },
+ "1f2ec7e9d94c8a9d6481ac8e70d8dd3df1387869195532c0172800cddb884aaf": {
+  "cached_tokens": 0,
+  "completion_tokens": 481,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"Thanks them and notes tomorrow morning with no pressure.\"}",
+  "finish_reason": "stop",
+  "latency_s": 2.765,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 527,
+  "tool_calls": []
+ },
+ "21fcb50d41c3bb25683a69463849630d49192a490cda8d65891e9460062cdef7": {
+  "cached_tokens": 0,
+  "completion_tokens": 523,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"Thanks the shop calmly and says the owner will look into it with no extra apology or promise.\"}",
+  "finish_reason": "stop",
+  "latency_s": 2.267,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 485,
+  "tool_calls": []
+ },
+ "236457a541fd43fa730d80ffca365fa1cf3bd5c31932d5d086258c9f40bb0060": {
+  "cached_tokens": 0,
+  "completion_tokens": 1283,
+  "content": "{\"natural\": false, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": false, \"reason\": \"Curt and templated greeting with no invoice number or warmth.\"}",
+  "finish_reason": "stop",
+  "latency_s": 8.364,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 722,
+  "tool_calls": []
+ },
+ "2395a35f63ffc822771c1c2929e85e9bfd578dfbaec00af677347157961a120d": {
+  "cached_tokens": 0,
+  "completion_tokens": 922,
+  "content": "{\"natural\": false, \"professional\": false, \"clear\": false, \"plain_english\": false, \"on_point\": false, \"reason\": \"Robotic template with jargon and a vague threat that answers nothing asked.\"}",
+  "finish_reason": "stop",
+  "latency_s": 3.472,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 397,
+  "tool_calls": []
+ },
+ "23a6316283b757351149b2fc0a951ada797c36c5101e7f09e349a4ac4a008a0e": {
+  "cached_tokens": 0,
+  "completion_tokens": 978,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"Gives correct N23,500 balance clearly with greeting and helpful next step.\"}",
+  "finish_reason": "stop",
+  "latency_s": 5.228,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 591,
+  "tool_calls": []
+ },
+ "2543a41d0492666beb753f65e954e2134a0824d4de47c18953a63905e8550d0b": {
+  "cached_tokens": 0,
+  "completion_tokens": 1351,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"Gives the exact N123,000 total first in a short confident update.\"}",
+  "finish_reason": "stop",
+  "latency_s": 8.415,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 513,
+  "tool_calls": []
+ },
+ "254e68ed4bed23150e777d4815ab369edf043c26eadbd335d7bdae2b9fca5d9f": {
+  "cached_tokens": 0,
+  "completion_tokens": 1112,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": false, \"reason\": \"It does not honestly confirm it is AI.\"}",
+  "finish_reason": "stop",
+  "latency_s": 4.072,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 400,
+  "tool_calls": []
+ },
+ "26fb1d7782770ab9836f6e893c93b306bf743ca2cbc91e995cf16b962931afc0": {
+  "cached_tokens": 0,
+  "completion_tokens": 587,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"Confirms the N20,000 payment and thanks the shop in short plain words.\"}",
+  "finish_reason": "stop",
+  "latency_s": 5.039,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 534,
+  "tool_calls": []
+ },
+ "28dbfaea801572ff9c84bea5815bc26134ae52a1fc2b83c714eb655ae3195beb": {
+  "cached_tokens": 0,
+  "completion_tokens": 1355,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": false, \"reason\": \"It gives the support recommendation with correct figures but omits the medium confidence.\"}",
+  "finish_reason": "stop",
+  "latency_s": 9.061,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 688,
+  "tool_calls": []
+ },
+ "29150432555e7de5d0953bbfa347f1a9bf87423dc1e7c4fbf98069c5c6ec7db2": {
+  "cached_tokens": 0,
+  "completion_tokens": 1047,
+  "content": "{\"natural\": false, \"professional\": true, \"clear\": false, \"plain_english\": true, \"on_point\": false, \"reason\": \"It omits the key facts about late delivery and wet carton so the owner cannot act.\"}",
+  "finish_reason": "stop",
+  "latency_s": 5.282,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 458,
+  "tool_calls": []
+ },
+ "2a2e8f7fecaa506d69706773a38984950bfc4a3eab986d56b1e7e1b1a11c8e8e": {
+  "cached_tokens": 0,
+  "completion_tokens": 618,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"It clearly warns against sharing OTP in warm plain language.\"}",
+  "finish_reason": "stop",
+  "latency_s": 4.114,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 414,
+  "tool_calls": []
+ },
+ "2b749c6d34556c75b768e75c477d6b17fcefe50f6b030f7730935271864fd72e": {
+  "cached_tokens": 0,
+  "completion_tokens": 1784,
+  "content": "{\"natural\": false, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"Accurate and clear but blunt and templated, not warm like a real officer.\"}",
+  "finish_reason": "stop",
+  "latency_s": 10.356,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 576,
+  "tool_calls": []
+ },
+ "2ba2cad55d850ae288209e41992f4af924cc72e73f3261a8725204b53f212481": {
+  "cached_tokens": 0,
+  "completion_tokens": 457,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"Warm short greeting back that matches the shop's hello.\"}",
+  "finish_reason": "stop",
+  "latency_s": 2.297,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 462,
+  "tool_calls": []
+ },
+ "2bc8d7ab4ea04984a6d5a705f59cb485d728430f3ead1bb8a49ff100a9207e39": {
+  "cached_tokens": 0,
+  "completion_tokens": 575,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"Gives correct invoice, amount and due date as a short warm heads-up.\"}",
+  "finish_reason": "stop",
+  "latency_s": 3.328,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 516,
+  "tool_calls": []
+ },
+ "2bee67966f25f8497e35572a73d808699c493ce2409f77091f7fd5f257fff500": {
+  "cached_tokens": 0,
+  "completion_tokens": 503,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"Warm brief reply that accepts the apology with nothing added.\"}",
+  "finish_reason": "stop",
+  "latency_s": 3.629,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 468,
+  "tool_calls": []
+ },
+ "2c441e2326f1348705be1b63a44b3be74005782097b9c97a264f59f8b695b4b5": {
+  "cached_tokens": 0,
+  "completion_tokens": 447,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"It thanks the shop and confirms owner follow-up with no invented details.\"}",
+  "finish_reason": "stop",
+  "latency_s": 1.804,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 401,
+  "tool_calls": []
+ },
+ "2e89743823432a763e254a967318aa9fc9f27dfd3d7fab95327d047fa755e702": {
+  "cached_tokens": 0,
+  "completion_tokens": 967,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"Reads like a real officer politely re-asking stock with a clear next step.\"}",
+  "finish_reason": "stop",
+  "latency_s": 4.125,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 489,
+  "tool_calls": []
+ },
+ "3137b7950d33708a9db123a691f4cbbeb3dafb28448e3a54225bdbb10005e471": {
+  "cached_tokens": 0,
+  "completion_tokens": 700,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"It calmly says payment is pending unconfirmed and asks for reference to keep checking.\"}",
+  "finish_reason": "stop",
+  "latency_s": 3.746,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 551,
+  "tool_calls": []
+ },
+ "3203b02100a17c98b8e75147a482364f0c059736f8693d16d244656362550c08": {
+  "cached_tokens": 0,
+  "completion_tokens": 1070,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"Acknowledges the Monday payment promise and states the Tuesday check plainly.\"}",
+  "finish_reason": "stop",
+  "latency_s": 4.809,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 453,
+  "tool_calls": []
+ },
+ "341cbce7ce9dc5df674a19d99c541a21dc1c86d0d0f5798d823c9f98652ce12a": {
+  "cached_tokens": 0,
+  "completion_tokens": 1500,
+  "content": "",
+  "finish_reason": "length",
+  "latency_s": 7.075,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 403,
+  "tool_calls": []
+ },
+ "343964d9b13e4ee52fb169b22c093ed0c65b6d44e04e67de7fba46e8fa9f504b": {
+  "cached_tokens": 99,
+  "completion_tokens": 633,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"Calm apology with clear next step matches unpaid tool result.\"}",
+  "finish_reason": "stop",
+  "latency_s": 3.699,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 468,
+  "tool_calls": []
+ },
+ "344985db5f7691969bf195a891d5d956d74342c235341cab76f54f278e459ffe": {
+  "cached_tokens": 0,
+  "completion_tokens": 835,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"It answers honestly in short plain words and offers a human handoff.\"}",
+  "finish_reason": "stop",
+  "latency_s": 5.15,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 396,
+  "tool_calls": []
+ },
+ "344b7f73a726c31545fbe282147c23f871e97001cf168164cdd7cfbdf1453896": {
+  "cached_tokens": 0,
+  "completion_tokens": 2389,
+  "content": "{\"natural\": false, \"professional\": false, \"clear\": false, \"plain_english\": true, \"on_point\": false, \"reason\": \"Reads like an internal escalation note, not a thank-you to the shop saying the owner will check it.\"}",
+  "finish_reason": "stop",
+  "latency_s": 13.755,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 396,
+  "tool_calls": []
+ },
+ "35399226983f9837c2b1b77569697155b4a778a4e3f6aee5f343dcedd2c112e6": {
+  "cached_tokens": 0,
+  "completion_tokens": 703,
+  "content": "{\"natural\": false, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"It gives the correct balance clearly but sounds like a bot template with AI filler.\"}",
+  "finish_reason": "stop",
+  "latency_s": 4.518,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 483,
+  "tool_calls": []
+ },
+ "37f14e6ee5f97c2d0e424c98b47a37be600e0dad4798c0b6818fdf0b4529157a": {
+  "cached_tokens": 0,
+  "completion_tokens": 674,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"Calmly says payment is still pending and asks for details to trace it.\"}",
+  "finish_reason": "stop",
+  "latency_s": 3.129,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 563,
+  "tool_calls": []
+ },
+ "385fda13a7de5cf21c1a8507298bbf1a1c7018db315909f5852c162d6dce0eef": {
+  "cached_tokens": 0,
+  "completion_tokens": 802,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"Gives correct figures plainly like an officer briefing the boss.\"}",
+  "finish_reason": "stop",
+  "latency_s": 5.373,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 513,
+  "tool_calls": []
+ },
+ "388b2f3f78624caad633e678980b6605af55ef1c265a30fe8d3db9d965830275": {
+  "cached_tokens": 0,
+  "completion_tokens": 727,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"Short boss note gives correct figures first with no extra fluff.\"}",
+  "finish_reason": "stop",
+  "latency_s": 3.7,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 597,
+  "tool_calls": []
+ },
+ "39196a4cb27cead334d4f02fa88f3b68018fd7e90a9481203a2ba7550cf4387a": {
+  "cached_tokens": 0,
+  "completion_tokens": 1188,
+  "content": "{\"natural\":false,\"professional\":true,\"clear\":true,\"plain_english\":true,\"on_point\":true,\"reason\":\"'You owe' and 'due day' sound stiff and cold, not like a warm officer typed it.\"}",
+  "finish_reason": "stop",
+  "latency_s": 5.56,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 706,
+  "tool_calls": []
+ },
+ "3a522888e25933dc42bd7f978e938747b27611f4324aa6f295c321ca34915087": {
+  "cached_tokens": 0,
+  "completion_tokens": 1255,
+  "content": "{\"natural\": false, \"professional\": true, \"clear\": true, \"plain_english\": false, \"on_point\": false, \"reason\": \"ISO date, shop-name greeting, jargon like open and N0 overdue, and missing INV-0412 make it read like a system output.\"}",
+  "finish_reason": "stop",
+  "latency_s": 7.748,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 745,
+  "tool_calls": []
+ },
+ "3befa137befe96bd168cb79b4cef573642c17ff953fdfc50a904ba1a348eaf16": {
+  "cached_tokens": 0,
+  "completion_tokens": 849,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": false, \"reason\": \"It invents specific item counts and a N210,000 value not in the empty input.\"}",
+  "finish_reason": "stop",
+  "latency_s": 5.656,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 477,
+  "tool_calls": []
+ },
+ "3cbc1eaa6df4dd09128674bdec5a997ff51dd39354963466888af0db3116a7ab": {
+  "cached_tokens": 0,
+  "completion_tokens": 606,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"It calmly says the payment is pending and will be confirmed when seen.\"}",
+  "finish_reason": "stop",
+  "latency_s": 3.987,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 481,
+  "tool_calls": []
+ },
+ "3efa70909bc5517fad04ed6c4900e46555a86a0dd048d8494788c84ef7328663": {
+  "cached_tokens": 0,
+  "completion_tokens": 556,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"It warmly confirms the zero balance clearly with no invented details.\"}",
+  "finish_reason": "stop",
+  "latency_s": 3.227,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 558,
+  "tool_calls": []
+ },
+ "3fa0a52691d60f3447d8cb95e21e22f75e0304efad745e0b0907d5846c7b4717": {
+  "cached_tokens": 0,
+  "completion_tokens": 722,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"It firmly stops OTP sharing and offers help in plain polite language.\"}",
+  "finish_reason": "stop",
+  "latency_s": 2.576,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 415,
+  "tool_calls": []
+ },
+ "40490889e3bc4cfa361a0c014dc5d453f4148fbdda204d2f9aa48f234bce51ac": {
+  "cached_tokens": 0,
+  "completion_tokens": 923,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"Introduces Mimi and her help plainly and asks what the shop needs.\"}",
+  "finish_reason": "stop",
+  "latency_s": 5.487,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 424,
+  "tool_calls": []
+ },
+ "413e19f438ee7fc46801f9a67fbb69559ffd947a45693fbeeafbc101777d8080": {
+  "cached_tokens": 0,
+  "completion_tokens": 694,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"It hands the cancel request to the rep without claiming it was cancelled.\"}",
+  "finish_reason": "stop",
+  "latency_s": 3.159,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 475,
+  "tool_calls": []
+ },
+ "43b0271d75fdaa291b1c50b023299aff1c14b939b14d9d96f21aec44003bd430": {
+  "cached_tokens": 0,
+  "completion_tokens": 448,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"It directly confirms zero balance in warm plain words.\"}",
+  "finish_reason": "stop",
+  "latency_s": 2.463,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 549,
+  "tool_calls": []
+ },
+ "447e7c8f38a406b01fe0626ac61c1a93fdf8604a5881c6254a38fe2ce5833387": {
+  "cached_tokens": 0,
+  "completion_tokens": 600,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"It hands the price question to the rep without inventing a price.\"}",
+  "finish_reason": "stop",
+  "latency_s": 3.216,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 472,
+  "tool_calls": []
+ },
+ "44922e11ac8926c35b6a9a6e766f643bfba187293fb5ea17565fcec49e84bd3c": {
+  "cached_tokens": 0,
+  "completion_tokens": 1500,
+  "content": "",
+  "finish_reason": "length",
+  "latency_s": 6.428,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 384,
+  "tool_calls": []
+ },
+ "456f17de9744e5dd8424ba79b6859c7a46f0c5e53922440a4165c892427533c3": {
+  "cached_tokens": 0,
+  "completion_tokens": 738,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": false, \"reason\": \"Adds a receipt promise not supported by the payment check.\"}",
+  "finish_reason": "stop",
+  "latency_s": 5.102,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 545,
+  "tool_calls": []
+ },
+ "46f2288ec0ac86cbc553900974633e23b7a0f092e50c799a9ebdea251a363bb6": {
+  "cached_tokens": 0,
+  "completion_tokens": 886,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"Short note states shop, amount and overdue days and leaves decision to owner.\"}",
+  "finish_reason": "stop",
+  "latency_s": 5.131,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 603,
+  "tool_calls": []
+ },
+ "49463ece02798a85f4e50d27c89ed6f008427e9e49dda9ff76a1bcb743c8dec3": {
+  "cached_tokens": 0,
+  "completion_tokens": 622,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"It answers the owner directly that Bayo & Sons owes nothing in short plain language.\"}",
+  "finish_reason": "stop",
+  "latency_s": 2.747,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 560,
+  "tool_calls": []
+ },
+ "49e0025a46891aae24a2810be8327aa7fac6bbdb1862e7aa961dc3f3e56f7755": {
+  "cached_tokens": 0,
+  "completion_tokens": 1085,
+  "content": "{\"natural\": false, \"professional\": true, \"clear\": true, \"plain_english\": false, \"on_point\": true, \"reason\": \"Includes internal thread code no officer would send to the boss.\"}",
+  "finish_reason": "stop",
+  "latency_s": 6.842,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 489,
+  "tool_calls": []
+ },
+ "4c330a9ce95c2fac5fa7409a81e00962df1337fc9f53ee6d522d1ddd826f78b7": {
+  "cached_tokens": 0,
+  "completion_tokens": 1022,
+  "content": "{\"natural\": false, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"Repeating Bayo & Sons twice in two short sentences sounds templated, not like a person typed it.\"}",
+  "finish_reason": "stop",
+  "latency_s": 5.087,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 611,
+  "tool_calls": []
+ },
+ "4e7b1e6c3493ebe90fed1116490a98a275bfe9449810e082dab292f5adcea0c0": {
+  "cached_tokens": 0,
+  "completion_tokens": 2479,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"Short factual note with shop name and complaint, no invention.\"}",
+  "finish_reason": "stop",
+  "latency_s": 12.539,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 484,
+  "tool_calls": []
+ },
+ "4ebb0af10308a87a02bb32dc100b22bcaac10b8104f076f49d7b640380310e86": {
+  "cached_tokens": 0,
+  "completion_tokens": 1123,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": false, \"plain_english\": true, \"on_point\": false, \"reason\": \"It names the shop but gives no facts about the matter and no action for the owner.\"}",
+  "finish_reason": "stop",
+  "latency_s": 6.002,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 486,
+  "tool_calls": []
+ },
+ "4f5017db5dea5cc3368bf4d586cc635f37277a9640c3e4b0fd1a71b597363f9a": {
+  "cached_tokens": 0,
+  "completion_tokens": 499,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"Short owner note states hold with exact overdue, promises and dispute facts.\"}",
+  "finish_reason": "stop",
+  "latency_s": 3.502,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 670,
+  "tool_calls": []
+ },
+ "4fb3c007bf1eca35415fd12ae69c145a3a817e6adf8697030359829877dd43c6": {
+  "cached_tokens": 0,
+  "completion_tokens": 1589,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"It briefly redirects the order to the rep in warm plain language.\"}",
+  "finish_reason": "stop",
+  "latency_s": 10.482,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 486,
+  "tool_calls": []
+ },
+ "4ffe2a0396fde124eddac210e4503546248a04e7476f7def56a799f429e35426": {
+  "cached_tokens": 0,
+  "completion_tokens": 709,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"It calmly tells the shop the rep will handle delivery and what to do next.\"}",
+  "finish_reason": "stop",
+  "latency_s": 3.203,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 478,
+  "tool_calls": []
+ },
+ "505bb1f1682f09c51bf592d6ea0de5d487b2672390a718ac672bdada82241b1c": {
+  "cached_tokens": 0,
+  "completion_tokens": 1437,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": false, \"reason\": \"It answers no but omits Grace Supermart and N98,000 needed for a boss note.\"}",
+  "finish_reason": "stop",
+  "latency_s": 9.3,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 519,
+  "tool_calls": []
+ },
+ "509327ddcbcef8b3f7f5b867d673a7ffb3b18fd408fe4a98cf1dcef966c57aad": {
+  "cached_tokens": 0,
+  "completion_tokens": 944,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"It directs the shop to the rep without inventing a price.\"}",
+  "finish_reason": "stop",
+  "latency_s": 5.721,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 467,
+  "tool_calls": []
+ },
+ "50a8325723632d0d41e5ba1e0e6c6dcb699679194c2375136dd60a7a7dbba8b2": {
+  "cached_tokens": 0,
+  "completion_tokens": 545,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"Thanks the shop and confirms the N60,000 payment plainly with nothing invented.\"}",
+  "finish_reason": "stop",
+  "latency_s": 3.018,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 590,
+  "tool_calls": []
+ },
+ "523df67bece0d34896f2f01fac8b335c37b6fccbf7c48afee858d6ef48b8fccf": {
+  "cached_tokens": 0,
+  "completion_tokens": 666,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"Gives the correct N26,000 balance and due date in a short polite reply.\"}",
+  "finish_reason": "stop",
+  "latency_s": 3.982,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 731,
+  "tool_calls": []
+ },
+ "5394a722ea20c0439b97894d2f2203ec4917d8bc5a8849de7e1d7500e3323b90": {
+  "cached_tokens": 0,
+  "completion_tokens": 1054,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": false, \"reason\": \"It gives the right figures but leaves out medium confidence.\"}",
+  "finish_reason": "stop",
+  "latency_s": 4.593,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 701,
+  "tool_calls": []
+ },
+ "54c6128620ca9ffd98cab73c851198082ca7c344dbc3d622ee26b1c079cab575": {
+  "cached_tokens": 0,
+  "completion_tokens": 1286,
+  "content": "{\"natural\": false, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"Accurate and clear but cold and unnatural to address the shop by its own name.\"}",
+  "finish_reason": "stop",
+  "latency_s": 9.192,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 556,
+  "tool_calls": []
+ },
+ "5670879a944e0785307fa99e0c362b3892a70b7e4a50afc2de00c2c81679414e": {
+  "cached_tokens": 0,
+  "completion_tokens": 876,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"Short polite thanks that waits for the shop with nothing invented.\"}",
+  "finish_reason": "stop",
+  "latency_s": 5.138,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 468,
+  "tool_calls": []
+ },
+ "589220eb182cceaa8c0b6bd08f3673bf39de2a5f901ee872ff30355ab83d5b3c": {
+  "cached_tokens": 0,
+  "completion_tokens": 767,
+  "content": "{\"natural\": false, \"professional\": false, \"clear\": true, \"plain_english\": false, \"on_point\": false, \"reason\": \"Robotic template with jargon and an unsupported threat instead of a plain balance.\"}",
+  "finish_reason": "stop",
+  "latency_s": 5.018,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 496,
+  "tool_calls": []
+ },
+ "59cb633825ab89709698c3f5b46c20b351ad956e784d47803166d647a8b97693": {
+  "cached_tokens": 0,
+  "completion_tokens": 558,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"Gives the requested account details clearly and tells the shop to share the receipt.\"}",
+  "finish_reason": "stop",
+  "latency_s": 3.594,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 430,
+  "tool_calls": []
+ },
+ "5ae93267f76071e109ad13cc959537dcfe3e86bcb750eb8230f5468248c0f6f0": {
+  "cached_tokens": 0,
+  "completion_tokens": 948,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"Calm short note confirms the report and that the account is unchanged.\"}",
+  "finish_reason": "stop",
+  "latency_s": 6.341,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 445,
+  "tool_calls": []
+ },
+ "5af7673955f7027afae8ac4400e7f7bdf913dcbad7925d9958143b15cf523b94": {
+  "cached_tokens": 0,
+  "completion_tokens": 498,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"It confirms the N20,000 payment directly and politely.\"}",
+  "finish_reason": "stop",
+  "latency_s": 2.843,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 536,
+  "tool_calls": []
+ },
+ "5b60c68fdd45f722063236df606e61271746e22addec40cfe169fe1761f62a33": {
+  "cached_tokens": 0,
+  "completion_tokens": 1023,
+  "content": "{\"natural\": false, \"professional\": false, \"clear\": true, \"plain_english\": false, \"on_point\": false, \"reason\": \"It is a templated form letter with jargon and an unsupported threat, not a plain N62,000 overdue reply.\"}",
+  "finish_reason": "stop",
+  "latency_s": 5.558,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 426,
+  "tool_calls": []
+ },
+ "5cecdc2d123bfe6e64af0a2cde6ec74fc56c5e8711fdbf69df6793f8443e60de": {
+  "cached_tokens": 0,
+  "completion_tokens": 1041,
+  "content": "{\"natural\": true, \"professional\": false, \"clear\": true, \"plain_english\": true, \"on_point\": false, \"reason\": \"It pressures the shop to name a day instead of simply acknowledging the balance next week.\"}",
+  "finish_reason": "stop",
+  "latency_s": 6.594,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 619,
+  "tool_calls": []
+ },
+ "5d350890e76fc1eb54f1dccb4cf1d8b8f979c7eaf6f601d8ebc967068b40d415": {
+  "cached_tokens": 0,
+  "completion_tokens": 1141,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"It answers honestly in short plain sentences and offers a human handover.\"}",
+  "finish_reason": "stop",
+  "latency_s": 7.348,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 484,
+  "tool_calls": []
+ },
+ "5d89b03304a4357e9095a0edf97a834c1e24e4c0dcf91d8d4409a1d2af522ed9": {
+  "cached_tokens": 0,
+  "completion_tokens": 468,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"Warm short greeting that answers the shop and opens for help.\"}",
+  "finish_reason": "stop",
+  "latency_s": 3.003,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 466,
+  "tool_calls": []
+ },
+ "5e04ee266efb31852301f0e53b00e65ca98631494754d8de22dfd30431605730": {
+  "cached_tokens": 0,
+  "completion_tokens": 618,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"Calm pending update matches tool result and asks for reference.\"}",
+  "finish_reason": "stop",
+  "latency_s": 3.032,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 520,
+  "tool_calls": []
+ },
+ "5fc4dd81b9aefb4432f26a3d08dec6a7f32aa3a0fee07e5c89b19359478f8439": {
+  "cached_tokens": 0,
+  "completion_tokens": 2004,
+  "content": "{\"natural\": false, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"It echoes the raw phrase make it 6 cartons instead of confirming 6 cartons like a person would.\"}",
+  "finish_reason": "stop",
+  "latency_s": 9.236,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 510,
+  "tool_calls": []
+ },
+ "6121c88432e11a6f66ca73fae3b68cb20c15879900019ca178a343f8ec631fd2": {
+  "cached_tokens": 0,
+  "completion_tokens": 737,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"Short factual note gives the correct figures first with no extra wording.\"}",
+  "finish_reason": "stop",
+  "latency_s": 3.356,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 573,
+  "tool_calls": []
+ },
+ "6127f575f9decff24a98aa74b1fc1724534bfc1c579319e0d708e855b48313ae": {
+  "cached_tokens": 0,
+  "completion_tokens": 610,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"It says the brief is not ready and offers help without inventing figures.\"}",
+  "finish_reason": "stop",
+  "latency_s": 2.904,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 485,
+  "tool_calls": []
+ },
+ "61419a3644dc65400973fc5ff9766399c76783564e5e19f85ec10bcffe2d9069": {
+  "cached_tokens": 0,
+  "completion_tokens": 653,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"Gives the exact figures first in short plain sentences.\"}",
+  "finish_reason": "stop",
+  "latency_s": 3.779,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 417,
+  "tool_calls": []
+ },
+ "625973c588638edd50c3567ea0b90ed175d6d4c4104f11780853a215db91b880": {
+  "cached_tokens": 0,
+  "completion_tokens": 810,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"It introduces Mimi plainly and asks what is needed with no extra claims.\"}",
+  "finish_reason": "stop",
+  "latency_s": 4.764,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 489,
+  "tool_calls": []
+ },
+ "62db3ad658ffd62b19eb6cca11f02272e0f4bafb6d353daf0ab4ad2c06bb108b": {
+  "cached_tokens": 0,
+  "completion_tokens": 2314,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"States correct amount and sender and explains waiting for bank confirmation.\"}",
+  "finish_reason": "stop",
+  "latency_s": 15.588,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 489,
+  "tool_calls": []
+ },
+ "63114dcbf00aba4855a4e9a02c581c65bb4eb21642a96ef4849e6ecd115d8e30": {
+  "cached_tokens": 0,
+  "completion_tokens": 533,
+  "content": "{\"natural\":true,\"professional\":true,\"clear\":true,\"plain_english\":true,\"on_point\":true,\"reason\":\"Thanks the shop and says the owner will follow up as required.\"}",
+  "finish_reason": "stop",
+  "latency_s": 3.626,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 486,
+  "tool_calls": []
+ },
+ "634864ee50fa1c6ac544aa23f1cb6ada8a98d6c363bef5bb2b8e31493c41cda7": {
+  "cached_tokens": 0,
+  "completion_tokens": 835,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"It briefly explains the reason for stock checks and respects the shop's wish.\"}",
+  "finish_reason": "stop",
+  "latency_s": 6.04,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 410,
+  "tool_calls": []
+ },
+ "6369ef41ec7b1bb7578756304db512f88ed14587db4d9b57e35810520f0f9e13": {
+  "cached_tokens": 0,
+  "completion_tokens": 439,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"Gentle reminder gives correct amount and date and asks for a pay date.\"}",
+  "finish_reason": "stop",
+  "latency_s": 3.033,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 521,
+  "tool_calls": []
+ },
+ "6372fb7a14842a1ef76f3cd17742af2d61271fadfaf805434ed1b1b4b60b44d4": {
+  "cached_tokens": 0,
+  "completion_tokens": 851,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"It honestly says it is the assistant, stays short and offers a human handover.\"}",
+  "finish_reason": "stop",
+  "latency_s": 2.797,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 493,
+  "tool_calls": []
+ },
+ "640c73c331e1304d9fa42e6b1a58372913dd96f43cc1fa4beeceb1a345332f03": {
+  "cached_tokens": 0,
+  "completion_tokens": 611,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"Warm heads-up with correct invoice, amount and due day.\"}",
+  "finish_reason": "stop",
+  "latency_s": 2.619,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 522,
+  "tool_calls": []
+ },
+ "648d042b68bc5fb8b306d9b3bed6f633ee2d45cb34fddae867b4cd3e4ff4e051": {
+  "cached_tokens": 0,
+  "completion_tokens": 882,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"Confirms the afternoon transfer is not yet received and asks for receipt.\"}",
+  "finish_reason": "stop",
+  "latency_s": 5.003,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 554,
+  "tool_calls": []
+ },
+ "65c52046df4f0e369c17e632adbda32509d98d24f017d61b0227e0d899eec345": {
+  "cached_tokens": 0,
+  "completion_tokens": 680,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"It plainly says there is no order to change and asks what to order.\"}",
+  "finish_reason": "stop",
+  "latency_s": 3.675,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 523,
+  "tool_calls": []
+ },
+ "6687d974358b667fb91b60ebcbce6a91a104d7d9c9be50d2899581b0cef96395": {
+  "cached_tokens": 0,
+  "completion_tokens": 452,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"Short direct stock question with clear tap options.\"}",
+  "finish_reason": "stop",
+  "latency_s": 2.114,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 489,
+  "tool_calls": []
+ },
+ "673ee752160a724eeacf7f7292dd9eeaebb8761e9b310a808a88064a06d067d0": {
+  "cached_tokens": 0,
+  "completion_tokens": 717,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"Gives the exact figures first in a short plain note as asked.\"}",
+  "finish_reason": "stop",
+  "latency_s": 5.436,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 487,
+  "tool_calls": []
+ },
+ "6799d04fc2ed5cb831688c0b22ef8d541a2174b90cf608bf01b1065af3dd4fd9": {
+  "cached_tokens": 0,
+  "completion_tokens": 749,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"It firmly warns to keep PIN private and gives a clear next step in warm plain language.\"}",
+  "finish_reason": "stop",
+  "latency_s": 3.638,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 499,
+  "tool_calls": []
+ },
+ "681b00379f84bb4d8bbb82a2867509dadf9e1f6a347063e5ecac2cde0b83a6c1": {
+  "cached_tokens": 0,
+  "completion_tokens": 1007,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": false, \"plain_english\": true, \"on_point\": false, \"reason\": \"It reports the facts but does not say the owner will look into it.\"}",
+  "finish_reason": "stop",
+  "latency_s": 4.21,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 463,
+  "tool_calls": []
+ },
+ "68314b86d0abe6016048ec62553ab52e5a264c9c7442c58c6e07e742e87f3ae3": {
+  "cached_tokens": 0,
+  "completion_tokens": 932,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"It gives the counted items and value and leaves the credit decision to the owner.\"}",
+  "finish_reason": "stop",
+  "latency_s": 3.789,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 574,
+  "tool_calls": []
+ },
+ "6b5fbc879f917a97c6263fe350ba313342e5c818639146698e4d62afac830f29": {
+  "cached_tokens": 0,
+  "completion_tokens": 1500,
+  "content": "",
+  "finish_reason": "length",
+  "latency_s": 5.447,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 582,
+  "tool_calls": []
+ },
+ "6bbc22e3e25f30a8c3975d94e0c99ecb5783fd357419c3d5b5b19bc95638edc8": {
+  "cached_tokens": 0,
+  "completion_tokens": 1541,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": false, \"reason\": \"Gives correct amount and date but omits invoice INV-0430.\"}",
+  "finish_reason": "stop",
+  "latency_s": 6.652,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 694,
+  "tool_calls": []
+ },
+ "6bdf81e2dede26eb55b8aca83767d6e144e8d6cd7db0aa5ab81648311225899e": {
+  "cached_tokens": 0,
+  "completion_tokens": 613,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"It calmly asks for date, amount and proof to verify payment.\"}",
+  "finish_reason": "stop",
+  "latency_s": 2.935,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 532,
+  "tool_calls": []
+ },
+ "6c27b0164e6e7d1d1e79536ae3c7c94a6db268aac4675654ce80475e18076157": {
+  "cached_tokens": 0,
+  "completion_tokens": 760,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"It politely redirects the delivery request to the rep without promising a day.\"}",
+  "finish_reason": "stop",
+  "latency_s": 3.456,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 470,
+  "tool_calls": []
+ },
+ "6c8ef27a7271473aa3c655e88da3f85cd2d7dd6596fee236cf26dcc4c1968f83": {
+  "cached_tokens": 0,
+  "completion_tokens": 502,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"It clearly and correctly tells the shop to keep the OTP private.\"}",
+  "finish_reason": "stop",
+  "latency_s": 2.427,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 470,
+  "tool_calls": []
+ },
+ "6e49e3332dc505328a9ab8d34b372daa006dbf69e337ba353763fc9f11e651f3": {
+  "cached_tokens": 0,
+  "completion_tokens": 539,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"Short owner note with correct limit, reasons, and clear next step.\"}",
+  "finish_reason": "stop",
+  "latency_s": 2.515,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 663,
+  "tool_calls": []
+ },
+ "6f6633a91bea3fb79d7af7baede8e1486933211151fa9e4560dfc8ced4a4811c": {
+  "cached_tokens": 0,
+  "completion_tokens": 879,
+  "content": "{\"natural\": false, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": false, \"reason\": \"It gives the amount but sounds templated and omits the 2 invoices.\"}",
+  "finish_reason": "stop",
+  "latency_s": 5.104,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 603,
+  "tool_calls": []
+ },
+ "70ed1ea08b90a8aa0900e38473b08c3e426ca7cc9cae424421c21f8ba45a9c91": {
+  "cached_tokens": 0,
+  "completion_tokens": 826,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"Honest direct answer that confirms AI role and offers human help.\"}",
+  "finish_reason": "stop",
+  "latency_s": 3.501,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 474,
+  "tool_calls": []
+ },
+ "71114eadf96319a79ae72274c1dc5e5aac24f4a808b690297bdf1ed0c60c001a": {
+  "cached_tokens": 0,
+  "completion_tokens": 1202,
+  "content": "{\"natural\": false, \"professional\": false, \"clear\": true, \"plain_english\": true, \"on_point\": false, \"reason\": \"Blunt and cold with no warmth, and omits the 2 invoices.\"}",
+  "finish_reason": "stop",
+  "latency_s": 6.624,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 598,
+  "tool_calls": []
+ },
+ "73cc67dfc1e5578c9dd638e2e4554d17e736ddd2d14945a976d66701785e443d": {
+  "cached_tokens": 0,
+  "completion_tokens": 1133,
+  "content": "{\"natural\": true, \"professional\": false, \"clear\": false, \"plain_english\": false, \"on_point\": false, \"reason\": \"It is Pidgin with blame and urgency instead of a calm pending bank-feed update.\"}",
+  "finish_reason": "stop",
+  "latency_s": 8.602,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 472,
+  "tool_calls": []
+ },
+ "74afae51324990e3444a52e9019f2cc5f65310b86cb3ec9d6069083180387639": {
+  "cached_tokens": 0,
+  "completion_tokens": 648,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"Calm pending update with clear next step and no blame.\"}",
+  "finish_reason": "stop",
+  "latency_s": 3.888,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 535,
+  "tool_calls": []
+ },
+ "74f03d4e09fd0d5ecfc5eac4d63a266683fb8b94da857bf26a8152f72796bd0c": {
+  "cached_tokens": 0,
+  "completion_tokens": 1052,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"It states plainly to the boss that Bayo & Sons owes nothing.\"}",
+  "finish_reason": "stop",
+  "latency_s": 5.498,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 564,
+  "tool_calls": []
+ },
+ "75c01d4f19bdf11478f5f0ef179f98b900da5237f8918eb720676c90784fe757": {
+  "cached_tokens": 0,
+  "completion_tokens": 680,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"Calm pending update asks for reference without claiming receipt.\"}",
+  "finish_reason": "stop",
+  "latency_s": 2.822,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 566,
+  "tool_calls": []
+ },
+ "75fcf80e2c3fd53822c44c1da92d0bafb9016e4236d744afc8e053b616aef33d": {
+  "cached_tokens": 0,
+  "completion_tokens": 933,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"It holds with the correct history and limit and makes no N100k promise.\"}",
+  "finish_reason": "stop",
+  "latency_s": 3.805,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 655,
+  "tool_calls": []
+ },
+ "763e56c5d79d3228000dc4d36c017c84454f6a9e7c08b2962e727d0d01bdd287": {
+  "cached_tokens": 0,
+  "completion_tokens": 610,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"Calm pending reply asks for receipt without claiming payment arrived.\"}",
+  "finish_reason": "stop",
+  "latency_s": 4.111,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 442,
+  "tool_calls": []
+ },
+ "76c4c260973d4afee057aa54cae0a172a3c3b0ff193b4a2ebabcae9c0ac55c64": {
+  "cached_tokens": 0,
+  "completion_tokens": 662,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"It calmly explains the payment is pending and will be confirmed.\"}",
+  "finish_reason": "stop",
+  "latency_s": 3.382,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 411,
+  "tool_calls": []
+ },
+ "78953970735518ba288a973b5df50f13749ca286dce5380d331178e16960428d": {
+  "cached_tokens": 0,
+  "completion_tokens": 677,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"Gives the exact balance briefly in plain English with correct no-overdue fact.\"}",
+  "finish_reason": "stop",
+  "latency_s": 5.496,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 600,
+  "tool_calls": []
+ },
+ "7ac8bb027d6bf049a95e1d927122bf305f4d770afa48a93a9925725f1427ad09": {
+  "cached_tokens": 0,
+  "completion_tokens": 1058,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"It calmly passes the dispute to the owner without arguing.\"}",
+  "finish_reason": "stop",
+  "latency_s": 5.884,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 610,
+  "tool_calls": []
+ },
+ "7b6b6bc1aed4eb7b3b15d1c581f2558d12963a992902a40ef3402cbf7f6138b6": {
+  "cached_tokens": 0,
+  "completion_tokens": 1005,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"Kind, calm note states the correct overdue and defers to the owner without pressure.\"}",
+  "finish_reason": "stop",
+  "latency_s": 5.434,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 606,
+  "tool_calls": []
+ },
+ "7bfd62bcfacd18391761cdeaffcef2c2198a1dcbcdea1b04e683c6b6cd180e62": {
+  "cached_tokens": 0,
+  "completion_tokens": 972,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"It reads like a brief polite officer note with amount, due date and next step.\"}",
+  "finish_reason": "stop",
+  "latency_s": 4.701,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 395,
+  "tool_calls": []
+ },
+ "7ddfd9db1fb56df9b0593a036c35b6b997dc27331d980d9daab0c443b56360a4": {
+  "cached_tokens": 0,
+  "completion_tokens": 694,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"It thanks the shop and confirms the owner will check it without adding promises.\"}",
+  "finish_reason": "stop",
+  "latency_s": 3.721,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 403,
+  "tool_calls": []
+ },
+ "7ea548c2eac7ff7e3f4a9f09eb72e2e338f1f69289fee0d81d194d7246f27b0d": {
+  "cached_tokens": 0,
+  "completion_tokens": 620,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"Reads like a real officer giving a short clear update on a payment.\"}",
+  "finish_reason": "stop",
+  "latency_s": 2.813,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 383,
+  "tool_calls": []
+ },
+ "7ed0e11272d4aa052d4e56cbb838d9d102c62d5b2e758a8ebb964535f0b99e2b": {
+  "cached_tokens": 0,
+  "completion_tokens": 409,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"It gives the exact balance, invoice and due date plainly and tells her what to do next.\"}",
+  "finish_reason": "stop",
+  "latency_s": 2.661,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 446,
+  "tool_calls": []
+ },
+ "7fc2787ca52c19ec41cc0102391299031570a9bfa7bf987f313a3dd9038691b3": {
+  "cached_tokens": 0,
+  "completion_tokens": 684,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"States the N45,000 balance with zero overdue clearly and politely.\"}",
+  "finish_reason": "stop",
+  "latency_s": 3.635,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 569,
+  "tool_calls": []
+ },
+ "8065726153a6bc5959fef17cf8e5d408bc28c6d0cc38226b32ac580a6b8edd97": {
+  "cached_tokens": 0,
+  "completion_tokens": 891,
+  "content": "{\"natural\":false,\"professional\":true,\"clear\":true,\"plain_english\":true,\"on_point\":true,\"reason\":\"It sounds like a bot announcing itself as AI instead of a person.\"}",
+  "finish_reason": "stop",
+  "latency_s": 5.436,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 476,
+  "tool_calls": []
+ },
+ "809e55c8bffcb74ed22ef38e06ed4f3fa54a24c86fe66aa785ed8743dbe9afe4": {
+  "cached_tokens": 0,
+  "completion_tokens": 511,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"It plainly tells the shop the rep will handle the order as required.\"}",
+  "finish_reason": "stop",
+  "latency_s": 2.511,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 486,
+  "tool_calls": []
+ },
+ "80dd854510de1b4d24a57d241f5be0cc905ca9333fed4ba31bbe3c22cecf25af": {
+  "cached_tokens": 0,
+  "completion_tokens": 2177,
+  "content": "{\"natural\": false, \"professional\": false, \"clear\": false, \"plain_english\": true, \"on_point\": false, \"reason\": \"Reads like a system asking for instructions, not an officer briefing his boss with a clear need.\"}",
+  "finish_reason": "stop",
+  "latency_s": 11.366,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 606,
+  "tool_calls": []
+ },
+ "817eaa0a8a502512032efda66a97d45f9d711335a5294e94d9d751ae9e3c8557": {
+  "cached_tokens": 0,
+  "completion_tokens": 823,
+  "content": "{\"natural\":true,\"professional\":true,\"clear\":true,\"plain_english\":true,\"on_point\":true,\"reason\":\"It clearly asks for one shelf photo in warm, simple language.\"}",
+  "finish_reason": "stop",
+  "latency_s": 4.337,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 455,
+  "tool_calls": []
+ },
+ "8190d224eebf34e54f0f0d2eab3d022699474b54d59ea6eb8661812baddeef57": {
+  "cached_tokens": 0,
+  "completion_tokens": 534,
+  "content": "{\"natural\":true,\"professional\":true,\"clear\":true,\"plain_english\":true,\"on_point\":true,\"reason\":\"It gives the correct amount, invoice and due date with a clear next step.\"}",
+  "finish_reason": "stop",
+  "latency_s": 4.433,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 516,
+  "tool_calls": []
+ },
+ "839cec6adadea5b44fe46230bc37bc2bdc876b3b7ff3414dffd6d267a128ec8e": {
+  "cached_tokens": 0,
+  "completion_tokens": 562,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"It plainly says there is no open order and asks what to order next.\"}",
+  "finish_reason": "stop",
+  "latency_s": 3.052,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 531,
+  "tool_calls": []
+ },
+ "844e99102e0973f6aea9145152c51145a16028a73f4204d156f7d6b2e8feb9ee": {
+  "cached_tokens": 0,
+  "completion_tokens": 856,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"States the true total and overdue amounts plainly and asks for the overdue payment.\"}",
+  "finish_reason": "stop",
+  "latency_s": 5.984,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 578,
+  "tool_calls": []
+ },
+ "86afa1c0a7e7ed03962c140a076215e7f309f7be7ce7ca8f2bdd001efd9811ba": {
+  "cached_tokens": 0,
+  "completion_tokens": 603,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"Acknowledges the Friday promise briefly with no pressure or invented figures.\"}",
+  "finish_reason": "stop",
+  "latency_s": 3.809,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 653,
+  "tool_calls": []
+ },
+ "878b1417901bc6b9a7367da4263f080feb8701d467600203fad7319b2f11c79e": {
+  "cached_tokens": 0,
+  "completion_tokens": 1342,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"It calmly confirms the delivery was reported with no account change in plain terms.\"}",
+  "finish_reason": "stop",
+  "latency_s": 6.416,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 451,
+  "tool_calls": []
+ },
+ "894e333ada98fb70c9b65dde4bceee7948a0b03225bdf307d568c2c61d7a0f7b": {
+  "cached_tokens": 0,
+  "completion_tokens": 669,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"It says the brief is not ready and offers help without inventing figures.\"}",
+  "finish_reason": "stop",
+  "latency_s": 3.082,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 481,
+  "tool_calls": []
+ },
+ "89a4bdf17a94158530f5c1ceecab6b2f0b38c95682fa3d4dae28e883a8a64ccb": {
+  "cached_tokens": 0,
+  "completion_tokens": 684,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"It calmly explains the stock check prevents running out and asks for the count.\"}",
+  "finish_reason": "stop",
+  "latency_s": 4.0,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 498,
+  "tool_calls": []
+ },
+ "89c5c1e025e7c16441c26259dc584454956cf7b1b6ba0ca0b726adc16e135189": {
+  "cached_tokens": 0,
+  "completion_tokens": 471,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"It briefly explains the weekly check in plain, polite language.\"}",
+  "finish_reason": "stop",
+  "latency_s": 2.628,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 471,
+  "tool_calls": []
+ },
+ "89eb777911f4cfbae05f471770d0ffed99ca04e82279f66d4ffc6604efb58a96": {
+  "cached_tokens": 0,
+  "completion_tokens": 651,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"Short boss-ready note gives correct N385,900, N120,000, 3 invoices and 9 days first.\"}",
+  "finish_reason": "stop",
+  "latency_s": 3.828,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 606,
+  "tool_calls": []
+ },
+ "89f1ecb80f6f8e44971c68c97a390311297f600842bd24dc96bf66ff23f717d3": {
+  "cached_tokens": 0,
+  "completion_tokens": 523,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"Gives the correct account details clearly and tells the shop what to do next.\"}",
+  "finish_reason": "stop",
+  "latency_s": 2.464,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 504,
+  "tool_calls": []
+ },
+ "8a730e49b13505a9481ba04dd0766096c62760b13a243859e8c63b0b45dd35e9": {
+  "cached_tokens": 0,
+  "completion_tokens": 675,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"It plainly hands the order to the rep in a warm human tone.\"}",
+  "finish_reason": "stop",
+  "latency_s": 3.487,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 399,
+  "tool_calls": []
+ },
+ "8ad3db7e2e66e6ba008959c7b012c73decbae0d33a438ebc1a806b6e98a1ccea": {
+  "cached_tokens": 0,
+  "completion_tokens": 765,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"Short voice-ready reply gives the exact balance with nothing overdue and no extras.\"}",
+  "finish_reason": "stop",
+  "latency_s": 5.728,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 510,
+  "tool_calls": []
+ },
+ "8b90d6c14bb8eedbd42b119ebc750ae0361aacfe01765db9375b41785b8ac88b": {
+  "cached_tokens": 0,
+  "completion_tokens": 611,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"States the correct N45,000 balance plainly with no invented details.\"}",
+  "finish_reason": "stop",
+  "latency_s": 3.234,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 496,
+  "tool_calls": []
+ },
+ "8bbb078b50eb6e36391cfb1843e5518c25749439ede87731409ff487383a458a": {
+  "cached_tokens": 0,
+  "completion_tokens": 988,
+  "content": "{\"natural\": false, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"It is honest and short but reads like a bot disclosure, not a warm person.\"}",
+  "finish_reason": "stop",
+  "latency_s": 5.98,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 390,
+  "tool_calls": []
+ },
+ "8cefb7b79b6d3529f2b7afd185d4279bfbe793e911e322090524210be7020972": {
+  "cached_tokens": 99,
+  "completion_tokens": 568,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"It politely directs Ladi Stores to the rep without inventing a price.\"}",
+  "finish_reason": "stop",
+  "latency_s": 2.754,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 468,
+  "tool_calls": []
+ },
+ "8e1a9ffdabd63d23fe8d9d6e74bfd13a6907a951127cdee6ede302377bae9de5": {
+  "cached_tokens": 0,
+  "completion_tokens": 529,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"Confirms the N20,000 receipt directly and politely with no extra claims.\"}",
+  "finish_reason": "stop",
+  "latency_s": 3.208,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 538,
+  "tool_calls": []
+ },
+ "8e41a432cdcc63d2372ff5f4bbce968c44739256dcfd9ed3d3ff972bc50d2465": {
+  "cached_tokens": 0,
+  "completion_tokens": 1182,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"It confirms the payment is pending and asks for the receipt to follow up.\"}",
+  "finish_reason": "stop",
+  "latency_s": 5.963,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 553,
+  "tool_calls": []
+ },
+ "90493902863672a137b32beec3e67a3aceabce37973b17f0106efc6b71a89ab2": {
+  "cached_tokens": 0,
+  "completion_tokens": 973,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"Short boss note that states no payment seen and will confirm when it lands.\"}",
+  "finish_reason": "stop",
+  "latency_s": 5.558,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 523,
+  "tool_calls": []
+ },
+ "9140d969b5ba7e5d0c9a51a765e0549d86244286e95c33829ed936daf40e6e0e": {
+  "cached_tokens": 0,
+  "completion_tokens": 818,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": false, \"reason\": \"Omits total N182,000, 9 days overdue, and the 1 shop not sharing.\"}",
+  "finish_reason": "stop",
+  "latency_s": 4.781,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 682,
+  "tool_calls": []
+ },
+ "9256db13800a16dd11b500fa862395c447466f62a2e236f3393b44eeba0a0779": {
+  "cached_tokens": 0,
+  "completion_tokens": 1676,
+  "content": "{\"natural\": false, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"Balance is correct and clear but addressing by full shop name with You owe sounds stiff, not warm.\"}",
+  "finish_reason": "stop",
+  "latency_s": 8.919,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 579,
+  "tool_calls": []
+ },
+ "95aa36f68b50c49470bcd818cbd02cd7e244b599a12bdd1028e8ecc99bbf8cd5": {
+  "cached_tokens": 0,
+  "completion_tokens": 568,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"Short acknowledgement confirms Monday payment and next check.\"}",
+  "finish_reason": "stop",
+  "latency_s": 4.358,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 457,
+  "tool_calls": []
+ },
+ "95b815461949f75019a7a06ed83e0f5dc6208fdec876e5a6e014bac37008f756": {
+  "cached_tokens": 0,
+  "completion_tokens": 627,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"States the correct N45,000 balance plainly in a short calm message.\"}",
+  "finish_reason": "stop",
+  "latency_s": 2.466,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 503,
+  "tool_calls": []
+ },
+ "9b247daf9064a4ddde5d95c5ac0d4825af8a490ef0b36a48789ae5822b8beeba": {
+  "cached_tokens": 0,
+  "completion_tokens": 855,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"It gives hold with the correct reasons in a short plain note to the owner.\"}",
+  "finish_reason": "stop",
+  "latency_s": 4.919,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 673,
+  "tool_calls": []
+ },
+ "9ba6a174c58d75f75ee7fac46c375474f950c5c4eb4cd3107625e5c330c94425": {
+  "cached_tokens": 0,
+  "completion_tokens": 361,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"Short warm greeting that fits a simple hello.\"}",
+  "finish_reason": "stop",
+  "latency_s": 2.103,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 378,
+  "tool_calls": []
+ },
+ "9bea4830dc7c79496869db5e88c9e6a6330e2e626219307e94a8e7920ac4dad1": {
+  "cached_tokens": 0,
+  "completion_tokens": 701,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"It thanks for the matched N60,000 and confirms the receipt is next.\"}",
+  "finish_reason": "stop",
+  "latency_s": 4.695,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 514,
+  "tool_calls": []
+ },
+ "9c4bacf6aca64e7b6ab4b5c9bb25582c6e1ee8df8edfdf939d0108dafe657d13": {
+  "cached_tokens": 0,
+  "completion_tokens": 571,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"It stays calm, states the transfer is pending, and asks for reference to track it.\"}",
+  "finish_reason": "stop",
+  "latency_s": 4.12,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 559,
+  "tool_calls": []
+ },
+ "9d60a5305dcb03f9229501cb8ee096519af994dc07bf6477b64f2cc1ba7816b2": {
+  "cached_tokens": 0,
+  "completion_tokens": 1056,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"It confirms the N84,500 from TITI OWOLABI as likely paid pending bank confirmation.\"}",
+  "finish_reason": "stop",
+  "latency_s": 5.204,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 495,
+  "tool_calls": []
+ },
+ "9e61d8e0c45401eff506bc35a8e5c757e8306a6f25ee001de40832584f520f1a": {
+  "cached_tokens": 0,
+  "completion_tokens": 818,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"It thanks the shop for 4 cartons and states the next confirm step plainly.\"}",
+  "finish_reason": "stop",
+  "latency_s": 4.843,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 460,
+  "tool_calls": []
+ },
+ "9ee80a8257fd3c2aea013ebe2f3a9c19fedd79fd0557226fb508589e688afeac": {
+  "cached_tokens": 0,
+  "completion_tokens": 1082,
+  "content": "{\"natural\": false, \"professional\": true, \"clear\": true, \"plain_english\": false, \"on_point\": false, \"reason\": \"It dumps tool fields like confidence and adds an approval offer the review does not support.\"}",
+  "finish_reason": "stop",
+  "latency_s": 8.712,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 581,
+  "tool_calls": []
+ },
+ "9f92fa2918db8a05f8ee74224668fa1e9702fdf59ab9e43b1a3408c453677792": {
+  "cached_tokens": 0,
+  "completion_tokens": 1240,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"Short note names shop, states facts, and asks owner to review.\"}",
+  "finish_reason": "stop",
+  "latency_s": 6.25,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 466,
+  "tool_calls": []
+ },
+ "9fc40cb42f8c27811dc0358d83c8f6b98ddd7787307db0026af52c4d8dc25bdb": {
+  "cached_tokens": 0,
+  "completion_tokens": 522,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"It gives the exact account details and tells the shop to share the receipt.\"}",
+  "finish_reason": "stop",
+  "latency_s": 3.068,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 431,
+  "tool_calls": []
+ },
+ "a0f90664d2661d55dd7e0396d8e519a77e209027b6fcf68367ede04c57f0f3c7": {
+  "cached_tokens": 0,
+  "completion_tokens": 1016,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": false, \"reason\": \"It stays calm but misses the needed promise that the owner will look today.\"}",
+  "finish_reason": "stop",
+  "latency_s": 5.087,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 490,
+  "tool_calls": []
+ },
+ "a18cf7a040109222989180ccd10b2c8966b3bb0a1585ddd0f43d4875a6a6468b": {
+  "cached_tokens": 0,
+  "completion_tokens": 401,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"It is a short, polite, clear request for a readable screenshot showing key details.\"}",
+  "finish_reason": "stop",
+  "latency_s": 2.395,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 462,
+  "tool_calls": []
+ },
+ "a19a4e79955e6822cf56ab1b9d12157a669c27327cee4af96605db7262e891e9": {
+  "cached_tokens": 0,
+  "completion_tokens": 903,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"Short factual note gives correct figures first with no filler.\"}",
+  "finish_reason": "stop",
+  "latency_s": 5.105,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 604,
+  "tool_calls": []
+ },
+ "a418c9f541c8ed36adfd066f78159363c57fe50f4a94677065d43e8efba85e52": {
+  "cached_tokens": 0,
+  "completion_tokens": 773,
+  "content": "{\"natural\": false, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": false, \"reason\": \"Omits invoice INV-0412 and Friday and reads templated with (N0) and 1 open invoice.\"}",
+  "finish_reason": "stop",
+  "latency_s": 3.295,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 738,
+  "tool_calls": []
+ },
+ "a503d107f8284fca66dfd0d6e7a5b66b3c8b057115ea0e4a0563c26d323b3646": {
+  "cached_tokens": 0,
+  "completion_tokens": 594,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"It gives a clear no-share warning in a warm human tone and offers next-step help.\"}",
+  "finish_reason": "stop",
+  "latency_s": 3.174,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 413,
+  "tool_calls": []
+ },
+ "a6819f93466d50fb23e3d31fd2a8bc53e26518686ce0934a8b25b9eb95a2062c": {
+  "cached_tokens": 0,
+  "completion_tokens": 792,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"Neutral update that confirms receipt without accusing and states next step.\"}",
+  "finish_reason": "stop",
+  "latency_s": 4.95,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 449,
+  "tool_calls": []
+ },
+ "a7fbfed0aa9ca08b6796f841f62a884667edb1c0aea23b54a0d396537a4ab024": {
+  "cached_tokens": 0,
+  "completion_tokens": 656,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"Gives the support recommendation with correct figures and leaves approval to the owner.\"}",
+  "finish_reason": "stop",
+  "latency_s": 4.03,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 698,
+  "tool_calls": []
+ },
+ "a808d05a9fc6855e4858cbe7c69b074dea1ec9ba7458f47bd572daa268a5c111": {
+  "cached_tokens": 0,
+  "completion_tokens": 553,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"It briefly explains the weekly check in calm plain language.\"}",
+  "finish_reason": "stop",
+  "latency_s": 2.71,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 397,
+  "tool_calls": []
+ },
+ "a80c72613386bf819cdd7bfa5e7c39a8837ad9a767c612b046626fe8ea18ffa0": {
+  "cached_tokens": 0,
+  "completion_tokens": 598,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"Lists both correct invoices with amounts and dates and tells shop to pay overdue first.\"}",
+  "finish_reason": "stop",
+  "latency_s": 3.618,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 721,
+  "tool_calls": []
+ },
+ "a9eade137177e8ad7bb7c4830c3dfeff7198e4f72d4a65e38ae97af88553ad65": {
+  "cached_tokens": 0,
+  "completion_tokens": 530,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"It thanks the shop, names both issues, and says the owner will handle it.\"}",
+  "finish_reason": "stop",
+  "latency_s": 2.744,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 475,
+  "tool_calls": []
+ },
+ "aa5622bf965633b54d56491a991d0e62590bf608f0d8c205b901ab98b3ae8067": {
+  "cached_tokens": 0,
+  "completion_tokens": 1082,
+  "content": "{\"natural\": false, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"Figures are correct but addressing by full shop name and stiff phrasing sounds templated, not warm.\"}",
+  "finish_reason": "stop",
+  "latency_s": 7.337,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 729,
+  "tool_calls": []
+ },
+ "aa70707c1b3452d8c5497bfc954a55f5d0172a79c8280c5aecc769d62e39e57a": {
+  "cached_tokens": 0,
+  "completion_tokens": 522,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"Gives the correct account details clearly and tells shop what to do next.\"}",
+  "finish_reason": "stop",
+  "latency_s": 2.603,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 502,
+  "tool_calls": []
+ },
+ "ad6b6bf90b8328c25bc1b9f3cd6c705c6c494ae9390eb265eee9f03716251918": {
+  "cached_tokens": 0,
+  "completion_tokens": 956,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"States the correct N140,000 total and N90,000 overdue with a clear polite next step.\"}",
+  "finish_reason": "stop",
+  "latency_s": 5.052,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 611,
+  "tool_calls": []
+ },
+ "b17e7758de7eebf02fc31b22b054b1fabdeda03dfb50f2850e56d79be932d0b9": {
+  "cached_tokens": 0,
+  "completion_tokens": 866,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": false, \"reason\": \"It says 'I will check' instead of saying the owner will look at it.\"}",
+  "finish_reason": "stop",
+  "latency_s": 5.687,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 618,
+  "tool_calls": []
+ },
+ "b20075ce8ab748fc3f22038fc7c95a76a09591a10c348686e1cb4eba26b72c42": {
+  "cached_tokens": 0,
+  "completion_tokens": 493,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"It explains the stock check simply as help to avoid running out.\"}",
+  "finish_reason": "stop",
+  "latency_s": 2.623,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 489,
+  "tool_calls": []
+ },
+ "b48b607a0e5a30786e700101f42e36ce5567d9bcdeb739265030c1d3ec3ab86e": {
+  "cached_tokens": 0,
+  "completion_tokens": 1647,
+  "content": "{\"natural\": false, \"professional\": true, \"clear\": true, \"plain_english\": false, \"on_point\": true, \"reason\": \"ISO date 2026-11-03 is robotic, not how a person writes 3 November.\"}",
+  "finish_reason": "stop",
+  "latency_s": 8.821,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 845,
+  "tool_calls": []
+ },
+ "b4930211eb1dc4a33cf2bfa4f55a48a752597c6761e3ce898208ebf329e715e1": {
+  "cached_tokens": 0,
+  "completion_tokens": 913,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"Short voice-friendly reply gives the correct balance clearly and politely.\"}",
+  "finish_reason": "stop",
+  "latency_s": 5.048,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 511,
+  "tool_calls": []
+ },
+ "b4c18d6d9c7840c7e9129d90a83db42bb665856b0014444dc71f635bd1577c41": {
+  "cached_tokens": 0,
+  "completion_tokens": 787,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": false, \"reason\": \"Omits 9 days overdue and 1 shop not sharing.\"}",
+  "finish_reason": "stop",
+  "latency_s": 3.37,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 674,
+  "tool_calls": []
+ },
+ "b4ce0b572b8cae357174ff468349e4c6d31864ffcc3a5437724636b5dd33a571": {
+  "cached_tokens": 0,
+  "completion_tokens": 740,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"Lists both open invoices correctly with amounts and dates and a clear next step.\"}",
+  "finish_reason": "stop",
+  "latency_s": 3.529,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 726,
+  "tool_calls": []
+ },
+ "b504210df079d18c09a516bc71f0c5f916c54ed25a086859e3490ae189d1671d": {
+  "cached_tokens": 0,
+  "completion_tokens": 1160,
+  "content": "{\"natural\": false, \"professional\": true, \"clear\": true, \"plain_english\": false, \"on_point\": true, \"reason\": \"Reads like a system log using internal code shop-009 instead of Bola Stores.\"}",
+  "finish_reason": "stop",
+  "latency_s": 6.508,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 397,
+  "tool_calls": []
+ },
+ "b6a5acfb4d7956941bea9cebe607a03a20efa10eb70c3768227291bcfe81176f": {
+  "cached_tokens": 0,
+  "completion_tokens": 720,
+  "content": "{\"natural\": false, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"It uses AI filler and a templated closing instead of a real person's wording.\"}",
+  "finish_reason": "stop",
+  "latency_s": 3.047,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 386,
+  "tool_calls": []
+ },
+ "b7df6f959a9c28f14e5a6984d5217be49b857d6c9aefdee2310188787bbdbca9": {
+  "cached_tokens": 0,
+  "completion_tokens": 934,
+  "content": "{\"natural\":false,\"professional\":true,\"clear\":true,\"plain_english\":true,\"on_point\":true,\"reason\":\"It is polite and correct but reads like a flat template, not a warm person.\"}",
+  "finish_reason": "stop",
+  "latency_s": 5.69,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 396,
+  "tool_calls": []
+ },
+ "b8343a84dd1d7d2bab9d2b38769c8bb5f9204487cb99b312b27864a85d51f9ed": {
+  "cached_tokens": 0,
+  "completion_tokens": 562,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"Calm pending reply that matches no payment found and asks for reference.\"}",
+  "finish_reason": "stop",
+  "latency_s": 3.082,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 513,
+  "tool_calls": []
+ },
+ "b8b86a58c560c3f1e5615bcd4f1e176c8b0931232f545e5abed1bf153f6b02cc": {
+  "cached_tokens": 0,
+  "completion_tokens": 611,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"It confirms the order briefly and hands it to the rep as required.\"}",
+  "finish_reason": "stop",
+  "latency_s": 2.473,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 387,
+  "tool_calls": []
+ },
+ "b9146093f199eae7761095af5507fed06dcad0fec5c71468186f014fde0948b8": {
+  "cached_tokens": 0,
+  "completion_tokens": 618,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"Calmly says payment is not showing yet and asks for receipt without blame.\"}",
+  "finish_reason": "stop",
+  "latency_s": 2.869,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 542,
+  "tool_calls": []
+ },
+ "b92fb5a06bdfbe1d03fdc68dddba2af7bfba1b070f803165629d5119522a36ba": {
+  "cached_tokens": 0,
+  "completion_tokens": 992,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"It plainly tells the shop the rep will handle the order.\"}",
+  "finish_reason": "stop",
+  "latency_s": 5.546,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 476,
+  "tool_calls": []
+ },
+ "b9a54c8b1614575a0a044f0d0128d3d35fe61a01f0c05baf2024e1ece882f730": {
+  "cached_tokens": 0,
+  "completion_tokens": 1532,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": false, \"reason\": \"It says payment is pending but then asks the shop to pay again instead of waiting or asking for proof.\"}",
+  "finish_reason": "stop",
+  "latency_s": 8.21,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 548,
+  "tool_calls": []
+ },
+ "ba15d1f040f1886803c03bb34256e0d4b284b2c6d2026e9b8452b37ce586808d": {
+  "cached_tokens": 0,
+  "completion_tokens": 1046,
+  "content": "{\"natural\": false, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"It is clear and polite but sounds like a bot introducing itself, not a person saying hello.\"}",
+  "finish_reason": "stop",
+  "latency_s": 4.445,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 391,
+  "tool_calls": []
+ },
+ "bb4d01fd9750339bf86baec5f79cca02aef92e233c2f2f8b93a5e9d40e2b447c": {
+  "cached_tokens": 0,
+  "completion_tokens": 902,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": false, \"reason\": \"It deflects to the rep instead of answering the question asked.\"}",
+  "finish_reason": "stop",
+  "latency_s": 3.089,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 369,
+  "tool_calls": []
+ },
+ "bc18430dc3afba48d086328f6e2d528b70009e2b795f3653ad255292183b2201": {
+  "cached_tokens": 0,
+  "completion_tokens": 739,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"It plainly says the brief is not ready and offers useful alternatives.\"}",
+  "finish_reason": "stop",
+  "latency_s": 3.456,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 466,
+  "tool_calls": []
+ },
+ "bd08b184fe56f46ed591451e84865147920bb3b347ec03c3397b160874312d6e": {
+  "cached_tokens": 0,
+  "completion_tokens": 644,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"Short direct stock question with clear tap choices for the shop.\"}",
+  "finish_reason": "stop",
+  "latency_s": 4.548,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 483,
+  "tool_calls": []
+ },
+ "bd6327db4a4cbf41804d52aa9ce2b5bf1b511c760b46a42b504a3e4e5292f82c": {
+  "cached_tokens": 0,
+  "completion_tokens": 636,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"Acknowledges the Monday payment plainly with no invented details.\"}",
+  "finish_reason": "stop",
+  "latency_s": 3.5,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 523,
+  "tool_calls": []
+ },
+ "bde12604fc9c6ae405fc1b3a8723a478f5abd52c669cae864d03f5c8fe315a57": {
+  "cached_tokens": 0,
+  "completion_tokens": 821,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"Calm plain reply that hands the delivery question to the rep as required.\"}",
+  "finish_reason": "stop",
+  "latency_s": 4.314,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 481,
+  "tool_calls": []
+ },
+ "beec65c3b3a9f10accbc94d326d81de536fca38c53ddeb53ea0b52b5c67b92ee": {
+  "cached_tokens": 0,
+  "completion_tokens": 538,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"It states who Mimi is, gives privacy reassurance, and asks what help is needed.\"}",
+  "finish_reason": "stop",
+  "latency_s": 3.743,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 491,
+  "tool_calls": []
+ },
+ "bf01c4d8d9238d8da2a178ea02acfa51b2fadb1c9470114355e538071699de6f": {
+  "cached_tokens": 0,
+  "completion_tokens": 767,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"Thanks them by name and confirms the N45,000 bank payment plainly.\"}",
+  "finish_reason": "stop",
+  "latency_s": 3.412,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 602,
+  "tool_calls": []
+ },
+ "bf572fdf06054ccb649a820c8725979d0b9fe06fee29d32104d9d7d7fd85c01d": {
+  "cached_tokens": 0,
+  "completion_tokens": 1263,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": false, \"reason\": \"It reports not received but misses thanks, N15,000 pending, and promise to confirm when it lands.\"}",
+  "finish_reason": "stop",
+  "latency_s": 6.931,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 546,
+  "tool_calls": []
+ },
+ "c2053e24c112a2c4af2f6af877afe19735b6982023d295014b55326be1b61499": {
+  "cached_tokens": 0,
+  "completion_tokens": 720,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"States the N45,000 balance plainly and confirms nothing overdue.\"}",
+  "finish_reason": "stop",
+  "latency_s": 4.761,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 567,
+  "tool_calls": []
+ },
+ "c2a7e855a9e83101b1c1dca54aeaea5b2453601bce37ff56331b4fb8988e496a": {
+  "cached_tokens": 0,
+  "completion_tokens": 598,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"States the correct N45,000 balance plainly with no invented details.\"}",
+  "finish_reason": "stop",
+  "latency_s": 4.48,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 496,
+  "tool_calls": []
+ },
+ "c4582451ba5c3d74d9bf06874113f4c10db9b94645ebb0828d2d13e0e87c9b87": {
+  "cached_tokens": 0,
+  "completion_tokens": 1323,
+  "content": "{\"natural\": false, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"It is polite and relevant but sounds impersonal with no name or company and an odd privacy line.\"}",
+  "finish_reason": "stop",
+  "latency_s": 7.616,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 421,
+  "tool_calls": []
+ },
+ "c50b2aacb71757ab56f6822ba836160185a997cd4bc3a3f068fd1c5c5c23f2c1": {
+  "cached_tokens": 0,
+  "completion_tokens": 1135,
+  "content": "{\"natural\": false, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"Addressing the shop by its full business name sounds templated, not like a person talking to the owner.\"}",
+  "finish_reason": "stop",
+  "latency_s": 8.058,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 522,
+  "tool_calls": []
+ },
+ "c5bef1e0711733214190a1268a36868ea679f92fad3eef1baadae95720740a99": {
+  "cached_tokens": 0,
+  "completion_tokens": 1337,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"Short first-person note that plainly explains how voice replies work.\"}",
+  "finish_reason": "stop",
+  "latency_s": 7.066,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 479,
+  "tool_calls": []
+ },
+ "c5ed79869acc678a99a84810decbadfdb39f1b1ea190e38ac64735f75267ad17": {
+  "cached_tokens": 0,
+  "completion_tokens": 913,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"Short warm thanks that fits the shop's message with nothing added.\"}",
+  "finish_reason": "stop",
+  "latency_s": 3.829,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 459,
+  "tool_calls": []
+ },
+ "c618c9da184588ba0efdabe1d6256485bbe242e1c76574dbb8df825879508ebe": {
+  "cached_tokens": 0,
+  "completion_tokens": 666,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"Short polite confirmation that does exactly the receipt job.\"}",
+  "finish_reason": "stop",
+  "latency_s": 3.993,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 445,
+  "tool_calls": []
+ },
+ "c66840d39bfa712b96fed821cb7067f97aaa326c3ab0afaedc7ccc3b07603de0": {
+  "cached_tokens": 0,
+  "completion_tokens": 541,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"It warmly and correctly confirms zero balance with no invented details.\"}",
+  "finish_reason": "stop",
+  "latency_s": 2.451,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 558,
+  "tool_calls": []
+ },
+ "c728b6acf58fb269c008e9c2b142c7b371bf2c198141fcce0fe1ef03b437ea95": {
+  "cached_tokens": 0,
+  "completion_tokens": 695,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"It firmly warns against sharing the PIN in warm plain language and gives a clear next step.\"}",
+  "finish_reason": "stop",
+  "latency_s": 2.997,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 506,
+  "tool_calls": []
+ },
+ "c8669c7362ab5fba666787b2809783e5d2bbf0275bae3bf79be5443104607443": {
+  "cached_tokens": 0,
+  "completion_tokens": 427,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"Short friendly acknowledgement with no figures or promises.\"}",
+  "finish_reason": "stop",
+  "latency_s": 2.673,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 459,
+  "tool_calls": []
+ },
+ "c8c69df5f4f581189e6d438658c16a0ba8306b92d8b9e9fa2403134474f1b6f0": {
+  "cached_tokens": 0,
+  "completion_tokens": 622,
+  "content": "{\"natural\": false, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"It answers the balance correctly but sounds like a template with AI filler.\"}",
+  "finish_reason": "stop",
+  "latency_s": 3.196,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 413,
+  "tool_calls": []
+ },
+ "c9a0d640df0dba4ff9135211a39b35c2c20b6bfdf431d802682dd80acc2379b4": {
+  "cached_tokens": 0,
+  "completion_tokens": 747,
+  "content": "{\"natural\": false, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"It is polite and clear but sounds like a bot, not a warm account officer.\"}",
+  "finish_reason": "stop",
+  "latency_s": 4.806,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 381,
+  "tool_calls": []
+ },
+ "c9fe5cae5d8fb87f88352345679a0cd87e66cb801180371c4c8b61e519512cbe": {
+  "cached_tokens": 0,
+  "completion_tokens": 929,
+  "content": "{\"natural\": false, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": false, \"reason\": \"It invents a 4-carton order and echoes raw words instead of confirming 6 cartons.\"}",
+  "finish_reason": "stop",
+  "latency_s": 5.697,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 468,
+  "tool_calls": []
+ },
+ "ca2f4b4e60452b871720595d1bbeccbb4cd1a9eb2d9bd8b1b1c1ba4b44bd60de": {
+  "cached_tokens": 0,
+  "completion_tokens": 866,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"Short warm polite reply that fits a simple thank you.\"}",
+  "finish_reason": "stop",
+  "latency_s": 5.299,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 462,
+  "tool_calls": []
+ },
+ "ca543fc7b2fadf0484d4a98fe543da7599659fbf4494ea9792c7d074a6f31ccb": {
+  "cached_tokens": 0,
+  "completion_tokens": 1500,
+  "content": "",
+  "finish_reason": "length",
+  "latency_s": 5.502,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 419,
+  "tool_calls": []
+ },
+ "ca637d7728423c2c7ee692a045c819ce15e5ce2060d8d94fdfe70f02dd7c2f3e": {
+  "cached_tokens": 0,
+  "completion_tokens": 730,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"Calm reply states pending status and asks for trace details without claiming receipt.\"}",
+  "finish_reason": "stop",
+  "latency_s": 3.239,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 545,
+  "tool_calls": []
+ },
+ "cb1c94032f74976148ae7347909cf4c59263ef5668836d865c5b6b2d73aa5759": {
+  "cached_tokens": 0,
+  "completion_tokens": 1135,
+  "content": "{\"natural\": false, \"professional\": true, \"clear\": true, \"plain_english\": false, \"on_point\": true, \"reason\": \"It uses AI filler and stiff formal wording instead of warm plain speech.\"}",
+  "finish_reason": "stop",
+  "latency_s": 6.824,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 406,
+  "tool_calls": []
+ },
+ "cbe3bea1e98a169b9a3aedd17c3ab1d2d9d3cadf91f588f02f3408c41124e1aa": {
+  "cached_tokens": 0,
+  "completion_tokens": 669,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"It answers the balance question directly with short polite confirmation.\"}",
+  "finish_reason": "stop",
+  "latency_s": 4.511,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 478,
+  "tool_calls": []
+ },
+ "cc36e0005535370598a1d1ed466201a11970633aef79db3523c53b1d2b3cf086": {
+  "cached_tokens": 0,
+  "completion_tokens": 647,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"Honest short answer that admits AI and offers a person.\"}",
+  "finish_reason": "stop",
+  "latency_s": 3.28,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 472,
+  "tool_calls": []
+ },
+ "cc51b624d0ed3b1518e158eef77c70e2dcd419e84e7317298992013e4d0cc9ea": {
+  "cached_tokens": 0,
+  "completion_tokens": 1350,
+  "content": "{\"natural\": false, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"Accurate and polite but blunt and templated, not warm like a real officer speaking.\"}",
+  "finish_reason": "stop",
+  "latency_s": 5.923,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 517,
+  "tool_calls": []
+ },
+ "ccfc1537096325d8eb7590b80606314628c8b3fcdf00550dd9a39427c65d5ec0": {
+  "cached_tokens": 0,
+  "completion_tokens": 2208,
+  "content": "{\"natural\": false, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"The account-sharing sentence sounds templated and awkward for a first intro.\"}",
+  "finish_reason": "stop",
+  "latency_s": 12.503,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 495,
+  "tool_calls": []
+ },
+ "cdad711cff4528d51ae8284f27dbd73d50ebe33e4567744c829aaffc747d1648": {
+  "cached_tokens": 0,
+  "completion_tokens": 915,
+  "content": "{\"natural\": true, \"professional\": false, \"clear\": true, \"plain_english\": false, \"on_point\": true, \"reason\": \"It states the payment is missing correctly but uses Pidgin slang instead of plain professional English.\"}",
+  "finish_reason": "stop",
+  "latency_s": 5.321,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 402,
+  "tool_calls": []
+ },
+ "cddea899dde783a4b55c687136d30e56cdc6b2270d855edc68f3dbd7348433bf": {
+  "cached_tokens": 0,
+  "completion_tokens": 1677,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": false, \"reason\": \"It never mentions Friday so does not acknowledge the promise.\"}",
+  "finish_reason": "stop",
+  "latency_s": 8.742,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 646,
+  "tool_calls": []
+ },
+ "ce805ef2b15a944d20b69b1e073187cc435842a3ce1c8b36f2ade98d761e5b19": {
+  "cached_tokens": 0,
+  "completion_tokens": 1062,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": false, \"plain_english\": true, \"on_point\": true, \"reason\": \"Reports the facts briefly but does not say what is needed from the owner.\"}",
+  "finish_reason": "stop",
+  "latency_s": 5.442,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 484,
+  "tool_calls": []
+ },
+ "d03d8eb5a6e7476c5a203981647a93724a78ac2c026645c4da7ef39cc6567c95": {
+  "cached_tokens": 0,
+  "completion_tokens": 502,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"Short boss note gives correct total and overdue figures first.\"}",
+  "finish_reason": "stop",
+  "latency_s": 2.667,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 568,
+  "tool_calls": []
+ },
+ "d0e30f07de56c3417e7a24758ec6ad39c9a820d9dc34a26472652b418859a43c": {
+  "cached_tokens": 0,
+  "completion_tokens": 1406,
+  "content": "{\"natural\": false, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": false, \"reason\": \"It is curt and adds balance pressure instead of kindly accepting the Friday promise.\"}",
+  "finish_reason": "stop",
+  "latency_s": 9.874,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 661,
+  "tool_calls": []
+ },
+ "d3d4c376dd6539852c8cc5ddc1b512ac83e558cc4e10b17c01daf783de19b3af": {
+  "cached_tokens": 0,
+  "completion_tokens": 835,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"Supports with correct payment and shelf figures and leaves the limit decision to the owner.\"}",
+  "finish_reason": "stop",
+  "latency_s": 4.147,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 685,
+  "tool_calls": []
+ },
+ "d4117c85f958451c185199779c7923c6a5573cb5b0abf2b2ca4d7b891354925b": {
+  "cached_tokens": 0,
+  "completion_tokens": 532,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"Gives the correct account details with brief reassurance in a warm, clear tone.\"}",
+  "finish_reason": "stop",
+  "latency_s": 3.054,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 532,
+  "tool_calls": []
+ },
+ "d428326284020cf79a4aafedb4fb4f381f4425589d086d6a644e157cea09395e": {
+  "cached_tokens": 0,
+  "completion_tokens": 640,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"It gives a short warm intro of who Mimi helps and asks what is needed.\"}",
+  "finish_reason": "stop",
+  "latency_s": 3.616,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 498,
+  "tool_calls": []
+ },
+ "d74c3b5e73ccd612c0c744cb48e6e51beec0573274cd9ddd541270acef4197dc": {
+  "cached_tokens": 0,
+  "completion_tokens": 880,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"It thanks the shop, confirms the N60,000, and says the receipt follows.\"}",
+  "finish_reason": "stop",
+  "latency_s": 4.364,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 593,
+  "tool_calls": []
+ },
+ "d74f1f86dd0406f6b41694db9539652d9e53cca99180059394ed16dcc86c0617": {
+  "cached_tokens": 0,
+  "completion_tokens": 606,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"It calmly holds as pending and asks for the reference to track.\"}",
+  "finish_reason": "stop",
+  "latency_s": 3.207,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 445,
+  "tool_calls": []
+ },
+ "d9e62666e89905e90b2b1e1bb6a768b3572e8fa69f9bbe53ea978c8dbe4b8bc6": {
+  "cached_tokens": 0,
+  "completion_tokens": 670,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"Firm polite reminder with correct amount, invoice and date and clear next step.\"}",
+  "finish_reason": "stop",
+  "latency_s": 4.207,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 521,
+  "tool_calls": []
+ },
+ "d9f89ea6d21b659b6a27de51659cf786d31c7ba02270dfb201cc9caaca1ee9be": {
+  "cached_tokens": 355,
+  "completion_tokens": 611,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"It answers the balance question directly with the correct zero balance in short polite terms.\"}",
+  "finish_reason": "stop",
+  "latency_s": 5.049,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 481,
+  "tool_calls": []
+ },
+ "da2ed11923e78feeb329bf2a3e50f32e282b4328b56ce3656b7c5ac079348196": {
+  "cached_tokens": 0,
+  "completion_tokens": 643,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"States the correct balance and overdue amount with a clear next step.\"}",
+  "finish_reason": "stop",
+  "latency_s": 2.298,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 502,
+  "tool_calls": []
+ },
+ "db83fe95a450ed1310c47416f66845c9db5aafec812f10361f0f4d01ac18d1f5": {
+  "cached_tokens": 0,
+  "completion_tokens": 763,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"It plainly routes the order to the rep as required.\"}",
+  "finish_reason": "stop",
+  "latency_s": 4.527,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 468,
+  "tool_calls": []
+ },
+ "dbc5c72c0c2416515eded63ec05b84c2086649dc2c5af8749bf16ac2b51bb4f4": {
+  "cached_tokens": 0,
+  "completion_tokens": 465,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"Lists both open invoices with correct amounts and dates and gives clear next step.\"}",
+  "finish_reason": "stop",
+  "latency_s": 2.557,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 726,
+  "tool_calls": []
+ },
+ "dd1ed5a10f6d75a66560406cf19598d9236ad1899dc9440cac7aae381690c9ac": {
+  "cached_tokens": 0,
+  "completion_tokens": 654,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"Calm pending update that asks for details to trace payment.\"}",
+  "finish_reason": "stop",
+  "latency_s": 3.032,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 460,
+  "tool_calls": []
+ },
+ "dd9af9832f0063fd0b46259f6cef32d191985ad31f3b57cefbe079b1e07bb620": {
+  "cached_tokens": 0,
+  "completion_tokens": 493,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"It is a short polite request that tells the shop exactly what to resend.\"}",
+  "finish_reason": "stop",
+  "latency_s": 2.286,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 468,
+  "tool_calls": []
+ },
+ "de4f2b1d774524c8c66c7b10c2b2d282c2837f40c7137b12a02b12950f3d29f8": {
+  "cached_tokens": 0,
+  "completion_tokens": 888,
+  "content": "{\"natural\": false, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"It reads like an auto template, not a warm person typing.\"}",
+  "finish_reason": "stop",
+  "latency_s": 4.636,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 451,
+  "tool_calls": []
+ },
+ "e3ce7355977c4a9afd14280ec0ec9a91fa75b884f74b6ff6f9d217dfe947aab4": {
+  "cached_tokens": 0,
+  "completion_tokens": 905,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"It gives the correct figures first in a short, human account-officer tone.\"}",
+  "finish_reason": "stop",
+  "latency_s": 3.724,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 513,
+  "tool_calls": []
+ },
+ "e3d01714ed17012ab3cac1b381fb84fa6365ac6168e077309c4edcc5a5cbb024": {
+  "cached_tokens": 0,
+  "completion_tokens": 704,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"Gives a clear not-now note with the correct history and limit.\"}",
+  "finish_reason": "stop",
+  "latency_s": 3.78,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 652,
+  "tool_calls": []
+ },
+ "e6068200932cacfb845819a67222fd30a5612d16b4b78eb9aef8c687c620295d": {
+  "cached_tokens": 0,
+  "completion_tokens": 1291,
+  "content": "{\"natural\": false, \"professional\": true, \"clear\": false, \"plain_english\": true, \"on_point\": true, \"reason\": \"It correctly hands off to the rep without inventing a price but reads templated and leaves the next step vague.\"}",
+  "finish_reason": "stop",
+  "latency_s": 8.192,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 389,
+  "tool_calls": []
+ },
+ "e68c729d032acbd868e56213bdd08ac88b034b9e161ce82ef4318a248274b490": {
+  "cached_tokens": 0,
+  "completion_tokens": 553,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"It states the brief is not ready and offers help without inventing figures.\"}",
+  "finish_reason": "stop",
+  "latency_s": 2.972,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 482,
+  "tool_calls": []
+ },
+ "e6c96896a8a8bb21af0984ea8a77b5fe0f30f20926869836270740a81eff7c69": {
+  "cached_tokens": 0,
+  "completion_tokens": 657,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"It states the brief is not ready and offers clear alternatives without inventing data.\"}",
+  "finish_reason": "stop",
+  "latency_s": 2.868,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 465,
+  "tool_calls": []
+ },
+ "e72e426b9b3054d54fd4957d1616c51909c5e308890d976c32d025a67fc4ee18": {
+  "cached_tokens": 0,
+  "completion_tokens": 936,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"It politely hands the order to the rep in short plain words.\"}",
+  "finish_reason": "stop",
+  "latency_s": 4.804,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 467,
+  "tool_calls": []
+ },
+ "e76d7a0fd5062278b28e86714f94ff20736d019d767683fe5f66fcf6e380a4af": {
+  "cached_tokens": 0,
+  "completion_tokens": 717,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"Reads back correct amount, date and ref and asks for YES clearly.\"}",
+  "finish_reason": "stop",
+  "latency_s": 4.38,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 507,
+  "tool_calls": []
+ },
+ "e86fbf26bd95fbeb9534e44c5fec1f8bd4683a0c2feb1e026189ad299fabaf80": {
+  "cached_tokens": 0,
+  "completion_tokens": 551,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"Thanks for the confirmed N45,000 and says receipt follows as tools allow.\"}",
+  "finish_reason": "stop",
+  "latency_s": 3.685,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 604,
+  "tool_calls": []
+ },
+ "e87a9eef7af7d4b1378dcd3eb0800ce427b5206ba391330fe88e1869693a1984": {
+  "cached_tokens": 0,
+  "completion_tokens": 744,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"Gives correct invoice, amount and date in warm plain language.\"}",
+  "finish_reason": "stop",
+  "latency_s": 3.86,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 609,
+  "tool_calls": []
+ },
+ "e8d9d7028c35d98bd1d1e124d430ecc78c874d8c3bf9e678803149826f983e23": {
+  "cached_tokens": 0,
+  "completion_tokens": 774,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"It politely directs the shop to the rep for the order in plain terms.\"}",
+  "finish_reason": "stop",
+  "latency_s": 3.901,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 486,
+  "tool_calls": []
+ },
+ "e99090f75451bdf3d6a3989dd9a1daa385d248fe10c91871d4c0ce9d294337aa": {
+  "cached_tokens": 99,
+  "completion_tokens": 849,
+  "content": "{\"natural\": true, \"professional\": false, \"clear\": true, \"plain_english\": false, \"on_point\": true, \"reason\": \"It sounds human and conveys the point but uses Pidgin slang instead of polite plain English.\"}",
+  "finish_reason": "stop",
+  "latency_s": 3.436,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 374,
+  "tool_calls": []
+ },
+ "eb8831bb42178e0d832141726b96aefe3f408a7ad975c5c2c466260b59a1da35": {
+  "cached_tokens": 0,
+  "completion_tokens": 981,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"Short note names shop, states dispute and 8 days overdue, and asks owner for next step.\"}",
+  "finish_reason": "stop",
+  "latency_s": 5.268,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 608,
+  "tool_calls": []
+ },
+ "ec2dc56f3701981044b51c35eb8b2ccac1a976e16e51f03ae809a2dcb77293a4": {
+  "cached_tokens": 0,
+  "completion_tokens": 594,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"It briefly explains the reason for stock checks in warm plain words.\"}",
+  "finish_reason": "stop",
+  "latency_s": 3.42,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 469,
+  "tool_calls": []
+ },
+ "ec351b5315bf3b5d2a8b632e5230a523031ce91c30eb97696592caa74d4f0558": {
+  "cached_tokens": 0,
+  "completion_tokens": 1064,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"It calmly asks for amount, date and proof to confirm payment.\"}",
+  "finish_reason": "stop",
+  "latency_s": 5.104,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 452,
+  "tool_calls": []
+ },
+ "ec7ea6eeca17d2a83d3a1b97f546215b016d6e23b206f17cba696dc80bf0688e": {
+  "cached_tokens": 0,
+  "completion_tokens": 706,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"It gives the owner the exact fact from the balance check with nothing added.\"}",
+  "finish_reason": "stop",
+  "latency_s": 5.04,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 558,
+  "tool_calls": []
+ },
+ "ed823fbaf62183d2c2679b88830825c372a432c09ff19ff926934386ba0a1c7d": {
+  "cached_tokens": 0,
+  "completion_tokens": 1242,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": false, \"reason\": \"It adds a filler apology instead of just thanking them and passing it to the owner.\"}",
+  "finish_reason": "stop",
+  "latency_s": 6.771,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 495,
+  "tool_calls": []
+ },
+ "ee3c74aa205de7c99a4d941570448ec350a04d7f7fb2f72b55b68803e40961ca": {
+  "cached_tokens": 0,
+  "completion_tokens": 448,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"Short polite acknowledgement with no figures or promises.\"}",
+  "finish_reason": "stop",
+  "latency_s": 2.812,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 469,
+  "tool_calls": []
+ },
+ "efdf8391adfbc85308b8c4c881dbd8b6383ff2bf9f214ffb3b125e5375d21ab6": {
+  "cached_tokens": 0,
+  "completion_tokens": 676,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"It calmly explains the stock check prevents running out and asks for a reply.\"}",
+  "finish_reason": "stop",
+  "latency_s": 5.068,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 488,
+  "tool_calls": []
+ },
+ "f060894724d9cb80a67100f22092cfc709026cbdc0729c4e748554f610e3d0cc": {
+  "cached_tokens": 0,
+  "completion_tokens": 526,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"It identifies Mimi, reassures on privacy, and asks for shop name and need.\"}",
+  "finish_reason": "stop",
+  "latency_s": 2.93,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 497,
+  "tool_calls": []
+ },
+ "f0bb58baae81c65c57f11900e0c10ad393b32e56b903fb59858ff586344a9999": {
+  "cached_tokens": 0,
+  "completion_tokens": 1008,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"It thanks the shop, apologises briefly and hands it to the owner.\"}",
+  "finish_reason": "stop",
+  "latency_s": 5.107,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 469,
+  "tool_calls": []
+ },
+ "f11d72f72b17bb4bef240fdb4cc8796a8a9fa0a08f0aac5bead67118d2d8854c": {
+  "cached_tokens": 0,
+  "completion_tokens": 828,
+  "content": "{\"natural\": false, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"Clear and correct but sounds system-written, not like a person typed it.\"}",
+  "finish_reason": "stop",
+  "latency_s": 4.877,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 455,
+  "tool_calls": []
+ },
+ "f191d13fa39eb0c5f0d5a71cff38ff142067225afe8e1c5830667e2774fa0aa9": {
+  "cached_tokens": 0,
+  "completion_tokens": 789,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"It explains voice replies plainly and tells the shop what to do next.\"}",
+  "finish_reason": "stop",
+  "latency_s": 6.128,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 473,
+  "tool_calls": []
+ },
+ "f2b44837f829d78d5f5c1f897a8dc9dea1f9b50428de6de5cc121616c969f533": {
+  "cached_tokens": 0,
+  "completion_tokens": 1066,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"Gives the correct bank details plainly and tells the shop to send receipt.\"}",
+  "finish_reason": "stop",
+  "latency_s": 7.793,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 528,
+  "tool_calls": []
+ },
+ "f451f59d50f3ee023212d73054724d7043e8ea043b588fd8cab198e8f08c9c8b": {
+  "cached_tokens": 0,
+  "completion_tokens": 506,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"It calmly says payment is still pending, asks for receipt, and promises to confirm.\"}",
+  "finish_reason": "stop",
+  "latency_s": 2.902,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 548,
+  "tool_calls": []
+ },
+ "f4e75650811448ac28addc5f3c6433314a2de57881c7857ed64e9ea1814ab46c": {
+  "cached_tokens": 0,
+  "completion_tokens": 2199,
+  "content": "{\"natural\": false, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"Reads like a system summary asking for instructions, not a person briefing the boss.\"}",
+  "finish_reason": "stop",
+  "latency_s": 14.565,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 619,
+  "tool_calls": []
+ },
+ "f631d20be85df2b3983209ac852373d5022cd243eeb7d566bc5ee18ee65406c4": {
+  "cached_tokens": 0,
+  "completion_tokens": 918,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"Gives correct figures first in short plain note to owner.\"}",
+  "finish_reason": "stop",
+  "latency_s": 5.123,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 601,
+  "tool_calls": []
+ },
+ "f6a9ba2e41ccd770f516b5a36afd4941a89ca8d59f4bc062955ef1bf0a6c308d": {
+  "cached_tokens": 0,
+  "completion_tokens": 649,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"States no open order and asks for items in plain, confident tone.\"}",
+  "finish_reason": "stop",
+  "latency_s": 4.892,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 522,
+  "tool_calls": []
+ },
+ "f8e8e66a45bb996622278c7aa2264b761f25d0a431dfd21e2b991fd3c81caf90": {
+  "cached_tokens": 0,
+  "completion_tokens": 463,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"Calm pending reply asks for receipt without inventing payment.\"}",
+  "finish_reason": "stop",
+  "latency_s": 2.163,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 440,
+  "tool_calls": []
+ },
+ "f94f1173a7f4be774f3843b51ef24cbf97ac1ade3578a225549e87e0bc2999e9": {
+  "cached_tokens": 0,
+  "completion_tokens": 930,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": false, \"reason\": \"Adds a pay-today request the shop did not ask for.\"}",
+  "finish_reason": "stop",
+  "latency_s": 5.176,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 514,
+  "tool_calls": []
+ },
+ "f967862dfd6d22588524620735a4392db449305fcf2812571092f654f9d413c2": {
+  "cached_tokens": 0,
+  "completion_tokens": 1048,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": false, \"reason\": \"It gives the figures and support but omits the medium confidence level.\"}",
+  "finish_reason": "stop",
+  "latency_s": 7.773,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 699,
+  "tool_calls": []
+ },
+ "fcd29947bae5da230201c5b045eeae663ff0e6e10b5d91eab02d81ef075ec368": {
+  "cached_tokens": 0,
+  "completion_tokens": 410,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"Short human acknowledgement that confirms Monday with nothing invented.\"}",
+  "finish_reason": "stop",
+  "latency_s": 2.193,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 517,
+  "tool_calls": []
+ },
+ "fe71fd80fddb373f23c44866644e8f63ea01836333520643b2a94c190f1ef460": {
+  "cached_tokens": 0,
+  "completion_tokens": 1041,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"It plainly hands the order to the rep with no invented details.\"}",
+  "finish_reason": "stop",
+  "latency_s": 8.564,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 469,
+  "tool_calls": []
+ },
+ "ffa3c2239754ac95df71fcabf781d33daeb72b89b2b4990b4f59d0ade342bb3c": {
+  "cached_tokens": 0,
+  "completion_tokens": 1514,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"Short warm thanks that confirms 4 cartons and what happens next.\"}",
+  "finish_reason": "stop",
+  "latency_s": 7.117,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 466,
+  "tool_calls": []
+ },
+ "fff0ab57ae44ef4953a395961ffe309080fb734312a9d401fc829f4fed4cf8f5": {
+  "cached_tokens": 0,
+  "completion_tokens": 1239,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": false, \"on_point\": true, \"reason\": \"It answers plainly but uses system jargon like matching credit and bank feed.\"}",
+  "finish_reason": "stop",
+  "latency_s": 6.806,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 519,
+  "tool_calls": []
+ },
+ "fff0db43e32140ac0ae62800032a7e165061b8e2ea9c38f0237420de0a0e6a84": {
+  "cached_tokens": 0,
+  "completion_tokens": 485,
+  "content": "{\"natural\": true, \"professional\": true, \"clear\": true, \"plain_english\": true, \"on_point\": true, \"reason\": \"Gives the correct account details clearly and tells shop what to do next.\"}",
+  "finish_reason": "stop",
+  "latency_s": 2.577,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 431,
+  "tool_calls": []
+ }
+}
