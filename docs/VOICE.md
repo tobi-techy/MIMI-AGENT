@@ -344,7 +344,7 @@ each Mimi asks, never reads back a wrong figure.
 `vf-60`: English 10, Pidgin 12, Yoruba-flavoured English 10, Yoruba 10,
 Igbo 9, Hausa 9; 20 Spitch voices including 8 never used before; four
 different "said on" days; none, light and heavy noise) plus 20 more dev
-clips (`vd-01` to `vd-20`). Their labels were committed (0c25ea2) before
+clips (`vd-01` to `vd-20`). Their labels were committed (b7e9f0a, authored before this code) before
 any tuning, and `--show` refuses every split but dev. Their audio is not
 made yet: the Spitch account ran out of credit on the first clip. A top-up
 of about $1 makes the 80 clips (`make voice-values-fixtures`, about $0.35)
