@@ -1,9 +1,9 @@
 {
- "44f4ea1b4a846c56f31416e0e1b2ff07": {
-  "completion_tokens": 372,
-  "latency_s": 2.478,
+ "eb06c325f69238a6921e2c5fad7780fe": {
+  "completion_tokens": 540,
+  "latency_s": 3.902,
   "model": "muse-spark-1.3",
-  "prompt_tokens": 794,
-  "text": "{\"route\": \"order/drop-confirmation\", \"confidence\": 0.95, \"second\": \"\", \"language\": \"pcm\"}"
+  "prompt_tokens": 776,
+  "text": "{\"route\": \"order/drop-confirmation\", \"confidence\": 0.98, \"second\": \"\", \"language\": \"yo\"}"
  }
 }

@@ -1,86 +1,86 @@
 {
  "10179290aa5efa821a4bd024ce2d8617": {
-  "completion_tokens": 503,
-  "latency_s": 5.128,
+  "completion_tokens": 570,
+  "latency_s": 5.853,
   "model": "muse-spark-1.3-contributor",
   "prompt_tokens": 161,
-  "text": "Mimi e wo shelf mi o, mo arrange am face camera"
+  "text": "Mimi ma, e wo shelf mi o"
  },
  "1a025c526e9add1a8eea260a0ff5cb5c": {
-  "completion_tokens": 477,
-  "latency_s": 5.693,
+  "completion_tokens": 411,
+  "latency_s": 4.36,
   "model": "muse-spark-1.3-contributor",
   "prompt_tokens": 372,
-  "text": "Sunrise 70g na 4 ctn i count, no be 6\n2 carton no come\nuna check am"
+  "text": "Mimi na only 4 ctn of that small sunrise reach\n2 ctn no come at all"
  },
  "21d1d09262ab6161a3cf7cefcfc6b4f8": {
-  "completion_tokens": 443,
-  "latency_s": 3.654,
+  "completion_tokens": 307,
+  "latency_s": 3.111,
   "model": "muse-spark-1.3-contributor",
   "prompt_tokens": 194,
   "text": "3-5"
  },
  "350599f22f47688bb36720e6dd2eb374": {
-  "completion_tokens": 399,
-  "latency_s": 4.571,
+  "completion_tokens": 629,
+  "latency_s": 6.288,
   "model": "muse-spark-1.3-contributor",
   "prompt_tokens": 320,
-  "text": "YES\ngoods don land, all complete"
+  "text": "ok\ngbogbo goods ti de"
  },
  "5209c836df261d763969276e6324c883": {
-  "completion_tokens": 284,
-  "latency_s": 3.849,
+  "completion_tokens": 358,
+  "latency_s": 4.182,
   "model": "muse-spark-1.3-contributor",
   "prompt_tokens": 131,
-  "text": "Mimi see receipt o, i don do transfer now"
+  "text": "Mimi i don send am, see reciept abeg"
  },
  "6ed9f3e251825fff87041336d677ae1e": {
-  "completion_tokens": 656,
-  "latency_s": 6.754,
+  "completion_tokens": 470,
+  "latency_s": 6.395,
   "model": "muse-spark-1.3-contributor",
   "prompt_tokens": 341,
-  "text": "Good morning Mimi! how body na?\nAh ah una too fast, all the goods don land complete, tank u o\nYES I confirm am"
+  "text": "Good morning Mimi!!\nAh all the market don land complete, tanks o\nYES"
  },
  "8191668e2be00c08abcd23afaeb4aebf": {
-  "completion_tokens": 405,
-  "latency_s": 4.29,
+  "completion_tokens": 555,
+  "latency_s": 5.824,
   "model": "muse-spark-1.3-contributor",
   "prompt_tokens": 134,
-  "text": "E kaaro Mimi, market dey move wella, abeg you fit increase my credit limit? I wan carry more goods dis week"
+  "text": "Kaaro Mimi, abeg una fit increase credit limit mi small? Oja n taja daadaa, mo wan buy more goods. Na Halima"
  },
  "9f75249e44ce904d7ba435e225301fc8": {
-  "completion_tokens": 450,
-  "latency_s": 5.139,
+  "completion_tokens": 402,
+  "latency_s": 5.379,
   "model": "muse-spark-1.3-contributor",
   "prompt_tokens": 133,
-  "text": "Mimi mo ti send am o, e check am"
+  "text": "Mimi, mo ti transfer o, e check receipt abeg"
  },
  "d02dfa9cbef556e269ee56a8c10bc454": {
-  "completion_tokens": 433,
-  "latency_s": 4.918,
+  "completion_tokens": 284,
+  "latency_s": 3.544,
   "model": "muse-spark-1.3-contributor",
   "prompt_tokens": 137,
-  "text": "Mimi i don pay o see receipt abeg confirm"
+  "text": "Mimi abeg confirm, i just do transfer now"
  },
  "d4d7b05d769b449d7e93c1acff98c6ff": {
-  "completion_tokens": 317,
-  "latency_s": 3.598,
+  "completion_tokens": 440,
+  "latency_s": 4.74,
   "model": "muse-spark-1.3-contributor",
   "prompt_tokens": 197,
   "text": "3-5"
  },
  "fb9e3222872f66e56e57a94667251c8b": {
-  "completion_tokens": 519,
-  "latency_s": 5.19,
+  "completion_tokens": 522,
+  "latency_s": 5.168,
   "model": "muse-spark-1.3-contributor",
   "prompt_tokens": 136,
-  "text": "E kaaro Mimi, abeg una fit increase my credit limit small? Market dey move wella, I wan stock more goods pls"
+  "text": "Mimi e kaaro o, na Bisi for Agric Olope, market dey move wella, abeg increase my credit limit make i fit buy more goods"
  },
  "fd382ddb6ccd3c87524e16aa2be90276": {
-  "completion_tokens": 491,
-  "latency_s": 5.395,
+  "completion_tokens": 456,
+  "latency_s": 4.59,
   "model": "muse-spark-1.3-contributor",
   "prompt_tokens": 159,
-  "text": "Mimi, see my shelf, na him be this o"
+  "text": "Mimi e wo o, na my shelf be dis"
  }
 }

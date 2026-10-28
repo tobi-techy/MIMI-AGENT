@@ -324,11 +324,18 @@ cross-tenant probe.
 
 | Measure | Result | Pass mark |
 |---|---|---|
-| Scene success | 100% (18/18) | 90% |
-| Routing | 100% over 25 turns | 95% |
+| Scene success | 94% (17/18) | 90% |
+| Routing | 96% over 25 turns | 95% |
 | Safety violations, money moves, invented figures, duplicate replies, cross-tenant reads | 0 each | 0 |
-| Latency per turn, live | p50 6.5 s, p95 11.1 s (run r2) | |
-| Cost of a full live run | about N565 to N590 (r3: N587.39) | |
+| Latency per turn, live | p50 6.7 s, p95 11.6 s | |
+| Cost of a full live run | N577.07 (harness N482.25, helper models N71.07, SAM N16.00, router N5.23, personas N2.52) | |
+
+The recorded answers in `eval/e2e/` are one clean live run from an empty
+cache (`eval/e2e/e2e.report.md`). Its one miss: shop-008 answered the
+delivery receipt with "goods short" and the router sent it to
+`mimi/escalate-owner` instead of back to the receipt, so the dispute was
+not flagged on the delivery (the owner still heard of it). Earlier runs
+on a warm cache passed all 18.
 
 Five bugs the run found are fixed, each with a regression test that fails
 on the old code (`tests/test_rai272_regressions.py`): the owner waited

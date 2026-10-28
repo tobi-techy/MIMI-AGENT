@@ -1,0 +1,193 @@
+{
+ "calls": {
+  "harness_model_calls": 60,
+  "helper_model_calls": 8,
+  "persona_calls": 15,
+  "persona_live_calls": 12,
+  "sam_images": 4,
+  "worker_live_rows": 12
+ },
+ "checks": {
+  "cross_tenant": {
+   "approvals_seen": 0,
+   "approve_other": 404,
+   "shop": "",
+   "thread": 404,
+   "threads_seen": [],
+   "turn": 404
+  },
+  "decisions": {
+   "apr_209f12d969cace7b3282": "reject:200",
+   "apr_6caf8bdaf59d5d66572f": "approve:200",
+   "apr_a738fc8c887144c24d00": "approve:200",
+   "apr_bbfa0a21fad28651860f": "reject:200"
+  },
+  "health": {
+   "db": "ok",
+   "model": "offline",
+   "queue_depth": 0,
+   "status": "ok",
+   "version": "0.1.0"
+  },
+  "paused_at": "turn_a150839584c1486a5160:1",
+  "second_decision_status": 409
+ },
+ "cost_kobo": {
+  "agent_per_turn_mean": 2298,
+  "harness": 48225,
+  "helper_models": 7107,
+  "persona": 252,
+  "router": 523,
+  "sam": 1600,
+  "total": 57707
+ },
+ "cross_tenant": [],
+ "duplicate_replies": [],
+ "failed_turns": [],
+ "invented_figures": [],
+ "latency_s": {
+  "n": 16,
+  "run_p50": 5.553,
+  "run_p95": 11.754,
+  "turn_p50": 6.748,
+  "turn_p95": 11.579
+ },
+ "misroutes": [
+  "receipt/shop-008/reply1: mimi/escalate-owner (expected order/drop-confirmation)"
+ ],
+ "mode": "live",
+ "money_moves": [],
+ "pass_marks": {
+  "routing": 0.95,
+  "scene_success": 0.9
+ },
+ "passed": true,
+ "routed_turns": 25,
+ "routing": 0.96,
+ "safety_violations": [],
+ "scene_success": 0.9444,
+ "scene_success_shops": 0.9231,
+ "turns": 25,
+ "units": [
+  {
+   "ok": true,
+   "scene": "receipt YES",
+   "shop_id": "shop-040",
+   "why": "receipt sent 1, consent 1, flag 0",
+   "witness": "ok\ngbogbo goods ti de"
+  },
+  {
+   "ok": false,
+   "scene": "receipt (goods short: dispute flagged)",
+   "shop_id": "shop-008",
+   "why": "receipt sent 1, flagged 0, consent 0"
+  },
+  {
+   "ok": true,
+   "scene": "receipt YES",
+   "shop_id": "shop-023",
+   "why": "receipt sent 1, consent 1, flag 0",
+   "witness": "Good morning Mimi!!\nAh all the market don land complete, tanks o\nYES"
+  },
+  {
+   "ok": true,
+   "scene": "payment screenshot: fake caught",
+   "screen": "f08",
+   "shop_id": "shop-035",
+   "why": "flag 1, proof 0, failed rules ['time_real'] (expected ['time_real'])"
+  },
+  {
+   "ok": true,
+   "scene": "payment screenshot: genuine read as likely",
+   "screen": "g02",
+   "shop_id": "shop-035",
+   "why": "proof 1, flag 0, matched ['dlv-56-9034']"
+  },
+  {
+   "ok": true,
+   "scene": "payment screenshot: genuine read as likely",
+   "screen": "g03",
+   "shop_id": "shop-038",
+   "why": "proof 1, flag 0, matched ['dlv-56-9037']"
+  },
+  {
+   "ok": true,
+   "scene": "payment screenshot: fake caught",
+   "screen": "f09",
+   "shop_id": "shop-038",
+   "why": "flag 1, proof 0, failed rules ['time_not_future'] (expected ['time_not_future'])"
+  },
+  {
+   "ok": true,
+   "scene": "payment screenshot: fake caught",
+   "screen": "f11",
+   "shop_id": "shop-025",
+   "why": "flag 1, proof 0, failed rules ['status'] (expected ['status'])"
+  },
+  {
+   "ok": true,
+   "scene": "payment screenshot: genuine read as likely",
+   "screen": "g05",
+   "shop_id": "shop-025",
+   "why": "proof 1, flag 0, matched ['dlv-56-9024']"
+  },
+  {
+   "draft_quantity": 9,
+   "ok": true,
+   "scene": "stock: one-tap count + restock draft",
+   "shop_id": "shop-012",
+   "why": "asks 1, count 1 (3-5), drafts 1, reply \"Thanks. I've asked Coral Lane Trading to prepare 9 packs for you. They'll confirm before delivery.\""
+  },
+  {
+   "draft_quantity": 4,
+   "ok": true,
+   "scene": "stock: one-tap count + restock draft",
+   "shop_id": "shop-014",
+   "why": "asks 1, count 1 (3-5), drafts 1, reply \"Thanks. I've asked Coral Lane Trading to prepare 4 tubs for you. They'll confirm before delivery.\""
+  },
+  {
+   "ok": true,
+   "scene": "credit bump: shelf photo to approvals",
+   "shelf_value_about_kobo": 1780000,
+   "shop_id": "shop-020",
+   "why": "photo asks 1, submitted 1, shelf counted True, recommendation hold"
+  },
+  {
+   "ok": true,
+   "scene": "credit bump: shelf photo to approvals",
+   "shelf_value_about_kobo": 1050000,
+   "shop_id": "shop-011",
+   "why": "photo asks 1, submitted 1, shelf counted True, recommendation support"
+  },
+  {
+   "ok": true,
+   "scene": "owner message handled first while shop turns queue",
+   "shop_id": "owner",
+   "why": "claim order ['owner', 'shop-020', 'shop-011', 'shop-014']"
+  },
+  {
+   "ok": true,
+   "scene": "worker SIGKILLed mid-turn: resumed, sent once",
+   "shop_id": "shop-012",
+   "why": "paused at turn_a150839584c1486a5160:1, attempts 2, takeover True, completions 1, replies 1"
+  },
+  {
+   "ok": true,
+   "scene": "owner approve / reject through /v1/approvals",
+   "shop_id": "owner",
+   "why": "decisions ['approve:200', 'approve:200', 'reject:200', 'reject:200'], second decision 409, woken helpers quiet True (4), credit requests {'shop-011': 'approved', 'shop-020': 'rejected'}"
+  },
+  {
+   "ok": true,
+   "scene": "console reads show the state",
+   "shop_id": "owner",
+   "why": "threads 11/11, steps on every shop thread True, limits unchanged True, fake flags pending 3"
+  },
+  {
+   "ok": true,
+   "scene": "another distributor's key sees nothing",
+   "shop_id": "palm-way",
+   "why": "failed probes none"
+  }
+ ]
+}

@@ -189,7 +189,7 @@ def test_regression_4_owner_brief_with_no_data_says_not_ready(api: Any) -> None:
     assert "daily brief is not ready yet" in seen[0]
     assert "never say how business is going" in seen[0]
 
-    # The recorded Muse Spark answer for this turn (the live r3 run): says
+    # The recorded Muse Spark answer for this turn (the clean live recording): says
     # the brief is not ready, gives no figure and no made-up summary.
     cache = json.loads((ROOT / "eval/e2e/harness.cache.json").read_text())
     bodies = [json.loads(tc["arguments"]).get("body", "")
