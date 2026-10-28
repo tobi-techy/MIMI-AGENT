@@ -2,9 +2,9 @@
 
 The migrations use ``op.create_table`` directly, so there is no ORM metadata
 to compare against (``target_metadata = None``). The URL comes from the
-``MIMI_DB_URL`` environment variable (any SQLAlchemy URL: SQLite for a local
-try, Postgres with the ``postgres`` extra installed). It is never stored in
-this repository.
+``DATABASE_URL`` or ``MIMI_DB_URL`` environment variable (any SQLAlchemy URL:
+SQLite for a local try, Postgres with the ``postgres`` extra installed). It
+is never stored in this repository.
 """
 
 from __future__ import annotations
@@ -24,12 +24,18 @@ target_metadata = None
 
 
 def _url() -> str:
-    url = os.environ.get("MIMI_DB_URL", "").strip()
+    url = (os.environ.get("DATABASE_URL", "").strip()
+           or os.environ.get("MIMI_DB_URL", "").strip())
     if not url:
         raise SystemExit(
-            "Set MIMI_DB_URL to a SQLAlchemy URL, for example "
+            "Set DATABASE_URL (or MIMI_DB_URL) to a SQLAlchemy URL, for example "
             "sqlite:////tmp/mimi.db"
         )
+    # Pin Postgres to psycopg2 (the ``postgres`` extra): hosted Postgres often
+    # hands out postgres://, and SQLAlchemy 2.1 maps postgresql:// to psycopg 3.
+    for bare in ("postgres://", "postgresql://"):
+        if url.startswith(bare):
+            return "postgresql+psycopg2://" + url[len(bare):]
     return url
 
 

@@ -1,7 +1,9 @@
 """Module rules: the runtime sits at the bottom and never reaches up.
 
 ``mimi.runtime`` may import only the standard library, third-party packages
-and ``mimi.types``. Nothing in ``mimi`` imports an HTTP server framework.
+and ``mimi.types``. Only ``mimi.api`` (the HTTP API, RAI-266) imports an HTTP
+server framework, and nothing else in ``mimi`` imports ``mimi.api``, so the
+agent itself stays framework-free.
 """
 
 from __future__ import annotations
@@ -29,11 +31,22 @@ def test_runtime_imports_nothing_above_it() -> None:
                 assert name.startswith(("mimi.runtime", "mimi.types")), (path, name)
 
 
-def test_no_http_server_framework() -> None:
+def test_no_http_server_framework_outside_the_api() -> None:
     banned = ("fastapi", "flask", "django", "starlette", "uvicorn")
     for path in ROOT.rglob("*.py"):
+        if (ROOT / "api") in path.parents:
+            continue
         for name in _imports(path):
             assert name.split(".")[0] not in banned, (path, name)
+            assert not name.startswith("mimi.api"), (path, name)
+
+
+def test_the_store_sits_under_the_api() -> None:
+    """The store may read the harness and the world; never the API or the flows."""
+    for path in (ROOT / "store").rglob("*.py"):
+        for name in _imports(path):
+            assert not name.startswith(("mimi.api", "mimi.receipts", "mimi.sim",
+                                        "mimi.proof", "mimi.stock", "mimi.voice")), (path, name)
 
 
 def test_world_and_models_do_not_import_the_flow() -> None:
