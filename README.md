@@ -33,7 +33,7 @@ person, brand, phone number and account in it. The model calls are real.
 | `muse-spark-1.3` | Mimi's reasoning: reads each shop's reply burst in context and returns a typed verdict (confirmed, disputed, partial, unclear, unrelated) with the language, a confidence and the exact quote it relied on. With vision input, it also reads payment screenshots into typed fields. It reads free-text answers to the one-tap stock question ("e don finish", "about 25 sachets") into a typed reading |
 | `muse-spark-1.3-contributor` | The shop simulator: each fictional shop replies in its own voice |
 | `muse-voice-transcribe-1.0` | Speech to text for WhatsApp voice notes: first choice for English notes, fallback for the rest |
-| `sam-3.1` (planned) | Shelf photos, to check stock against what was delivered |
+| `sam-3.1` | Shelf photos for a credit ask (RAI-271): finds every pack on the shelf; code says which delivered item each is, counts and values it, and the request goes to the owner's approvals as a draft (`mimi/credit/`, `docs/CREDIT.md`) |
 
 Third-party speech service:
 

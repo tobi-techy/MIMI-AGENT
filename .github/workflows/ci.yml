@@ -69,6 +69,10 @@ jobs:
         run: python -m mimi.harness.router_eval --no-write
       - name: Context builder eval (50 Collector scenarios vs a full-history baseline on recorded Muse Spark answers, two-distributor leakage, prefix stability, pointers, cache hits; fails on any pass mark)
         run: python -m mimi.harness.context_eval --no-write
+      - name: Credit eval, 24 synthetic shelf photos + 6 stress, 10 conversations, routing (recorded SAM 3.1 and Muse Spark answers; fails on any pass mark, an auto-approval, a money move or an invented number)
+        run: python -m mimi.credit.eval --no-write
+      - name: Offline credit-bump scene
+        run: python -m mimi.sim --credit --transcript
       - name: Offline 3-shop sim
         run: python -m mimi.sim --shops 3 --transcript
       - name: Offline 3-shop sim with voice notes

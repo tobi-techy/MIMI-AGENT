@@ -349,9 +349,9 @@ sends to Order, which is arguably right; the scenarios still run Collector.
   model writes summaries yet.
 * Memory (RAI-236): `MemoryAPI` is a port; the eval uses notes derived from
   the synthetic world.
-* Only the Collector is a full hire; Proof is a minimal config. The other
-  helpers are routed to and get the handoff event, then report
-  `no_helper_yet` until RAI-272 moves the Day 2 to 6 handlers behind the
-  router as skills.
+* The Collector and Credit (RAI-271, `mimi/credit/`, `docs/CREDIT.md`) are
+  full hires; Proof is a minimal config. The other helpers are routed to and
+  get the handoff event, then report `no_helper_yet` until RAI-272 moves the
+  Day 2 to 6 handlers behind the router as skills.
 * The kill switch and daily cap live in the control-plane port; there is no
   console toggle yet.
