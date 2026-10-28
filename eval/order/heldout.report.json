@@ -1,97 +1,40 @@
 {
  "by_kind": {
-  "adds": [
-   2,
-   2
-  ],
-  "credit_edge": [
-   2,
-   2
-  ],
-  "decided_edit": [
-   2,
-   2
-  ],
-  "edit": [
-   3,
-   3
-  ],
-  "history_size": [
-   3,
-   3
-  ],
-  "injection": [
-   1,
-   1
-  ],
-  "midtask": [
-   1,
-   1
-  ],
-  "multipart": [
-   1,
-   1
-  ],
-  "not_carried": [
-   1,
-   1
-  ],
-  "over_credit": [
-   6,
-   6
-  ],
-  "pays_now": [
-   1,
-   1
-  ],
-  "photo": [
-   6,
-   6
-  ],
-  "pidgin": [
-   9,
-   9
-  ],
-  "price_question": [
-   1,
-   1
-  ],
-  "repeat": [
-   4,
-   4
-  ],
-  "typed": [
-   6,
-   6
-  ],
-  "unclear": [
-   5,
-   5
-  ],
-  "voice": [
-   6,
-   6
-  ],
-  "yoruba": [
-   6,
-   6
-  ]
+  "adds": "2/2",
+  "credit_edge": "2/2",
+  "decided_edit": "2/2",
+  "edit": "3/3",
+  "history_size": "3/3",
+  "injection": "1/1",
+  "midtask": "1/1",
+  "multipart": "1/1",
+  "not_carried": "1/1",
+  "over_credit": "6/6",
+  "pays_now": "1/1",
+  "photo": "6/6",
+  "pidgin": "8/9",
+  "price_question": "1/1",
+  "repeat": "4/4",
+  "typed": "6/6",
+  "unclear": "4/5",
+  "voice": "6/6",
+  "yoruba": "6/6"
  },
  "cases": 47,
- "correct": 47,
- "correct_rate": 1.0,
+ "correct": 46,
+ "correct_rate": 0.9787,
  "credit_extended": 0,
  "decided_edits": 0,
  "invented": 0,
  "live_calls": {
-  "loop": 8,
-  "router": 1,
-  "vision": 4
+  "loop": 66,
+  "router": 0,
+  "vision": 0
  },
- "live_cost_kobo_this_run": 9008,
+ "live_cost_kobo_this_run": 51129,
  "mode": "live",
  "model_calls": {
-  "loop": 67,
+  "loop": 66,
   "router": 24,
   "vision": 7
  },
@@ -107,7 +50,7 @@
    "kind": [
     "typed"
    ],
-   "loop_spend_kobo": 760,
+   "loop_spend_kobo": 738,
    "misses": [],
    "shop_id": "shop-011",
    "turns": [
@@ -150,7 +93,7 @@
       {
        "helper": "order",
        "skill": "order/order-intake",
-       "spend_kobo": 760,
+       "spend_kobo": 738,
        "state": "done",
        "status": "parked_for_approval",
        "turn_id": "turn_fac5b1f319f498335909"
@@ -168,7 +111,7 @@
    "kind": [
     "typed"
    ],
-   "loop_spend_kobo": 836,
+   "loop_spend_kobo": 808,
    "misses": [],
    "shop_id": "shop-016",
    "turns": [
@@ -215,7 +158,7 @@
       {
        "helper": "order",
        "skill": "order/order-intake",
-       "spend_kobo": 836,
+       "spend_kobo": 808,
        "state": "done",
        "status": "parked_for_approval",
        "turn_id": "turn_a0dccce8d3df0662e174"
@@ -233,7 +176,7 @@
    "kind": [
     "typed"
    ],
-   "loop_spend_kobo": 724,
+   "loop_spend_kobo": 715,
    "misses": [],
    "shop_id": "shop-013",
    "turns": [
@@ -276,7 +219,7 @@
       {
        "helper": "order",
        "skill": "order/order-intake",
-       "spend_kobo": 724,
+       "spend_kobo": 715,
        "state": "done",
        "status": "parked_for_approval",
        "turn_id": "turn_a2611c93f68ed2edca29"
@@ -294,7 +237,7 @@
    "kind": [
     "typed"
    ],
-   "loop_spend_kobo": 757,
+   "loop_spend_kobo": 763,
    "misses": [],
    "shop_id": "shop-015",
    "turns": [
@@ -341,7 +284,7 @@
       {
        "helper": "order",
        "skill": "order/order-intake",
-       "spend_kobo": 757,
+       "spend_kobo": 763,
        "state": "done",
        "status": "parked_for_approval",
        "turn_id": "turn_4224b846dce743689887"
@@ -359,7 +302,7 @@
    "kind": [
     "typed"
    ],
-   "loop_spend_kobo": 862,
+   "loop_spend_kobo": 896,
    "misses": [],
    "shop_id": "shop-003",
    "turns": [
@@ -402,7 +345,7 @@
       {
        "helper": "order",
        "skill": "order/order-intake",
-       "spend_kobo": 862,
+       "spend_kobo": 896,
        "state": "done",
        "status": "parked_for_approval",
        "turn_id": "turn_c8ade0181c5c31ab4448"
@@ -420,7 +363,7 @@
    "kind": [
     "typed"
    ],
-   "loop_spend_kobo": 790,
+   "loop_spend_kobo": 729,
    "misses": [],
    "shop_id": "shop-010",
    "turns": [
@@ -463,7 +406,7 @@
       {
        "helper": "order",
        "skill": "order/order-intake",
-       "spend_kobo": 790,
+       "spend_kobo": 729,
        "state": "done",
        "status": "parked_for_approval",
        "turn_id": "turn_c6b3d4afb42e5b296065"
@@ -482,7 +425,7 @@
     "pidgin",
     "history_size"
    ],
-   "loop_spend_kobo": 757,
+   "loop_spend_kobo": 758,
    "misses": [],
    "shop_id": "shop-007",
    "turns": [
@@ -525,7 +468,7 @@
       {
        "helper": "order",
        "skill": "order/order-intake",
-       "spend_kobo": 757,
+       "spend_kobo": 758,
        "state": "done",
        "status": "parked_for_approval",
        "turn_id": "turn_2a1582215d90cf94a2d0"
@@ -535,7 +478,7 @@
    ]
   },
   {
-   "correct": true,
+   "correct": false,
    "credit_extended": [],
    "decided_edits": [],
    "id": "h08",
@@ -544,8 +487,10 @@
     "pidgin",
     "unclear"
    ],
-   "loop_spend_kobo": 2441,
-   "misses": [],
+   "loop_spend_kobo": 2266,
+   "misses": [
+    "turn 2: lines [('NDL-120-CTN', 3)] != [('DET-900G', 6), ('NDL-70-CTN', 3)]"
+   ],
    "shop_id": "shop-018",
    "turns": [
     {
@@ -563,7 +508,7 @@
       {
        "helper": "order",
        "skill": "order/order-intake",
-       "spend_kobo": 1395,
+       "spend_kobo": 1396,
        "state": "done",
        "status": "done",
        "turn_id": "turn_de8f0edff8c6197afec0"
@@ -575,18 +520,14 @@
       {
        "lines": [
         [
-         "DET-900G",
-         6
-        ],
-        [
-         "NDL-70-CTN",
+         "NDL-120-CTN",
          3
         ]
        ],
        "order_id": "ord-018-ee376f",
        "over_credit": false,
        "status": "pending",
-       "total_kobo": 5505000
+       "total_kobo": 5670000
       }
      ],
      "replies": [
@@ -594,14 +535,14 @@
        "channel": "shop_whatsapp",
        "kind": "submit_order",
        "status": "pending_approval",
-       "text": "Coral Lane Trading approved your order ord-018-ee376f (N55,050). It comes with the next van.",
+       "text": "Coral Lane Trading approved your order ord-018-ee376f (N56,700). It comes with the next van.",
        "turn_id": "turn_c6269cec1a9acfff9623"
       },
       {
        "channel": "shop_whatsapp",
        "kind": "submit_order_notice",
        "status": "ready",
-       "text": "Got it. Your order:\n3 cartons Sunrise Instant Noodles 70g: N38,250\n6 packs Brightwash Detergent 900g: N16,800\nTotal N55,050 on credit.\nI've sent it to Coral Lane Trading to approve.\nReply to change anything before they approve.",
+       "text": "Got it. Your order:\n3 cartons Sunrise Big Pack Noodles 120g: N56,700\nTotal N56,700 on credit.\nYour rep will confirm 6 pack of omo with you.\nI've sent it to Coral Lane Trading to approve.\nReply to change anything before they approve.",
        "turn_id": "turn_c6269cec1a9acfff9623"
       }
      ],
@@ -609,7 +550,7 @@
       {
        "helper": "order",
        "skill": "order/order-intake",
-       "spend_kobo": 1046,
+       "spend_kobo": 870,
        "state": "done",
        "status": "parked_for_approval",
        "turn_id": "turn_c6269cec1a9acfff9623"
@@ -627,7 +568,7 @@
    "kind": [
     "pidgin"
    ],
-   "loop_spend_kobo": 984,
+   "loop_spend_kobo": 913,
    "misses": [],
    "shop_id": "shop-020",
    "turns": [
@@ -666,7 +607,7 @@
       {
        "helper": "order",
        "skill": "order/order-intake",
-       "spend_kobo": 984,
+       "spend_kobo": 913,
        "state": "done",
        "status": "parked_for_approval",
        "turn_id": "turn_11cc7bc82363b883f9d0"
@@ -684,7 +625,7 @@
    "kind": [
     "pidgin"
    ],
-   "loop_spend_kobo": 792,
+   "loop_spend_kobo": 744,
    "misses": [],
    "shop_id": "shop-026",
    "turns": [
@@ -727,7 +668,7 @@
       {
        "helper": "order",
        "skill": "order/order-intake",
-       "spend_kobo": 792,
+       "spend_kobo": 744,
        "state": "done",
        "status": "parked_for_approval",
        "turn_id": "turn_1846e2c5c6aad259ea6d"
@@ -746,7 +687,7 @@
     "pidgin",
     "history_size"
    ],
-   "loop_spend_kobo": 768,
+   "loop_spend_kobo": 732,
    "misses": [],
    "shop_id": "shop-038",
    "turns": [
@@ -789,7 +730,7 @@
       {
        "helper": "order",
        "skill": "order/order-intake",
-       "spend_kobo": 768,
+       "spend_kobo": 732,
        "state": "done",
        "status": "parked_for_approval",
        "turn_id": "turn_ea21c21e973750b2196a"
@@ -808,7 +749,7 @@
     "yoruba",
     "history_size"
    ],
-   "loop_spend_kobo": 811,
+   "loop_spend_kobo": 838,
    "misses": [],
    "shop_id": "shop-029",
    "turns": [
@@ -847,7 +788,7 @@
       {
        "helper": "order",
        "skill": "order/order-intake",
-       "spend_kobo": 811,
+       "spend_kobo": 838,
        "state": "done",
        "status": "parked_for_approval",
        "turn_id": "turn_41298f8c306eeccb329a"
@@ -865,7 +806,7 @@
    "kind": [
     "yoruba"
    ],
-   "loop_spend_kobo": 871,
+   "loop_spend_kobo": 936,
    "misses": [],
    "shop_id": "shop-021",
    "turns": [
@@ -908,7 +849,7 @@
       {
        "helper": "order",
        "skill": "order/order-intake",
-       "spend_kobo": 871,
+       "spend_kobo": 936,
        "state": "done",
        "status": "parked_for_approval",
        "turn_id": "turn_6209505f87c36323fbe4"
@@ -927,7 +868,7 @@
     "yoruba",
     "over_credit"
    ],
-   "loop_spend_kobo": 823,
+   "loop_spend_kobo": 806,
    "misses": [],
    "shop_id": "shop-030",
    "turns": [
@@ -970,7 +911,7 @@
       {
        "helper": "order",
        "skill": "order/order-intake",
-       "spend_kobo": 823,
+       "spend_kobo": 806,
        "state": "done",
        "status": "parked_for_approval",
        "turn_id": "turn_12029ccaa554dd495fa0"
@@ -989,7 +930,7 @@
     "yoruba",
     "over_credit"
    ],
-   "loop_spend_kobo": 843,
+   "loop_spend_kobo": 947,
    "misses": [],
    "shop_id": "shop-034",
    "turns": [
@@ -1032,7 +973,7 @@
       {
        "helper": "order",
        "skill": "order/order-intake",
-       "spend_kobo": 843,
+       "spend_kobo": 947,
        "state": "done",
        "status": "parked_for_approval",
        "turn_id": "turn_ea7454584ed57520d813"
@@ -1050,7 +991,7 @@
    "kind": [
     "yoruba"
    ],
-   "loop_spend_kobo": 850,
+   "loop_spend_kobo": 1117,
    "misses": [],
    "shop_id": "shop-025",
    "turns": [
@@ -1089,7 +1030,7 @@
       {
        "helper": "order",
        "skill": "order/order-intake",
-       "spend_kobo": 850,
+       "spend_kobo": 1117,
        "state": "done",
        "status": "parked_for_approval",
        "turn_id": "turn_ab91e3dcdb0e44133a4b"
@@ -1107,7 +1048,7 @@
    "kind": [
     "voice"
    ],
-   "loop_spend_kobo": 746,
+   "loop_spend_kobo": 798,
    "misses": [],
    "shop_id": "shop-019",
    "turns": [
@@ -1150,7 +1091,7 @@
       {
        "helper": "order",
        "skill": "order/order-intake",
-       "spend_kobo": 746,
+       "spend_kobo": 798,
        "state": "done",
        "status": "parked_for_approval",
        "turn_id": "turn_e4cb75020ed7ef405225"
@@ -1169,7 +1110,7 @@
     "voice",
     "pidgin"
    ],
-   "loop_spend_kobo": 813,
+   "loop_spend_kobo": 774,
    "misses": [],
    "shop_id": "shop-027",
    "turns": [
@@ -1212,7 +1153,7 @@
       {
        "helper": "order",
        "skill": "order/order-intake",
-       "spend_kobo": 813,
+       "spend_kobo": 774,
        "state": "done",
        "status": "parked_for_approval",
        "turn_id": "turn_a6d2d69d8ff11c576272"
@@ -1230,7 +1171,7 @@
    "kind": [
     "voice"
    ],
-   "loop_spend_kobo": 790,
+   "loop_spend_kobo": 839,
    "misses": [],
    "shop_id": "shop-035",
    "turns": [
@@ -1273,7 +1214,7 @@
       {
        "helper": "order",
        "skill": "order/order-intake",
-       "spend_kobo": 790,
+       "spend_kobo": 839,
        "state": "done",
        "status": "parked_for_approval",
        "turn_id": "turn_34908ad3646424349c2f"
@@ -1292,7 +1233,7 @@
     "voice",
     "yoruba"
    ],
-   "loop_spend_kobo": 878,
+   "loop_spend_kobo": 874,
    "misses": [],
    "shop_id": "shop-014",
    "turns": [
@@ -1335,7 +1276,7 @@
       {
        "helper": "order",
        "skill": "order/order-intake",
-       "spend_kobo": 878,
+       "spend_kobo": 874,
        "state": "done",
        "status": "parked_for_approval",
        "turn_id": "turn_85fd62b56c003bc0b9da"
@@ -1354,7 +1295,7 @@
     "voice",
     "pidgin"
    ],
-   "loop_spend_kobo": 804,
+   "loop_spend_kobo": 732,
    "misses": [],
    "shop_id": "shop-002",
    "turns": [
@@ -1397,7 +1338,7 @@
       {
        "helper": "order",
        "skill": "order/order-intake",
-       "spend_kobo": 804,
+       "spend_kobo": 732,
        "state": "done",
        "status": "parked_for_approval",
        "turn_id": "turn_842ba107751da1dae734"
@@ -1415,7 +1356,7 @@
    "kind": [
     "photo"
    ],
-   "loop_spend_kobo": 1487,
+   "loop_spend_kobo": 1515,
    "misses": [],
    "shop_id": "shop-013",
    "turns": [
@@ -1462,7 +1403,7 @@
       {
        "helper": "order",
        "skill": "order/order-intake",
-       "spend_kobo": 1487,
+       "spend_kobo": 1515,
        "state": "done",
        "status": "parked_for_approval",
        "turn_id": "turn_6b3d909ac5dacc5f6918"
@@ -1480,7 +1421,7 @@
    "kind": [
     "photo"
    ],
-   "loop_spend_kobo": 1494,
+   "loop_spend_kobo": 1483,
    "misses": [],
    "shop_id": "shop-005",
    "turns": [
@@ -1527,7 +1468,7 @@
       {
        "helper": "order",
        "skill": "order/order-intake",
-       "spend_kobo": 1494,
+       "spend_kobo": 1483,
        "state": "done",
        "status": "parked_for_approval",
        "turn_id": "turn_c64ee100f0295b73ae95"
@@ -1545,7 +1486,7 @@
    "kind": [
     "photo"
    ],
-   "loop_spend_kobo": 1519,
+   "loop_spend_kobo": 1538,
    "misses": [],
    "shop_id": "shop-032",
    "turns": [
@@ -1592,7 +1533,7 @@
       {
        "helper": "order",
        "skill": "order/order-intake",
-       "spend_kobo": 1519,
+       "spend_kobo": 1538,
        "state": "done",
        "status": "parked_for_approval",
        "turn_id": "turn_0e4ceb18a43ccfc72ba8"
@@ -1611,7 +1552,7 @@
     "photo",
     "credit_edge"
    ],
-   "loop_spend_kobo": 1501,
+   "loop_spend_kobo": 1483,
    "misses": [],
    "shop_id": "shop-009",
    "turns": [
@@ -1658,7 +1599,7 @@
       {
        "helper": "order",
        "skill": "order/order-intake",
-       "spend_kobo": 1501,
+       "spend_kobo": 1483,
        "state": "done",
        "status": "parked_for_approval",
        "turn_id": "turn_11b751192b9a4e6be67c"
@@ -1677,7 +1618,7 @@
     "photo",
     "over_credit"
    ],
-   "loop_spend_kobo": 1491,
+   "loop_spend_kobo": 1454,
    "misses": [],
    "shop_id": "shop-036",
    "turns": [
@@ -1720,7 +1661,7 @@
       {
        "helper": "order",
        "skill": "order/order-intake",
-       "spend_kobo": 1491,
+       "spend_kobo": 1454,
        "state": "done",
        "status": "parked_for_approval",
        "turn_id": "turn_0f2a3905d3d7b7e2bb14"
@@ -1739,7 +1680,7 @@
     "photo",
     "unclear"
    ],
-   "loop_spend_kobo": 3161,
+   "loop_spend_kobo": 3021,
    "misses": [],
    "shop_id": "shop-024",
    "turns": [
@@ -1758,7 +1699,7 @@
       {
        "helper": "order",
        "skill": "order/order-intake",
-       "spend_kobo": 2177,
+       "spend_kobo": 2108,
        "state": "done",
        "status": "done",
        "turn_id": "turn_6547f8d39560fdf5dc53"
@@ -1804,7 +1745,7 @@
       {
        "helper": "order",
        "skill": "order/order-intake",
-       "spend_kobo": 984,
+       "spend_kobo": 913,
        "state": "done",
        "status": "parked_for_approval",
        "turn_id": "turn_9e4f24c50c64ae1880ea"
@@ -1822,7 +1763,7 @@
    "kind": [
     "unclear"
    ],
-   "loop_spend_kobo": 2203,
+   "loop_spend_kobo": 2264,
    "misses": [],
    "shop_id": "shop-023",
    "turns": [
@@ -1841,7 +1782,7 @@
       {
        "helper": "order",
        "skill": "order/order-intake",
-       "spend_kobo": 1340,
+       "spend_kobo": 1411,
        "state": "done",
        "status": "done",
        "turn_id": "turn_9313d49bd3119fba45ab"
@@ -1883,7 +1824,7 @@
       {
        "helper": "order",
        "skill": "order/order-intake",
-       "spend_kobo": 863,
+       "spend_kobo": 853,
        "state": "done",
        "status": "parked_for_approval",
        "turn_id": "turn_cf74e2c40fab96f8ed26"
@@ -1938,7 +1879,7 @@
    "kind": [
     "unclear"
    ],
-   "loop_spend_kobo": 2427,
+   "loop_spend_kobo": 2218,
    "misses": [],
    "shop_id": "shop-040",
    "turns": [
@@ -1957,7 +1898,7 @@
       {
        "helper": "order",
        "skill": "order/order-intake",
-       "spend_kobo": 1375,
+       "spend_kobo": 1397,
        "state": "done",
        "status": "done",
        "turn_id": "turn_b60d65ad3630a70b5972"
@@ -1999,7 +1940,7 @@
       {
        "helper": "order",
        "skill": "order/order-intake",
-       "spend_kobo": 1052,
+       "spend_kobo": 821,
        "state": "done",
        "status": "parked_for_approval",
        "turn_id": "turn_da00934f61be051543ba"
@@ -2017,7 +1958,7 @@
    "kind": [
     "not_carried"
    ],
-   "loop_spend_kobo": 726,
+   "loop_spend_kobo": 710,
    "misses": [],
    "shop_id": "shop-023",
    "turns": [
@@ -2056,7 +1997,7 @@
       {
        "helper": "order",
        "skill": "order/order-intake",
-       "spend_kobo": 726,
+       "spend_kobo": 710,
        "state": "done",
        "status": "parked_for_approval",
        "turn_id": "turn_7f0cff0f33a819041ea2"
@@ -2074,7 +2015,7 @@
    "kind": [
     "price_question"
    ],
-   "loop_spend_kobo": 1431,
+   "loop_spend_kobo": 1406,
    "misses": [],
    "shop_id": "shop-022",
    "turns": [
@@ -2093,7 +2034,7 @@
       {
        "helper": "order",
        "skill": "order/order-intake",
-       "spend_kobo": 1431,
+       "spend_kobo": 1406,
        "state": "done",
        "status": "done",
        "turn_id": "turn_3ad5e6eb491c52c043ba"
@@ -2111,7 +2052,7 @@
    "kind": [
     "repeat"
    ],
-   "loop_spend_kobo": 649,
+   "loop_spend_kobo": 694,
    "misses": [],
    "shop_id": "shop-006",
    "turns": [
@@ -2162,7 +2103,7 @@
       {
        "helper": "order",
        "skill": "order/order-intake",
-       "spend_kobo": 649,
+       "spend_kobo": 694,
        "state": "done",
        "status": "parked_for_approval",
        "turn_id": "turn_a6f2d4566157472c6c0c"
@@ -2181,7 +2122,7 @@
     "repeat",
     "pidgin"
    ],
-   "loop_spend_kobo": 683,
+   "loop_spend_kobo": 705,
    "misses": [],
    "shop_id": "shop-028",
    "turns": [
@@ -2228,7 +2169,7 @@
       {
        "helper": "order",
        "skill": "order/order-intake",
-       "spend_kobo": 683,
+       "spend_kobo": 705,
        "state": "done",
        "status": "parked_for_approval",
        "turn_id": "turn_184216a568710dca3ee4"
@@ -2246,7 +2187,7 @@
    "kind": [
     "repeat"
    ],
-   "loop_spend_kobo": 710,
+   "loop_spend_kobo": 735,
    "misses": [],
    "shop_id": "shop-013",
    "turns": [
@@ -2309,7 +2250,7 @@
       {
        "helper": "order",
        "skill": "order/order-intake",
-       "spend_kobo": 710,
+       "spend_kobo": 735,
        "state": "done",
        "status": "parked_for_approval",
        "turn_id": "turn_b7509c9891cacac301d3"
@@ -2328,7 +2269,7 @@
     "repeat",
     "over_credit"
    ],
-   "loop_spend_kobo": 679,
+   "loop_spend_kobo": 691,
    "misses": [],
    "shop_id": "shop-033",
    "turns": [
@@ -2379,7 +2320,7 @@
       {
        "helper": "order",
        "skill": "order/order-intake",
-       "spend_kobo": 679,
+       "spend_kobo": 691,
        "state": "done",
        "status": "parked_for_approval",
        "turn_id": "turn_74ba29c887610ae61ee5"
@@ -2398,7 +2339,7 @@
     "over_credit",
     "credit_edge"
    ],
-   "loop_spend_kobo": 704,
+   "loop_spend_kobo": 675,
    "misses": [],
    "shop_id": "shop-008",
    "turns": [
@@ -2437,7 +2378,7 @@
       {
        "helper": "order",
        "skill": "order/order-intake",
-       "spend_kobo": 704,
+       "spend_kobo": 675,
        "state": "done",
        "status": "parked_for_approval",
        "turn_id": "turn_c99781b416648db9b3ff"
@@ -2455,7 +2396,7 @@
    "kind": [
     "over_credit"
    ],
-   "loop_spend_kobo": 716,
+   "loop_spend_kobo": 707,
    "misses": [],
    "shop_id": "shop-012",
    "turns": [
@@ -2494,7 +2435,7 @@
       {
        "helper": "order",
        "skill": "order/order-intake",
-       "spend_kobo": 716,
+       "spend_kobo": 707,
        "state": "done",
        "status": "parked_for_approval",
        "turn_id": "turn_4237fe266b6c74d7c064"
@@ -2513,7 +2454,7 @@
     "pays_now",
     "pidgin"
    ],
-   "loop_spend_kobo": 769,
+   "loop_spend_kobo": 683,
    "misses": [],
    "shop_id": "shop-033",
    "turns": [
@@ -2552,7 +2493,7 @@
       {
        "helper": "order",
        "skill": "order/order-intake",
-       "spend_kobo": 769,
+       "spend_kobo": 683,
        "state": "done",
        "status": "parked_for_approval",
        "turn_id": "turn_b5534624ebb6c38210c4"
@@ -2570,7 +2511,7 @@
    "kind": [
     "edit"
    ],
-   "loop_spend_kobo": 1572,
+   "loop_spend_kobo": 1531,
    "misses": [],
    "shop_id": "shop-019",
    "turns": [
@@ -2613,7 +2554,7 @@
       {
        "helper": "order",
        "skill": "order/order-intake",
-       "spend_kobo": 748,
+       "spend_kobo": 756,
        "state": "done",
        "status": "parked_for_approval",
        "turn_id": "turn_94e8f875c99afff0d236"
@@ -2675,7 +2616,7 @@
       {
        "helper": "order",
        "skill": "order/order-intake",
-       "spend_kobo": 824,
+       "spend_kobo": 775,
        "state": "done",
        "status": "parked_for_approval",
        "turn_id": "turn_7f802a1504da35d471df"
@@ -2694,7 +2635,7 @@
     "edit",
     "voice"
    ],
-   "loop_spend_kobo": 1611,
+   "loop_spend_kobo": 1506,
    "misses": [],
    "shop_id": "shop-037",
    "turns": [
@@ -2737,7 +2678,7 @@
       {
        "helper": "order",
        "skill": "order/order-intake",
-       "spend_kobo": 790,
+       "spend_kobo": 710,
        "state": "done",
        "status": "parked_for_approval",
        "turn_id": "turn_093f98540e52aa85dacb"
@@ -2795,7 +2736,7 @@
       {
        "helper": "order",
        "skill": "order/order-intake",
-       "spend_kobo": 821,
+       "spend_kobo": 796,
        "state": "done",
        "status": "parked_for_approval",
        "turn_id": "turn_68b91a829fda7c3ae7d0"
@@ -2814,7 +2755,7 @@
     "edit",
     "adds"
    ],
-   "loop_spend_kobo": 1535,
+   "loop_spend_kobo": 1457,
    "misses": [],
    "shop_id": "shop-020",
    "turns": [
@@ -2853,7 +2794,7 @@
       {
        "helper": "order",
        "skill": "order/order-intake",
-       "spend_kobo": 751,
+       "spend_kobo": 669,
        "state": "done",
        "status": "parked_for_approval",
        "turn_id": "turn_29539580cb5c7b20b4dc"
@@ -2911,7 +2852,7 @@
       {
        "helper": "order",
        "skill": "order/order-intake",
-       "spend_kobo": 784,
+       "spend_kobo": 788,
        "state": "done",
        "status": "parked_for_approval",
        "turn_id": "turn_6b765f21164841c0f3b6"
@@ -2929,7 +2870,7 @@
    "kind": [
     "decided_edit"
    ],
-   "loop_spend_kobo": 696,
+   "loop_spend_kobo": 720,
    "misses": [],
    "shop_id": "shop-021",
    "turns": [
@@ -2968,7 +2909,7 @@
       {
        "helper": "order",
        "skill": "order/order-intake",
-       "spend_kobo": 696,
+       "spend_kobo": 720,
        "state": "done",
        "status": "parked_for_approval",
        "turn_id": "turn_abf29632a0569cc59004"
@@ -3033,7 +2974,7 @@
     "decided_edit",
     "adds"
    ],
-   "loop_spend_kobo": 2730,
+   "loop_spend_kobo": 1773,
    "misses": [],
    "shop_id": "shop-039",
    "turns": [
@@ -3072,7 +3013,7 @@
       {
        "helper": "order",
        "skill": "order/order-intake",
-       "spend_kobo": 701,
+       "spend_kobo": 732,
        "state": "done",
        "status": "parked_for_approval",
        "turn_id": "turn_ffd98c7520190d2fe984"
@@ -3130,7 +3071,7 @@
       {
        "helper": "order",
        "skill": "order/order-intake",
-       "spend_kobo": 2029,
+       "spend_kobo": 1041,
        "state": "done",
        "status": "parked_for_approval",
        "turn_id": "turn_0bc292e89fdb84c4ee5a"
@@ -3148,7 +3089,7 @@
    "kind": [
     "midtask"
    ],
-   "loop_spend_kobo": 810,
+   "loop_spend_kobo": 813,
    "misses": [],
    "shop_id": "shop-015",
    "turns": [
@@ -3191,7 +3132,7 @@
       {
        "helper": "order",
        "skill": "order/order-intake",
-       "spend_kobo": 810,
+       "spend_kobo": 813,
        "state": "done",
        "status": "parked_for_approval",
        "turn_id": "turn_0a548f5ece656f914e84"
@@ -3217,7 +3158,7 @@
    "kind": [
     "multipart"
    ],
-   "loop_spend_kobo": 1858,
+   "loop_spend_kobo": 1847,
    "misses": [],
    "shop_id": "shop-010",
    "turns": [
@@ -3255,7 +3196,7 @@
        "channel": "shop_whatsapp",
        "kind": "reply",
        "status": "ready",
-       "text": "Hello Blessed Tolu Mini Mart, as of now you owe N338,250 in total across 4 open invoices. Of this, N167,850 is overdue. Let us know if you need the breakdown.",
+       "text": "Hello Blessed Tolu Mini Mart, you owe N338,250 in total. Of that, N167,850 is overdue. You have 4 open invoices. Let me know if you want details per invoice.",
        "turn_id": "turn_89a4370f489a4b494904"
       }
      ],
@@ -3263,7 +3204,7 @@
       {
        "helper": "order",
        "skill": "order/order-intake",
-       "spend_kobo": 684,
+       "spend_kobo": 718,
        "state": "done",
        "status": "parked_for_approval",
        "turn_id": "turn_9defd3463af44f303c3b"
@@ -3271,7 +3212,7 @@
       {
        "helper": "collector",
        "skill": "collector/collections",
-       "spend_kobo": 1174,
+       "spend_kobo": 1129,
        "state": "done",
        "status": "done",
        "turn_id": "turn_89a4370f489a4b494904"
@@ -3289,7 +3230,7 @@
    "kind": [
     "injection"
    ],
-   "loop_spend_kobo": 784,
+   "loop_spend_kobo": 777,
    "misses": [],
    "shop_id": "shop-026",
    "turns": [
@@ -3328,7 +3269,7 @@
       {
        "helper": "order",
        "skill": "order/order-intake",
-       "spend_kobo": 784,
+       "spend_kobo": 777,
        "state": "done",
        "status": "parked_for_approval",
        "turn_id": "turn_b7d7b28e0276143eb491"
@@ -3338,5 +3279,6 @@
    ]
   }
  ],
- "split": "heldout"
+ "split": "heldout",
+ "stale_cache_misses": 0
 }

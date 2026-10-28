@@ -328,12 +328,30 @@ SLICES: dict[str, SliceSpec] = {
                                         "a claimed payment is compared with what is open"),
     "credit/credit-request": SliceSpec(("balance", "payments", "promises"),
                                        "credit asks look at what is owed and how it is paid"),
-    "order/order-intake": SliceSpec(("balance",), "an order is checked against the limit"),
-    "order/drop-confirmation": SliceSpec(("open_invoices",), "which delivery the reply is about"),
+    # Order sees no money (RAI-306): code checks credit (``orders.order.credit_view``)
+    # and the distributor sets it, so intake gets a band and drop confirmation
+    # gets which deliveries are open, never a limit, balance or amount.
+    "order/order-intake": SliceSpec(("credit_room",), "an order is checked against the limit"),
+    "order/drop-confirmation": SliceSpec(("open_deliveries",), "which delivery the reply is about"),
 }
-SCOPES = {"balance": "shop:balance", "open_invoices": "shop:invoices",
+SCOPES = {"balance": "shop:balance", "credit_room": "shop:balance",
+          "open_invoices": "shop:invoices", "open_deliveries": "shop:invoices",
           "payments": "shop:payments", "promises": "shop:promises"}
 SLICE_ROWS = {"open_invoices": 5, "payments": 3, "promises": 2}
+# A shop with under this share of its limit left (after open receivables) has
+# ``low`` credit room.
+LOW_ROOM_SHARE = 0.2
+
+
+def credit_room(limit_kobo: int, open_kobo: int) -> str:
+    """A code-made credit band for Order intake: ``ok``, ``low`` (under 20% of
+    the limit left after open receivables) or ``none`` (nothing left, or no
+    credit line). The figures behind it never reach the model."""
+    room = limit_kobo - open_kobo
+    if limit_kobo <= 0 or room <= 0:
+        return "none"
+    return "low" if room < LOW_ROOM_SHARE * limit_kobo else "ok"
+
 # Worst-case JSON size of each skill's slice over every shop in the world
 # (chars), about 30% over the largest on 28 Oct 2026 (RAI-307). The slice
 # rides on the newest message of every run, so a slice that grows past its
@@ -344,8 +362,8 @@ SLICE_BUDGETS: dict[str, int] = {
     "collector/promise-to-pay": 1_700,  # 1,303
     "proof/fake-alert-check": 1_650,   # 1,265
     "credit/credit-request": 1_200,    # 904
-    "order/order-intake": 400,         # 287
-    "order/drop-confirmation": 1_150,  # 863
+    "order/order-intake": 120,         # 90 (a band, RAI-306)
+    "order/drop-confirmation": 470,    # 358 (ids and due dates, RAI-306)
 }
 
 # One line per routed skill, on the newest message: what this run is for and
@@ -641,7 +659,7 @@ class ContextBuilder:
             if not grants.allows(shop_id, scope):
                 man.omitted.append(Omitted(name=read, reason=f"{shop_id} has not shared {scope}"))
                 continue
-            if read in ("balance", "open_invoices"):
+            if read in ("balance", "open_invoices", "credit_room", "open_deliveries"):
                 rows = rows if rows is not None else self.book.receivables(tenant, shop_id)
             if read == "balance":
                 overdue = [r for r in rows or [] if r["status"] == "overdue"]
@@ -650,6 +668,14 @@ class ContextBuilder:
                     "overdue_kobo": sum(r["outstanding_kobo"] for r in overdue),
                     "open_invoices": len(rows or []),
                     "credit_limit_kobo": int(shop.get("credit_limit_kobo") or 0)}
+            elif read == "credit_room":
+                data["credit_room"] = credit_room(int(shop.get("credit_limit_kobo") or 0),
+                                                  sum(r["outstanding_kobo"] for r in rows or []))
+            elif read == "open_deliveries":
+                inv = sorted(rows or [], key=lambda r: (str(r["due_on"]), r["delivery_id"]))
+                data["open_invoices"] = [
+                    {"invoice_id": r["delivery_id"], "due_on": str(r["due_on"])}
+                    for r in inv[-SLICE_ROWS["open_invoices"]:]]
             elif read == "open_invoices":
                 inv = sorted(rows or [], key=lambda r: (str(r["due_on"]), r["delivery_id"]))
                 data["open_invoices"] = [
@@ -670,7 +696,7 @@ class ContextBuilder:
         # Empty lists count as nothing open: a shop with no rows still gets
         # the note, so the model never guesses at a history that is not there.
         if not any(data.get(k) for k in ("open_invoices", "recent_payments", "promises")) and \
-                not (data.get("balance") or {}).get("open_invoices"):
+                not rows:
             man.notes.append("new shop or no history: nothing open on the book")
         return _with_naira(data), read_at
 

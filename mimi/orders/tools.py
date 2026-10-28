@@ -184,7 +184,6 @@ class OrderOut(_Out):
     lines: list[LineOut]
     total_kobo: int
     payment: str
-    available_credit_kobo: int
     over_credit: bool
     over_by_kobo: int
     not_carried: list[str]
@@ -420,7 +419,7 @@ def register_order_tools(registry: ToolRegistry, ports: OrderPorts) -> None:
         notice = od.confirm_text(q, c, dist, left_for_rep=b.left_for_rep)
         return OrderOut(
             order_id=oid, version=1, shop_id=args.shop_id, lines=[_out(x) for x in q.lines],
-            total_kobo=q.total_kobo, payment=c.payment, available_credit_kobo=c.available_kobo,
+            total_kobo=q.total_kobo, payment=c.payment,
             over_credit=c.over_credit, over_by_kobo=c.over_by_kobo,
             not_carried=list(q.not_carried), left_for_rep=b.left_for_rep,
             reason="repeat_order" if b.repeat else "shop_order", words=b.said[-1500:],
@@ -570,7 +569,7 @@ def register_order_tools(registry: ToolRegistry, ports: OrderPorts) -> None:
         return OrderOut(
             order_id=oid, version=version, shop_id=args.shop_id,
             lines=[_out(x) for x in q.lines], total_kobo=q.total_kobo, payment=c.payment,
-            available_credit_kobo=c.available_kobo, over_credit=c.over_credit,
+            over_credit=c.over_credit,
             over_by_kobo=c.over_by_kobo, not_carried=q.not_carried, left_for_rep=[],
             reason="shop_correction", words=said[-1500:],
             shop_notice=od.confirm_text(q, c, dist, revised=True),
