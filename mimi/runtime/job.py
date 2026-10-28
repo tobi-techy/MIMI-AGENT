@@ -91,6 +91,16 @@ class Job:
     after_flush: dict[str, Any] | None = None
     # Consecutive failed steps; three in a row blocks the job.
     failures: int = 0
+    # Loop safety (docs/LOOP-SAFETY.md). Failed steps over the job's whole
+    # life (a poison job is parked, never retried forever); lease takeovers
+    # (a worker died mid-step); self-wakes per Lagos day; the job tree:
+    # its parent, its root and the helper chain from the root, this job last.
+    total_failures: int = 0
+    takeovers: int = 0
+    self_wakes: dict[str, int] = field(default_factory=dict)
+    parent_job_id: str = ""
+    root_job_id: str = ""
+    chain: list[str] = field(default_factory=list)
     # Optimistic concurrency: every save must name the version it read.
     version: int = 0
 
@@ -125,6 +135,12 @@ class Job:
             "result": self.result,
             "after_flush": self.after_flush,
             "failures": self.failures,
+            "total_failures": self.total_failures,
+            "takeovers": self.takeovers,
+            "self_wakes": dict(self.self_wakes),
+            "parent_job_id": self.parent_job_id,
+            "root_job_id": self.root_job_id,
+            "chain": list(self.chain),
             "version": self.version,
         }
 
@@ -158,6 +174,12 @@ class Job:
             result=raw["result"],
             after_flush=raw.get("after_flush"),
             failures=int(raw["failures"]),
+            total_failures=int(raw.get("total_failures") or 0),
+            takeovers=int(raw.get("takeovers") or 0),
+            self_wakes={str(k): int(v) for k, v in (raw.get("self_wakes") or {}).items()},
+            parent_job_id=str(raw.get("parent_job_id") or ""),
+            root_job_id=str(raw.get("root_job_id") or ""),
+            chain=list(raw.get("chain") or []),
             version=int(raw["version"]),
         )
 

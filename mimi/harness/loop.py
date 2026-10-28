@@ -56,6 +56,7 @@ from zoneinfo import ZoneInfo
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
+from mimi.harness import guards as G
 from mimi.harness.context import pointer
 from mimi.harness.errors import ConnectorDown, ToolError, error_text
 from mimi.harness.gateway import AllModelsFailed, Gateway, worst_case_kobo
@@ -173,7 +174,27 @@ class LoopState(BaseModel):
     route: dict[str, Any] = Field(default_factory=dict)
     # The provider's cached prompt tokens, summed over the run's calls.
     cached_tokens: int = 0
+    # Loop guards (mimi.harness.guards): identical calls and identical
+    # failures by call signature, the results that moved the run on, steps in
+    # a row without progress, failed tool calls, and the guard that tripped.
+    call_counts: dict[str, int] = Field(default_factory=dict)
+    fail_counts: dict[str, int] = Field(default_factory=dict)
+    seen_results: list[str] = Field(default_factory=list)
+    stale_steps: int = 0
+    tool_errors: int = 0
+    guard: str = ""
+    guard_detail: str = ""
+    # The helpers above this one in the job tree, root first, this one last:
+    # ask_helper may not hand work back up it or past the depth cap.
+    lineage: list[str] = Field(default_factory=list)
+    # The run budget recorded at start, and what the owner granted on top.
+    # A resumed run never takes a fresh budget from a new helper config.
+    budget: dict[str, float] = Field(default_factory=dict)
+    granted: list[dict[str, float]] = Field(default_factory=list)
     finished: RunResult | None = None
+
+
+DAILY_CAP_REASON = "daily naira cap reached"
 
 
 def _h(*parts: Any) -> str:
@@ -228,8 +249,12 @@ class Harness:
         note: str = "",
         context: Any = None,
         route: dict[str, Any] | None = None,
+        lineage: Sequence[str] = (),
     ) -> LoopState:
-        """``context`` is a ``mimi.harness.context.Context`` (RAI-281): its
+        """``lineage`` is the helper chain above this run in its job tree, root
+        first (``mimi.runtime.delegation``); this helper is appended.
+
+        ``context`` is a ``mimi.harness.context.Context`` (RAI-281): its
         messages and pinned tools replace the default opening."""
         run_id = "run_" + _h(event.event_id, helper.name, event.tenant_id)[:16]
         job_id = event.job_id or run_id
@@ -260,6 +285,10 @@ class Harness:
             must_speak=bool(event.text) and event.wake_source in (
                 "owner_message", "shop_message", "rep_message"),
             route=dict(route or {}),
+            lineage=[*lineage, helper.name],
+            budget={"max_steps": helper.budget.max_steps,
+                    "max_seconds": helper.budget.max_seconds,
+                    "max_kobo": helper.budget.max_kobo},
         )
         if context is not None:
             state.tools = [dict(t) for t in context.tools]
@@ -300,9 +329,14 @@ class Harness:
         return state.finished
 
     def resume(self, state: LoopState, helper: Helper, *,
-               owner_messages: Sequence[str] = ()) -> RunResult:
-        """Carry a parked run on (the owner granted more budget, or answered)."""
-        state = self.reopen(state)
+               owner_messages: Sequence[str] = (),
+               grant: RunBudget | None = None) -> RunResult:
+        """Carry a parked run on (the owner granted more budget, or answered).
+
+        The run keeps the budget it started with; only ``grant`` (what the
+        owner allowed on top) adds to it. A bigger helper config is not a grant.
+        """
+        state = self.reopen(state, grant=grant)
         first = True
         while state.finished is None:
             res = self.step(state, helper, owner_messages=owner_messages if first else ())
@@ -311,10 +345,31 @@ class Harness:
         return state.finished
 
     @staticmethod
-    def reopen(state: LoopState) -> LoopState:
+    def reopen(state: LoopState, *, grant: RunBudget | None = None) -> LoopState:
+        """Clear a parked run's finish so it can take its next step.
+
+        A failed run never reopens (fail safe). A run a loop guard or a run
+        budget stopped reopens only with an owner ``grant``; the daily cap,
+        a question, an approval and a timer reopen freely (the gates run
+        again before any spend).
+        """
         if state.finished is None:
             return state
+        st = state.finished.status
+        if st == "failed":
+            return state
+        budget_stop = st == "stopped_budget" and state.finished.reason != DAILY_CAP_REASON
+        if (st == "stopped_runaway" or budget_stop) and grant is None:
+            return state
         s = state.model_copy(deep=True)
+        if grant is not None:
+            s.granted.append({"max_steps": grant.max_steps, "max_seconds": grant.max_seconds,
+                              "max_kobo": grant.max_kobo})
+            if st == "stopped_runaway":
+                # The owner said try again: the guard's counters start over,
+                # the run's budget and spend do not.
+                s.guard = s.guard_detail = ""
+                s.call_counts, s.fail_counts, s.stale_steps, s.tool_errors = {}, {}, 0, 0
         s.finished = None
         s.ends_turn = False
         s.question = ""
@@ -392,17 +447,46 @@ class Harness:
         shorts: list[str] = []
         names: list[str] = []
         tools_ms = 0.0
+        n_msgs = len(state.messages)
         for position, call in enumerate(turn.tool_calls):
-            if state.fail_reason:
+            if state.fail_reason or state.guard:
                 # Answer every call id so the transcript stays valid.
                 state.messages.append(self._tool_msg(call.id, error_text(
                     "Skipped because the run stopped.", "Nothing; the owner was told.")))
                 continue
+            sig = G.call_sig(call.name, call.arguments)
+            if state.fail_counts.get(sig, 0) >= G.LIMITS.max_identical_failures:
+                self._trip(state, "repeat_failure", call.name)
+            elif state.call_counts.get(sig, 0) >= G.LIMITS.max_identical_calls:
+                self._trip(state, "repeat", call.name)
+            if state.guard:
+                state.messages.append(self._tool_msg(call.id, error_text(
+                    "Skipped because the run stopped.", "Nothing; the owner was told.")))
+                continue
+            e0 = len(state.events)
             short, ms = self._dispatch(state, helper, call.id, call.name, call.arguments,
                                        position, now)
+            state.call_counts[sig] = state.call_counts.get(sig, 0) + 1
+            if G.call_failed(state.events[e0:]):
+                state.fail_counts[sig] = state.fail_counts.get(sig, 0) + 1
+                state.tool_errors += 1
             names.append(call.name)
             shorts.append(short)
             tools_ms += ms
+        if turn.tool_calls and not state.guard and not state.fail_reason:
+            moved = len(state.intents) > n_int
+            for m in state.messages[n_msgs:]:
+                if m.get("role") != "tool":
+                    continue
+                h = G.result_progress(str(m.get("content") or ""))
+                if h and h not in state.seen_results:
+                    state.seen_results.append(h)
+                    moved = True
+            state.stale_steps = 0 if moved else state.stale_steps + 1
+            if state.stale_steps >= G.LIMITS.max_no_progress_steps:
+                self._trip(state, "no_progress", str(state.stale_steps))
+            elif state.tool_errors >= G.LIMITS.max_tool_errors:
+                self._trip(state, "tool_errors", str(state.tool_errors))
 
         step_s = self.perf() - t0
         self._emit(state, "step_finished", tool=",".join(names), short="; ".join(shorts)[:300],
@@ -414,6 +498,12 @@ class Harness:
 
         if state.fail_reason:
             self._finish(state, "failed", state.fail_reason)
+        elif state.guard:
+            note = G.runaway_note(helper.name, state.guard, state.guard_detail,
+                                  self._progress(state))
+            self._owner_draft(state, note)
+            self._finish(state, "stopped_runaway", f"loop guard: {state.guard}",
+                         question=note)
         elif not turn.tool_calls and not turn.content and turn.finish_reason == "length":
             self._invalid_turn(state, "the model ran out of tokens before answering")
         elif not turn.tool_calls and self._needs_nudge(state):
@@ -488,11 +578,11 @@ class Harness:
                        data={"spent_kobo": spent, "cap_kobo": cap, "owner_asked": first})
             if first:
                 self._owner_draft(state, q)
-            self._finish(state, "stopped_budget", "daily naira cap reached", question=q)
+            self._finish(state, "stopped_budget", DAILY_CAP_REASON, question=q)
             return True
         if not enforce:
             return False
-        b = helper.budget
+        b = self.run_budget(state, helper)
         hit = ""
         q = ""
         if state.spend.steps >= b.max_steps:
@@ -526,10 +616,106 @@ class Harness:
         return False
 
     @staticmethod
+    def run_budget(state: LoopState, helper: Helper) -> RunBudget:
+        """The budget recorded at start plus every owner grant."""
+        base = state.budget or {"max_steps": helper.budget.max_steps,
+                                "max_seconds": helper.budget.max_seconds,
+                                "max_kobo": helper.budget.max_kobo}
+        steps, secs, kobo = (int(base["max_steps"]), float(base["max_seconds"]),
+                             int(base["max_kobo"]))
+        for g in state.granted:
+            steps += int(g.get("max_steps", 0))
+            secs += float(g.get("max_seconds", 0))
+            kobo += int(g.get("max_kobo", 0))
+        return RunBudget(max_steps=steps, max_seconds=secs, max_kobo=kobo)
+
+    @staticmethod
     def _progress(state: LoopState) -> str:
         calls = sum(1 for e in state.events if e.type == "tool_result")
         return (f"So far: {calls} tool calls and {len(state.intents)} proposals saved; "
                 "nothing was dropped.")
+
+    def _trip(self, state: LoopState, guard: str, detail: str) -> None:
+        """A loop guard tripped: nothing more is dispatched this run."""
+        state.guard, state.guard_detail = guard, detail
+        G.record_trip("loop_guard", guard=guard, helper=state.helper, run_id=state.run_id)
+        self._emit(state, "loop_guard", short=f"{guard}: {detail}"[:200],
+                   data={"guard": guard, "detail": detail, "steps": state.spend.steps,
+                         "tool_errors": state.tool_errors,
+                         "stale_steps": state.stale_steps})
+
+    def _guard_refusal(self, state: LoopState, call_id: str, name: str, reason: str,
+                       why: str, next_step: str, t: float) -> tuple[str, float]:
+        """A per-call guard refused this call: answered, logged, nothing proposed."""
+        G.record_trip("call_guard", guard=reason, tool=name, helper=state.helper,
+                      run_id=state.run_id)
+        self._emit(state, "tool_refused", tool=name, short=why[:160],
+                   data={"reason": reason})
+        state.messages.append(self._tool_msg(call_id, error_text(why, next_step)))
+        return f"{name}: refused ({reason})", (self.perf() - t) * 1000
+
+    def _call_guards(self, state: LoopState, helper: Helper, call_id: str, name: str,
+                     parsed: BaseModel, now: datetime, t: float) -> tuple[str, float] | None:
+        """Delegation, shop message and follow-up limits (mimi.harness.guards)."""
+        lim = G.LIMITS
+        args = parsed.model_dump(mode="json")
+        if name in G.DELEGATING_TOOLS:
+            target = str(args.get("helper") or "")
+            chain = state.lineage or [helper.name]
+            if target in chain:
+                return self._guard_refusal(
+                    state, call_id, name, "ping_pong",
+                    f"{target} is already working on this job further up "
+                    f"({' to '.join(chain)}); handing it back would loop.",
+                    "Do not hand it on. Ask the owner with ask_question if you are stuck.", t)
+            if len(chain) > lim.max_delegation_depth:
+                return self._guard_refusal(
+                    state, call_id, name, "delegation_depth",
+                    f"This job is already {len(chain) - 1} handoffs deep (the limit is "
+                    f"{lim.max_delegation_depth}).",
+                    "Finish with what you have, or ask the owner with ask_question.", t)
+        shop = G.to_shop(name, args)
+        if shop:
+            in_run = sum(1 for i in state.intents
+                         if G.intent_to_shop(i.tool, i.payload) == shop)
+            recent = self._recent(state.tenant_id, "shop_messages", shop, 3600.0)
+            if (in_run >= lim.max_shop_messages_per_run
+                    or in_run + recent >= lim.max_shop_messages_per_hour):
+                return self._guard_refusal(
+                    state, call_id, name, "shop_rate_limit",
+                    f"Mimi has already written to {shop} {in_run + recent} times in the "
+                    "last hour.",
+                    "Do not message this shop again now. If it matters, tell the owner "
+                    "with notify_owner, then end the turn.", t)
+        if name in G.FOLLOWUP_TOOLS:
+            key = str(args.get("shop_id") or "")
+            in_run = sum(1 for i in state.intents if i.tool in G.FOLLOWUP_TOOLS
+                         and str(i.payload.get("shop_id") or "") == key)
+            today = self._recent(state.tenant_id, "followups", key, 86_400.0)
+            if in_run >= lim.max_followups_per_shop_run:
+                return self._guard_refusal(
+                    state, call_id, name, "followup_dedupe",
+                    "A follow-up for this is already set in this turn.",
+                    "Do not set another; carry on with the next step.", t)
+            if today >= lim.max_followups_per_shop_day:
+                return self._guard_refusal(
+                    state, call_id, name, "followup_cap",
+                    f"{today} follow-ups are already set for this today (the limit is "
+                    f"{lim.max_followups_per_shop_day}).",
+                    "Do not set another. Tell the owner with notify_owner if it matters.", t)
+        return None
+
+    def _recent(self, tenant_id: str, kind: str, shop_id: str, window_s: float) -> int:
+        """What Go already did for this shop in the last ``window_s`` seconds
+        (0 when the control plane cannot say; the in-run counts still hold)."""
+        fn = getattr(self.control, "recent_count", None)
+        if fn is None:
+            return 0
+        try:
+            return int(fn(tenant_id, kind, shop_id, window_s))
+        except Exception as exc:  # a counter read never breaks a turn
+            log.warning("recent_count failed: %s", type(exc).__name__)
+            return 0
 
     def _owner_draft(self, state: LoopState, text: str) -> None:
         text = clean_reply(text, where="owner_question")
@@ -732,6 +918,9 @@ class Harness:
             state.messages.append(self._tool_msg(call_id, err.render()))
             return f"{name}: connector down", (self.perf() - t) * 1000
 
+        guarded = self._call_guards(state, helper, call_id, name, parsed, now, t)
+        if guarded is not None:
+            return guarded
         ctx = ToolContext(
             run_id=state.run_id, job_id=state.job_id, thread_id=state.thread_id,
             tenant_id=state.tenant_id, helper=helper.name, step=state.step, now=now,

@@ -113,8 +113,16 @@ def test_four_tool_collector_task_parks_for_approval_with_the_right_intent() -> 
     assert r.model_calls == 2 and go.book_writes == 0
 
 
+def _wander(m: Any, t: Any, cost: int | None = None) -> Any:
+    """A model that never stops but never repeats itself either: a new shop
+    every step, so the run budget (not a loop guard) is what stops it."""
+    shops = [s.shop_id for s in WORLD.shops]
+    return say("", ("get_balance", {"shop_id": shops[(len(m) // 2) % len(shops)]}),
+               cost_kobo=cost)
+
+
 def test_budget_hit_at_step_13_stops_and_asks_the_owner_without_dropping_work() -> None:
-    loop = ScriptedModel(lambda m, t: say("", ("get_balance", {"shop_id": "shop-001"})))
+    loop = ScriptedModel(_wander)
     h, helper, go, _ = rig(loop)
     first = h.run(ev("how is shop-001"), helper)
     # The 12 steps ran; the 13th is refused before any model call.
@@ -142,17 +150,17 @@ def test_budget_stop_keeps_proposals_and_a_grant_resumes_the_same_run() -> None:
     parked = state.finished
     assert parked.status == "stopped_budget" and model.calls == 3
     assert [i.intent_kind for i in parked.intents] == ["send_reminder"]  # kept, not dropped
-    # The owner says keep going: a bigger budget resumes the same saved run.
-    bigger = collector_helper(default_registry(), GoPolicy(), budget=RunBudget(max_steps=8))
-    done = h.resume(state, bigger, owner_messages=["yes, keep going"])
+    # The owner says keep going: their grant resumes the same saved run (a
+    # bigger helper config alone is not a grant; tests/test_loop_safety.py).
+    done = h.resume(state, helper, owner_messages=["yes, keep going"],
+                    grant=RunBudget(max_steps=5, max_seconds=0, max_kobo=0))
     assert done.status == "done" and model.calls == 5  # no step was run twice
     assert [i.intent_kind for i in done.intents].count("send_reminder") == 1
     assert done.run_id == parked.run_id
 
 
 def test_naira_budget_reserves_the_next_call_and_never_overspends() -> None:
-    loop = ScriptedModel(lambda m, t: say("", ("get_balance", {"shop_id": "shop-001"}),
-                                          cost_kobo=900))
+    loop = ScriptedModel(lambda m, t: _wander(m, t, 900))
     h, helper, _, _ = rig(loop, budget=RunBudget(max_kobo=5_000))
     r = h.run(ev("x"), helper)
     assert r.status == "stopped_budget" and r.spend.kobo <= 5_000

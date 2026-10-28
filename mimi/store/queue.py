@@ -39,9 +39,18 @@ from sqlalchemy.engine import Engine
 
 from mimi.harness.router import PRIORITY
 from mimi.store import schema as s
-from mimi.store.util import dumps, loads, now_iso
+from mimi.store.util import dumps, insert_ignore, loads, now_iso
 
 MAX_ATTEMPTS = 3
+# Loop safety (docs/LOOP-SAFETY.md): a turn whose worker died mid-run this
+# many times (every claim is an attempt) is a poison turn: failed and parked
+# for a person with one owner note, never taken over forever. A released turn
+# waits before its retry: 1 s, then 2 s (doubling, capped).
+MAX_CLAIMS = 6
+RETRY_BASE_S = 1.0
+RETRY_MAX_S = 30.0
+POISON_NOTE = ("One message could not be handled: Mimi stopped working on it after it "
+               "failed {n} times. Nothing was sent for it; it is parked for a look.")
 
 
 class _Raced(RuntimeError):
@@ -89,7 +98,9 @@ class TurnQueue:
                  .select_from(s.turns.outerjoin(s.inbound_messages, sa.and_(
                      s.inbound_messages.c.tenant_id == s.turns.c.tenant_id,
                      s.inbound_messages.c.turn_id == s.turns.c.turn_id)))
-                 .where(sa.or_(s.turns.c.state == "queued",
+                 .where(sa.or_(sa.and_(s.turns.c.state == "queued",
+                                       sa.or_(s.turns.c.lease_expires_ts.is_(None),
+                                              s.turns.c.lease_expires_ts < now)),
                                sa.and_(s.turns.c.state == "leased",
                                        s.turns.c.lease_expires_ts < now)))
                  .order_by(s.turns.c.created_ts, s.turns.c.turn_id))
@@ -141,7 +152,11 @@ class TurnQueue:
             if t is None:
                 return None
             takeover = t.state == "leased"
-            if not (t.state == "queued" or (takeover and (t.lease_expires_ts or 0) < now)):
+            waited = t.state == "queued" and (t.lease_expires_ts or 0) < now
+            if not (waited or (takeover and (t.lease_expires_ts or 0) < now)):
+                return None
+            if t.attempts >= MAX_CLAIMS:
+                self._poison(conn, t, now)
                 return None
             if pg and conn.execute(sa.select(s.threads.c.thread_id).where(
                     s.threads.c.tenant_id == t.tenant_id,
@@ -209,6 +224,23 @@ class TurnQueue:
                          worker_id=worker_id, version=t.version + 1,
                          attempts=t.attempts + 1, batch=tuple(batch),
                          checkpoint=dict(loads(t.checkpoint, {})), takeover=takeover)
+
+    @staticmethod
+    def _poison(conn: sa.Connection, t: Any, now: float) -> None:
+        """Park a turn that keeps killing its worker, with one owner note."""
+        conn.execute(s.turns.update().where(
+            s.turns.c.turn_id == t.turn_id, s.turns.c.version == t.version)
+            .values(state="failed", status="poisoned", lease_owner=None,
+                    lease_expires_ts=None, version=t.version + 1,
+                    error=f"poison: claimed {t.attempts} times without finishing",
+                    finished_at=now_iso(now)))
+        insert_ignore(conn, s.messages, {
+            "tenant_id": t.tenant_id, "message_id": f"out:poison:{t.turn_id}",
+            "thread_id": f"{t.tenant_id}:owner", "turn_id": t.turn_id, "direction": "out",
+            "sender": "mimi", "channel": "owner_console", "shop_id": "",
+            "text": POISON_NOTE.format(n=t.attempts), "kind": "poison_note",
+            "status": "ready", "idempotency_key": f"poison:{t.turn_id}", "simulated": False,
+            "at": now_iso(now), "ts": now})
 
     # ------------------------------------------------------------ leases
 
@@ -320,11 +352,14 @@ class TurnQueue:
     def release(self, claim: Claim, error: str) -> str:
         """A step raised: back in the queue, or failed after ``MAX_ATTEMPTS``."""
         state = "failed" if claim.attempts >= MAX_ATTEMPTS else "queued"
+        # Back off before the retry (a queued turn is claimable once this passes).
+        wait = min(RETRY_MAX_S, RETRY_BASE_S * 2 ** max(0, claim.attempts - 1))
         with self.engine.begin() as conn:
             conn.execute(s.turns.update().where(
                 s.turns.c.turn_id == claim.turn_id, s.turns.c.version == claim.version,
                 s.turns.c.lease_owner == claim.worker_id)
-                .values(state=state, lease_owner=None, lease_expires_ts=None,
+                .values(state=state, lease_owner=None,
+                        lease_expires_ts=None if state == "failed" else self.clock() + wait,
                         version=claim.version + 1, error=error[:2000],
                         status="failed" if state == "failed" else "",
                         finished_at=now_iso() if state == "failed" else None))

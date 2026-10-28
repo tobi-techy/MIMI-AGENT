@@ -214,13 +214,19 @@ def test_postgres_claims_skip_a_locked_thread_instead_of_waiting(engine: Any) ->
 
 
 def test_a_turn_that_keeps_failing_stops_after_three_tries(engine: Any) -> None:
-    q = TurnQueue(engine, lease_s=30)
+    import time as _time
+
+    now = [_time.time()]
+    q = TurnQueue(engine, lease_s=30, clock=lambda: now[0])
     tid = _enqueue(engine, "f1")
     states = []
     for i in range(3):
         c = q.claim(f"w{i}")
         assert c is not None and c.turn_id == tid
         states.append(q.release(c, "boom"))
+        # A released turn waits out its backoff before the retry (loop safety).
+        assert q.claim("early") is None or states[-1] == "failed"
+        now[0] += 60
     assert states == ["queued", "queued", "failed"] and q.claim("w9") is None
     assert q.get(tid).error == "boom"
 

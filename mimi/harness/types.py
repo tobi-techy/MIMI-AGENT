@@ -45,6 +45,8 @@ RunStatus = Literal[
     "asked_question",
     "stopped_budget",
     "stopped_killed",
+    # A loop guard tripped (mimi.harness.guards): repeat, no progress, tool errors.
+    "stopped_runaway",
     "failed",
 ]
 
@@ -67,6 +69,10 @@ EventType = Literal[
     "step_finished",
     "run_finished",
     "artifact_stored",
+    # A loop guard tripped (mimi.harness.guards).
+    "loop_guard",
+    # The verification gate held an outbound claim back (mimi.harness.claims).
+    "claim_blocked",
 ]
 
 
