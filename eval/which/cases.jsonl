@@ -1,0 +1,40 @@
+{"id": "wA01", "open": "both", "task": "credit", "replies": ["YES"], "expect": ["which"], "note": ""}
+{"id": "wA02", "open": "both", "task": "restock", "replies": ["yes o"], "expect": ["which"], "note": ""}
+{"id": "wA03", "open": "both", "task": "credit", "replies": ["Yes ma"], "expect": ["which"], "note": ""}
+{"id": "wA04", "open": "both", "task": "restock", "replies": ["ok"], "expect": ["which"], "note": ""}
+{"id": "wA05", "open": "both", "task": "credit", "replies": ["Okay."], "expect": ["which"], "note": ""}
+{"id": "wA06", "open": "both", "task": "restock", "replies": ["confirm"], "expect": ["which"], "note": ""}
+{"id": "wA07", "open": "both", "task": "credit", "replies": ["Yep"], "expect": ["which"], "note": ""}
+{"id": "wA08", "open": "both", "task": "restock", "replies": ["ee"], "expect": ["which"], "note": ""}
+{"id": "wA09", "open": "both", "task": "credit", "replies": ["NO"], "expect": ["which"], "note": ""}
+{"id": "wA10", "open": "both", "task": "restock", "replies": ["no o"], "expect": ["which"], "note": ""}
+{"id": "wA11", "open": "both", "task": "credit", "replies": ["rara"], "expect": ["which"], "note": ""}
+{"id": "wA12", "open": "both", "task": "restock", "replies": ["mba"], "expect": ["which"], "note": ""}
+{"id": "wA13", "open": "both", "task": "credit", "replies": ["a'a"], "expect": ["which"], "note": ""}
+{"id": "wA14", "open": "both", "task": "restock", "replies": ["not yet"], "expect": ["which"], "note": ""}
+{"id": "wA15", "open": "both", "task": "restock", "replies": ["Yes sir!"], "expect": ["which"], "note": ""}
+{"id": "wB01", "open": "both", "task": "credit", "replies": ["Yes the goods complete"], "expect": ["receipt"], "note": ""}
+{"id": "wB02", "open": "both", "task": "restock", "replies": ["yes all the goods reach well"], "expect": ["receipt"], "note": ""}
+{"id": "wB03", "open": "both", "task": "credit", "replies": ["Yes, the delivery is fine"], "expect": ["receipt"], "note": ""}
+{"id": "wB04", "open": "both", "task": "restock", "replies": ["ok the supply don land complete"], "expect": ["receipt"], "note": ""}
+{"id": "wB05", "open": "both", "task": "credit", "replies": ["yes make am 300k"], "expect": ["fix"], "note": ""}
+{"id": "wB06", "open": "both", "task": "restock", "replies": ["Yes change it"], "expect": ["fix"], "note": ""}
+{"id": "wB07", "open": "both", "task": "restock", "replies": ["yes o, do the change"], "expect": ["fix"], "note": ""}
+{"id": "wB08", "open": "both", "task": "credit", "replies": ["yes thank you"], "expect": ["which"], "note": "no word says which"}
+{"id": "wB09", "open": "both", "task": "restock", "replies": ["Ok sir"], "expect": ["which"], "note": "no word says which"}
+{"id": "wB10", "open": "both", "task": "credit", "replies": ["no the delivery no complete"], "expect": ["receipt"], "note": ""}
+{"id": "wC01", "open": "both", "task": "credit", "replies": ["YES", "the delivery"], "expect": ["which", "receipt"], "note": ""}
+{"id": "wC02", "open": "both", "task": "restock", "replies": ["yes", "receipt"], "expect": ["which", "receipt"], "note": ""}
+{"id": "wC03", "open": "both", "task": "credit", "replies": ["Yes o", "na the goods wey come"], "expect": ["which", "receipt"], "note": ""}
+{"id": "wC04", "open": "both", "task": "credit", "replies": ["yes", "the order change"], "expect": ["which", "fix"], "note": ""}
+{"id": "wC05", "open": "both", "task": "restock", "replies": ["ok", "the change"], "expect": ["which", "fix"], "note": ""}
+{"id": "wC06", "open": "both", "task": "restock", "replies": ["YES", "change am"], "expect": ["which", "fix"], "note": ""}
+{"id": "wC07", "open": "both", "task": "credit", "replies": ["no", "the order change"], "expect": ["which", "fix"], "note": ""}
+{"id": "wC08", "open": "both", "task": "restock", "replies": ["yes", "YES"], "expect": ["which", "owner"], "note": "still not clear: the owner, never a second question"}
+{"id": "wC09", "open": "both", "task": "credit", "replies": ["ok", "I no understand"], "expect": ["which", "owner"], "note": ""}
+{"id": "wC10", "open": "both", "task": "restock", "replies": ["yes", "both"], "expect": ["which", "owner"], "note": "both: the owner decides, Mimi does not guess"}
+{"id": "wD01", "open": "receipt", "task": "", "replies": ["YES"], "expect": ["receipt"], "note": ""}
+{"id": "wD02", "open": "receipt", "task": "", "replies": ["no o"], "expect": ["receipt"], "note": ""}
+{"id": "wD03", "open": "fix", "task": "credit", "replies": ["YES"], "expect": ["fix"], "note": ""}
+{"id": "wD04", "open": "fix", "task": "restock", "replies": ["yes"], "expect": ["fix"], "note": ""}
+{"id": "wD05", "open": "fix", "task": "restock", "replies": ["NO"], "expect": ["fix"], "note": ""}
