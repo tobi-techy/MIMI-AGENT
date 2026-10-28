@@ -174,7 +174,8 @@ def test_the_model_labels_the_answer_and_code_binds(store_url: str) -> None:
         receipt(c, agent)
         v = reply(c, agent, "b-1", "goods short", NOW + timedelta(minutes=5))
         assert v["route"]["rule"] == "pending_bind:short"
-        assert v["route"]["layer"] == "rule" and v["route"]["model_called"]
+        # The binder's model call decided it: labelled "model", never "rule".
+        assert v["route"]["layer"] == "model" and v["route"]["model_called"]
         assert ("flag_delivery_to_owner", "applied") in _intents(engine, SHOP)
 
 

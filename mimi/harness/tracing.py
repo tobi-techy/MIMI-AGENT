@@ -50,7 +50,7 @@ class HarnessTurn(Turn):
     @property
     def tags(self) -> list[str]:  # type: ignore[override]
         return ["harness", f"helper:{self.helper}", f"status:{self.status}",
-                f"wake:{self.wake_source}", "distributor:coral-lane"]
+                f"wake:{self.wake_source}"]
 
 
 def _ns(ev: Event) -> int:
@@ -75,8 +75,10 @@ def run_observations(events: Sequence[Event]) -> list[Observation]:
                 usage={"input": int(ev.data.get("prompt_tokens", 0)),
                        "output": int(ev.data.get("completion_tokens", 0))},
                 output={"tool_calls": ev.short},
+                # The model's plain text is private reasoning: it never
+                # leaves in a trace (only whether there was any).
                 metadata={"cost_kobo": ev.cost_kobo,
-                          "private_text": str(ev.data.get("private_text", ""))[:200]}))
+                          "private_text_chars": len(str(ev.data.get("private_text", "")))}))
         elif ev.type == "model_fallback":
             current.children.append(Observation("span", "model-fallback", _ns(ev),
                                                 level="WARNING", status_message=ev.short))
@@ -165,8 +167,7 @@ class RouteTurn(Turn):
 
     @property
     def tags(self) -> list[str]:  # type: ignore[override]
-        return ["router", f"layer:{self.layer}", f"skill:{self.skill}",
-                "distributor:coral-lane"]
+        return ["router", f"layer:{self.layer}", f"skill:{self.skill}"]
 
 
 def build_route_turn(decision: Any, *, synthetic: bool = True) -> RouteTurn:
@@ -247,7 +248,7 @@ class JobTurn(HarnessTurn):
     @property
     def tags(self) -> list[str]:  # type: ignore[override]
         return ["job", f"helper:{self.helper}", f"status:{self.status}",
-                f"wake:{self.wake_source}", "distributor:coral-lane"]
+                f"wake:{self.wake_source}"]
 
 
 def build_job_turn(decision: Any, result: RunResult | None, *, job_id: str, status: str,

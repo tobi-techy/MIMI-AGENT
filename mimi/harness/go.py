@@ -118,7 +118,7 @@ class GateDecision:
     key: str
     kind: str
     tier: str
-    outcome: str  # applied | queued_for_approval | refused | duplicate
+    outcome: str  # applied | queued_for_approval | refused | shadowed | duplicate
 
 
 @dataclass
@@ -140,6 +140,8 @@ class FakeGo:
     applied: list[dict[str, Any]] = field(default_factory=list)
     approvals: list[dict[str, Any]] = field(default_factory=list)
     sent_messages: list[dict[str, Any]] = field(default_factory=list)
+    # Shadow-mode intents (RAI-235): recorded here, never applied.
+    shadowed: list[dict[str, Any]] = field(default_factory=list)
     submits: int = 0
     _spend: dict[tuple[str, date], int] = field(default_factory=lambda: defaultdict(int))
     _asked: set[tuple[str, str, date]] = field(default_factory=set)
@@ -308,6 +310,12 @@ class FakeGo:
                 return business
             self.attempts_seen.add(idempotency_key)
             tier = str(record.get("tier") or "never")
+            if record.get("shadow"):
+                # Shadow mode (RAI-235): recorded, applied never. Nothing is
+                # queued, written or sent, whatever tier it carries.
+                self.shadowed.append(record)
+                self.accepted[business] = GateDecision(business, kind, tier, "shadowed")
+                return business
             if tier == "never":
                 outcome = "refused"
             elif tier == "approve":

@@ -624,10 +624,10 @@ def collect(*, live: bool, cache_dir: Path, workdir: Path | None = None,
                        if a["tool"] == "raise_daily_allowance"]
         run.checks["budget_raise_items"] = raise_items
         if raise_items:
-            r = client.post(f"/v1/approvals/{raise_items[0]['approval_id']}/approve?wait=false",
-                            json={"note": "e2e owner raises the allowance"},
-                            headers=api.h["owner"])
-            run.checks["budget_decision_status"] = r.status_code
+            resp = client.post(f"/v1/approvals/{raise_items[0]['approval_id']}/approve"
+                               "?wait=false", json={"note": "e2e owner raises the allowance"},
+                               headers=api.h["owner"])
+            run.checks["budget_decision_status"] = resp.status_code
         for rec in parked:
             finish(rec)
         with engine.connect() as conn:

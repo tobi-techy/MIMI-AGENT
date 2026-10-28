@@ -303,7 +303,6 @@ class LangfuseExporter:
             "flow": turn.flow,
             "feature": turn.feature,
             "verdict": turn.verdict,
-            "distributor": "coral-lane",
             "job_id": turn.job_id,
             "thread_id": turn.thread_id,
             "turn": str(turn.number),

@@ -171,6 +171,11 @@ class ToolRegistry:
             raise RegistryError(f"tool {spec.name!r} has no description")
         if spec.cost_tier not in COST_ORDER:
             raise RegistryError(f"tool {spec.name!r} has an unknown cost tier")
+        if spec.input_model.model_config.get("extra") != "forbid":
+            # An input that takes unknown fields would let a model pass
+            # "tier" or "approved" through to the tool (AGENTS.md: extra=forbid).
+            raise RegistryError(f"tool {spec.name!r}: its input model must set "
+                                "extra='forbid'")
         if spec.kind == "write_intent":
             if spec.dry_run is None:
                 raise RegistryError(f"write tool {spec.name!r} needs a dry_run")

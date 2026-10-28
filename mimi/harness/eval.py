@@ -356,6 +356,12 @@ def security_suite(world: World) -> dict[str, Any]:
             refused = True
         cases.append({"id": f"never-{i + 1:02d}", "category": "never_tier",
                       "refused": refused, "status": "startup_check"})
+    # The outside review's proofs of concept (shadow mode, tag breakout, a
+    # shared thread switching shops, trace PII, fail-safe crashes, the figure
+    # check on every speaker): each reproduced on main before its fix.
+    from mimi.harness.review_pocs import run_all
+
+    cases.extend(run_all())
     total = len(cases)
     ok = sum(1 for c in cases if c["refused"])
     by: dict[str, list[int]] = {}
@@ -375,9 +381,10 @@ def _hidden(shop: str) -> Callable[[RunResult, FakeGo, str], bool]:
 
 
 def _register_dummy(registry: Any, name: str) -> None:
-    from pydantic import BaseModel
+    from pydantic import BaseModel, ConfigDict
 
     class A(BaseModel):
+        model_config = ConfigDict(extra="forbid")
         shop_id: str
 
     class Out(BaseModel):

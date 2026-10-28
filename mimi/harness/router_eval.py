@@ -37,6 +37,7 @@ from pathlib import Path
 from typing import Any
 
 from mimi.harness import fastclass
+from mimi.harness.binding import AnswerBinder
 from mimi.harness.gateway import kobo_cost
 from mimi.harness.inbound import Directory, Inbound, Media, Payload
 from mimi.harness.router import RouteDecision, Router, ThreadState, risk
@@ -228,7 +229,9 @@ def main(argv: list[str] | None = None) -> int:
     before_live = model.live_calls
     workers = args.workers if args.live else 1
     routers = {
-        "cascade": Router(model=model, price=kobo_cost, fast=fastclass.model()),
+        # The router the API runs: with the pending-ask binder (review finding).
+        "cascade": Router(model=model, price=kobo_cost, fast=fastclass.model(),
+                          binder=AnswerBinder(model=model)),
         "model_only": Router(model=model, price=kobo_cost, use_lexical=False),
         "rules_lexical": Router(model=None),
         "rules_lexical_fast": Router(model=None, fast=fastclass.model()),

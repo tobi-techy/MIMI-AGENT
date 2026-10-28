@@ -46,6 +46,7 @@ from typing import Any, Literal
 
 from mimi.harness import lexicon
 from mimi.harness.inbound import Inbound
+from mimi.harness.untrusted import defang
 from mimi.models.base import ChatMessage, ChatModel, ModelError
 
 STEER_PROMPT_VERSION = "steer-2026-10-28.2"
@@ -669,12 +670,7 @@ def owner_note(shop_id: str, task: OpenTask, words: str, *, kind: str) -> str:
             f"was changed. The shop said: \"{quote(words, 300)}\"")
 
 
-_OUR_TAGS = re.compile(r"<(\s*/?\s*)(shop_message|owner_message|rep_message|book_slice|"
-                       r"helper_verdict|system_message|running_task_message)\b", re.I)
-
-
-def _defang(text: str) -> str:
-    return _OUR_TAGS.sub(lambda m: "&lt;" + m.group(1) + m.group(2), text)
+_defang = defang  # every tag shape, generically (mimi.harness.untrusted)
 
 
 def injected_note(parts: Sequence[Part], *, sender: str, shop_id: str, note: str) -> str:
