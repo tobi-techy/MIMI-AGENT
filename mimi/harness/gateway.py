@@ -312,8 +312,12 @@ class RecordedToolModel:
         turn = self.live.chat(messages, tools, max_tokens=max_tokens)
         self._data[k] = _turn_to(turn)
         self.path.parent.mkdir(parents=True, exist_ok=True)
-        self.path.write_text(json.dumps(self._data, sort_keys=True, indent=1) + "\n",
-                             encoding="utf-8")
+        # Atomic: a process killed mid-write (the worker-kill run) must not
+        # leave a torn cache behind.
+        tmp = self.path.with_name(f".{self.path.name}.{os.getpid()}.tmp")
+        tmp.write_text(json.dumps(self._data, sort_keys=True, indent=1) + "\n",
+                       encoding="utf-8")
+        os.replace(tmp, self.path)
         return turn
 
 

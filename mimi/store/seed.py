@@ -18,6 +18,7 @@ from sqlalchemy.engine import Engine
 
 from mimi.store import schema as s
 from mimi.store.util import dumps, now_iso
+from mimi.world.catalogue import COLLECTION_ACCOUNT
 from mimi.world.model import World
 
 # The fictional owner's number (the same one the router eval uses).
@@ -58,9 +59,10 @@ def seed_world(engine: Engine, world: World, *, tenant_id: str | None = None,
             "tenant_id": tid, "name": name or world.distributor,
             "owner_phones": dumps(sorted(owner_phones)), "owner_thread": f"{tid}:owner",
             "live_date": world.date_of(world.live_day).isoformat(),
+            "live_day": world.live_day, "price_rise_day": world.price_rise_day,
             "daily_cap_kobo": daily_cap_kobo,
-            "collection_account": dumps({"account_name": world.distributor.upper(),
-                                         "bank": "Demo Bank", "account_number": "0000000000"}),
+            # The account the world's shops pay into (and its screenshots show).
+            "collection_account": dumps(dict(COLLECTION_ACCOUNT)),
             "simulated": True, "created_at": now_iso()}])
         put(s.reps, [{"tenant_id": tid, "rep_id": r.rep_id, "name": r.name, "phone": r.phone,
                       "areas": dumps(list(r.areas))} for r in world.reps])

@@ -26,12 +26,14 @@ from typing import Any
 import sqlalchemy as sa
 from sqlalchemy.engine import Engine
 
+from mimi.credit.looks import item_name, pieces_per_unit
 from mimi.harness.go import ConsentGrants, CrossTenant
 from mimi.harness.inbound import Directory
 from mimi.harness.types import Event
 from mimi.runtime.outbox import MONEY_VERBS
 from mimi.store import schema as s
 from mimi.store.util import dumps, insert_ignore, loads, now_iso
+from mimi.world.model import Sku
 
 BASE_SHOP_SCOPES = frozenset({"shop:balance", "shop:invoices", "shop:payments",
                               "shop:messages", "shop:promises"})
@@ -205,6 +207,197 @@ class SqlGo:
                 return {"credit_id": c.credit_id, "payment_id": c.payment_id,
                         "amount_kobo": int(c.amount_kobo), "received_at": c.received_at}
         return None
+
+    # ------------------------------------------------- helper reads (RAI-272)
+    # The reads the Credit, Stock, Proof and Order helpers make on the API, the
+    # same contract as their in-process stand-ins (``mimi.credit.book.CreditGo``
+    # and the world the flows read). Every one is tenant-scoped.
+
+    def days(self, tenant_id: str) -> tuple[int, int | None]:
+        """(live day number, price rise day) of the book."""
+        with self.engine.connect() as conn:
+            t = self._tenant_row(conn, tenant_id)
+        return int(t.live_day or 0), (int(t.price_rise_day)
+                                      if t.price_rise_day is not None else None)
+
+    def restock_days(self, tenant_id: str, shop_id: str) -> int:
+        """Days between the rep's van visits to the shop (route data)."""
+        with self.engine.connect() as conn:
+            return int(self._shop_row(conn, tenant_id, shop_id).restock_days or 0)
+
+    def skus(self, tenant_id: str) -> dict[str, Sku]:
+        with self.engine.connect() as conn:
+            self._tenant_row(conn, tenant_id)
+            rows = conn.execute(sa.select(s.skus).where(s.skus.c.tenant_id == tenant_id)).all()
+        return {r.sku: Sku(r.sku, r.name, r.brand, r.unit, int(r.price_kobo),
+                           int(r.risen_price_kobo) if r.risen_price_kobo is not None else None)
+                for r in rows}
+
+    def deliveries(self, tenant_id: str, shop_id: str, *,
+                   live: bool | None = None) -> list[dict[str, Any]]:
+        """The shop's deliveries with their lines, oldest first (``live``: only
+        the live day's, only earlier ones, or all)."""
+        with self.engine.connect() as conn:
+            self._shop_row(conn, tenant_id, shop_id)
+            q = sa.select(s.deliveries).where(s.deliveries.c.tenant_id == tenant_id,
+                                              s.deliveries.c.shop_id == shop_id)
+            if live is not None:
+                q = q.where(s.deliveries.c.live == live)
+            ds = conn.execute(q.order_by(s.deliveries.c.day, s.deliveries.c.minute,
+                                         s.deliveries.c.delivery_id)).all()
+            lines: dict[str, list[dict[str, Any]]] = {}
+            if ds:
+                for ln in conn.execute(sa.select(s.delivery_lines).where(
+                        s.delivery_lines.c.tenant_id == tenant_id,
+                        s.delivery_lines.c.delivery_id.in_([d.delivery_id for d in ds]))
+                        .order_by(s.delivery_lines.c.delivery_id, s.delivery_lines.c.line_no)):
+                    lines.setdefault(ln.delivery_id, []).append({
+                        "sku": ln.sku, "name": ln.name, "unit": ln.unit,
+                        "quantity": int(ln.quantity), "unit_price_kobo": int(ln.unit_price_kobo),
+                        "line_total_kobo": int(ln.line_total_kobo)})
+        return [{"delivery_id": d.delivery_id, "shop_id": d.shop_id, "rep_id": d.rep_id,
+                 "day": int(d.day), "delivered_on": d.delivered_on, "minute": int(d.minute),
+                 "total_kobo": int(d.total_kobo), "status": d.status, "live": bool(d.live),
+                 "witnessed_at": d.witnessed_at, "lines": lines.get(d.delivery_id, [])}
+                for d in ds]
+
+    def delivery(self, tenant_id: str, shop_id: str, delivery_id: str) -> dict[str, Any] | None:
+        for d in self.deliveries(tenant_id, shop_id):
+            if d["delivery_id"] == delivery_id:
+                return d
+        return None
+
+    def credit_history(self, tenant_id: str, shop_id: str) -> dict[str, Any]:
+        """``CreditGo.credit_history`` over the store (same shape)."""
+        live_day, _ = self.days(tenant_id)
+        ds = self.deliveries(tenant_id, shop_id, live=False)
+        with self.engine.connect() as conn:
+            due = {r.delivery_id: r for r in conn.execute(sa.select(s.receivables).where(
+                s.receivables.c.tenant_id == tenant_id, s.receivables.c.shop_id == shop_id))}
+            feed = {r.payment_id for r in conn.execute(
+                sa.select(s.bank_feed.c.payment_id).where(s.bank_feed.c.tenant_id == tenant_id))}
+            pays = conn.execute(sa.select(s.payments).where(
+                s.payments.c.tenant_id == tenant_id, s.payments.c.shop_id == shop_id)
+                .order_by(s.payments.c.day, s.payments.c.payment_id)).all()
+            proms = conn.execute(sa.select(s.promises).where(
+                s.promises.c.tenant_id == tenant_id, s.promises.c.shop_id == shop_id)
+                .order_by(s.promises.c.promise_id)).all()
+            open_disputes = conn.execute(sa.select(sa.func.count()).select_from(s.disputes)
+                                         .where(s.disputes.c.tenant_id == tenant_id,
+                                                s.disputes.c.shop_id == shop_id,
+                                                s.disputes.c.status == "open")).scalar()
+        start = date.fromisoformat(self.today_for(tenant_id).isoformat()).toordinal() - live_day
+        deliveries = []
+        for d in ds:
+            r = due.get(d["delivery_id"])
+            deliveries.append({
+                "delivery_id": d["delivery_id"], "day": d["day"],
+                "delivered_on": d["delivered_on"],
+                "due_day": int(r.due_day) if r else d["day"],
+                "due_on": r.due_on if r else d["delivered_on"], "total_kobo": d["total_kobo"],
+                "lines": [{"sku": ln["sku"], "quantity": ln["quantity"]} for ln in d["lines"]]})
+        return {
+            "live_day": live_day,
+            "deliveries": deliveries,
+            "payments": [{
+                "payment_id": p.payment_id, "delivery_id": p.delivery_id, "day": int(p.day),
+                "paid_on": p.paid_on, "amount_kobo": 0 if p.fake_alert else int(p.amount_kobo),
+                "claimed_kobo": int(p.amount_kobo), "method": p.method,
+                "bank_confirmed": p.payment_id in feed, "status": p.status} for p in pays],
+            "promises": [{"made_day": date.fromisoformat(p.made_on).toordinal() - start,
+                          "promised_day": date.fromisoformat(p.promised_on).toordinal() - start,
+                          "kept": bool(p.kept)} for p in proms],
+            "open_disputes": int(open_disputes or 0),
+        }
+
+    def price_list(self, tenant_id: str) -> dict[str, tuple[int, int, str, str]]:
+        """sku -> (unit price today in kobo, pieces per unit, item name, unit)."""
+        live_day, rise = self.days(tenant_id)
+        return {k: (sku.price_on(live_day, rise if rise is not None else 10**9),
+                    pieces_per_unit(sku), item_name(sku), sku.unit)
+                for k, sku in self.skus(tenant_id).items()}
+
+    def open_credit_review(self, tenant_id: str, shop_id: str) -> str:
+        """A credit request of this shop already waiting in the owner's approvals."""
+        with self.engine.connect() as conn:
+            self._shop_row(conn, tenant_id, shop_id)
+            rows = conn.execute(sa.select(s.approvals.c.payload).where(
+                s.approvals.c.tenant_id == tenant_id, s.approvals.c.shop_id == shop_id,
+                s.approvals.c.tool == "submit_credit_review",
+                s.approvals.c.status == "pending")).all()
+        for r in rows:
+            return str(loads(r.payload, {}).get("review_id") or "pending")
+        return ""
+
+    def photo_asks(self, tenant_id: str, shop_id: str, day: str) -> int:
+        """Shelf-photo asks Go recorded for the shop that Lagos day."""
+        return sum(1 for i in self.intents_of(tenant_id, shop_id, ("ask_for_shelf_photo",))
+                   if i["outcome"] != "refused" and i["payload"].get("date") == day)
+
+    def intents_of(self, tenant_id: str, shop_id: str,
+                   tools: tuple[str, ...]) -> list[dict[str, Any]]:
+        """The shop's recorded intents of these tools, oldest first (Go's record)."""
+        with self.engine.connect() as conn:
+            self._tenant_row(conn, tenant_id)
+            q = sa.select(s.intents).where(s.intents.c.tenant_id == tenant_id,
+                                           s.intents.c.tool.in_(list(tools)))
+            if shop_id:
+                q = q.where(s.intents.c.shop_id == shop_id)
+            rows = conn.execute(q.order_by(s.intents.c.created_at,
+                                           s.intents.c.idempotency_key)).all()
+        return [{"tool": r.tool, "outcome": r.outcome, "payload": loads(r.payload, {}),
+                 "shop_id": r.shop_id, "turn_id": r.turn_id, "created_at": r.created_at,
+                 "idempotency_key": r.idempotency_key} for r in rows]
+
+    def turn_messages(self, tenant_id: str, turn_id: str) -> list[dict[str, Any]]:
+        """The inbound messages a turn answers (its batch), oldest first.
+
+        What a shop actually said, read from the store: a tool reads the
+        shop's words here instead of trusting the model to copy them.
+        """
+        with self.engine.connect() as conn:
+            t = conn.execute(sa.select(s.turns.c.batch).where(
+                s.turns.c.tenant_id == tenant_id, s.turns.c.turn_id == turn_id)).first()
+            ids = list(loads(t.batch, [])) if t is not None else []
+            q = sa.select(s.inbound_messages).where(s.inbound_messages.c.tenant_id == tenant_id)
+            q = q.where(s.inbound_messages.c.external_id.in_(ids)) if ids else \
+                q.where(s.inbound_messages.c.turn_id == turn_id)
+            rows = conn.execute(q).all()
+        out = []
+        for r in rows:
+            env = loads(r.envelope, {})
+            p = env.get("payload") or {}
+            m = p.get("media") or {}
+            out.append({"message_id": r.external_id, "source": r.source,
+                        "received_at": r.received_at, "text": p.get("text", ""),
+                        "button_id": p.get("button_id", ""),
+                        "caption": m.get("caption", ""), "transcript": m.get("transcript", ""),
+                        "media_kind": m.get("kind", "none"), "mime": m.get("mime", ""),
+                        "sha256": m.get("sha256", ""), "media_ref": r.media_ref})
+        out.sort(key=lambda x: (x["received_at"], x["message_id"]))
+        return out
+
+    def media_of(self, tenant_id: str, shop_id: str) -> list[dict[str, Any]]:
+        """Images the shop sent, oldest first: id ``ph_<sha256[:12]>``, ref, mime."""
+        with self.engine.connect() as conn:
+            self._shop_row(conn, tenant_id, shop_id)
+            rows = conn.execute(sa.select(s.inbound_messages).where(
+                s.inbound_messages.c.tenant_id == tenant_id,
+                s.inbound_messages.c.thread_id == f"{tenant_id}:shop:{shop_id}",
+                s.inbound_messages.c.media_ref != "")
+                .order_by(s.inbound_messages.c.received_at,
+                          s.inbound_messages.c.external_id)).all()
+        out = []
+        for r in rows:
+            m = (loads(r.envelope, {}).get("payload") or {}).get("media") or {}
+            if m.get("kind") != "image" or not m.get("sha256"):
+                continue
+            out.append({"photo_id": "ph_" + str(m["sha256"])[:12], "ref": r.media_ref,
+                        "mime": m.get("mime") or "image/jpeg", "sha256": m["sha256"],
+                        "camera": bool(m.get("camera_exif")), "message_id": r.external_id,
+                        "received_at": r.received_at,
+                        "width": int(m.get("width") or 0), "height": int(m.get("height") or 0)})
+        return out
 
     # ------------------------------------------------------------- control
 

@@ -1,0 +1,30 @@
+{
+ "3066a4efb1d5fb33bda1ae25140d292c": {
+  "completion_tokens": 315,
+  "latency_s": 1.912,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 422,
+  "text": "{\"confidence\": 0.96, \"label\": \"short\"}"
+ },
+ "65b38dbc0b3ac6d56fded86b7e5c1654": {
+  "completion_tokens": 330,
+  "latency_s": 2.437,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 409,
+  "text": "{\"confidence\": 0.92, \"label\": \"yes\"}"
+ },
+ "eb06c325f69238a6921e2c5fad7780fe": {
+  "completion_tokens": 540,
+  "latency_s": 3.902,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 776,
+  "text": "{\"route\": \"order/drop-confirmation\", \"confidence\": 0.98, \"second\": \"\", \"language\": \"yo\"}"
+ },
+ "eba2d4e6b68c121a0998931190b0117e": {
+  "completion_tokens": 304,
+  "latency_s": 2.137,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 418,
+  "text": "{\"confidence\": 0.98, \"label\": \"yes\"}"
+ }
+}

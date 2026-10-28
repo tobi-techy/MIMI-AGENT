@@ -56,6 +56,23 @@ class TurnIn(BaseModel):
     simulated: bool = Field(False, description="Simulator traffic: tagged everywhere.")
 
 
+class EventIn(BaseModel):
+    """A system event from Go or the scheduler: a delivery done, a routine due."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    event_id: str = Field(..., min_length=1, max_length=200,
+                          description="The sender's own event id. The same id twice is one turn.")
+    kind: Literal["webhook", "routine"]
+    name: str = Field(..., min_length=1, max_length=100, pattern=r"^[a-z0-9_.]+$",
+                      description="Webhook kind (delivery_completed, bank_credit, ...) or "
+                                  "routine name (stock.weekly_check, ...).")
+    shop_id: str = Field("", max_length=64, pattern=r"^[A-Za-z0-9_.-]*$",
+                         description="The shop the event is about; empty for the distributor.")
+    received_at: datetime | None = Field(None, description="Defaults to now (UTC).")
+    simulated: bool = False
+
+
 class Reply(_Out):
     message_id: str
     channel: str

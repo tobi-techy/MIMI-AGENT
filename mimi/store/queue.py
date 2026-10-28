@@ -34,6 +34,7 @@ from typing import Any
 import sqlalchemy as sa
 from sqlalchemy.engine import Engine
 
+from mimi.harness.router import PRIORITY
 from mimi.store import schema as s
 from mimi.store.util import dumps, loads, now_iso
 
@@ -80,7 +81,11 @@ class TurnQueue:
         now = self.clock()
         with self.engine.connect() as conn:
             q = (sa.select(s.turns.c.turn_id, s.turns.c.tenant_id, s.turns.c.thread_id,
-                           s.turns.c.state, s.turns.c.created_ts)
+                           s.turns.c.state, s.turns.c.created_ts,
+                           s.inbound_messages.c.source)
+                 .select_from(s.turns.outerjoin(s.inbound_messages, sa.and_(
+                     s.inbound_messages.c.tenant_id == s.turns.c.tenant_id,
+                     s.inbound_messages.c.turn_id == s.turns.c.turn_id)))
                  .where(sa.or_(s.turns.c.state == "queued",
                                sa.and_(s.turns.c.state == "leased",
                                        s.turns.c.lease_expires_ts < now)))
@@ -94,6 +99,16 @@ class TurnQueue:
                             s.turns.c.thread_id == row.thread_id)
             candidates = conn.execute(q.limit(200)).all()
             conn.rollback()
+        # A lapsed lease first (work already under way), then the owner, then
+        # people, then systems and routines (RAI-272: the owner is handled
+        # first); oldest first within each. A thread's oldest runnable turn
+        # still leads that thread.
+        by_thread: dict[tuple[str, str], Any] = {}
+        for c in candidates:
+            by_thread.setdefault((c.tenant_id, c.thread_id), c)
+        candidates = sorted(by_thread.values(), key=lambda c: (
+            0 if c.state == "leased" else 1, PRIORITY.get(c.source or "", 3),
+            c.created_ts, c.turn_id))
         seen: set[tuple[str, str]] = set()
         for c in candidates:
             key = (c.tenant_id, c.thread_id)

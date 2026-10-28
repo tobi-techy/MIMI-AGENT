@@ -26,7 +26,7 @@ console / WhatsApp webhook
   framework), the agent (`agent.py`), settings (`config.py`), console reads
   (`reads.py`), the helpers it hires (`helpers.py`) and the no-key model
   (`offline.py`).
-* `mimi/store/`: tables (`schema.py`, alembic `0006_api_store`), the engine
+* `mimi/store/`: tables (`schema.py`, alembic `0006_api_store`, `0007_tenant_days`), the engine
   (`db.py`), `SqlGo` (`book.py`, the same ports as `FakeGo`), the turn queue
   (`queue.py`), the context builder's stores (`context_stores.py`) and the
   seed (`seed.py`).
@@ -91,6 +91,7 @@ SQLite in `/data` (mount a volume); set `DATABASE_URL` for Postgres.
 | `META_API_KEY`, `META_API_BASE`, `MIMI_MODEL` | none, `https://api.meta.ai/v1`, `muse-spark-1.3` | Muse Spark for the harness and the router's last layer |
 | `MIMI_PHONE_PSEUDONYM_KEY` | dev key | required in production (thread ids for unknown numbers) |
 | `MIMI_RELEASE` | | shown by `/v1/health` |
+| `MIMI_MEDIA_DIR` | none | where the helpers read a message's image by its `ref` (`local:<path>`), checked against its `sha256`; the simulator and the e2e eval use it. Without it no image is read |
 
 Production (`MIMI_ENV=production`) refuses to start without
 `MIMI_PHONE_PSEUDONYM_KEY`, without `MIMI_API_KEYS`, without `META_API_KEY`
@@ -102,8 +103,8 @@ Production (`MIMI_ENV=production`) refuses to start without
 Each bearer key belongs to one distributor (tenant) and one role:
 
 * `owner`: the console. Every read, and approve or reject.
-* `channel`: the WhatsApp webhook and the simulator. Only `POST /v1/turns`
-  and `GET /v1/turns/{id}`.
+* `channel`: the WhatsApp webhook, Go's webhooks and the simulator. Only
+  `POST /v1/turns`, `POST /v1/events` and `GET /v1/turns/{id}`.
 
 The tenant comes from the key, never from the body (a body `tenant_id` that
 differs is a 403). Every query filters on it and every key in the store
@@ -116,6 +117,7 @@ approval reads as 404. Keys are compared by SHA-256 in constant time; give
 | Method and path | Role | What |
 |---|---|---|
 | `POST /v1/turns` | any | One inbound message: `message_id` (the dedupe key), `source` (`shop_message`, `owner_message`, `rep_message`), `phone`, `text`, `button_id`, `media` (`kind`, `ref`, `mime`, `sha256`, size, `caption`, `transcript`), `received_at`, `simulated`. Waits for the replies (200) or answers 202 with the turn id; `?wait=false` queues only. The same `message_id` again returns the same turn and replies with `duplicate: true` |
+| `POST /v1/events` | any | One system event from Go or the scheduler: `event_id` (the dedupe key), `kind` (`webhook` or `routine`), `name` (`delivery_completed`, `stock.weekly_check`, ...), `shop_id` (empty for the distributor), `received_at`, `simulated`. Queued as a turn on the shop's thread and routed by rule (202 with the turn id). The words the helper sees are written by code from the kind, name and shop; an event carries no free text. Another distributor's shop is 404 |
 | `GET /v1/turns/{turn_id}` | any | State, status, route, run id (the trace id) and replies |
 | `GET /v1/threads` | owner | Threads, newest first: kind, shop, last message, pending approvals. `limit`, `offset`, `kind` |
 | `GET /v1/threads/{thread_id}` | owner | Messages, reasoning steps (routing and every harness step: tool, tier, short line, model, cost, time; never the model's private text), turns, router state |
@@ -131,6 +133,65 @@ Replies come back with `status`: `ready` (hand it to the channel now) or
 `pending_approval` (it waits in approvals). Sending them on WhatsApp is the
 webhook adapter's job (the Meta app and test number exist; the send wiring
 is RAI-266's remaining piece).
+
+## Helpers hired (RAI-272)
+
+The router hands each turn to one helper on the harness
+(`mimi/api/helpers.py`). Each helper's tools read the book through `SqlGo`
+and write only intents Go applies:
+
+| Helper | Skills | Tools (tier) |
+|---|---|---|
+| Collector | what a shop owes, reminders, promises | its 13 tools (RAI-279) |
+| Order | `order/drop-confirmation` | `get_open_deliveries`, `read_receipt_reply` (auto); `send_delivery_receipt`, `record_delivery_consent`, `flag_delivery_to_owner`, `ask_receipt_again` (notify) |
+| Proof | `proof/fake-alert-check` | `check_payment_screenshot` (auto), `record_payment_proof` (notify, level likely, never money), `flag_payment_proof` (approve, always) |
+| Stock | `stock/stock-count` | `get_stock_estimates`, `read_stock_answer` (auto); `ask_stock_count`, `record_stock_count` (notify); `draft_restock` (approve, always; `places_order: false`) |
+| Credit | `credit/credit-request` | `get_credit_file`, `count_shelf_photo` (SAM 3.1), `prepare_credit_review` (auto); `ask_for_shelf_photo` (notify); `submit_credit_review` (approve, always; never a limit change) |
+| Mimi | `mimi/chat`, `mimi/owner-brief` | `send_to_user` only. The owner brief has no data in this build, so it says the daily brief is not ready yet and gives no figures |
+
+Two rules came from the e2e run:
+
+* An approve-tier intent whose shop reply does not depend on the owner
+  (`flag_payment_proof`, `draft_restock`) sends its fixed shop notice at
+  once, so a turn that parks for approval still answers the shop, exactly
+  once (a model `send_to_user` with the same text is dropped).
+* A write that asks the shop something (a photo, a stock tap, a YES) leaves
+  the thread waiting on that skill, so the answer routes back by rule.
+
+### Pending-ask binding
+
+An open ask binds the shop's next reply to the helper that asked
+(`mimi/harness/binding.py`, wired in `Agent`):
+
+* The ask is stored on the thread with the skill, what answer it expects,
+  when it was sent (`asked_at`, with its zone) and what it is about
+  (`ask_ref`: the delivery id or the sku). It expires: 48 h for a delivery
+  receipt, 24 h for a stock tap or a shelf photo (`binding.ASK_TTL`). An
+  expired ask captures nothing; the message routes as a new one and the
+  route's `thread_note` says so.
+* A fixed short answer (a tap, YES, NO, a number, a photo when a photo was
+  asked for) binds by rule, with no model call.
+* Any other reply: the router model only classifies it against the ask,
+  into a fixed label set (receipt: `yes`, `short`, `damaged`, `wrong_items`,
+  `unclear`, `unrelated`). Every label except `unrelated` binds to the
+  asking helper in code (route rule `pending_bind:<label>`, layer `rule`).
+  `unrelated` releases the message to the normal router only at confidence
+  0.6 or more, and the ask stays open for the real answer. A binder model
+  error or an empty answer falls back to the phrase rules: release only when
+  they clearly point at another helper's skill, otherwise bind.
+* The binder never decides what the answer means: Order's reply reader and
+  its code guards still decide consent or dispute.
+* A turn of the asking helper that answers nothing (no consent, flag,
+  count or credit submission, and no new ask) leaves the ask open.
+* Belt and braces: when `mimi/escalate-owner` fires on a shop message tied
+  to a delivery (its receipt ask was open, or the shop named the delivery
+  id), code also records `flag_delivery_to_owner` on that delivery (notify
+  tier, reason `escalated`, the shop's words quoted, the same business key
+  as Order's own flag, so it is never recorded twice). Never consent, never
+  a money move. The route result carries `delivery_flagged`.
+
+The queue takes a lapsed lease first, then the owner, then shops and reps,
+then webhooks and routines; oldest first within each.
 
 ## Durability: what survives a crash
 
@@ -181,9 +242,7 @@ returns the last four digits only.
   are not here yet; the API returns the replies for the adapter to send.
 * The owner's mid-run steering (a second owner message reaching a running
   turn) is queued as the next turn instead.
-* Only Collector, Proof and a small Mimi helper are hired; order, stock,
-  credit and brand turns report `no_helper_yet:<helper>` until their
-  helpers move onto the harness (Credit, RAI-271, plugs into
-  `mimi/api/helpers.py`).
+* Brand turns still report `no_helper_yet:brand`; the other helpers are
+  hired (see "Helpers hired" above).
 * One live day per tenant (`tenants.live_date`) stands in for the book's
   clock.

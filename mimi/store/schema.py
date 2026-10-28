@@ -35,6 +35,10 @@ tenants = sa.Table(
     sa.Column("owner_thread", sa.String(200), nullable=False, default=""),
     # The book's "today" (Africa/Lagos calendar day), ISO date.
     sa.Column("live_date", sa.String(10), nullable=False),
+    # The world's day number of ``live_date`` and the day some prices rose
+    # (alembic 0007): the stock and credit helpers price and date in days.
+    sa.Column("live_day", sa.Integer(), nullable=False, default=0),
+    sa.Column("price_rise_day", sa.Integer(), nullable=True),
     sa.Column("daily_cap_kobo", sa.BigInteger(), nullable=False, default=50_000),
     sa.Column("collection_account", sa.Text(), nullable=False, default="{}"),  # JSON
     sa.Column("simulated", sa.Boolean(), nullable=False, default=True),

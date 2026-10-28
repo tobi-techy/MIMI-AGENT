@@ -36,23 +36,27 @@ import threading
 import time
 import uuid
 from collections.abc import Mapping, Sequence
-from dataclasses import asdict, dataclass, field
+from dataclasses import asdict, dataclass, field, replace
 from datetime import UTC, datetime
 from typing import Any
 
 import sqlalchemy as sa
 from sqlalchemy.engine import Engine
 
+from mimi.api.helpers import HelperDeps
 from mimi.harness import fastclass
+from mimi.harness.binding import AnswerBinder, ask_is_live, delivery_ids_in
 from mimi.harness.context import ContextBuilder
 from mimi.harness.frontdoor import FrontDoor
 from mimi.harness.gateway import Gateway, ToolModel, kobo_cost
 from mimi.harness.inbound import Directory, Inbound, Payload
-from mimi.harness.loop import Harness, Helper, LoopState
+from mimi.harness.loop import Harness, Helper, LoopState, business_key
 from mimi.harness.policy import GoPolicy, RiskPolicy
 from mimi.harness.router import RouteDecision, Router, ThreadState, lead_of
+from mimi.harness.tracing import trace_route, trace_run
 from mimi.harness.types import RunEvent
 from mimi.models.base import ChatModel
+from mimi.observe.langfuse_export import exporter_from_env
 from mimi.store import schema as s
 from mimi.store.book import SqlGo, moves_money
 from mimi.store.context_stores import (
@@ -76,7 +80,53 @@ MESSAGE_INTENTS: dict[str, tuple[str, str]] = {
     "send_reminder": ("shop_whatsapp", "text"),
     "notify_rep": ("rep_whatsapp", "message"),
     "notify_owner": ("owner_console", "message"),
+    # The helpers' own asks and notices, text written by code (RAI-272).
+    "ask_for_shelf_photo": ("shop_whatsapp", "text"),
+    "ask_stock_count": ("shop_whatsapp", "text"),
+    "send_delivery_receipt": ("shop_whatsapp", "text"),
+    "ask_receipt_again": ("shop_whatsapp", "text"),
+    "flag_delivery_to_owner": ("owner_console", "message"),
 }
+
+# Approve-tier intents whose shop reply does not depend on the owner's answer
+# ("sent to the distributor to confirm"): Go sends it at once, so a turn that
+# parks for approval still answers the shop (RAI-272, found by the e2e run).
+NOTICE_INTENTS: dict[str, tuple[str, str]] = {
+    "flag_payment_proof": ("shop_whatsapp", "shop_notice"),
+    "draft_restock": ("shop_whatsapp", "shop_notice"),
+}
+
+# A write that asks the shop something leaves the thread waiting on that
+# skill, so the answer (a photo, a tap, a YES) routes back by rule.
+AWAITS: dict[str, tuple[str, str]] = {
+    "ask_for_shelf_photo": ("credit/credit-request", "photo"),
+    "ask_stock_count": ("stock/stock-count", "taps"),
+    "send_delivery_receipt": ("order/drop-confirmation", "yes_no"),
+    "ask_receipt_again": ("order/drop-confirmation", "any"),
+}
+# What an ask is about, read from its payload (kept as the thread's ask_ref).
+ASK_REF_FIELDS: tuple[str, ...] = ("delivery_id", "sku")
+# Intents that settle a delivery receipt (nothing more to bind or flag).
+RECEIPT_SETTLED: tuple[str, ...] = ("record_delivery_consent", "flag_delivery_to_owner")
+# What answers each kind of ask. A turn of the asking helper that proposes none
+# of these (and asks nothing new) leaves the ask open, until it expires.
+SETTLES: dict[str, tuple[str, ...]] = {
+    "order/drop-confirmation": RECEIPT_SETTLED,
+    "stock/stock-count": ("record_stock_count",),
+    "credit/credit-request": ("submit_credit_review",),
+}
+
+
+def media_pointer(inbound: Inbound) -> str:
+    """What the model sees for an image: its id, never its pixels."""
+    m = inbound.payload.media
+    if m.kind != "image" or not m.sha256:
+        return ""
+    from mimi.harness.router import media_shape
+
+    what = {"photo": "shelf photo", "screenshot": "payment screenshot"}.get(
+        "photo" if m.camera_exif else media_shape(m), "image")
+    return f"[{what} ph_{m.sha256[:12]}]"
 
 
 class NotFound(LookupError):
@@ -123,6 +173,16 @@ def thread_kind(tenant_id: str, thread_id: str) -> tuple[str, str]:
     return "other", ""
 
 
+def _settles(pending: str, routed: str, proposed: set[str], flagged: bool) -> bool:
+    """Whether this turn answered the thread's open ask."""
+    if flagged:
+        return True
+    if routed != pending:
+        return False
+    keys = SETTLES.get(pending)
+    return True if keys is None else bool(proposed & set(keys))
+
+
 def _state_to_json(ts: ThreadState) -> dict[str, Any]:
     return asdict(ts)
 
@@ -165,18 +225,24 @@ class Agent:
         models: Sequence[ToolModel],
         router_model: ChatModel | None = None,
         helpers: Mapping[str, Helper] | None = None,
+        deps: HelperDeps | None = None,
         policy: RiskPolicy | None = None,
         lease_s: float = 30.0,
         worker_id: str = "",
         clock: Any = None,
+        exporter: Any = None,
     ) -> None:
         from mimi.api.helpers import build_helpers
 
         self.engine = engine
         self.go = SqlGo(engine)
         self.policy = policy or GoPolicy()
-        self.helpers: dict[str, Helper] = dict(helpers or build_helpers(self.policy))
-        self.router = Router(model=router_model, fast=fastclass.model(), price=kobo_cost)
+        self.helpers: dict[str, Helper] = dict(helpers or build_helpers(
+            self.policy, go=self.go, deps=deps))
+        # A pending ask binds the shop's next reply to the helper that asked
+        # (``mimi.harness.binding``); the router model only classifies it.
+        self.router = Router(model=router_model, fast=fastclass.model(), price=kobo_cost,
+                             binder=AnswerBinder(model=router_model))
         self.clock = clock or (lambda: datetime.now(UTC))
         self.artifacts = SqlArtifactStore(engine)
         self.harness = Harness(book=self.go, control=self.go, events=self.go,
@@ -188,14 +254,19 @@ class Agent:
         self.lease_s = lease_s
         self.queue = TurnQueue(engine, lease_s=lease_s)
         self.worker_id = worker_id or f"{socket.gethostname()}:{os.getpid()}:{uuid.uuid4().hex[:6]}"
+        # One Langfuse trace per completed run (off without keys and in CI).
+        self.exporter = exporter if exporter is not None else exporter_from_env()
         self.model_mode = "offline" if all(getattr(m, "name", "") == "offline"
                                            for m in models) else "live"
 
     @classmethod
     def from_env(cls, engine: Engine, *, env: Mapping[str, str] | None = None,
                  lease_s: float = 30.0) -> Agent:
+        from mimi.api.helpers import deps_from_env
+
         e = env if env is not None else os.environ
         key = e.get("META_API_KEY", "").strip()
+        deps = deps_from_env(e)
         if key:
             from mimi.harness.gateway import OpenAIToolModel
             from mimi.models.env import from_env
@@ -205,10 +276,11 @@ class Agent:
                 base_url=e.get("META_API_BASE", "").strip() or "https://api.meta.ai/v1",
                 timeout_s=float(e.get("META_TIMEOUT_S", "30") or 30))
             return cls(engine, models=[tool], router_model=from_env("mimi", env=e),
-                       lease_s=lease_s)
+                       deps=deps, lease_s=lease_s)
         from mimi.api.offline import OfflineModel
 
-        return cls(engine, models=[OfflineModel()], router_model=None, lease_s=lease_s)
+        return cls(engine, models=[OfflineModel()], router_model=None, deps=deps,
+                   lease_s=lease_s)
 
     # ================================================================ intake
 
@@ -415,7 +487,8 @@ class Agent:
         if lead.source in ("shop_message", "rep_message"):
             shop_id = directory.shop_for(lead.payload.from_phone)
         shop_id = shop_id or lead.payload.shop_id
-        text = "\n".join(e.text for e in events if e.text)
+        text = "\n".join(" ".join(x for x in (media_pointer(e), e.text) if x)
+                         for e in events if e.text or media_pointer(e))
         sender = {"owner_message": "owner", "shop_message": "shop",
                   "rep_message": "rep"}.get(lead.source, "system")
         if sender == "owner" and not directory.is_owner(lead):
@@ -479,6 +552,7 @@ class Agent:
                                "toolset_hash": r.toolset_hash,
                                "context_manifest": r.context.get("context_manifest", {})})
                 if apply and r.status != "failed":
+                    noticed: set[str] = set()
                     for rec in r.intents:
                         if rec.tool in ("send_to_user", "ask_question"):
                             continue  # recorded below with their draft
@@ -494,8 +568,18 @@ class Agent:
                                       kind=rec.tool,
                                       status="ready" if outcome == "applied"
                                       else "pending_approval", ts=now)
+                        note = NOTICE_INTENTS.get(rec.tool)
+                        notice = str(rec.payload.get(note[1], "")) if note else ""
+                        if note and notice and outcome in ("applied", "queued_for_approval"):
+                            self._out(conn, tenant, thread, turn_id,
+                                      key=f"{rec.idempotency_key}:notice", channel=note[0],
+                                      shop_id=rec.shop_id, text=notice, kind=f"{rec.tool}_notice",
+                                      status="ready", ts=now)
+                            noticed.add(" ".join(notice.split()))
                     by_key = {i.idempotency_key: i for i in r.intents}
                     for n, dr in enumerate(r.outbound_drafts):
+                        if dr.channel == "shop_whatsapp" and " ".join(dr.body.split()) in noticed:
+                            continue  # the notice above already says it, once
                         drec = by_key.get(dr.idempotency_key)
                         outcome, _ = (self.go.apply_intent(
                             conn, tenant, drec.model_dump(mode="json"), turn_id=turn_id,
@@ -511,11 +595,39 @@ class Agent:
                 if event is not None:
                     append_history(conn, tenant, thread, turn_id,
                                    state.messages[state.prefix_len + state.history_len:])
+                asked_at = lead.received_at.isoformat()
                 if r.status == "asked_question" and sender == "shop":
-                    next_state = ThreadState(pending_skill=d.skill, last_skill=d.skill)
+                    next_state = ThreadState(pending_skill=d.skill, last_skill=d.skill,
+                                             asked_at=asked_at)
+                if apply and r.status != "failed":
+                    for rec in r.intents:
+                        if rec.tool in AWAITS:
+                            skill_key, expects = AWAITS[rec.tool]
+                            ref = next((str(rec.payload[f]) for f in ASK_REF_FIELDS
+                                        if rec.payload.get(f)), "")
+                            next_state = ThreadState(pending_skill=skill_key,
+                                                     expects=expects,  # type: ignore[arg-type]
+                                                     last_skill=d.skill, asked_at=asked_at,
+                                                     ask_ref=ref)
+                    if d.skill == "mimi/escalate-owner" and sender == "shop":
+                        flagged = self._flag_escalated_delivery(
+                            conn, tenant, thread, turn_id, prior, events, d, r.intents)
+                        if flagged:
+                            result["delivery_flagged"] = flagged
             elif state is not None:
                 run_id = state.run_id
                 result["run_status"] = status
+            # An open ask the turn did not answer stays open (until it expires):
+            # an unrelated question in between must not drop the shop's receipt.
+            proposed = {i.tool for i in state.finished.intents} if (
+                state is not None and state.finished is not None) else set()
+            if (prior.pending_skill and not next_state.pending_skill
+                    and not _settles(prior.pending_skill, d.skill, proposed,
+                                     bool(result.get("delivery_flagged")))
+                    and ask_is_live(prior.pending_skill, prior.asked_at, lead.received_at)):
+                next_state = replace(next_state, pending_skill=prior.pending_skill,
+                                     expects=prior.expects, asked_at=prior.asked_at,
+                                     ask_ref=prior.ask_ref)
             conn.execute(s.threads.update().where(
                 s.threads.c.tenant_id == tenant, s.threads.c.thread_id == thread)
                 .values(state=dumps(_state_to_json(next_state)), last_at=now_iso(now),
@@ -531,6 +643,67 @@ class Agent:
                         .values(envelope=scrubbed.model_dump_json()))
             self.queue.finish_in(conn, claim, status=status, helper=d.helper, skill=d.skill,
                                  run_id=run_id, result=result)
+        # After the commit: a turn that lost its lease above never gets here,
+        # so each run is traced once (tracing never raises).
+        trace_route(d, self.exporter)
+        if state is not None and state.finished is not None:
+            trace_run(state.finished, self.exporter,
+                      shop_id=thread_kind(tenant, thread)[1] or "owner")
+
+    def _flag_escalated_delivery(self, conn: sa.Connection, tenant: str, thread: str,
+                                 turn_id: str, prior: ThreadState, events: Sequence[Inbound],
+                                 d: RouteDecision, intents: Sequence[Any]) -> str:
+        """Belt and braces: escalate-owner fired on a shop message tied to a
+        delivery (its receipt ask was open, or the shop named the delivery), so
+        the flag is also recorded on that delivery, written by code.
+
+        Only a ``flag_delivery_to_owner`` intent (notify tier, the same
+        business key Order's own flag has, so it is never recorded twice);
+        never consent, never a money move. Returns the delivery id flagged.
+        """
+        kind, shop_id = thread_kind(tenant, thread)
+        if kind != "shop" or not shop_id:
+            return ""
+        if any(getattr(i, "tool", "") == "flag_delivery_to_owner" for i in intents):
+            return ""
+        lead = lead_of(events)
+        words = " / ".join(e.text for e in events if e.text)[:600]
+        cands: list[str] = []
+        if (prior.pending_skill == "order/drop-confirmation" and prior.ask_ref
+                and ask_is_live(prior.pending_skill, prior.asked_at, lead.received_at)):
+            cands.append(prior.ask_ref)
+        cands += [x for x in delivery_ids_in(words) if x not in cands]
+        for dlv in cands:
+            known = conn.execute(sa.select(s.deliveries.c.delivery_id).where(
+                s.deliveries.c.tenant_id == tenant, s.deliveries.c.shop_id == shop_id,
+                s.deliveries.c.delivery_id == dlv)).first()
+            if known is None:
+                continue
+            done = [loads(r.payload, {}).get("delivery_id") for r in conn.execute(
+                sa.select(s.intents.c.payload).where(
+                    s.intents.c.tenant_id == tenant, s.intents.c.shop_id == shop_id,
+                    s.intents.c.tool.in_(RECEIPT_SETTLED),
+                    s.intents.c.outcome != "refused"))]
+            if dlv in done:
+                continue
+            payload = {"shop_id": shop_id, "delivery_id": dlv, "reason": "escalated",
+                       "shop_words": words, "disputed": [],
+                       "message": (f"{shop_id} about delivery {dlv}: sent to the owner as a "
+                                   f"complaint while the receipt was open. The shop said: "
+                                   f"\"{words}\"")}
+            record = {
+                "tool": "flag_delivery_to_owner", "intent_kind": "flag_delivery_to_owner",
+                "tier": "notify", "scope": "shop:invoices", "tenant_id": tenant,
+                "shop_id": shop_id,
+                "idempotency_key": business_key(tenant, "flag_delivery_to_owner",
+                                                {"shop_id": shop_id, "delivery_id": dlv}),
+                "attempt_key": f"esc:{turn_id}:{dlv}", "payload": payload,
+                "preview": f"Would tell the owner about {dlv} (escalated)"}
+            outcome, _ = self.go.apply_intent(conn, tenant, record, turn_id=turn_id,
+                                              thread_id=thread, helper=d.helper, skill=d.skill)
+            if outcome == "applied":
+                return dlv
+        return ""
 
     @staticmethod
     def _shop_of(*, directory: Directory | None, tenant: str, thread: str) -> str:
@@ -592,9 +765,13 @@ class Agent:
             inbound = Inbound(
                 source="approval_answered", org_id=tenant_id,
                 external_id=f"approval:{approval_id}",
-                received_at=datetime.fromtimestamp(now, UTC), thread_id=a.thread_id,
+                received_at=self.clock(), thread_id=a.thread_id,
                 payload=Payload(name=approval_id, for_helper=a.helper, for_skill=a.skill,
-                                shop_id=a.shop_id, answer=decision))
+                                shop_id=a.shop_id, answer=decision,
+                                # Written by code, so the woken helper knows what
+                                # was decided (no figures, no shop text).
+                                text=f"The owner {decision} approvals item {approval_id} "
+                                     f"({a.tool} for {a.shop_id or 'the distributor'})."))
             follow = self.submit(tenant_id, inbound)
         return row, follow
 
