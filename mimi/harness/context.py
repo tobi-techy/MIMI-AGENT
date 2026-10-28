@@ -469,6 +469,11 @@ class ContextBuilder:
             # Pinned for another shop (or before prefixes carried a shop):
             # the prefix is keyed by the shop too, so this run gets its own.
             prefix = None
+        if (prefix is not None and helper.skill_version.startswith("skill:")
+                and helper.skill_version != prefix.skill_version):
+            # Skills mode (RAI-314): the prefix carries one routed skill's
+            # body, so a run routed to another skill on this thread re-pins.
+            prefix = None
         if prefix is None:
             prefix = self._new_prefix(event, helper, shop_id, man)
             self.prefixes.put(prefix)
