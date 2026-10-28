@@ -9,6 +9,9 @@ below need the HTTP agent, which the harness may not import.
 from __future__ import annotations
 
 import dataclasses
+import os
+import subprocess
+from pathlib import Path
 from typing import Any
 
 import pytest
@@ -113,3 +116,77 @@ def test_a_shops_own_thread_keeps_its_prefix_when_an_event_names_no_shop() -> No
                               shop_id="", at=at), helper, "collector/collections")
     assert second.manifest.prefix_reused
     assert second.prefix.prefix_hash == first.prefix.prefix_hash
+
+
+# ---------------------------------------------------- Medium: production config
+# Each of these started on main before its fix (SQLite with the escape variable,
+# the Makefile's demo keys, and `make api` filling both in under MIMI_ENV=production).
+
+DEMO_KEYS = "coral-lane:owner:local-owner-key-0001,coral-lane:channel:local-channel-key-001"
+ROOT = Path(__file__).resolve().parents[1]
+
+
+@pytest.fixture
+def prod_env(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("MIMI_PHONE_PSEUDONYM_KEY", "poc-" + "p" * 32)
+
+
+def test_poc_production_refuses_sqlite_even_with_the_old_escape(
+        prod_env: None, monkeypatch: pytest.MonkeyPatch) -> None:
+    from mimi.api.config import ConfigError, Settings, parse_keys
+
+    monkeypatch.setenv("MIMI_ALLOW_SQLITE_IN_PRODUCTION", "1")
+    with pytest.raises(ConfigError, match="SQLite"):
+        Settings(env="production", keys=parse_keys("coral-lane:owner:" + "k" * 32),
+                 has_model_key=True, database_url="sqlite:///./mimi.db").check()
+
+
+@pytest.mark.parametrize("keys", [DEMO_KEYS, "coral-lane:owner:local-owner-key-0001",
+                                  "coral-lane:channel:local-channel-key-001"])
+def test_poc_production_refuses_the_demo_keys(prod_env: None, keys: str) -> None:
+    from mimi.api.config import ConfigError, Settings, parse_keys
+
+    with pytest.raises(ConfigError, match="demo key"):
+        Settings(env="production", keys=parse_keys(keys), has_model_key=True,
+                 database_url="postgresql://poc/db").check()
+
+
+def test_production_with_real_settings_still_starts(prod_env: None) -> None:
+    from mimi.api.config import Settings, parse_keys
+
+    Settings(env="production", keys=parse_keys("coral-lane:owner:" + "k" * 32),
+             has_model_key=True, database_url="postgresql://poc/db").check()
+
+
+def _makefile_api_env() -> str:
+    """The Makefile's ``API_ENV`` recipe prefix as the shell sees it (no make needed)."""
+    lines = (ROOT / "Makefile").read_text().splitlines()
+    n = next(i for i, line in enumerate(lines) if line.startswith("API_ENV ="))
+    body = [lines[n].split("=", 1)[1]]
+    while lines[n].rstrip().endswith("\\"):
+        n += 1
+        body.append(lines[n])
+    return " ".join(b.rstrip().rstrip("\\").strip() for b in body).replace("$$", "$")
+
+
+def _run_api_env(**env: str) -> subprocess.CompletedProcess[str]:
+    base = {k: v for k, v in os.environ.items()
+            if k not in ("DATABASE_URL", "MIMI_DB_URL", "MIMI_API_KEYS", "MIMI_ENV")}
+    script = _makefile_api_env() + ' echo "db=$DATABASE_URL keys=$MIMI_API_KEYS"'
+    return subprocess.run(["sh", "-c", script], env={**base, **env}, capture_output=True,
+                          text=True, timeout=30)
+
+
+def test_poc_make_api_fills_no_defaults_in_production() -> None:
+    proc = _run_api_env(MIMI_ENV="production")
+    out = proc.stdout + proc.stderr
+    assert proc.returncode != 0, out
+    assert "local-owner-key" not in out and "db=sqlite" not in out
+
+
+def test_make_api_keeps_local_defaults_in_dev_and_passes_prod_settings() -> None:
+    dev = _run_api_env()
+    assert dev.returncode == 0 and "db=sqlite" in dev.stdout and "local-owner-key" in dev.stdout
+    prod = _run_api_env(MIMI_ENV="production", DATABASE_URL="postgresql://poc/db",
+                        MIMI_API_KEYS="coral-lane:owner:" + "k" * 32)  # pragma: allowlist secret
+    assert prod.returncode == 0 and "db=postgresql://poc/db" in prod.stdout

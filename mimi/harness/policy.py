@@ -113,6 +113,20 @@ ALWAYS_APPROVE: frozenset[str] = frozenset({"submit_credit_review", "flag_paymen
                                             "submit_order", "revise_order"})
 
 
+def go_allows(tool: str, kind: str = "", tiers: Mapping[str, Tier] | None = None) -> bool:
+    """Go's own last line, whatever tier a record arrives with: the tool must be on
+    the policy allowlist (a row in ``tiers``, ``BASE_TIERS`` by default), must not be
+    a ``never`` tool, and neither its name nor its kind may carry a money word."""
+    from mimi.runtime.outbox import MONEY_VERBS
+
+    table = BASE_TIERS if tiers is None else tiers
+    name = tool or kind
+    if not name or name in NEVER_TOOLS or table.get(name, "never") == "never":
+        return False
+    low = f"{tool} {kind}".lower()
+    return not any(v in low for v in MONEY_VERBS)
+
+
 class RiskPolicy(Protocol):
     def base_tier(self, tool: str) -> Tier: ...
 

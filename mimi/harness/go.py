@@ -25,7 +25,8 @@ from dataclasses import dataclass, field
 from datetime import date
 from typing import Any, Protocol
 
-from mimi.harness.types import Event, IntentRecord
+from mimi.harness.policy import go_allows
+from mimi.harness.types import Event, IntentRecord, Tier
 from mimi.world.catalogue import COLLECTION_ACCOUNT
 from mimi.world.model import World
 
@@ -131,6 +132,8 @@ class FakeGo:
     killed_helpers: set[tuple[str, str]] = field(default_factory=set)
     killed_tenants: set[str] = field(default_factory=set)
     down: set[tuple[str, str]] = field(default_factory=set)
+    # Go's policy allowlist (tool -> tier). None is the production table.
+    policy_tiers: dict[str, Tier] | None = None
     # Book state that only the gate writes.
     book_writes: int = 0
     reads: int = 0
@@ -316,7 +319,8 @@ class FakeGo:
                 self.shadowed.append(record)
                 self.accepted[business] = GateDecision(business, kind, tier, "shadowed")
                 return business
-            if tier == "never":
+            tool = str(record.get("tool") or "")
+            if tier == "never" or not go_allows(tool, kind, self.policy_tiers):
                 outcome = "refused"
             elif tier == "approve":
                 outcome = "queued_for_approval"

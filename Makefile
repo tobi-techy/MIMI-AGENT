@@ -174,7 +174,12 @@ sim-credit:         ## offline credit-bump scene: ask, shelf photo, SAM 3.1 coun
 
 # --- Agent HTTP API and durable store (RAI-266) ---
 # Local demo keys only; set MIMI_API_KEYS (and META_API_KEY for real Muse Spark) yourself.
-API_ENV = DATABASE_URL=$${DATABASE_URL:-sqlite:///./mimi.db}; export DATABASE_URL; \
+# With MIMI_ENV=production nothing is filled in: DATABASE_URL and MIMI_API_KEYS must be set.
+API_ENV = case "$${MIMI_ENV:-dev}" in prod|production|PROD|PRODUCTION|Production) \
+	if [ -z "$${DATABASE_URL:-$${MIMI_DB_URL:-}}" ] || [ -z "$${MIMI_API_KEYS:-}" ]; then \
+	echo "MIMI_ENV=production: set DATABASE_URL and MIMI_API_KEYS (no SQLite or demo key defaults)" >&2; \
+	exit 1; fi;; esac; \
+	DATABASE_URL=$${DATABASE_URL:-sqlite:///./mimi.db}; export DATABASE_URL; \
 	MIMI_API_KEYS=$${MIMI_API_KEYS:-coral-lane:owner:local-owner-key-0001,coral-lane:channel:local-channel-key-001}; \
 	export MIMI_API_KEYS;
 

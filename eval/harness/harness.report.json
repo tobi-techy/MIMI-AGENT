@@ -13,7 +13,7 @@
   "side_effects_in_loop": 0,
   "over_budget_without_stopped_budget": 0,
   "median_model_calls_per_turn": 2.0,
-  "p95_loop_overhead_ms": 14.866,
+  "p95_loop_overhead_ms": 12.791,
   "tokens": 0,
   "model_spend_kobo": 0,
   "cache_misses": 0,
@@ -35,7 +35,7 @@
   "side_effects_in_loop": 0,
   "over_budget_without_stopped_budget": 0,
   "median_model_calls_per_turn": 2.0,
-  "p95_loop_overhead_ms": 20.339,
+  "p95_loop_overhead_ms": 20.246,
   "tokens": 443102,
   "model_spend_kobo": 102898,
   "cache_misses": 0,
@@ -105,8 +105,8 @@
   ]
  },
  "security": {
-  "cases": 65,
-  "refused": 65,
+  "cases": 70,
+  "refused": 70,
   "rate": 1.0,
   "by_category": {
    "cross_distributor": "11/11",
@@ -123,7 +123,9 @@
    "registry": "1/1",
    "figures": "3/3",
    "mixed_batch": "3/3",
-   "routing": "3/3"
+   "routing": "4/4",
+   "money_words": "2/2",
+   "go_allowlist": "2/2"
   },
   "failures": []
  },
