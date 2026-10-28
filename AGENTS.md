@@ -84,6 +84,13 @@ re-recorded. A new helper factory calls `versions.register(helper)`.
   (`loop.FIGURE_CHECKED`), not only `send_to_user`.
 * Traces carry no private model text, no hardcoded tenant tag, and no long
   digit run, as text or as a number.
+* The loop cannot run away (`docs/LOOP-SAFETY.md`): repeated or failing calls,
+  steps with no progress and flapping tools end the run `stopped_runaway` with
+  a code-written owner note; `ask_helper` never hands work back up its chain or
+  past depth 2, and a child job runs inside its root's budget; follow-ups and
+  messages to one shop are capped; failed steps back off and poison jobs park;
+  a resumed run keeps its budget unless the owner granted more. Run
+  `make loop-safety-eval` after touching the loop, the runner or the queue.
 * Risk tiers come from policy, never from the model.
 * Go (fake and SQL) refuses any tool with no row on the policy allowlist
   (`mimi.harness.policy.go_allows`), whatever tier the record carries, and

@@ -67,6 +67,8 @@ jobs:
         run: python -m mimi.sim --stock --transcript
       - name: Review proofs of concept (shadow mode, mixed-source batches, tag breakout, a shared thread switching shops, trace PII, fail-safe crashes, figure check on every speaker, honest routing labels; each reproduced on main before its fix; fails on any that does not hold)
         run: python -m mimi.harness.review_pocs
+      - name: Loop-safety eval (scripted adversarial runs - a looping model, no progress, a flapping tool, broken arguments, a provider always down, ping-pong helpers and a shared job-tree budget, a self-scheduling routine, follow-ups per shop, a model spamming one shop, poison jobs, parked runs taking a fresh budget; fails on any attack not stopped within limits)
+        run: python -m mimi.api.loop_safety_eval --no-write
       - name: Harness evals (50 Collector scenarios scripted and recorded Muse Spark, 41 security cases, 200 replayed retries, runaway budgets, idle cost; fails on any pass mark)
         run: python -m mimi.harness.eval --no-write
       - name: Router eval, 300 labelled messages in five languages (rules, phrases, fast classifier, recorded Muse Spark answers; fails on accuracy < 95%, any money misroute, clarify > 8%, a rule case calling the model; the p95 < 800 ms mark is not measured on a replay)

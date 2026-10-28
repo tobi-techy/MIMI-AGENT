@@ -81,8 +81,10 @@ def harness_steps(harness: Harness, helpers: Mapping[str, Helper]) -> dict[str, 
                     # The job parked (a question, an approval, a budget, a
                     # timer) and something woke it: carry on the same run.
                     status = state.finished.status
-                    state = harness.reopen(state)
-                    if not ctx.new_owner_messages:
+                    # A loop-guard or budget stop reopens only on the owner's
+                    # say-so this boundary (docs/LOOP-SAFETY.md, item 6).
+                    state = harness.reopen(state, grant=helper.budget if ctx.granted else None)
+                    if state.finished is None and not ctx.new_owner_messages:
                         state.messages.append({"role": "user", "content": (
                             f"[Mimi harness] Woke again ({ctx.wake_source}) after "
                             f"{status}. Check what changed before acting.")})
@@ -93,7 +95,8 @@ def harness_steps(harness: Harness, helpers: Mapping[str, Helper]) -> dict[str, 
                              thread_id=ctx.thread_id or ctx.job_id,
                              wake_source=wake,  # type: ignore[arg-type]
                              text=ctx.goal, sender="owner", at=ctx.now, job_id=ctx.job_id),
-                    helper, plan=ctx.plan, todo=ctx.todo, note=ctx.working_note)
+                    helper, plan=ctx.plan, todo=ctx.todo, note=ctx.working_note,
+                    lineage=ctx.lineage)
             res = harness.step(state, helper, owner_messages=ctx.new_owner_messages,
                                enforce_run_budget=False)
             keys = {i.idempotency_key for i in res.new_intents}
@@ -114,7 +117,8 @@ def harness_steps(harness: Harness, helpers: Mapping[str, Helper]) -> dict[str, 
                                    **common)
             if result.status == "parked_for_timer" and result.follow_up_at is not None:
                 return StepOutcome(kind="sleep", sleep_until=result.follow_up_at, **common)
-            if result.status in ("parked_for_approval", "asked_question", "stopped_budget"):
+            if result.status in ("parked_for_approval", "asked_question", "stopped_budget",
+                                 "stopped_runaway"):
                 return StepOutcome(kind="ask_owner",
                                    question=result.owner_question or result.reason, **common)
             return StepOutcome(kind="blocked", question=f"{result.status}: {result.reason}",

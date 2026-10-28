@@ -1,0 +1,161 @@
+{
+ "generated_by": "python -m mimi.api.loop_safety_eval",
+ "cases": [
+  {
+   "case": "looping_model",
+   "group": "looping model",
+   "ok": true,
+   "detail": {
+    "status": "stopped_runaway",
+    "steps": 4,
+    "kobo": 400
+   }
+  },
+  {
+   "case": "same_failing_call",
+   "group": "looping model",
+   "ok": true,
+   "detail": {
+    "status": "stopped_runaway",
+    "steps": 3
+   }
+  },
+  {
+   "case": "no_progress",
+   "group": "looping model",
+   "ok": true,
+   "detail": {
+    "status": "stopped_runaway",
+    "steps": 6
+   }
+  },
+  {
+   "case": "broken_arguments",
+   "group": "retries",
+   "ok": true,
+   "detail": {
+    "status": "failed",
+    "model_calls": 2
+   }
+  },
+  {
+   "case": "provider_always_down",
+   "group": "retries",
+   "ok": true,
+   "detail": {
+    "status": "failed",
+    "calls": 1
+   }
+  },
+  {
+   "case": "flapping_tool",
+   "group": "flapping tool",
+   "ok": true,
+   "detail": {
+    "status": "stopped_runaway",
+    "steps": 6,
+    "reason": "loop guard: no_progress"
+   }
+  },
+  {
+   "case": "ping_pong_harness",
+   "group": "ping-pong helpers",
+   "ok": true,
+   "detail": {
+    "back_up_chain": true,
+    "too_deep": true
+   }
+  },
+  {
+   "case": "ping_pong_runtime",
+   "group": "ping-pong helpers",
+   "ok": true,
+   "detail": {
+    "cycle_and_depth_refused": [
+     true,
+     true
+    ],
+    "child_budget_kobo": 400,
+    "tree_spend_kobo": 1200,
+    "child_state": "waiting_on_owner"
+   }
+  },
+  {
+   "case": "self_scheduling_routine",
+   "group": "self-scheduling routine",
+   "ok": true,
+   "detail": {
+    "runs": 49,
+    "instant_rewakes": 0,
+    "state": "waiting_on_owner"
+   }
+  },
+  {
+   "case": "followups_capped",
+   "group": "self-scheduling routine",
+   "ok": true,
+   "detail": {
+    "followups_set": 3
+   }
+  },
+  {
+   "case": "spam_one_shop",
+   "group": "self-scheduling routine",
+   "ok": true,
+   "detail": {
+    "per_run": [
+     3,
+     3,
+     0,
+     0
+    ],
+    "total": 6
+   }
+  },
+  {
+   "case": "poison_runtime",
+   "group": "poison job",
+   "ok": true,
+   "detail": {
+    "failures": 6,
+    "backoff_s": [
+     0.2,
+     0.4,
+     0.2,
+     0.4
+    ],
+    "takeover_job": "blocked"
+   }
+  },
+  {
+   "case": "poison_turn_queue",
+   "group": "poison job",
+   "ok": true,
+   "detail": {
+    "claims": 6,
+    "status": "poisoned",
+    "owner_notes": 1
+   }
+  },
+  {
+   "case": "no_fresh_budget",
+   "group": "parked runs",
+   "ok": true,
+   "detail": {
+    "no_grant": true,
+    "granted_one_step": true,
+    "runaway_stays_stopped": true
+   }
+  }
+ ],
+ "pass_marks": {
+  "looping model: all stopped within limits": true,
+  "retries: all stopped within limits": true,
+  "flapping tool: all stopped within limits": true,
+  "ping-pong helpers: all stopped within limits": true,
+  "self-scheduling routine: all stopped within limits": true,
+  "poison job: all stopped within limits": true,
+  "parked runs: all stopped within limits": true
+ },
+ "passed": true
+}

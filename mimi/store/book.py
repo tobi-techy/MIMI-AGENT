@@ -450,6 +450,25 @@ class SqlGo:
                     s.spend.c.tenant_id == tenant_id, s.spend.c.day == day.isoformat())
                     .values(kobo=s.spend.c.kobo + int(kobo)))
 
+    def recent_count(self, tenant_id: str, kind: str, shop_id: str, window_s: float) -> int:
+        """Loop guards (``mimi.harness.guards``): messages Mimi wrote to this
+        shop, or follow-ups set for it, in the last ``window_s`` seconds."""
+        since = time.time() - window_s
+        with self.engine.connect() as conn:
+            if kind == "shop_messages":
+                q = sa.select(sa.func.count()).select_from(s.messages).where(
+                    s.messages.c.tenant_id == tenant_id, s.messages.c.direction == "out",
+                    s.messages.c.channel == "shop_whatsapp", s.messages.c.shop_id == shop_id,
+                    s.messages.c.ts >= since)
+            elif kind == "followups":
+                q = sa.select(sa.func.count()).select_from(s.intents).where(
+                    s.intents.c.tenant_id == tenant_id, s.intents.c.tool == "set_followup",
+                    s.intents.c.shop_id == shop_id, s.intents.c.outcome == "applied",
+                    s.intents.c.created_at >= now_iso(since))
+            else:
+                return 0
+            return int(conn.execute(q).scalar() or 0)
+
     def ask_owner_once(self, tenant_id: str, topic: str, day: date) -> bool:
         with self.engine.begin() as conn:
             return insert_ignore(conn, s.asked_once, {"tenant_id": tenant_id, "topic": topic,

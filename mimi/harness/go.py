@@ -334,6 +334,24 @@ class FakeGo:
             self.accepted[business] = GateDecision(business, kind, tier, outcome)
             return business
 
+    def recent_count(self, tenant_id: str, kind: str, shop_id: str, window_s: float) -> int:
+        """Loop guards (``mimi.harness.guards``): shop messages or follow-ups
+        Go applied for this shop. The fake world is one synthetic day, so the
+        window is the whole of it."""
+        self._tenant(tenant_id)
+        from mimi.harness.guards import intent_to_shop
+
+        with self._lock:
+            rows = list(self.applied) + list(self.approvals)
+        if kind == "shop_messages":
+            return sum(1 for r in rows
+                       if intent_to_shop(str(r.get("tool", "")), dict(r.get("payload") or {}))
+                       == shop_id)
+        if kind == "followups":
+            return sum(1 for r in rows if r.get("tool") == "set_followup"
+                       and str((r.get("payload") or {}).get("shop_id") or "") == shop_id)
+        return 0
+
     def submit_record(self, rec: IntentRecord, attempt_key: str = "") -> str:
         """Submit an ``IntentRecord`` directly (tests and the eval)."""
         return self.submit(rec.tenant_id, attempt_key or rec.attempt_key, rec.intent_kind,

@@ -107,6 +107,13 @@ class SqlJobStore:
         )
         return result.rowcount == 1
 
+    def tree(self, root_job_id: str) -> list[Job]:
+        """Every job of one job tree: the root and every job under it."""
+        with self.engine.connect() as conn:
+            rows = conn.execute(sa.select(jobs.c.body)).scalars()
+            out = [Job.from_dict(json.loads(b)) for b in rows]
+        return [j for j in out if j.job_id == root_job_id or j.root_job_id == root_job_id]
+
     def claim(self, worker_id: str, now: datetime, lease_s: float) -> Job | None:
         with self.engine.begin() as conn:
             rows = conn.execute(
@@ -124,6 +131,9 @@ class SqlJobStore:
         candidates.sort(key=lambda j: (j.job_id not in waiting, j.job_id))
         for job in candidates:
             expected = job.version
+            if job.state is JobState.WORKING:
+                # A lapsed lease: the last holder died mid-step.
+                job.takeovers += 1
             job.move(JobState.WORKING)
             job.lease_owner = worker_id
             job.lease_expires_at = now + timedelta(seconds=lease_s)

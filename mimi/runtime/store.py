@@ -105,6 +105,9 @@ class InMemoryJobStore:
                 key=lambda j: (not self._has_unacked(j.job_id), j.job_id),
             )
             job = candidates[0]
+            if job.state is JobState.WORKING:
+                # A lapsed lease: the last holder died mid-step.
+                job.takeovers += 1
             job.move(JobState.WORKING)
             job.lease_owner = worker_id
             job.lease_expires_at = now + timedelta(seconds=lease_s)
@@ -141,6 +144,12 @@ class InMemoryJobStore:
             self._jobs[job.job_id] = stored
             self._acked.update(ack_message_ids)
             return stored.copy()
+
+    def tree(self, root_job_id: str) -> list[Job]:
+        """Every job of one job tree: the root and every job under it."""
+        with self._lock:
+            return [j.copy() for j in self._jobs.values()
+                    if j.job_id == root_job_id or j.root_job_id == root_job_id]
 
     def post_owner_message(self, job_id: str, message: OwnerMessage) -> None:
         with self._lock:

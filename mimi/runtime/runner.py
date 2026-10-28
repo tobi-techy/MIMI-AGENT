@@ -19,11 +19,14 @@ from __future__ import annotations
 
 import logging
 import threading
+import time
 from collections.abc import Callable
 from dataclasses import dataclass
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
+from zoneinfo import ZoneInfo
 
 from mimi.runtime.budgets import first_hit
+from mimi.runtime.delegation import root_of, tree_spend
 from mimi.runtime.job import Job, OwnerMessage, PendingOutbound
 from mimi.runtime.outbox import (
     ALLOWED_INTENT_TYPES,
@@ -42,6 +45,19 @@ log = logging.getLogger(__name__)
 STOP_WORDS = frozenset({"stop", "wait", "hold on", "pause", "cancel"})
 CONTINUE_WORDS = frozenset({"yes", "continue", "keep going", "go on", "ok", "okay"})
 MAX_CONSECUTIVE_FAILURES = 3
+# Loop safety (docs/LOOP-SAFETY.md). A job that failed this many steps over
+# its whole life, or whose worker died mid-step this many times, is a poison
+# job: parked BLOCKED for a person, never retried forever.
+MAX_TOTAL_FAILURES = 6
+MAX_TAKEOVERS = 3
+# Retries after a failed step wait 0.2 s, then 0.4 s (doubling, capped).
+BACKOFF_BASE_S = 0.2
+BACKOFF_MAX_S = 5.0
+# A job may wake itself (sleep) this many times per Lagos day (hourly checks
+# and burst waits fit), and never sooner than this after the step that asked.
+MAX_SELF_WAKES_PER_DAY = 48
+MIN_SLEEP_S = 30.0
+LAGOS = ZoneInfo("Africa/Lagos")
 
 
 def _norm(text: str) -> str:
@@ -72,6 +88,7 @@ class JobRunner:
         lease_s: float = 30.0,
         clock: Callable[[], datetime] = _utcnow,
         intent_types: tuple[type, ...] = ALLOWED_INTENT_TYPES,
+        sleep: Callable[[float], None] = time.sleep,
     ) -> None:
         self.store = store
         self.sink = sink
@@ -83,6 +100,7 @@ class JobRunner:
         # Build the list with ``outbox.intent_types``, which refuses money
         # verbs; the default is empty, so a runner accepts nothing undeclared.
         self.intent_types = intent_types
+        self.sleep = sleep
 
     # ------------------------------------------------------------------ API
 
@@ -133,6 +151,12 @@ class JobRunner:
             job = self._park(job, JobState.BLOCKED, f"no helper {job.helper!r}", ())
             return RunReport(job.job_id, job.state, 0)
 
+        poison = self._poison(job)
+        if poison:
+            job = self._park(job, JobState.BLOCKED, poison, ())
+            return RunReport(job.job_id, job.state, 0)
+
+        granted = False
         while job.state is JobState.WORKING:
             try:
                 job = self._flush(job)
@@ -157,10 +181,18 @@ class JobRunner:
                 job = self._park(job, JobState.WAITING_ON_OWNER, "owner said stop", ack)
                 break
 
+            said_continue = any(_norm(t) in CONTINUE_WORDS for t in texts)
             hit = first_hit(job.budget, job.spend)
-            if hit is not None and any(_norm(t) in CONTINUE_WORDS for t in texts):
+            if hit is not None and said_continue:
                 job.budget = job.budget.extended(job.budget_grant)
                 hit = first_hit(job.budget, job.spend)
+            if hit is None and job.root_job_id and job.root_job_id != job.job_id:
+                # A child job runs inside its root's budget (mimi.runtime.delegation).
+                root = self.store.get(root_of(job))
+                hit = first_hit(root.budget, tree_spend(self.store, root_of(job)))
+            granted = granted or said_continue
+            if said_continue:
+                job.self_wakes = {}  # the owner said keep going: the day's count starts over
             if hit is not None:
                 job.owner_messages.extend(texts)
                 job = self._park(
@@ -168,17 +200,36 @@ class JobRunner:
                 )
                 break
 
-            job = self._step(job, step_fn, texts, ack)
+            job = self._step(job, step_fn, texts, ack, granted=granted)
+            granted = False
             steps_run += 1
+            if job.state is JobState.WORKING and job.failures and job.after_flush is None:
+                # Back off before retrying a failed step; a poison job parks.
+                poison = self._poison(job)
+                if poison:
+                    job = self._park(job, JobState.BLOCKED, poison, ())
+                    break
+                self.sleep(min(BACKOFF_MAX_S, BACKOFF_BASE_S * 2 ** (job.failures - 1)))
 
         return RunReport(job.job_id, job.state, steps_run)
+
+    @staticmethod
+    def _poison(job: Job) -> str:
+        if job.total_failures >= MAX_TOTAL_FAILURES:
+            return (f"poison: {job.total_failures} failed steps over this job's life; "
+                    "parked for a person, not retried")
+        if job.takeovers >= MAX_TAKEOVERS:
+            return (f"poison: the worker stopped mid-step {job.takeovers} times; parked "
+                    "for a person, not retried")
+        return ""
 
     @staticmethod
     def _owner_says_stop(inbox: list[OwnerMessage]) -> bool:
         return any(_norm(m.text) in STOP_WORDS for m in inbox)
 
     def _step(
-        self, job: Job, step_fn: StepFn, texts: tuple[str, ...], ack: tuple[str, ...]
+        self, job: Job, step_fn: StepFn, texts: tuple[str, ...], ack: tuple[str, ...],
+        *, granted: bool = False,
     ) -> Job:
         started = self.clock()
         ctx = StepContext(
@@ -195,6 +246,8 @@ class JobRunner:
             thread_id=job.thread_id,
             wake_source=job.wake_source,
             scratch=job.copy().scratch,
+            lineage=tuple(job.chain[:-1]),
+            granted=granted,
         )
         with self.tracer.step(
             job_id=job.job_id,
@@ -261,12 +314,25 @@ class JobRunner:
             job.waiting_reason = decision.get("question") or "needs the owner"
         elif kind == "sleep":
             raw = decision.get("sleep_until")
+            now = self.clock()
+            day = now.astimezone(LAGOS).date().isoformat()
+            wakes = job.self_wakes.get(day, 0) + 1
             if not raw:
                 job.move(JobState.BLOCKED)
                 job.waiting_reason = "sleep without a wake time"
+            elif wakes > MAX_SELF_WAKES_PER_DAY:
+                # A routine that keeps re-scheduling itself is capped per day.
+                job.move(JobState.WAITING_ON_OWNER)
+                job.waiting_reason = (f"this job woke itself {wakes - 1} times today "
+                                      f"(the limit is {MAX_SELF_WAKES_PER_DAY}); paused "
+                                      "until the owner says keep going")
             else:
+                job.self_wakes = {day: wakes}
                 job.move(JobState.SLEEPING_UNTIL)
-                job.sleeping_until = datetime.fromisoformat(raw)
+                # Never an instant loop: a wake in the past or right now waits
+                # at least 30 seconds.
+                job.sleeping_until = max(datetime.fromisoformat(raw),
+                                         now + timedelta(seconds=MIN_SLEEP_S))
         elif kind == "blocked":
             job.move(JobState.BLOCKED)
             job.waiting_reason = decision.get("question") or "blocked"
@@ -275,6 +341,7 @@ class JobRunner:
     def _failed_step(self, job: Job, exc: Exception, started: datetime) -> Job:
         log.warning("step %s#%d failed: %r", job.job_id, job.step_index, exc)
         job.failures += 1
+        job.total_failures += 1
         job.spend.seconds += (self.clock() - started).total_seconds()
         if job.failures >= MAX_CONSECUTIVE_FAILURES:
             job.move(JobState.BLOCKED)

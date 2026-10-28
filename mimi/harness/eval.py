@@ -232,8 +232,14 @@ def runaway_suite(world: World) -> dict[str, Any]:
     rows = []
     ok = 0
     for name, budget, cost in cases:
-        def again(m: Any, t: Any, c: int = cost) -> ModelTurn:
-            return say("again", ("get_balance", {"shop_id": "shop-001"}), cost_kobo=c)
+        shops = [s.shop_id for s in world.shops]
+
+        def again(m: Any, t: Any, c: int = cost, shops: list[str] = shops) -> ModelTurn:
+            # A new shop every step: never repeats, never ends. The loop
+            # guards stop identical loops sooner (mimi.api.loop_safety_eval);
+            # this suite proves the run budgets themselves.
+            return say("again", ("get_balance", {"shop_id": shops[(len(m) // 2) % len(shops)]}),
+                       cost_kobo=c)
 
         loop = ScriptedModel(again)
         h, helper, go = make(world, loop, at=at, budget=budget)

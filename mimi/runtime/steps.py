@@ -32,6 +32,11 @@ class StepContext:
     wake_source: str = ""
     # The helper's own saved state from the previous step (``Job.scratch``).
     scratch: dict[str, Any] = field(default_factory=dict)
+    # The helpers above this job in its job tree, root first
+    # (``mimi.runtime.delegation``), and whether the owner granted more this
+    # boundary (a parked run never takes a fresh budget without it).
+    lineage: tuple[str, ...] = ()
+    granted: bool = False
 
 
 @dataclass(frozen=True)
