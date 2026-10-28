@@ -5,7 +5,7 @@
    2
   ],
   "credit_edge": [
-   1,
+   2,
    2
   ],
   "decided_edit": [
@@ -37,7 +37,7 @@
    1
   ],
   "over_credit": [
-   5,
+   6,
    6
   ],
   "pays_now": [
@@ -45,7 +45,7 @@
    1
   ],
   "photo": [
-   3,
+   6,
    6
   ],
   "pidgin": [
@@ -65,7 +65,7 @@
    6
   ],
   "unclear": [
-   4,
+   5,
    5
   ],
   "voice": [
@@ -78,22 +78,22 @@
   ]
  },
  "cases": 47,
- "correct": 44,
- "correct_rate": 0.9362,
+ "correct": 47,
+ "correct_rate": 1.0,
  "credit_extended": 0,
  "decided_edits": 0,
  "invented": 0,
  "live_calls": {
-  "loop": 62,
-  "router": 24,
-  "vision": 3
+  "loop": 8,
+  "router": 1,
+  "vision": 4
  },
- "live_cost_kobo_this_run": 63946,
+ "live_cost_kobo_this_run": 9008,
  "mode": "live",
  "model_calls": {
-  "loop": 62,
+  "loop": 67,
   "router": 24,
-  "vision": 3
+  "vision": 7
  },
  "not_run_spend_cap": [],
  "passed": true,
@@ -1602,7 +1602,7 @@
    ]
   },
   {
-   "correct": false,
+   "correct": true,
    "credit_extended": [],
    "decided_edits": [],
    "id": "h25",
@@ -1611,30 +1611,56 @@
     "photo",
     "credit_edge"
    ],
-   "loop_spend_kobo": 1409,
-   "misses": [
-    "turn 1: no pending order"
-   ],
+   "loop_spend_kobo": 1501,
+   "misses": [],
    "shop_id": "shop-009",
    "turns": [
     {
-     "orders": [],
+     "orders": [
+      {
+       "lines": [
+        [
+         "BISC-CTN",
+         4
+        ],
+        [
+         "MLK-TIN-CTN",
+         2
+        ],
+        [
+         "OIL-5L",
+         3
+        ]
+       ],
+       "order_id": "ord-009-3bf13a",
+       "over_credit": false,
+       "status": "pending",
+       "total_kobo": 12715000
+      }
+     ],
      "replies": [
       {
        "channel": "shop_whatsapp",
-       "kind": "question",
+       "kind": "submit_order",
+       "status": "pending_approval",
+       "text": "Coral Lane Trading approved your order ord-009-3bf13a (N127,150). It comes with the next van.",
+       "turn_id": "turn_11b751192b9a4e6be67c"
+      },
+      {
+       "channel": "shop_whatsapp",
+       "kind": "submit_order_notice",
        "status": "ready",
-       "text": "Thanks for the photo! I no fit read the list from the shelf photo — abeg type the items with quantities make I prepare am for you?",
+       "text": "Got it. Your order:\n2 cartons Okin Evaporated Milk 160g: N52,000\n3 kegs Palmside Vegetable Oil 5L: N51,150\n4 cartons Crunchy Biscuits: N24,000\nTotal N127,150 on credit.\nI've sent it to Coral Lane Trading to approve.\nReply to change anything before they approve.",
        "turn_id": "turn_11b751192b9a4e6be67c"
       }
      ],
      "turns": [
       {
-       "helper": "mimi",
-       "skill": "mimi/shop-onboarding",
-       "spend_kobo": 1409,
+       "helper": "order",
+       "skill": "order/order-intake",
+       "spend_kobo": 1501,
        "state": "done",
-       "status": "asked_question",
+       "status": "parked_for_approval",
        "turn_id": "turn_11b751192b9a4e6be67c"
       }
      ]
@@ -1642,7 +1668,7 @@
    ]
   },
   {
-   "correct": false,
+   "correct": true,
    "credit_extended": [],
    "decided_edits": [],
    "id": "h26",
@@ -1651,30 +1677,52 @@
     "photo",
     "over_credit"
    ],
-   "loop_spend_kobo": 0,
-   "misses": [
-    "turn 1: no pending order"
-   ],
+   "loop_spend_kobo": 1491,
+   "misses": [],
    "shop_id": "shop-036",
    "turns": [
     {
-     "orders": [],
+     "orders": [
+      {
+       "lines": [
+        [
+         "NDL-120-CTN",
+         2
+        ],
+        [
+         "PWATER-BAG",
+         5
+        ]
+       ],
+       "order_id": "ord-036-2f2ff1",
+       "over_credit": true,
+       "status": "pending",
+       "total_kobo": 3980000
+      }
+     ],
      "replies": [
       {
        "channel": "shop_whatsapp",
-       "kind": "question",
+       "kind": "submit_order",
+       "status": "pending_approval",
+       "text": "Coral Lane Trading approved your order ord-036-2f2ff1 (N39,800). It comes with the next van.",
+       "turn_id": "turn_0f2a3905d3d7b7e2bb14"
+      },
+      {
+       "channel": "shop_whatsapp",
+       "kind": "submit_order_notice",
        "status": "ready",
-       "text": "Just to be sure I get the right person on it: is this about who Mimi is or more credit?",
+       "text": "Got it. Your order:\n2 cartons Sunrise Big Pack Noodles 120g: N37,800\n5 bags Ekiti Spring Sachet Water: N2,000\nTotal N39,800 on credit.\nThis is N39,800 above your available credit, so Coral Lane Trading will decide. I've sent it to them.\nReply to change anything before they approve.",
        "turn_id": "turn_0f2a3905d3d7b7e2bb14"
       }
      ],
      "turns": [
       {
-       "helper": "mimi",
-       "skill": "mimi/shop-onboarding",
-       "spend_kobo": 0,
+       "helper": "order",
+       "skill": "order/order-intake",
+       "spend_kobo": 1491,
        "state": "done",
-       "status": "asked_to_clarify",
+       "status": "parked_for_approval",
        "turn_id": "turn_0f2a3905d3d7b7e2bb14"
       }
      ]
@@ -1682,7 +1730,7 @@
    ]
   },
   {
-   "correct": false,
+   "correct": true,
    "credit_extended": [],
    "decided_edits": [],
    "id": "h27",
@@ -1691,11 +1739,8 @@
     "photo",
     "unclear"
    ],
-   "loop_spend_kobo": 631,
-   "misses": [
-    "turn 1: 0 questions asked",
-    "turn 2: no pending order"
-   ],
+   "loop_spend_kobo": 3161,
+   "misses": [],
    "shop_id": "shop-024",
    "turns": [
     {
@@ -1703,17 +1748,17 @@
      "replies": [
       {
        "channel": "shop_whatsapp",
-       "kind": "reply",
+       "kind": "ask_order_question",
        "status": "ready",
-       "text": "Thanks for your order request — the orders helper / your rep will help you with this shortly.",
+       "text": "Before I send your order: which rice do you want: Ekiti Gold Parboiled Rice 50kg (N88,550 a bag) or Ekiti Gold Parboiled Rice 5kg (N9,600 a bag)?",
        "turn_id": "turn_6547f8d39560fdf5dc53"
       }
      ],
      "turns": [
       {
-       "helper": "brand",
-       "skill": "brand/promo-info",
-       "spend_kobo": 631,
+       "helper": "order",
+       "skill": "order/order-intake",
+       "spend_kobo": 2177,
        "state": "done",
        "status": "done",
        "turn_id": "turn_6547f8d39560fdf5dc53"
@@ -1721,23 +1766,47 @@
      ]
     },
     {
-     "orders": [],
+     "orders": [
+      {
+       "lines": [
+        [
+         "RICE-5KG",
+         5
+        ],
+        [
+         "SPAG-CTN",
+         3
+        ]
+       ],
+       "order_id": "ord-024-aa99a3",
+       "over_credit": false,
+       "status": "pending",
+       "total_kobo": 11115000
+      }
+     ],
      "replies": [
       {
        "channel": "shop_whatsapp",
-       "kind": "question",
+       "kind": "submit_order",
+       "status": "pending_approval",
+       "text": "Coral Lane Trading approved your order ord-024-aa99a3 (N111,150). It comes with the next van.",
+       "turn_id": "turn_9e4f24c50c64ae1880ea"
+      },
+      {
+       "channel": "shop_whatsapp",
+       "kind": "submit_order_notice",
        "status": "ready",
-       "text": "Just to be sure I get the right person on it: is this about what is left on your shelf or a new order?",
+       "text": "Got it. Your order:\n5 bags Ekiti Gold Parboiled Rice 5kg: N48,000\n3 cartons Mamaland Spaghetti 500g: N63,150\nTotal N111,150 on credit.\nI've sent it to Coral Lane Trading to approve.\nReply to change anything before they approve.",
        "turn_id": "turn_9e4f24c50c64ae1880ea"
       }
      ],
      "turns": [
       {
-       "helper": "mimi",
-       "skill": "stock/stock-count",
-       "spend_kobo": 0,
+       "helper": "order",
+       "skill": "order/order-intake",
+       "spend_kobo": 984,
        "state": "done",
-       "status": "asked_to_clarify",
+       "status": "parked_for_approval",
        "turn_id": "turn_9e4f24c50c64ae1880ea"
       }
      ]

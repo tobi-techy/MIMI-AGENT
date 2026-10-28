@@ -1,0 +1,58 @@
+{
+ "613c11db4494e116836f655e6f649039": {
+  "completion_tokens": 545,
+  "latency_s": 3.693,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 755,
+  "text": "{\"route\": \"order/order-intake\", \"confidence\": 0.9, \"second\": \"\", \"language\": \"en\"}"
+ },
+ "64bd1ac9ac0ead0a8c0e2ff30d703a06": {
+  "completion_tokens": 700,
+  "latency_s": 4.96,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 755,
+  "text": ""
+ },
+ "6f28416bab3aea6ebaf9c566a9c14b70": {
+  "completion_tokens": 342,
+  "latency_s": 2.553,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 757,
+  "text": "{\"route\": \"order/drop-confirmation\", \"confidence\": 0.85, \"second\": \"\", \"language\": \"pcm\"}"
+ },
+ "7f0268de772bb18ed255fedb93399c11": {
+  "completion_tokens": 675,
+  "latency_s": 4.257,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 753,
+  "text": "{\"route\": \"stock/stock-count\", \"confidence\": 0.55, \"second\": \"credit/credit-request\", \"language\": \"yo\"}"
+ },
+ "859ead2cd47ac45f2230b503c8c4acdf": {
+  "completion_tokens": 358,
+  "latency_s": 3.055,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 753,
+  "text": "{\"route\": \"stock/stock-count\", \"confidence\": 0.9, \"second\": \"\", \"language\": \"en\"}"
+ },
+ "ce539748967865d0f8cc6b7ac8dfd7aa": {
+  "completion_tokens": 700,
+  "latency_s": 4.462,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 756,
+  "text": ""
+ },
+ "d592a40c1110bf1c6ded1fc72e403e05": {
+  "completion_tokens": 538,
+  "latency_s": 3.551,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 754,
+  "text": "{\"route\": \"proof/fake-alert-check\", \"confidence\": 0.6, \"second\": \"stock/stock-count\", \"language\": \"pcm\"}"
+ },
+ "fb3a841a0c48327498f6c94d9bf07c8c": {
+  "completion_tokens": 700,
+  "latency_s": 5.097,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 754,
+  "text": ""
+ }
+}

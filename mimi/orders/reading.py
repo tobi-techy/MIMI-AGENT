@@ -65,17 +65,40 @@ def parse(text: str) -> ListReading | None:
                        float(raw.get("legibility") or 0.0))
 
 
-class ListReader:
-    """``reader(image bytes, mime) -> ListReading`` (one call, one repair)."""
+MEMO_SIZE = 256
 
-    def __init__(self, model: ChatModel | None, *, max_tokens: int = 600) -> None:
+
+class ListReader:
+    """``reader(image bytes, mime) -> ListReading`` (one call, one repair).
+
+    ``memo`` (shared by the router's photo look and the Order tool, RAI-304)
+    keeps model readings by image hash, so a list photo the router already
+    looked at is not read twice. Only model answers are kept, never errors.
+    """
+
+    def __init__(self, model: ChatModel | None, *, max_tokens: int = 600,
+                 memo: dict[str, ListReading] | None = None) -> None:
         self.model = model
         self.max_tokens = max_tokens
+        self.memo = memo if memo is not None else {}
 
     def __call__(self, data: bytes, mime: str = "image/jpeg") -> ListReading:
         if self.model is None:
             return ListReading(False, via="no_model")
         image = ImageInput(data, mime)
+        key = f"{PROMPT_VERSION}:{image.sha256}"
+        hit = self.memo.get(key)
+        if hit is not None:
+            return hit
+        got = self._read(image)
+        if got.via == "model":
+            if len(self.memo) >= MEMO_SIZE:
+                self.memo.pop(next(iter(self.memo)))
+            self.memo[key] = got
+        return got
+
+    def _read(self, image: ImageInput) -> ListReading:
+        assert self.model is not None
         msgs = [ChatMessage("system", SYSTEM),
                 ChatMessage("user", "Copy this order list.", images=(image,))]
         meta = {"script": "order_list_read", "image_sha256": image.sha256,

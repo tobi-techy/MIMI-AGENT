@@ -99,6 +99,12 @@ class HelperDeps:
     segmenter: Segmenter = field(default_factory=NoSegmenter)
     media: MediaSource = field(default_factory=NoMedia)
     distributor: str = "Coral Lane Trading"
+    # List-photo readings by image hash, shared by the router's photo look and
+    # the Order tool (RAI-304): a list photo is read by vision once.
+    list_memo: dict[str, Any] = field(default_factory=dict)
+
+    def list_reader(self) -> ListReader:
+        return ListReader(self.vision, memo=self.list_memo)
 
 
 def deps_from_env(env: Mapping[str, str] | None = None) -> HelperDeps:
@@ -144,7 +150,7 @@ def build_helpers(policy: RiskPolicy | None = None, *, go: SqlGo | None = None,
     register_stock_tools(reg, StockPorts(reader=StockAnswerReader(deps.stock), distributor=dist))
     register_credit(reg, CreditPorts(photos=StorePhotos(go, deps.media),  # type: ignore[arg-type]
                                      segmenter=deps.segmenter, distributor=dist))
-    register_order_tools(reg, OrderPorts(reader=ListReader(deps.vision),
+    register_order_tools(reg, OrderPorts(reader=deps.list_reader(),
                                          images=StorePhotos(go, deps.media), distributor=dist))
     helpers["proof"] = Helper(
         "proof", PROOF_SKILL + SCREENSHOT_SKILL,

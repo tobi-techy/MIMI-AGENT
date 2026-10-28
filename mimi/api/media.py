@@ -51,7 +51,7 @@ class NoMedia:
         return None
 
 
-def _checked(source: MediaSource, tenant_id: str, ref: str, sha256: str) -> bytes | None:
+def checked_media(source: MediaSource, tenant_id: str, ref: str, sha256: str) -> bytes | None:
     data = source.read(tenant_id, ref)
     if data is None or hashlib.sha256(data).hexdigest() != sha256:
         return None  # a ref that does not give the bytes the channel hashed
@@ -71,7 +71,7 @@ class StorePhotos:
     def get(self, tenant_id: str, photo_id: str) -> Photo | None:
         for shop_id, m in self._all(tenant_id):
             if m["photo_id"] == photo_id:
-                data = _checked(self.source, tenant_id, m["ref"], m["sha256"])
+                data = checked_media(self.source, tenant_id, m["ref"], m["sha256"])
                 return Photo(tenant_id, shop_id, photo_id, data, m["mime"]) if data else None
         return None
 
@@ -97,7 +97,7 @@ class StoreScreens:
                  photo_id: str) -> tuple[bytes, str, str, str] | None:
         for m in self.go.media_of(tenant_id, shop_id):
             if m["photo_id"] == photo_id:
-                data = _checked(self.source, tenant_id, str(m["ref"]), str(m["sha256"]))
+                data = checked_media(self.source, tenant_id, str(m["ref"]), str(m["sha256"]))
                 if data is None:
                     return None
                 return data, str(m["mime"]), str(m["sha256"]), str(m["received_at"])

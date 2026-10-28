@@ -1,0 +1,72 @@
+{
+ "28842eb8297edb334db267a16c288b08": {
+  "completion_tokens": 347,
+  "latency_s": 3.158,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 2049,
+  "text": "{\"heading\":\"TENANCY RECEIPT\",\"is_order_list\":false,\"legibility\":1,\"lines\":[]}"
+ },
+ "317e495eae0ddc0fcbcac16ea80b096a": {
+  "completion_tokens": 333,
+  "latency_s": 2.662,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 1851,
+  "text": "{\"heading\":\"\",\"is_order_list\":false,\"legibility\":1,\"lines\":[]}"
+ },
+ "37caf2a63f379ae4493bdb373f5f05b1": {
+  "completion_tokens": 580,
+  "latency_s": 3.947,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 2023,
+  "text": "{\"heading\": \"\", \"is_order_list\": false, \"legibility\": 1, \"lines\": []}"
+ },
+ "3c04ad5595fa6eebabb08fb518f8198f": {
+  "completion_tokens": 551,
+  "latency_s": 3.394,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 2023,
+  "text": "{\"heading\": \"Money\", \"is_order_list\": false, \"legibility\": 1, \"lines\": [\"Friday 10,000\", \"Sunday 25,000\"]}"
+ },
+ "402f1b6dfb758ebb269603b09a9b1e3c": {
+  "completion_tokens": 600,
+  "latency_s": 4.52,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 1825,
+  "text": ""
+ },
+ "750977000f84ddc0e717425bbe543bb5": {
+  "completion_tokens": 419,
+  "latency_s": 3.85,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 2023,
+  "text": "{\"heading\": \"order\", \"is_order_list\": true, \"legibility\": 1, \"lines\": [\"Spaghetti ctn 1\", \"Sachet milk 2 bags\"]}"
+ },
+ "a85c547c320e7c9ebd9ecb6938b65989": {
+  "completion_tokens": 600,
+  "latency_s": 4.336,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 2023,
+  "text": ""
+ },
+ "bdd09f1787245503e0e14ab3685ad6ef": {
+  "completion_tokens": 509,
+  "latency_s": 3.366,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 2023,
+  "text": "{\"heading\":\"for van\",\"is_order_list\":true,\"legibility\":1,\"lines\":[\"Malt can 2 pack\",\"Milo 500g 2\"]}"
+ },
+ "bdf28b96552619f5130ef02bb835e695": {
+  "completion_tokens": 312,
+  "latency_s": 3.035,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 2023,
+  "text": "{\"heading\": \"\", \"is_order_list\": true, \"legibility\": 1, \"lines\": [\"Cubes 1 ctn\", \"Rice 50kg 1\"]}"
+ },
+ "d146c36a7f6e562ce9767a920c17ca38": {
+  "completion_tokens": 368,
+  "latency_s": 2.579,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 2023,
+  "text": "{\"heading\": \"Coral Lane\", \"is_order_list\": true, \"legibility\": 1, \"lines\": [\"Rice 50kg x 1\", \"Cubes 2 pk\"]}"
+ }
+}

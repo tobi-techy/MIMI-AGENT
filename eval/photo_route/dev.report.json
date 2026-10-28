@@ -1,0 +1,132 @@
+{
+ "cases": 9,
+ "correct": 9,
+ "correct_rate": 1.0,
+ "errors": [],
+ "lists_to_order": "4/4",
+ "live_calls": {
+  "router": 0,
+  "vision": 10
+ },
+ "live_cost_kobo_this_run": 7119,
+ "lookalikes_right": "5/5",
+ "lookalikes_to_order": 0,
+ "mode": "live",
+ "model_calls": {
+  "router": 0,
+  "vision": 10
+ },
+ "passed": true,
+ "router": "with_photo_look",
+ "rows": [
+  {
+   "caption": "here",
+   "id": "d01",
+   "layer": "rule",
+   "lookalike_to_order": false,
+   "photo": "order/photos/od-01.jpg",
+   "right": true,
+   "rule": "photo_order_list_seen",
+   "skill": "order/order-intake",
+   "status": "routed",
+   "want": "order"
+  },
+  {
+   "caption": "",
+   "id": "d02",
+   "layer": "rule",
+   "lookalike_to_order": false,
+   "photo": "order/photos/od-02.jpg",
+   "right": true,
+   "rule": "photo_order_list_seen",
+   "skill": "order/order-intake",
+   "status": "routed",
+   "want": "order"
+  },
+  {
+   "caption": "abeg",
+   "id": "d03",
+   "layer": "rule",
+   "lookalike_to_order": false,
+   "photo": "photo_route/photos/dl-01.jpg",
+   "right": true,
+   "rule": "photo_order_list_seen",
+   "skill": "order/order-intake",
+   "status": "routed",
+   "want": "order"
+  },
+  {
+   "caption": "e se",
+   "id": "d04",
+   "layer": "rule",
+   "lookalike_to_order": false,
+   "photo": "photo_route/photos/dl-02.jpg",
+   "right": true,
+   "rule": "photo_order_list_seen",
+   "skill": "order/order-intake",
+   "status": "routed",
+   "want": "order"
+  },
+  {
+   "caption": "look",
+   "id": "d05",
+   "layer": "fast",
+   "lookalike_to_order": false,
+   "photo": "credit/shelves/s03.jpg",
+   "right": true,
+   "rule": "too_short_to_tell",
+   "skill": "proof/fake-alert-check",
+   "status": "clarify",
+   "want": "not_order"
+  },
+  {
+   "caption": "",
+   "id": "d06",
+   "layer": "rule",
+   "lookalike_to_order": false,
+   "photo": "photo_route/photos/dx-pos.jpg",
+   "right": true,
+   "rule": "image_without_words",
+   "skill": "proof/fake-alert-check",
+   "status": "clarify",
+   "want": "not_order"
+  },
+  {
+   "caption": "list",
+   "id": "d07",
+   "layer": "fast",
+   "lookalike_to_order": false,
+   "photo": "photo_route/photos/dx-paid.jpg",
+   "right": true,
+   "rule": "too_short_to_tell",
+   "skill": "mimi/shop-onboarding",
+   "status": "clarify",
+   "want": "not_order"
+  },
+  {
+   "caption": "e no complete o",
+   "id": "d08",
+   "layer": "lexical",
+   "lookalike_to_order": false,
+   "photo": "photo_route/photos/dl-01.jpg",
+   "right": true,
+   "rule": "",
+   "skill": "order/drop-confirmation",
+   "status": "routed",
+   "want": "not_order"
+  },
+  {
+   "caption": "see",
+   "id": "d09",
+   "layer": "fast",
+   "lookalike_to_order": false,
+   "photo": "photo_route/photos/dx-doc.jpg",
+   "right": true,
+   "rule": "too_short_to_tell",
+   "skill": "proof/fake-alert-check",
+   "status": "clarify",
+   "want": "not_order"
+  }
+ ],
+ "split": "dev"
+}

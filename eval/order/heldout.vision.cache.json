@@ -13,11 +13,39 @@
   "prompt_tokens": 2023,
   "text": "{\"heading\": \"Order - Coral Lane\", \"is_order_list\": true, \"legibility\": 1, \"lines\": [\"5 ctn Indomie (big)\", \"3 ctn Tin milk\", \"10 pk spaghetti\"]}"
  },
+ "56d146d6db2b20eca9d370c8affdbc2c": {
+  "completion_tokens": 329,
+  "latency_s": 2.661,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 2049,
+  "text": "{\"heading\":\"Next van\",\"is_order_list\":true,\"legibility\":1,\"lines\":[\"Peak milk tin 2 carton\",\"Vegetable oil 5L - 3\",\"Biscuit 4 ctn\"]}"
+ },
+ "690c0f9e1caad5ff5aff44b482d04197": {
+  "completion_tokens": 261,
+  "latency_s": 2.197,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 2023,
+  "text": "{\"heading\": \"List\", \"is_order_list\": true, \"legibility\": 1, \"lines\": [\"Indomie super pack - 2 ctn\", \"pure water 5 bag\"]}"
+ },
  "d3e2a1ef20e34adcd8888adba3caf2e3": {
   "completion_tokens": 462,
   "latency_s": 2.167,
   "model": "muse-spark-1.3",
   "prompt_tokens": 2023,
   "text": "{\"heading\": \"my order\", \"is_order_list\": true, \"legibility\": 1, \"lines\": [\"Sachet milk x6 bags\", \"Omo small x 10\", \"Semo 5\"]}"
+ },
+ "e9e6d7d56eab155c26b7c4658acd8733": {
+  "completion_tokens": 277,
+  "latency_s": 2.279,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 2023,
+  "text": "{\"heading\": \"Order\", \"is_order_list\": true, \"legibility\": 1, \"lines\": [\"Rice - 5 bags\", \"Spaghetti ctn - 3\"]}"
+ },
+ "f6dd202971a84430801929180ffcc1da": {
+  "completion_tokens": 600,
+  "latency_s": 3.839,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 2023,
+  "text": ""
  }
 }
