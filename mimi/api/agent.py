@@ -54,11 +54,11 @@ from mimi.harness.context import ContextBuilder
 from mimi.harness.frontdoor import FrontDoor
 from mimi.harness.gateway import Gateway, ToolModel, kobo_cost
 from mimi.harness.inbound import Directory, Inbound, Payload
-from mimi.harness.loop import Harness, Helper, LoopState, business_key
+from mimi.harness.loop import LAGOS, Harness, Helper, LoopState, _naira, business_key
 from mimi.harness.policy import GoPolicy, RiskPolicy
 from mimi.harness.router import _NO, _YES, RouteDecision, Router, ThreadState, lead_of
 from mimi.harness.router import label as skill_label
-from mimi.harness.tracing import trace_route, trace_run
+from mimi.harness.tracing import trace_job
 from mimi.harness.types import RunEvent
 from mimi.models.base import ChatModel
 from mimi.observe.langfuse_export import exporter_from_env
@@ -92,6 +92,8 @@ MESSAGE_INTENTS: dict[str, tuple[str, str]] = {
     "send_delivery_receipt": ("shop_whatsapp", "text"),
     "ask_receipt_again": ("shop_whatsapp", "text"),
     "flag_delivery_to_owner": ("owner_console", "message"),
+    # Brand's email draft: shown to the owner only, never sent to the brand.
+    "draft_brand_email": ("owner_console", "body"),
 }
 
 # Approve-tier intents whose shop reply does not depend on the owner's answer
@@ -101,6 +103,13 @@ NOTICE_INTENTS: dict[str, tuple[str, str]] = {
     "flag_payment_proof": ("shop_whatsapp", "shop_notice"),
     "draft_restock": ("shop_whatsapp", "shop_notice"),
     "revise_restock": ("shop_whatsapp", "shop_notice"),
+}
+# The loop's reason when the distributor's daily naira cap stops a run.
+DAILY_CAP_REASON = "daily naira cap reached"
+# The shop's holding reply while its job is parked on the daily cap (code text).
+HOLDING_TEXT = {
+    "en": "Thanks, I have your message. I'll get back to you on it soon.",
+    "pcm": "Thank you, I don see your message. I go come back to you on am soon.",
 }
 # How long a correction question waits for the shop's YES or NO (RAI-301).
 FIX_TTL_S = 24 * 3600
@@ -168,7 +177,8 @@ class TurnView:
 
     @property
     def finished(self) -> bool:
-        return self.state in ("done", "failed")
+        # A parked job is settled for now: it waits for the owner, not a worker.
+        return self.state in ("done", "failed", "parked")
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
@@ -468,6 +478,11 @@ class Agent:
     def _checkpoint(self, holder: list[Claim], ck: dict[str, Any]) -> None:
         holder[0] = self.queue.checkpoint(holder[0], ck)
 
+    def _in_txn(self, point: str, claim: Claim) -> None:
+        """A seam inside a write transaction, before its commit (``absorb``: a
+        step-boundary inbox read; ``finish``: a turn's intents, messages and
+        done). No-op; the e2e worker-kill check crashes the process here."""
+
     def _stop_requested(self, turn_id: str) -> bool:
         with self.engine.connect() as conn:
             return bool(conn.execute(sa.select(s.turns.c.stop).where(
@@ -516,6 +531,13 @@ class Agent:
             ck["steer"] = self._steer_stage(claim, events, d, prior)
             self._checkpoint(holder, ck)
         sv: dict[str, Any] = ck["steer"]
+        if sv.get("join") and not ck.get("joined"):
+            # The shop's YES that the which question asked about joins this turn,
+            # so the helper reads the shop's own words (RAI-272).
+            ck["joined"] = True
+            holder[0] = self.queue.join_batch(holder[0], list(sv["join"]), ck)
+            claim = holder[0]
+            events = self._load_batch(claim.tenant_id, claim.batch)
         if sv.get("route"):
             r = sv["route"]
             d = d.model_copy(update={"status": "routed", "helper": r["helper"],
@@ -541,6 +563,14 @@ class Agent:
         if "loop" in ck:
             state = LoopState.model_validate(ck["loop"])
             event = RunEvent.model_validate(ck["event"])
+            if ck.get("parked"):
+                # The owner raised today's allowance: the parked job carries on
+                # from its last step (nothing was dropped, nothing runs twice).
+                state = self.harness.reopen(state)
+                ck = {k: v for k, v in ck.items() if k != "parked"}
+                ck["loop"] = state.model_dump(mode="json")
+                ck["resumed"] = int(ck.get("resumed") or 0) + 1
+                self._checkpoint(holder, ck)
         else:
             event, job, route = self._run_event(claim, events, directory, d,
                                                 text=sv.get("primary_text"))
@@ -564,8 +594,102 @@ class Agent:
             state = LoopState.model_validate(res.state)
             ck["loop"] = res.state
             self._checkpoint(holder, ck)
+        if (state.finished.status == "stopped_budget"
+                and state.finished.reason == DAILY_CAP_REASON):
+            self._park(holder, ck, d, events, state)
+            return
         self._complete(holder, d, events, prior, status=state.finished.status,
                        state=state, event=event, steer=sv)
+
+    # ============================================================ budget park
+
+    def _park(self, holder: list[Claim], ck: dict[str, Any], d: RouteDecision,
+              events: Sequence[Inbound], state: LoopState) -> None:
+        """The daily naira cap was hit: park the job, never drop it (RAI-272).
+
+        One compare-and-set (lost lease: nothing written) parks the turn with
+        its loop state, sends the shop one holding reply written by code (a
+        person's message only), posts the loop's owner note (once a day) and
+        puts one "raise today's allowance" item in the owner's approvals (once
+        per day and cap). Approving it raises the cap and re-queues every
+        parked job of the distributor; each carries on from its last step.
+        Nothing here moves money: the allowance is Mimi's own model spend.
+        """
+        claim = holder[0]
+        tenant, thread, turn_id = claim.tenant_id, claim.thread_id, claim.turn_id
+        r = state.finished
+        assert r is not None
+        hit = next((e for e in reversed(state.events) if e.type == "cap_hit"), None)
+        data = dict(hit.data) if hit is not None else {}
+        spent, cap = int(data.get("spent_kobo") or 0), int(data.get("cap_kobo") or 0)
+        day = (hit.at if hit is not None else self.clock()).astimezone(LAGOS).date()
+        lead = lead_of(events)
+        _, shop_id = thread_kind(tenant, thread)
+        now = time.time()
+        new_cap = max(cap * 2, cap + 50_000)  # proposed: double it, at least N500 more
+        ck = {**ck, "parked": {"reason": "daily_cap", "day": day.isoformat(),
+                               "spent_kobo": spent, "cap_kobo": cap, "at": now_iso(now)}}
+        with self.engine.begin() as conn:
+            res = conn.execute(s.turns.update().where(
+                s.turns.c.turn_id == turn_id, s.turns.c.version == claim.version,
+                s.turns.c.lease_owner == claim.worker_id, s.turns.c.state == "leased")
+                .values(state="parked", status="parked_budget", helper=d.helper,
+                        skill=d.skill, run_id=r.run_id, checkpoint=dumps(ck),
+                        lease_owner=None, lease_expires_ts=None, version=claim.version + 1,
+                        result=dumps({"route": {"helper": d.helper, "skill": d.skill,
+                                                "layer": d.layer, "rule": d.rule,
+                                                "cost_kobo": d.cost_kobo},
+                                      "run_status": r.status, "reason": r.reason,
+                                      "parked": ck["parked"]})))
+            if res.rowcount != 1:
+                raise LeaseLost(turn_id)
+            if lead.sender in ("shop", "rep") and lead.source in PERSON_SOURCES:
+                self._out(conn, tenant, thread, turn_id, key=f"hold:{turn_id}",
+                          channel=_CHANNEL_FOR[lead.sender], shop_id=shop_id,
+                          text=HOLDING_TEXT[st._lang(lead.text)], kind="holding_reply",
+                          status="ready", ts=now)
+            for n, dr in enumerate(r.outbound_drafts):
+                if dr.channel == "owner_console":
+                    # The loop wrote it only on the day's first cap hit.
+                    self._out(conn, tenant, thread, turn_id, key=dr.idempotency_key,
+                              channel=dr.channel, shop_id="", text=dr.body, kind="cap_note",
+                              status="ready", ts=now + (n + 1) * 1e-3)
+            payload = {"day": day.isoformat(), "cap_kobo": cap, "spent_kobo": spent,
+                       "new_cap_kobo": new_cap}
+            record = {
+                "tool": "raise_daily_allowance", "intent_kind": "raise_daily_allowance",
+                "tier": self.policy.tier(tenant, "raise_daily_allowance", payload),
+                "scope": "org:plan", "tenant_id": tenant, "shop_id": "",
+                "idempotency_key": business_key(tenant, "raise_daily_allowance",
+                                                {"day": day.isoformat(), "cap_kobo": cap}),
+                "attempt_key": f"park:{turn_id}", "payload": payload,
+                "preview": (f"Raise today's model allowance from {_naira(cap)} to "
+                            f"{_naira(new_cap)}? Helpers are paused until then; their "
+                            "work waits and nothing is dropped.")}
+            self.go.apply_intent(conn, tenant, record, turn_id=turn_id, thread_id="",
+                                 helper="", skill="mimi/budget")
+            insert_ignore(conn, s.thread_events, {
+                "tenant_id": tenant, "event_id": f"park_{turn_id}_{claim.version}",
+                "thread_id": thread, "run_id": r.run_id, "turn_id": turn_id, "seq": -1,
+                "step": r.spend.steps, "type": "parked", "tool": "", "tier": "",
+                "short": f"paused: daily allowance {_naira(cap)} reached", "cost_kobo": 0,
+                "model": "", "duration_ms": 0.0,
+                "data": dumps(ck["parked"]), "at": now_iso(now), "ts": now})
+
+    def resume_parked(self, conn: sa.Connection, tenant_id: str) -> list[str]:
+        """Re-queue every job the daily cap parked (the owner raised it)."""
+        ids = list(conn.execute(sa.select(s.turns.c.turn_id).where(
+            s.turns.c.tenant_id == tenant_id, s.turns.c.state == "parked")
+            .order_by(s.turns.c.created_ts, s.turns.c.turn_id)).scalars())
+        if ids:
+            # Back as a lapsed lease: the next worker takes it over like a
+            # crashed job, with its own batch and checkpoint (never merged
+            # with a later burst; those are their own turns).
+            conn.execute(s.turns.update().where(
+                s.turns.c.turn_id.in_(ids), s.turns.c.state == "parked")
+                .values(state="leased", status="", lease_owner=None, lease_expires_ts=0.0,
+                        version=s.turns.c.version + 1))
+        return ids
 
     # ============================================================ steering
 
@@ -596,6 +720,9 @@ class Agent:
         fix = json.loads(prior.fix) if prior.fix else {}
         if fix and time.time() - float(fix.get("asked_ts", 0)) > FIX_TTL_S:
             fix = {}
+        two = self._two_asks(fix, prior, lead, text, tasks)
+        if two is not None:
+            return {**out, **two}
         if fix and (_YES.match(folded) or _NO.match(folded)):
             out["fix_done"] = True
             return {**out, **self._fix_answer(fix, bool(_YES.match(folded)), text, tasks)}
@@ -720,6 +847,83 @@ class Agent:
         return {"code": {"kind": "question", "text": q, **info, "label": label,
                          "tasks": [t.key for t in tasks]}}
 
+    def _two_asks(self, fix: dict[str, Any], prior: ThreadState, lead: Inbound, text: str,
+                  tasks: Sequence[st.OpenTask]) -> dict[str, Any] | None:
+        """A delivery receipt and a correction question both open (RAI-272).
+
+        A yes or no that fits both binds to neither: code asks one short
+        question ("Yes to the delivery receipt or the order change?"). The
+        answer to that question, or a yes or no whose own words say which,
+        goes to that ask; a reply that still does not say which goes to the
+        owner, never to a second question. ``None`` when this does not apply.
+        """
+        if not fix:
+            return None
+        receipt_open = (prior.pending_skill == "order/drop-confirmation"
+                        and ask_is_live(prior.pending_skill, prior.asked_at, lead.received_at))
+        which = fix.get("which") or {}
+        base = {k: v for k, v in fix.items() if k != "which"}
+        task = base.get("task") or {}
+        if which:
+            if not receipt_open:
+                return None  # the receipt was settled or expired: the fix rules apply
+            side = st.which_side(text)
+            yn = str(which.get("answer", "yes"))
+            if side == "receipt":
+                words = f"{which.get('words', '')}\n{text}".strip()
+                plan = self._which_receipt(words, base, via="answered")
+                if which.get("external_id"):
+                    plan["join"] = [str(which["external_id"])]
+                return plan
+            if side == "fix":
+                plan = self._fix_answer(base, yn == "yes", str(base.get("words", "")), tasks)
+                return {**plan, "fix_done": True,
+                        "which": {"side": "fix", "via": "answered", "yn": yn}}
+            return self._which_owner(base, prior, f"{which.get('words', '')} / {text}",
+                                     handed=bool(which.get("handed")))
+        if not receipt_open:
+            return None
+        yn, rest = st.yes_no_lead(text)
+        if not yn:
+            return None
+        side = st.which_side(rest) if rest else ""
+        if side == "receipt":
+            return self._which_receipt(text, base, via="own_words")
+        if side == "fix":
+            plan = self._fix_answer(base, yn == "yes", str(base.get("words", "")), tasks)
+            return {**plan, "fix_done": True, "which": {"side": "fix", "via": "own_words",
+                                                        "yn": yn}}
+        if side == "both":
+            return self._which_owner(base, prior, text, handed=False)
+        q = st.which_question(yn, str(task.get("tool", "")), str(base.get("words", "")) or text)
+        return {"code": {"kind": "which", "text": q, "task": task or None, "action": "which",
+                         "why": "a delivery receipt and a correction question are both open; "
+                                "the reply fits both", "words": st.quote(text, 300),
+                         "label": str(base.get("label", "")), "answer": yn,
+                         "external_id": lead.external_id, "tasks": base.get("tasks", [])},
+                "which": {"side": "", "via": "asked", "yn": yn}}
+
+    @staticmethod
+    def _which_receipt(words: str, base: dict[str, Any], *, via: str) -> dict[str, Any]:
+        """The reply is about the delivery receipt: Order reads it, the
+        correction question stays open (without the which question)."""
+        return {"route": {"helper": "order", "skill": "order/drop-confirmation",
+                          "rule": f"steer:which_receipt:{via}"},
+                "primary_text": words, "fix_keep": json.dumps(base, sort_keys=True),
+                "which": {"side": "receipt", "via": via},
+                "notes": ["the shop's reply is about the delivery receipt (it said so), not "
+                          "the other open question"]}
+
+    @staticmethod
+    def _which_owner(base: dict[str, Any], prior: ThreadState, words: str, *,
+                     handed: bool) -> dict[str, Any]:
+        return {"code": {"kind": "which_owner", "task": base.get("task") or None,
+                         "action": "which_owner", "why": "still not clear which ask the "
+                         "reply answers: the owner checks", "words": st.quote(words, 300),
+                         "delivery_id": prior.ask_ref, "handed": handed,
+                         "base": base},
+                "which": {"side": "owner", "via": "unclear"}}
+
     def _fix_answer(self, fix: dict[str, Any], yes: bool, text: str,
                     tasks: Sequence[st.OpenTask]) -> dict[str, Any]:
         """The shop answered Mimi's correction question with YES or NO."""
@@ -832,6 +1036,7 @@ class Agent:
                 sx.insert_followup(conn, tenant, thread, fu, after_ts=float(t), order=n,
                                    shop_id=shop_id, simulated=False,
                                    media_ref=sx.media_ref_of(conn, tenant, ib.external_id))
+            self._in_txn("absorb", claim)
 
         holder[0] = self.queue.absorb(claim, ck, merge=merge, inbox=marks, extra=extra)
         return state, ck
@@ -921,6 +1126,15 @@ class Agent:
                                       "words": code.get("words", ""),
                                       "question": code.get("text", ""), "asked_ts": now,
                                       "tasks": code.get("tasks", [])}, sort_keys=True)
+                elif code["kind"] in ("which", "which_owner") and prior.fix:
+                    # Both asks stay open; the correction carries the which question
+                    # (asked once: a later unclear reply goes to the owner).
+                    base = {k: v for k, v in json.loads(prior.fix).items() if k != "which"}
+                    fix = json.dumps({**base, "which": {
+                        "answer": code.get("answer", "yes"), "words": code.get("words", ""),
+                        "external_id": code.get("external_id", ""),
+                        "question": code.get("text", ""), "asked_ts": now,
+                        "handed": code["kind"] == "which_owner"}}, sort_keys=True)
                 next_state = ThreadState(last_skill=prior.last_skill, fix=fix)
             if status == "cancelled_by_sender":
                 words = str((claim.checkpoint.get("cancel") or {}).get("words", ""))
@@ -1025,12 +1239,15 @@ class Agent:
                 next_state = replace(next_state, pending_skill=prior.pending_skill,
                                      expects=prior.expects, asked_at=prior.asked_at,
                                      ask_ref=prior.ask_ref)
-            if prior.fix and not sv.get("fix_done") and not next_state.fix:
+            if sv.get("fix_keep") is not None and not next_state.fix:
+                next_state = replace(next_state, fix=str(sv["fix_keep"]))
+            elif prior.fix and not sv.get("fix_done") and not next_state.fix:
                 next_state = replace(next_state, fix=prior.fix)
             fus = self._followups(conn, claim, sv, events) if status not in (
                 "stopped_by_owner", "cancelled_by_sender") else []
-            if sv.get("plan") or fus or claim.checkpoint.get("inbox"):
+            if sv.get("plan") or fus or claim.checkpoint.get("inbox") or sv.get("which"):
                 result["steer"] = {
+                    "which": sv.get("which"),
                     "layer": sv.get("layer", ""), "plan": sv.get("plan", {}),
                     "labels": sv.get("labels", []), "followups": fus,
                     "code": code.get("kind", ""), "correction": sv.get("correction"),
@@ -1049,13 +1266,14 @@ class Agent:
                         s.inbound_messages.c.tenant_id == tenant,
                         s.inbound_messages.c.external_id == e.external_id)
                         .values(envelope=scrubbed.model_dump_json()))
+            self._in_txn("finish", claim)
             self.queue.finish_in(conn, claim, status=status, helper=d.helper, skill=d.skill,
                                  run_id=run_id, result=result)
         # After the commit: a turn that lost its lease above never gets here,
-        # so each run is traced once (tracing never raises).
-        trace_route(d, self.exporter)
-        if state is not None and state.finished is not None:
-            trace_run(state.finished, self.exporter,
+        # so each job is traced once, as one trace (tracing never raises).
+        if getattr(self.exporter, "enabled", False):
+            trace_job(d, state.finished if state is not None else None, self.exporter,
+                      job_id=turn_id, status=status, job=self._job_story(claim),
                       shop_id=thread_kind(tenant, thread)[1] or "owner")
 
     def _voice_choice(self, holder: list[Claim], lead: Inbound,
@@ -1106,6 +1324,29 @@ class Agent:
         except SpeechError as exc:
             raise NotFound(f"{message_id}: {exc}") from exc
         return audio, voice
+
+    def _job_story(self, claim: Claim) -> dict[str, Any]:
+        """The job's state changes for its trace: each claim (and takeover),
+        a park on the daily cap and its resume, then done."""
+        with self.engine.connect() as conn:
+            att = conn.execute(sa.select(s.turn_attempts.c.worker_id,
+                                         s.turn_attempts.c.takeover,
+                                         s.turn_attempts.c.claimed_at).where(
+                s.turn_attempts.c.turn_id == claim.turn_id)
+                .order_by(s.turn_attempts.c.attempt_id)).all()
+            parks = conn.execute(sa.select(sa.func.count()).select_from(s.thread_events).where(
+                s.thread_events.c.turn_id == claim.turn_id,
+                s.thread_events.c.type == "parked")).scalar() or 0
+        seq = ["taken_over" if a.takeover else "leased" for a in att]
+        resumed = int(claim.checkpoint.get("resumed") or 0)
+        if parks and resumed and "taken_over" in seq:
+            # A resume is a takeover of the parked job: the park sits before it.
+            seq.insert(max(i for i, x in enumerate(seq) if x == "taken_over"), "parked_budget")
+        states = ["queued", *seq, "done"]
+        return {"turn_id": claim.turn_id, "attempts": len(att),
+                "takeovers": sum(bool(a.takeover) for a in att),
+                "workers": [a.worker_id for a in att], "parked": int(parks),
+                "resumed": resumed, "states": states}
 
     def _followups(self, conn: sa.Connection, claim: Claim, sv: dict[str, Any],
                    events: Sequence[Inbound]) -> list[str]:
@@ -1179,6 +1420,11 @@ class Agent:
             text = str(code.get("text", ""))
         elif kind == "left":
             text = str(code.get("text", ""))
+        elif kind == "which":
+            text = str(code.get("text", ""))
+        elif kind == "which_owner":
+            self._which_note(conn, tenant, thread, turn_id, shop_id, code, now)
+            text = st.which_owner_text(sx.tenant_name(conn, tenant), words)
         elif kind != "withdraw":
             text = st.left_text(words)
         result["steer_action"] = kind
@@ -1198,6 +1444,30 @@ class Agent:
                                             {"shop_id": shop_id, "about": task.key,
                                              "kind": kind, "turn": turn_id}),
             "attempt_key": f"steer:{turn_id}", "payload": payload,
+            "preview": f"Would tell the owner: {note[:120]}"}
+        outcome, _ = self.go.apply_intent(conn, tenant, record, turn_id=turn_id,
+                                          thread_id=thread, helper="mimi", skill="mimi/steer")
+        if outcome == "applied":
+            self._out(conn, tenant, thread, turn_id, key=str(record["idempotency_key"]),
+                      channel="owner_console", shop_id=shop_id, text=note, kind="notify_owner",
+                      status="ready", ts=now + 1e-3)
+
+    def _which_note(self, conn: sa.Connection, tenant: str, thread: str, turn_id: str,
+                    shop_id: str, code: dict[str, Any], now: float) -> None:
+        """The owner checks a reply that fits two open asks (never bound by a guess)."""
+        task = code.get("task") or {}
+        note = st.which_owner_note(shop_id or "a shop", str(code.get("delivery_id", "")),
+                                   str(task.get("summary", "")), str(code.get("words", "")))
+        payload = {"message": note, "shop_id": shop_id, "about": "two_open_asks",
+                   "delivery_id": str(code.get("delivery_id", ""))}
+        record = {
+            "tool": "notify_owner", "intent_kind": "notify_owner",
+            "tier": self.policy.tier(tenant, "notify_owner", payload), "scope": "org:plan",
+            "tenant_id": tenant, "shop_id": shop_id,
+            "idempotency_key": business_key(tenant, "notify_owner",
+                                            {"shop_id": shop_id, "about": "two_open_asks",
+                                             "turn": turn_id}),
+            "attempt_key": f"which:{turn_id}", "payload": payload,
             "preview": f"Would tell the owner: {note[:120]}"}
         outcome, _ = self.go.apply_intent(conn, tenant, record, turn_id=turn_id,
                                           thread_id=thread, helper="mimi", skill="mimi/steer")
@@ -1315,7 +1585,17 @@ class Agent:
             conn.execute(s.credit_requests.update().where(
                 s.credit_requests.c.tenant_id == tenant_id,
                 s.credit_requests.c.approval_id == approval_id).values(status=decision))
+            resumed: list[str] = []
+            if a.tool == "raise_daily_allowance" and approve:
+                # The owner's figure is the one code proposed; the cap only goes up.
+                new_cap = int(loads(a.payload, {}).get("new_cap_kobo") or 0)
+                conn.execute(s.tenants.update().where(
+                    s.tenants.c.tenant_id == tenant_id,
+                    s.tenants.c.daily_cap_kobo < new_cap).values(daily_cap_kobo=new_cap))
+                resumed = self.resume_parked(conn, tenant_id)
         row = self.approval(tenant_id, approval_id)
+        if resumed:
+            log.info("owner raised the daily allowance; resumed %d parked job(s)", len(resumed))
         follow: TurnView | None = None
         if a.helper and a.thread_id:
             inbound = Inbound(

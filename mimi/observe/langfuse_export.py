@@ -168,6 +168,8 @@ class LangfuseExporter:
         # Each process run gets its own trace ids, so a rerun never writes into
         # an earlier run's traces (ids stay stable within a run for late scores).
         self.run_id = os.environ.get("MIMI_TRACE_RUN") or uuid.uuid4().hex[:12]
+        self._pending = 0
+        self._lock = threading.Lock()
         self._thread = threading.Thread(target=self._run, name="mimi-langfuse", daemon=True)
         self._thread.start()
 
@@ -178,6 +180,25 @@ class LangfuseExporter:
 
     def feedback(self, fb: Feedback) -> None:
         self._put(("feedback", fb))
+
+    def flush(self, timeout_s: float = 10.0) -> bool:
+        """Wait until every queued item is sent and the SDK has flushed it (a
+        worker that may be killed next calls this after each job). Never raises;
+        False when it did not finish in time."""
+        deadline = time.monotonic() + timeout_s
+        while time.monotonic() < deadline:
+            with self._lock:
+                if self._pending <= 0:
+                    break
+            time.sleep(0.02)
+        else:
+            return False
+        if self._client is None:
+            return True
+        flusher = threading.Thread(target=self._safe_flush, daemon=True)
+        flusher.start()
+        flusher.join(max(0.1, deadline - time.monotonic()))
+        return not flusher.is_alive()
 
     def close(self, timeout_s: float = 10.0) -> None:
         deadline = time.monotonic() + timeout_s
@@ -202,8 +223,12 @@ class LangfuseExporter:
 
     def _put(self, item: Any) -> None:
         try:
+            with self._lock:
+                self._pending += 1
             self._q.put_nowait(item)
         except queue.Full:
+            with self._lock:
+                self._pending -= 1
             self.dropped += 1
             log.warning("tracing: export queue full; dropped one item")
 
@@ -222,6 +247,8 @@ class LangfuseExporter:
         while True:
             item = self._q.get()
             if item is _STOP:
+                with self._lock:
+                    self._pending -= 1
                 return
             kind, obj = item
             try:
@@ -233,6 +260,9 @@ class LangfuseExporter:
                 self.errors += 1
                 log.warning("tracing: Langfuse export failed (%s: %s)", type(exc).__name__,
                             str(exc)[:160])
+            finally:
+                with self._lock:
+                    self._pending -= 1
 
     def trace_id_for(self, seed: str) -> str:
         from langfuse import Langfuse

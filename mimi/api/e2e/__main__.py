@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import sys
 import tempfile
 from pathlib import Path
@@ -30,29 +31,34 @@ def main(argv: list[str] | None = None) -> int:
     w.add_argument("--marker", default="")
     w.add_argument("--stop-file", default="")
     w.add_argument("--usage", default="")
+    w.add_argument("--kill-plan", default="")
     ap.add_argument("--live", action="store_true", help="record missing answers (needs a key)")
     ap.add_argument("--no-write", action="store_true", help="do not write the report files")
     ap.add_argument("--cache-dir", default=str(EVAL_DIR))
     ap.add_argument("--workdir", default="")
+    ap.add_argument("--db", default="", help="store URL (default: a new SQLite file); a "
+                    "Postgres URL is wiped and reused, so only point it at a throwaway database")
     args = ap.parse_args(argv)
     if args.cmd == "worker":
         from mimi.api.e2e.worker import run as run_worker
 
         return run_worker(args.db, live=args.live, cache_dir=Path(args.cache_dir),
                    worker_id=args.worker_id, pause=args.pause_at, marker=args.marker,
-                   stop_file=args.stop_file, usage=args.usage)
+                   stop_file=args.stop_file, usage=args.usage,
+                   kill_plan=args.kill_plan)
     from mimi.api.e2e.runner import collect
     from mimi.api.e2e.score import score, table
 
     wd = Path(args.workdir) if args.workdir else Path(tempfile.mkdtemp(prefix="mimi-e2e-"))
     wd.mkdir(parents=True, exist_ok=True)
-    run = collect(live=args.live, cache_dir=Path(args.cache_dir), workdir=wd)
+    run = collect(live=args.live, cache_dir=Path(args.cache_dir), workdir=wd,
+                  db_url=args.db or os.environ.get("MIMI_E2E_DATABASE_URL", "").strip())
     report = score(run, wd / "usage.jsonl")
     report["mode"] = "live" if args.live else "replay"
     text = table(report)
     print(text)
     for k in ("misroutes", "safety_violations", "money_moves", "invented_figures",
-              "duplicate_replies", "failed_turns"):
+              "duplicate_replies", "failed_turns", "lost_jobs"):
         if report[k]:
             print(f"{k}: {json.dumps(report[k], indent=1)}")
     if not args.no_write:

@@ -15,6 +15,9 @@ Pidgin, Yoruba, Igbo or Hausa mixed with English), recorded and replayed.
 | steer (RAI-301) | shop-033 | receipt -> "Yes all complete. How much I owe now?" -> Order takes the YES, a follow-up turn gives the balance |
 | steer (RAI-301) | shop-014 | while its stock answer runs, a voice note "abeg make am 6 tubs, no be 4" -> absorbed at the next step -> one draft of 6 |
 | steer (RAI-301) | shop-020 | while its credit request waits for the owner, a payment screenshot -> Proof, the credit approval untouched |
+| two open asks (RAI-272) | shop-011 | receipt open, then a credit correction (a YES/NO question), then a bare YES -> "Yes to the delivery receipt or the credit change?" -> "the delivery" -> Order |
+| brand (RAI-272) | shop-031, owner | a promo question answered from code; a brand email kept as a draft in approvals |
+| daily cap (RAI-272) | shop-019, shop-027 | the allowance runs out: both parked with a holding reply, one owner note and approval; approved -> both resume and answer |
 """
 
 from __future__ import annotations
@@ -56,8 +59,61 @@ PARKED_SHOP = "shop-020"
 PARKED_SCREEN = "g05"
 PARKED_CAPTION = "I don pay part of my balance"
 
+# Two open asks (RAI-272 binder bug): shop-011's receipt is open, then the shop
+# corrects its pending credit request (a correction question is asked), then a
+# bare YES: Mimi asks which, the shop says the delivery, and Order takes it.
+WHICH_SHOP = "shop-011"
+WHICH_STEPS: tuple[tuple[str, str, tuple[str, ...]], ...] = (
+    ("correction", "Abeg make the credit 300k instead, not 200k",
+     ("mimi/steer", "credit/credit-request", "order/drop-confirmation")),
+    ("bare_yes", "YES", ("mimi/steer",)),
+    ("says_which", "the delivery", ("order/drop-confirmation",)),
+)
+# Brand's Promo Check (RAI-272): a shop asks about a promo, the owner wants a
+# brand email drafted. Read and draft only.
+BRAND_SHOP = "shop-031"
+BRAND_SHOP_TEXT = "Good morning. Una get any promo for Sunrise noodles this month?"
+BRAND_OWNER_TEXT = ("Please draft an email to Okin asking them for more shelf posters for "
+                    "our shops.")
+# The daily naira cap (RAI-272): two shops ask after the day's allowance ran out.
+BUDGET_SHOPS: tuple[tuple[str, str], ...] = (
+    ("shop-019", "Good evening. How much I owe una now?"),
+    ("shop-027", "Abeg wetin be my balance?"),
+)
+
+# The forced worker kills (RAI-272): eleven SIGKILLs at fixed crash points
+# during the scenes (``mimi.api.e2e.worker``). ``ext`` matches a message id of
+# the turn's batch. k05 is the burst kill: the runner queues an owner message
+# and three shop turns while worker A hangs on shop-012's stock check.
+KILL_PLAN: list[dict[str, object]] = [
+    {"id": "k01", "ext": "webhook:e2e.dlv.dlv-56-9039", "at": "route",
+     "what": "receipt event: after the route is saved, before any step"},
+    {"id": "k02", "ext": "e2e.shop-008.receipt.1", "at": "finish",
+     "what": "receipt dispute: inside the transaction writing the flag intent and reply"},
+    {"id": "k03", "ext": "e2e.shop-035.proof.1", "at": "step:1",
+     "what": "fake screenshot: after step 1"},
+    {"id": "k04", "ext": "e2e.shop-038.proof.2", "at": "finish",
+     "what": "fake screenshot: inside the transaction writing the approvals item"},
+    {"id": "k05", "ext": "routine:e2e.stock.shop-012.1", "at": "step:1", "manual": True,
+     "what": "stock check: after step 1, while an owner message and three shop turns queue"},
+    {"id": "k06", "ext": "e2e.shop-014.stock.1", "at": "absorb",
+     "what": "voice note mid-task: inside the step-boundary inbox absorb, before commit"},
+    {"id": "k07", "ext": "e2e.shop-020.credit.2", "at": "step:2",
+     "what": "credit shelf photo: after step 2"},
+    {"id": "k08", "ext": "e2e.shop-011.credit.2", "at": "finish",
+     "what": "credit shelf photo: inside the transaction writing the credit review intent"},
+    {"id": "k09", "ext": "e2e.shop-020.parked.1", "at": "step:1",
+     "what": "screenshot while the credit approval is parked: after step 1"},
+    {"id": "k10", "ext": "approval:*", "at": "route",
+     "what": "the owner decided a parked approval: the woken helper, after its route"},
+    {"id": "k11", "ext": "e2e.budget.shop-019.1", "at": "resume",
+     "what": "a job parked on the daily cap: right after its resume is saved"},
+]
+MANUAL_KILL = "k05"
+
 ALL_SHOPS: tuple[str, ...] = (*RECEIPT_SHOPS, *PROOF_SHOPS, *STOCK_SHOPS, *CREDIT_SHOPS,
-                              MULTIPART_SHOP)
+                              MULTIPART_SHOP, BRAND_SHOP,
+                              *(sid for sid, _ in BUDGET_SHOPS))
 
 
 @dataclass(frozen=True)

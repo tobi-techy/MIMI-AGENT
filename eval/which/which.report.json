@@ -1,0 +1,572 @@
+{
+ "ambiguous_binds": 0,
+ "cases": 40,
+ "correct": 1.0,
+ "groups": {
+  "A": [
+   15,
+   15
+  ],
+  "B": [
+   10,
+   10
+  ],
+  "C": [
+   10,
+   10
+  ],
+  "D": [
+   5,
+   5
+  ]
+ },
+ "misses": [],
+ "n_correct": 40,
+ "pass_marks": {
+  "ambiguous_binds": 0,
+  "correct": 0.95
+ },
+ "passed": true,
+ "rows": [
+  {
+   "ambiguous_binds": 0,
+   "checks": [],
+   "expect": [
+    "which"
+   ],
+   "got": [
+    "which"
+   ],
+   "id": "wA01",
+   "note": "",
+   "ok": true
+  },
+  {
+   "ambiguous_binds": 0,
+   "checks": [],
+   "expect": [
+    "which"
+   ],
+   "got": [
+    "which"
+   ],
+   "id": "wA02",
+   "note": "",
+   "ok": true
+  },
+  {
+   "ambiguous_binds": 0,
+   "checks": [],
+   "expect": [
+    "which"
+   ],
+   "got": [
+    "which"
+   ],
+   "id": "wA03",
+   "note": "",
+   "ok": true
+  },
+  {
+   "ambiguous_binds": 0,
+   "checks": [],
+   "expect": [
+    "which"
+   ],
+   "got": [
+    "which"
+   ],
+   "id": "wA04",
+   "note": "",
+   "ok": true
+  },
+  {
+   "ambiguous_binds": 0,
+   "checks": [],
+   "expect": [
+    "which"
+   ],
+   "got": [
+    "which"
+   ],
+   "id": "wA05",
+   "note": "",
+   "ok": true
+  },
+  {
+   "ambiguous_binds": 0,
+   "checks": [],
+   "expect": [
+    "which"
+   ],
+   "got": [
+    "which"
+   ],
+   "id": "wA06",
+   "note": "",
+   "ok": true
+  },
+  {
+   "ambiguous_binds": 0,
+   "checks": [],
+   "expect": [
+    "which"
+   ],
+   "got": [
+    "which"
+   ],
+   "id": "wA07",
+   "note": "",
+   "ok": true
+  },
+  {
+   "ambiguous_binds": 0,
+   "checks": [],
+   "expect": [
+    "which"
+   ],
+   "got": [
+    "which"
+   ],
+   "id": "wA08",
+   "note": "",
+   "ok": true
+  },
+  {
+   "ambiguous_binds": 0,
+   "checks": [],
+   "expect": [
+    "which"
+   ],
+   "got": [
+    "which"
+   ],
+   "id": "wA09",
+   "note": "",
+   "ok": true
+  },
+  {
+   "ambiguous_binds": 0,
+   "checks": [],
+   "expect": [
+    "which"
+   ],
+   "got": [
+    "which"
+   ],
+   "id": "wA10",
+   "note": "",
+   "ok": true
+  },
+  {
+   "ambiguous_binds": 0,
+   "checks": [],
+   "expect": [
+    "which"
+   ],
+   "got": [
+    "which"
+   ],
+   "id": "wA11",
+   "note": "",
+   "ok": true
+  },
+  {
+   "ambiguous_binds": 0,
+   "checks": [],
+   "expect": [
+    "which"
+   ],
+   "got": [
+    "which"
+   ],
+   "id": "wA12",
+   "note": "",
+   "ok": true
+  },
+  {
+   "ambiguous_binds": 0,
+   "checks": [],
+   "expect": [
+    "which"
+   ],
+   "got": [
+    "which"
+   ],
+   "id": "wA13",
+   "note": "",
+   "ok": true
+  },
+  {
+   "ambiguous_binds": 0,
+   "checks": [],
+   "expect": [
+    "which"
+   ],
+   "got": [
+    "which"
+   ],
+   "id": "wA14",
+   "note": "",
+   "ok": true
+  },
+  {
+   "ambiguous_binds": 0,
+   "checks": [],
+   "expect": [
+    "which"
+   ],
+   "got": [
+    "which"
+   ],
+   "id": "wA15",
+   "note": "",
+   "ok": true
+  },
+  {
+   "ambiguous_binds": 0,
+   "checks": [],
+   "expect": [
+    "receipt"
+   ],
+   "got": [
+    "receipt"
+   ],
+   "id": "wB01",
+   "note": "",
+   "ok": true
+  },
+  {
+   "ambiguous_binds": 0,
+   "checks": [],
+   "expect": [
+    "receipt"
+   ],
+   "got": [
+    "receipt"
+   ],
+   "id": "wB02",
+   "note": "",
+   "ok": true
+  },
+  {
+   "ambiguous_binds": 0,
+   "checks": [],
+   "expect": [
+    "receipt"
+   ],
+   "got": [
+    "receipt"
+   ],
+   "id": "wB03",
+   "note": "",
+   "ok": true
+  },
+  {
+   "ambiguous_binds": 0,
+   "checks": [],
+   "expect": [
+    "receipt"
+   ],
+   "got": [
+    "receipt"
+   ],
+   "id": "wB04",
+   "note": "",
+   "ok": true
+  },
+  {
+   "ambiguous_binds": 0,
+   "checks": [],
+   "expect": [
+    "fix"
+   ],
+   "got": [
+    "fix"
+   ],
+   "id": "wB05",
+   "note": "",
+   "ok": true
+  },
+  {
+   "ambiguous_binds": 0,
+   "checks": [],
+   "expect": [
+    "fix"
+   ],
+   "got": [
+    "fix"
+   ],
+   "id": "wB06",
+   "note": "",
+   "ok": true
+  },
+  {
+   "ambiguous_binds": 0,
+   "checks": [],
+   "expect": [
+    "fix"
+   ],
+   "got": [
+    "fix"
+   ],
+   "id": "wB07",
+   "note": "",
+   "ok": true
+  },
+  {
+   "ambiguous_binds": 0,
+   "checks": [],
+   "expect": [
+    "which"
+   ],
+   "got": [
+    "which"
+   ],
+   "id": "wB08",
+   "note": "no word says which",
+   "ok": true
+  },
+  {
+   "ambiguous_binds": 0,
+   "checks": [],
+   "expect": [
+    "which"
+   ],
+   "got": [
+    "which"
+   ],
+   "id": "wB09",
+   "note": "no word says which",
+   "ok": true
+  },
+  {
+   "ambiguous_binds": 0,
+   "checks": [],
+   "expect": [
+    "receipt"
+   ],
+   "got": [
+    "receipt"
+   ],
+   "id": "wB10",
+   "note": "",
+   "ok": true
+  },
+  {
+   "ambiguous_binds": 0,
+   "checks": [],
+   "expect": [
+    "which",
+    "receipt"
+   ],
+   "got": [
+    "which",
+    "receipt"
+   ],
+   "id": "wC01",
+   "note": "",
+   "ok": true
+  },
+  {
+   "ambiguous_binds": 0,
+   "checks": [],
+   "expect": [
+    "which",
+    "receipt"
+   ],
+   "got": [
+    "which",
+    "receipt"
+   ],
+   "id": "wC02",
+   "note": "",
+   "ok": true
+  },
+  {
+   "ambiguous_binds": 0,
+   "checks": [],
+   "expect": [
+    "which",
+    "receipt"
+   ],
+   "got": [
+    "which",
+    "receipt"
+   ],
+   "id": "wC03",
+   "note": "",
+   "ok": true
+  },
+  {
+   "ambiguous_binds": 0,
+   "checks": [],
+   "expect": [
+    "which",
+    "fix"
+   ],
+   "got": [
+    "which",
+    "fix"
+   ],
+   "id": "wC04",
+   "note": "",
+   "ok": true
+  },
+  {
+   "ambiguous_binds": 0,
+   "checks": [],
+   "expect": [
+    "which",
+    "fix"
+   ],
+   "got": [
+    "which",
+    "fix"
+   ],
+   "id": "wC05",
+   "note": "",
+   "ok": true
+  },
+  {
+   "ambiguous_binds": 0,
+   "checks": [],
+   "expect": [
+    "which",
+    "fix"
+   ],
+   "got": [
+    "which",
+    "fix"
+   ],
+   "id": "wC06",
+   "note": "",
+   "ok": true
+  },
+  {
+   "ambiguous_binds": 0,
+   "checks": [],
+   "expect": [
+    "which",
+    "fix"
+   ],
+   "got": [
+    "which",
+    "fix"
+   ],
+   "id": "wC07",
+   "note": "",
+   "ok": true
+  },
+  {
+   "ambiguous_binds": 0,
+   "checks": [],
+   "expect": [
+    "which",
+    "owner"
+   ],
+   "got": [
+    "which",
+    "owner"
+   ],
+   "id": "wC08",
+   "note": "still not clear: the owner, never a second question",
+   "ok": true
+  },
+  {
+   "ambiguous_binds": 0,
+   "checks": [],
+   "expect": [
+    "which",
+    "owner"
+   ],
+   "got": [
+    "which",
+    "owner"
+   ],
+   "id": "wC09",
+   "note": "",
+   "ok": true
+  },
+  {
+   "ambiguous_binds": 0,
+   "checks": [],
+   "expect": [
+    "which",
+    "owner"
+   ],
+   "got": [
+    "which",
+    "owner"
+   ],
+   "id": "wC10",
+   "note": "both: the owner decides, Mimi does not guess",
+   "ok": true
+  },
+  {
+   "ambiguous_binds": 0,
+   "checks": [],
+   "expect": [
+    "receipt"
+   ],
+   "got": [
+    "receipt"
+   ],
+   "id": "wD01",
+   "note": "",
+   "ok": true
+  },
+  {
+   "ambiguous_binds": 0,
+   "checks": [],
+   "expect": [
+    "receipt"
+   ],
+   "got": [
+    "receipt"
+   ],
+   "id": "wD02",
+   "note": "",
+   "ok": true
+  },
+  {
+   "ambiguous_binds": 0,
+   "checks": [],
+   "expect": [
+    "fix"
+   ],
+   "got": [
+    "fix"
+   ],
+   "id": "wD03",
+   "note": "",
+   "ok": true
+  },
+  {
+   "ambiguous_binds": 0,
+   "checks": [],
+   "expect": [
+    "fix"
+   ],
+   "got": [
+    "fix"
+   ],
+   "id": "wD04",
+   "note": "",
+   "ok": true
+  },
+  {
+   "ambiguous_binds": 0,
+   "checks": [],
+   "expect": [
+    "fix"
+   ],
+   "got": [
+    "fix"
+   ],
+   "id": "wD05",
+   "note": "",
+   "ok": true
+  }
+ ]
+}

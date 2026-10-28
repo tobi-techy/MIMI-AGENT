@@ -197,6 +197,61 @@ An open ask binds the shop's next reply to the helper that asked
   as Order's own flag, so it is never recorded twice). Never consent, never
   a money move. The route result carries `delivery_flagged`.
 
+### Two open asks on one thread (RAI-272)
+
+A delivery receipt ("Reply YES to confirm") and a correction question ("Reply
+YES or NO", about a pending restock draft or credit request) can both be
+open on one shop thread. A bare YES or NO fits both, so it binds to neither
+(`Agent._two_asks`, phrase rules in `mimi/harness/steer.py`):
+
+* Code asks one short question: "Yes to the delivery receipt or the order
+  change?" (or "the credit change", or the Pidgin form). Both asks stay
+  open. Turn status `steer_which`.
+* The shop's answer goes to that ask. "The delivery": Order reads the
+  receipt reply, with the shop's YES joined to the turn's batch so the
+  reader sees the shop's own words; the correction stays open. "The
+  change": the correction question's YES or NO path; the receipt stays open.
+* Still not clear ("both", another bare YES, "I no understand"): the owner
+  gets a note and the shop is told the owner will check. Never a second
+  question, never a guess, never consent. Turn status `steer_which_owner`.
+* A yes or no whose own words say which ("yes the goods complete", "yes make
+  am 300k") goes straight to that ask.
+
+Held-out set: `eval/which/cases.jsonl`, 40 cases written before the fix.
+`make which-eval` (offline, code only): 40/40, 0 ambiguous replies bound; the
+old code scored 10/40 with 29 bound.
+
+### The daily naira cap parks jobs (RAI-272)
+
+When the distributor's daily model allowance is used up, the loop stops the
+run before its next model call (`stopped_budget`, "daily naira cap
+reached"). The API parks the job instead of finishing it
+(`Agent._park`, one compare-and-set):
+
+* turn state `parked`, status `parked_budget`, with its loop state kept;
+* the shop (or rep) gets one holding reply written by code, with no figure;
+* the owner gets the loop's note once a day, and one approvals item
+  `raise_daily_allowance` per day and cap (approve tier; the proposed new
+  cap is double the old one, at least N500 more, computed in code).
+
+Approving it raises the cap and puts every parked job back as a lapsed
+lease, so the next worker takes it over from its checkpoint and finishes it
+(`resume_parked`). Rejecting it leaves the jobs parked. Nothing is dropped
+and nothing moves money: the allowance is Mimi's own model spend.
+
+### Brand: the Promo Check helper (RAI-272)
+
+A minimal, read-only helper behind `brand/promo-info` and
+`brand/brand-email` (`mimi/brand/tools.py`):
+
+| Tool | Tier | What it does |
+|---|---|---|
+| `get_brand_promos` | auto | The promos running today (Africa/Lagos) from a fixed synthetic list of the fictional brands, with the shop reply written by code from those rows |
+| `draft_brand_email` | approve (always) | An email to a brand, kept as a draft in the owner's approvals. Never sent: there is no email connector, and approving only marks it approved for the owner |
+
+Brand never promises a discount or a price and never quotes a naira figure
+in a draft.
+
 ### Steering: every part of every message, even mid-task (RAI-301)
 
 Mimi hears everything a shop or the owner sends, in any form, and answers

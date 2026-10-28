@@ -14,6 +14,9 @@ Workers take turns with ``claim``:
 * the claim is a compare-and-set on ``version`` and bumps the thread's
   ``claim_seq`` in the same transaction, so two workers can never both win a
   turn, or two turns of one thread, on SQLite or Postgres;
+* on Postgres the claim locks the turn row and its thread row with
+  ``FOR UPDATE SKIP LOCKED`` (the way River claims jobs): a worker skips a
+  row another worker is claiming instead of waiting on it;
 * a lease the holder stopped renewing expires and the turn is claimable
   again (takeover). The new holder carries on from the last checkpoint.
 
@@ -128,14 +131,25 @@ class TurnQueue:
 
     def _claim_txn(self, worker_id: str, turn_id: str, now: float) -> Claim | None:
         with self.engine.begin() as conn:
-            t = conn.execute(sa.select(s.turns).where(s.turns.c.turn_id == turn_id)).first()
+            pg = conn.dialect.name == "postgresql"
+            q = sa.select(s.turns).where(s.turns.c.turn_id == turn_id)
+            # Postgres: River-style claims. The turn row and then its thread row
+            # are locked FOR UPDATE SKIP LOCKED, so a worker never waits behind
+            # another worker's claim (or a turn finishing on that thread): it
+            # skips to the next candidate. SQLite has one writer at a time.
+            t = conn.execute(q.with_for_update(skip_locked=True) if pg else q).first()
             if t is None:
                 return None
             takeover = t.state == "leased"
             if not (t.state == "queued" or (takeover and (t.lease_expires_ts or 0) < now)):
                 return None
-            # Serialise claims on this thread (row lock on Postgres, the write
-            # lock on SQLite), then make sure nobody else holds it.
+            if pg and conn.execute(sa.select(s.threads.c.thread_id).where(
+                    s.threads.c.tenant_id == t.tenant_id,
+                    s.threads.c.thread_id == t.thread_id)
+                    .with_for_update(skip_locked=True)).first() is None:
+                return None  # another worker is busy on this thread right now
+            # Serialise claims on this thread (the row lock just taken on
+            # Postgres, the write lock on SQLite), then make sure nobody else holds it.
             conn.execute(s.threads.update().where(
                 s.threads.c.tenant_id == t.tenant_id, s.threads.c.thread_id == t.thread_id)
                 .values(claim_seq=s.threads.c.claim_seq + 1))
@@ -218,6 +232,25 @@ class TurnQueue:
                 raise LeaseLost(claim.turn_id)
         return Claim(**{**claim.__dict__, "version": claim.version + 1,
                         "checkpoint": dict(data)})
+
+    def join_batch(self, claim: Claim, external_ids: list[str], data: dict[str, Any]) -> Claim:
+        """Add earlier messages of the thread to this turn's batch (compare-and-set
+        with its checkpoint): the shop's YES the which question asked about,
+        so the helper reads the shop's own words (RAI-272)."""
+        batch = list(claim.batch)
+        for ext in external_ids:
+            if ext and ext not in batch:
+                batch.insert(0, ext)
+        with self.engine.begin() as conn:
+            res = conn.execute(s.turns.update().where(
+                s.turns.c.turn_id == claim.turn_id, s.turns.c.version == claim.version,
+                s.turns.c.lease_owner == claim.worker_id, s.turns.c.state == "leased")
+                .values(checkpoint=dumps(data), version=claim.version + 1,
+                        batch=dumps(batch)))
+            if res.rowcount != 1:
+                raise LeaseLost(claim.turn_id)
+        return Claim(**{**claim.__dict__, "version": claim.version + 1,
+                        "checkpoint": dict(data), "batch": tuple(batch)})
 
     def absorb(self, claim: Claim, data: dict[str, Any], *, merge: list[tuple[str, str]],
                inbox: list[tuple[str, str, dict[str, Any]]],

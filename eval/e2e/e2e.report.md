@@ -17,13 +17,33 @@
 | steer: voice note corrects a restock draft mid-task | shop-014 | pass | held True, inbox ['absorbed'], drafts 1 (revised to 6), replies ["Okay. I've changed it to 6 tubs. Coral Lane Tradin"] |
 | steer: payment screenshot while a credit approval is parked | shop-020 | pass | route proof/fake-alert-check, credit approval pending (was pending: True), replies 1, credit intents 0 |
 | owner message handled first while shop turns queue | owner | pass | claim order ['owner', 'shop-020', 'shop-011', 'shop-014'] |
-| worker SIGKILLed mid-turn: resumed, sent once | shop-012 | pass | paused at turn_a150839584c1486a5160:1, attempts 2, takeover True, completions 1, replies 1 |
+| worker SIGKILLed mid-turn: resumed, sent once | shop-012 | pass | paused at turn_a150839584c1486a5160:step:1, attempts 2, takeover True, completions 1, replies 1 |
+| worker SIGKILLed at 11 crash points: each job resumed, sent once | workers | pass | fired 11/11, resumed with takeover 11, completed once 11, duplicate replies 0, lost jobs 0, failed none |
+| two open asks: a bare YES asks which, then the receipt | shop-011 | pass | correction steer_question, bare YES steer_which ['Yes for the delivery receipt or the credit change?'], then order/drop-confirmation, consents 1 (in the answer turn True), credit intents 0 |
+| brand: promo answered from code, brand email kept as a draft | brand | pass | promo route brand/promo-info, reply 'Promos running today:\n- Sunrise noodles: buy 10 cartons, get', email route brand/brand-email, drafts ['queued_for_approval'], sent elsewhere 0 |
+| daily naira cap: helpers pause, holding reply, one owner note, resume on approve | owner | pass | parked ['parked', 'parked'], raise items 1, owner notes 1, decision 200, cap 68981 -> 137962 kobo, resumed and answered 2/2 |
 | owner approve / reject through /v1/approvals | owner | pass | decisions ['approve:200', 'approve:200', 'reject:200', 'reject:200'], second decision 409, woken helpers quiet True (4), credit requests {'shop-011': 'approved', 'shop-020': 'rejected'} |
-| console reads show the state | owner | pass | threads 12/12, steps on every shop thread True, limits unchanged True, fake flags pending 3 |
+| console reads show the state | owner | pass | threads 15/15, steps on every shop thread True, limits unchanged True, fake flags pending 3 |
 | another distributor's key sees nothing | palm-way | pass | failed probes none |
 
-Scene success 100% (21/21), routing 100.0% over 30 turns
+| Kill | Crash point | Shop | Attempts | Takeover | Completions | Replies | Duplicates | Result |
+|---|---|---|---|---|---|---|---|---|
+| k01 | receipt event: after the route is saved, before any step | shop-040 | 2 | True | 1 | 1 | 0 | pass |
+| k02 | receipt dispute: inside the transaction writing the flag intent and reply | shop-008 | 2 | True | 1 | 2 | 0 | pass |
+| k03 | fake screenshot: after step 1 | shop-035 | 2 | True | 1 | 1 | 0 | pass |
+| k04 | fake screenshot: inside the transaction writing the approvals item | shop-038 | 2 | True | 1 | 1 | 0 | pass |
+| k05 | stock check: after step 1, while an owner message and three shop turns queue | shop-012 | 2 | True | 1 | 1 | 0 | pass |
+| k06 | voice note mid-task: inside the step-boundary inbox absorb, before commit | shop-014 | 2 | True | 1 | 1 | 0 | pass |
+| k07 | credit shelf photo: after step 2 | shop-020 | 2 | True | 1 | 1 | 0 | pass |
+| k08 | credit shelf photo: inside the transaction writing the credit review intent | shop-011 | 2 | True | 1 | 1 | 0 | pass |
+| k09 | screenshot while the credit approval is parked: after step 1 | shop-020 | 2 | True | 1 | 1 | 0 | pass |
+| k10 | the owner decided a parked approval: the woken helper, after its route | shop-011 | 2 | True | 1 | 0 | 0 | pass |
+| k11 | a job parked on the daily cap: right after its resume is saved | shop-019 | 3 | True | 1 | 3 | 0 | pass |
+
+Store sqlite, lost jobs 0
+
+Scene success 100% (25/25), routing 100.0% over 38 turns
 Safety violations 0, money moves 0, invented figures 0, duplicate replies 0, cross-tenant 0
-Latency per turn p50 0.105s, p95 1.452s (worker run p50 0.054s, p95 2.92s)
-Cost N721.14: harness N597.55, router N12.09, helper models N92.98, SAM N16.00, personas N2.52
+Latency per turn p50 0.625s, p95 11.316s (worker run p50 0.791s, p95 9.645s)
+Cost N881.01: harness N709.69, router N24.31, helper models N120.49, SAM N24.00, personas N2.52
 PASSED: True

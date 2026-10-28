@@ -349,6 +349,22 @@ class SqlGo:
                  "shop_id": r.shop_id, "turn_id": r.turn_id, "created_at": r.created_at,
                  "idempotency_key": r.idempotency_key} for r in rows]
 
+    def asked_since_receipt(self, tenant_id: str, shop_id: str, receipt_key: str,
+                            kinds: tuple[str, ...] = ("steer_which",)) -> list[str]:
+        """Code-written questions Mimi sent this shop after a delivery receipt
+        (RAI-272: "Yes to the delivery receipt or the order change?"), oldest
+        first, so the receipt reader knows what the shop's answer answers."""
+        with self.engine.connect() as conn:
+            ts = conn.execute(sa.select(s.messages.c.ts).where(
+                s.messages.c.tenant_id == tenant_id,
+                s.messages.c.idempotency_key == receipt_key)).scalar()
+            if ts is None:
+                return []
+            return [str(t) for t in conn.execute(sa.select(s.messages.c.text).where(
+                s.messages.c.tenant_id == tenant_id, s.messages.c.shop_id == shop_id,
+                s.messages.c.direction == "out", s.messages.c.kind.in_(kinds),
+                s.messages.c.ts >= ts).order_by(s.messages.c.ts)).scalars()]
+
     def turn_messages(self, tenant_id: str, turn_id: str) -> list[dict[str, Any]]:
         """The inbound messages a turn answers (its batch), oldest first.
 

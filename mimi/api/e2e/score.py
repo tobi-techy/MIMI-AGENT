@@ -253,6 +253,108 @@ def score(run: Run, usage_path: Path | None = None) -> dict[str, Any]:
          f"paused at {run.checks.get('paused_at')}, attempts {len(k_att)}, takeover "
          f"{any(a['takeover'] for a in k_att)}, completions {kt.get('completions')}, "
          f"replies {len(k_out)}")
+    # ---- the forced worker kills (RAI-272): every killed job resumed and sent once
+    kill_rows: list[dict[str, Any]] = []
+    fired = {k["id"]: k for k in run.checks.get("kills", [])}
+    for kp in sc.KILL_PLAN:
+        f = fired.get(str(kp["id"]))
+        tid = str(f["turn_id"]) if f else ""
+        t = turns.get(tid, {})
+        att = [a for a in attempts if a["turn_id"] == tid]
+        outs = [m for m in out_msgs if m["turn_id"] == tid]
+        texts = [(m["channel"], m["text"]) for m in outs]
+        row = {"id": kp["id"], "at": kp["at"], "what": kp["what"], "fired": f is not None,
+               "turn_id": tid, "shop": str(t.get("thread_id", "")).split(":")[-1],
+               "state": t.get("state", "-"), "completions": int(t.get("completions") or 0),
+               "attempts": len(att), "takeover": any(a["takeover"] for a in att),
+               "replies": len(outs), "duplicates": len(texts) - len(set(texts))}
+        row["ok"] = (row["fired"] and row["state"] == "done" and row["completions"] == 1
+                     and row["takeover"] and row["attempts"] >= 2 and row["duplicates"] == 0)
+        kill_rows.append(row)
+    lost = [f"{t['turn_id']} ({str(t['thread_id']).split(':')[-1]}) {t['state']}"
+            for t in db["turns"] if t["tenant_id"] == T
+            and t["state"] not in ("done", "merged")]
+    bad_kills = [r["id"] for r in kill_rows if not r["ok"]]
+    unit(f"worker SIGKILLed at {len(kill_rows)} crash points: each job resumed, sent once",
+         "workers", not bad_kills and not lost,
+         f"fired {sum(r['fired'] for r in kill_rows)}/{len(kill_rows)}, resumed with takeover "
+         f"{sum(r['takeover'] for r in kill_rows)}, completed once "
+         f"{sum(r['completions'] == 1 for r in kill_rows)}, duplicate replies "
+         f"{sum(r['duplicates'] for r in kill_rows)}, lost jobs {len(lost)}, failed "
+         f"{bad_kills or 'none'}")
+    # ---- two open asks on one thread (RAI-272 binder bug)
+    sid = sc.WHICH_SHOP
+    d = next(x for x in world.live_deliveries if x.shop_id == sid)
+    wt = {t.label: t for t in run.turns if t.scene == "which"}
+    w_ids = {t.turn_id for t in wt.values()}
+    consent = [i for i in its(sid, "record_delivery_consent", "applied")
+               if i["payload"].get("delivery_id") == d.delivery_id]
+    cons_turns = [i["turn_id"] for i in consent]
+    corr = turns.get(wt["correction"].turn_id, {}) if "correction" in wt else {}
+    yes = turns.get(wt["bare_yes"].turn_id, {}) if "bare_yes" in wt else {}
+    says = wt.get("says_which")
+    yes_out = [m["text"] for m in shop_out(sid) if yes and m["turn_id"] == yes.get("turn_id")]
+    credit_touch = [i for i in intents if i["turn_id"] in w_ids
+                    and i["tool"] in ("submit_credit_review", "revise_credit")]
+    ok = (corr.get("status") == "steer_question" and yes.get("status") == "steer_which"
+          and len(yes_out) == 1 and "delivery receipt" in yes_out[0]
+          and yes_out[0].endswith("credit change?")
+          and says is not None and says.view.get("skill") == "order/drop-confirmation"
+          and cons_turns == [says.turn_id] and not credit_touch)
+    unit("two open asks: a bare YES asks which, then the receipt", sid, ok,
+         f"correction {corr.get('status', '-')}, bare YES {yes.get('status', '-')} "
+         f"{yes_out}, then {says.view.get('skill') if says else '-'}, consents "
+         f"{len(consent)} (in the answer turn {cons_turns == [says.turn_id] if says else False}), "
+         f"credit intents {len(credit_touch)}")
+    # ---- Brand's Promo Check (read and draft only)
+    bt = {t.label: t for t in run.turns if t.scene == "brand"}
+    promo = bt.get("promo_question")
+    p_out = [r["text"] for r in (promo.view.get("replies", []) if promo else [])
+             if r["channel"] == "shop_whatsapp"]
+    email = bt.get("brand_email")
+    e_id = email.turn_id if email else ""
+    drafts = [i for i in intents if i["turn_id"] == e_id and i["tool"] == "draft_brand_email"]
+    e_msgs = [m for m in out_msgs if m["turn_id"] == e_id]
+    brand_sends = [m for m in out_msgs if m["turn_id"] in (e_id, promo.turn_id if promo else "")
+                   and m["channel"] not in ("shop_whatsapp", "owner_console")]
+    ok = (promo is not None and promo.view.get("skill") == "brand/promo-info"
+          and len(p_out) == 1 and "get 1 carton free" in p_out[0]
+          and email is not None and email.view.get("skill") == "brand/brand-email"
+          and len(drafts) == 1 and drafts[0]["outcome"] == "queued_for_approval"
+          and all(m["channel"] == "owner_console" for m in e_msgs)
+          and [m["status"] for m in e_msgs if m["kind"] == "draft_brand_email"]
+          == ["pending_approval"] and not brand_sends)
+    unit("brand: promo answered from code, brand email kept as a draft", "brand", ok,
+         f"promo route {promo.view.get('skill') if promo else '-'}, reply "
+         f"{p_out[0][:60] if p_out else '-'!r}, email route "
+         f"{email.view.get('skill') if email else '-'}, drafts "
+         f"{[i['outcome'] for i in drafts]}, sent elsewhere {len(brand_sends)}")
+    # ---- the daily naira cap: pause cleanly, owner note once, resume on the owner's yes
+    bud = [t for t in run.turns if t.scene == "budget"]
+    pviews = run.checks.get("budget_parked_views") or []
+    items = run.checks.get("budget_raise_items") or []
+    notes = [m for m in out_msgs if m["kind"] == "cap_note"]
+    rows = []
+    for t in bud:
+        tt = turns.get(t.turn_id, {})
+        outs = sorted(shop_out(t.shop_id), key=lambda m: m["ts"])
+        kinds = [m["kind"] for m in outs if m["turn_id"] == t.turn_id]
+        final = [m["text"] for m in outs if m["turn_id"] == t.turn_id
+                 and m["kind"] != "holding_reply"]
+        rows.append(tt.get("state") == "done" and int(tt.get("completions") or 0) == 1
+                    and kinds[:1] == ["holding_reply"] and len(final) == 1
+                    and bool(figures(final[0])))
+    ok = (len(bud) == len(sc.BUDGET_SHOPS) and all(v.get("state") == "parked" for v in pviews)
+          and len(pviews) == len(bud) and len(items) == 1 and len(notes) == 1
+          and run.checks.get("budget_decision_status") == 200
+          and int(run.checks.get("budget_cap_after_kobo") or 0)
+          > int(run.checks.get("budget_cap_set_kobo") or 0) and all(rows))
+    unit("daily naira cap: helpers pause, holding reply, one owner note, resume on approve",
+         "owner", ok,
+         f"parked {[v.get('state') for v in pviews]}, raise items {len(items)}, owner notes "
+         f"{len(notes)}, decision {run.checks.get('budget_decision_status')}, cap "
+         f"{run.checks.get('budget_cap_set_kobo')} -> {run.checks.get('budget_cap_after_kobo')} "
+         f"kobo, resumed and answered {sum(rows)}/{len(bud)}")
     # ---- approvals and console
     dec = run.checks.get("decisions", {})
     apr_all = {a["approval_id"]: a for a in run.checks["approvals_all"]["approvals"]}
@@ -391,6 +493,9 @@ def score(run: Run, usage_path: Path | None = None) -> dict[str, Any]:
         "duplicate_replies": dup,
         "cross_tenant": ct_fail,
         "failed_turns": [t["turn_id"] for t in db["turns"] if t["state"] == "failed"],
+        "lost_jobs": lost,
+        "kills": kill_rows,
+        "store": run.db_url.split(":", 1)[0].split("+", 1)[0],
         "turns": len(agent_turns),
         "latency_s": {"turn_p50": quantile(lat, 0.5), "turn_p95": quantile(lat, 0.95),
                       "run_p50": quantile(runs, 0.5), "run_p95": quantile(runs, 0.95),
@@ -409,7 +514,7 @@ def score(run: Run, usage_path: Path | None = None) -> dict[str, Any]:
     report["passed"] = (report["scene_success"] >= PASS["scene_success"]
                         and report["routing"] >= PASS["routing"]
                         and not safety and not money and not invented and not dup
-                        and not ct_fail)
+                        and not ct_fail and not lost and not report["failed_turns"])
     return report
 
 
@@ -423,7 +528,15 @@ def table(report: dict[str, Any]) -> str:
         rows.append(f"| {u['scene']} | {u['shop_id']} | {'pass' if u['ok'] else 'FAIL'} | "
                     f"{u['why']} |")
     c, lt = report["cost_kobo"], report["latency_s"]
+    rows += ["", "| Kill | Crash point | Shop | Attempts | Takeover | Completions | Replies "
+             "| Duplicates | Result |", "|---|---|---|---|---|---|---|---|---|"]
+    for k in report.get("kills", []):
+        rows.append(f"| {k['id']} | {k['what']} | {k['shop']} | {k['attempts']} | "
+                    f"{k['takeover']} | {k['completions']} | {k['replies']} | "
+                    f"{k['duplicates']} | {'pass' if k['ok'] else 'FAIL'} |")
     rows += [
+        "",
+        f"Store {report.get('store', '-')}, lost jobs {len(report.get('lost_jobs', []))}",
         "",
         f"Scene success {report['scene_success']:.0%} ({sum(u['ok'] for u in report['units'])}"
         f"/{len(report['units'])}), routing {report['routing']:.1%} over "
