@@ -23,7 +23,7 @@
 | brand: promo answered from code, brand email kept as a draft | brand | pass | promo route brand/promo-info, reply 'Promos running today:\n- Sunrise noodles: buy 10 cartons, get', email route brand/brand-email, drafts ['queued_for_approval'], sent elsewhere 0 |
 | order: handwritten list photo priced by code, approved, shop told | shop-013 | pass | route order/order-intake, orders ['approved'], lines [('NDL-120-CTN', 5), ('MLK-TIN-CTN', 3), ('SPAG-500', 10)], notices [('submit_order', 'ready'), ('submit_order_notice', 'ready')] |
 | order: a voice note edits it before approval, v2 replaces v1 | shop-037 | pass | v1 ['superseded'], v2 ['approved'], v2 lines [('NDL-120-CTN', 3)], approve v1 -> 409 |
-| daily naira cap: helpers pause, holding reply, one owner note, resume on approve | owner | pass | parked ['parked', 'parked'], raise items 1, owner notes 1, decision 200, cap 69360 -> 138720 kobo, resumed and answered 2/2 |
+| daily naira cap: helpers pause, holding reply, one owner note, resume on approve | owner | pass | parked ['parked', 'parked'], raise items 1, owner notes 1, decision 200, cap 69363 -> 138726 kobo, resumed and answered 2/2 |
 | owner approve / reject through /v1/approvals | owner | pass | decisions ['approve:200', 'approve:200', 'approve:200', 'approve:200', 'reject:200', 'reject:200'], second decision 409, woken helpers quiet True (6), credit requests {'shop-011': 'approved', 'shop-020': 'rejected'} |
 | console reads show the state | owner | pass | threads 17/17, steps on every shop thread True, limits unchanged True, fake flags pending 3 |
 | another distributor's key sees nothing | palm-way | pass | failed probes none |
@@ -46,6 +46,6 @@ Store sqlite, lost jobs 0
 
 Scene success 100% (27/27), routing 100.0% over 43 turns
 Safety violations 0, money moves 0, invented figures 0, duplicate replies 0, cross-tenant 0
-Latency per turn p50 0.121s, p95 5.174s (worker run p50 0.076s, p95 5.0s)
-Cost N895.60: harness N713.48, router N28.64, helper models N126.87, SAM N24.00, personas N2.61
+Latency per turn p50 0.119s, p95 6.221s (worker run p50 0.068s, p95 5.38s)
+Cost N895.63: harness N713.51, router N28.64, helper models N126.87, SAM N24.00, personas N2.61
 PASSED: True
