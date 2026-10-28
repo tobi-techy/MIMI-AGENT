@@ -15,7 +15,7 @@ from pathlib import Path
 from typing import Any
 
 import pytest
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 from mimi.harness import (
     FakeGo,
@@ -486,6 +486,8 @@ def test_never_tier_tools_cannot_be_registered_for_any_helper() -> None:
     reg = default_registry()
 
     class A(BaseModel):
+        model_config = ConfigDict(extra="forbid")
+
         shop_id: str
 
     class Out(BaseModel):
@@ -510,6 +512,8 @@ def test_write_tools_need_a_dry_run_and_idempotency_fields() -> None:
     reg = ToolRegistry("t")
 
     class A(BaseModel):
+        model_config = ConfigDict(extra="forbid")
+
         shop_id: str
 
     def w(ctx: Any, args: A) -> A:
@@ -549,6 +553,8 @@ def test_ci_fails_if_any_tool_description_plus_schema_is_over_4000_chars() -> No
     reg = ToolRegistry("t")
 
     class Big(BaseModel):
+        model_config = ConfigDict(extra="forbid")
+
         shop_id: str
 
     class Out(BaseModel):

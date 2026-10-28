@@ -44,6 +44,7 @@ from typing import Any
 
 from mimi.harness import lexicon
 from mimi.harness.skills import allowed_for
+from mimi.harness.untrusted import defang
 from mimi.models.base import ChatMessage, ChatModel, ModelError
 
 BINDER_PROMPT_VERSION = "binder-2026-10-28.1"
@@ -144,7 +145,7 @@ def binder_messages(skill: str, text: str) -> list[ChatMessage]:
     lines = "\n".join(f"- {lb}: {_DESCRIBE[lb]}" for lb in labels)
     ask = ASKS.get(skill, "a question; the shop's reply is awaited")
     user = (f"Mimi asked the shop: {ask}.\n"
-            f"<shop_message untrusted=\"true\">\n{text}\n</shop_message>")
+            f"<shop_message untrusted=\"true\">\n{defang(text)}\n</shop_message>")
     return [ChatMessage("system", SYSTEM.format(labels=lines)), ChatMessage("user", user)]
 
 

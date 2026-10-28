@@ -58,13 +58,13 @@ def to_runtime(rec: IntentRecord) -> HarnessIntent:
                          rec.model_dump(mode="json"))
 
 
-def draft_intent(d: OutboundDraft, job_id: str) -> HarnessIntent:
+def draft_intent(d: OutboundDraft, job_id: str, *, shadow: bool = False) -> HarnessIntent:
     """An owner question the harness wrote itself (budget, daily cap)."""
     rec = {"tool": "send_to_user", "intent_kind": "send_to_user", "tier": d.tier,
            "scope": "org:owner", "tenant_id": d.tenant_id, "shop_id": d.shop_id,
            "idempotency_key": d.idempotency_key, "attempt_key": d.idempotency_key,
            "payload": {"channel": d.channel, "body": d.body, "kind": d.kind},
-           "preview": d.body, "step": d.step, "shadow": False}
+           "preview": d.body, "step": d.step, "shadow": shadow}
     return HarnessIntent(_scope(d.tenant_id, d.shop_id), "send_to_user", rec)
 
 
@@ -98,7 +98,7 @@ def harness_steps(harness: Harness, helpers: Mapping[str, Helper]) -> dict[str, 
                                enforce_run_budget=False)
             keys = {i.idempotency_key for i in res.new_intents}
             intents: list[HarnessIntent] = [to_runtime(i) for i in res.new_intents]
-            intents += [draft_intent(d, ctx.job_id) for d in res.new_drafts
+            intents += [draft_intent(d, ctx.job_id, shadow=helper.shadow) for d in res.new_drafts
                         if d.idempotency_key not in keys]
             trace = _trace(res.new_events, ctx)
             common: dict[str, Any] = dict(

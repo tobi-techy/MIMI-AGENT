@@ -505,8 +505,9 @@ class SqlGo:
                      skill: str = "") -> tuple[str, str | None]:
         """Record one intent once. Returns (outcome, approval_id or None).
 
-        ``never`` is refused; ``approve`` waits in the owner's approvals;
-        ``auto`` and ``notify`` are applied. Nothing here can move money: a
+        ``never`` is refused; a shadow-mode record is ``shadowed`` (recorded,
+        applied never); ``approve`` waits in the owner's approvals; ``auto``
+        and ``notify`` are applied. Nothing here can move money: a
         money verb is refused whatever tier it arrives with.
         """
         key = str(record["idempotency_key"])
@@ -522,6 +523,10 @@ class SqlGo:
             return f"duplicate:{existing}", apr
         if tier == "never" or moves_money(tool, kind):
             outcome = "refused"
+        elif record.get("shadow"):
+            # Shadow mode (RAI-235): the intent is recorded and applied never.
+            # No approval, no credit request, no message, whatever its tier.
+            outcome = "shadowed"
         elif tier == "approve":
             outcome = "queued_for_approval"
         else:
@@ -544,7 +549,7 @@ class SqlGo:
                 "shop_id": shop_id, "tool": tool, "intent_kind": kind,
                 "preview": str(record.get("preview", "")), "payload": dumps(payload),
                 "status": "pending", "created_at": now, "created_ts": time.time()})
-        if outcome != "refused" and is_credit_intent(tool, kind) and shop_id:
+        if outcome not in ("refused", "shadowed") and is_credit_intent(tool, kind) and shop_id:
             amount = 0
             for f in ("amount_kobo", "new_limit_kobo", "limit_kobo", "bump_kobo"):
                 if isinstance(payload.get(f), int):

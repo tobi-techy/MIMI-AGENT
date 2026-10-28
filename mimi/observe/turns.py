@@ -61,7 +61,6 @@ FEATURE: dict[str, str] = {
     "stock_check": "stock",
     "stock_answer": "stock",
 }
-DISTRIBUTOR_TAG = "distributor:coral-lane"
 
 # USD per 1M tokens (input, output), Meta Model API standard and contributor
 # mode, from https://dev.meta.ai/docs/pricing-rate-limits (checked 27 Oct 2026).
@@ -199,7 +198,7 @@ class Turn:
 
     @property
     def tags(self) -> list[str]:
-        tags = [self.feature, f"verdict:{self.verdict or 'none'}", DISTRIBUTOR_TAG]
+        tags = [self.feature, f"verdict:{self.verdict or 'none'}"]
         if self.language:
             tags.append(f"language:{self.language}")
         return tags

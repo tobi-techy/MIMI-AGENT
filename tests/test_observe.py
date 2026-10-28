@@ -128,7 +128,8 @@ def test_turns_are_one_per_shop_message_with_attributes() -> None:
         assert t.user_id.startswith("shop-") and "+" not in t.user_id
         assert t.session_id.startswith(t.shop_id + ":")
         assert t.feature in t.tags and any(x.startswith("verdict:") for x in t.tags)
-        assert "distributor:coral-lane" in t.tags
+        # No hardcoded tenant tag: a trace never claims a distributor it is not.
+        assert not any(x.startswith("distributor:") for x in t.tags)
         names = {s.name for s in t.scores}
         assert "turn_error" in names
     shot = next(t for t in rec.turns if t.flow == "payment_screenshot" and t.verdict != "duplicate")

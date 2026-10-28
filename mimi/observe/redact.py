@@ -13,7 +13,11 @@ rules are the ones a real shop's data would need:
 * images and audio: raw bytes and ``data:...;base64,...`` URLs never leave;
   they become ``{"sha256": ..., "bytes": n}`` / ``[image sha256=...]``;
 * fields named like ``account``, ``phone``, ``msisdn``, ``sender_phone``:
-  digits masked to the last 4 whatever their shape.
+  digits masked to the last 4 whatever their shape;
+* integers of 10 or more digits (a phone or account number stored as a
+  number) are masked the same way, except in fields that are clearly a
+  measure (``*_kobo``, ``*_ms``, ``*_ns``, ``*_tokens``, ``*_bytes``,
+  ``ts``, ``seq``...).
 
 ``redact`` is pure and total: it never raises, whatever it is given.
 """
@@ -48,6 +52,21 @@ _KEYS = (
 _PASS_THROUGH = frozenset({"LangfuseMedia"})
 _SENSITIVE_KEYS = ("account", "phone", "msisdn", "nuban")
 _SECRET_KEYS = ("api_key", "apikey", "secret", "password", "token", "authorization")
+# Field names whose integers are measures, never identifiers.
+_MEASURE_SUFFIXES = ("_kobo", "_ms", "_ns", "_s", "_tokens", "_bytes", "_ts", "_count",
+                     "_at", "_unix", "_epoch")
+_MEASURE_KEYS = frozenset({"ts", "seq", "bytes", "tokens", "kobo", "duration", "input",
+                           "output", "total", "step", "steps", "epoch"})
+_LONG_INT = 10 ** 9  # 10 or more digits
+
+
+def _is_measure(key: str) -> bool:
+    k = key.lower()
+    return k in _MEASURE_KEYS or k.endswith(_MEASURE_SUFFIXES)
+
+
+def _long_int(value: int) -> bool:
+    return abs(value) >= _LONG_INT
 
 
 def _digits(s: str) -> str:
@@ -101,6 +120,8 @@ def _field(key: str, value: Any, depth: int = 0) -> Any:
         s = str(value)
         if len(_digits(s)) >= 5:
             return mask_phone(s) if "phone" in k or "msisdn" in k else mask_digits(s)
+    if isinstance(value, int) and not isinstance(value, bool) and _is_measure(k):
+        return value
     return redact(value, depth + 1)
 
 
@@ -109,6 +130,9 @@ def redact(value: Any, _depth: int = 0) -> Any:
     try:
         if _depth > 12:
             return "[truncated]"
+        if isinstance(value, int) and not isinstance(value, bool) and _long_int(value):
+            # A phone or account number kept as a number (see the module doc).
+            return mask_digits(str(value))
         if value is None or isinstance(value, bool | int | float):
             return value
         if type(value).__name__ in _PASS_THROUGH:

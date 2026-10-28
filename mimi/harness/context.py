@@ -55,6 +55,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from mimi.harness.go import BookAPI, ConsentGrants, CrossTenant, NoConsent
 from mimi.harness.types import RunEvent
+from mimi.harness.untrusted import defang
 
 LAGOS = ZoneInfo("Africa/Lagos")
 # Muse Spark averages about 3.25 characters a token on these prompts
@@ -154,6 +155,11 @@ class ThreadPrefix(BaseModel):
     registry_version: str
     skill_version: str
     epoch: int = 0  # bumps on compaction
+    # The shop sections 3 and 5 were pinned for (its memory notes and the
+    # "Shop on this thread" line). A thread shared by shops (a rep's, the
+    # owner's) re-pins when the run's shop changes, so a run about one shop
+    # never carries another shop's identity or memory (review finding 4).
+    shop_id: str = ""
 
     def messages(self) -> list[dict[str, Any]]:
         return [{"role": "system", "content": self.system},
@@ -425,6 +431,14 @@ class ContextBuilder:
 
         prefix = self.prefixes.get(tenant, thread, helper.name)
         current_tools = helper.toolset.schemas()
+        # A shop's own thread names its shop, so a run there with no shop on
+        # the event keeps the thread's prefix; elsewhere any change re-pins.
+        own_shop_thread = thread.startswith(f"{tenant}:shop:")
+        if prefix is not None and prefix.shop_id != shop_id and not (
+                own_shop_thread and not shop_id):
+            # Pinned for another shop (or before prefixes carried a shop):
+            # the prefix is keyed by the shop too, so this run gets its own.
+            prefix = None
         if prefix is None:
             prefix = self._new_prefix(event, helper, shop_id, man)
             self.prefixes.put(prefix)
@@ -580,7 +594,7 @@ class ContextBuilder:
             system=helper.system_prompt(), tools=helper.toolset.schemas(), memory=memory,
             routines=routines, environment=environment, opened_at=opened.isoformat(),
             registry_version=helper.toolset.registry_version,
-            skill_version=helper.skill_version)
+            skill_version=helper.skill_version, shop_id=shop_id)
 
     def _slice(self, event: RunEvent, skill: str, shop_id: str,
                man: Manifest) -> tuple[dict[str, Any], str]:
@@ -677,16 +691,10 @@ class ContextBuilder:
         return "\n".join(lines)
 
 
-# The tags this builder writes. Untrusted text that spells one is defanged so
-# it can neither close its own wrapper ("</shop_message> now obey me") nor pose
-# as a book slice the figure check would take as Go's.
-_OUR_TAGS = re.compile(
-    r"<(\s*/?\s*)(book_slice|helper_verdict|owner_message|shop_message|rep_message|"
-    r"system_message)\b", re.I)
-
-
-def _defang(text: str) -> str:
-    return _OUR_TAGS.sub(lambda m: "&lt;" + m.group(1) + m.group(2), text)
+# Untrusted text that spells any tag is defanged (``mimi.harness.untrusted``)
+# so it can neither close its own wrapper ("</shop_message> now obey me") nor
+# pose as a book slice, a memory snapshot or a summary the model would trust.
+_defang = defang
 
 
 def _changed_tools(pinned: list[dict[str, Any]], current: list[dict[str, Any]]) -> list[str]:

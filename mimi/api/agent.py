@@ -1269,8 +1269,10 @@ class Agent:
                             conn, tenant, drec.model_dump(mode="json"), turn_id=turn_id,
                             thread_id=thread, helper=d.helper, skill=d.skill)
                             if drec is not None else ("applied", None))
-                        if outcome.endswith("refused"):
-                            continue
+                        shadow = (drec.shadow if drec is not None
+                                  else getattr(self.helpers.get(d.helper), "shadow", False))
+                        if outcome.endswith(("refused", "shadowed")) or shadow:
+                            continue  # refused, or a shadow-mode run: nothing goes out
                         self._out(conn, tenant, thread, turn_id, key=dr.idempotency_key,
                                   channel=dr.channel, shop_id=dr.shop_id, text=dr.body,
                                   kind=dr.kind,
@@ -1582,7 +1584,7 @@ class Agent:
                 sa.select(s.intents.c.payload).where(
                     s.intents.c.tenant_id == tenant, s.intents.c.shop_id == shop_id,
                     s.intents.c.tool.in_(RECEIPT_SETTLED),
-                    s.intents.c.outcome != "refused"))]
+                    s.intents.c.outcome.not_in(("refused", "shadowed"))))]
             if dlv in done:
                 continue
             payload = {"shop_id": shop_id, "delivery_id": dlv, "reason": "escalated",
