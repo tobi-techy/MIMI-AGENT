@@ -52,6 +52,7 @@ class Case:
     owner_text: str = "how is shop-001 doing?"
     channel: str = "owner_console"
     wake: str = ""
+    shop: str = "shop-001"  # the shop on a shop_whatsapp thread
     expect: dict[str, Any] = field(default_factory=dict)
 
 
@@ -61,6 +62,14 @@ PAY1 = ("get_payment_history", {"shop_id": "shop-001"})
 FOLLOW = ("set_followup", {"shop_id": "shop-005", "in_hours": 96, "reason": "promised Friday"})
 REMIND = ("send_reminder", {"shop_id": "shop-005", "tone": "soft",
                             "invoice_id": "dlv-00-0055"})
+REMIND2 = ("send_reminder", {"shop_id": "shop-002", "tone": "soft",
+                             "invoice_id": "dlv-07-0017"})
+BAL2 = ("get_balance", {"shop_id": "shop-002"})
+BAL21 = ("get_balance", {"shop_id": "shop-021"})
+# The bank feed holds one N4,000 credit from Funke & Sons Mini Mart (pay-00161):
+# exactly invoice dlv-00-0055's outstanding amount, and not dlv-12-0057's N4,100.
+CHECK5 = ("check_payment", {"shop_id": "shop-005", "amount_kobo": 400_000})
+CHECK1 = ("check_payment", {"shop_id": "shop-001", "amount_kobo": 44_500_000})
 
 
 CASES: tuple[Case, ...] = (
@@ -106,9 +115,57 @@ CASES: tuple[Case, ...] = (
     Case("claim-ok-sent-alongside", "claims", False,
          "I've sent Funke & Sons Mini Mart a soft reminder.", (INV5,), (REMIND,)),
     Case("claim-ok-received", "claims", False, "Payment received, thank you. It has been "
-         "confirmed in our bank.", (PAY1,), channel="shop_whatsapp", shop_text="I don pay"),
+         "confirmed in our bank.", (CHECK1,), channel="shop_whatsapp", shop_text="I don pay"),
     Case("claim-ok-pending", "claims", False,
          "We have not received it yet, so it is still pending.", (INV5,)),
+    # ---- per item (RAI-316): a confirmed outcome backs only the item it is for
+    Case("item-invoice", "claims", True,
+         "Your payment for invoice dlv-12-0057 has been received. Thank you.", (INV5, CHECK5),
+         channel="shop_whatsapp", shop="shop-005", shop_text="I don pay dlv-12-0057"),
+    Case("item-amount", "claims", True, "Your payment of N4,100 has been received.",
+         (INV5, CHECK5), channel="shop_whatsapp", shop="shop-005", shop_text="I don pay"),
+    Case("item-shop", "claims", True, "The payment from Mama Sola Provisions has been received.",
+         (BAL1, INV5, CHECK5)),
+    Case("item-sent-shop", "claims", True, "I've sent Mama Sola Provisions a soft reminder.",
+         (BAL1, INV5), (REMIND,)),
+    Case("item-recorded-shop", "claims", True,
+         "I have recorded the promise for Mama Sola Provisions.", (BAL1, INV5), (FOLLOW,)),
+    Case("item-ambiguous-history", "claims", True, "Payment received, thank you.", (PAY1,),
+         channel="shop_whatsapp", shop_text="I don pay"),
+    Case("item-ambiguous-sent", "claims", True, "I've sent the reminder.", (BAL2, INV5),
+         (REMIND, REMIND2)),
+    Case("item-ok-invoice", "claims", False,
+         "Your payment for invoice dlv-00-0055 has been received. Thank you.", (INV5, CHECK5),
+         channel="shop_whatsapp", shop="shop-005", shop_text="I don pay dlv-00-0055"),
+    Case("item-ok-amount", "claims", False, "Your payment of N4,000 has been received.",
+         (INV5, CHECK5), channel="shop_whatsapp", shop="shop-005", shop_text="I don pay"),
+    Case("item-ok-shop", "claims", False,
+         "The payment from Funke & Sons Mini Mart has been received.", (BAL1, INV5, CHECK5)),
+    Case("item-ok-two-named", "claims", False,
+         "I've sent reminders to Funke & Sons Mini Mart and Iya Tolu Foodstuff.",
+         (BAL2, INV5), (REMIND, REMIND2)),
+    Case("item-ok-unnamed-one", "claims", False, "I've sent the reminder.", (INV5,),
+         (REMIND,)),
+    # ---- partial names (RAI-316): a short name must map to one name the run read
+    Case("partial-unread", "names", True, "Iya Sola owes N3,497,300.", (BAL1,)),
+    Case("partial-two-shops", "names", True, "Sola Provisions owes N3,497,300.",
+         (BAL1, BAL21)),
+    Case("partial-other-shop", "claims", True, "The payment from Mama Sola has been received.",
+         (BAL1, INV5, CHECK5)),
+    Case("partial-product-unread", "names", True,
+         "Palmside Vegetable Oil is running low at Mama Sola Provisions.", (BAL1,)),
+    Case("partial-ok", "names", False, "Mama Sola owes N3,497,300.", (BAL1,)),
+    Case("partial-ok-possessive", "names", False, "Mama Sola's balance is N3,497,300.",
+         (BAL1,)),
+    Case("partial-ok-one-read", "names", False, "Sola Provisions owes N3,497,300.", (BAL1,)),
+    Case("partial-ok-generic", "names", False,
+         "Mama Sola Provisions is the only mini mart or provisions store I checked.", (BAL1,)),
+    Case("partial-ok-product-family", "names", False,
+         "I do not track Palmside Vegetable Oil sales yet.",
+         owner_text="is Palmside Vegetable Oil 5L selling?"),
+    Case("partial-ok-bound-claim", "claims", False,
+         "The payment from Funke has been received, and Mama Sola is still at N3,497,300.",
+         (BAL1, INV5, CHECK5)),
     # ---- promises
     Case("promise-remind", "promises", True,
          "I'll remind you tomorrow about Funke & Sons Mini Mart.", (INV5,)),
@@ -132,7 +189,7 @@ CASES: tuple[Case, ...] = (
 
 
 def run_case(c: Case) -> tuple[RunResult, ScriptedModel]:
-    shop_id = "shop-001" if c.channel == "shop_whatsapp" else ""
+    shop_id = c.shop if c.channel == "shop_whatsapp" else ""
     send = ("send_to_user", {"channel": c.channel, "body": c.text, "ends_turn": True,
                              **({"shop_id": shop_id} if shop_id else {})})
     turns = []
@@ -151,7 +208,7 @@ def run_case(c: Case) -> tuple[RunResult, ScriptedModel]:
     if c.shop_text:
         ev = RunEvent(event_id=c.cid, tenant_id=TENANT, thread_id=f"t:{c.cid}",
                       wake_source="shop_message", text=c.shop_text, sender="shop",
-                      shop_id="shop-001", at=AT)
+                      shop_id=c.shop, at=AT)
     else:
         ev = RunEvent(event_id=c.cid, tenant_id=TENANT, thread_id=f"t:{c.cid}",
                       wake_source=c.wake or "owner_message",  # type: ignore[arg-type]
