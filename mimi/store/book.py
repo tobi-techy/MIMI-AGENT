@@ -29,6 +29,7 @@ from sqlalchemy.engine import Engine
 from mimi.credit.looks import item_name, pieces_per_unit
 from mimi.harness.go import ConsentGrants, CrossTenant
 from mimi.harness.inbound import Directory
+from mimi.harness.policy import go_allows
 from mimi.harness.types import Event
 from mimi.runtime.outbox import MONEY_VERBS
 from mimi.store import schema as s
@@ -508,7 +509,8 @@ class SqlGo:
         ``never`` is refused; a shadow-mode record is ``shadowed`` (recorded,
         applied never); ``approve`` waits in the owner's approvals; ``auto``
         and ``notify`` are applied. Nothing here can move money: a
-        money verb is refused whatever tier it arrives with.
+        money verb, or a tool the policy has no row for, is refused whatever
+        tier it arrives with.
         """
         key = str(record["idempotency_key"])
         tool = str(record.get("tool", ""))
@@ -521,7 +523,9 @@ class SqlGo:
                 s.approvals.c.tenant_id == tenant_id,
                 s.approvals.c.idempotency_key == key)).scalar()
             return f"duplicate:{existing}", apr
-        if tier == "never" or moves_money(tool, kind):
+        if tier == "never" or moves_money(tool, kind) or not go_allows(tool, kind):
+            # A tool with no policy row is refused even at tier auto: the tier on
+            # a record is the caller's word; the allowlist is Go's.
             outcome = "refused"
         elif record.get("shadow"):
             # Shadow mode (RAI-235): the intent is recorded and applied never.

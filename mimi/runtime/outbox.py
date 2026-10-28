@@ -32,6 +32,11 @@ MONEY_VERBS: tuple[str, ...] = (
     "withdraw",
     "disburse",
     "refund",
+    # The outside review (Medium): payment words a new tool could hide behind.
+    "wire",
+    "settle",
+    "remit",
+    "debit",
 )
 
 

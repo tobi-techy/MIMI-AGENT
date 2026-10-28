@@ -640,10 +640,15 @@ class Router:
             # model's word alone.
             conf = min(conf, self.threshold(helper_of(pick.route)) - 0.01)
         helper = pick.route.split("/")[0]
-        if guard and risk(pick.route) > max(risk(lx.top) if lx.top else 0, 0):
+        lifted = risk(pick.route) > max(risk(lx.top) if lx.top else 0, 0)
+        # Same helper, other skill: a balance question pushed to a payment
+        # confirmation keeps the helper's risk but still moves money.
+        sideways = pick.route in MONEY_SKILLS and pick.route not in tied
+        if guard and (lifted or sideways):
             # The message carried an injected instruction. The model may not
             # lift the route above what the shop's own words support by
-            # phrase evidence: ask instead.
+            # phrase evidence, nor move it to a money skill those words do
+            # not name: ask instead.
             return self._clarify(_uniq([pick.route, lx.top or "mimi/chat"]), sender, lang,
                                  base, layer="model", rule="injection_cap",
                                  downgraded_from=pick.route, secondary=secondary,

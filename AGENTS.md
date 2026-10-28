@@ -81,6 +81,15 @@ cache with the change.
 * Traces carry no private model text, no hardcoded tenant tag, and no long
   digit run, as text or as a number.
 * Risk tiers come from policy, never from the model.
+* Go (fake and SQL) refuses any tool with no row on the policy allowlist
+  (`mimi.harness.policy.go_allows`), whatever tier the record carries, and
+  any tool or kind with a money word (`MONEY_VERBS`: transfer, payout, refund,
+  wire, settle, remit, debit and the rest).
+* An injected sentence never moves a route to a money skill the shop's own
+  words do not name, inside the same helper too (`injection_cap`).
+* Production refuses SQLite and the Makefile's demo Bearer keys
+  (`Settings.check`); `make api` under `MIMI_ENV=production` fills in no
+  defaults.
 * Speaking is `send_to_user`; plain model text is private.
 * Every outbound message passes the style guard (`mimi.harness.style.clean_reply`:
   no em or en dashes, no AI filler, figures never changed). How Mimi writes is in

@@ -34,6 +34,9 @@ from mimi.store.db import database_url
 Role = Literal["owner", "channel"]
 ROLES: tuple[Role, ...] = ("owner", "channel")
 DEFAULT_CORS = ("https://console.userail.money",)
+# The Makefile's local demo Bearer keys (docs/API.md). Public, so never valid in
+# production.
+DEMO_KEYS: tuple[str, ...] = ("local-owner-key-0001", "local-channel-key-001")
 LOCALHOST_REGEX = r"^http://(localhost|127\.0\.0\.1)(:\d+)?$"
 
 
@@ -130,7 +133,10 @@ class Settings:
             raise ConfigError("MIMI_API_KEYS is not set: refusing to serve without auth")
         if not self.has_model_key:
             raise ConfigError("META_API_KEY is not set: production never runs the offline model")
-        if self.database_url.startswith("sqlite") and not os.environ.get(
-                "MIMI_ALLOW_SQLITE_IN_PRODUCTION"):
-            raise ConfigError("production needs DATABASE_URL (Postgres); set "
-                              "MIMI_ALLOW_SQLITE_IN_PRODUCTION=1 to run on SQLite anyway")
+        if self.database_url.lower().startswith("sqlite"):
+            raise ConfigError("production needs DATABASE_URL (Postgres): refusing to serve "
+                              "from SQLite")
+        demo = {key_digest(k) for k in DEMO_KEYS}
+        if any(k.digest in demo for k in self.keys):
+            raise ConfigError("MIMI_API_KEYS holds a published local demo key: refusing to "
+                              "serve production with it")

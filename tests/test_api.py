@@ -343,11 +343,12 @@ def test_credit_limits_and_requests(env: dict[str, Any]) -> None:
     x = next(r for r in d["limits"] if r["shop_id"] == "shop-001")
     assert x["available_kobo"] == max(0, x["credit_limit_kobo"] - x["outstanding_kobo"])
     # A credit intent from a helper (RAI-271 lands it) shows up as a request.
+    # It must be a tool on Go's policy allowlist: an unlisted one is refused.
     from mimi.store.book import SqlGo
 
     with env["engine"].begin() as conn:
-        SqlGo.apply_intent(conn, A, {"idempotency_key": "ik_cr1", "tool": "credit_bump",
-                                     "intent_kind": "credit_bump", "tier": "approve",
+        SqlGo.apply_intent(conn, A, {"idempotency_key": "ik_cr1", "tool": "submit_credit_review",
+                                     "intent_kind": "submit_credit_review", "tier": "approve",
                                      "shop_id": "shop-002", "preview": "Raise to N200,000",
                                      "payload": {"shop_id": "shop-002",
                                                  "new_limit_kobo": 20_000_000}})

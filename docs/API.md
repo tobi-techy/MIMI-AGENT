@@ -96,8 +96,10 @@ SQLite in `/data` (mount a volume); set `DATABASE_URL` for Postgres.
 
 Production (`MIMI_ENV=production`) refuses to start without
 `MIMI_PHONE_PSEUDONYM_KEY`, without `MIMI_API_KEYS`, without `META_API_KEY`
-(it never runs the offline model) and on SQLite unless
-`MIMI_ALLOW_SQLITE_IN_PRODUCTION=1`.
+(it never runs the offline model), on SQLite (there is no override), and with
+either of the Makefile's local demo keys in `MIMI_API_KEYS`. `make api` and
+`make api-seed` with `MIMI_ENV=production` fill in no defaults: they stop
+unless `DATABASE_URL` and `MIMI_API_KEYS` are set.
 
 ## Auth and tenancy
 
