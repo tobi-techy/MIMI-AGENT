@@ -28,7 +28,12 @@ def test_runtime_imports_nothing_above_it() -> None:
     for path in (ROOT / "runtime").rglob("*.py"):
         for name in _imports(path):
             if name.startswith("mimi."):
-                assert name.startswith(("mimi.runtime", "mimi.types")), (path, name)
+                # mimi.tz is a stdlib-only leaf (the one Lagos clock, RAI-308).
+                assert name == "mimi.tz" or name.startswith(("mimi.runtime", "mimi.types")), (path, name)
+
+
+def test_tz_is_a_leaf() -> None:
+    assert not [n for n in _imports(ROOT / "tz.py") if n.startswith("mimi")]
 
 
 def test_no_http_server_framework_outside_the_api() -> None:
