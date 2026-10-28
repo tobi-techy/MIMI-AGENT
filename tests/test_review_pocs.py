@@ -87,3 +87,29 @@ def _now() -> Any:
     from datetime import UTC, datetime
 
     return datetime(2026, 10, 26, 9, 0, tzinfo=UTC)
+
+
+def test_a_shops_own_thread_keeps_its_prefix_when_an_event_names_no_shop() -> None:
+    """The prefix re-pins when the shop changes, but a shop's own thread names
+    its shop: a run there with no shop on the event (an approval answered)
+    keeps the pinned bytes, so the provider's cache keeps hitting."""
+    from datetime import UTC, datetime
+
+    from mimi.harness.collector import collector_helper, default_registry
+    from mimi.harness.context import ContextBuilder
+    from mimi.harness.go import FakeGo
+    from mimi.harness.policy import GoPolicy
+    from mimi.harness.types import RunEvent
+
+    at = datetime(2026, 10, 26, 9, 0, tzinfo=UTC)
+    b = ContextBuilder(book=FakeGo(W), clock=lambda: at)
+    helper = collector_helper(default_registry(), GoPolicy())
+    thread = f"{W.tenant_id}:shop:shop-011"
+    first = b.build(RunEvent(event_id="e1", tenant_id=W.tenant_id, thread_id=thread,
+                             wake_source="shop_message", text="hi", sender="shop",
+                             shop_id="shop-011", at=at), helper, "collector/collections")
+    second = b.build(RunEvent(event_id="e2", tenant_id=W.tenant_id, thread_id=thread,
+                              wake_source="approval_answered", text="", sender="system",
+                              shop_id="", at=at), helper, "collector/collections")
+    assert second.manifest.prefix_reused
+    assert second.prefix.prefix_hash == first.prefix.prefix_hash

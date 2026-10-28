@@ -51,6 +51,8 @@ from typing import Any, Literal
 from pydantic import BaseModel, ConfigDict
 
 from mimi.harness import lexicon
+from mimi.harness.batch import is_mixed, strip_untrusted
+from mimi.harness.batch import untrusted as is_untrusted
 from mimi.harness.binding import AnswerBinder, ask_is_live
 from mimi.harness.inbound import Directory, Inbound, Media
 from mimi.harness.skills import (
@@ -64,6 +66,7 @@ from mimi.harness.skills import (
     catalogue_text,
     default_skill,
 )
+from mimi.harness.untrusted import defang
 from mimi.models.base import ChatMessage, ChatModel, ModelError
 
 Layer = Literal["rule", "lexical", "fast", "model"]
@@ -287,6 +290,23 @@ class Router:
                 "thread_id": thread_id, "thread_note": note,
                 "priority": PRIORITY.get(lead.source, 3),
                 "lane": self._lane(lead), "thresholds": self.thresholds}
+        if is_mixed(batch, lead, directory):
+            # A trusted lead batched with outside text: strip each outside
+            # event on its own, so it never routes with the lead's trust.
+            parts: list[str] = []
+            spans: list[str] = []
+            for e in batch:
+                if not e.text:
+                    continue
+                if is_untrusted(e, directory):
+                    clean, sp = strip_untrusted(e.text)
+                    spans.extend(sp)
+                    parts.append(clean)
+                else:
+                    parts.append(e.text)
+            text = "\n".join(p for p in parts if p).strip()
+            if spans:
+                base["injection"] = tuple(spans)
         dec = self._decide(lead, batch, text, directory, thread, base)
         local = (self.perf() - t0) * 1000 - dec.model_ms
         return dec.model_copy(update={
@@ -307,11 +327,12 @@ class Router:
         sender = lead.sender
         p = lead.payload
 
-        def rule(key: str, name: str, conf: float = 1.0, **kw: Any) -> RouteDecision:
+        def rule(key: str, name: str, conf: float = 1.0, layer: Layer = "rule",
+                 **kw: Any) -> RouteDecision:
             fields = {**base, **kw}
             fields.setdefault("language", "en")
             return RouteDecision(status="routed", helper=key.split("/")[0], skill=key,
-                                 confidence=conf, layer="rule", rule=name, **fields)
+                                 confidence=conf, layer=layer, rule=name, **fields)
 
         # ---- events with no person behind them: always a rule
         if lead.source == "routine" or lead.source == "scheduled_check_in":
@@ -322,10 +343,13 @@ class Router:
             if owner_helper in HELPER_RISK:
                 # "<helper>.<job>": a job this router has no row for still
                 # belongs to the helper that scheduled it.
-                first = next(s.key for s in SKILLS if s.helper == owner_helper)
-                return rule(first, f"{lead.source}:helper_prefix",
-                            thread_note=f"routine {p.name!r} has no skill row; "
-                                        f"{owner_helper} decides")
+                # Never a guessed skill at full confidence (the helper's first
+                # skill can move money): ask the owner which one it is.
+                keys = [s.key for s in SKILLS if s.helper == owner_helper]
+                return self._clarify(keys, "owner", "en",
+                                     {**base, "thread_note": f"routine {p.name!r} has no "
+                                                             f"skill row; ask the owner"},
+                                     layer="rule", rule=f"{lead.source}:helper_prefix")
             return rule("mimi/owner-brief", f"{lead.source}:unknown",
                         thread_note=f"unknown routine {p.name!r}; owner thread")
         if lead.source == "webhook":
@@ -404,8 +428,10 @@ class Router:
                                      "completion_tokens": b.completion_tokens,
                                      "cost_kobo": bind_kobo}
             if b.binds:
+                # Labelled by what decided it: the binder's model call is not a rule.
                 return rule(thread.pending_skill, f"pending_bind:{b.label}", language=lang,
                             conf=b.confidence or 1.0, bound=b.label,
+                            layer="model" if spend["model_called"] else "rule",
                             thread_note=b.why, **spend)
             # Released: routed as if no ask were open (no "waiting" hint to
             # pull the model back to the asker); the ask itself stays open.
@@ -818,7 +844,8 @@ def router_messages(sender: str, text: str, media: Media,
         hints.append("the words are a voice-note transcript")
     tag = "owner_message" if sender == "owner" else f"{sender}_message"
     untrusted = "" if sender == "owner" else ' untrusted="true"'
-    user = ("\n".join(hints) + "\n" if hints else "") + f"<{tag}{untrusted}>\n{text}\n</{tag}>"
+    body = text if sender == "owner" else defang(text)
+    user = ("\n".join(hints) + "\n" if hints else "") + f"<{tag}{untrusted}>\n{body}\n</{tag}>"
     return [ChatMessage("system", system), ChatMessage("user", user)]
 
 

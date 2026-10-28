@@ -63,7 +63,6 @@ def msg(text: str = "", source: str = "shop_message", phone: str = SHOP, **p: An
     (msg(source="routine", phone="", name="collector.overdue_sweep"), "collector/chase"),
     (msg(source="routine", phone="", name="mimi.morning_brief"), "mimi/owner-brief"),
     (msg(source="scheduled_check_in", phone="", name="stock.weekly_check"), "stock/stock-count"),
-    (msg(source="routine", phone="", name="collector.heartbeat"), "collector/collections"),
     (msg(source="webhook", phone="", name="bank_credit"), "proof/bank-credit"),
     (msg(source="webhook", phone="", name="delivery_completed"), "order/drop-confirmation"),
     (msg(source="approval_answered", phone="", for_helper="credit", for_skill="credit-request"),
@@ -83,6 +82,17 @@ def test_rules_never_call_the_model(inbound: Inbound, skill: str) -> None:
     d = Router(model=NoModel()).route(inbound, D)
     assert d.layer == "rule" and not d.model_called, d
     assert d.skill == skill and d.status == "routed"
+
+
+def test_an_unknown_routine_asks_the_owner_and_never_guesses_a_money_skill() -> None:
+    """Review finding: "collector.heartbeat" used to land on collector/collections
+    (a money skill) at confidence 1.0 by the helper prefix alone."""
+    d = Router(model=NoModel()).route(
+        msg(source="routine", phone="", name="collector.heartbeat"), D)
+    assert d.status == "clarify" and d.confidence == 0.0 and not d.model_called, d
+    assert d.layer == "rule" and d.rule == "routine:helper_prefix"
+    assert set(d.options) <= {"collector/collections", "collector/payment-check",
+                              "collector/promise-to-pay", "collector/chase"}
 
 
 def test_pending_answers_route_by_rule() -> None:

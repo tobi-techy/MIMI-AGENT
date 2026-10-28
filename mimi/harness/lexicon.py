@@ -302,6 +302,11 @@ def language(text: str) -> str:
 
 # --------------------------------------------------------------- injection
 
+_WRAPPER_NAMES = (r"[a-z_]*_message|system|tool|instructions?|developer|assistant|book_slice|"
+                  r"helper_verdict|memory_snapshot|thread_summary|environment|routines|"
+                  r"untrusted|shop_data|owner|admin")
+_WRAPPER_TAG = rf"<\s*/?\s*(?:{_WRAPPER_NAMES})\b[^>]*>"
+
 _INJECTION = [
     r"\bignore (?:all |any |the |your |my )?(?:previous|prior|above|earlier|other)? ?(?:instructions?|rules?|prompts?|messages?)\b",
     r"\bdisregard (?:all |the |your )?(?:previous |above )?(?:instructions?|rules?)\b",
@@ -315,7 +320,10 @@ _INJECTION = [
     r"\bmark (?:it|this|that|my (?:invoice|payment|balance|debt)) (?:as )?(?:paid|verified|confirmed|cleared|settled)\b",
     r"\bapprove (?:it|this|my (?:credit|payment|limit)) (?:now|immediately|automatically|without)\b",
     r"\b(?:tool_call|function_call|send_money|transfer_money|set_tier|tier\s*[:=])\b",
-    r"</?\s*(?:owner_message|system|tool|instructions?)\s*>",
+    # Any of Mimi's wrapper tags, opening or closing, with or without
+    # attributes: every *_message wrapper, the book slice, verdicts, memory,
+    # summaries, the environment, and the classic system/tool/instructions.
+    _WRAPPER_TAG,
 ]
 INJECTION = tuple(re.compile(p, re.I) for p in _INJECTION)
 MENTION = re.compile(r"@(order|collector|credit|stock|brand|proof|mimi)\b", re.I)
@@ -327,13 +335,16 @@ def injection_spans(text: str) -> list[str]:
 
 
 _TAG_BLOCK = re.compile(
-    r"<\s*(system|instructions?|tool|owner_message|developer)\s*>.*?<\s*/\s*\1\s*>", re.I | re.S)
+    rf"<\s*({_WRAPPER_NAMES})\b[^>]*>.*?<\s*/\s*\1\s*>", re.I | re.S)
+# A lone wrapper tag left after the blocks are gone (a "</shop_message>" breakout).
+_LONE_TAG = re.compile(_WRAPPER_TAG, re.I)
 
 
 def without_injection(text: str) -> str:
     """The text with @mentions, injected tag blocks and every sentence or line
     that carries an injected instruction removed."""
     t = _TAG_BLOCK.sub(" ", text)
+    t = _LONE_TAG.sub(" ", t)
     t = MENTION.sub(" ", t)
     pieces = re.split(r"(?<=[.!?\n])\s+|\n", t)
     kept = [p.strip() for p in pieces if p.strip() and not injection_spans(p)]

@@ -51,6 +51,7 @@ from mimi.api.helpers import HelperDeps
 from mimi.api.media import checked_media
 from mimi.harness import fastclass
 from mimi.harness import steer as st
+from mimi.harness.batch import is_mixed, mixed_text, run_sender
 from mimi.harness.binding import AnswerBinder, ask_is_live, delivery_ids_in
 from mimi.harness.context import ContextBuilder
 from mimi.harness.frontdoor import FrontDoor
@@ -1131,6 +1132,7 @@ class Agent:
         if lead.source in ("shop_message", "rep_message"):
             shop_id = directory.shop_for(lead.payload.from_phone)
         shop_id = shop_id or lead.payload.shop_id
+        given = text is not None
         if text is None:
             text = "\n".join(" ".join(x for x in (media_pointer(e), e.text) if x)
                              for e in events if e.text or media_pointer(e))
@@ -1138,6 +1140,13 @@ class Agent:
                   "rep_message": "rep"}.get(lead.source, "system")
         if sender == "owner" and not directory.is_owner(lead):
             sender = "shop"  # a stranger on the owner channel is untrusted shop text
+        if is_mixed(events, lead, directory):
+            # The owner (or Mimi) and someone from outside in one burst: each
+            # event tagged and stripped, and the turn runs untrusted (finding 2).
+            if not given:
+                parts = [" ".join(x for x in (media_pointer(e), e.text) if x) for e in events]
+                text, _spans = mixed_text(events, directory, parts)
+            sender = run_sender(events, directory)
         ext = [e.external_id for e in events]
         event = RunEvent(
             event_id=f"{claim.tenant_id}:{'+'.join(ext)}", tenant_id=claim.tenant_id,

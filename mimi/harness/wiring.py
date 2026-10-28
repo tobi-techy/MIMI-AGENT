@@ -27,6 +27,7 @@ from collections.abc import Mapping
 from dataclasses import dataclass, field
 from typing import Any
 
+from mimi.harness.batch import is_mixed, mixed_text, run_sender
 from mimi.harness.context import ContextBuilder
 from mimi.harness.frontdoor import Turn
 from mimi.harness.inbound import Directory
@@ -78,6 +79,12 @@ class TurnRunner:
                 # A stranger on the owner channel: its words are untrusted
                 # shop text in the prompt, never an <owner_message>.
                 sender = "shop"
+        dirs = self.directories.get(turn.org_id)
+        if is_mixed(turn.events, lead, dirs):
+            # The owner (or Mimi) and someone from outside in one burst: each
+            # event tagged and stripped, and the turn runs untrusted (finding 2).
+            text, _spans = mixed_text(turn.events, dirs)
+            sender = run_sender(turn.events, dirs)
         event = RunEvent(
             event_id=f"{turn.org_id}:{'+'.join(turn.external_ids)}",
             tenant_id=turn.org_id, thread_id=turn.thread_id,

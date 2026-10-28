@@ -164,7 +164,10 @@ class Directory(BaseModel):
             rep = self.rep_phones.get(p.from_phone, "")
             if rep:
                 return f"{self.org_id}:rep:{rep}", ""
-            return owner, "a rep message from a number not on the rep list"
+            # Not a rep Go knows: never the owner thread (its history, its
+            # batch and the owner's trust), like a stranger on the owner channel.
+            return f"{self.org_id}:new:{_tail(p.from_phone)}", \
+                "a rep message from a number not on the rep list"
         if p.shop_id:
             return f"{self.org_id}:shop:{p.shop_id}", ""
         if inbound.source in ("routine", "scheduled_check_in", "helper_finished"):

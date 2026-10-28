@@ -61,10 +61,25 @@ cache with the change.
   re-record the harness and context evals.
 * Shop text never reaches a model unmarked: it is wrapped in `untrusted`
   tags, with injected sentences and shop @mentions removed before routing.
+  Every wrapper defangs its text with `mimi.harness.untrusted.defang` (any
+  tag shape, so a new wrapper is covered without a list).
+* A burst that mixes the owner (or Mimi) with outside text is stripped and
+  tagged per event and runs untrusted (`mimi.harness.batch`); a rep number
+  Go does not know never lands on the owner thread.
+* The pinned prefix (sections 1 to 5) is keyed by the run's shop: a thread
+  shared by shops re-pins when the shop changes.
 
 ## Hard rules
 
 * Write tools return intents only; the loop never writes to the book.
+* Shadow mode records intents and applies none: Go (fake and SQL) marks
+  them `shadowed`, and the API writes no message, approval or credit row.
+* Every tool input model sets `extra="forbid"` (the registry refuses one
+  that does not); a bug in a tool, its scope or its dry run fails safe.
+* The figure check covers every tool whose text reaches a person or helper
+  (`loop.FIGURE_CHECKED`), not only `send_to_user`.
+* Traces carry no private model text, no hardcoded tenant tag, and no long
+  digit run, as text or as a number.
 * Risk tiers come from policy, never from the model.
 * Speaking is `send_to_user`; plain model text is private.
 * Every outbound message passes the style guard (`mimi.harness.style.clean_reply`:

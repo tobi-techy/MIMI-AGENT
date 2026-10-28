@@ -65,6 +65,8 @@ jobs:
         run: python -m mimi.stock.eval
       - name: Offline low-stock scene
         run: python -m mimi.sim --stock --transcript
+      - name: Review proofs of concept (shadow mode, mixed-source batches, tag breakout, a shared thread switching shops, trace PII, fail-safe crashes, figure check on every speaker, honest routing labels; each reproduced on main before its fix; fails on any that does not hold)
+        run: python -m mimi.harness.review_pocs
       - name: Harness evals (50 Collector scenarios scripted and recorded Muse Spark, 41 security cases, 200 replayed retries, runaway budgets, idle cost; fails on any pass mark)
         run: python -m mimi.harness.eval --no-write
       - name: Router eval, 300 labelled messages in five languages (rules, phrases, fast classifier, recorded Muse Spark answers; fails on accuracy < 95%, any money misroute, clarify > 8%, a rule case calling the model, p95 >= 800 ms)

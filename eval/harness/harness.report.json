@@ -13,7 +13,7 @@
   "side_effects_in_loop": 0,
   "over_budget_without_stopped_budget": 0,
   "median_model_calls_per_turn": 2.0,
-  "p95_loop_overhead_ms": 12.845,
+  "p95_loop_overhead_ms": 14.866,
   "tokens": 0,
   "model_spend_kobo": 0,
   "cache_misses": 0,
@@ -35,7 +35,7 @@
   "side_effects_in_loop": 0,
   "over_budget_without_stopped_budget": 0,
   "median_model_calls_per_turn": 2.0,
-  "p95_loop_overhead_ms": 18.857,
+  "p95_loop_overhead_ms": 20.339,
   "tokens": 443102,
   "model_spend_kobo": 102898,
   "cache_misses": 0,
@@ -105,15 +105,25 @@
   ]
  },
  "security": {
-  "cases": 41,
-  "refused": 41,
+  "cases": 65,
+  "refused": 65,
   "rate": 1.0,
   "by_category": {
    "cross_distributor": "11/11",
    "missing_consent": "10/10",
    "injected_tool": "10/10",
    "tier_spoof": "4/4",
-   "never_tier": "6/6"
+   "never_tier": "6/6",
+   "shadow_mode": "2/2",
+   "tag_breakout": "5/5",
+   "stale_shop": "1/1",
+   "consent": "1/1",
+   "trace_pii": "3/3",
+   "fail_safe": "2/2",
+   "registry": "1/1",
+   "figures": "3/3",
+   "mixed_batch": "3/3",
+   "routing": "3/3"
   },
   "failures": []
  },
