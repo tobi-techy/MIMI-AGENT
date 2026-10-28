@@ -65,6 +65,8 @@ ASKS: dict[str, str] = {
         "how much of one product is left on the shelf, as a tap: 0-2, 3-5 or 6+"),
     "credit/credit-request": "a photo of the shop's shelf, for its credit request",
     "collector/promise-to-pay": "how much the shop will pay, or when",
+    "order/order-intake": ("one short question about the shop's order: which item or size it "
+                           "wants, or how many"),
 }
 
 # The labels per ask. Everything except "unrelated" binds.

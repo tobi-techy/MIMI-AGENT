@@ -91,6 +91,8 @@ jobs:
         run: python -m mimi.api.which_eval --no-write
       - name: Pending-ask binding eval, 43 held-out replies to delivery receipt asks (recorded Muse Spark answers; fails under 95% correct route and action, or on any false consent)
         run: python -m mimi.api.binding_eval --no-write
+      - name: Order intake eval, 47 held-out orders (typed, voice transcripts, list photos, Yoruba and Pidgin, unclear items, repeats, over credit, edits; recorded Muse Spark answers; fails under 90% or on any invented price or item, credit extended or edit to a decided order)
+        run: python -m mimi.api.order_eval --no-write
       - name: Steer eval, 53 held-out cases with voice notes, screenshots, photos and documents (multi-part messages, messages mid-task, corrections; recorded Muse Spark answers; fails under 90% or on any lost message, duplicate reply, money move or edit to a decided approval)
         run: python -m mimi.api.steer_eval --no-write
       - name: OpenAPI document matches the API (docs/api/openapi.json)

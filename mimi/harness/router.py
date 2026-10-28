@@ -222,6 +222,10 @@ class ModelPick:
 # ------------------------------------------------------------- the router
 
 
+_ORDER_OR_STATUS = frozenset({"order/order-intake", "order/delivery-status"})
+_ORDER_WORDS = re.compile(r"\b(?:order|list|oda)\b")
+
+
 def media_shape(m: Media) -> Literal["screenshot", "photo", "unknown"]:
     """Cheap and deterministic: a phone screenshot or a camera photo."""
     if m.kind != "image":
@@ -436,6 +440,14 @@ class Router:
             # otherwise; Proof only ever makes a payment "likely".
             return rule("proof/fake-alert-check", "screenshot", language=lang)
         dec = self._classify(lead, text, sender, thread, base, lang)
+        if (p.media.kind == "image" and dec.status == "clarify"
+                and "order/order-intake" in dec.options
+                and (set(dec.options) <= _ORDER_OR_STATUS or _ORDER_WORDS.search(folded))):
+            # A photo is never "where is my van", and a photo whose caption
+            # says order or list is the shop's order list (RAI-302).
+            dec = dec.model_copy(update={"status": "routed", "helper": "order",
+                                         "skill": "order/order-intake", "clarify_question": "",
+                                         "options": (), "rule": "photo_order_list"})
         if p.media.kind == "image" and dec.status == "routed":
             dec = self._photo(dec, thread)
         if thread.clarify_options and dec.status == "clarify":
@@ -480,6 +492,10 @@ class Router:
             return dec.model_copy(update={"helper": thread.pending_skill.split("/")[0],
                                           "skill": thread.pending_skill,
                                           "rule": "photo_for_pending"})
+        if dec.skill == "order/delivery-status":
+            # A photo is never a question about when the van comes: an order list.
+            return dec.model_copy(update={"skill": "order/order-intake",
+                                          "rule": "photo_order_list"})
         if dec.skill in ("collector/payment-check", "collector/collections"):
             # A photo with payment words is the proof itself (a POS slip, a
             # teller): Proof checks it; nothing is counted from a picture.

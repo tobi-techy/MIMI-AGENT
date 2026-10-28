@@ -121,6 +121,10 @@ _R: list[tuple[str, float, str]] = [
     ("order/order-intake", 3, rf"\b(?:wants?|needs?) {QTY} {UNIT}\b"),
     ("order/order-intake", 3, r"\bmo fe (?:ra|order|gba)\b|\be (?:mu|gbe) .{2,30} wa\b|\bse e ni\b"),
     ("order/order-intake", 3, r"\bina so (?:in sayi|a kawo|ku kawo|kaya)\b|\ba kawo min\b|\bku kawo min\b"),
+    # Repeat orders, pay-on-delivery orders, Yoruba "help me bring/buy" (RAI-302).
+    ("order/order-intake", 3, r"\b(?:e |e jowo |jowo |ejo )?(?:ba mi|fun mi) (?:mu|gbe|ra|fi|ko)\b"),
+    ("order/order-intake", 3, r"\brepeat (?:my |the |our )?(?:last |usual |previous )?order\b|\bsame (?:order|thing|things|goods|one)s? (?:as |like )?(?:last|before|the last|usual|previous)\b|\bsame as (?:last|before|the last|usual|previous)\b"),
+    ("order/order-intake", 3, r"\b(?:pay|cash|transfer)\b.{0,25}\b(?:when|once|on|before)\b.{0,15}\b(?:deliver\w*|(?:the )?van|una (?:bring|deliver)|you (?:bring|deliver))\b"),
     ("order/order-intake", 3, r"\bachoro m (?:izu|ka unu bute)\b|\bbute (?:\w+ ){0,3}(?:carton|katon)\b|\bunu nwere\b"),
     # ---------------- order/drop-confirmation
     ("order/drop-confirmation", 3, r"^(?:yes|yes o|yes sir|yes ma|yeah|yep|received|confirmed|ok received|i confirm)[.! ]*$"),

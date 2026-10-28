@@ -1,11 +1,11 @@
 {
  "calls": {
-  "harness_model_calls": 81,
-  "helper_model_calls": 14,
+  "harness_model_calls": 85,
+  "helper_model_calls": 15,
   "persona_calls": 15,
   "persona_live_calls": 0,
   "sam_images": 6,
-  "worker_live_rows": 1
+  "worker_live_rows": 0
  },
  "checks": {
   "cross_tenant": {
@@ -18,7 +18,9 @@
   },
   "decisions": {
    "apr_209f12d969cace7b3282": "reject:200",
+   "apr_396f472ba3f8ee18d739": "approve:200",
    "apr_6caf8bdaf59d5d66572f": "approve:200",
+   "apr_7197cf0a486b1512e9e2": "approve:200",
    "apr_9c26bff228a731e10be4": "reject:200",
    "apr_a738fc8c887144c24d00": "approve:200"
   },
@@ -33,13 +35,13 @@
   "second_decision_status": 409
  },
  "cost_kobo": {
-  "agent_per_turn_mean": 2311,
-  "harness": 70969,
-  "helper_models": 12049,
+  "agent_per_turn_mean": 2139,
+  "harness": 74050,
+  "helper_models": 12687,
   "persona": 252,
-  "router": 2431,
+  "router": 2864,
   "sam": 2400,
-  "total": 88101
+  "total": 92253
  },
  "cross_tenant": [],
  "duplicate_replies": [],
@@ -190,10 +192,10 @@
    "id": "k10",
    "ok": true,
    "replies": 0,
-   "shop": "shop-011",
+   "shop": "shop-037",
    "state": "done",
    "takeover": true,
-   "turn_id": "turn_2589a858e9018bd29cbc",
+   "turn_id": "turn_3f7f5671c6c9e1eaa5b3",
    "what": "the owner decided a parked approval: the woken helper, after its route"
   },
   {
@@ -213,11 +215,11 @@
   }
  ],
  "latency_s": {
-  "n": 29,
-  "run_p50": 0.791,
-  "run_p95": 9.645,
-  "turn_p50": 0.625,
-  "turn_p95": 11.316
+  "n": 32,
+  "run_p50": 0.056,
+  "run_p95": 4.756,
+  "turn_p50": 0.11,
+  "turn_p95": 4.83
  },
  "lost_jobs": [],
  "misroutes": [],
@@ -228,13 +230,13 @@
   "scene_success": 0.9
  },
  "passed": true,
- "routed_turns": 38,
+ "routed_turns": 43,
  "routing": 1.0,
  "safety_violations": [],
  "scene_success": 1.0,
  "scene_success_shops": 1.0,
  "store": "sqlite",
- "turns": 38,
+ "turns": 43,
  "units": [
   {
    "ok": true,
@@ -376,21 +378,33 @@
   },
   {
    "ok": true,
+   "scene": "order: handwritten list photo priced by code, approved, shop told",
+   "shop_id": "shop-013",
+   "why": "route order/order-intake, orders ['approved'], lines [('NDL-120-CTN', 5), ('MLK-TIN-CTN', 3), ('SPAG-500', 10)], notices [('submit_order', 'ready'), ('submit_order_notice', 'ready')]"
+  },
+  {
+   "ok": true,
+   "scene": "order: a voice note edits it before approval, v2 replaces v1",
+   "shop_id": "shop-037",
+   "why": "v1 ['superseded'], v2 ['approved'], v2 lines [('NDL-120-CTN', 3)], approve v1 -> 409"
+  },
+  {
+   "ok": true,
    "scene": "daily naira cap: helpers pause, holding reply, one owner note, resume on approve",
    "shop_id": "owner",
-   "why": "parked ['parked', 'parked'], raise items 1, owner notes 1, decision 200, cap 68981 -> 137962 kobo, resumed and answered 2/2"
+   "why": "parked ['parked', 'parked'], raise items 1, owner notes 1, decision 200, cap 72062 -> 144124 kobo, resumed and answered 2/2"
   },
   {
    "ok": true,
    "scene": "owner approve / reject through /v1/approvals",
    "shop_id": "owner",
-   "why": "decisions ['approve:200', 'approve:200', 'reject:200', 'reject:200'], second decision 409, woken helpers quiet True (4), credit requests {'shop-011': 'approved', 'shop-020': 'rejected'}"
+   "why": "decisions ['approve:200', 'approve:200', 'approve:200', 'approve:200', 'reject:200', 'reject:200'], second decision 409, woken helpers quiet True (6), credit requests {'shop-011': 'approved', 'shop-020': 'rejected'}"
   },
   {
    "ok": true,
    "scene": "console reads show the state",
    "shop_id": "owner",
-   "why": "threads 15/15, steps on every shop thread True, limits unchanged True, fake flags pending 3"
+   "why": "threads 17/17, steps on every shop thread True, limits unchanged True, fake flags pending 3"
   },
   {
    "ok": true,

@@ -329,6 +329,45 @@ def score(run: Run, usage_path: Path | None = None) -> dict[str, Any]:
          f"{p_out[0][:60] if p_out else '-'!r}, email route "
          f"{email.view.get('skill') if email else '-'}, drafts "
          f"{[i['outcome'] for i in drafts]}, sent elsewhere {len(brand_sends)}")
+    # ---- Order intake (RAI-302): a list photo, then a voice edit before approval
+    apr_now = {a["approval_id"]: a for a in run.checks["approvals_all"]["approvals"]}
+    prices = {x.sku: x.price_on(world.live_day, world.price_rise_day) for x in world.skus}
+
+    def priced(p: dict[str, Any], want: tuple[tuple[str, int], ...]) -> bool:
+        lines = p.get("lines") or []
+        return ({(ln["sku"], int(ln["quantity"])) for ln in lines} == set(want)
+                and all(int(ln["unit_price_kobo"]) == prices[ln["sku"]]
+                        and int(ln["line_total_kobo"]) == int(ln["quantity"]) * prices[ln["sku"]]
+                        for ln in lines)
+                and int(p.get("total_kobo", -1)) == sum(int(ln["line_total_kobo"])
+                                                        for ln in lines))
+
+    sid = sc.ORDER_PHOTO_SHOP
+    ot = next((t for t in run.turns if t.scene == "order"), None)
+    subs = its(sid, "submit_order")
+    o_out = {m["kind"]: m for m in shop_out(sid)}
+    ok = (ot is not None and ot.view.get("skill") == "order/order-intake" and len(subs) == 1
+          and subs[0]["outcome"] == "approved" and priced(subs[0]["payload"],
+                                                          sc.ORDER_PHOTO_LINES)
+          and o_out.get("submit_order_notice", {}).get("status") == "ready"
+          and o_out.get("submit_order", {}).get("status") == "ready")
+    unit("order: handwritten list photo priced by code, approved, shop told", sid, ok,
+         f"route {ot.view.get('skill') if ot else '-'}, orders "
+         f"{[i['outcome'] for i in subs]}, lines "
+         f"{[(ln['sku'], ln['quantity']) for ln in (subs[0]['payload'].get('lines') or [])] if subs else '-'}, "
+         f"notices {[(k, m['status']) for k, m in o_out.items()]}")
+    sid = sc.ORDER_EDIT_SHOP
+    v1s, v2s = its(sid, "submit_order"), its(sid, "revise_order")
+    v1_apr = [a for a in apr_now.values() if a["shop_id"] == sid and a["tool"] == "submit_order"]
+    ok = (len(v1s) == 1 and len(v2s) == 1 and v1s[0]["outcome"] == "superseded"
+          and v2s[0]["outcome"] == "approved" and int(v2s[0]["payload"].get("version", 0)) == 2
+          and priced(v2s[0]["payload"], sc.ORDER_EDIT_LINES)
+          and [a["status"] for a in v1_apr] == ["superseded"]
+          and run.checks.get("order_v1_approve_status") == 409)
+    unit("order: a voice note edits it before approval, v2 replaces v1", sid, ok,
+         f"v1 {[i['outcome'] for i in v1s]}, v2 {[i['outcome'] for i in v2s]}, v2 lines "
+         f"{[(ln['sku'], ln['quantity']) for ln in (v2s[0]['payload'].get('lines') or [])] if v2s else '-'}, "
+         f"approve v1 -> {run.checks.get('order_v1_approve_status')}")
     # ---- the daily naira cap: pause cleanly, owner note once, resume on the owner's yes
     bud = [t for t in run.turns if t.scene == "budget"]
     pviews = run.checks.get("budget_parked_views") or []

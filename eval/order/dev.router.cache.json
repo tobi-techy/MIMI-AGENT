@@ -1,0 +1,58 @@
+{
+ "079f038a6f32a7172f37ab8a41647a30": {
+  "completion_tokens": 617,
+  "latency_s": 2.984,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 624,
+  "text": "{\"parts\": [{\"confidence\": 0.95, \"id\": \"p1\", \"label\": \"corrects\", \"task\": \"t1\"}]}"
+ },
+ "431d6239b563365445259e22f35753c3": {
+  "completion_tokens": 985,
+  "latency_s": 4.116,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 603,
+  "text": "{\"parts\": [{\"confidence\": 0.96, \"id\": \"p1\", \"label\": \"current\", \"task\": \"\"}, {\"confidence\": 0.9, \"id\": \"p2\", \"label\": \"current\", \"task\": \"\"}]}"
+ },
+ "4875af13cd84ca04673446dde0b39395": {
+  "completion_tokens": 205,
+  "latency_s": 1.485,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 749,
+  "text": "{\"route\": \"order/order-intake\", \"confidence\": 0.95, \"second\": \"\", \"language\": \"en\"}"
+ },
+ "50f4b4f4f655e384db5da290e927f031": {
+  "completion_tokens": 396,
+  "latency_s": 2.752,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 340,
+  "text": "{\"confidence\": 0.9, \"label\": \"answer\"}"
+ },
+ "9b34c4b42d7900190a8d1b4c8efc5d7f": {
+  "completion_tokens": 2000,
+  "latency_s": 6.613,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 621,
+  "text": ""
+ },
+ "d7b53f2d8af48338b8076d8ce0a0e68d": {
+  "completion_tokens": 488,
+  "latency_s": 3.132,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 758,
+  "text": "{\"route\": \"order/order-intake\", \"confidence\": 0.85, \"second\": \"stock/stock-count\", \"language\": \"en\"}"
+ },
+ "ed9afac4e25337a73048c7fc057ec587": {
+  "completion_tokens": 448,
+  "latency_s": 1.982,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 632,
+  "text": "{\"parts\": [{\"confidence\": 0.98, \"id\": \"p1\", \"label\": \"adds\", \"task\": \"t0\"}]}"
+ },
+ "fa0839e6607014f236ce87ceac397318": {
+  "completion_tokens": 229,
+  "latency_s": 2.037,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 754,
+  "text": "{\"route\": \"order/order-intake\", \"confidence\": 0.98, \"second\": \"\", \"language\": \"pcm\"}"
+ }
+}

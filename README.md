@@ -436,6 +436,26 @@ make steer-eval   # 53 held-out cases, replayed (CI, no key); 90% and the zeros
 make steer-eval-live  # record what is missing (needs META_API_KEY)
 ```
 
+## Eval: shops order by text, voice or list photo (RAI-302)
+
+A shop orders on WhatsApp ("send 5 carton Indomie, 2 Peak milk", a voice note
+or a photo of its handwritten list). Muse Spark only says what the shop asked
+for, quoting its words; code matches the catalogue, prices it, checks credit
+and writes every reply. Every order waits for the owner or rep; over available
+credit is flagged, never allowed; edits before approval make a new version;
+decided orders are never changed. See `docs/ORDER.md`.
+
+| Held-out (47 synthetic cases, written before the helper) | Pass mark | Result |
+|---|---|---|
+| Fully right | 90% | **93.6% (44/47)** |
+| Invented prices or items | 0 | **0** |
+| Credit extended | 0 | **0** |
+| Edits to decided orders | 0 | **0** |
+
+The 3 misses are list photos routed away from Order. Two e2e scenes (a list
+photo approved; a voice edit making version 2, version 1 refused with 409)
+pass. `make order-eval` replays it offline.
+
 ## Eval: stock estimate and one-tap counts
 
 **Backtest** (no model calls): every morning for six weeks, the production

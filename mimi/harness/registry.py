@@ -98,6 +98,9 @@ class ToolSpec:
     # A scope that depends on the arguments (send_to_user to a shop needs
     # shop:messages, to the owner org:owner). Defaults to ``scope``.
     scope_fn: Callable[[Any], str] | None = None
+    # A write whose message is the whole answer (a question Go sends): the
+    # turn ends after the step that proposes it (RAI-302).
+    ends_turn: bool = False
 
     def scope_for(self, args: Any) -> str:
         return self.scope_fn(args) if self.scope_fn else self.scope
@@ -196,6 +199,7 @@ class ToolRegistry:
         summary: str = "",
         name: str = "",
         scope_fn: Callable[[Any], str] | None = None,
+        ends_turn: bool = False,
     ) -> Callable[[ToolFn], ToolFn]:
         """Decorator. Input and output models come from the function's hints."""
 
@@ -229,6 +233,7 @@ class ToolRegistry:
                     intent_kind=intent_kind or (name or fn.__name__),
                     summary=summary or description.split(". ")[0][:120],
                     scope_fn=scope_fn,
+                    ends_turn=ends_turn,
                 )
             )
             return fn

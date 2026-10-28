@@ -32,6 +32,7 @@ from __future__ import annotations
 import json
 import logging
 import os
+import re
 import socket
 import threading
 import time
@@ -62,6 +63,7 @@ from mimi.harness.tracing import trace_job
 from mimi.harness.types import RunEvent
 from mimi.models.base import ChatModel
 from mimi.observe.langfuse_export import exporter_from_env
+from mimi.orders.catalogue import family_of
 from mimi.stock.copy import numbers_in
 from mimi.store import schema as s
 from mimi.store.book import SqlGo, moves_money
@@ -94,6 +96,11 @@ MESSAGE_INTENTS: dict[str, tuple[str, str]] = {
     "flag_delivery_to_owner": ("owner_console", "message"),
     # Brand's email draft: shown to the owner only, never sent to the brand.
     "draft_brand_email": ("owner_console", "body"),
+    # Order intake (RAI-302): the question now; the "approved" notice waits
+    # with the order and goes out only if the owner approves it.
+    "ask_order_question": ("shop_whatsapp", "text"),
+    "submit_order": ("shop_whatsapp", "approved_text"),
+    "revise_order": ("shop_whatsapp", "approved_text"),
 }
 
 # Approve-tier intents whose shop reply does not depend on the owner's answer
@@ -103,6 +110,8 @@ NOTICE_INTENTS: dict[str, tuple[str, str]] = {
     "flag_payment_proof": ("shop_whatsapp", "shop_notice"),
     "draft_restock": ("shop_whatsapp", "shop_notice"),
     "revise_restock": ("shop_whatsapp", "shop_notice"),
+    "submit_order": ("shop_whatsapp", "shop_notice"),
+    "revise_order": ("shop_whatsapp", "shop_notice"),
 }
 # The loop's reason when the distributor's daily naira cap stops a run.
 DAILY_CAP_REASON = "daily naira cap reached"
@@ -111,6 +120,12 @@ HOLDING_TEXT = {
     "en": "Thanks, I have your message. I'll get back to you on it soon.",
     "pcm": "Thank you, I don see your message. I go come back to you on am soon.",
 }
+# A change to an order already sent, in the shop's words (RAI-302).
+_ORDER_CHANGE = re.compile(r"(?i)\b(?:make (?:it|am|them|that)|change|instead|reduce|increase|"
+                           r"remove|cancel|no be|not \d|only \d|more)\b")
+# Skills whose approval_answered wake needs no model: the decided intent's
+# message was written by code and Go releases it on approve (RAI-302).
+CODE_ONLY_APPROVALS: frozenset[str] = frozenset({"order/order-intake"})
 # How long a correction question waits for the shop's YES or NO (RAI-301).
 FIX_TTL_S = 24 * 3600
 # Route rules a part keeps whatever the steer labels say: a screenshot is read
@@ -124,6 +139,7 @@ AWAITS: dict[str, tuple[str, str]] = {
     "ask_stock_count": ("stock/stock-count", "taps"),
     "send_delivery_receipt": ("order/drop-confirmation", "yes_no"),
     "ask_receipt_again": ("order/drop-confirmation", "any"),
+    "ask_order_question": ("order/order-intake", "any"),
 }
 # What an ask is about, read from its payload (kept as the thread's ask_ref).
 ASK_REF_FIELDS: tuple[str, ...] = ("delivery_id", "sku")
@@ -135,6 +151,7 @@ SETTLES: dict[str, tuple[str, ...]] = {
     "order/drop-confirmation": RECEIPT_SETTLED,
     "stock/stock-count": ("record_stock_count",),
     "credit/credit-request": ("submit_credit_review",),
+    "order/order-intake": ("submit_order", "revise_order"),
 }
 
 
@@ -555,7 +572,13 @@ class Agent:
         if d.status == "clarify":
             self._complete(holder, d, events, prior, status="asked_to_clarify", steer=sv)
             return
-        helper = self.helpers.get(d.helper)
+        if lead.source == "approval_answered" and d.skill in CODE_ONLY_APPROVALS:
+            # The owner's decision is already applied and its notice released
+            # by code: nothing for a model to do (RAI-302).
+            self._complete(holder, d, events, prior, status="done_quiet", steer=sv)
+            return
+        # A skill can have its own helper config (Order intake, RAI-302).
+        helper = self.helpers.get(d.skill) or self.helpers.get(d.helper)
         if helper is None:
             self._complete(holder, d, events, prior, status=f"no_helper_yet:{d.helper}",
                            steer=sv)
@@ -760,6 +783,17 @@ class Agent:
         if fix:
             out["fix_done"] = True  # the shop moved on; the question is not asked twice
         tmap = {t.tid: t for t in tasks}
+        if plan.action == "keep" and not plan.followups and d.skill == "order/order-intake":
+            # "Make it 6" when the shop's only recent order is decided: a change
+            # to a decided order, answered by code, never a new order (RAI-302).
+            done = next((t for t in reversed(tasks) if t.tool in st.ORDER_TASKS and t.decided),
+                        None)
+            if (done is not None and not any(t.tool in st.ORDER_TASKS and not t.decided
+                                              for t in tasks)
+                    and _ORDER_CHANGE.search(text) and not family_of(text)[0]):
+                out.update(self._task_plan("owner", "a change to a decided order", "corrects",
+                                           done, text, tasks))
+                return out
         if plan.action != "keep":
             task = tmap.get(plan.task)
             label = next((lb.label for lb in res.labels if lb.pid in plan.primary
@@ -821,8 +855,14 @@ class Agent:
         """The turn for one task action: a helper route or a code reply."""
         info = {"task": sx.task_json(task) if task else None, "action": action, "why": why,
                 "words": st.quote(words, 300)}
+        if (action == "adds" and task is not None and task.tool in st.ORDER_TASKS
+                and task.decided and not family_of(words)[0]):
+            # "Make it 6" on an approved order names no new goods: it is a
+            # change to a decided order, so the owner is told (RAI-302).
+            action, why = "owner", f"{task.tool} is already {task.status}: never edited"
         if (action == "revise" and task is not None and task.tool in sx.FAMILY
-                and task.tool != "submit_credit_review" and not numbers_in(words)):
+                and task.tool not in ("submit_credit_review", *st.ORDER_TASKS)
+                and not numbers_in(words)):
             # A new restock version needs the shop's number; the tool refuses
             # without one, so code asks instead of waking the helper.
             action, why = "question", "no quantity in the shop's words"
@@ -1387,7 +1427,7 @@ class Agent:
             family = sx.FAMILY.get(rec.tool)
             corrects = (corr.get("action") == "revise" and task.get("tool") in (family or ())
                         and task.get("shop_id") == rec.shop_id)
-            if family is None or not (rec.tool == "revise_restock" or corrects):
+            if family is None or not (rec.tool in sx.REVISIONS or corrects):
                 continue
             sku = str(rec.payload.get("sku", ""))
             for old in sx.pending_of_family(conn, tenant, rec.shop_id, rec.tool, sku):

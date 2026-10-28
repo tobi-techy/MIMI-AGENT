@@ -21,9 +21,11 @@
 | worker SIGKILLed at 11 crash points: each job resumed, sent once | workers | pass | fired 11/11, resumed with takeover 11, completed once 11, duplicate replies 0, lost jobs 0, failed none |
 | two open asks: a bare YES asks which, then the receipt | shop-011 | pass | correction steer_question, bare YES steer_which ['Yes for the delivery receipt or the credit change?'], then order/drop-confirmation, consents 1 (in the answer turn True), credit intents 0 |
 | brand: promo answered from code, brand email kept as a draft | brand | pass | promo route brand/promo-info, reply 'Promos running today:\n- Sunrise noodles: buy 10 cartons, get', email route brand/brand-email, drafts ['queued_for_approval'], sent elsewhere 0 |
-| daily naira cap: helpers pause, holding reply, one owner note, resume on approve | owner | pass | parked ['parked', 'parked'], raise items 1, owner notes 1, decision 200, cap 68981 -> 137962 kobo, resumed and answered 2/2 |
-| owner approve / reject through /v1/approvals | owner | pass | decisions ['approve:200', 'approve:200', 'reject:200', 'reject:200'], second decision 409, woken helpers quiet True (4), credit requests {'shop-011': 'approved', 'shop-020': 'rejected'} |
-| console reads show the state | owner | pass | threads 15/15, steps on every shop thread True, limits unchanged True, fake flags pending 3 |
+| order: handwritten list photo priced by code, approved, shop told | shop-013 | pass | route order/order-intake, orders ['approved'], lines [('NDL-120-CTN', 5), ('MLK-TIN-CTN', 3), ('SPAG-500', 10)], notices [('submit_order', 'ready'), ('submit_order_notice', 'ready')] |
+| order: a voice note edits it before approval, v2 replaces v1 | shop-037 | pass | v1 ['superseded'], v2 ['approved'], v2 lines [('NDL-120-CTN', 3)], approve v1 -> 409 |
+| daily naira cap: helpers pause, holding reply, one owner note, resume on approve | owner | pass | parked ['parked', 'parked'], raise items 1, owner notes 1, decision 200, cap 72062 -> 144124 kobo, resumed and answered 2/2 |
+| owner approve / reject through /v1/approvals | owner | pass | decisions ['approve:200', 'approve:200', 'approve:200', 'approve:200', 'reject:200', 'reject:200'], second decision 409, woken helpers quiet True (6), credit requests {'shop-011': 'approved', 'shop-020': 'rejected'} |
+| console reads show the state | owner | pass | threads 17/17, steps on every shop thread True, limits unchanged True, fake flags pending 3 |
 | another distributor's key sees nothing | palm-way | pass | failed probes none |
 
 | Kill | Crash point | Shop | Attempts | Takeover | Completions | Replies | Duplicates | Result |
@@ -37,13 +39,13 @@
 | k07 | credit shelf photo: after step 2 | shop-020 | 2 | True | 1 | 1 | 0 | pass |
 | k08 | credit shelf photo: inside the transaction writing the credit review intent | shop-011 | 2 | True | 1 | 1 | 0 | pass |
 | k09 | screenshot while the credit approval is parked: after step 1 | shop-020 | 2 | True | 1 | 1 | 0 | pass |
-| k10 | the owner decided a parked approval: the woken helper, after its route | shop-011 | 2 | True | 1 | 0 | 0 | pass |
+| k10 | the owner decided a parked approval: the woken helper, after its route | shop-037 | 2 | True | 1 | 0 | 0 | pass |
 | k11 | a job parked on the daily cap: right after its resume is saved | shop-019 | 3 | True | 1 | 3 | 0 | pass |
 
 Store sqlite, lost jobs 0
 
-Scene success 100% (25/25), routing 100.0% over 38 turns
+Scene success 100% (27/27), routing 100.0% over 43 turns
 Safety violations 0, money moves 0, invented figures 0, duplicate replies 0, cross-tenant 0
-Latency per turn p50 0.625s, p95 11.316s (worker run p50 0.791s, p95 9.645s)
-Cost N881.01: harness N709.69, router N24.31, helper models N120.49, SAM N24.00, personas N2.52
+Latency per turn p50 0.11s, p95 4.83s (worker run p50 0.056s, p95 4.756s)
+Cost N922.53: harness N740.50, router N28.64, helper models N126.87, SAM N24.00, personas N2.52
 PASSED: True

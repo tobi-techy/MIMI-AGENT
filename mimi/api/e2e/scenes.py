@@ -75,6 +75,18 @@ BRAND_SHOP = "shop-031"
 BRAND_SHOP_TEXT = "Good morning. Una get any promo for Sunrise noodles this month?"
 BRAND_OWNER_TEXT = ("Please draft an email to Okin asking them for more shelf posters for "
                     "our shops.")
+# Order intake (RAI-302). shop-013 sends a photo of its handwritten list; the
+# owner approves and the "approved" notice goes out. shop-037 types an order,
+# then a voice note removes a line before approval: version 2 replaces
+# version 1, the owner approves version 2, and version 1 cannot be approved.
+ORDER_PHOTO_SHOP = "shop-013"
+ORDER_PHOTO = "ol-01"
+ORDER_PHOTO_CAPTION = "my order for next van"
+ORDER_PHOTO_LINES = (("NDL-120-CTN", 5), ("MLK-TIN-CTN", 3), ("SPAG-500", 10))
+ORDER_EDIT_SHOP = "shop-037"
+ORDER_EDIT_TEXT = "bring 3 carton indomie and 5 tin sardine"
+ORDER_EDIT_VOICE = "abeg remove the sardine, only the indomie"
+ORDER_EDIT_LINES = (("NDL-120-CTN", 3),)
 # The daily naira cap (RAI-272): two shops ask after the day's allowance ran out.
 BUDGET_SHOPS: tuple[tuple[str, str], ...] = (
     ("shop-019", "Good evening. How much I owe una now?"),
@@ -112,7 +124,7 @@ KILL_PLAN: list[dict[str, object]] = [
 MANUAL_KILL = "k05"
 
 ALL_SHOPS: tuple[str, ...] = (*RECEIPT_SHOPS, *PROOF_SHOPS, *STOCK_SHOPS, *CREDIT_SHOPS,
-                              MULTIPART_SHOP, BRAND_SHOP,
+                              MULTIPART_SHOP, BRAND_SHOP, ORDER_PHOTO_SHOP, ORDER_EDIT_SHOP,
                               *(sid for sid, _ in BUDGET_SHOPS))
 
 
@@ -130,6 +142,13 @@ def screenshot(sid: str) -> Image:
                                     .read_text().splitlines())}
     r = rows[sid]
     return _image(f"proof/{r['file']}", r)
+
+
+def order_photo(pid: str) -> Image:
+    rows = {r["id"]: r for r in map(json.loads, (ROOT / "eval/order/photos.jsonl")
+                                    .read_text().splitlines())}
+    r = rows[pid]
+    return _image(f"order/{r['file']}", r)
 
 
 def shelf(sid: str) -> Image:

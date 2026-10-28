@@ -65,6 +65,8 @@ MONEY_TOOLS = frozenset({
 })
 MONEY_HELPERS = frozenset({"collector", "credit", "proof"})
 DECIDED = frozenset({"approved", "rejected", "applied"})
+# Shop orders (RAI-302): adding goods is never a money change.
+ORDER_TASKS = frozenset({"submit_order", "revise_order"})
 
 
 # ------------------------------------------------------------------- parts
@@ -210,6 +212,12 @@ def task_summary(tool: str, status: str, payload: Mapping[str, Any]) -> str:
                             "before delivery", "approved": "approved by the owner",
                  "rejected": "rejected by the owner"}.get(status, status)
         return f"restock draft of {' '.join(what.split())}, {state}"
+    if tool in ("submit_order", "revise_order"):
+        what = ", ".join(f"{ln.get('quantity', '?')} {ln.get('unit', '')} {ln.get('item', '')}"
+                         for ln in (p.get("lines") or [])[:6])
+        state = {"pending": "waiting for the owner's approval", "approved": "approved by the "
+                 "owner", "rejected": "turned down by the owner"}.get(status, status)
+        return f"order {p.get('order_id', '')} of {' '.join(what.split())}, {state}"
     if tool == "submit_credit_review":
         return ("credit request for the owner"
                 + {"pending": ", waiting for the owner's decision",
@@ -424,6 +432,10 @@ def task_action(label: str, conf: float, task: OpenTask | None,
     if label in ("corrects", "cancels") and conf < ACT_AT:
         return "question", f"{label} at {conf:.2f}, below {ACT_AT}"
     if label == "adds":
+        if task.tool in ORDER_TASKS:
+            # More goods after an order: Order makes a new version, or a new
+            # order when the open one is decided (it is never edited).
+            return "adds", ""
         return ("owner", "adds to a decided item") if task.status in ("approved", "rejected") \
             else ("adds", "")
     if task.money:
