@@ -1,0 +1,9 @@
+{
+ "44f4ea1b4a846c56f31416e0e1b2ff07": {
+  "completion_tokens": 372,
+  "latency_s": 2.478,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 794,
+  "text": "{\"route\": \"order/drop-confirmation\", \"confidence\": 0.95, \"second\": \"\", \"language\": \"pcm\"}"
+ }
+}

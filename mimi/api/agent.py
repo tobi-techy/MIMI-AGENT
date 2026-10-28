@@ -43,6 +43,7 @@ from typing import Any
 import sqlalchemy as sa
 from sqlalchemy.engine import Engine
 
+from mimi.api.helpers import HelperDeps
 from mimi.harness import fastclass
 from mimi.harness.context import ContextBuilder
 from mimi.harness.frontdoor import FrontDoor
@@ -51,8 +52,10 @@ from mimi.harness.inbound import Directory, Inbound, Payload
 from mimi.harness.loop import Harness, Helper, LoopState
 from mimi.harness.policy import GoPolicy, RiskPolicy
 from mimi.harness.router import RouteDecision, Router, ThreadState, lead_of
+from mimi.harness.tracing import trace_route, trace_run
 from mimi.harness.types import RunEvent
 from mimi.models.base import ChatModel
+from mimi.observe.langfuse_export import exporter_from_env
 from mimi.store import schema as s
 from mimi.store.book import SqlGo, moves_money
 from mimi.store.context_stores import (
@@ -76,7 +79,42 @@ MESSAGE_INTENTS: dict[str, tuple[str, str]] = {
     "send_reminder": ("shop_whatsapp", "text"),
     "notify_rep": ("rep_whatsapp", "message"),
     "notify_owner": ("owner_console", "message"),
+    # The helpers' own asks and notices, text written by code (RAI-272).
+    "ask_for_shelf_photo": ("shop_whatsapp", "text"),
+    "ask_stock_count": ("shop_whatsapp", "text"),
+    "send_delivery_receipt": ("shop_whatsapp", "text"),
+    "ask_receipt_again": ("shop_whatsapp", "text"),
+    "flag_delivery_to_owner": ("owner_console", "message"),
 }
+
+# Approve-tier intents whose shop reply does not depend on the owner's answer
+# ("sent to the distributor to confirm"): Go sends it at once, so a turn that
+# parks for approval still answers the shop (RAI-272, found by the e2e run).
+NOTICE_INTENTS: dict[str, tuple[str, str]] = {
+    "flag_payment_proof": ("shop_whatsapp", "shop_notice"),
+    "draft_restock": ("shop_whatsapp", "shop_notice"),
+}
+
+# A write that asks the shop something leaves the thread waiting on that
+# skill, so the answer (a photo, a tap, a YES) routes back by rule.
+AWAITS: dict[str, tuple[str, str]] = {
+    "ask_for_shelf_photo": ("credit/credit-request", "photo"),
+    "ask_stock_count": ("stock/stock-count", "taps"),
+    "send_delivery_receipt": ("order/drop-confirmation", "yes_no"),
+    "ask_receipt_again": ("order/drop-confirmation", "any"),
+}
+
+
+def media_pointer(inbound: Inbound) -> str:
+    """What the model sees for an image: its id, never its pixels."""
+    m = inbound.payload.media
+    if m.kind != "image" or not m.sha256:
+        return ""
+    from mimi.harness.router import media_shape
+
+    what = {"photo": "shelf photo", "screenshot": "payment screenshot"}.get(
+        "photo" if m.camera_exif else media_shape(m), "image")
+    return f"[{what} ph_{m.sha256[:12]}]"
 
 
 class NotFound(LookupError):
@@ -165,17 +203,20 @@ class Agent:
         models: Sequence[ToolModel],
         router_model: ChatModel | None = None,
         helpers: Mapping[str, Helper] | None = None,
+        deps: HelperDeps | None = None,
         policy: RiskPolicy | None = None,
         lease_s: float = 30.0,
         worker_id: str = "",
         clock: Any = None,
+        exporter: Any = None,
     ) -> None:
         from mimi.api.helpers import build_helpers
 
         self.engine = engine
         self.go = SqlGo(engine)
         self.policy = policy or GoPolicy()
-        self.helpers: dict[str, Helper] = dict(helpers or build_helpers(self.policy))
+        self.helpers: dict[str, Helper] = dict(helpers or build_helpers(
+            self.policy, go=self.go, deps=deps))
         self.router = Router(model=router_model, fast=fastclass.model(), price=kobo_cost)
         self.clock = clock or (lambda: datetime.now(UTC))
         self.artifacts = SqlArtifactStore(engine)
@@ -188,14 +229,19 @@ class Agent:
         self.lease_s = lease_s
         self.queue = TurnQueue(engine, lease_s=lease_s)
         self.worker_id = worker_id or f"{socket.gethostname()}:{os.getpid()}:{uuid.uuid4().hex[:6]}"
+        # One Langfuse trace per completed run (off without keys and in CI).
+        self.exporter = exporter if exporter is not None else exporter_from_env()
         self.model_mode = "offline" if all(getattr(m, "name", "") == "offline"
                                            for m in models) else "live"
 
     @classmethod
     def from_env(cls, engine: Engine, *, env: Mapping[str, str] | None = None,
                  lease_s: float = 30.0) -> Agent:
+        from mimi.api.helpers import deps_from_env
+
         e = env if env is not None else os.environ
         key = e.get("META_API_KEY", "").strip()
+        deps = deps_from_env(e)
         if key:
             from mimi.harness.gateway import OpenAIToolModel
             from mimi.models.env import from_env
@@ -205,10 +251,11 @@ class Agent:
                 base_url=e.get("META_API_BASE", "").strip() or "https://api.meta.ai/v1",
                 timeout_s=float(e.get("META_TIMEOUT_S", "30") or 30))
             return cls(engine, models=[tool], router_model=from_env("mimi", env=e),
-                       lease_s=lease_s)
+                       deps=deps, lease_s=lease_s)
         from mimi.api.offline import OfflineModel
 
-        return cls(engine, models=[OfflineModel()], router_model=None, lease_s=lease_s)
+        return cls(engine, models=[OfflineModel()], router_model=None, deps=deps,
+                   lease_s=lease_s)
 
     # ================================================================ intake
 
@@ -415,7 +462,8 @@ class Agent:
         if lead.source in ("shop_message", "rep_message"):
             shop_id = directory.shop_for(lead.payload.from_phone)
         shop_id = shop_id or lead.payload.shop_id
-        text = "\n".join(e.text for e in events if e.text)
+        text = "\n".join(" ".join(x for x in (media_pointer(e), e.text) if x)
+                         for e in events if e.text or media_pointer(e))
         sender = {"owner_message": "owner", "shop_message": "shop",
                   "rep_message": "rep"}.get(lead.source, "system")
         if sender == "owner" and not directory.is_owner(lead):
@@ -479,6 +527,7 @@ class Agent:
                                "toolset_hash": r.toolset_hash,
                                "context_manifest": r.context.get("context_manifest", {})})
                 if apply and r.status != "failed":
+                    noticed: set[str] = set()
                     for rec in r.intents:
                         if rec.tool in ("send_to_user", "ask_question"):
                             continue  # recorded below with their draft
@@ -494,8 +543,18 @@ class Agent:
                                       kind=rec.tool,
                                       status="ready" if outcome == "applied"
                                       else "pending_approval", ts=now)
+                        note = NOTICE_INTENTS.get(rec.tool)
+                        notice = str(rec.payload.get(note[1], "")) if note else ""
+                        if note and notice and outcome in ("applied", "queued_for_approval"):
+                            self._out(conn, tenant, thread, turn_id,
+                                      key=f"{rec.idempotency_key}:notice", channel=note[0],
+                                      shop_id=rec.shop_id, text=notice, kind=f"{rec.tool}_notice",
+                                      status="ready", ts=now)
+                            noticed.add(" ".join(notice.split()))
                     by_key = {i.idempotency_key: i for i in r.intents}
                     for n, dr in enumerate(r.outbound_drafts):
+                        if dr.channel == "shop_whatsapp" and " ".join(dr.body.split()) in noticed:
+                            continue  # the notice above already says it, once
                         drec = by_key.get(dr.idempotency_key)
                         outcome, _ = (self.go.apply_intent(
                             conn, tenant, drec.model_dump(mode="json"), turn_id=turn_id,
@@ -513,6 +572,13 @@ class Agent:
                                    state.messages[state.prefix_len + state.history_len:])
                 if r.status == "asked_question" and sender == "shop":
                     next_state = ThreadState(pending_skill=d.skill, last_skill=d.skill)
+                if apply and r.status != "failed":
+                    for rec in r.intents:
+                        if rec.tool in AWAITS:
+                            skill_key, expects = AWAITS[rec.tool]
+                            next_state = ThreadState(pending_skill=skill_key,
+                                                     expects=expects,  # type: ignore[arg-type]
+                                                     last_skill=d.skill)
             elif state is not None:
                 run_id = state.run_id
                 result["run_status"] = status
@@ -531,6 +597,12 @@ class Agent:
                         .values(envelope=scrubbed.model_dump_json()))
             self.queue.finish_in(conn, claim, status=status, helper=d.helper, skill=d.skill,
                                  run_id=run_id, result=result)
+        # After the commit: a turn that lost its lease above never gets here,
+        # so each run is traced once (tracing never raises).
+        trace_route(d, self.exporter)
+        if state is not None and state.finished is not None:
+            trace_run(state.finished, self.exporter,
+                      shop_id=thread_kind(tenant, thread)[1] or "owner")
 
     @staticmethod
     def _shop_of(*, directory: Directory | None, tenant: str, thread: str) -> str:
@@ -592,9 +664,13 @@ class Agent:
             inbound = Inbound(
                 source="approval_answered", org_id=tenant_id,
                 external_id=f"approval:{approval_id}",
-                received_at=datetime.fromtimestamp(now, UTC), thread_id=a.thread_id,
+                received_at=self.clock(), thread_id=a.thread_id,
                 payload=Payload(name=approval_id, for_helper=a.helper, for_skill=a.skill,
-                                shop_id=a.shop_id, answer=decision))
+                                shop_id=a.shop_id, answer=decision,
+                                # Written by code, so the woken helper knows what
+                                # was decided (no figures, no shop text).
+                                text=f"The owner {decision} approvals item {approval_id} "
+                                     f"({a.tool} for {a.shop_id or 'the distributor'})."))
             follow = self.submit(tenant_id, inbound)
         return row, follow
 

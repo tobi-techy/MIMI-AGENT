@@ -18,6 +18,8 @@ import re
 from dataclasses import dataclass
 from typing import Literal
 
+from mimi.world.catalogue import COLLECTION_ACCOUNT
+
 Layout = Literal["app_receipt", "sms_alert"]
 
 
@@ -112,8 +114,9 @@ class CollectionAccount:
         return self.number[-4:]
 
 
+_ACCOUNT = dict(COLLECTION_ACCOUNT)
 CORAL_LANE_ACCOUNT = CollectionAccount(
-    name="CORAL LANE TRADING", bank="Kestrel Bank", number="9990004471"
+    name=_ACCOUNT["account_name"], bank=_ACCOUNT["bank"], number=_ACCOUNT["account_number"]
 )
 
 

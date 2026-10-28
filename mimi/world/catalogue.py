@@ -298,3 +298,13 @@ CATALOGUE: tuple[tuple[str, str, str, str, int, bool, bool], ...] = (
 )
 
 REP_NAMES: tuple[str, ...] = ("Kayode Ajayi", "Amaka Nwosu")
+
+
+# The account Coral Lane Trading's shops pay into (fictional bank, fictional
+# number). The store seeds it, the Collector gives it to shops and the proof
+# checks compare every screenshot's recipient against it.
+COLLECTION_ACCOUNT: tuple[tuple[str, str], ...] = (
+    ("account_name", "CORAL LANE TRADING"),
+    ("bank", "Kestrel Bank"),
+    ("account_number", "9990004471"),
+)

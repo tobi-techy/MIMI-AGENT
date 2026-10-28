@@ -73,11 +73,29 @@ BASE_TIERS: dict[str, Tier] = {
     "submit_credit_review": "approve",
     "find_credit_candidates": "auto",
     "find_shop": "auto",
+    # Proof's screenshot tools (RAI-268 on the harness, RAI-272)
+    "check_payment_screenshot": "auto",
+    "record_payment_proof": "notify",
+    "flag_payment_proof": "approve",
+    # Order's delivery receipt (RAI-267 on the harness)
+    "get_open_deliveries": "auto",
+    "send_delivery_receipt": "notify",
+    "read_receipt_reply": "auto",
+    "record_delivery_consent": "notify",
+    "flag_delivery_to_owner": "notify",
+    "ask_receipt_again": "notify",
+    # Stock (RAI-270 on the harness)
+    "get_stock_estimates": "auto",
+    "ask_stock_count": "notify",
+    "read_stock_answer": "auto",
+    "record_stock_count": "notify",
+    "draft_restock": "approve",
 }
 
 # Tools whose intent only the owner may accept: no table edit or amount rule
 # lowers them below approve.
-ALWAYS_APPROVE: frozenset[str] = frozenset({"submit_credit_review"})
+ALWAYS_APPROVE: frozenset[str] = frozenset({"submit_credit_review", "flag_payment_proof",
+                                            "draft_restock"})
 
 
 class RiskPolicy(Protocol):

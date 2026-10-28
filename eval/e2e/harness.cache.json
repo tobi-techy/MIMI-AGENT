@@ -1,0 +1,1052 @@
+{
+ "0557188cf83de9b30cc2d71100a7b95b27e9ef886ef5510243201cbe7353ae21": {
+  "cached_tokens": 4593,
+  "completion_tokens": 31,
+  "content": "",
+  "finish_reason": "stop",
+  "latency_s": 0.722,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 5928,
+  "tool_calls": []
+ },
+ "0d4fb261e97c2c384e05bfe8c9e1d21c82ea4f90e6bad6b6f0e557ce9730b810": {
+  "cached_tokens": 0,
+  "completion_tokens": 129,
+  "content": "I'll verify your receipt against our records now.",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.322,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 2822,
+  "tool_calls": [
+   {
+    "arguments": "{\"photo_id\":\"ph_cce311a2ab43\",\"shop_id\":\"shop-038\"}",
+    "id": "call_bb8763ae-a161-4c5f-8004-21e83a08cf77",
+    "name": "check_payment_screenshot"
+   }
+  ]
+ },
+ "0f7e299802c3deefe92905298bd7165c0a605d5b2e6d1083cc318b1c96389844": {
+  "cached_tokens": 3825,
+  "completion_tokens": 387,
+  "content": "",
+  "finish_reason": "tool_calls",
+  "latency_s": 2.592,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 4375,
+  "tool_calls": [
+   {
+    "arguments": "{\"body\":\"Thanks. I can see N13,600 from KUNLE AKINOLA on your screenshot. I've sent it to Coral Lane Trading to confirm with the bank. It shows as likely paid until the bank confirms.\",\"channel\":\"shop_whatsapp\",\"ends_turn\":true,\"shop_id\":\"shop-025\"}",
+    "id": "call_97801fe3-fe85-4dfb-903b-f0200298fd4a",
+    "name": "send_to_user"
+   }
+  ]
+ },
+ "19c998088aa5b1d0085edb41a35640a445880c9e5c5339469209333d2a89cb08": {
+  "cached_tokens": 0,
+  "completion_tokens": 137,
+  "content": "Your receipt is in \u2014 I'll verify it against our records.",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.946,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 2804,
+  "tool_calls": [
+   {
+    "arguments": "{\"photo_id\":\"ph_cce311a2ab43\",\"shop_id\":\"shop-038\"}",
+    "id": "call_0e60c08b-eb6d-4ef7-9780-63aee6d2ab85",
+    "name": "check_payment_screenshot"
+   }
+  ]
+ },
+ "1d385987e9d64d71154b4ec839e54f36032bc5e2b999ac0f33d12e8ce2dafe94": {
+  "cached_tokens": 3569,
+  "completion_tokens": 157,
+  "content": "",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.155,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 3888,
+  "tool_calls": [
+   {
+    "arguments": "{\"delivery_id\":\"dlv-56-9039\",\"shop_id\":\"shop-040\"}",
+    "id": "call_0fa8a9d0-3df2-4e33-9786-e9beeb2fabbb",
+    "name": "record_delivery_consent"
+   }
+  ]
+ },
+ "20d00a5380a5443e5a548034d526ba409f458e8fee13564bce6e715b14722647": {
+  "cached_tokens": 2801,
+  "completion_tokens": 100,
+  "content": "",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.468,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 3056,
+  "tool_calls": [
+   {
+    "arguments": "{\"delivery_id\":\"dlv-56-9007\",\"shop_id\":\"shop-008\"}",
+    "id": "call_c493d6bd-0dd8-4ca7-802c-01d678dfb81a",
+    "name": "send_delivery_receipt"
+   }
+  ]
+ },
+ "23f5013832e38ae8af1560b58050eb80665cef68b258681011e91ebe78bb141e": {
+  "cached_tokens": 0,
+  "completion_tokens": 261,
+  "content": "",
+  "finish_reason": "tool_calls",
+  "latency_s": 2.03,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 3106,
+  "tool_calls": [
+   {
+    "arguments": "{\"photo_id\":\"ph_cce311a2ab43\",\"shop_id\":\"shop-038\"}",
+    "id": "call_6396279b-eca1-451d-a9f2-bb6b7c36e475",
+    "name": "record_payment_proof"
+   },
+   {
+    "arguments": "{\"body\":\"Thanks. I can see N26,400 from BUKOLA OLATUNJI on your screenshot. I've sent it to Coral Lane Trading to confirm with the bank. It shows as likely paid until the bank confirms.\",\"channel\":\"shop_whatsapp\",\"ends_turn\":true,\"kind\":\"reply\",\"shop_id\":\"shop-038\"}",
+    "id": "call_a399d0a0-f78c-42ef-983f-9940b7a08ebd",
+    "name": "send_to_user"
+   }
+  ]
+ },
+ "293bd0922813d3c0fc752b20736350db5338a2ce1f914adf2a93e328f2051f5d": {
+  "cached_tokens": 2801,
+  "completion_tokens": 197,
+  "content": "Shop answered 3\u20135; I'll read the response to get the restock decision.",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.981,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 3117,
+  "tool_calls": [
+   {
+    "arguments": "{\"shop_id\":\"shop-012\",\"sku\":\"SEMO-1KG\"}",
+    "id": "call_c25eee87-6c44-400a-b3bf-c95211b67944",
+    "name": "read_stock_answer"
+   }
+  ]
+ },
+ "2ba3f3e3a0c709844122636a26396384d4cd737ccc0ced8c39d0f303e6dddb21": {
+  "cached_tokens": 0,
+  "completion_tokens": 127,
+  "content": "I'll examine that payment screenshot to verify the claim.",
+  "finish_reason": "tool_calls",
+  "latency_s": 2.116,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 2824,
+  "tool_calls": [
+   {
+    "arguments": "{\"photo_id\":\"ph_2aedf240dba4\",\"shop_id\":\"shop-035\"}",
+    "id": "call_543afe05-9a05-4856-b351-733a337021d4",
+    "name": "check_payment_screenshot"
+   }
+  ]
+ },
+ "306bdb5625c7ec18adea7ea1d5e7e65c06fd405f3879c8fdf60f20c8f3c4e2f3": {
+  "cached_tokens": 0,
+  "completion_tokens": 257,
+  "content": "",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.352,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 3318,
+  "tool_calls": [
+   {
+    "arguments": "{\"delivery_id\":\"dlv-56-9022\",\"shop_id\":\"shop-023\"}",
+    "id": "call_9331a256-148e-4ab2-bab3-e7fca5dde346",
+    "name": "record_delivery_consent"
+   },
+   {
+    "arguments": "{\"body\":\"Thank you. Delivery dlv-56-9022 is confirmed.\",\"channel\":\"shop_whatsapp\",\"ends_turn\":true,\"shop_id\":\"shop-023\"}",
+    "id": "call_8bcc7394-fc96-4d86-8364-d131a91c71ba",
+    "name": "send_to_user"
+   }
+  ]
+ },
+ "343ee76977ac047f797d71c2892f949cfa4428f8319ff0b5ee723270d994d24d": {
+  "cached_tokens": 3057,
+  "completion_tokens": 242,
+  "content": "",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.514,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 3277,
+  "tool_calls": [
+   {
+    "arguments": "{\"body\":\"Thanks. I can see N26,400 from BUKOLA OLATUNJI on your screenshot. I've sent it to Coral Lane Trading to confirm with the bank. It shows as likely paid until the bank confirms.\",\"channel\":\"shop_whatsapp\",\"ends_turn\":true,\"kind\":\"reply\",\"shop_id\":\"shop-038\"}",
+    "id": "call_bc6e73ac-e448-480d-a737-a6fe9015e933",
+    "name": "send_to_user"
+   }
+  ]
+ },
+ "39de5d85bf22795c46c682395055f500ffd373d6365557484059d9338abf26b9": {
+  "cached_tokens": 3313,
+  "completion_tokens": 22,
+  "content": "",
+  "finish_reason": "stop",
+  "latency_s": 0.668,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 4032,
+  "tool_calls": []
+ },
+ "3add69171961e7f7ef0e691878b53df7e2fa59d83b918c88c109aafd8f1cc588": {
+  "cached_tokens": 0,
+  "completion_tokens": 118,
+  "content": "I'll examine that payment screenshot to verify the claim.",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.948,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 2806,
+  "tool_calls": [
+   {
+    "arguments": "{\"photo_id\":\"ph_2aedf240dba4\",\"shop_id\":\"shop-035\"}",
+    "id": "call_75dc02c7-dca3-4d6a-a9fc-e8e0f19090f1",
+    "name": "check_payment_screenshot"
+   }
+  ]
+ },
+ "3f2518c394a9e1840c6bb684bd818ffb27010038bd1702c32c70614c090b9fc6": {
+  "cached_tokens": 0,
+  "completion_tokens": 22,
+  "content": "",
+  "finish_reason": "stop",
+  "latency_s": 1.067,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 3043,
+  "tool_calls": []
+ },
+ "42e8649a94c978018001fb6e1570b59dc66b720a0ea685797e241eba769fa30e": {
+  "cached_tokens": 0,
+  "completion_tokens": 184,
+  "content": "Got the YES \u2014 I'll confirm what was received.",
+  "finish_reason": "tool_calls",
+  "latency_s": 2.642,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 3653,
+  "tool_calls": [
+   {
+    "arguments": "{\"delivery_id\":\"dlv-56-9039\",\"shop_id\":\"shop-040\"}",
+    "id": "call_973e843c-7669-4e15-80c0-0d6cc1ee2d40",
+    "name": "read_receipt_reply"
+   }
+  ]
+ },
+ "47cc5854a8f45fa14ee490af248d557e54940b932ada03d788b153b169cc10fa": {
+  "cached_tokens": 3057,
+  "completion_tokens": 165,
+  "content": "",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.124,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 4041,
+  "tool_calls": [
+   {
+    "arguments": "{\"body\":\"Thank you. Delivery dlv-56-9039 is confirmed.\",\"channel\":\"shop_whatsapp\",\"ends_turn\":true,\"kind\":\"reply\",\"shop_id\":\"shop-040\"}",
+    "id": "call_d9ceded4-7d7a-4fdc-838d-e1d37f4737a4",
+    "name": "send_to_user"
+   }
+  ]
+ },
+ "4b5b85105be4c7011877e0eb79c532cec7ac909c94b8bd7f04874f57090ce1a0": {
+  "cached_tokens": 0,
+  "completion_tokens": 105,
+  "content": "",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.969,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 4658,
+  "tool_calls": [
+   {
+    "arguments": "{\"origin\":\"shop_ask\",\"photo_id\":\"ph_c94787826bab\",\"shop_id\":\"shop-020\"}",
+    "id": "call_5e3c833b-6b26-4799-a9fe-53f8e06202c1",
+    "name": "prepare_credit_review"
+   }
+  ]
+ },
+ "4dbebe4db268a8993124fbbace81a779a833fa712165f9602dcaa094253cfc06": {
+  "cached_tokens": 241,
+  "completion_tokens": 600,
+  "content": "Photo checked \u2014 I'll forward your request to Coral Lane Trading for a decision.",
+  "finish_reason": "tool_calls",
+  "latency_s": 3.417,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 5018,
+  "tool_calls": [
+   {
+    "arguments": "{\"note_for_owner\":\"His Mercy Mini Mart has 13 of 13 verified payments on time (N2,942,400 verified) with nothing overdue. Owes N0 on a N640,000 limit.\",\"origin\":\"shop_ask\",\"photo_id\":\"ph_75a88c005b4e\",\"review_id\":\"cr_9aaca97c88853e96\",\"shop_id\":\"shop-011\"}",
+    "id": "call_2689de86-4836-4785-9dac-8638709a35fb",
+    "name": "submit_credit_review"
+   },
+   {
+    "arguments": "{\"body\":\"I counted about 11 Sunrise Instant Noodles 70g packets, 5 Sunrise Big Pack Noodles 120g packets and 4 Smile Toothpaste 140g tube boxes, worth about N10,500 at Coral Lane Trading prices. I've sent your request with this to Coral Lane Trading. They decide the limit.\",\"channel\":\"shop_whatsapp\",\"ends_turn\":true,\"shop_id\":\"shop-011\"}",
+    "id": "call_ae0be8a2-c5ec-435c-ad4a-83c1711bc11c",
+    "name": "send_to_user"
+   }
+  ]
+ },
+ "512cdcb8e8c1e54dafd6e59df25b5f40960617fe5f3fb404de09a2d2c80ab3f2": {
+  "cached_tokens": 0,
+  "completion_tokens": 140,
+  "content": "Your credit request is in \u2014 I'll pull your file to start the review.",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.05,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 3288,
+  "tool_calls": [
+   {
+    "arguments": "{\"shop_id\":\"shop-011\"}",
+    "id": "call_4187254b-3f63-456e-884f-de2edef83a20",
+    "name": "get_credit_file"
+   }
+  ]
+ },
+ "5191196f2fa96aebd80ca0852d3b815e8b60e0085af2e46c7f39758149aecb14": {
+  "cached_tokens": 0,
+  "completion_tokens": 29,
+  "content": "",
+  "finish_reason": "stop",
+  "latency_s": 1.115,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 2915,
+  "tool_calls": []
+ },
+ "582b2137986e12b007ef7b437eafb20e9429d040a2b830d24cee136670a0bd70": {
+  "cached_tokens": 0,
+  "completion_tokens": 223,
+  "content": "",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.33,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 4139,
+  "tool_calls": [
+   {
+    "arguments": "{\"photo_id\":\"ph_4919f457ff38\",\"shop_id\":\"shop-038\"}",
+    "id": "call_b9cf7940-2e95-4ba3-a804-17c313660900",
+    "name": "flag_payment_proof"
+   },
+   {
+    "arguments": "{\"body\":\"Thanks, I've sent this to Coral Lane Trading to confirm with the bank. Nothing has changed on your account yet.\",\"channel\":\"shop_whatsapp\",\"ends_turn\":true,\"kind\":\"reply\",\"shop_id\":\"shop-038\"}",
+    "id": "call_3d48a33f-2af9-49b4-b671-d8bbabe4acbb",
+    "name": "send_to_user"
+   }
+  ]
+ },
+ "6661905bc7f18d13d1259b3c9454e1b3242a1913887b4a9a9dff2ee1ca9ad6ec": {
+  "cached_tokens": 3185,
+  "completion_tokens": 195,
+  "content": "",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.437,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 3638,
+  "tool_calls": [
+   {
+    "arguments": "{\"shop_id\":\"shop-020\"}",
+    "id": "call_a585f3fd-7a3e-4733-8570-7c0594fafda6",
+    "name": "ask_for_shelf_photo"
+   }
+  ]
+ },
+ "67c525b94a4dbaa171a6a426905639386f878858f6abfd1ceb4dd99830136e9e": {
+  "cached_tokens": 369,
+  "completion_tokens": 90,
+  "content": "",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.271,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 4149,
+  "tool_calls": [
+   {
+    "arguments": "{\"photo_id\":\"ph_4919f457ff38\",\"shop_id\":\"shop-038\"}",
+    "id": "call_5e5ce076-ac5e-4930-a1ad-2b339c0555c4",
+    "name": "flag_payment_proof"
+   }
+  ]
+ },
+ "684d6e3c7ff6793251578ae3296864bdbc068b57afed9c8719f32a211fa83148": {
+  "cached_tokens": 0,
+  "completion_tokens": 71,
+  "content": "",
+  "finish_reason": "tool_calls",
+  "latency_s": 0.794,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 2406,
+  "tool_calls": [
+   {
+    "arguments": "{\"shop_id\":\"shop-012\"}",
+    "id": "call_eb25bad3-c05a-4189-b211-92c652281cd4",
+    "name": "get_stock_estimates"
+   }
+  ]
+ },
+ "69524a4b5902b4f7fd1e61c075ca792b001ed3e9aa42adf1456e05ed77564b6f": {
+  "cached_tokens": 0,
+  "completion_tokens": 447,
+  "content": "Good evening \u2014 I'll greet you warmly.",
+  "finish_reason": "tool_calls",
+  "latency_s": 2.112,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 1576,
+  "tool_calls": [
+   {
+    "arguments": "{\"body\":\"Good evening! Business is calm on my side. I can help with deliveries, what shops owe, and payments \u2014 what do you need?\",\"channel\":\"owner_console\",\"ends_turn\":true,\"kind\":\"reply\"}",
+    "id": "call_c9953aaa-0025-43ae-a534-e2d0324e0e2d",
+    "name": "send_to_user"
+   }
+  ]
+ },
+ "7ad70e63479949efa1f6751f7662520901bd25d7c503dfead24ed4ca8dbdcbdb": {
+  "cached_tokens": 4977,
+  "completion_tokens": 31,
+  "content": "",
+  "finish_reason": "stop",
+  "latency_s": 1.493,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 6010,
+  "tool_calls": []
+ },
+ "7cc85e92812a6593e1939ffb304223eceba9f7399198818a8164b2e0aa141acc": {
+  "cached_tokens": 2545,
+  "completion_tokens": 91,
+  "content": "",
+  "finish_reason": "tool_calls",
+  "latency_s": 0.799,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 2762,
+  "tool_calls": [
+   {
+    "arguments": "{\"delivery_id\":\"dlv-56-9022\",\"shop_id\":\"shop-023\"}",
+    "id": "call_870f7c48-aea5-40de-907f-492ab0fa970f",
+    "name": "send_delivery_receipt"
+   }
+  ]
+ },
+ "82ae53b9993128802e6ca4a5b4ec54016ffd5dee6b2b158d7d828bc39bb8403b": {
+  "cached_tokens": 0,
+  "completion_tokens": 142,
+  "content": "",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.359,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 3910,
+  "tool_calls": [
+   {
+    "arguments": "{\"delivery_id\":\"dlv-56-9007\",\"shop_id\":\"shop-008\"}",
+    "id": "call_21c298c4-9fa4-4e20-b355-82df9eaa54a1",
+    "name": "flag_delivery_to_owner"
+   }
+  ]
+ },
+ "886a18dec439216511881bb3d257734079fa6ead71d0525905526294388cfd57": {
+  "cached_tokens": 0,
+  "completion_tokens": 98,
+  "content": "",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.528,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 3272,
+  "tool_calls": [
+   {
+    "arguments": "{\"photo_id\":\"ph_4dbc324bf104\",\"shop_id\":\"shop-025\"}",
+    "id": "call_1b017588-0d02-4588-a679-aaedd78b6c59",
+    "name": "flag_payment_proof"
+   }
+  ]
+ },
+ "89e56caa2008d70c4aa13ccc708afb2952bd72f8b3923d3536be23b59114f7d4": {
+  "cached_tokens": 0,
+  "completion_tokens": 177,
+  "content": "",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.49,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 3636,
+  "tool_calls": [
+   {
+    "arguments": "{\"shop_id\":\"shop-011\"}",
+    "id": "call_c267ead2-ea71-4c19-bbe4-a767f4e85f04",
+    "name": "ask_for_shelf_photo"
+   }
+  ]
+ },
+ "8c1938fc3e177656e286008406182dd9e6cc47fbc473f673de514703fcc62851": {
+  "cached_tokens": 3185,
+  "completion_tokens": 103,
+  "content": "Just received your second receipt \u2014 I'll run the checks.",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.098,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 3847,
+  "tool_calls": [
+   {
+    "arguments": "{\"photo_id\":\"ph_4919f457ff38\",\"shop_id\":\"shop-038\"}",
+    "id": "call_6e70c5bf-ca20-44c9-b9d6-db10339d02c3",
+    "name": "check_payment_screenshot"
+   }
+  ]
+ },
+ "92a09d947c9ca9cb2a87c83e72faa4748a9d0496ddab2cfbffed14d50170004a": {
+  "cached_tokens": 2929,
+  "completion_tokens": 170,
+  "content": "",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.05,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 4064,
+  "tool_calls": [
+   {
+    "arguments": "{\"body\":\"Thanks, I've told Coral Lane Trading about this delivery. Nothing has changed on your account.\",\"channel\":\"shop_whatsapp\",\"ends_turn\":true,\"kind\":\"reply\",\"shop_id\":\"shop-008\"}",
+    "id": "call_ce95dbdb-a679-470a-901c-872e7dddaa82",
+    "name": "send_to_user"
+   }
+  ]
+ },
+ "92b3d5afd05e3be04ee74fd26411614965f589a0df6213c49f68f8dd2907150e": {
+  "cached_tokens": 3697,
+  "completion_tokens": 195,
+  "content": "Got your shelf photo \u2014 let me check it now.",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.916,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 4134,
+  "tool_calls": [
+   {
+    "arguments": "{\"photo_id\":\"ph_75a88c005b4e\",\"shop_id\":\"shop-011\"}",
+    "id": "call_201a27b0-7465-4578-b1da-2d9cf4823c0c",
+    "name": "count_shelf_photo"
+   }
+  ]
+ },
+ "92ffe4e9442ea011ec250a96f4c77b1e55024c99ac09b4df9d1e00648e65360a": {
+  "cached_tokens": 0,
+  "completion_tokens": 102,
+  "content": "Got another receipt \u2014 I'll check this one too.",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.025,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 3832,
+  "tool_calls": [
+   {
+    "arguments": "{\"photo_id\":\"ph_4919f457ff38\",\"shop_id\":\"shop-038\"}",
+    "id": "call_c32c1ccf-5c1b-434d-a15a-85fa15ae7c6b",
+    "name": "check_payment_screenshot"
+   }
+  ]
+ },
+ "95ea8219519b8db3f909b24b88a5777fe79c761b8e111047f0bf2273d5a656c7": {
+  "cached_tokens": 0,
+  "completion_tokens": 103,
+  "content": "Shelf photo received \u2014 checking what\u2019s on it to prepare your review.",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.811,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 4140,
+  "tool_calls": [
+   {
+    "arguments": "{\"photo_id\":\"ph_c94787826bab\",\"shop_id\":\"shop-020\"}",
+    "id": "call_901f0ec6-40dd-4eb6-9130-914042d04405",
+    "name": "count_shelf_photo"
+   }
+  ]
+ },
+ "a53a73713a08be8baaa596a0a5c58b27ae8a83e81e80eaf85df4bbcfdb931610": {
+  "cached_tokens": 241,
+  "completion_tokens": 108,
+  "content": "Checking this new receipt now.",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.175,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 3921,
+  "tool_calls": [
+   {
+    "arguments": "{\"photo_id\":\"ph_fef0fca0493e\",\"shop_id\":\"shop-025\"}",
+    "id": "call_31c91a05-a74f-4ee5-9e66-c7c4830337a7",
+    "name": "check_payment_screenshot"
+   }
+  ]
+ },
+ "a712964b36342e0980d27cca8358a3a5a589cf23380affd16b9b82aec4e6f8cd": {
+  "cached_tokens": 3697,
+  "completion_tokens": 238,
+  "content": "",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.583,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 4113,
+  "tool_calls": [
+   {
+    "arguments": "{\"photo_id\":\"ph_316a7622105c\",\"shop_id\":\"shop-035\"}",
+    "id": "call_0e447084-7e4f-43ae-957d-cf90df586f9e",
+    "name": "record_payment_proof"
+   },
+   {
+    "arguments": "{\"body\":\"Thanks. I can see N34,950 from Chidi Fagbemi on your screenshot. I've sent it to Coral Lane Trading to confirm with the bank. It shows as likely paid until the bank confirms.\",\"channel\":\"shop_whatsapp\",\"ends_turn\":true,\"kind\":\"reply\",\"shop_id\":\"shop-035\"}",
+    "id": "call_3b114c63-3e7a-4409-ba8b-6bfbca582bf7",
+    "name": "send_to_user"
+   }
+  ]
+ },
+ "a741cf2e1634a9785be89125899e52edb7200b92ca585bf0a8ccf36aa8d720ce": {
+  "cached_tokens": 0,
+  "completion_tokens": 102,
+  "content": "",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.167,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 4218,
+  "tool_calls": [
+   {
+    "arguments": "{\"photo_id\":\"ph_fef0fca0493e\",\"shop_id\":\"shop-025\"}",
+    "id": "call_cb3b1760-4d4c-4c45-811a-a1c46a224ead",
+    "name": "record_payment_proof"
+   }
+  ]
+ },
+ "adb6fa273de797f2d4107ebeac42c8fe5f3f5061416a9b7302ec35b1d6ca9cda": {
+  "cached_tokens": 241,
+  "completion_tokens": 30,
+  "content": "",
+  "finish_reason": "stop",
+  "latency_s": 1.236,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 3777,
+  "tool_calls": []
+ },
+ "b463b6ee2c0aaeb9d1c34de15f03c11ef2ac6ed7dd944c33ae7eeab12927fd35": {
+  "cached_tokens": 0,
+  "completion_tokens": 101,
+  "content": "New screenshot received \u2014 I'll check it now.",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.197,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 3816,
+  "tool_calls": [
+   {
+    "arguments": "{\"photo_id\":\"ph_316a7622105c\",\"shop_id\":\"shop-035\"}",
+    "id": "call_95c58f98-d341-4951-958e-626c6b1a29a3",
+    "name": "check_payment_screenshot"
+   }
+  ]
+ },
+ "b8bfabd7eb2d3fa97088575bf0077ece760951c312f94940f68209696266a1ab": {
+  "cached_tokens": 2673,
+  "completion_tokens": 178,
+  "content": "Your confirmation is in \u2014 I'll pull it up to finalize.",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.568,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 3080,
+  "tool_calls": [
+   {
+    "arguments": "{\"delivery_id\":\"dlv-56-9022\",\"shop_id\":\"shop-023\"}",
+    "id": "call_c428566a-d3c8-4f7d-8d3f-cb8ae230f90d",
+    "name": "read_receipt_reply"
+   }
+  ]
+ },
+ "ba97e7f0def5d77d3613cfe5451c829b15c268db89d8391d7669b998c9a2ed23": {
+  "cached_tokens": 3185,
+  "completion_tokens": 45,
+  "content": "",
+  "finish_reason": "stop",
+  "latency_s": 0.761,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 3775,
+  "tool_calls": []
+ },
+ "bd776456ac3ac1e7f8467c9653c69faf85331f9e51b38020db914bcd254ead83": {
+  "cached_tokens": 0,
+  "completion_tokens": 236,
+  "content": "",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.668,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 3116,
+  "tool_calls": [
+   {
+    "arguments": "{\"photo_id\":\"ph_2aedf240dba4\",\"shop_id\":\"shop-035\"}",
+    "id": "call_d84795db-9efa-4b5b-87f5-6512d4037b77",
+    "name": "flag_payment_proof"
+   },
+   {
+    "arguments": "{\"body\":\"Thanks, I've sent this to Coral Lane Trading to confirm with the bank. Nothing has changed on your account yet.\",\"channel\":\"shop_whatsapp\",\"ends_turn\":true,\"kind\":\"reply\",\"shop_id\":\"shop-035\"}",
+    "id": "call_acc39ff3-783b-4d21-82f6-b71173244f91",
+    "name": "send_to_user"
+   }
+  ]
+ },
+ "bda3d8a87dad23688b6b65ea3a5b8ec29b371d8bf56f2e0c96516c3c7e0e63b4": {
+  "cached_tokens": 3697,
+  "completion_tokens": 379,
+  "content": "Review ready \u2014 sending your update and forwarding the request to Coral Lane Trading.",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.895,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 5102,
+  "tool_calls": [
+   {
+    "arguments": "{\"body\":\"I counted about 9 Mamaland Spaghetti 500g packets, 7 Sunrise Big Pack Noodles 120g packets and 6 Sunrise Instant Noodles 70g packets, plus 1 more item, worth about N17,800 at Coral Lane Trading prices. I've sent your request with this to Coral Lane Trading. They decide the limit.\",\"channel\":\"shop_whatsapp\",\"ends_turn\":true,\"shop_id\":\"shop-020\"}",
+    "id": "call_32c052f6-49cc-4463-a065-02be5a0da3d0",
+    "name": "send_to_user"
+   },
+   {
+    "arguments": "{\"note_for_owner\":\"No bank-verified payments to base an increase on, though nothing is overdue. Shelf shows stock worth about N17,800.\",\"origin\":\"shop_ask\",\"photo_id\":\"ph_c94787826bab\",\"review_id\":\"cr_c8e747617ba099e0\",\"shop_id\":\"shop-020\"}",
+    "id": "call_d47a4c37-4ba0-4291-8ba6-e47469ff2272",
+    "name": "submit_credit_review"
+   }
+  ]
+ },
+ "c0d32c3ab31fca322d645359cc6ceb880ae2deecc2deea5338be02e6fe9e5734": {
+  "cached_tokens": 0,
+  "completion_tokens": 137,
+  "content": "I'll verify that receipt against our records.",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.685,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 2983,
+  "tool_calls": [
+   {
+    "arguments": "{\"photo_id\":\"ph_4dbc324bf104\",\"shop_id\":\"shop-025\"}",
+    "id": "call_7c3037fd-18c4-43ed-91bf-9dbc41afea1f",
+    "name": "check_payment_screenshot"
+   }
+  ]
+ },
+ "c6723bcf1205cc6310baba020112b36ac0a95b654739b5bd72eead154f3ab75f": {
+  "cached_tokens": 0,
+  "completion_tokens": 32,
+  "content": "",
+  "finish_reason": "stop",
+  "latency_s": 1.441,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 3209,
+  "tool_calls": []
+ },
+ "c7c08d65a2a083222acfc8e14d838434c46e669f5e865bf10ca2894b746d5d0f": {
+  "cached_tokens": 3057,
+  "completion_tokens": 246,
+  "content": "",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.812,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 3899,
+  "tool_calls": [
+   {
+    "arguments": "{\"photo_id\":\"ph_316a7622105c\",\"shop_id\":\"shop-035\"}",
+    "id": "call_3f645301-6e9a-4e3f-9c10-8ef4a046b04c",
+    "name": "record_payment_proof"
+   },
+   {
+    "arguments": "{\"body\":\"Thanks. I can see N34,950 from Chidi Fagbemi on your screenshot. I've sent it to Coral Lane Trading to confirm with the bank. It shows as likely paid until the bank confirms.\",\"channel\":\"shop_whatsapp\",\"ends_turn\":true,\"kind\":\"reply\",\"shop_id\":\"shop-035\"}",
+    "id": "call_459cd1f7-4620-4170-bf14-f9882f6dac5c",
+    "name": "send_to_user"
+   }
+  ]
+ },
+ "cb0d3b0bf9bbca5f3686d6a526ff7a1d78d92134b0d227be01424b6fd68f44e6": {
+  "cached_tokens": 0,
+  "completion_tokens": 128,
+  "content": "Weekly check flagged one line to confirm \u2014 I'll ask the shop for a quick count.",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.156,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 2902,
+  "tool_calls": [
+   {
+    "arguments": "{\"shop_id\":\"shop-014\",\"sku\":\"CUSTARD-2KG\"}",
+    "id": "call_798905d1-2803-47f7-b1e7-86675ba74164",
+    "name": "ask_stock_count"
+   }
+  ]
+ },
+ "cd58c611d754800921b823315ff88b07d925ff5951759f0b9149ab3fad59f628": {
+  "cached_tokens": 0,
+  "completion_tokens": 90,
+  "content": "Starting your credit request check \u2014 pulling the payment history first.",
+  "finish_reason": "tool_calls",
+  "latency_s": 0.881,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 3295,
+  "tool_calls": [
+   {
+    "arguments": "{\"shop_id\":\"shop-020\"}",
+    "id": "call_e30b06fc-a112-4d9c-9b73-4f2e71f2b347",
+    "name": "get_credit_file"
+   }
+  ]
+ },
+ "ceae23f61db6ad05bcafe23bce8eb04680b4b9dc6fe859aaeb00fdb8dca2090c": {
+  "cached_tokens": 0,
+  "completion_tokens": 119,
+  "content": "Confirming the new delivery receipt \u2014 fetching today's open deliveries.",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.253,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 2545,
+  "tool_calls": [
+   {
+    "arguments": "{\"shop_id\":\"shop-023\"}",
+    "id": "call_68897d9f-abf9-43ba-ae1d-e142f26a174a",
+    "name": "get_open_deliveries"
+   }
+  ]
+ },
+ "cf3fbaddf44e77c0b4aa3133e9169747245e39e4d150d71402ab3eeb36b58de5": {
+  "cached_tokens": 2801,
+  "completion_tokens": 50,
+  "content": "",
+  "finish_reason": "stop",
+  "latency_s": 1.003,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 3078,
+  "tool_calls": []
+ },
+ "d06f01bf1a6109ad479e11a23a0e094dfc323a6e3dc82af1c2789f3850420990": {
+  "cached_tokens": 0,
+  "completion_tokens": 114,
+  "content": "I'll confirm today's delivery to get your receipt sent.",
+  "finish_reason": "tool_calls",
+  "latency_s": 0.953,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 2841,
+  "tool_calls": [
+   {
+    "arguments": "{\"shop_id\":\"shop-008\"}",
+    "id": "call_29e691d8-95ad-4a96-9aca-f60a83250495",
+    "name": "get_open_deliveries"
+   }
+  ]
+ },
+ "d20e6d362d63973d1d8d7d3353232dd30fd6feb0512c92156588357d9cb4b153": {
+  "cached_tokens": 0,
+  "completion_tokens": 308,
+  "content": "",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.334,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 3397,
+  "tool_calls": [
+   {
+    "arguments": "{\"shop_id\":\"shop-012\",\"sku\":\"SEMO-1KG\"}",
+    "id": "call_e2428fc7-aeaa-4457-a8eb-421a217010fa",
+    "name": "record_stock_count"
+   },
+   {
+    "arguments": "{\"shop_id\":\"shop-012\",\"sku\":\"SEMO-1KG\"}",
+    "id": "call_3a3c4629-54a5-45ff-83a0-4fd80c9f6a88",
+    "name": "draft_restock"
+   },
+   {
+    "arguments": "{\"body\":\"Thanks. I've asked Coral Lane Trading to prepare 9 packs for you. They'll confirm before delivery.\",\"channel\":\"shop_whatsapp\",\"ends_turn\":true,\"kind\":\"reply\",\"shop_id\":\"shop-012\"}",
+    "id": "call_0613dba4-b3b1-46d7-b3ca-aa8d9fe06a6d",
+    "name": "send_to_user"
+   }
+  ]
+ },
+ "d21e3579af24e9658e22be79d7e52d8f62fb3057da2389fb4f1e39217f3b020c": {
+  "cached_tokens": 3313,
+  "completion_tokens": 27,
+  "content": "",
+  "finish_reason": "stop",
+  "latency_s": 0.842,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 4048,
+  "tool_calls": []
+ },
+ "d2439f6eb9598d700865609020075b0225909c3ae5b9fa62a846bfdfc6b8d21d": {
+  "cached_tokens": 0,
+  "completion_tokens": 100,
+  "content": "",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.195,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 3061,
+  "tool_calls": [
+   {
+    "arguments": "{\"delivery_id\":\"dlv-56-9039\",\"shop_id\":\"shop-040\"}",
+    "id": "call_032a257d-2366-462d-9c89-607b44bdb315",
+    "name": "send_delivery_receipt"
+   }
+  ]
+ },
+ "d997ae59774ca1d1a591a45af89e9767dbb7479212b09cf4ec9c4543ed517fcd": {
+  "cached_tokens": 0,
+  "completion_tokens": 104,
+  "content": "New payment screenshot arrived \u2014 I'll check it right away.",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.661,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 3600,
+  "tool_calls": [
+   {
+    "arguments": "{\"photo_id\":\"ph_316a7622105c\",\"shop_id\":\"shop-035\"}",
+    "id": "call_1510e546-6beb-4737-8245-555fe337ab70",
+    "name": "check_payment_screenshot"
+   }
+  ]
+ },
+ "da9780475d92c56c47f1c7db43131d37f858039c5c4677656ac8e4764a8e8604": {
+  "cached_tokens": 0,
+  "completion_tokens": 89,
+  "content": "",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.277,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 3128,
+  "tool_calls": [
+   {
+    "arguments": "{\"photo_id\":\"ph_2aedf240dba4\",\"shop_id\":\"shop-035\"}",
+    "id": "call_5ae5b795-382b-4a7e-9e73-1a525b0ebcc3",
+    "name": "flag_payment_proof"
+   }
+  ]
+ },
+ "de808610c128a3d08f959632fe799fbd9ee10599c436690711508aa7282a8ab9": {
+  "cached_tokens": 2289,
+  "completion_tokens": 96,
+  "content": "",
+  "finish_reason": "tool_calls",
+  "latency_s": 2.094,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 2894,
+  "tool_calls": [
+   {
+    "arguments": "{\"shop_id\":\"shop-012\",\"sku\":\"SEMO-1KG\"}",
+    "id": "call_f4bcb6ca-425e-4ca0-ba0e-70860e263260",
+    "name": "ask_stock_count"
+   }
+  ]
+ },
+ "e532aa2012611a3f6b17396b83caaeb388bf3b4be9a392f2b7ffd99d0c481528": {
+  "cached_tokens": 0,
+  "completion_tokens": 195,
+  "content": "I see a shortage reported \u2014 I'll review the details now.",
+  "finish_reason": "tool_calls",
+  "latency_s": 2.076,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 3666,
+  "tool_calls": [
+   {
+    "arguments": "{\"delivery_id\":\"dlv-56-9007\",\"shop_id\":\"shop-008\"}",
+    "id": "call_cd5192ed-5f5b-4d26-8b9f-d22078bb8de1",
+    "name": "read_receipt_reply"
+   }
+  ]
+ },
+ "e78fb00b45f395ab0b422ea211c6f8bb050b0b7a989f268879fdf42205db31c1": {
+  "cached_tokens": 0,
+  "completion_tokens": 105,
+  "content": "I'll pull up the recent deliveries so I can send the receipt right away.",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.715,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 2841,
+  "tool_calls": [
+   {
+    "arguments": "{\"shop_id\":\"shop-040\"}",
+    "id": "call_5828e5ab-a45c-4e62-b220-6fac29872cfe",
+    "name": "get_open_deliveries"
+   }
+  ]
+ },
+ "eb0f54ac98c81076de5b2b0dd88530583f08e103a4c4b083807c59526b69f082": {
+  "cached_tokens": 0,
+  "completion_tokens": 340,
+  "content": "",
+  "finish_reason": "tool_calls",
+  "latency_s": 2.424,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 3409,
+  "tool_calls": [
+   {
+    "arguments": "{\"shop_id\":\"shop-014\",\"sku\":\"CUSTARD-2KG\"}",
+    "id": "call_67a02070-73e2-443e-9d88-a6eea28a12b9",
+    "name": "record_stock_count"
+   },
+   {
+    "arguments": "{\"shop_id\":\"shop-014\",\"sku\":\"CUSTARD-2KG\"}",
+    "id": "call_faf4d752-3dc8-462d-a9eb-dd7e02c7de66",
+    "name": "draft_restock"
+   },
+   {
+    "arguments": "{\"body\":\"Thanks. I've asked Coral Lane Trading to prepare 4 tubs for you. They'll confirm before delivery.\",\"channel\":\"shop_whatsapp\",\"ends_turn\":true,\"kind\":\"reply\",\"shop_id\":\"shop-014\"}",
+    "id": "call_3500af4c-e71b-4447-99f5-2da742c5e7a1",
+    "name": "send_to_user"
+   }
+  ]
+ },
+ "ee885d9f2f1025f3150bb6bf68293c18a5eebce6481515d3f79e08c20c3e39c4": {
+  "cached_tokens": 3057,
+  "completion_tokens": 156,
+  "content": "",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.222,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 3152,
+  "tool_calls": [
+   {
+    "arguments": "{\"shop_id\":\"shop-014\",\"sku\":\"CUSTARD-2KG\"}",
+    "id": "call_89b42d99-5994-41ca-8370-2f0504469596",
+    "name": "read_stock_answer"
+   }
+  ]
+ },
+ "f16c8a6262976e703dac89836ce6589f4c93d918a7cafa4bde37ab735c87d003": {
+  "cached_tokens": 0,
+  "completion_tokens": 98,
+  "content": "",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.703,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 3121,
+  "tool_calls": [
+   {
+    "arguments": "{\"photo_id\":\"ph_cce311a2ab43\",\"shop_id\":\"shop-038\"}",
+    "id": "call_56a45a39-4abc-486e-a186-447c2390fca5",
+    "name": "record_payment_proof"
+   }
+  ]
+ },
+ "f6960227c11831fd68dc5144cab750e0c0a2548da647797d734ea2398fbc7ebd": {
+  "cached_tokens": 241,
+  "completion_tokens": 71,
+  "content": "",
+  "finish_reason": "tool_calls",
+  "latency_s": 0.962,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 2406,
+  "tool_calls": [
+   {
+    "arguments": "{\"shop_id\":\"shop-014\"}",
+    "id": "call_4e74aad2-b2f1-44a4-bd73-5e472cfaf077",
+    "name": "get_stock_estimates"
+   }
+  ]
+ },
+ "f782ee2f7b3e81ec084320f265c99e6fa87d50fcf41210473b12dbea701d940e": {
+  "cached_tokens": 4081,
+  "completion_tokens": 117,
+  "content": "",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.238,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 4596,
+  "tool_calls": [
+   {
+    "arguments": "{\"origin\":\"shop_ask\",\"photo_id\":\"ph_75a88c005b4e\",\"shop_id\":\"shop-011\"}",
+    "id": "call_a0883269-9828-4c1c-96f3-ba2f8ee507a8",
+    "name": "prepare_credit_review"
+   }
+  ]
+ },
+ "fb1de17c6682738980973b77e93d505521f1cc227574d32492dd090e125a2a36": {
+  "cached_tokens": 0,
+  "completion_tokens": 27,
+  "content": "",
+  "finish_reason": "stop",
+  "latency_s": 1.353,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 3214,
+  "tool_calls": []
+ }
+}

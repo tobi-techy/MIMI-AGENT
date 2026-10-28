@@ -1,0 +1,65 @@
+{
+ "30a2c1a8648df9b1e5063fbd21f7cdde": {
+  "completion_tokens": 803,
+  "latency_s": 4.579,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 1965,
+  "text": "{\"amount_as_printed\":\"₦34,950.00\",\"amount_confidence\":1,\"bank_name\":\"Harmattan MFB\",\"date_time_as_printed\":\"Sep 31, 2026 02:15:44 PM\",\"editing_confidence\":0,\"editing_signs\":[],\"fee_as_printed\":null,\"headline_status\":\"Transaction Successful\",\"is_payment_screenshot\":true,\"layout\":\"app_receipt\",\"legibility\":1,\"narration\":\"CLT\",\"notes\":\"App receipt shows a successful transfer of 34,950 naira.\",\"recipient_account_as_printed\":\"******4471\",\"recipient_bank\":\"Kestrel Bank\",\"recipient_name\":\"CORAL LANE TRADING\",\"reference\":\"HMF-VBIZ020XIH\",\"sender_name\":\"Chidi Fagbemi\",\"session_id\":null,\"status_detail\":\"Successful\",\"total_as_printed\":null,\"typefaces\":{\"amount\":\"sans-serif\",\"date_time\":\"sans-serif\",\"other_rows\":\"sans-serif\",\"recipient_name\":\"sans-serif\",\"reference\":\"sans-serif\",\"sender_name\":\"sans-serif\"}}"
+ },
+ "51fcecc3cd933e99afa92e699ae3adb0": {
+  "completion_tokens": 577,
+  "latency_s": 3.406,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 1965,
+  "text": "{\"amount_as_printed\":\"₦13,600.00\",\"amount_confidence\":1,\"bank_name\":\"Kestrel Bank\",\"date_time_as_printed\":\"26 Oct 2026, 15:58\",\"editing_confidence\":0,\"editing_signs\":[],\"fee_as_printed\":null,\"headline_status\":\"Transfer Successful\",\"is_payment_screenshot\":true,\"layout\":\"app_receipt\",\"legibility\":0.98,\"narration\":\"goods\",\"notes\":\"Receipt shows a successful transfer with a pending status row.\",\"recipient_account_as_printed\":\"******4471\",\"recipient_bank\":\"Kestrel Bank\",\"recipient_name\":\"CORAL LANE TRADING\",\"reference\":\"KST421480934488\",\"sender_name\":\"KUNLE AKINOLA\",\"session_id\":\"999317433561416934185513502260\",\"status_detail\":\"Pending\",\"total_as_printed\":null,\"typefaces\":{\"amount\":\"sans-serif\",\"date_time\":\"sans-serif\",\"other_rows\":\"sans-serif\",\"recipient_name\":\"sans-serif\",\"reference\":\"sans-serif\",\"sender_name\":\"sans-serif\"}}"
+ },
+ "588dfe106a70c335b3e3a254b5754a48": {
+  "completion_tokens": 637,
+  "latency_s": 2.729,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 1330,
+  "text": "{\"confidence\": 0.95, \"disputed_items\": [{\"claimed_qty_if_stated\": 4, \"receipt_line\": 2, \"sku_or_name_as_written\": \"Sunrise 70g\"}], \"evidence_quote\": \"Sunrise 70g na 4 ctn i count, no be 6\", \"language\": \"pidgin\", \"outcome\": \"disputed\", \"reason\": \"Shop says only 4 cartons of 70g noodles arrived instead of 6.\"}"
+ },
+ "6952a58bfbeb9c54ab6203cda605c27e": {
+  "completion_tokens": 993,
+  "latency_s": 5.623,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 1965,
+  "text": "{\"amount_as_printed\": \"₦26,400.00\", \"amount_confidence\": 1.0, \"bank_name\": \"Lagoonpay\", \"date_time_as_printed\": \"2026-10-26 12:16:38\", \"editing_confidence\": 0.0, \"editing_signs\": [], \"fee_as_printed\": \"₦0.00\", \"headline_status\": \"Payment sent\", \"is_payment_screenshot\": true, \"layout\": \"app_receipt\", \"legibility\": 0.95, \"narration\": \"payment\", \"notes\": \"Lagoonpay receipt shows a successful payment to Coral Lane Trading.\", \"recipient_account_as_printed\": \"999****4471\", \"recipient_bank\": \"Kestrel Bank\", \"recipient_name\": \"CORAL LANE TRADING\", \"reference\": \"999837636444668557691183680036\", \"sender_name\": \"BUKOLA OLATUNJI\", \"session_id\": null, \"status_detail\": \"Successful\", \"total_as_printed\": \"₦26,400.00\", \"typefaces\": {\"amount\": \"sans-serif\", \"date_time\": \"sans-serif\", \"other_rows\": \"sans-serif\", \"recipient_name\": \"sans-serif\", \"reference\": \"sans-serif\", \"sender_name\": \"sans-serif\"}}"
+ },
+ "8281e69d661e1ff1b67acba3553888fa": {
+  "completion_tokens": 627,
+  "latency_s": 3.114,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 1965,
+  "text": "{\"amount_as_printed\":\"₦13,600.00\",\"amount_confidence\":1,\"bank_name\":\"Kestrel Bank\",\"date_time_as_printed\":\"26 Oct 2026, 17:15\",\"editing_confidence\":0,\"editing_signs\":[],\"fee_as_printed\":\"₦53.75\",\"headline_status\":\"Transfer Successful\",\"is_payment_screenshot\":true,\"layout\":\"app_receipt\",\"legibility\":0.99,\"narration\":\"CLT\",\"notes\":\"Kestrel Bank app receipt shows a successful transfer of 13,600 naira.\",\"recipient_account_as_printed\":\"******4471\",\"recipient_bank\":\"Kestrel Bank\",\"recipient_name\":\"CORAL LANE TRADING\",\"reference\":\"KST333159016370\",\"sender_name\":\"KUNLE AKINOLA\",\"session_id\":\"999844434638608638395731219449\",\"status_detail\":\"Successful\",\"total_as_printed\":\"₦13,653.75\",\"typefaces\":{\"amount\":\"sans-serif\",\"date_time\":\"sans-serif\",\"other_rows\":\"sans-serif\",\"recipient_name\":\"sans-serif\",\"reference\":\"sans-serif\",\"sender_name\":\"sans-serif\"}}"
+ },
+ "c3a32bde864759fc2fadcce00df11a6a": {
+  "completion_tokens": 952,
+  "latency_s": 4.226,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 1338,
+  "text": "{\"confidence\": 0.98, \"disputed_items\": [], \"evidence_quote\": \"all the goods don land complete, tank u o\\nYES I confirm am\", \"language\": \"pidgin\", \"outcome\": \"confirmed\", \"reason\": \"Shop states all goods arrived complete and explicitly confirms.\"}"
+ },
+ "d59ad5772ccc1e35b7944ddc6cbc3b51": {
+  "completion_tokens": 651,
+  "latency_s": 4.47,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 1228,
+  "text": "{\"confidence\": 0.98, \"disputed_items\": [], \"evidence_quote\": \"all complete\", \"language\": \"mixed\", \"outcome\": \"confirmed\", \"reason\": \"Shop says all goods arrived complete.\"}"
+ },
+ "e4455cdc6c443cc7bba9cab4972bb0de": {
+  "completion_tokens": 792,
+  "latency_s": 4.367,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 2064,
+  "text": "{\"amount_as_printed\":\"₦34,950.00\",\"amount_confidence\":0.99,\"bank_name\":\"Harmattan MFB\",\"date_time_as_printed\":\"Oct 26, 2026 03:47:14 PM\",\"editing_confidence\":0,\"editing_signs\":[],\"fee_as_printed\":\"₦10.00\",\"headline_status\":\"Transaction Successful\",\"is_payment_screenshot\":true,\"layout\":\"app_receipt\",\"legibility\":0.95,\"narration\":null,\"notes\":\"Receipt shows a successful Harmattan MFB transfer.\",\"recipient_account_as_printed\":\"******4471\",\"recipient_bank\":\"Kestrel Bank\",\"recipient_name\":\"CORAL LANE TRADING\",\"reference\":\"HMF-GH6KIXFX7E\",\"sender_name\":\"Chidi Fagbemi\",\"session_id\":null,\"status_detail\":\"Successful\",\"total_as_printed\":\"₦34,960.00\",\"typefaces\":{\"amount\":\"sans-serif\",\"date_time\":\"sans-serif\",\"other_rows\":\"sans-serif\",\"recipient_name\":\"sans-serif\",\"reference\":\"sans-serif\",\"sender_name\":\"sans-serif\"}}"
+ },
+ "e7307d54ba2277f3720a36f827f30a57": {
+  "completion_tokens": 755,
+  "latency_s": 4.038,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 1965,
+  "text": "{\"amount_as_printed\":\"₦26,400.00\",\"amount_confidence\":1,\"bank_name\":\"Kestrel Bank\",\"date_time_as_printed\":\"26 Oct 2026, 21:50\",\"editing_confidence\":0,\"editing_signs\":[],\"fee_as_printed\":null,\"headline_status\":\"Transfer Successful\",\"is_payment_screenshot\":true,\"layout\":\"app_receipt\",\"legibility\":0.98,\"narration\":\"payment\",\"notes\":\"Receipt shows a successful Kestrel Bank transfer.\",\"recipient_account_as_printed\":\"******4471\",\"recipient_bank\":\"Kestrel Bank\",\"recipient_name\":\"CORAL LANE TRADING\",\"reference\":\"KST328654302065\",\"sender_name\":\"BUKOLA OLATUNJI\",\"session_id\":\"999185693582087299038001180561\",\"status_detail\":\"Successful\",\"total_as_printed\":null,\"typefaces\":{\"amount\":\"sans-serif\",\"date_time\":\"sans-serif\",\"other_rows\":\"sans-serif\",\"recipient_name\":\"sans-serif\",\"reference\":\"sans-serif\",\"sender_name\":\"sans-serif\"}}"
+ }
+}

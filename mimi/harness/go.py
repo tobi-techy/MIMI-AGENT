@@ -26,6 +26,7 @@ from datetime import date
 from typing import Any, Protocol
 
 from mimi.harness.types import Event, IntentRecord
+from mimi.world.catalogue import COLLECTION_ACCOUNT
 from mimi.world.model import World
 
 
@@ -234,8 +235,8 @@ class FakeGo:
 
     def collection_account(self, tenant_id: str) -> dict[str, Any]:
         self._tenant(tenant_id)
-        return {"account_name": "CORAL LANE TRADING", "bank": "Demo Bank",
-                "account_number": "0000000000"}
+        # The account the world's shops pay into (and its screenshots show).
+        return dict(COLLECTION_ACCOUNT)
 
     def bank_feed_match(
         self, tenant_id: str, shop_id: str, amount_kobo: int, reference: str

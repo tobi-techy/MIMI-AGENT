@@ -45,6 +45,7 @@ from mimi.api.schemas import (
     DecisionIn,
     DecisionOut,
     ErrorOut,
+    EventIn,
     Health,
     ShopDetail,
     ShopList,
@@ -164,6 +165,29 @@ def create_app(settings: Settings | None = None, agent: Agent | None = None, *,
                               duplicate=view.duplicate)
         if not view.finished:
             response.status_code = 202
+        return _turn_out(view)
+
+    @app.post("/v1/events", response_model=TurnOut, status_code=202, responses=_ERRORS,
+              summary="Send one system event (a Go webhook or a routine) to Mimi")
+    def post_event(body: EventIn, key: Any_) -> dict[str, Any]:
+        """Queues the event as a turn on the shop's thread (or the job thread).
+
+        The words the helper sees are written here from the event's kind and
+        shop, never taken from the caller: a system event carries no free text.
+        """
+        at = body.received_at or datetime.now(UTC)
+        if at.tzinfo is None:
+            at = at.replace(tzinfo=UTC)
+        if body.shop_id:
+            key_shop = agent.go.shop(key.tenant_id, body.shop_id)  # 404 for another tenant's
+            what = f"{body.name.replace('_', ' ').replace('.', ' ')} for {key_shop['shop_id']}"
+        else:
+            what = body.name.replace("_", " ").replace(".", " ")
+        inbound = Inbound(
+            source=body.kind, org_id=key.tenant_id, external_id=f"{body.kind}:{body.event_id}",
+            received_at=at, payload=Payload(text=f"System event: {what}.", name=body.name,
+                                            shop_id=body.shop_id))
+        view = agent.submit(key.tenant_id, inbound, simulated=body.simulated)
         return _turn_out(view)
 
     @app.get("/v1/turns/{turn_id}", response_model=TurnOut, responses=_ERRORS,
