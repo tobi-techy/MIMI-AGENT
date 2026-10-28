@@ -26,7 +26,7 @@ from mimi.receipts import (
 )
 from mimi.receipts.intents import RecordPaymentPromise
 from mimi.receipts.verdict import fake_verdict
-from mimi.receipts.voice_replies import figures_match, spoken_script, voice_fields
+from mimi.receipts.voice_replies import figures_match, voice_fields
 from mimi.runtime.outbox import MONEY_VERBS
 from mimi.runtime.runner import JobRunner
 from mimi.runtime.store import InMemoryJobStore
@@ -267,7 +267,9 @@ def test_voice_on_is_the_shops_own_recorded_choice() -> None:
     r.settle()
     clar = r.sent("receipt_clarify")[0]
     assert clar["text"] and clar["voice_language"] == "pidgin"
-    assert "Abeg" in clar["voice_script"]
+    # The voice note is the text read aloud, never a second message.
+    assert clar["voice_script"] == " ".join(clar["text"].split()).replace(
+        f"delivery {clar['delivery_id']}", "this delivery")
     assert r.text("voice off") == "voice_off"
     assert not r.prefs.get(SHOP.shop_id).speaks
     assert len(r.prefs.history(SHOP.shop_id)) == 2
@@ -298,12 +300,16 @@ def test_nobody_but_the_shop_can_turn_voice_on() -> None:
     assert parse_voice_command("please send voice on friday") is None
 
 
-def test_scripts_in_yoruba_igbo_hausa_carry_no_figures() -> None:
+def test_voice_in_yoruba_igbo_hausa_reads_the_english_text_in_the_shops_voice() -> None:
+    text = "You said you will pay N20,000 on Tuesday 27 October 2026 for delivery dlv-1-2."
     for lang in ("yoruba", "igbo", "hausa"):
-        for purpose in ("receipt_clarify", "receipt_type_request", "promise_readback", "promise_clarify"):
-            s = spoken_script(purpose, lang, amount_kobo=2_000_000, due_on=date(2026, 10, 27))
-            assert s and not any(ch.isdigit() for ch in s), (lang, purpose)
-    assert spoken_script("delivery_receipt", "english") == ""  # the receipt is text only
+        pref = VoicePreference("s", True, lang, "m", "VOICE ON", "+2340000000001", "t")
+        for purpose in ("promise_readback", "promise_clarify"):
+            s, voice = voice_fields(pref, purpose, text, today=date(2026, 10, 26),
+                                    amount_kobo=2_000_000, due_on=date(2026, 10, 27))
+            assert voice == f"{lang}:en" and not any(ch.isdigit() for ch in s), (lang, purpose)
+            assert "twenty thousand naira" in s and "twenty-seventh of October" in s
+        assert voice_fields(pref, "delivery_receipt", text, today=date(2026, 10, 26)) == ("", "")
 
 
 def test_a_script_whose_figures_are_not_in_the_text_is_dropped() -> None:

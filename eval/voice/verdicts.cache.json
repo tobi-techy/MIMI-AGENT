@@ -272,6 +272,13 @@
   "prompt_tokens": 1264,
   "text": "{\"confidence\": 0.8, \"disputed_items\": [], \"evidence_quote\": \"gbogbo eru ti de\", \"language\": \"yoruba\", \"outcome\": \"confirmed\", \"reason\": \"Shop states in Yoruba that all the goods have arrived.\"}"
  },
+ "48c57c71236e978ab4771d09564b2361": {
+  "completion_tokens": 514,
+  "latency_s": 3.022,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 1263,
+  "text": "{\"confidence\": 0.9, \"disputed_items\": [], \"evidence_quote\": \"Bogbo eru ti de de\", \"language\": \"yoruba\", \"outcome\": \"confirmed\", \"reason\": \"Shop states all goods have arrived correctly.\"}"
+ },
  "48e842cc59b9cdff318ae381f1ddb283": {
   "completion_tokens": 641,
   "latency_s": 3.654,
@@ -1021,12 +1028,26 @@
   "prompt_tokens": 1342,
   "text": "{\"confidence\": 0.9, \"disputed_items\": [], \"evidence_quote\": \"ihe nile abiala.\", \"language\": \"igbo\", \"outcome\": \"confirmed\", \"reason\": \"Shop states in Igbo that everything has arrived.\"}"
  },
+ "edb13dff18a2f3d51aab49d2aa58c6a4": {
+  "completion_tokens": 506,
+  "latency_s": 3.322,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 1273,
+  "text": "{\"confidence\": 0.9, \"disputed_items\": [], \"evidence_quote\": \"gbogbo \\u1eb9r\\u00f9 ti d\\u00e9\", \"language\": \"yoruba\", \"outcome\": \"confirmed\", \"reason\": \"Shop states all goods have arrived.\"}"
+ },
  "ee0a7bd3aa0767e41b4fb16aa1a0f7f6": {
   "completion_tokens": 978,
   "latency_s": 5.453,
   "model": "muse-spark-1.3",
   "prompt_tokens": 1348,
   "text": "{\"confidence\": 0.85, \"disputed_items\": [], \"evidence_quote\": \"everything complete\", \"language\": \"mixed\", \"outcome\": \"confirmed\", \"reason\": \"Shop states all items arrived complete.\"}"
+ },
+ "ef848b1f523e147b4f350e41c1a0fd17": {
+  "completion_tokens": 427,
+  "latency_s": 2.427,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 1263,
+  "text": "{\"confidence\": 0.9, \"disputed_items\": [], \"evidence_quote\": \"gbogbo eru ti de\", \"language\": \"yoruba\", \"outcome\": \"confirmed\", \"reason\": \"The shop states that all goods have arrived.\"}"
  },
  "f0df02e23c1b96934225d1f791bf1e3a": {
   "completion_tokens": 467,

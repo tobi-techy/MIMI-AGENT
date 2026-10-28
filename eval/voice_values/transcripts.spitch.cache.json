@@ -1,0 +1,625 @@
+{
+ "0224eed01347a9029a9fd7abddc9a778": {
+  "audio_s": 2.652,
+  "confidence": null,
+  "language": "ig",
+  "latency_s": 0.895,
+  "text": "aga m akwụ ụgwọ ahụ echi"
+ },
+ "0362b97b415d1408b4a243ac83faa599": {
+  "audio_s": 2.467,
+  "confidence": null,
+  "language": "yo",
+  "latency_s": 0.871,
+  "text": "ma san owó náà ní ọlá"
+ },
+ "04af69e0f76b88711a933d1cb2d0684f": {
+  "audio_s": 3.579,
+  "confidence": null,
+  "language": "oci",
+  "latency_s": 1.253,
+  "text": "kabupi ten thousand five on monday"
+ },
+ "08e1d239d721d571340060be55bef210": {
+  "audio_s": 3.603,
+  "confidence": null,
+  "language": "yo",
+  "latency_s": 1.036,
+  "text": "ma san egberun merun run naira ni ola"
+ },
+ "09c18e3cad7e3f8bd1a52ac536143a22": {
+  "audio_s": 3.822,
+  "confidence": null,
+  "language": "yo",
+  "latency_s": 1.041,
+  "text": "eji agope fifteen thousand ojo eti"
+ },
+ "09da09c3207184b301d21c341134b114": {
+  "audio_s": 3.412,
+  "confidence": null,
+  "language": "hat",
+  "latency_s": 1.328,
+  "text": "i go pay you two thousand five tomorrow"
+ },
+ "0fcbc27ca3ccf60200120580580612da": {
+  "audio_s": 3.141,
+  "confidence": null,
+  "language": "ha",
+  "latency_s": 1.056,
+  "text": "zambia dubu biyu da dari biyar jibi"
+ },
+ "127dc13271477f412b46cbc50e13939b": {
+  "audio_s": 3.157,
+  "confidence": null,
+  "language": "ha",
+  "latency_s": 1.116,
+  "text": "zan biya naira dubu hamsin ranar juma'a"
+ },
+ "158573368939fe74070a86b5de9b0314": {
+  "audio_s": 5.213,
+  "confidence": null,
+  "language": "lir",
+  "latency_s": 1.267,
+  "text": "mape forty-five thousand naira on saturday e ji"
+ },
+ "16089acbede55b04841d77fff37446b5": {
+  "audio_s": 3.425,
+  "confidence": null,
+  "language": "en",
+  "latency_s": 1.015,
+  "text": "nasaturday i go pay twelve thousand"
+ },
+ "16b1f447d0ab79a48d0ef72f5eef5b36": {
+  "audio_s": 3.157,
+  "confidence": null,
+  "language": "yo",
+  "latency_s": 0.964,
+  "text": "a wo pe egberun marun by friday"
+ },
+ "184777f483827836cdea0519a70057f4": {
+  "audio_s": 3.55,
+  "confidence": null,
+  "language": "yo",
+  "latency_s": 1.117,
+  "text": "má san ẹgbẹ̀rún lọ́nà ogún ní ọjọ́ étí"
+ },
+ "186d3eeef9d28ee4ca93850616dbeff5": {
+  "audio_s": 4.821,
+  "confidence": null,
+  "language": "en",
+  "latency_s": 1.283,
+  "text": "i go send de money fifteen thousand end of the month"
+ },
+ "18aee7bdb6435707a96ee39f439c3ebb": {
+  "audio_s": 4.423,
+  "confidence": null,
+  "language": "en",
+  "latency_s": 1.298,
+  "text": "i go pay you thirty-five thousand naira next thursday"
+ },
+ "18d4d8cf0d18a844649bcec063a21812": {
+  "audio_s": 5.784,
+  "confidence": null,
+  "language": "yo",
+  "latency_s": 1.218,
+  "text": "má pay yu 20,000 náírà ní ọlá by god's grace"
+ },
+ "1a44e2896afbf5875bb6252fbd0cce2d": {
+  "audio_s": 3.868,
+  "confidence": null,
+  "language": "ig",
+  "latency_s": 1.096,
+  "text": "aga m akwụ puku naira iri na ise echi"
+ },
+ "1f71d30211136b28569a0945947d5b0c": {
+  "audio_s": 3.698,
+  "confidence": null,
+  "language": "sna",
+  "latency_s": 1.221,
+  "text": "i will pay twenty five thousand naira tomorrow"
+ },
+ "1fa5dffacb8799978f87a0a2495be39b": {
+  "audio_s": 3.43,
+  "confidence": null,
+  "language": "en",
+  "latency_s": 1.523,
+  "text": "make i pay 30 k for fried next week"
+ },
+ "209c94c8d0647e03077412c3babae586": {
+  "audio_s": 2.635,
+  "confidence": null,
+  "language": "ha",
+  "latency_s": 0.892,
+  "text": "na biya dubu ashirin jiya"
+ },
+ "26490fa656295a577e714c30ef707fd0": {
+  "audio_s": 2.781,
+  "confidence": null,
+  "language": "yo",
+  "latency_s": 1.65,
+  "text": "ma san ẹgbẹ̀rún mẹ́rin ní òní"
+ },
+ "275a82217f8bba14a870a32cd3b6fd6d": {
+  "audio_s": 2.484,
+  "confidence": null,
+  "language": "ha",
+  "latency_s": 0.774,
+  "text": "zan tura kudin gobe"
+ },
+ "2ac1214c35f3abbc93c5d144a0605148": {
+  "audio_s": 3.822,
+  "confidence": null,
+  "language": "yo",
+  "latency_s": 1.071,
+  "text": "eji agope fifteen thousand ojo eti"
+ },
+ "2b644048f430d71f0f5a60dc5ae8e4cb": {
+  "audio_s": 4.016,
+  "confidence": null,
+  "language": "zul",
+  "latency_s": 1.434,
+  "text": "ọ ga-agụ balans yuu 50,000 naịra dis wiikendi"
+ },
+ "2d2640e338f3f87fab7eabcbb623605b": {
+  "audio_s": 2.756,
+  "confidence": null,
+  "language": "en",
+  "latency_s": 0.957,
+  "text": "abega ago pay twenty tomorrow"
+ },
+ "2e6cad74acef89ab8d898941a9e4d38a": {
+  "audio_s": 3.868,
+  "confidence": null,
+  "language": "ig",
+  "latency_s": 1.065,
+  "text": "aga m akwụ puku naira iri na ise echi"
+ },
+ "30655d273ef3d0f997e375ecc367c98b": {
+  "audio_s": 3.362,
+  "confidence": null,
+  "language": "yo",
+  "latency_s": 1.103,
+  "text": "má san ẹgbẹ̀rún méjìlá ní ọjọ́ àbámẹ́ta"
+ },
+ "312a938992947ef05970dfaa6073b7ad": {
+  "audio_s": 2.86,
+  "confidence": null,
+  "language": "yo",
+  "latency_s": 0.949,
+  "text": "ma sun egberun meta ni orala"
+ },
+ "36d26f0380c1ce566b7021561a046f18": {
+  "audio_s": 2.944,
+  "confidence": null,
+  "language": "ig",
+  "latency_s": 0.891,
+  "text": "akwụọla m puku iri ụnyaahụ"
+ },
+ "3c760db485b695a284e9d4ce5742c32e": {
+  "audio_s": 4.259,
+  "confidence": null,
+  "language": "ig",
+  "latency_s": 1.746,
+  "text": "aga m akwụ 30,000 naịra na satọdee"
+ },
+ "3d0bd7d73cbe23737a033e627e95131a": {
+  "audio_s": 4.821,
+  "confidence": null,
+  "language": "ara",
+  "latency_s": 1.566,
+  "text": "ago send de money fifteen thousand end of the month"
+ },
+ "3fcac47522392f4b64453ac8a566923d": {
+  "audio_s": 4.212,
+  "confidence": null,
+  "language": "yo",
+  "latency_s": 1.161,
+  "text": "ese i don pay the twenty thousand yesterday"
+ },
+ "468e0d17fb8a18eb4a42a634e99c7d47": {
+  "audio_s": 3.189,
+  "confidence": null,
+  "language": "en",
+  "latency_s": 1.045,
+  "text": "i don pay yu yesterday i beg check am"
+ },
+ "46b1a0ce188d60d9f8db6bcc08c12914": {
+  "audio_s": 3.555,
+  "confidence": null,
+  "language": "zlm",
+  "latency_s": 1.037,
+  "text": "tawo fe tutawa daw five on friday"
+ },
+ "5b4db11d75d9483fd707665ced1788b2": {
+  "audio_s": 2.806,
+  "confidence": null,
+  "language": "en",
+  "latency_s": 0.985,
+  "text": "i go pay twenty k next tomorrow"
+ },
+ "636ed06ba812a7558f46aa5abda4b110": {
+  "audio_s": 3.603,
+  "confidence": null,
+  "language": "yo",
+  "latency_s": 1.104,
+  "text": "ma san egberun merun run naira ni ola"
+ },
+ "655f533502ed948c9fdb56b24e3be998": {
+  "audio_s": 5.037,
+  "confidence": null,
+  "language": "oci",
+  "latency_s": 1.5,
+  "text": "i will pay ten thousand today and ten thousand on friday"
+ },
+ "661920505aa933d36343431f8c710b6b": {
+  "audio_s": 2.652,
+  "confidence": null,
+  "language": "ig",
+  "latency_s": 0.858,
+  "text": "aga m akwụ ụgwọ ahụ echi"
+ },
+ "691a021543521f7f7f4fe5c032c15637": {
+  "audio_s": 2.984,
+  "confidence": null,
+  "language": "yo",
+  "latency_s": 0.788,
+  "text": "má san 2005 lọ́lá"
+ },
+ "6bafca51bd8e6a1c67818e406590a225": {
+  "audio_s": 4.389,
+  "confidence": null,
+  "language": "sna",
+  "latency_s": 1.749,
+  "text": "let me pay fifty thousand naira only at the end of the month"
+ },
+ "70d12c8ac5c41420c5b4911acf35d866": {
+  "audio_s": 4.045,
+  "confidence": null,
+  "language": "ig",
+  "latency_s": 1.838,
+  "text": "aga m akwụ gị puku iri abụọ na fraịdee"
+ },
+ "723787f0db6696250622ddf34022f6b4": {
+  "audio_s": 3.044,
+  "confidence": null,
+  "language": "ha",
+  "latency_s": 1.041,
+  "text": "zan biya dubu talatin ranar asabar"
+ },
+ "7f09d337060bbdd72e788665e145d51e": {
+  "audio_s": 3.157,
+  "confidence": null,
+  "language": "yo",
+  "latency_s": 1.009,
+  "text": "a wo pe egberun marun by friday"
+ },
+ "7fa97c6804e5f6d42ce0eb53707308ed": {
+  "audio_s": 3.259,
+  "confidence": null,
+  "language": "ig",
+  "latency_s": 0.981,
+  "text": "aga m akwụ puku ise nwanne echi"
+ },
+ "830f013ecf371f55eb5050a37ca44ece": {
+  "audio_s": 3.141,
+  "confidence": null,
+  "language": "ha",
+  "latency_s": 1.037,
+  "text": "zambia dubu biyu da dari biyar jibi"
+ },
+ "87c43fbf28f442d533e745cff3ebd194": {
+  "audio_s": 3.157,
+  "confidence": null,
+  "language": "ha",
+  "latency_s": 1.071,
+  "text": "zan biya naira dubu hamsin ranar juma'a"
+ },
+ "8b0db34768cdb21c44a9e825f09c04bd": {
+  "audio_s": 3.362,
+  "confidence": null,
+  "language": "yo",
+  "latency_s": 1.783,
+  "text": "má san ẹgbẹ̀rún méjìlá ní ọjọ́ àbámẹ́ta"
+ },
+ "9148866c6a5fdc42bf58ad7e1f89895f": {
+  "audio_s": 3.031,
+  "confidence": null,
+  "language": "yo",
+  "latency_s": 0.993,
+  "text": "mo ti san ẹgbẹ̀rún mẹ́wàá lánàá"
+ },
+ "91e7c6090f28d6a1038e46ceff19876b": {
+  "audio_s": 3.889,
+  "confidence": null,
+  "language": "haw",
+  "latency_s": 1.39,
+  "text": "i will pay five hundred thousand naira on the thirtieth"
+ },
+ "962c973629ffc30db80ed79ce814c199": {
+  "audio_s": 5.495,
+  "confidence": null,
+  "language": "en",
+  "latency_s": 2.777,
+  "text": "i'll transfer one hundred and twenty thousand naira on the fifth of november"
+ },
+ "9721eacf0afe00d16c936a825b2b067d": {
+  "audio_s": 4.423,
+  "confidence": null,
+  "language": "haw",
+  "latency_s": 1.34,
+  "text": "i go pay you thirty-five thousand naira next thursday"
+ },
+ "97de09bd08d06464e1f1afe74d24547a": {
+  "audio_s": 5.784,
+  "confidence": null,
+  "language": "yo",
+  "latency_s": 1.196,
+  "text": "má pay yu 20,000 náírà ní ọlá by god's grace"
+ },
+ "9d36067938b8ed0200b80ae69a49b167": {
+  "audio_s": 2.756,
+  "confidence": null,
+  "language": "yo",
+  "latency_s": 1.084,
+  "text": "abega ago pay 20 tomorrow"
+ },
+ "9e1e4ca49f0303db51c057cd28ce245b": {
+  "audio_s": 3.412,
+  "confidence": null,
+  "language": "en",
+  "latency_s": 1.503,
+  "text": "i go pay you two thousand five tomorrow"
+ },
+ "a2928c997e5253acdaad5f8d9425e167": {
+  "audio_s": 4.212,
+  "confidence": null,
+  "language": "yo",
+  "latency_s": 1.183,
+  "text": "ese i don pay the twenty thousand yesterday"
+ },
+ "a29898404b9115e724f4dc2a1df0b32d": {
+  "audio_s": 3.189,
+  "confidence": null,
+  "language": "mlt",
+  "latency_s": 1.276,
+  "text": "i don pay yu yesterday i beg check am"
+ },
+ "a92b88ccaccbb9e9fbfab235d5f6e75b": {
+  "audio_s": 4.912,
+  "confidence": null,
+  "language": "en",
+  "latency_s": 1.353,
+  "text": "everything completes i go pay n 25,000 on second november"
+ },
+ "ab9d92b488721bf8be10603d1f99bbca": {
+  "audio_s": 2.952,
+  "confidence": null,
+  "language": "ha",
+  "latency_s": 1.013,
+  "text": "zan biya dubu goma sha biyar gobe"
+ },
+ "ac3163d55e441ff3f4a7787be7195d9c": {
+  "audio_s": 2.944,
+  "confidence": null,
+  "language": "ig",
+  "latency_s": 0.955,
+  "text": "akwụọla m puku iri ụnyaahụ"
+ },
+ "b3cd6e91483ea0469946046f56b9d3b4": {
+  "audio_s": 2.484,
+  "confidence": null,
+  "language": "ha",
+  "latency_s": 0.794,
+  "text": "zan tura kudin gobe"
+ },
+ "b40963de86d19483b4f06d0548dc51fd": {
+  "audio_s": 3.55,
+  "confidence": null,
+  "language": "yo",
+  "latency_s": 1.064,
+  "text": "má san ẹgbẹ̀rún lọ́nà ogún ní ọjọ́ étí"
+ },
+ "b543b8a305d14649734ab762cc9c6ad5": {
+  "audio_s": 4.126,
+  "confidence": null,
+  "language": "mkd",
+  "latency_s": 1.011,
+  "text": "au p 30,000 na eva next friday"
+ },
+ "b6e33848da2aaa0966e391eb9a99f90e": {
+  "audio_s": 3.709,
+  "confidence": null,
+  "language": "en",
+  "latency_s": 1.083,
+  "text": "i go pay you 20,000 naira next thursday"
+ },
+ "b94fae9b03e43e37e3424d10ae4acbbc": {
+  "audio_s": 2.984,
+  "confidence": null,
+  "language": "yo",
+  "latency_s": 0.841,
+  "text": "má san 2005 lọ́lá"
+ },
+ "bc382bba02e4c69fafa7eb2942a71709": {
+  "audio_s": 2.781,
+  "confidence": null,
+  "language": "yo",
+  "latency_s": 0.937,
+  "text": "ma san ẹgbẹ̀rún mẹ́rin ní òní"
+ },
+ "bc5ee8edf526a3062157bffd5c6bac98": {
+  "audio_s": 3.584,
+  "confidence": null,
+  "language": "en",
+  "latency_s": 1.235,
+  "text": "i will pay 1,500 naira next friday"
+ },
+ "be6ff75987e9a3c8a65c0a645b96abb4": {
+  "audio_s": 2.635,
+  "confidence": null,
+  "language": "ha",
+  "latency_s": 0.949,
+  "text": "na biya dubu ashirin jiya"
+ },
+ "c3f24ee75bfbcc11f96bcba54cb04c00": {
+  "audio_s": 4.722,
+  "confidence": null,
+  "language": "yo",
+  "latency_s": 1.143,
+  "text": "àwùpé yu ẹgbẹ̀rún mẹ́wàá next friday sa"
+ },
+ "c870f576e1c407ab48304e480af144e4": {
+  "audio_s": 4.359,
+  "confidence": null,
+  "language": "en",
+  "latency_s": 1.682,
+  "text": "i will pay two hundred and fifty thousand naira next monday"
+ },
+ "cac2f3a8bf9bec949c6004cf254732cf": {
+  "audio_s": 2.86,
+  "confidence": null,
+  "language": "yo",
+  "latency_s": 0.968,
+  "text": "ma sun egberun meta ni orala"
+ },
+ "cb6db171d6b082d6740766d2e6e747a3": {
+  "audio_s": 4.912,
+  "confidence": null,
+  "language": "hat",
+  "latency_s": 1.38,
+  "text": "everything kompletes i go pay n 25,000 on second november"
+ },
+ "cc18ea44960355ecf0f3021556be3f92": {
+  "audio_s": 5.037,
+  "confidence": null,
+  "language": "en",
+  "latency_s": 1.335,
+  "text": "i will pay ten thousand today and ten thousand on friday"
+ },
+ "cdbc1fce7220cd85ca4c5adbf3ef7292": {
+  "audio_s": 5.213,
+  "confidence": null,
+  "language": "yo",
+  "latency_s": 1.211,
+  "text": "mape forty-five thousand naira on saturday e j"
+ },
+ "cfd687cbd4225675d39e6106eefa24df": {
+  "audio_s": 3.031,
+  "confidence": null,
+  "language": "yo",
+  "latency_s": 1.02,
+  "text": "mo ti san ẹgbẹ̀rún mẹ́wàá lánàá"
+ },
+ "d033c1ab20c48394eb54764a0ef38e29": {
+  "audio_s": 3.856,
+  "confidence": null,
+  "language": "mya",
+  "latency_s": 1.16,
+  "text": "muma transfer tatsi tauzan naira ni sela"
+ },
+ "d55cf0e1812c2e8cbacdc7a78db0cc8e": {
+  "audio_s": 4.259,
+  "confidence": null,
+  "language": "yo",
+  "latency_s": 1.061,
+  "text": "a ga m akwụ 30,000 naịra na satọde"
+ },
+ "dbd74212e70d92a22c6ebfbf8f96acc7": {
+  "audio_s": 2.346,
+  "confidence": null,
+  "language": "hat",
+  "latency_s": 0.93,
+  "text": "alpeit fortifalo somero"
+ },
+ "dceef08399222d813977b832da86f61b": {
+  "audio_s": 3.044,
+  "confidence": null,
+  "language": "ha",
+  "latency_s": 1.721,
+  "text": "zan biya dubu talatin ranar asabar"
+ },
+ "e05dea723b68646b5e8b3857fa773abb": {
+  "audio_s": 3.856,
+  "confidence": null,
+  "language": "yo",
+  "latency_s": 1.172,
+  "text": "mo ma transfer thirty thousand naira ni cella"
+ },
+ "e22fe09d7df9d4fda9a8c9584419298d": {
+  "audio_s": 2.467,
+  "confidence": null,
+  "language": "yo",
+  "latency_s": 0.844,
+  "text": "ma san owó náà ní ọlá"
+ },
+ "e5c16f6f6f7386614550cc490009e7e2": {
+  "audio_s": 2.806,
+  "confidence": null,
+  "language": "sna",
+  "latency_s": 0.91,
+  "text": "ago pe 20k next tomorrow"
+ },
+ "e6844500eec1e13a7dfb577f85dc9a66": {
+  "audio_s": 3.43,
+  "confidence": null,
+  "language": "pcm",
+  "latency_s": 1.055,
+  "text": "mek ai pe 30 k for fraide next wik"
+ },
+ "e79dafdfbb535dd2da88cd2ed181173d": {
+  "audio_s": 3.259,
+  "confidence": null,
+  "language": "sna",
+  "latency_s": 1.025,
+  "text": "aga m akwụ puku ise nwanne echi"
+ },
+ "e7c54bd07ddd81ceaa950cd1ba6d2b70": {
+  "audio_s": 4.045,
+  "confidence": null,
+  "language": "ig",
+  "latency_s": 1.073,
+  "text": "aga m akwụ gị puku iri abụọ na fraịdee"
+ },
+ "e824fe8f4fdf5528b539d94f1bb9613f": {
+  "audio_s": 3.425,
+  "confidence": null,
+  "language": "mlg",
+  "latency_s": 1.085,
+  "text": "na saturday agopedi twelve thousand"
+ },
+ "efdba3abfb3009f684352ad5dbb18ff2": {
+  "audio_s": 4.016,
+  "confidence": null,
+  "language": "en",
+  "latency_s": 1.188,
+  "text": "o ga agu balance you 50,000 naira this weekend"
+ },
+ "f05a9169a09bdebcd107b18dcfcc8f2b": {
+  "audio_s": 3.709,
+  "confidence": null,
+  "language": "en",
+  "latency_s": 1.131,
+  "text": "i go pay you 20,000 naira next thursday"
+ },
+ "f3e38375291f82ca22bd9447bd1cf70e": {
+  "audio_s": 2.952,
+  "confidence": null,
+  "language": "ha",
+  "latency_s": 1.029,
+  "text": "zan biya dubu goma sha biyar gobe"
+ },
+ "f7543f4ec8604e2678b909fce582b422": {
+  "audio_s": 2.758,
+  "confidence": null,
+  "language": "en",
+  "latency_s": 1.135,
+  "text": "i pay twenty thousand years"
+ },
+ "fc13d3c2205b0322586a92734e451867": {
+  "audio_s": 4.722,
+  "confidence": null,
+  "language": "yo",
+  "latency_s": 1.1,
+  "text": "àwùpé yu ẹgbẹ̀rún mẹ́wàá next friday sa"
+ }
+}

@@ -45,6 +45,7 @@ import sqlalchemy as sa
 from sqlalchemy.engine import Engine
 
 from mimi.api import steering as sx
+from mimi.api import voice as vx
 from mimi.api.helpers import HelperDeps
 from mimi.harness import fastclass
 from mimi.harness import steer as st
@@ -275,6 +276,7 @@ class Agent:
         self.steerer = st.Steerer(model=router_model)
         self.steer_on = os.environ.get("MIMI_STEER", "1").strip() != "0"
         self.artifacts = SqlArtifactStore(engine)
+        vx.ensure_schema(engine)  # shop_voice_consent (alembic 0004 in production)
         self.harness = Harness(book=self.go, control=self.go, events=self.go,
                                gateway=Gateway(list(models)), policy=self.policy,
                                clock=self.clock, artifacts=self.artifacts)
@@ -404,13 +406,18 @@ class Agent:
                 lead = conn.execute(sa.select(s.turns).where(
                     s.turns.c.turn_id == t.merged_into,
                     s.turns.c.tenant_id == tenant_id)).first() or t
-            replies = [{
-                "message_id": m.message_id, "channel": m.channel, "shop_id": m.shop_id,
-                "text": m.text, "kind": m.kind, "status": m.status, "at": m.at}
-                for m in conn.execute(sa.select(s.messages).where(
+            replies = []
+            for m in conn.execute(sa.select(s.messages).where(
                     s.messages.c.tenant_id == tenant_id, s.messages.c.turn_id == lead.turn_id,
                     s.messages.c.direction == "out").order_by(s.messages.c.ts,
-                                                              s.messages.c.message_id))]
+                                                              s.messages.c.message_id)):
+                reply = {"message_id": m.message_id, "channel": m.channel,
+                         "shop_id": m.shop_id, "text": m.text, "kind": m.kind,
+                         "status": m.status, "at": m.at}
+                voice = vx.reply_voice(conn, tenant_id, m)
+                if voice is not None:
+                    reply["voice"] = voice  # the same text, read aloud (RAI-290)
+                replies.append(reply)
         result = loads(lead.result, {})
         return TurnView(
             turn_id=t.turn_id, tenant_id=tenant_id, thread_id=t.thread_id, state=lead.state,
@@ -487,6 +494,14 @@ class Agent:
         events = self._load_batch(claim.tenant_id, claim.batch)
         if not events:
             raise RuntimeError("turn has no inbound messages")
+        lead = lead_of(events)
+        if (len(events) == 1 and lead.source == "shop_message"
+                and lead.payload.media.kind == "none"
+                and vx.voice_enabled(claim.tenant_id)):
+            cmd = vx.voice_command(lead.payload.text)
+            if cmd is not None:
+                self._voice_choice(holder, lead, cmd)
+                return
         directory = self.go.directory(claim.tenant_id)
         prior = self._thread_state(claim.tenant_id, claim.thread_id)
         if "decision" in ck:
@@ -1042,6 +1057,55 @@ class Agent:
         if state is not None and state.finished is not None:
             trace_run(state.finished, self.exporter,
                       shop_id=thread_kind(tenant, thread)[1] or "owner")
+
+    def _voice_choice(self, holder: list[Claim], lead: Inbound,
+                      cmd: tuple[bool, str | None]) -> None:
+        """VOICE ON / VOICE OFF from the shop itself: code records it and answers."""
+        claim = holder[0]
+        tenant, thread, turn_id = claim.tenant_id, claim.thread_id, claim.turn_id
+        shop_id = thread_kind(tenant, thread)[1] or lead.payload.shop_id
+        now = time.time()
+        with self.engine.begin() as conn:
+            pref = vx.record_choice(
+                conn, shop_id=shop_id, on=cmd[0], language=cmd[1],
+                message_id=lead.external_id, text=lead.payload.text.strip(),
+                sender=f"shop_whatsapp:{shop_id}", at=lead.received_at.isoformat())
+            self._out(conn, tenant, thread, turn_id, key=f"voice:{turn_id}",
+                      channel="shop_whatsapp", shop_id=shop_id, text=vx.choice_text(pref),
+                      kind="voice_setting", status="ready", ts=now)
+            if lead.payload.from_phone:
+                scrubbed = lead.model_copy(update={"payload": lead.payload.model_copy(
+                    update={"from_phone": ""})})
+                conn.execute(s.inbound_messages.update().where(
+                    s.inbound_messages.c.tenant_id == tenant,
+                    s.inbound_messages.c.external_id == lead.external_id)
+                    .values(envelope=scrubbed.model_dump_json()))
+            status = "voice_on" if pref.voice_replies else "voice_off"
+            self.queue.finish_in(conn, claim, status=status, helper="mimi",
+                                 skill="mimi/voice-setting", run_id="", result={
+                                     "route": {"helper": "mimi", "skill": "mimi/voice-setting",
+                                               "layer": "rule", "rule": "voice_command",
+                                               "model_called": False, "cost_kobo": 0},
+                                     "voice": {"on": pref.voice_replies,
+                                               "language": pref.language}})
+
+    def voice_audio(self, tenant_id: str, message_id: str, speaker: Any) -> tuple[Any, dict]:
+        """(SpokenAudio, the voice fields) for one outbound message, made now
+        and never stored. ``NotFound`` when the message has no voice reply."""
+        from mimi.voice.speak import SpeechError
+
+        with self.engine.connect() as conn:
+            m = conn.execute(sa.select(s.messages).where(
+                s.messages.c.tenant_id == tenant_id,
+                s.messages.c.message_id == message_id)).first()
+            voice = vx.reply_voice(conn, tenant_id, m) if m is not None else None
+        if voice is None:
+            raise NotFound(message_id)
+        try:
+            audio = speaker.speak(voice["script"], voice["voice"])
+        except SpeechError as exc:
+            raise NotFound(f"{message_id}: {exc}") from exc
+        return audio, voice
 
     def _followups(self, conn: sa.Connection, claim: Claim, sv: dict[str, Any],
                    events: Sequence[Inbound]) -> list[str]:

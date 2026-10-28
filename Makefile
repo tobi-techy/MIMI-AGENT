@@ -1,7 +1,7 @@
 PY ?= python
 
 .PHONY: credit-eval credit-eval-live credit-fixtures sim-credit e2e e2e-live binding-eval binding-eval-live steer-eval steer-eval-live
-.PHONY: install test eval eval-live eval-fake voice-eval voice-eval-live voice-fixtures proof-eval proof-eval-live proof-fixtures stock-backtest stock-eval stock-eval-live stock-eval-fake sim-stock trace-stock sim sim-live sim-voice sim-voice-v2 sim-screens trace-smoke langfuse-setup langfuse-monitor langfuse-datasets proof-experiment voice-experiment receipts-experiment judge-calibration world-check lint typecheck secrets provenance migrate check harness-eval harness-eval-live trace-harness router-eval router-eval-live context-eval context-eval-live router-train trace-router api api-worker api-seed api-openapi api-openapi-check
+.PHONY: install test eval eval-live eval-fake voice-eval voice-eval-live voice-fixtures voice-values-eval voice-values-eval-live voice-values-fixtures proof-eval proof-eval-live proof-fixtures stock-backtest stock-eval stock-eval-live stock-eval-fake sim-stock trace-stock sim sim-live sim-voice sim-voice-v2 sim-screens trace-smoke langfuse-setup langfuse-monitor langfuse-datasets proof-experiment voice-experiment receipts-experiment judge-calibration world-check lint typecheck secrets provenance migrate check harness-eval harness-eval-live trace-harness router-eval router-eval-live context-eval context-eval-live router-train trace-router api api-worker api-seed api-openapi api-openapi-check
 
 install:            ## editable install with dev tools
 	$(PY) -m pip install -e '.[dev,otel,langfuse]'
@@ -26,6 +26,15 @@ voice-eval-live:    ## call Spitch, Muse Voice Transcribe and Muse Spark (needs 
 
 voice-fixtures:     ## make missing synthetic clips with Spitch TTS (needs SPITCH_API_KEY)
 	$(PY) scripts/make_voice_fixtures.py
+
+voice-values-eval:  ## amounts and dates from 50 voice clips, replaying recorded transcripts and voice replies
+	META_API_KEY= SPITCH_API_KEY= $(PY) -m mimi.receipts.values_eval --no-write
+
+voice-values-eval-live: ## record missing transcripts and voice replies (needs both keys); writes the report
+	$(PY) -m mimi.receipts.values_eval --live
+
+voice-values-fixtures: ## make missing amounts-and-dates clips with Spitch TTS (needs SPITCH_API_KEY)
+	$(PY) scripts/make_voice_values_fixtures.py
 
 proof-eval:         ## payment-screenshot eval, replaying the recorded Muse Spark answers
 	META_API_KEY= $(PY) -m mimi.proof.eval
@@ -78,7 +87,7 @@ provenance:         ## every commit was made in the hackathon window
 migrate:            ## create Mimi's tables; set MIMI_DB_URL first
 	alembic upgrade head
 
-check: lint typecheck test api-openapi-check eval voice-eval proof-eval stock-backtest stock-eval harness-eval router-eval context-eval credit-eval e2e binding-eval steer-eval world-check secrets provenance
+check: lint typecheck test api-openapi-check eval voice-eval voice-values-eval proof-eval stock-backtest stock-eval harness-eval router-eval context-eval credit-eval e2e binding-eval steer-eval world-check secrets provenance
 
 sim-voice-v2:       ## offline sim: voice notes, payment promises, voice replies
 	META_API_KEY= SPITCH_API_KEY= $(PY) -m mimi.sim --shops 3 --transcript --voice 1 --promises 1 --voice-replies

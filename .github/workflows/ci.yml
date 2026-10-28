@@ -55,6 +55,8 @@ jobs:
         run: python -m mimi.receipts.eval
       - name: Voice-note eval, 50 clips with and without hints (recorded Spitch, Muse Voice Transcribe and Muse Spark answers)
         run: python -m mimi.voice.eval
+      - name: Voice amounts and dates, 50 clips in six language styles (recorded Spitch and Muse Voice Transcribe answers and voice replies; fails on a promise recorded without YES or wrong, a voice reply saying a figure not in its text, or accuracy below the recorded run)
+        run: python -m mimi.receipts.values_eval --no-write
       - name: Payment-screenshot eval, 40 synthetic alerts (recorded Muse Spark answers; fails on a fake marked likely)
         run: python -m mimi.proof.eval
       - name: Stock backtest, estimator v0.2 with one-tap counts (no model; caps and drafts gated)

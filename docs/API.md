@@ -128,10 +128,16 @@ approval reads as 404. Keys are compared by SHA-256 in constant time; give
 | `POST /v1/approvals/{id}/approve` | owner | Releases the drafted message, marks the intent approved and wakes the helper on its thread (`approval_answered`, through the router). A money verb is refused (409). Deciding twice is 409 |
 | `POST /v1/approvals/{id}/reject` | owner | Nothing is sent; the helper is told |
 | `GET /v1/credit` | owner | Per-shop limit, outstanding, available, and credit requests from helpers' credit intents (Credit, RAI-271) |
+| `GET /v1/messages/{message_id}/voice` | any | The reply's voice note (RAI-290): its own text read aloud, made now and never stored (`audio/ogg`, or `audio/wav` from the offline speaker). 404 when the reply has no `voice` block |
 | `GET /v1/health` | none | Database, model mode (`live` or `offline`), queue depth, version |
 
 Replies come back with `status`: `ready` (hand it to the channel now) or
-`pending_approval` (it waits in approvals). Sending them on WhatsApp is the
+`pending_approval` (it waits in approvals). A `ready` WhatsApp reply to a
+shop that sent a voice note and opted in with `VOICE ON` also carries
+`voice` (`script`, `voice`, `language`, and the `amounts_kobo` and `days`
+code read back from the script, which are the text's): send the text, then
+the audio from `GET /v1/messages/{message_id}/voice`. Off unless
+`MIMI_VOICE_REPLIES` names the distributor (`docs/VOICE.md`). Sending them on WhatsApp is the
 webhook adapter's job (the Meta app and test number exist; the send wiring
 is RAI-266's remaining piece).
 

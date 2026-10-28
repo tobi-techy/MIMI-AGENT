@@ -70,6 +70,16 @@ _QUESTIONS: dict[str, str] = {
     ),
     "past_date": "That day has passed. On what day will you pay {amount} for delivery {ref}?",
     "correction": "Please tell me the right amount and the day you will pay for delivery {ref}.",
+    # The shop's words fit two values: name both and let the shop choose.
+    "amount_options": (
+        "Did you mean {a1} or {a2} for delivery {ref}? Please write the full amount "
+        "in naira and the day you will pay."
+    ),
+    "amount_options_day": (
+        "Did you mean {a1} or {a2} for delivery {ref} on {day}? Please write the full "
+        "amount in naira."
+    ),
+    "date_options": "Which day will you pay {amount} for delivery {ref}: {d1} or {d2}?",
 }
 
 
@@ -78,9 +88,25 @@ def readback_text(ref: str, amount_kobo: int, due_on: date) -> str:
 
 
 def question_text(
-    issue: str, ref: str, amount_kobo: int | None = None, due_on: date | None = None
+    issue: str,
+    ref: str,
+    amount_kobo: int | None = None,
+    due_on: date | None = None,
+    *,
+    amount_options: Sequence[int] = (),
+    date_options: Sequence[date] = (),
 ) -> str:
-    """One plain-English question for what is missing. Never model-written."""
+    """One plain-English question for what is missing. Never model-written.
+    When the shop's words fit two values, the question names both."""
+    if issue == "ambiguous_amount" and len(amount_options) == 2:
+        a1, a2 = (naira(int(k)) for k in amount_options)
+        if due_on is not None:
+            return _QUESTIONS["amount_options_day"].format(a1=a1, a2=a2, ref=ref,
+                                                           day=long_date(due_on))
+        return _QUESTIONS["amount_options"].format(a1=a1, a2=a2, ref=ref)
+    if issue == "ambiguous_date" and len(date_options) == 2 and amount_kobo is not None:
+        d1, d2 = (long_date(d) for d in date_options)
+        return _QUESTIONS["date_options"].format(amount=naira(amount_kobo), ref=ref, d1=d1, d2=d2)
     key = issue
     if issue in ("no_date", "ambiguous_date", "several_dates", "past_date") and amount_kobo is None:
         key = "no_amount"
@@ -121,6 +147,8 @@ def pending_from(reading: PromiseReading, reply: ShopReply) -> dict[str, Any]:
         "issue": reading.issue,
         "amount_kobo": reading.amount_kobo,
         "due_on": reading.due_on.isoformat() if reading.due_on else None,
+        "amount_options": list(reading.amount_options),
+        "date_options": [d.isoformat() for d in reading.date_options],
         "said_message_id": reply.message_id,
         "said_text": reply.text,
         "said_kind": reply.kind,
@@ -145,7 +173,14 @@ def message_for(pending: dict[str, Any], ref: str) -> tuple[PromisePurpose, str]
     due = _due(pending)
     if pending["status"] == "promise" and pending["amount_kobo"] is not None and due:
         return "promise_readback", readback_text(ref, int(pending["amount_kobo"]), due)
-    return "promise_clarify", question_text(pending["issue"], ref, pending["amount_kobo"], due)
+    return "promise_clarify", question_text(
+        pending["issue"],
+        ref,
+        pending["amount_kobo"],
+        due,
+        amount_options=pending.get("amount_options") or (),
+        date_options=[date.fromisoformat(x) for x in pending.get("date_options") or ()],
+    )
 
 
 def digest(text: str) -> str:
@@ -205,6 +240,8 @@ def promise_step(pending: dict[str, Any], new: Sequence[ShopReply]) -> PromiseSt
             "issue": "",
             "amount_kobo": reading.amount_kobo,
             "due_on": reading.due_on.isoformat() if reading.due_on else None,
+            "amount_options": [],
+            "date_options": [],
             "answer_message_id": newest.message_id,
         }
         return again(p, "new amount or day")
@@ -217,11 +254,14 @@ def promise_step(pending: dict[str, Any], new: Sequence[ShopReply]) -> PromiseSt
             "issue": reading.issue,
             "amount_kobo": reading.amount_kobo if reading.amount_kobo is not None else known_kobo,
             "due_on": _iso(reading.due_on or known_due),
+            "amount_options": list(reading.amount_options),
+            "date_options": [d.isoformat() for d in reading.date_options],
         }
         return again(p, f"still unclear: {reading.issue}")
     if pending["status"] == "unclear" and reading.status == "unclear":
         p = {**pending, "issue": reading.issue or pending["issue"]}
         return again(p, f"still unclear: {p['issue']}")
     # A "no", or anything without a new amount or day: ask for the right one.
-    p = {**pending, "status": "unclear", "issue": "correction"}
+    p = {**pending, "status": "unclear", "issue": "correction", "amount_options": [],
+         "date_options": []}
     return again(p, "not a YES")

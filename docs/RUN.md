@@ -84,6 +84,7 @@ export META_API_KEY=...         # also used by muse-voice-transcribe-1.0
 # optional
 export MIMI_VOICE=router        # router (default) | spitch | muse | fake
 export MIMI_TTS=spitch          # voice replies: spitch (default with a key) | fake
+export MIMI_VOICE_REPLIES=coral-lane  # API voice replies: off (default) | all | distributor ids
 export VOICE_TIMEOUT_S=30
 ```
 

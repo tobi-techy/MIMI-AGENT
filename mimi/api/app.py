@@ -195,6 +195,26 @@ def create_app(settings: Settings | None = None, agent: Agent | None = None, *,
     def get_turn(turn_id: str, key: Any_) -> dict[str, Any]:
         return _turn_out(agent.view(key.tenant_id, turn_id))
 
+    speaker_box: list[Any] = []
+
+    @app.get("/v1/messages/{message_id}/voice", responses={
+        **_ERRORS, 200: {"content": {"audio/ogg": {}, "audio/wav": {}},
+                         "description": "The voice note for this reply"}},
+             response_class=Response, summary="A reply's voice note (RAI-290)")
+    def get_voice(message_id: str, key: Any_) -> Response:
+        """The reply's text, read aloud: made now, never stored. 404 when the
+        reply has no voice note (flag off, the shop did not opt in or did not
+        send a voice note, or the code check on the figures failed). The text
+        reply always goes too."""
+        if not speaker_box:
+            from mimi.voice.env import speaker_from_env
+
+            speaker_box.append(speaker_from_env())
+        audio, voice = agent.voice_audio(key.tenant_id, message_id, speaker_box[0])
+        return Response(content=audio.data, media_type=f"audio/{audio.format}", headers={
+            "X-Mimi-Voice": voice["voice"], "X-Mimi-Voice-Seconds": str(audio.duration_s),
+            "Cache-Control": "no-store"})
+
     # -------------------------------------------------------------- console
 
     @app.get("/v1/threads", response_model=ThreadList, responses=_ERRORS)

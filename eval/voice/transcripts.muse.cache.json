@@ -34,6 +34,13 @@
   "latency_s": 2.049,
   "text": "everything rich i go I go pay you Friday."
  },
+ "0f5b048102c62f3775fa369729902fdb": {
+  "audio_s": 4.114,
+  "confidence": null,
+  "language": null,
+  "latency_s": 3.347,
+  "text": "gbogbo eru ti de, ma san egberun mewa ni ola."
+ },
  "1123ee23f3db3fc0b86562adb3db35af": {
   "audio_s": 4.101,
   "confidence": null,
@@ -229,6 +236,13 @@
   "language": null,
   "latency_s": 1.809,
   "text": "received in full, thank you very much."
+ },
+ "61de08e10ad77cc95d5475dba388270d": {
+  "audio_s": 4.114,
+  "confidence": null,
+  "language": null,
+  "latency_s": 3.097,
+  "text": "Bogbo eru ti de de, ma sun egberun mewa ni ola."
  },
  "6498e3fa1d7996630ab0fe69c9dee9d5": {
   "audio_s": 3.261,

@@ -45,6 +45,10 @@ Build window: 26 Oct 2026 12:00 PM ET (16:00 UTC, 17:00 WAT) to 4 Nov 2026
   `mimi/voice/env.py` and passed to the clients; `SPITCH_API_KEY` only in
   `mimi/voice/env.py` (and the fixture script). Neither is ever logged,
   printed or committed.
+* The amounts-and-dates eval (`eval/voice_values/`) is excluded the same
+  way: transcript caches and the report keyed by SHA-256, synthetic clips,
+  and five synthetic voice replies (`replies/`, Spitch system voices reading
+  Mimi's own read-back text; no person's voice).
 * The recorded voice answers (`eval/voice/*.cache.json`) are excluded from
   the detect-secrets scan for the same reason as the receipt cache: their
   keys are SHA-256 hashes. They hold transcript text of synthetic clips

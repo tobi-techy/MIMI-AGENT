@@ -49,6 +49,10 @@ VOICES: dict[str, tuple[str, str]] = {
     "yoruba": ("yo", "funmi"),
     "igbo": ("ig", "ngozi"),
     "hausa": ("ha", "amina"),
+    # The shop's own voice reading an English text (``mimi.voice.render``).
+    "yoruba:en": ("en", "funmi"),
+    "igbo:en": ("en", "ngozi"),
+    "hausa:en": ("en", "amina"),
 }
 MAX_SCRIPT_CHARS = 400  # a short reply, not the receipt
 
