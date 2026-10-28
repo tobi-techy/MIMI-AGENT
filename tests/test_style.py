@@ -146,7 +146,7 @@ def test_no_code_template_has_a_dash_or_filler() -> None:
                  "mimi/proof/copy.py", "mimi/stock/copy.py", "mimi/credit/copy.py",
                  "mimi/harness/collector.py", "mimi/harness/steer.py", "mimi/harness/loop.py",
                  "mimi/api/voice.py", "mimi/api/offline.py", "mimi/api/helpers.py",
-                 "mimi/api/agent.py", "mimi/runtime/budgets.py", "mimi/brand/tools.py"]
+                 "mimi/api/agent.py", "mimi/runtime/budgets.py", "mimi/brand/tools.py", "mimi/orders/order.py", "mimi/orders/tools.py"]
     bad = []
     for rel in templates:
         for line, text in _strings(ROOT / rel):
