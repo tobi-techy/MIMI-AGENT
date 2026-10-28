@@ -7,6 +7,11 @@
   ``META_API_BASE`` (default ``https://api.meta.ai/v1``),
   ``VOICE_TIMEOUT_S`` (default 30).
 
+* ``MIMI_VOICE_SECOND``: ``1`` (default) asks a second transcriber where
+  ``consensus.SECOND_OPINION`` names one and reconciles amounts and days in
+  code; ``0`` turns it off. ``MIMI_SPITCH_VOCAB=1`` also sends the money words
+  (``vocab.py``) to Spitch; Muse always gets them.
+
 * ``MIMI_TTS``: ``spitch`` (default when ``SPITCH_API_KEY`` is set) or
   ``fake``, for voice replies (``speaker_from_env``).
 
@@ -23,12 +28,14 @@ from pathlib import Path
 
 from mimi.voice.base import Transcriber
 from mimi.voice.cache import CachedTranscriber
+from mimi.voice.consensus import SECOND_OPINION
 from mimi.voice.fake import FakeTranscriber
 from mimi.voice.meta import META_BASE, MuseTranscriber
 from mimi.voice.router import DEFAULT_POLICY, Policy, VoiceRouter
 from mimi.voice.speak import CachedSpeaker, FakeSpeaker, Speaker, SpitchSpeaker
 from mimi.voice.spitch import SPITCH_BASE, SpitchTranscriber
 from mimi.voice.tts import SpitchSpeech
+from mimi.voice.vocab import VOCAB_PROVIDERS
 
 
 def voice_keys(env: Mapping[str, str] | None = None) -> dict[str, bool]:
@@ -79,7 +86,9 @@ def transcriber_from_env(
         }
     if choice in live:
         return live[choice]
-    return VoiceRouter(live, policy)
+    second = SECOND_OPINION if e.get("MIMI_VOICE_SECOND", "1").strip() != "0" else None
+    vocab = VOCAB_PROVIDERS + (("spitch",) if e.get("MIMI_SPITCH_VOCAB", "").strip() == "1" else ())
+    return VoiceRouter(live, policy, second=second, vocab_providers=vocab)
 
 
 def speaker_from_env(

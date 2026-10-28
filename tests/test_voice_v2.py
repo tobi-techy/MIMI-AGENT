@@ -283,7 +283,7 @@ def test_voice_readback_says_the_figures_that_are_in_the_text() -> None:
     r.settle()
     back = r.sent("promise_readback")[0]
     assert "twenty thousand naira" in back["voice_script"]
-    assert "Tuesday the twenty-seventh of October" in back["voice_script"]
+    assert "Tuesday, the twenty-seventh of October," in back["voice_script"]
     assert figures_match(back["text"], back["voice_script"], date(2026, 10, 26))
 
 

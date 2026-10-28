@@ -55,9 +55,11 @@ from mimi.receipts.promises import message_for, pending_from, promise_step
 from mimi.voice.audio import inspect
 from mimi.voice.base import Transcriber, VoiceContext
 from mimi.voice.cache import CachedTranscriber
+from mimi.voice.consensus import SECOND_OPINION
 from mimi.voice.promise import PromiseReading, read_promise
 from mimi.voice.render import render_voice
 from mimi.voice.router import DEFAULT_POLICY, VoiceRouter
+from mimi.voice.vocab import VOCAB_PROVIDERS
 
 ROOT = Path(__file__).resolve().parents[2]
 DIR = ROOT / "eval" / "voice_values"
@@ -65,9 +67,15 @@ MANIFEST = DIR / "clips.jsonl"
 REPORT = DIR / "values.report.json"
 PROVIDERS = ("spitch", "muse")
 PASS_ACCURACY = 0.95
-# The recorded live run (28 Oct 2026): 37/50 through the speech router.
+# Tobi's bar for the transcriber pass (28 Oct 2026): >= 90% on the fresh
+# held-out split (``fresh``, 60 clips, labels committed before tuning).
+PASS_FRESH = 0.90
+SPLITS = ("dev", "heldout", "fresh")
+# Accuracy through the speech router on every clip that has audio and a
+# recorded transcript. 28 Oct 2026: 37/50 (74%) with one transcriber; 42/50
+# (84%) with the money words and the second opinion (``mimi.voice.consensus``).
 # A change that reads fewer clips right fails CI; raise this when it improves.
-ACCURACY_FLOOR = 0.74
+ACCURACY_FLOOR = 0.84
 # USD per second of audio, from the providers' price pages as recorded in
 # eval/voice/voice.report.json (26 Oct 2026).
 SPITCH_STT_USD_S = 0.1732 / 412.4
@@ -103,7 +111,12 @@ def router(live: bool) -> tuple[VoiceRouter, dict[str, CachedTranscriber]]:
             p: CachedTranscriber(None, cache_path(p), mode="replay", name=p) for p in PROVIDERS
         }
     providers: dict[str, Transcriber] = dict(cached)
-    return VoiceRouter(providers, DEFAULT_POLICY), cached
+    return VoiceRouter(providers, DEFAULT_POLICY, second=SECOND_OPINION,
+                       vocab_providers=VOCAB_PROVIDERS), cached
+
+
+def has_audio(clip: dict[str, Any]) -> bool:
+    return (DIR / clip["file"]).exists()
 
 
 def _d(s: str | None) -> date | None:
@@ -190,7 +203,8 @@ def run_clip(clip: dict[str, Any], tr: Transcriber | None, *, hint: bool = True)
         t = _Said(clip["reference"])
     else:
         audio = inspect((DIR / clip["file"]).read_bytes())
-        t = tr.transcribe(audio, VoiceContext(language_hint=clip["hint"] if hint else None))
+        t = tr.transcribe(audio, VoiceContext(language_hint=clip["hint"] if hint else None,
+                                              said_at=clip["said_at"]))
     said_at = clip["said_at"]
     reply = ShopReply(
         message_id=f"wamid.{clip['id']}", job_id="job-eval", shop_id="shop-eval",
@@ -309,8 +323,16 @@ def heard_back(results: list[ClipResult], tr: Transcriber, *, live: bool) -> dic
         inner = speaker_from_env()
     speaker = CachedSpeaker(inner, HEARD_DIR, mode="through" if live else "replay",
                             name="spitch")
+    from mimi.voice.speak import VOICES, speech_key
+
+    def recorded(r: ClipResult) -> bool:
+        key = speech_key("spitch", VOICES[r.voice_language][1], r.voice_language, r.voice_script)
+        return key in speaker._index
+
+    # One read-back per voice; an already recorded one first, so a replay
+    # does not depend on which clip happens to come first.
     picked: dict[str, ClipResult] = {}
-    for r in results:
+    for r in sorted(results, key=lambda r: not recorded(r) if r.voice_script else True):
         if r.message_purpose == "promise_readback" and r.voice_script and \
                 r.voice_language in HEARD_VOICES and r.voice_language not in picked:
             picked[r.voice_language] = r
@@ -354,7 +376,7 @@ def _cost(cached: dict[str, CachedTranscriber]) -> dict[str, Any]:
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("--live", action="store_true", help="record missing transcripts")
-    ap.add_argument("--split", choices=("all", "dev", "heldout"), default="all")
+    ap.add_argument("--split", choices=("all", *SPLITS), default="all")
     ap.add_argument("--show", action="store_true", help="per-clip detail (dev only)")
     ap.add_argument("--no-write", action="store_true")
     ap.add_argument("--strict", action="store_true", help="also block on the 95%% mark")
@@ -363,7 +385,12 @@ def main(argv: list[str] | None = None) -> int:
         print("--show is for the dev split only: held-out clips are scored, not read", file=sys.stderr)
         return 2
     tr, cached = router(args.live)
-    clips = [c for c in load_clips() if args.split in ("all", c["split"])]
+    wanted = [c for c in load_clips() if args.split in ("all", c["split"])]
+    clips = [c for c in wanted if has_audio(c)]
+    no_audio = Counter(c["split"] for c in wanted if not has_audio(c))
+    if no_audio:
+        print(f"clips with labels but no audio yet (make them with `make voice-values-fixtures`,"
+              f" needs Spitch credit): {dict(no_audio)}")
     passes_out: dict[str, Any] = {}
     runs: tuple[tuple[str, Transcriber | None, bool], ...] = (
         ("router", tr, True), ("router_no_hint", tr, False), ("reference_text", None, True))
@@ -390,14 +417,21 @@ def main(argv: list[str] | None = None) -> int:
               f"voice figures not in text {s['voice_figures_not_in_text']}")
     heard: dict[str, Any] = {}
     if args.split == "all":
-        heard = heard_back([ClipResult(**c) for c in passes_out["router"]["clips"]], tr,
+        # Heard back with the plain router (no money words, no second
+        # opinion): it checks the voice reply, not the shop's note.
+        plain = VoiceRouter(dict(cached), DEFAULT_POLICY)
+        heard = heard_back([ClipResult(**c) for c in passes_out["router"]["clips"]], plain,
                            live=args.live)
-        print(f"voice replies heard back: amounts and days right {heard['right']}/{heard['n']}")
-        for x in heard["replies"]:
+        rec = [x for x in heard["replies"] if x["right"] is not None]
+        print(f"voice replies heard back: amounts and days right {heard['right']}/{len(rec)} "
+              f"recorded ({heard['n'] - len(rec)} voices not recorded for these scripts yet)")
+        for x in rec:
             if not x["right"]:
                 print(f"  {x['clip']} [{x['voice']}] heard: {x['heard']!r}")
     main_s = passes_out["router"]["summary"]
     marks = passes(main_s)
+    fresh = main_s["by_split"].get("fresh")
+    marks["fresh held-out >= 90%"] = bool(fresh and (fresh["accuracy"] or 0) >= PASS_FRESH)
     safety = all(
         v
         for run in passes_out.values()
@@ -425,7 +459,7 @@ def main(argv: list[str] | None = None) -> int:
             recorded_at = datetime.now().astimezone().isoformat(timespec="seconds")
         REPORT.write_text(json.dumps({
             "pass_marks": marks, "safety_every_pass": safety, "accuracy_floor": ACCURACY_FLOOR,
-            "pass": ok,
+            "pass": ok, "clips_without_audio": dict(no_audio),
             "cost": cost, "recorded_at": recorded_at, "voice_replies_heard_back": heard,
             "passes": passes_out,
         }, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")

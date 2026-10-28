@@ -12,7 +12,9 @@ speech engine reads. Nothing is generated, translated or summarised:
   "31 October" was heard back as "thirty fourth"; a weekday written next to
   a date must be that date's weekday, or there is no voice;
 * references such as ``dlv-56-9039`` are not read out ("this delivery");
-* "today", "tomorrow" and every other word stay exactly as written.
+* "today", "tomorrow" and every other word stay exactly as written;
+* then ``mimi.voice.pacing.pace``: sentence breaks, hyphenated compound
+  numbers, a pause around a spoken date, symbols said as words.
 
 Then code checks the script: the amounts and days read from the script
 must be exactly the amounts and days read from the text (and, when the
@@ -37,6 +39,7 @@ from collections.abc import Sequence
 from dataclasses import dataclass
 from datetime import date
 
+from mimi.voice.pacing import pace
 from mimi.voice.promise import _blank, find_amounts, find_dates, fold, naira_words, spoken_date
 
 MAX_SCRIPT_CHARS = 400
@@ -122,7 +125,7 @@ def render_voice(
         if text_kobo or text_days or _DIGIT.search(_BARE_REF.sub("", body)):
             return None, f"a {text_lang} text with figures stays text only"
         script = _REF.sub(lambda m: f"this {m.group('what').lower()}", body)
-        return _checked(script, voice, text_kobo, text_days, today)
+        return _checked(pace(script), voice, text_kobo, text_days, today)
     folded = fold(body)
     if len(folded) != len(body):
         return None, "cannot line the text up with its reading"
@@ -160,7 +163,7 @@ def render_voice(
     script = _REF.sub(lambda m: f"this {m.group('what').lower()}", script)
     script = _BARE_REF.sub("it", script)
     script = re.sub(r"\bN(?=\s)", "naira", script)
-    vs, why = _checked(script, voice, text_kobo, text_days, today)
+    vs, why = _checked(pace(script), voice, text_kobo, text_days, today)
     if vs is None:
         return vs, why
     if expect_kobo is not None and set(vs.amounts_kobo) != {k for k in expect_kobo if k is not None}:

@@ -296,6 +296,91 @@ its promise right: amount and day 14/14 on clear promises.
 * The Yoruba, Igbo and Hausa promise words were written for this repo and
   have not yet been reviewed by a native speaker.
 
+## Second opinion and money words (28 Oct 2026, RAI-290)
+
+Goal for this pass (Tobi): amount and day right on at least 90% of voice
+clips through real speech. What changed, all tuned on the `dev` split only:
+
+* **Money words** (`mimi/voice/vocab.py`). Muse Voice Transcribe gets the
+  money and day words for the shop's language as `keywords` (English,
+  Pidgin, Yoruba). On dev, Muse alone went from 8/20 to 12/20; on English it
+  stopped hearing "I will pay" as "there will be". Spitch takes the same
+  words as `special_words`, but that is not measured yet (the Spitch account
+  ran out of its free credit during this pass), so Spitch gets them only
+  with `MIMI_SPITCH_VOCAB=1`.
+* **Second opinion** (`mimi/voice/consensus.py`, `SECOND_OPINION`). For a
+  Pidgin or Yoruba hint, Muse hears the note at the same time as Spitch.
+  Code reads the amount and day from both transcripts and reconciles them
+  field by field: the same value, or a value only one heard while the other
+  heard no figure at all, stands; two different values, or a clean value
+  against one the other transcriber could not read, is a question to the
+  shop. Code never picks one transcriber's number. A vague "next week"
+  agrees with "Friday next week". Words that fit two values stay a question.
+  The kept transcript is the one whose own reading asserts nothing the
+  reconciled reading does not; if none fits it is `low` ("transcribers
+  disagree"), which asks one question and can never give consent. Igbo and
+  Hausa stay Spitch only (Muse does not list them and only added noise on
+  dev); English stays Muse first (a Spitch second opinion without a
+  language hint only added wrong options on dev). `MIMI_VOICE_SECOND=0`
+  turns it off.
+* **Audio clean-up** (high-pass, denoise, loudness, trim) was tried for Muse
+  and not kept: dev did not move (12/20 either way) and the held-out score
+  went down. The clips are synthetic and already clean, so this needs real
+  noisy notes to judge.
+* **A third provider** was not tried: no other speech key is set up, and
+  Tobi asked for no paid calls to new providers this pass.
+
+| Pass (router, language hint) | All with audio | dev (old 20) | old held-out (30) | fresh held-out (60) | new dev (20) | Wrong read-backs | Recorded without YES | Recorded wrong | Voice figures not in text |
+|---|---|---|---|---|---|---|---|---|---|
+| Before (one transcriber) | 37/50 (74%) | 17/20 | 20/30 | no audio | no audio | 0 | 0 | 0 | 0 |
+| After (money words + second opinion) | 42/50 (84%) | 18/20 | 24/30 (80%) | no audio | no audio | 0 | 0 | 0 | 0 |
+
+By language after: English 10/11, Pidgin 11/12, Yoruba-flavoured English
+5/8, Yoruba 4/7, Igbo 6/6, Hausa 6/6. The rest of the misses are Spitch
+mishearing Yoruba numbers (for example `mẹ́ẹ̀ẹ́dógún` as "merun run"); in
+each Mimi asks, never reads back a wrong figure.
+
+**Fresh held-out set.** 60 new clips (`split: fresh`, ids `vf-01` to
+`vf-60`: English 10, Pidgin 12, Yoruba-flavoured English 10, Yoruba 10,
+Igbo 9, Hausa 9; 20 Spitch voices including 8 never used before; four
+different "said on" days; none, light and heavy noise) plus 20 more dev
+clips (`vd-01` to `vd-20`). Their labels were committed (0c25ea2) before
+any tuning, and `--show` refuses every split but dev. Their audio is not
+made yet: the Spitch account ran out of credit on the first clip. A top-up
+of about $1 makes the 80 clips (`make voice-values-fixtures`, about $0.35)
+and their Spitch transcripts (`make voice-values-eval-live`, about $0.15);
+the eval then scores them with no code change, and the `fresh held-out >=
+90%` mark in the report says whether the bar is met. Until then the 90%
+bar is **not shown** on fresh data.
+
+CI floor: accuracy through the router on every clip with audio must not
+fall below 84% (`ACCURACY_FLOOR`); the safety marks block in every pass,
+as before.
+
+## Voice reply pacing and voices (28 Oct 2026)
+
+`mimi/voice/pacing.py` runs on every voice script after the figures are in
+words: a semicolon becomes a sentence break, compound numbers are
+hyphenated ("forty-eight thousand five hundred naira"), a spoken date gets a
+pause on each side ("on Thursday, the twenty-ninth of October, for this
+delivery"), symbols are said as words, and dashes become commas (no em
+dash is ever written). References were already not read out. The figures
+check runs again on the paced script. The wording itself is not changed
+here.
+
+Voices: the current picks stay (`lucy`, `tega`, `funmi`, `ngozi`, `amina`)
+until they are compared by ear. What the recorded clips show (Spitch
+heard-back word error rate on the eval clips, 2 to 5 clips per voice, mixed
+noise, so a weak signal): `lucy` 0.00 at 2.8 words a second, `tega` 0.10,
+`ngozi` 0.00, `sade` 0.27 at a calmer 2.7 words a second against `funmi`
+0.32, `aliyu` 0.08 against `amina` 0.12. `scripts/voice_audition.py` speaks
+the same paced read-back and question with every candidate voice, hears
+each take back, checks the figures are exact, measures pace and pauses and
+gives a naturalness proxy (1 to 5), then lists the takes for a person to
+play. It needs Spitch credit (about $0.40 for the top voices,
+`--max-usd`); the voice replies heard back in the values eval also need
+re-recording for the paced scripts.
+
 ## Eval (50 clips)
 
 `python -m mimi.voice.eval` (replays recorded answers; CI) and `--live`
@@ -378,9 +463,14 @@ format), one MP3 and one M4A.
 
 * Real voice notes: only later, only with the speaker's consent, and kept
   out of this public repo (`COMPLIANCE.md`).
-* The 95% amounts-and-dates mark through speech (74% now; the reader alone
-  is at 96%). The next step is the transcriber side: shop keywords and a
-  promise-shaped prompt, or a third STT provider, measured on this set.
+* The amounts-and-dates bar through speech: 84% on the recorded clips now
+  (95% in the issue, 90% for this pass). The fresh held-out set has labels
+  but no audio until Spitch is topped up; Spitch `special_words` are not
+  measured for the same reason.
+* On the API path a voice-note promise still goes to Collector, where the
+  model sets the follow-up; the code reader and its YES read-back are not
+  wired into the harness yet (it touches the pending-ask binder and the
+  replayed e2e caches).
 * Native-speaker review of the Yoruba, Igbo and Hausa promise words.
 * One promise per message: "10k today and 10k Friday" (instalments) is
   asked about, not split into two promises.

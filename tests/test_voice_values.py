@@ -6,6 +6,7 @@ These are typed-text cases written for the reader; the 50 voice clips are in
 
 from __future__ import annotations
 
+import re
 from datetime import date
 
 import pytest
@@ -107,12 +108,17 @@ def test_the_voice_is_the_text_with_figures_in_words() -> None:
     vs, why = render_voice(text, "english", today=D("2026-10-28"),
                            expect_kobo=[2_000_000], expect_days=[D("2026-10-29")])
     assert vs is not None, why
-    assert vs.script.startswith("You said you will pay twenty thousand naira on Thursday the "
-                                "twenty-ninth of October for this delivery. Reply YES")
+    assert vs.script.startswith("You said you will pay twenty thousand naira on Thursday, the "
+                                "twenty-ninth of October, for this delivery. Reply YES")
     assert vs.amounts_kobo == (2_000_000,) and vs.days == (D("2026-10-29"),)
     assert not any(ch.isdigit() for ch in vs.script)
-    # Everything but the figures and the reference is the text, word for word.
-    assert vs.script.endswith(text.split("dlv-56-9039.", 1)[1])
+    # Everything but the figures and the reference is the text, word for word
+    # (pacing only changes punctuation).
+    def words(x: str) -> list[str]:
+        return re.findall(r"[a-z]+", x.lower())
+
+    tail = words(text.split("dlv-56-9039.", 1)[1])
+    assert words(vs.script)[-len(tail):] == tail
 
 
 def test_a_voice_that_would_say_another_figure_is_dropped() -> None:

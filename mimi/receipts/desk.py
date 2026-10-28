@@ -23,7 +23,7 @@ from __future__ import annotations
 
 import time
 from collections.abc import Callable
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from datetime import datetime
 
 from mimi.observe.turns import Media, Observation, TurnBook, audio_cost, note, sniff_mime
@@ -202,6 +202,8 @@ class ReceiptDesk:
             if self.voice_context is not None
             else VoiceContext()
         )
+        if ctx.said_at is None:
+            ctx = replace(ctx, said_at=hook.received_at.isoformat())
         t = self._transcribe(hook, job_id, ctx)
         self.transcripts.append(t)
         return ShopReply(
