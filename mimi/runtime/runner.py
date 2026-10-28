@@ -23,7 +23,6 @@ import time
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
-from zoneinfo import ZoneInfo
 
 from mimi.runtime.budgets import first_hit
 from mimi.runtime.delegation import root_of, tree_spend
@@ -39,6 +38,7 @@ from mimi.runtime.states import JobState
 from mimi.runtime.steps import StepContext, StepFn, StepOutcome
 from mimi.runtime.store import JobStore, LeaseLost
 from mimi.runtime.tracing import StepTracer
+from mimi.tz import LAGOS
 
 log = logging.getLogger(__name__)
 
@@ -57,7 +57,6 @@ BACKOFF_MAX_S = 5.0
 # and burst waits fit), and never sooner than this after the step that asked.
 MAX_SELF_WAKES_PER_DAY = 48
 MIN_SLEEP_S = 30.0
-LAGOS = ZoneInfo("Africa/Lagos")
 
 
 def _norm(text: str) -> str:
