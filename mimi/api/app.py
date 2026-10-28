@@ -57,6 +57,7 @@ from mimi.api.schemas import (
 from mimi.harness.go import CrossTenant
 from mimi.harness.inbound import Inbound, Media, Payload
 from mimi.store.db import make_engine
+from mimi.tz import assume_lagos
 
 log = logging.getLogger(__name__)
 VERSION = "0.1.0"
@@ -152,7 +153,9 @@ def create_app(settings: Settings | None = None, agent: Agent | None = None, *,
             raise HTTPException(422, "a turn needs text, a button or media")
         at = body.received_at or datetime.now(UTC)
         if at.tzinfo is None:
-            at = at.replace(tzinfo=UTC)  # a time without a zone is read as UTC
+            # A channel time without a zone is a Lagos wall-clock time
+            # (RAI-308): reading it as UTC put 23:30 on the next day.
+            at = assume_lagos(at)
         inbound = Inbound(
             source=body.source, org_id=key.tenant_id, external_id=body.message_id,
             received_at=at,
@@ -177,7 +180,7 @@ def create_app(settings: Settings | None = None, agent: Agent | None = None, *,
         """
         at = body.received_at or datetime.now(UTC)
         if at.tzinfo is None:
-            at = at.replace(tzinfo=UTC)
+            at = assume_lagos(at)  # no zone: Africa/Lagos (RAI-308)
         if body.shop_id:
             key_shop = agent.go.shop(key.tenant_id, body.shop_id)  # 404 for another tenant's
             what = f"{body.name.replace('_', ' ').replace('.', ' ')} for {key_shop['shop_id']}"

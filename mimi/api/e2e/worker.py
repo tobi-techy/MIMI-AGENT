@@ -39,15 +39,14 @@ import time
 from datetime import datetime
 from pathlib import Path
 from typing import Any
-from zoneinfo import ZoneInfo
 
 from mimi.api.agent import Agent
 from mimi.api.e2e.models import CachePaths, agent_models
 from mimi.observe.langfuse_export import exporter_from_env
 from mimi.store.db import make_engine
 from mimi.store.queue import Claim
+from mimi.tz import LAGOS
 
-LAGOS = ZoneInfo("Africa/Lagos")
 # The simulated "now" for every turn of the run: the live day, after the last
 # screenshot (22:39 WAT) so no message is ever in the agent's future.
 SIM_NOW = datetime(2026, 10, 26, 23, 30, tzinfo=LAGOS)

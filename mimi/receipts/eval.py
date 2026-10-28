@@ -50,7 +50,7 @@ from collections import defaultdict
 from collections.abc import Sequence
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any
 
@@ -62,6 +62,7 @@ from mimi.receipts.decide import decide
 from mimi.receipts.inbox import ShopReply
 from mimi.receipts.receipt import clarify_text, receipt_text
 from mimi.receipts.verdict import ReceiptJudge, fake_verdict
+from mimi.tz import WAT
 from mimi.world import load_world
 from mimi.world.model import World
 
@@ -70,7 +71,6 @@ EVAL_DIR = ROOT / "eval" / "receipts"
 CASES = EVAL_DIR / "receipt_replies.jsonl"
 CACHE = EVAL_DIR / "receipt_replies.cache.json"
 REPORT = EVAL_DIR / "receipt_replies.report.json"
-WAT = timezone(timedelta(hours=1))
 
 PASS_MARKS: dict[str, float] = {
     "false_confirms": 0,

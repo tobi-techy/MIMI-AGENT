@@ -21,6 +21,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from mimi.harness.registry import ToolContext, ToolRegistry
 from mimi.harness.style import clean_reply
+from mimi.tz import lagos_day as _lagos_day
 
 
 class _In(BaseModel):
@@ -33,9 +34,8 @@ class _Out(BaseModel):
 
 def lagos_day(ctx: ToolContext) -> str:
     """Today in Africa/Lagos, as an ISO date (the day every key and rule uses)."""
-    from zoneinfo import ZoneInfo
 
-    return ctx.now.astimezone(ZoneInfo("Africa/Lagos")).date().isoformat()
+    return _lagos_day(ctx.now).isoformat()
 
 
 def digest(text: str) -> str:

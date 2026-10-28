@@ -42,7 +42,7 @@ import math
 import sys
 from collections import Counter
 from dataclasses import dataclass, field
-from datetime import datetime, time, timedelta, timezone
+from datetime import datetime, time, timedelta
 from pathlib import Path
 from typing import Any
 
@@ -58,12 +58,12 @@ from mimi.stock.intents import STOCK_INTENTS
 from mimi.stock.reorders import DEV_SEED, HELD_OUT_SEED, generate_reorders
 from mimi.stock.trigger import SHOP_WEEKLY_CAP, iso_week
 from mimi.stock.truth import ItemTruth, generate_truth
+from mimi.tz import WAT
 from mimi.world import load_world
 from mimi.world.model import World
 
 ROOT = Path(__file__).resolve().parents[2]
 REPORT = ROOT / "eval" / "stock" / "backtest.report.json"
-WAT = timezone(timedelta(hours=1), "WAT")
 FIRST_DAY, SCORE_FROM, LAST_DAY = 14, 28, 55
 PLAN_DAYS = 7
 PASS_MARKS: dict[str, float] = {

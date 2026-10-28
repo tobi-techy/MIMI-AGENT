@@ -40,7 +40,6 @@ from collections import Counter
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any
-from zoneinfo import ZoneInfo
 
 import sqlalchemy as sa
 
@@ -48,11 +47,13 @@ from mimi.harness.gateway import kobo_cost
 from mimi.harness.inbound import Inbound, Media, Payload
 from mimi.harness.router import RouteDecision
 from mimi.harness.steer import STEER_PROMPT_VERSION
+from mimi.harness.versions import ROUTER_VERSIONS
 from mimi.models.base import ChatModel
 from mimi.models.cache import CachedModel
 from mimi.models.env import DEFAULT_MODELS, from_env
 from mimi.store import schema as s
 from mimi.store.util import dumps, insert_ignore, loads, now_iso
+from mimi.tz import LAGOS
 from mimi.world.loader import load_world
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -62,7 +63,6 @@ CASES = EVAL_DIR / "heldout.jsonl"
 DEV = EVAL_DIR / "dev.jsonl"
 CACHE = EVAL_DIR / "router.cache.json"
 REPORT = EVAL_DIR / "steer.report.json"
-LAGOS = ZoneInfo("Africa/Lagos")
 NOW = datetime(2026, 10, 26, 23, 30, tzinfo=LAGOS)
 PASS_MARKS = {"correct": 0.90, "lost": 0, "no_disposition": 0, "duplicate_replies": 0,
               "money_moves": 0, "decided_edits": 0}
@@ -80,8 +80,8 @@ def _model(live: bool, dev: bool = False) -> CachedModel:
         if not os.environ.get("META_API_KEY", "").strip():
             raise SystemExit("--live needs META_API_KEY")
         inner: ChatModel | None = from_env("mimi")
-        return CachedModel(inner, cache, mode="through", name=name)
-    return CachedModel(None, cache, mode="replay", name=name)
+        return CachedModel(inner, cache, mode="through", name=name, versions=ROUTER_VERSIONS)
+    return CachedModel(None, cache, mode="replay", name=name, versions=ROUTER_VERSIONS)
 
 
 # ---------------------------------------------------------------- media

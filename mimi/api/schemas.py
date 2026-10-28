@@ -12,6 +12,8 @@ from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
+RECEIVED_AT = ("When the message was received, with its zone. Defaults to now. A time "
+               "without a zone is read as Africa/Lagos (WAT, UTC+1).")
 
 class _Out(BaseModel):
     model_config = ConfigDict(extra="forbid")
@@ -52,7 +54,7 @@ class TurnIn(BaseModel):
     text: str = Field("", max_length=8000)
     button_id: str = Field("", max_length=200)
     media: MediaIn | None = None
-    received_at: datetime | None = Field(None, description="Defaults to now (UTC).")
+    received_at: datetime | None = Field(None, description=RECEIVED_AT)
     simulated: bool = Field(False, description="Simulator traffic: tagged everywhere.")
 
 
@@ -69,7 +71,7 @@ class EventIn(BaseModel):
                                   "routine name (stock.weekly_check, ...).")
     shop_id: str = Field("", max_length=64, pattern=r"^[A-Za-z0-9_.-]*$",
                          description="The shop the event is about; empty for the distributor.")
-    received_at: datetime | None = Field(None, description="Defaults to now (UTC).")
+    received_at: datetime | None = Field(None, description=RECEIVED_AT)
     simulated: bool = False
 
 

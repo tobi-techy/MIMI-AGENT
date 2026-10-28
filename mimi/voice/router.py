@@ -40,9 +40,8 @@ from __future__ import annotations
 from collections.abc import Mapping, Sequence
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import replace
-from datetime import datetime
-from zoneinfo import ZoneInfo
 
+from mimi.tz import now_lagos
 from mimi.voice.base import AudioClip, Transcriber, Transcript, VoiceContext
 from mimi.voice.consensus import choose
 from mimi.voice.vocab import with_vocab
@@ -104,7 +103,7 @@ class VoiceRouter:
             return first
         self.second_opinions += 1
         two = replace(two, tried=(f"{other}:{two.status}:second",))
-        said = ctx.said_at or datetime.now(ZoneInfo("Africa/Lagos")).isoformat()
+        said = ctx.said_at or now_lagos().isoformat()
         return choose([first, two], said)
 
     def _first(self, clip: AudioClip, ctx: VoiceContext) -> Transcript:

@@ -34,7 +34,6 @@ from collections.abc import Sequence
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any, Literal
-from zoneinfo import ZoneInfo
 
 import sqlalchemy as sa
 
@@ -43,15 +42,16 @@ from mimi.harness.gateway import ModelTurn, RecordedToolModel, kobo_cost
 from mimi.harness.inbound import Inbound, Media, Payload
 from mimi.harness.loop import naira_text
 from mimi.harness.policy import NEVER_TOOLS
+from mimi.harness.versions import ROUTER_VERSIONS
 from mimi.models.cache import CachedModel
 from mimi.models.env import from_env
 from mimi.orders.words import quantities_in
 from mimi.store import schema as s
 from mimi.store.util import dumps, insert_ignore, loads, now_iso
+from mimi.tz import LAGOS
 
 ROOT = Path(__file__).resolve().parents[2]
 EVAL_DIR = ROOT / "eval" / "order"
-LAGOS = ZoneInfo("Africa/Lagos")
 NOW = datetime(2026, 10, 26, 18, 30, tzinfo=LAGOS)
 TENANT = "coral-lane"
 MODEL = "muse-spark-1.3"
@@ -104,7 +104,8 @@ def models(split: str, live: bool) -> tuple[CountingToolModel, CachedModel, Cach
                                                tool_live, name=MODEL))
     inner = from_env("mimi") if live else None
     mode: Literal["through", "replay"] = "through" if live else "replay"
-    router = CachedModel(inner, EVAL_DIR / f"{split}.router.cache.json", mode=mode, name=MODEL)
+    router = CachedModel(inner, EVAL_DIR / f"{split}.router.cache.json", mode=mode, name=MODEL,
+                         versions=ROUTER_VERSIONS)
     vision = CachedModel(inner, EVAL_DIR / f"{split}.vision.cache.json", mode=mode, name=MODEL)
     return tool, router, vision
 
@@ -559,6 +560,7 @@ def run(split: str = "heldout", live: bool = False, only: list[str] | None = Non
         "live_calls": {"loop": tool.live_calls, "router": router.live_calls,
                        "vision": vision.live_calls},
         "live_cost_kobo_this_run": int(live_kobo),
+        "stale_cache_misses": tool.inner.stale + router.stale,
         "by_kind": _by_kind(rows, [c for c in cases if c["id"] in stopped]), "rows": rows,
         "not_run_spend_cap": stopped,
     }

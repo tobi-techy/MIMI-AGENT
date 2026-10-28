@@ -34,7 +34,7 @@ from __future__ import annotations
 
 import heapq
 from dataclasses import dataclass, field
-from datetime import datetime, time, timedelta, timezone
+from datetime import datetime, time, timedelta
 from time import sleep
 from typing import Any
 
@@ -70,13 +70,12 @@ from mimi.runtime.store import InMemoryJobStore, JobStore
 from mimi.runtime.tracing import RecordingStepTracer
 from mimi.sim.persona import ShopPersona, _rng, voice_for
 from mimi.sim.screens import SimScreenshot, plan_screenshot
+from mimi.tz import WAT
 from mimi.voice.base import Transcriber, VoiceContext
 from mimi.voice.fixtures import clip_bytes, load_clips
 from mimi.voice.prefs import InMemoryVoicePrefs, VoicePrefs
 from mimi.voice.speak import Speaker, SpokenAudio, speak_reply
 from mimi.world.model import Delivery, World
-
-WAT = timezone(timedelta(hours=1), "WAT")
 
 # Persona voice -> (fixture language, hint for the transcriber).
 _VOICE_LANG = {

@@ -45,9 +45,9 @@ from calendar import monthrange
 from dataclasses import dataclass
 from datetime import date, datetime, timedelta
 from typing import Literal
-from zoneinfo import ZoneInfo
 
-LAGOS = ZoneInfo("Africa/Lagos")
+from mimi.tz import LAGOS
+
 MAX_KOBO = 100_000_000 * 100  # N100m: anything bigger is not a shop's promise
 BARE_MIN_NAIRA = 1_000
 

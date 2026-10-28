@@ -23,7 +23,11 @@ CI is offline: no key means FakeModel or recorded answers. Recorded Muse
 Spark answers live next to each eval (`eval/*/...cache.json`). A change to a
 prompt, a tool description or a tool schema changes the request, so the
 replayed eval misses; re-record with the eval's `--live` flag and commit the
-cache with the change.
+cache with the change. Recorded loop answers are also keyed by the Go policy
+version (`policy.POLICY_VERSION`) and the helper's `skill_version`, and router
+answers by `ROUTER_PROMPT_VERSION` and `CATALOGUE_VERSION`
+(`mimi.harness.versions`): bump one and its replays miss as `stale` until
+re-recorded. A new helper factory calls `versions.register(helper)`.
 
 ## Adding a tool (`mimi/harness/`)
 
@@ -102,6 +106,8 @@ cache with the change.
   never passed on a replay (it is `not measured`).
 * Every helper's toolset stays under its `registry.TOOLSET_BUDGETS` entry and
   `MAX_TOOLSET_CHARS`; every book slice under `context.SLICE_BUDGETS`.
+* Every shop-facing day and time comes from `mimi.tz` (Africa/Lagos); a
+  channel time without a zone is Lagos, never UTC.
 * Synthetic data only; no real shop data, phone numbers or keys in the repo,
   traces or eval fixtures.
 * Module rules: `mimi.runtime` imports nothing above it; the harness never

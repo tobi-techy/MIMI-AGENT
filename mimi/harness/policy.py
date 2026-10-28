@@ -142,11 +142,16 @@ class OwnerLimits:
     auto_limit_kobo: int = 5_000_000
 
 
+# Bump on any tier, allowlist or limit change: recorded loop answers are keyed
+# by it (RAI-309), so a bump makes every replayed loop call miss as stale.
+POLICY_VERSION = "policy-2026-10-27"
+
+
 @dataclass
 class GoPolicy:
     tiers: dict[str, Tier] = field(default_factory=lambda: dict(BASE_TIERS))
     limits: dict[str, OwnerLimits] = field(default_factory=dict)
-    version: str = "policy-2026-10-27"
+    version: str = POLICY_VERSION
 
     def base_tier(self, tool: str) -> Tier:
         if tool in NEVER_TOOLS:

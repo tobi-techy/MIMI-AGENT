@@ -1,1345 +1,5 @@
 {
- "008c14e1d474229739d78a4139b0bb4ebdd577768cc802241e62754120226b0d": {
-  "cached_tokens": 4081,
-  "completion_tokens": 539,
-  "content": "I'll note your Friday payment promise and schedule a follow-up.",
-  "finish_reason": "tool_calls",
-  "latency_s": 2.241,
-  "model": "muse-spark-1.3",
-  "prompt_tokens": 4742,
-  "tool_calls": [
-   {
-    "arguments": "{\"in_hours\":120,\"reason\":\"Shop promised to pay on Friday 2026-10-30 - recheck\",\"shop_id\":\"shop-005\"}",
-    "id": "call_343cadff-e22f-4d70-9ab7-06fadddc0531",
-    "name": "set_followup"
-   }
-  ]
- },
- "00e0266ae92fc26baca8ac5449757d9d16bb34bcb4f968bf6b9e45e618310f2f": {
-  "cached_tokens": 4081,
-  "completion_tokens": 307,
-  "content": "",
-  "finish_reason": "tool_calls",
-  "latency_s": 1.842,
-  "model": "muse-spark-1.3",
-  "prompt_tokens": 4990,
-  "tool_calls": [
-   {
-    "arguments": "{\"body\":\"Noted, your payment is pending confirmation from the bank. I will confirm once it reflects. Thank you.\",\"channel\":\"shop_whatsapp\",\"ends_turn\":true,\"shop_id\":\"shop-002\"}",
-    "id": "call_025d87e3-2880-4809-bc04-2d1eb366360e",
-    "name": "send_to_user"
-   }
-  ]
- },
- "0e1df95aeb89a5357889ae3821f34894b7f17b79164a69f709cd64762627460a": {
-  "cached_tokens": 3441,
-  "completion_tokens": 295,
-  "content": "",
-  "finish_reason": "tool_calls",
-  "latency_s": 1.37,
-  "model": "muse-spark-1.3",
-  "prompt_tokens": 6442,
-  "tool_calls": [
-   {
-    "arguments": "{\"items\":[{\"shop_id\":\"shop-001\"},{\"shop_id\":\"shop-002\"},{\"shop_id\":\"shop-005\"},{\"shop_id\":\"shop-006\"},{\"shop_id\":\"shop-007\"},{\"shop_id\":\"shop-008\"},{\"shop_id\":\"shop-009\"},{\"shop_id\":\"shop-010\"},{\"shop_id\":\"shop-012\"},{\"shop_id\":\"shop-014\"},{\"shop_id\":\"shop-017\"},{\"shop_id\":\"shop-027\"},{\"shop_id\":\"shop-028\"},{\"shop_id\":\"shop-030\"},{\"shop_id\":\"shop-033\"},{\"shop_id\":\"shop-039\"},{\"shop_id\":\"shop-040\"}],\"note\":\"17 shops over N50k, total N6,352,050\"}",
-    "id": "call_fab1a7c7-1c33-40a6-819e-f4a4d585353b",
-    "name": "propose_reminder_plan"
-   }
-  ]
- },
- "0f18554b73925bc510f10d48b75a546503441ca0e845819faf7d28e16db84111": {
-  "cached_tokens": 3441,
-  "completion_tokens": 631,
-  "content": "Promise noted for Saturday \u2014 I'll set the follow-up and confirm.",
-  "finish_reason": "tool_calls",
-  "latency_s": 3.897,
-  "model": "muse-spark-1.3",
-  "prompt_tokens": 4760,
-  "tool_calls": [
-   {
-    "arguments": "{\"in_hours\":144,\"reason\":\"Shop-007 promised to pay on Saturday 2026-10-31, check payment\",\"shop_id\":\"shop-007\"}",
-    "id": "call_c04a8ea4-b46a-44b1-b594-1e749b0b8f9f",
-    "name": "set_followup"
-   }
-  ]
- },
- "14b0edfc5ccc82d3a878160ec5e7fd73faabd316dbc3fd0b8b97d4bf73747dd5": {
-  "cached_tokens": 4081,
-  "completion_tokens": 104,
-  "content": "Checking that N71,600 payment now.",
-  "finish_reason": "tool_calls",
-  "latency_s": 0.916,
-  "model": "muse-spark-1.3",
-  "prompt_tokens": 5463,
-  "tool_calls": [
-   {
-    "arguments": "{\"amount_kobo\":7160000,\"shop_id\":\"shop-019\"}",
-    "id": "call_4cea375d-c5e6-476e-a83a-be5dbf08cdb1",
-    "name": "check_payment"
-   }
-  ]
- },
- "14b9223ef63e7b8cbe50a7888c1e21c09634223f3caf599fee02a8d99b1ed4db": {
-  "cached_tokens": 3569,
-  "completion_tokens": 44,
-  "content": "Silently ignoring routine heartbeat with no pending work.",
-  "finish_reason": "stop",
-  "latency_s": 0.601,
-  "model": "muse-spark-1.3",
-  "prompt_tokens": 3740,
-  "tool_calls": []
- },
- "15f6dec48a36531b222e3c7bdbe8cfd031773f1229e426ee712ee1b7271b5aeb": {
-  "cached_tokens": 4465,
-  "completion_tokens": 230,
-  "content": "",
-  "finish_reason": "tool_calls",
-  "latency_s": 1.407,
-  "model": "muse-spark-1.3",
-  "prompt_tokens": 5730,
-  "tool_calls": [
-   {
-    "arguments": "{\"body\":\"Thanks for sharing. That payment is still pending in the bank feed, not confirmed yet. Will confirm once it shows. Abeg keep the alert.\",\"channel\":\"shop_whatsapp\",\"ends_turn\":true,\"shop_id\":\"shop-013\"}",
-    "id": "call_fc99d5ee-bab6-425c-9710-fa20a1581c64",
-    "name": "send_to_user"
-   }
-  ]
- },
- "167355aed9f0df119436ba211e5c91bafd0c5869ac66cad0d8aaa480e945368b": {
-  "cached_tokens": 4081,
-  "completion_tokens": 158,
-  "content": "Checking your claimed payment now.",
-  "finish_reason": "tool_calls",
-  "latency_s": 1.215,
-  "model": "muse-spark-1.3",
-  "prompt_tokens": 4530,
-  "tool_calls": [
-   {
-    "arguments": "{\"amount_kobo\":6330000,\"reference\":\"CLT-00039\",\"shop_id\":\"shop-024\"}",
-    "id": "call_31257e80-4ac3-40c7-bc7d-b4ec3e2cecbb",
-    "name": "check_payment"
-   }
-  ]
- },
- "1b6979c9d74a8063a01fc7c2b804c6c96f43d9f9a04d411e7eb25aa9617d35af": {
-  "cached_tokens": 7665,
-  "completion_tokens": 136,
-  "content": "",
-  "finish_reason": "tool_calls",
-  "latency_s": 0.89,
-  "model": "muse-spark-1.3",
-  "prompt_tokens": 8279,
-  "tool_calls": [
-   {
-    "arguments": "{\"items\":[{\"shop_id\":\"shop-001\"},{\"shop_id\":\"shop-002\"},{\"shop_id\":\"shop-004\"},{\"shop_id\":\"shop-005\"},{\"shop_id\":\"shop-012\"}],\"note\":\"5 shops over N500k, total N5,464,300\"}",
-    "id": "call_3da4d1a1-f937-49e4-8e28-f05704831cb0",
-    "name": "propose_reminder_plan"
-   }
-  ]
- },
- "1bedbd3df5d0bb7a8b157166230ec50cc94d56c0e736419e80c3c25cf6cbb134": {
-  "cached_tokens": 4081,
-  "completion_tokens": 175,
-  "content": "I'll verify the claimed payment against your recent transfer.",
-  "finish_reason": "tool_calls",
-  "latency_s": 1.428,
-  "model": "muse-spark-1.3",
-  "prompt_tokens": 4518,
-  "tool_calls": [
-   {
-    "arguments": "{\"amount_kobo\":12420000,\"reference\":\"CLT-00023\",\"shop_id\":\"shop-011\"}",
-    "id": "call_97a46090-b065-419e-9132-88121a0c6c2a",
-    "name": "check_payment"
-   }
-  ]
- },
- "1c46aebecb8ebd90b5a8ce88036fd4de2a515baaa04e7ed899620d0a98647da6": {
-  "cached_tokens": 4081,
-  "completion_tokens": 214,
-  "content": "",
-  "finish_reason": "tool_calls",
-  "latency_s": 1.421,
-  "model": "muse-spark-1.3",
-  "prompt_tokens": 4768,
-  "tool_calls": [
-   {
-    "arguments": "{\"amount_kobo\":1310000,\"reference\":\"CLT-00032\",\"shop_id\":\"shop-038\"}",
-    "id": "call_39f663cb-3ab5-4005-a56c-b52be9646a93",
-    "name": "send_receipt"
-   }
-  ]
- },
- "1e0f82211e37fc330d1226f54b0f425acaf3bd0c0615a300d2147a2b5f14389e": {
-  "cached_tokens": 3441,
-  "completion_tokens": 145,
-  "content": "",
-  "finish_reason": "tool_calls",
-  "latency_s": 1.127,
-  "model": "muse-spark-1.3",
-  "prompt_tokens": 7473,
-  "tool_calls": [
-   {
-    "arguments": "{\"items\":[{\"shop_id\":\"shop-001\"},{\"shop_id\":\"shop-002\"},{\"shop_id\":\"shop-004\"},{\"shop_id\":\"shop-005\"},{\"shop_id\":\"shop-008\"},{\"shop_id\":\"shop-012\"}],\"note\":\"6 shops over N200k, total N5,907,700\"}",
-    "id": "call_91dd6561-9806-4784-a9d8-0c7219d0aa7e",
-    "name": "propose_reminder_plan"
-   }
-  ]
- },
- "2405b2736459d01426766d83c6e0874686f65b1c35e26a0c51d21d91c9340c6b": {
-  "cached_tokens": 6769,
-  "completion_tokens": 188,
-  "content": "",
-  "finish_reason": "tool_calls",
-  "latency_s": 1.397,
-  "model": "muse-spark-1.3",
-  "prompt_tokens": 7527,
-  "tool_calls": [
-   {
-    "arguments": "{\"items\":[{\"shop_id\":\"shop-001\"},{\"shop_id\":\"shop-002\"},{\"shop_id\":\"shop-004\"},{\"shop_id\":\"shop-005\"},{\"shop_id\":\"shop-007\"},{\"shop_id\":\"shop-008\"},{\"shop_id\":\"shop-010\"},{\"shop_id\":\"shop-012\"}],\"note\":\"8 shops over N150k, total N6,243,850\"}",
-    "id": "call_7db7b73f-1aa6-4095-bed7-b7f631f238a2",
-    "name": "propose_reminder_plan"
-   }
-  ]
- },
- "2b2c4ef11f8ab05b506abcfeed620317a5fdb8cd947edad62703fe19c781b94e": {
-  "cached_tokens": 3441,
-  "completion_tokens": 132,
-  "content": "Checking that N55,000 claim against the bank feed.",
-  "finish_reason": "tool_calls",
-  "latency_s": 1.239,
-  "model": "muse-spark-1.3",
-  "prompt_tokens": 4835,
-  "tool_calls": [
-   {
-    "arguments": "{\"amount_kobo\":5500000,\"shop_id\":\"shop-017\"}",
-    "id": "call_937ecf49-4e03-4a96-b9cf-e9d2656ca3b1",
-    "name": "check_payment"
-   }
-  ]
- },
- "33a7f6db05eae6ab3f9b25dd5dd5ac3e436f7b16a0abd172f0a81d0fae812bac": {
-  "cached_tokens": 3825,
-  "completion_tokens": 560,
-  "content": "",
-  "finish_reason": "stop",
-  "latency_s": 2.988,
-  "model": "muse-spark-1.3",
-  "prompt_tokens": 4038,
-  "tool_calls": []
- },
- "35838edc0c7d00073314606a8924b013645410f37aee5172c65bdbd1a08d278c": {
-  "cached_tokens": 4081,
-  "completion_tokens": 162,
-  "content": "I'll verify your payment claim against the bank records.",
-  "finish_reason": "tool_calls",
-  "latency_s": 1.394,
-  "model": "muse-spark-1.3",
-  "prompt_tokens": 4558,
-  "tool_calls": [
-   {
-    "arguments": "{\"amount_kobo\":2060000,\"reference\":\"CLT-00046\",\"shop_id\":\"shop-031\"}",
-    "id": "call_b47fb62c-8c62-4b56-bfb4-5981bc3d5d77",
-    "name": "check_payment"
-   }
-  ]
- },
- "362311151ed28eb1070d4119a452a02a142bc6964a63c353205201be1fbaa450": {
-  "cached_tokens": 5233,
-  "completion_tokens": 173,
-  "content": "",
-  "finish_reason": "tool_calls",
-  "latency_s": 1.237,
-  "model": "muse-spark-1.3",
-  "prompt_tokens": 5813,
-  "tool_calls": [
-   {
-    "arguments": "{\"body\":\"N0 outstanding, N0 overdue. His Mercy Mini Mart: 0 open invoices. Limit N640,000.\",\"channel\":\"owner_console\",\"ends_turn\":true,\"kind\":\"reply\"}",
-    "id": "call_dbaa3ffa-784a-4129-a8b1-bf559fdc1240",
-    "name": "send_to_user"
-   }
-  ]
- },
- "3a5646d67a3597863d72feae5a4c20fe591ccadb8eb866d8a7d73a5ab87a2963": {
-  "cached_tokens": 4081,
-  "completion_tokens": 165,
-  "content": "",
-  "finish_reason": "tool_calls",
-  "latency_s": 1.316,
-  "model": "muse-spark-1.3",
-  "prompt_tokens": 4938,
-  "tool_calls": [
-   {
-    "arguments": "{\"body\":\"N20,600 received, thank you. Receipt to follow.\",\"channel\":\"shop_whatsapp\",\"ends_turn\":true,\"shop_id\":\"shop-031\",\"kind\":\"receipt\"}",
-    "id": "call_7a1f71ef-3194-42aa-b871-c5e415adb3cb",
-    "name": "send_to_user"
-   }
-  ]
- },
- "3ac5eba0b610adeaa5e82a15448747808d2186cdfb02db40b142e77023a00f5e": {
-  "cached_tokens": 5489,
-  "completion_tokens": 91,
-  "content": "I'll check Divine Favour's balance.",
-  "finish_reason": "tool_calls",
-  "latency_s": 0.984,
-  "model": "muse-spark-1.3",
-  "prompt_tokens": 6435,
-  "tool_calls": [
-   {
-    "arguments": "{\"shop_id\":\"shop-004\"}",
-    "id": "call_95a46527-0d50-43ee-ad1a-37de5f21be25",
-    "name": "get_balance"
-   }
-  ]
- },
- "3b78fee5254b97c217340a04e5b853192f570bf8746dbb5597b753ab9b1652a8": {
-  "cached_tokens": 3441,
-  "completion_tokens": 133,
-  "content": "I'll verify that N355,000 payment now.",
-  "finish_reason": "tool_calls",
-  "latency_s": 1.124,
-  "model": "muse-spark-1.3",
-  "prompt_tokens": 4828,
-  "tool_calls": [
-   {
-    "arguments": "{\"amount_kobo\":35500000,\"shop_id\":\"shop-002\"}",
-    "id": "call_b985b595-017e-4e6f-ba4f-e43b4cc60c55",
-    "name": "check_payment"
-   }
-  ]
- },
- "3f2a44c5e4639a8f28a1ade493884b78ad4d8684f604d753a4885f3846485e34": {
-  "cached_tokens": 3953,
-  "completion_tokens": 195,
-  "content": "",
-  "finish_reason": "tool_calls",
-  "latency_s": 1.16,
-  "model": "muse-spark-1.3",
-  "prompt_tokens": 4297,
-  "tool_calls": [
-   {
-    "arguments": "{\"body\":\"Yemisi & Sons Mini Mart: N770,200 outstanding, N635,500 overdue. 7 open invoices, oldest 47 days overdue. Limit N630,000.\",\"channel\":\"owner_console\",\"ends_turn\":true,\"kind\":\"reply\"}",
-    "id": "call_d8baa186-c115-45a9-845c-2129d6acc409",
-    "name": "send_to_user"
-   }
-  ]
- },
- "44bb924684034e52141e227d3d153f01c2a0964cde7cd47350269835460d6d02": {
-  "cached_tokens": 3953,
-  "completion_tokens": 135,
-  "content": "I'll pull everyone over 50k and build today's reminder plan.",
-  "finish_reason": "tool_calls",
-  "latency_s": 1.928,
-  "model": "muse-spark-1.3",
-  "prompt_tokens": 4080,
-  "tool_calls": [
-   {
-    "arguments": "{\"limit\":50,\"min_overdue_naira\":50000,\"overdue_only\":true}",
-    "id": "call_fb46af89-2728-4266-a66e-69398ed4ec20",
-    "name": "get_invoices"
-   }
-  ]
- },
- "48f4f4d58e2496bd25fb670284a5b1dcc6365143732629cc056c62a82f265808": {
-  "cached_tokens": 4209,
-  "completion_tokens": 191,
-  "content": "I'll verify your payment now.",
-  "finish_reason": "tool_calls",
-  "latency_s": 1.181,
-  "model": "muse-spark-1.3",
-  "prompt_tokens": 4590,
-  "tool_calls": [
-   {
-    "arguments": "{\"amount_kobo\":14620000,\"reference\":\"CLT-00005\",\"shop_id\":\"shop-013\"}",
-    "id": "call_3ffd7472-adc7-4d92-abe7-8f107e1f66ef",
-    "name": "check_payment"
-   }
-  ]
- },
- "4aa006c38c82b680b19aaa534049667f3bcc8571270abed26ad8f74ba3bb22b3": {
-  "cached_tokens": 3441,
-  "completion_tokens": 120,
-  "content": "Compiling shops over 150k for the chase plan.",
-  "finish_reason": "tool_calls",
-  "latency_s": 1.138,
-  "model": "muse-spark-1.3",
-  "prompt_tokens": 6857,
-  "tool_calls": [
-   {
-    "arguments": "{\"limit\":50,\"min_overdue_naira\":150000,\"overdue_only\":true}",
-    "id": "call_0656acde-1a4f-47f7-af16-efc806854b4c",
-    "name": "get_invoices"
-   }
-  ]
- },
- "4c6ab11294a6f882103f757059983bf6c28277745e7fa74bd274829b1f672e1e": {
-  "cached_tokens": 4081,
-  "completion_tokens": 534,
-  "content": "",
-  "finish_reason": "tool_calls",
-  "latency_s": 1.956,
-  "model": "muse-spark-1.3",
-  "prompt_tokens": 5854,
-  "tool_calls": [
-   {
-    "arguments": "{\"question\":\"Shop-005 (Funke & Sons Mini Mart) disputes the balance, says \\\"I paid part already\\\" with no amount given. Overdue is N1,070,050, recent bank-confirmed payments show N350 on 2026-10-24, N4,800 on 2026-10-19, N375,000 on 2026-10-18. How should I respond?\",\"shop_id\":\"shop-005\",\"to\":\"owner\"}",
-    "id": "call_41bbb139-ef83-4f31-880f-ceb9f2bf0531",
-    "name": "ask_question"
-   }
-  ]
- },
- "4d8c5d2cf201455dbcfcaf4df6557ec00d18277525d0a71f92e1079158642365": {
-  "cached_tokens": 4721,
-  "completion_tokens": 136,
-  "content": "",
-  "finish_reason": "tool_calls",
-  "latency_s": 1.135,
-  "model": "muse-spark-1.3",
-  "prompt_tokens": 4890,
-  "tool_calls": [
-   {
-    "arguments": "{\"body\":\"Thank you, N69,100 received.\",\"channel\":\"shop_whatsapp\",\"ends_turn\":true,\"shop_id\":\"shop-019\"}",
-    "id": "call_8b4151d2-1eaf-4745-a331-2607ac464167",
-    "name": "send_to_user"
-   }
-  ]
- },
- "4e621bdb8f1f97e2ce632f5a2bf33d83e865f01eed7275004e34f705a3a361e0": {
-  "cached_tokens": 4209,
-  "completion_tokens": 195,
-  "content": "",
-  "finish_reason": "tool_calls",
-  "latency_s": 1.167,
-  "model": "muse-spark-1.3",
-  "prompt_tokens": 4812,
-  "tool_calls": [
-   {
-    "arguments": "{\"body\":\"Yinka Provision Store: N788,000 outstanding, N443,400 overdue. 11 open invoices, oldest 44 days overdue. Limit N840,000.\",\"channel\":\"owner_console\",\"ends_turn\":true,\"kind\":\"reply\"}",
-    "id": "call_28d2b410-1579-4f02-a782-2172600e03c8",
-    "name": "send_to_user"
-   }
-  ]
- },
- "4fd567efb1f399f6026c368ec7f2740a67bcba0a36543dd31e32861a1a3684e4": {
-  "cached_tokens": 4977,
-  "completion_tokens": 289,
-  "content": "You flagged a possible dispute on that balance \u2014 I'll escalate it.",
-  "finish_reason": "tool_calls",
-  "latency_s": 1.594,
-  "model": "muse-spark-1.3",
-  "prompt_tokens": 7043,
-  "tool_calls": [
-   {
-    "arguments": "{\"question\":\"Shop-002 Iya Tolu Foodstuff disputes balance: book shows outstanding N1,056,450 overdue N652,850. How should I respond?\",\"shop_id\":\"shop-002\",\"to\":\"owner\"}",
-    "id": "call_25469a92-7fd3-402e-a8ae-3cafcc8db2ea",
-    "name": "ask_question"
-   }
-  ]
- },
- "52557493e23508a6b7c935dbca44668fd9219c5dc0334e28c09bccee51f26fe8": {
-  "cached_tokens": 3441,
-  "completion_tokens": 229,
-  "content": "Routine heartbeat, no new balance question or dispute \u2014 no action.",
-  "finish_reason": "stop",
-  "latency_s": 1.69,
-  "model": "muse-spark-1.3",
-  "prompt_tokens": 3937,
-  "tool_calls": []
- },
- "5336a417fdf545ad9a8c828f660269e793869f7acb6a62028f10a1003ec33ef2": {
-  "cached_tokens": 5617,
-  "completion_tokens": 232,
-  "content": "",
-  "finish_reason": "tool_calls",
-  "latency_s": 1.267,
-  "model": "muse-spark-1.3",
-  "prompt_tokens": 6301,
-  "tool_calls": [
-   {
-    "arguments": "{\"body\":\"N0 outstanding, N0 overdue. Ronke Foodstuff & Provisions: 0 open invoices. Limit N840,000.\",\"channel\":\"owner_console\",\"ends_turn\":true,\"kind\":\"reply\"}",
-    "id": "call_bdf16de3-eda4-4f87-b671-36ee374dcac8",
-    "name": "send_to_user"
-   }
-  ]
- },
- "53911a204891a07344bb9bae0a09bd57d55f08e2ac45ed267b3e34a57672da38": {
-  "cached_tokens": 4081,
-  "completion_tokens": 202,
-  "content": "",
-  "finish_reason": "tool_calls",
-  "latency_s": 1.567,
-  "model": "muse-spark-1.3",
-  "prompt_tokens": 6051,
-  "tool_calls": [
-   {
-    "arguments": "{\"body\":\"Noted, thank you. I will check back tomorrow on your promise to pay on Monday.\",\"channel\":\"shop_whatsapp\",\"ends_turn\":true,\"shop_id\":\"shop-002\"}",
-    "id": "call_8f504abe-50d8-48c4-976c-c5ee1aaa638d",
-    "name": "send_to_user"
-   }
-  ]
- },
- "5594127592cd515706ffaf085995f02ac4a837da1a305c3ee2112d588cd2cef0": {
-  "cached_tokens": 4593,
-  "completion_tokens": 255,
-  "content": "",
-  "finish_reason": "tool_calls",
-  "latency_s": 1.431,
-  "model": "muse-spark-1.3",
-  "prompt_tokens": 4906,
-  "tool_calls": [
-   {
-    "arguments": "{\"body\":\"Noted, thank you. We will check on Friday after your Thursday payment.\",\"channel\":\"shop_whatsapp\",\"ends_turn\":true,\"shop_id\":\"shop-010\"}",
-    "id": "call_4942b604-66a6-4cd4-9a9e-a301927870a2",
-    "name": "send_to_user"
-   }
-  ]
- },
- "5671f31d188e2e738289d885ac3ffe028dbfc08c26cd82b338f1e912e1c1605b": {
-  "cached_tokens": 4081,
-  "completion_tokens": 238,
-  "content": "",
-  "finish_reason": "tool_calls",
-  "latency_s": 1.188,
-  "model": "muse-spark-1.3",
-  "prompt_tokens": 6129,
-  "tool_calls": [
-   {
-    "arguments": "{\"question\":\"Mama Sola Provisions (shop-001) disputes balance. Book shows outstanding N3,497,300, overdue N2,387,250 across 14 open invoices. Recent bank-confirmed payments: N505,000 and N275,000 on 2026-10-24, N460,000 on 2026-10-12. How should I resolve the disputed amount?\",\"shop_id\":\"shop-001\",\"to\":\"owner\"}",
-    "id": "call_a0ad9d59-6a63-49ba-839a-42d49cff3ccd",
-    "name": "ask_question"
-   }
-  ]
- },
- "56a8c06311ff916ad2b8624e4974873f931f112b0cd31380c2e7471b106811e6": {
-  "cached_tokens": 3441,
-  "completion_tokens": 390,
-  "content": "I'll verify that payment claim against the bank feed.",
-  "finish_reason": "tool_calls",
-  "latency_s": 1.852,
-  "model": "muse-spark-1.3",
-  "prompt_tokens": 4566,
-  "tool_calls": [
-   {
-    "arguments": "{\"amount_kobo\":1310000,\"reference\":\"CLT-00032\",\"shop_id\":\"shop-038\"}",
-    "id": "call_30eaf886-9952-45a4-84bf-ccc28919aca9",
-    "name": "check_payment"
-   }
-  ]
- },
- "5c7123b0223b1ac087f5b4b589a85b6e9a2ea0ef98f93811d6a239ef191886ff": {
-  "cached_tokens": 3441,
-  "completion_tokens": 236,
-  "content": "Payment verified \u2014 I'll send the receipt.",
-  "finish_reason": "tool_calls",
-  "latency_s": 1.219,
-  "model": "muse-spark-1.3",
-  "prompt_tokens": 4720,
-  "tool_calls": [
-   {
-    "arguments": "{\"amount_kobo\":12420000,\"reference\":\"CLT-00023\",\"shop_id\":\"shop-011\"}",
-    "id": "call_b6650621-bc14-401f-a5ba-63b2a0803c4b",
-    "name": "send_receipt"
-   }
-  ]
- },
- "607069d4de67aa53b7ba8a2613751ab0d86e10583977243cdd270c20467bfa48": {
-  "cached_tokens": 4721,
-  "completion_tokens": 220,
-  "content": "",
-  "finish_reason": "tool_calls",
-  "latency_s": 1.16,
-  "model": "muse-spark-1.3",
-  "prompt_tokens": 4954,
-  "tool_calls": [
-   {
-    "arguments": "{\"body\":\"Noted, I will check on Saturday. Thank you.\",\"channel\":\"shop_whatsapp\",\"ends_turn\":true,\"shop_id\":\"shop-005\"}",
-    "id": "call_9984dfa5-9e58-4008-b87c-2dda2d3ac99e",
-    "name": "send_to_user"
-   }
-  ]
- },
- "61d4e43025b7d24d252c051c099fe0996158fbe5b9a5a2ecb7eea693ec3340b7": {
-  "cached_tokens": 4465,
-  "completion_tokens": 105,
-  "content": "I'll get Mama Sola's current balance.",
-  "finish_reason": "tool_calls",
-  "latency_s": 0.932,
-  "model": "muse-spark-1.3",
-  "prompt_tokens": 5397,
-  "tool_calls": [
-   {
-    "arguments": "{\"shop_id\":\"shop-001\"}",
-    "id": "call_eb5bfbad-8d45-4e0d-bebc-2cffa25a5d58",
-    "name": "get_balance"
-   }
-  ]
- },
- "642881461d987b82294dbfa224b89ae5cdb6551ab41fc93d694973e86020c005": {
-  "cached_tokens": 5873,
-  "completion_tokens": 144,
-  "content": "",
-  "finish_reason": "tool_calls",
-  "latency_s": 1.654,
-  "model": "muse-spark-1.3",
-  "prompt_tokens": 7155,
-  "tool_calls": [
-   {
-    "arguments": "{\"body\":\"N1,056,450 outstanding, N652,850 overdue. Iya Tolu Foodstuff: 9 open invoices, 47 days oldest, limit N1,580,000.\",\"channel\":\"owner_console\",\"ends_turn\":true}",
-    "id": "call_2ae10268-923b-4e26-9b7c-31bd5bfaba74",
-    "name": "send_to_user"
-   }
-  ]
- },
- "682806e56d72fd910935a4ae60a11ddf131bb8b2464162b2bfc628d571bd60d0": {
-  "cached_tokens": 6897,
-  "completion_tokens": 124,
-  "content": "I'll pull everyone over 500k and put together the chase plan.",
-  "finish_reason": "tool_calls",
-  "latency_s": 1.409,
-  "model": "muse-spark-1.3",
-  "prompt_tokens": 7789,
-  "tool_calls": [
-   {
-    "arguments": "{\"limit\":50,\"min_overdue_naira\":500000,\"overdue_only\":true}",
-    "id": "call_f60216ea-2279-4e39-8ced-b860cacbce47",
-    "name": "get_invoices"
-   }
-  ]
- },
- "6d5e37255e7fa0da7bff11539b4e207258836089fd69a0b826d7539436ad5db5": {
-  "cached_tokens": 4081,
-  "completion_tokens": 157,
-  "content": "",
-  "finish_reason": "tool_calls",
-  "latency_s": 1.006,
-  "model": "muse-spark-1.3",
-  "prompt_tokens": 4897,
-  "tool_calls": [
-   {
-    "arguments": "{\"body\":\"Thank you, N33,600 received.\",\"channel\":\"shop_whatsapp\",\"ends_turn\":true,\"shop_id\":\"shop-035\"}",
-    "id": "call_2489a701-78fb-4546-9f91-e7aa1cae58d7",
-    "name": "send_to_user"
-   }
-  ]
- },
- "6e449be533bacbd2b2c24fdd47c27a538731b2d7241a4885e320b639df0d7fa1": {
-  "cached_tokens": 3953,
-  "completion_tokens": 161,
-  "content": "Yinka balance check \u2014 getting the figures.",
-  "finish_reason": "tool_calls",
-  "latency_s": 1.67,
-  "model": "muse-spark-1.3",
-  "prompt_tokens": 4610,
-  "tool_calls": [
-   {
-    "arguments": "{\"shop_id\":\"shop-008\"}",
-    "id": "call_f8705250-8892-41e4-bfcd-a2940a5e84ef",
-    "name": "get_balance"
-   }
-  ]
- },
- "71e4d409e4fc3c50a5185bf8e143102cc1e048ccb4f4bde4650ff5a87c250267": {
-  "cached_tokens": 3441,
-  "completion_tokens": 215,
-  "content": "Heartbeat acknowledged \u2014 no pending collections work, ending turn without message.",
-  "finish_reason": "stop",
-  "latency_s": 1.291,
-  "model": "muse-spark-1.3",
-  "prompt_tokens": 3838,
-  "tool_calls": []
- },
- "71ef15f9ac32baa94731090ebb0f1b6ff0dfaa6ca40f53daf4a34d6870ca34a0": {
-  "cached_tokens": 3441,
-  "completion_tokens": 301,
-  "content": "Heartbeat with no task and no new message \u2014 nothing to do.",
-  "finish_reason": "stop",
-  "latency_s": 1.286,
-  "model": "muse-spark-1.3",
-  "prompt_tokens": 3540,
-  "tool_calls": []
- },
- "74766b685a806d1d45f1ab449bb60cba0dc1555d9de8778bd7a84826e6ce98e6": {
-  "cached_tokens": 3441,
-  "completion_tokens": 265,
-  "content": "Payment verified \u2014 I'll send the receipt.",
-  "finish_reason": "tool_calls",
-  "latency_s": 1.509,
-  "model": "muse-spark-1.3",
-  "prompt_tokens": 4788,
-  "tool_calls": [
-   {
-    "arguments": "{\"amount_kobo\":14620000,\"reference\":\"CLT-00005\",\"shop_id\":\"shop-013\"}",
-    "id": "call_98c3eee4-bf66-43ab-a5f3-575aae134870",
-    "name": "send_receipt"
-   }
-  ]
- },
- "75b150dc2d16eb944c702768f22b2403d8a633276bb0258099334bc7e2c65a27": {
-  "cached_tokens": 3185,
-  "completion_tokens": 332,
-  "content": "",
-  "finish_reason": "tool_calls",
-  "latency_s": 2.043,
-  "model": "muse-spark-1.3",
-  "prompt_tokens": 4963,
-  "tool_calls": [
-   {
-    "arguments": "{\"body\":\"Noted, thank you. We will check back after Tuesday.\",\"channel\":\"shop_whatsapp\",\"ends_turn\":true,\"shop_id\":\"shop-012\"}",
-    "id": "call_fb0361e9-8b37-406e-9185-4d598fa5a502",
-    "name": "send_to_user"
-   }
-  ]
- },
- "77a5e8ec35792e9bbc7982bc47ddb3100d4ec9bd5490e7d91aba36eab117cac6": {
-  "cached_tokens": 3441,
-  "completion_tokens": 178,
-  "content": "",
-  "finish_reason": "tool_calls",
-  "latency_s": 1.646,
-  "model": "muse-spark-1.3",
-  "prompt_tokens": 4959,
-  "tool_calls": [
-   {
-    "arguments": "{\"body\":\"Noted, thank you. I will check tomorrow.\",\"channel\":\"shop_whatsapp\",\"ends_turn\":true,\"shop_id\":\"shop-004\"}",
-    "id": "call_f4d909da-7793-4997-abe6-157d077e44ee",
-    "name": "send_to_user"
-   }
-  ]
- },
- "78adb6a66a3119d41f87da289169fa5575336deb0230a3175ccc42ff7f6ad1fa": {
-  "cached_tokens": 4081,
-  "completion_tokens": 172,
-  "content": "I'll verify that N561,800 payment claim right away.",
-  "finish_reason": "tool_calls",
-  "latency_s": 1.563,
-  "model": "muse-spark-1.3",
-  "prompt_tokens": 4528,
-  "tool_calls": [
-   {
-    "arguments": "{\"amount_kobo\":56180000,\"reference\":\"CLT-00025\",\"shop_id\":\"shop-003\"}",
-    "id": "call_d7538232-e83d-488c-a194-167dff6ab46a",
-    "name": "check_payment"
-   }
-  ]
- },
- "798d3735ed3c4fb4cd15965bccb1588c2f3233157df8cb20762d10246e7d5d27": {
-  "cached_tokens": 5361,
-  "completion_tokens": 79,
-  "content": "I'll get Funke & Sons' current balance.",
-  "finish_reason": "tool_calls",
-  "latency_s": 0.932,
-  "model": "muse-spark-1.3",
-  "prompt_tokens": 5915,
-  "tool_calls": [
-   {
-    "arguments": "{\"shop_id\":\"shop-005\"}",
-    "id": "call_5fe24a7f-112b-4247-be80-49d6dab87aa4",
-    "name": "get_balance"
-   }
-  ]
- },
- "7c72a15ef466b3f109226028eddce6612776d1a5c20ba1bb9d4cc7c77c165a56": {
-  "cached_tokens": 4081,
-  "completion_tokens": 173,
-  "content": "",
-  "finish_reason": "tool_calls",
-  "latency_s": 1.173,
-  "model": "muse-spark-1.3",
-  "prompt_tokens": 4911,
-  "tool_calls": [
-   {
-    "arguments": "{\"body\":\"Thank you, N561,800 received.\",\"channel\":\"shop_whatsapp\",\"ends_turn\":true,\"shop_id\":\"shop-003\"}",
-    "id": "call_54887df0-8e42-4bb8-9436-7f53b3640dd1",
-    "name": "send_to_user"
-   }
-  ]
- },
- "7d36e9bfb629d87b1e8807c9eca6d07e647a03e18ce34cc3a085d88e6d3cf4e6": {
-  "cached_tokens": 3441,
-  "completion_tokens": 39,
-  "content": "No-op: routine heartbeat, nothing new \u2014 ending turn silently.",
-  "finish_reason": "stop",
-  "latency_s": 0.873,
-  "model": "muse-spark-1.3",
-  "prompt_tokens": 3641,
-  "tool_calls": []
- },
- "7d4237a4f899d921615e2385ec24b8e51146c24f9f3f7f5afbe531d9b401019e": {
-  "cached_tokens": 4721,
-  "completion_tokens": 187,
-  "content": "",
-  "finish_reason": "tool_calls",
-  "latency_s": 1.319,
-  "model": "muse-spark-1.3",
-  "prompt_tokens": 4930,
-  "tool_calls": [
-   {
-    "arguments": "{\"body\":\"Thank you, N13,100 received.\",\"channel\":\"shop_whatsapp\",\"ends_turn\":true,\"kind\":\"receipt\",\"shop_id\":\"shop-038\"}",
-    "id": "call_474c194a-e873-4137-a5e4-9ffc8fa684f3",
-    "name": "send_to_user"
-   }
-  ]
- },
- "83380c6a7268193df460bad60466551974564454c2002a250420af9a15ea3b3f": {
-  "cached_tokens": 3185,
-  "completion_tokens": 450,
-  "content": "Disputed delivery \u2014 I'll flag this to the owner for guidance.",
-  "finish_reason": "tool_calls",
-  "latency_s": 2.326,
-  "model": "muse-spark-1.3",
-  "prompt_tokens": 4801,
-  "tool_calls": [
-   {
-    "arguments": "{\"question\":\"Yinka Provision Store (shop-008) says \\\"I won't pay that, the cartons were damaged\\\". Outstanding N788,000, overdue N443,400. How should I handle the damage claim?\",\"shop_id\":\"shop-008\",\"to\":\"owner\"}",
-    "id": "call_419011e0-2061-46d5-a36f-8208deadc2e5",
-    "name": "ask_question"
-   }
-  ]
- },
- "881b5a2d48910cf6457ed750192d87a6f48616f3474ac4492610589fb1cf2581": {
-  "cached_tokens": 3441,
-  "completion_tokens": 127,
-  "content": "Getting the list for everyone over 50k.",
-  "finish_reason": "tool_calls",
-  "latency_s": 1.031,
-  "model": "muse-spark-1.3",
-  "prompt_tokens": 5231,
-  "tool_calls": [
-   {
-    "arguments": "{\"limit\":50,\"min_overdue_naira\":50000,\"overdue_only\":true}",
-    "id": "call_ef661513-0534-4d50-bed2-c39bdeb23566",
-    "name": "get_invoices"
-   }
-  ]
- },
- "8a06562d3bed330c4c84b9462cc2126c4ec0bf3f981687faa184927558556600": {
-  "cached_tokens": 4721,
-  "completion_tokens": 272,
-  "content": "",
-  "finish_reason": "tool_calls",
-  "latency_s": 1.739,
-  "model": "muse-spark-1.3",
-  "prompt_tokens": 4973,
-  "tool_calls": [
-   {
-    "arguments": "{\"body\":\"Thanks for the update. Your payment is not showing in our bank feed yet, so it is still pending. I will keep checking and confirm once it reflects. If you have a receipt reference, please share it.\",\"channel\":\"shop_whatsapp\",\"ends_turn\":true,\"shop_id\":\"shop-001\"}",
-    "id": "call_c0fe645f-87ec-497a-a8f8-4d3a484220a8",
-    "name": "send_to_user"
-   }
-  ]
- },
- "8c0a282e4d999f282c4dcadf9fd74625948b95c5d011ff50439114fa46b9844a": {
-  "cached_tokens": 4593,
-  "completion_tokens": 76,
-  "content": "His Mercy balance \u2014 checking the book.",
-  "finish_reason": "tool_calls",
-  "latency_s": 1.053,
-  "model": "muse-spark-1.3",
-  "prompt_tokens": 5620,
-  "tool_calls": [
-   {
-    "arguments": "{\"shop_id\":\"shop-011\"}",
-    "id": "call_0353a326-4014-4a3c-b6dd-0bbb41ec5551",
-    "name": "get_balance"
-   }
-  ]
- },
- "8eda14bdac79a2c27a9efca89525b883a9706c868f0942b662521d43364e2320": {
-  "cached_tokens": 3185,
-  "completion_tokens": 312,
-  "content": "Payment verified \u2014 I'll send the receipt now.",
-  "finish_reason": "tool_calls",
-  "latency_s": 1.576,
-  "model": "muse-spark-1.3",
-  "prompt_tokens": 4732,
-  "tool_calls": [
-   {
-    "arguments": "{\"amount_kobo\":56180000,\"reference\":\"CLT-00025\",\"shop_id\":\"shop-003\"}",
-    "id": "call_0ecce89d-89e5-44c7-8690-d913ac3c9747",
-    "name": "send_receipt"
-   }
-  ]
- },
- "8ff5549ff2dbcaeb61f574409cd84314e5192101939cd55b39edde1dfbd47fcd": {
-  "cached_tokens": 3953,
-  "completion_tokens": 243,
-  "content": "Over 1m chase \u2014 checking who qualifies.",
-  "finish_reason": "tool_calls",
-  "latency_s": 1.827,
-  "model": "muse-spark-1.3",
-  "prompt_tokens": 4805,
-  "tool_calls": [
-   {
-    "arguments": "{\"limit\":50,\"min_overdue_naira\":1000000,\"overdue_only\":true}",
-    "id": "call_26b1e426-00d1-4543-b992-ebade691b704",
-    "name": "get_invoices"
-   }
-  ]
- },
- "91a17a3db66e00148b3cfe7736ff852116720a5444772ddf2f82b75721923e6f": {
-  "cached_tokens": 4465,
-  "completion_tokens": 265,
-  "content": "Payment verified \u2014 I'll send your receipt.",
-  "finish_reason": "tool_calls",
-  "latency_s": 1.417,
-  "model": "muse-spark-1.3",
-  "prompt_tokens": 4760,
-  "tool_calls": [
-   {
-    "arguments": "{\"amount_kobo\":2060000,\"reference\":\"CLT-00046\",\"shop_id\":\"shop-031\"}",
-    "id": "call_b7c9f857-65e0-4560-a547-4edfc0423f51",
-    "name": "send_receipt"
-   }
-  ]
- },
- "91b2192dfd6c8a5f12cdeacbae09db090c602b90af8f796914367e86b04d256d": {
-  "cached_tokens": 5873,
-  "completion_tokens": 409,
-  "content": "That total doesn't sound right to you \u2014 I'll flag it for review.",
-  "finish_reason": "tool_calls",
-  "latency_s": 2.149,
-  "model": "muse-spark-1.3",
-  "prompt_tokens": 5922,
-  "tool_calls": [
-   {
-    "arguments": "{\"body\":\"Noted. I will recheck your balance and get back to you shortly.\",\"channel\":\"shop_whatsapp\",\"shop_id\":\"shop-001\"}",
-    "id": "call_58cbe78a-6cd5-41ff-a96a-bec76cb9df64",
-    "name": "send_to_user"
-   }
-  ]
- },
- "963c755ec5cb16e4882c39238f6d47dec95a86290e7baec1aaabc3ebb90f1765": {
-  "cached_tokens": 6001,
-  "completion_tokens": 76,
-  "content": "Femi balance check \u2014 getting the figures.",
-  "finish_reason": "tool_calls",
-  "latency_s": 0.921,
-  "model": "muse-spark-1.3",
-  "prompt_tokens": 6597,
-  "tool_calls": [
-   {
-    "arguments": "{\"shop_id\":\"shop-015\"}",
-    "id": "call_4db31ed0-d3b7-4cc5-99d7-4a8de24141af",
-    "name": "get_balance"
-   }
-  ]
- },
- "96b177b6ae5eca28270060e918ab4761c2f40fe588097c887227c12c0548fb25": {
-  "cached_tokens": 6385,
-  "completion_tokens": 187,
-  "content": "",
-  "finish_reason": "tool_calls",
-  "latency_s": 1.534,
-  "model": "muse-spark-1.3",
-  "prompt_tokens": 6642,
-  "tool_calls": [
-   {
-    "arguments": "{\"body\":\"N1,983,550 outstanding, N718,650 overdue. Divine Favour Provisions: 9 open invoices, 44 days oldest, limit N2,410,000.\",\"channel\":\"owner_console\",\"ends_turn\":true}",
-    "id": "call_d42b7eff-0faf-4f5e-8268-4a65a38483eb",
-    "name": "send_to_user"
-   }
-  ]
- },
- "96feac4d2cfa4177d7687307d097f48e24173847ded9b787ff385144dfadf5e8": {
-  "cached_tokens": 4721,
-  "completion_tokens": 206,
-  "content": "",
-  "finish_reason": "tool_calls",
-  "latency_s": 1.289,
-  "model": "muse-spark-1.3",
-  "prompt_tokens": 5007,
-  "tool_calls": [
-   {
-    "arguments": "{\"body\":\"Thanks for letting me know. I checked and it is still pending, not showing yet. I will confirm once the bank shows it. Please keep your receipt.\",\"channel\":\"shop_whatsapp\",\"ends_turn\":true,\"shop_id\":\"shop-030\"}",
-    "id": "call_bcac3bab-fde4-4d96-9291-b3b208e9c41a",
-    "name": "send_to_user"
-   }
-  ]
- },
- "988e5e883edebc2035c238624c8737495ad0131ba9fe6777dd8af19cb2ea7b0b": {
-  "cached_tokens": 4081,
-  "completion_tokens": 129,
-  "content": "I'll verify your \u20a615,000 payment against the bank feed.",
-  "finish_reason": "tool_calls",
-  "latency_s": 1.05,
-  "model": "muse-spark-1.3",
-  "prompt_tokens": 4841,
-  "tool_calls": [
-   {
-    "arguments": "{\"amount_kobo\":1500000,\"shop_id\":\"shop-030\"}",
-    "id": "call_10e3a01a-6b51-4e03-8682-ea943ad31590",
-    "name": "check_payment"
-   }
-  ]
- },
- "98eab544656a4dcb0c5ee68c684724126d178a295d2e0fc34f768bb1768840b5": {
-  "cached_tokens": 3953,
-  "completion_tokens": 166,
-  "content": "Over 300k chase \u2014 I'll pull the overdue list.",
-  "finish_reason": "tool_calls",
-  "latency_s": 1.092,
-  "model": "muse-spark-1.3",
-  "prompt_tokens": 4080,
-  "tool_calls": [
-   {
-    "arguments": "{\"limit\":50,\"min_overdue_naira\":300000,\"overdue_only\":true}",
-    "id": "call_2aaa4e73-ac78-4748-b95d-cf4babee140f",
-    "name": "get_invoices"
-   }
-  ]
- },
- "9a8694ddd32c04502fc001ca64d74236f0df6d6f511c319cf79ccb47417f8a8d": {
-  "cached_tokens": 3953,
-  "completion_tokens": 225,
-  "content": "On it \u2014 pulling the over 100k list now.",
-  "finish_reason": "tool_calls",
-  "latency_s": 1.796,
-  "model": "muse-spark-1.3",
-  "prompt_tokens": 5779,
-  "tool_calls": [
-   {
-    "arguments": "{\"limit\":50,\"min_overdue_naira\":100000,\"overdue_only\":true}",
-    "id": "call_1227030e-5355-4ad6-9811-20e6f99c2bdb",
-    "name": "get_invoices"
-   }
-  ]
- },
- "a3273c43b8db51c0d3fff252136a6e03817ac0fa6b9a80f6e7f955fcc9afd6b1": {
-  "cached_tokens": 4721,
-  "completion_tokens": 488,
-  "content": "Noted for Monday \u2014 I'll set the follow-up.",
-  "finish_reason": "tool_calls",
-  "latency_s": 2.554,
-  "model": "muse-spark-1.3",
-  "prompt_tokens": 5846,
-  "tool_calls": [
-   {
-    "arguments": "{\"in_hours\":24,\"reason\":\"Shop promised to pay on Monday 2026-10-26\",\"shop_id\":\"shop-002\"}",
-    "id": "call_09f5723f-0d56-41c6-959d-f46a287b0ab6",
-    "name": "set_followup"
-   }
-  ]
- },
- "a40194e65722332cfe85aa9e1cac5df443d3f668c771a24cc47636df351c19ca": {
-  "cached_tokens": 4593,
-  "completion_tokens": 173,
-  "content": "",
-  "finish_reason": "tool_calls",
-  "latency_s": 1.235,
-  "model": "muse-spark-1.3",
-  "prompt_tokens": 4898,
-  "tool_calls": [
-   {
-    "arguments": "{\"body\":\"Thank you, N124,200 received.\",\"channel\":\"shop_whatsapp\",\"ends_turn\":true,\"shop_id\":\"shop-011\"}",
-    "id": "call_b12b2695-e46b-4597-b181-9e14d2e6abd7",
-    "name": "send_to_user"
-   }
-  ]
- },
- "a69fa9d677d071e692a6be79c8e6304264c2551d3ff90c88bf24dd5651bb3523": {
-  "cached_tokens": 4209,
-  "completion_tokens": 176,
-  "content": "I'll verify this payment claim.",
-  "finish_reason": "tool_calls",
-  "latency_s": 1.148,
-  "model": "muse-spark-1.3",
-  "prompt_tokens": 5554,
-  "tool_calls": [
-   {
-    "arguments": "{\"amount_kobo\":14720000,\"reference\":\"CLT-00005\",\"shop_id\":\"shop-013\"}",
-    "id": "call_022b5aed-cc65-4140-bffa-a62b002c5537",
-    "name": "check_payment"
-   }
-  ]
- },
- "a7394b1bf25bba4c87f5a4a55a5e21e60ebcaf50ee941641c75af2530e86b327": {
-  "cached_tokens": 4721,
-  "completion_tokens": 488,
-  "content": "",
-  "finish_reason": "tool_calls",
-  "latency_s": 2.288,
-  "model": "muse-spark-1.3",
-  "prompt_tokens": 5108,
-  "tool_calls": [
-   {
-    "arguments": "{\"items\":[{\"shop_id\":\"shop-001\"},{\"shop_id\":\"shop-005\"}],\"note\":\"Over 1m: 2 shops, N3,457,300 total overdue.\"}",
-    "id": "call_71c20f4b-886b-4480-bce8-7a1b2727e576",
-    "name": "propose_reminder_plan"
-   }
-  ]
- },
- "a8f2909d29c8de224b7f41be785bfb3cc5f79caf0d7a63c9e3190f908fa9987f": {
-  "cached_tokens": 3313,
-  "completion_tokens": 166,
-  "content": "",
-  "finish_reason": "tool_calls",
-  "latency_s": 1.068,
-  "model": "muse-spark-1.3",
-  "prompt_tokens": 5607,
-  "tool_calls": [
-   {
-    "arguments": "{\"body\":\"N3,497,300 outstanding, N2,387,250 overdue. Mama Sola Provisions: 14 open invoices, 45 days oldest, limit N1,700,000.\",\"channel\":\"owner_console\",\"ends_turn\":true}",
-    "id": "call_35319196-1589-4dd2-9908-ff190664e950",
-    "name": "send_to_user"
-   }
-  ]
- },
- "aba553d2311b946292e68e65a4966cbeb7f126140d5dfda33e6f1c0fd2afcb17": {
-  "cached_tokens": 3953,
-  "completion_tokens": 127,
-  "content": "Balance check for Yemisi \u2014 pulling the book figures.",
-  "finish_reason": "tool_calls",
-  "latency_s": 1.066,
-  "model": "muse-spark-1.3",
-  "prompt_tokens": 4090,
-  "tool_calls": [
-   {
-    "arguments": "{\"shop_id\":\"shop-012\"}",
-    "id": "call_1bbeb93c-cdc1-4e89-b1cd-79d5067aad41",
-    "name": "get_balance"
-   }
-  ]
- },
- "abfc4c8bac4e5dac8d6e135831474bd5f2b89de062459b4f30575835dfc2e6a2": {
-  "cached_tokens": 3441,
-  "completion_tokens": 332,
-  "content": "",
-  "finish_reason": "tool_calls",
-  "latency_s": 2.168,
-  "model": "muse-spark-1.3",
-  "prompt_tokens": 4999,
-  "tool_calls": [
-   {
-    "arguments": "{\"body\":\"Thanks for letting us know. I checked and it is not showing in our bank yet \u2014 still pending. Please keep the alert/receipt and I will confirm once it lands.\",\"channel\":\"shop_whatsapp\",\"ends_turn\":true,\"shop_id\":\"shop-017\"}",
-    "id": "call_d9965f3b-3578-468c-b18d-5fce86e954f4",
-    "name": "send_to_user"
-   }
-  ]
- },
- "afb2e44fc72b2732428420008d1a7cfe3ed9e9eb7c28d853befc646d85e5b7a4": {
-  "cached_tokens": 3953,
-  "completion_tokens": 123,
-  "content": "Pulling the over 200k list to build the reminder plan.",
-  "finish_reason": "tool_calls",
-  "latency_s": 1.895,
-  "model": "muse-spark-1.3",
-  "prompt_tokens": 6924,
-  "tool_calls": [
-   {
-    "arguments": "{\"limit\":50,\"min_overdue_naira\":200000,\"overdue_only\":true}",
-    "id": "call_fb828900-e5ee-4b93-8743-a14a5b3cf8ea",
-    "name": "get_invoices"
-   }
-  ]
- },
- "b1eb7870e17a31d8967cb07142eca7ac539e42c9dbccd465648adb3c08b64648": {
-  "cached_tokens": 4081,
-  "completion_tokens": 506,
-  "content": "I'll record that Tuesday payment promise and set a follow-up.",
-  "finish_reason": "tool_calls",
-  "latency_s": 2.229,
-  "model": "muse-spark-1.3",
-  "prompt_tokens": 4759,
-  "tool_calls": [
-   {
-    "arguments": "{\"in_hours\":216,\"reason\":\"Shop promised to pay on Tuesday 3 Nov, recheck\",\"shop_id\":\"shop-012\"}",
-    "id": "call_dc520177-3287-46aa-a18d-272b9b7c397e",
-    "name": "set_followup"
-   }
-  ]
- },
- "b49ba992e443cbfa0e149d0e0939e743a2bdac5d8b11f1a44f6cdb2cbb3c3b33": {
-  "cached_tokens": 4721,
-  "completion_tokens": 130,
-  "content": "Blessed Funke balance \u2014 checking the book.",
-  "finish_reason": "tool_calls",
-  "latency_s": 1.062,
-  "model": "muse-spark-1.3",
-  "prompt_tokens": 5122,
-  "tool_calls": [
-   {
-    "arguments": "{\"shop_id\":\"shop-003\"}",
-    "id": "call_de29cf50-7448-451e-b711-2655e9165216",
-    "name": "get_balance"
-   }
-  ]
- },
- "b517485f2705c5514c383087a4a0d5a309f564e002ab5e893a25691b7d5e7913": {
-  "cached_tokens": 4081,
-  "completion_tokens": 250,
-  "content": "",
-  "finish_reason": "tool_calls",
-  "latency_s": 1.564,
-  "model": "muse-spark-1.3",
-  "prompt_tokens": 5624,
-  "tool_calls": [
-   {
-    "arguments": "{\"body\":\"Thanks for sharing. I have checked and it is pending on our side - not yet confirmed by the bank. I will confirm once it shows up. Please keep the alert handy.\",\"channel\":\"shop_whatsapp\",\"ends_turn\":true,\"shop_id\":\"shop-019\"}",
-    "id": "call_8492b761-3fd6-4374-ace7-ee219c8ea181",
-    "name": "send_to_user"
-   }
-  ]
- },
- "be6b6158eeda536de4fe56226c6d2d1535f57f8a0f33119156835ddd558d2207": {
-  "cached_tokens": 4849,
-  "completion_tokens": 330,
-  "content": "That dispute needs the owner's eyes \u2014 I'll flag it now.",
-  "finish_reason": "tool_calls",
-  "latency_s": 1.93,
-  "model": "muse-spark-1.3",
-  "prompt_tokens": 5944,
-  "tool_calls": [
-   {
-    "arguments": "{\"question\":\"Yemisi & Sons Mini Mart disputes balance. Book shows outstanding N770,200, overdue N635,500, 7 open invoices. How should I proceed?\",\"shop_id\":\"shop-012\",\"to\":\"owner\"}",
-    "id": "call_bce3a0fc-27c4-403e-ade0-74570c744f7d",
-    "name": "ask_question"
-   }
-  ]
- },
- "c33772a2dac9618d70c3fc8036e877f574063edaefd6462fb150430397a25c20": {
-  "cached_tokens": 3441,
-  "completion_tokens": 146,
-  "content": "",
-  "finish_reason": "tool_calls",
-  "latency_s": 1.297,
-  "model": "muse-spark-1.3",
-  "prompt_tokens": 4890,
-  "tool_calls": [
-   {
-    "arguments": "{\"body\":\"N63,300 received. Thank you.\",\"channel\":\"shop_whatsapp\",\"ends_turn\":true,\"shop_id\":\"shop-024\"}",
-    "id": "call_8e440b42-fbea-408c-939e-4fbbe8656be6",
-    "name": "send_to_user"
-   }
-  ]
- },
- "d0141146c0279a61d4d1bda369769386c02c7430023252edf679b33ab155d37a": {
-  "cached_tokens": 4465,
-  "completion_tokens": 342,
-  "content": "Payment verified \u2014 I'll send the receipt and thank you.",
-  "finish_reason": "tool_calls",
-  "latency_s": 2.08,
-  "model": "muse-spark-1.3",
-  "prompt_tokens": 4716,
-  "tool_calls": [
-   {
-    "arguments": "{\"amount_kobo\":3360000,\"reference\":\"CLT-00013\",\"shop_id\":\"shop-035\"}",
-    "id": "call_4e0925ab-958b-4fc0-90d0-33c668e15542",
-    "name": "send_receipt"
-   }
-  ]
- },
- "d2ea2635cc8f342efa85838a8fe33e394a3b8733db7273b0de7809b1adfc7a3e": {
-  "cached_tokens": 4721,
-  "completion_tokens": 277,
-  "content": "",
-  "finish_reason": "tool_calls",
-  "latency_s": 1.845,
-  "model": "muse-spark-1.3",
-  "prompt_tokens": 4978,
-  "tool_calls": [
-   {
-    "arguments": "{\"body\":\"Noted, we will expect your payment on Saturday. Thank you.\",\"channel\":\"shop_whatsapp\",\"ends_turn\":true,\"shop_id\":\"shop-007\"}",
-    "id": "call_a152cc3c-efe5-4035-9515-83d0035d92b7",
-    "name": "send_to_user"
-   }
-  ]
- },
- "d4d4b4b2bc4155f32e12c9fedf988a8f33a2a7fc92d8fc0871523e34a6083d2b": {
-  "cached_tokens": 3441,
-  "completion_tokens": 155,
-  "content": "I'll verify your N69,100 payment now.",
-  "finish_reason": "tool_calls",
-  "latency_s": 1.279,
-  "model": "muse-spark-1.3",
-  "prompt_tokens": 4526,
-  "tool_calls": [
-   {
-    "arguments": "{\"amount_kobo\":6910000,\"reference\":\"CLT-00004\",\"shop_id\":\"shop-019\"}",
-    "id": "call_5c1833ea-27d2-4f10-9c78-744a9b064326",
-    "name": "check_payment"
-   }
-  ]
- },
- "dbe0790a8c93575af1b66e522a53b100dbd0c426bb132238265d23f080076c96": {
-  "cached_tokens": 5105,
-  "completion_tokens": 78,
-  "content": "I'll get Iya Tolu's current balance.",
-  "finish_reason": "tool_calls",
-  "latency_s": 1.05,
-  "model": "muse-spark-1.3",
-  "prompt_tokens": 6946,
-  "tool_calls": [
-   {
-    "arguments": "{\"shop_id\":\"shop-002\"}",
-    "id": "call_2bb96681-5814-4baa-9da2-0ca7e10809c3",
-    "name": "get_balance"
-   }
-  ]
- },
- "dcc2e4ee3b5026b94a597fd4e16b7a9aeff3139542afff64e2ed6f9fc87b4865": {
-  "cached_tokens": 4721,
-  "completion_tokens": 153,
-  "content": "",
-  "finish_reason": "tool_calls",
-  "latency_s": 1.198,
-  "model": "muse-spark-1.3",
-  "prompt_tokens": 4966,
-  "tool_calls": [
-   {
-    "arguments": "{\"body\":\"N146,200 received, thank you. Receipt sent.\",\"channel\":\"shop_whatsapp\",\"ends_turn\":true,\"shop_id\":\"shop-013\"}",
-    "id": "call_9fc68598-60b8-4370-84aa-7e6ad6cf4dbf",
-    "name": "send_to_user"
-   }
-  ]
- },
- "dce9dcb6757e7a79dd88fff36a86cece6b143058b4857ebeb353a8adc59e8a0b": {
-  "cached_tokens": 5105,
-  "completion_tokens": 76,
-  "content": "Ronke balance check \u2014 getting the figures.",
-  "finish_reason": "tool_calls",
-  "latency_s": 0.821,
-  "model": "muse-spark-1.3",
-  "prompt_tokens": 6104,
-  "tool_calls": [
-   {
-    "arguments": "{\"shop_id\":\"shop-013\"}",
-    "id": "call_a61cd1d8-b828-4fca-a4f1-c1d4b779ac94",
-    "name": "get_balance"
-   }
-  ]
- },
- "dd6be2eb6ca80456eb857d0445b01fb16ba716d3392eef130aeef32219dd5d22": {
-  "cached_tokens": 4721,
-  "completion_tokens": 316,
-  "content": "",
-  "finish_reason": "tool_calls",
-  "latency_s": 1.732,
-  "model": "muse-spark-1.3",
-  "prompt_tokens": 5934,
-  "tool_calls": [
-   {
-    "arguments": "{\"question\":\"Divine Favour Provisions (shop-004) disputes the amount, says last delivery was short. Overdue N718,650, outstanding N1,983,550. How should I handle the dispute?\",\"shop_id\":\"shop-004\",\"to\":\"owner\"}",
-    "id": "call_dee26906-4ed1-4375-8ef0-ba7df91b3ef6",
-    "name": "ask_question"
-   }
-  ]
- },
- "de206df2be6093a415888971c3d2d967ee2729f13ea0885a88b82ca1ca9f96f6": {
-  "cached_tokens": 5233,
-  "completion_tokens": 213,
-  "content": "",
-  "finish_reason": "tool_calls",
-  "latency_s": 1.236,
-  "model": "muse-spark-1.3",
-  "prompt_tokens": 6572,
-  "tool_calls": [
-   {
-    "arguments": "{\"items\":[{\"shop_id\":\"shop-001\"},{\"shop_id\":\"shop-005\"},{\"shop_id\":\"shop-004\"},{\"shop_id\":\"shop-002\"},{\"shop_id\":\"shop-012\"},{\"shop_id\":\"shop-008\"},{\"shop_id\":\"shop-007\"},{\"shop_id\":\"shop-010\"},{\"shop_id\":\"shop-006\"},{\"shop_id\":\"shop-014\"}],\"note\":\"10 shops over N100k, total N6,524,750\"}",
-    "id": "call_fe395eeb-0e67-4d5d-af1d-41b5200e70f6",
-    "name": "propose_reminder_plan"
-   }
-  ]
- },
- "de79165ded562a68dfb237d19ede54a93ffe854609ca493217eb0e13c1b9f46a": {
+ "01abc42f3b3273bc4f340147357e8c32d0aabe4a2e432f963ab015c8fa6fb9fe": {
   "cached_tokens": 3953,
   "completion_tokens": 175,
   "content": "",
@@ -1347,79 +7,188 @@
   "latency_s": 1.271,
   "model": "muse-spark-1.3",
   "prompt_tokens": 4504,
+  "request": "de79165ded562a68dfb237d19ede54a93ffe854609ca493217eb0e13c1b9f46a",
   "tool_calls": [
    {
     "arguments": "{\"items\":[{\"shop_id\":\"shop-001\"},{\"shop_id\":\"shop-005\"},{\"shop_id\":\"shop-004\"},{\"shop_id\":\"shop-008\"}],\"note\":\"Over 300k: 4 shops, N4,619,350 total overdue.\"}",
     "id": "call_05dff52e-d455-4566-9165-3933ace768f7",
     "name": "propose_reminder_plan"
    }
-  ]
+  ],
+  "versions": {
+   "policy": "policy-2026-10-27",
+   "skill": "collector:collector-v1"
+  }
  },
- "dfa79767e45d898b300f28a5b33a736ac1988d2403d92c6ed5285e9051099fdb": {
-  "cached_tokens": 4465,
-  "completion_tokens": 256,
-  "content": "",
+ "0353d90c5d3a33111a9bcd439ba8ffdf0bcfe2764238f89773e5eb9edd0390ee": {
+  "cached_tokens": 4849,
+  "completion_tokens": 330,
+  "content": "That dispute needs the owner's eyes \u2014 I'll flag it now.",
   "finish_reason": "tool_calls",
-  "latency_s": 1.499,
+  "latency_s": 1.93,
   "model": "muse-spark-1.3",
-  "prompt_tokens": 4728,
+  "prompt_tokens": 5944,
+  "request": "be6b6158eeda536de4fe56226c6d2d1535f57f8a0f33119156835ddd558d2207",
   "tool_calls": [
    {
-    "arguments": "{\"amount_kobo\":6330000,\"reference\":\"CLT-00039\",\"shop_id\":\"shop-024\"}",
-    "id": "call_5d4e74ee-c753-453a-8bfd-f8fd052f60fc",
+    "arguments": "{\"question\":\"Yemisi & Sons Mini Mart disputes balance. Book shows outstanding N770,200, overdue N635,500, 7 open invoices. How should I proceed?\",\"shop_id\":\"shop-012\",\"to\":\"owner\"}",
+    "id": "call_bce3a0fc-27c4-403e-ade0-74570c744f7d",
+    "name": "ask_question"
+   }
+  ],
+  "versions": {
+   "policy": "policy-2026-10-27",
+   "skill": "collector:collector-v1"
+  }
+ },
+ "03ab245c26dc02e167c084d980959cb37313ceb8117a90712ae1b98f1627ff59": {
+  "cached_tokens": 3185,
+  "completion_tokens": 312,
+  "content": "Payment verified \u2014 I'll send the receipt now.",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.576,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 4732,
+  "request": "8eda14bdac79a2c27a9efca89525b883a9706c868f0942b662521d43364e2320",
+  "tool_calls": [
+   {
+    "arguments": "{\"amount_kobo\":56180000,\"reference\":\"CLT-00025\",\"shop_id\":\"shop-003\"}",
+    "id": "call_0ecce89d-89e5-44c7-8690-d913ac3c9747",
     "name": "send_receipt"
    }
-  ]
+  ],
+  "versions": {
+   "policy": "policy-2026-10-27",
+   "skill": "collector:collector-v1"
+  }
  },
- "e637a4d02efdbfd293f1543af13e5f12ea9144a55c197586a7b0b224515773bb": {
-  "cached_tokens": 6257,
-  "completion_tokens": 300,
+ "08fd63c67397d954e9167ae5102d436c0800f3ea4cefd8feb3df92922510aafb": {
+  "cached_tokens": 4081,
+  "completion_tokens": 250,
   "content": "",
   "finish_reason": "tool_calls",
-  "latency_s": 1.241,
+  "latency_s": 1.564,
   "model": "muse-spark-1.3",
-  "prompt_tokens": 6793,
+  "prompt_tokens": 5624,
+  "request": "b517485f2705c5514c383087a4a0d5a309f564e002ab5e893a25691b7d5e7913",
   "tool_calls": [
    {
-    "arguments": "{\"body\":\"N0 outstanding, N0 overdue. Femi POS & Provisions: 0 open invoices. Limit N760,000.\",\"channel\":\"owner_console\",\"ends_turn\":true,\"kind\":\"reply\"}",
-    "id": "call_a0303653-1c1d-4e9b-b89f-8240c536244c",
+    "arguments": "{\"body\":\"Thanks for sharing. I have checked and it is pending on our side - not yet confirmed by the bank. I will confirm once it shows up. Please keep the alert handy.\",\"channel\":\"shop_whatsapp\",\"ends_turn\":true,\"shop_id\":\"shop-019\"}",
+    "id": "call_8492b761-3fd6-4374-ace7-ee219c8ea181",
     "name": "send_to_user"
    }
-  ]
+  ],
+  "versions": {
+   "policy": "policy-2026-10-27",
+   "skill": "collector:collector-v1"
+  }
  },
- "e72d6b8f0d6b67a92ee8f574f732e497ac42b20a8d71425b84187c9bc6813fa5": {
-  "cached_tokens": 3953,
-  "completion_tokens": 181,
+ "0dd193b20511a1060f4a4ecff8e2deed2c00f36b4d1ae79e45133e1c38cd6f71": {
+  "cached_tokens": 4593,
+  "completion_tokens": 173,
   "content": "",
   "finish_reason": "tool_calls",
-  "latency_s": 1.052,
+  "latency_s": 1.235,
   "model": "muse-spark-1.3",
-  "prompt_tokens": 6126,
+  "prompt_tokens": 4898,
+  "request": "a40194e65722332cfe85aa9e1cac5df443d3f668c771a24cc47636df351c19ca",
   "tool_calls": [
    {
-    "arguments": "{\"body\":\"N2,211,200 outstanding, N1,070,050 overdue. Funke & Sons Mini Mart: 8 open invoices, 49 days oldest, limit N2,480,000.\",\"channel\":\"owner_console\",\"ends_turn\":true}",
-    "id": "call_6d34dce9-d7a8-4133-879a-d3fc08da8a57",
+    "arguments": "{\"body\":\"Thank you, N124,200 received.\",\"channel\":\"shop_whatsapp\",\"ends_turn\":true,\"shop_id\":\"shop-011\"}",
+    "id": "call_b12b2695-e46b-4597-b181-9e14d2e6abd7",
     "name": "send_to_user"
    }
-  ]
+  ],
+  "versions": {
+   "policy": "policy-2026-10-27",
+   "skill": "collector:collector-v1"
+  }
  },
- "f1956a6a9f271beac5942ca960240b7830cfd68e220493480ca6ee004f51ce54": {
-  "cached_tokens": 3441,
-  "completion_tokens": 581,
-  "content": "I'll record your Thursday promise and set a check for the day after.",
+ "12772a6993d0aa1577dc5190c96cf12523526f8309f7580db265d46692ec4426": {
+  "cached_tokens": 4721,
+  "completion_tokens": 130,
+  "content": "Blessed Funke balance \u2014 checking the book.",
   "finish_reason": "tool_calls",
-  "latency_s": 2.73,
+  "latency_s": 1.062,
   "model": "muse-spark-1.3",
-  "prompt_tokens": 4698,
+  "prompt_tokens": 5122,
+  "request": "b49ba992e443cbfa0e149d0e0939e743a2bdac5d8b11f1a44f6cdb2cbb3c3b33",
   "tool_calls": [
    {
-    "arguments": "{\"in_hours\":96,\"reason\":\"Shop promised to pay on Thursday 2026-10-29\",\"shop_id\":\"shop-010\"}",
-    "id": "call_47bf6f6f-227f-4592-893f-52fc203666d4",
-    "name": "set_followup"
+    "arguments": "{\"shop_id\":\"shop-003\"}",
+    "id": "call_de29cf50-7448-451e-b711-2655e9165216",
+    "name": "get_balance"
    }
-  ]
+  ],
+  "versions": {
+   "policy": "policy-2026-10-27",
+   "skill": "collector:collector-v1"
+  }
  },
- "f31552bcca82a2d52d14e89b1d7f209ccfcc4ed844bbcfd1777069ec4612982c": {
+ "156e599d8dfc948c03ce4b0318516ed38f2274ca55eb6625a03aed331d8c95dd": {
+  "cached_tokens": 4465,
+  "completion_tokens": 230,
+  "content": "",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.407,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 5730,
+  "request": "15f6dec48a36531b222e3c7bdbe8cfd031773f1229e426ee712ee1b7271b5aeb",
+  "tool_calls": [
+   {
+    "arguments": "{\"body\":\"Thanks for sharing. That payment is still pending in the bank feed, not confirmed yet. Will confirm once it shows. Abeg keep the alert.\",\"channel\":\"shop_whatsapp\",\"ends_turn\":true,\"shop_id\":\"shop-013\"}",
+    "id": "call_fc99d5ee-bab6-425c-9710-fa20a1581c64",
+    "name": "send_to_user"
+   }
+  ],
+  "versions": {
+   "policy": "policy-2026-10-27",
+   "skill": "collector:collector-v1"
+  }
+ },
+ "1792ba338b651776b55bc6321c8c97af7b7b15b859146832181c740140bd5318": {
+  "cached_tokens": 3185,
+  "completion_tokens": 332,
+  "content": "",
+  "finish_reason": "tool_calls",
+  "latency_s": 2.043,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 4963,
+  "request": "75b150dc2d16eb944c702768f22b2403d8a633276bb0258099334bc7e2c65a27",
+  "tool_calls": [
+   {
+    "arguments": "{\"body\":\"Noted, thank you. We will check back after Tuesday.\",\"channel\":\"shop_whatsapp\",\"ends_turn\":true,\"shop_id\":\"shop-012\"}",
+    "id": "call_fb0361e9-8b37-406e-9185-4d598fa5a502",
+    "name": "send_to_user"
+   }
+  ],
+  "versions": {
+   "policy": "policy-2026-10-27",
+   "skill": "collector:collector-v1"
+  }
+ },
+ "180bdfcd0421f2dd2c4d657cf4784328d7f5a288fd657a236d913d88d2fe859c": {
+  "cached_tokens": 5873,
+  "completion_tokens": 144,
+  "content": "",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.654,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 7155,
+  "request": "642881461d987b82294dbfa224b89ae5cdb6551ab41fc93d694973e86020c005",
+  "tool_calls": [
+   {
+    "arguments": "{\"body\":\"N1,056,450 outstanding, N652,850 overdue. Iya Tolu Foodstuff: 9 open invoices, 47 days oldest, limit N1,580,000.\",\"channel\":\"owner_console\",\"ends_turn\":true}",
+    "id": "call_2ae10268-923b-4e26-9b7c-31bd5bfaba74",
+    "name": "send_to_user"
+   }
+  ],
+  "versions": {
+   "policy": "policy-2026-10-27",
+   "skill": "collector:collector-v1"
+  }
+ },
+ "18e5e24c61efb2acb43ead5e9b3617f3073ba2034866dcc725c2ffaba1008e14": {
   "cached_tokens": 4081,
   "completion_tokens": 178,
   "content": "I'll verify that N33,600 payment claim now.",
@@ -1427,15 +196,62 @@
   "latency_s": 1.545,
   "model": "muse-spark-1.3",
   "prompt_tokens": 4513,
+  "request": "f31552bcca82a2d52d14e89b1d7f209ccfcc4ed844bbcfd1777069ec4612982c",
   "tool_calls": [
    {
     "arguments": "{\"amount_kobo\":3360000,\"reference\":\"CLT-00013\",\"shop_id\":\"shop-035\"}",
     "id": "call_f36668bc-1014-4d8d-b64d-048c21329882",
     "name": "check_payment"
    }
-  ]
+  ],
+  "versions": {
+   "policy": "policy-2026-10-27",
+   "skill": "collector:collector-v1"
+  }
  },
- "f3483927421bbc531bf47edd2f94ca59713d8695aafec08157c8cfe56d590da2": {
+ "19661c6fc92dd62961e15e50d7a58448b2e41fa03e944b7e31126660ec42d7e3": {
+  "cached_tokens": 3441,
+  "completion_tokens": 127,
+  "content": "Getting the list for everyone over 50k.",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.031,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 5231,
+  "request": "881b5a2d48910cf6457ed750192d87a6f48616f3474ac4492610589fb1cf2581",
+  "tool_calls": [
+   {
+    "arguments": "{\"limit\":50,\"min_overdue_naira\":50000,\"overdue_only\":true}",
+    "id": "call_ef661513-0534-4d50-bed2-c39bdeb23566",
+    "name": "get_invoices"
+   }
+  ],
+  "versions": {
+   "policy": "policy-2026-10-27",
+   "skill": "collector:collector-v1"
+  }
+ },
+ "1b31c90f3ae80a691319fcdcaf92d6f04687f6517e6804fc4cce6cee295058c2": {
+  "cached_tokens": 4209,
+  "completion_tokens": 191,
+  "content": "I'll verify your payment now.",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.181,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 4590,
+  "request": "48f4f4d58e2496bd25fb670284a5b1dcc6365143732629cc056c62a82f265808",
+  "tool_calls": [
+   {
+    "arguments": "{\"amount_kobo\":14620000,\"reference\":\"CLT-00005\",\"shop_id\":\"shop-013\"}",
+    "id": "call_3ffd7472-adc7-4d92-abe7-8f107e1f66ef",
+    "name": "check_payment"
+   }
+  ],
+  "versions": {
+   "policy": "policy-2026-10-27",
+   "skill": "collector:collector-v1"
+  }
+ },
+ "1cb2528791295cbb1474539fe24e9c360270080dea7b576d6ee6c425bb9ebc29": {
   "cached_tokens": 4081,
   "completion_tokens": 143,
   "content": "I'll verify that N430,000 payment claim.",
@@ -1443,63 +259,743 @@
   "latency_s": 1.24,
   "model": "muse-spark-1.3",
   "prompt_tokens": 4811,
+  "request": "f3483927421bbc531bf47edd2f94ca59713d8695aafec08157c8cfe56d590da2",
   "tool_calls": [
    {
     "arguments": "{\"amount_kobo\":43000000,\"shop_id\":\"shop-001\"}",
     "id": "call_9365c0e1-ae1b-4b1e-98e0-8dab71a4224f",
     "name": "check_payment"
    }
-  ]
+  ],
+  "versions": {
+   "policy": "policy-2026-10-27",
+   "skill": "collector:collector-v1"
+  }
  },
- "f454fa554ef9d592fac3f1b4da1046e5c2c528eb0fb516c9f95f9524fe959ac3": {
-  "cached_tokens": 4081,
-  "completion_tokens": 141,
+ "1e4659ec0f86c0e4ad137d02dd01199262d029ab609e2a4238cb91aa61438053": {
+  "cached_tokens": 3441,
+  "completion_tokens": 229,
+  "content": "Routine heartbeat, no new balance question or dispute \u2014 no action.",
+  "finish_reason": "stop",
+  "latency_s": 1.69,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 3937,
+  "request": "52557493e23508a6b7c935dbca44668fd9219c5dc0334e28c09bccee51f26fe8",
+  "tool_calls": [],
+  "versions": {
+   "policy": "policy-2026-10-27",
+   "skill": "collector:collector-v1"
+  }
+ },
+ "274ef785fdad610e5f64e3c32645192161d7478a06c403fa702997ef5b413052": {
+  "cached_tokens": 4721,
+  "completion_tokens": 153,
   "content": "",
   "finish_reason": "tool_calls",
-  "latency_s": 1.081,
+  "latency_s": 1.198,
   "model": "muse-spark-1.3",
-  "prompt_tokens": 5323,
+  "prompt_tokens": 4966,
+  "request": "dcc2e4ee3b5026b94a597fd4e16b7a9aeff3139542afff64e2ed6f9fc87b4865",
   "tool_calls": [
    {
-    "arguments": "{\"body\":\"Blessed Funke Mini Mart: N0 outstanding, N0 overdue. 0 open invoices. Limit N1,790,000.\",\"channel\":\"owner_console\",\"ends_turn\":true,\"kind\":\"reply\"}",
-    "id": "call_bb68a401-c131-45d5-829b-641f25255922",
+    "arguments": "{\"body\":\"N146,200 received, thank you. Receipt sent.\",\"channel\":\"shop_whatsapp\",\"ends_turn\":true,\"shop_id\":\"shop-013\"}",
+    "id": "call_9fc68598-60b8-4370-84aa-7e6ad6cf4dbf",
     "name": "send_to_user"
    }
-  ]
+  ],
+  "versions": {
+   "policy": "policy-2026-10-27",
+   "skill": "collector:collector-v1"
+  }
  },
- "f642a1ca8923d74052c3ec41d316ab2fc38b32923f3048bc149f7d697afe4568": {
+ "2c3c4bee395366492ac1cf0a3095f4fa2b031e31e74aac923b2130d293ceba77": {
   "cached_tokens": 3441,
-  "completion_tokens": 164,
+  "completion_tokens": 236,
+  "content": "Payment verified \u2014 I'll send the receipt.",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.219,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 4720,
+  "request": "5c7123b0223b1ac087f5b4b589a85b6e9a2ea0ef98f93811d6a239ef191886ff",
+  "tool_calls": [
+   {
+    "arguments": "{\"amount_kobo\":12420000,\"reference\":\"CLT-00023\",\"shop_id\":\"shop-011\"}",
+    "id": "call_b6650621-bc14-401f-a5ba-63b2a0803c4b",
+    "name": "send_receipt"
+   }
+  ],
+  "versions": {
+   "policy": "policy-2026-10-27",
+   "skill": "collector:collector-v1"
+  }
+ },
+ "2e3384cc1142e0124061826fdff5766be95b7dbd4fe2019f8f5055e85cec66fe": {
+  "cached_tokens": 3185,
+  "completion_tokens": 450,
+  "content": "Disputed delivery \u2014 I'll flag this to the owner for guidance.",
+  "finish_reason": "tool_calls",
+  "latency_s": 2.326,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 4801,
+  "request": "83380c6a7268193df460bad60466551974564454c2002a250420af9a15ea3b3f",
+  "tool_calls": [
+   {
+    "arguments": "{\"question\":\"Yinka Provision Store (shop-008) says \\\"I won't pay that, the cartons were damaged\\\". Outstanding N788,000, overdue N443,400. How should I handle the damage claim?\",\"shop_id\":\"shop-008\",\"to\":\"owner\"}",
+    "id": "call_419011e0-2061-46d5-a36f-8208deadc2e5",
+    "name": "ask_question"
+   }
+  ],
+  "versions": {
+   "policy": "policy-2026-10-27",
+   "skill": "collector:collector-v1"
+  }
+ },
+ "2eb2bc16668d2addb686c7ce6e0e4234fdd76f168c33c38c499cc2f403fd837c": {
+  "cached_tokens": 4721,
+  "completion_tokens": 136,
   "content": "",
   "finish_reason": "tool_calls",
-  "latency_s": 1.598,
+  "latency_s": 1.135,
   "model": "muse-spark-1.3",
-  "prompt_tokens": 4728,
+  "prompt_tokens": 4890,
+  "request": "4d8c5d2cf201455dbcfcaf4df6557ec00d18277525d0a71f92e1079158642365",
+  "tool_calls": [
+   {
+    "arguments": "{\"body\":\"Thank you, N69,100 received.\",\"channel\":\"shop_whatsapp\",\"ends_turn\":true,\"shop_id\":\"shop-019\"}",
+    "id": "call_8b4151d2-1eaf-4745-a331-2607ac464167",
+    "name": "send_to_user"
+   }
+  ],
+  "versions": {
+   "policy": "policy-2026-10-27",
+   "skill": "collector:collector-v1"
+  }
+ },
+ "339163ad976587cb6859139780508ee645ed38b6a4a55776d473eb01aef6c4fa": {
+  "cached_tokens": 6001,
+  "completion_tokens": 76,
+  "content": "Femi balance check \u2014 getting the figures.",
+  "finish_reason": "tool_calls",
+  "latency_s": 0.921,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 6597,
+  "request": "963c755ec5cb16e4882c39238f6d47dec95a86290e7baec1aaabc3ebb90f1765",
+  "tool_calls": [
+   {
+    "arguments": "{\"shop_id\":\"shop-015\"}",
+    "id": "call_4db31ed0-d3b7-4cc5-99d7-4a8de24141af",
+    "name": "get_balance"
+   }
+  ],
+  "versions": {
+   "policy": "policy-2026-10-27",
+   "skill": "collector:collector-v1"
+  }
+ },
+ "37227925e02c38e5fc353ac94939c2bd74f8a802d28a5a343b9bbf600eef37ff": {
+  "cached_tokens": 4081,
+  "completion_tokens": 173,
+  "content": "",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.173,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 4911,
+  "request": "7c72a15ef466b3f109226028eddce6612776d1a5c20ba1bb9d4cc7c77c165a56",
+  "tool_calls": [
+   {
+    "arguments": "{\"body\":\"Thank you, N561,800 received.\",\"channel\":\"shop_whatsapp\",\"ends_turn\":true,\"shop_id\":\"shop-003\"}",
+    "id": "call_54887df0-8e42-4bb8-9436-7f53b3640dd1",
+    "name": "send_to_user"
+   }
+  ],
+  "versions": {
+   "policy": "policy-2026-10-27",
+   "skill": "collector:collector-v1"
+  }
+ },
+ "3733a3320205613977f6b36d0faaa140682dc3ac1c1ecd9de6dcc506ace06582": {
+  "cached_tokens": 4721,
+  "completion_tokens": 187,
+  "content": "",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.319,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 4930,
+  "request": "7d4237a4f899d921615e2385ec24b8e51146c24f9f3f7f5afbe531d9b401019e",
+  "tool_calls": [
+   {
+    "arguments": "{\"body\":\"Thank you, N13,100 received.\",\"channel\":\"shop_whatsapp\",\"ends_turn\":true,\"kind\":\"receipt\",\"shop_id\":\"shop-038\"}",
+    "id": "call_474c194a-e873-4137-a5e4-9ffc8fa684f3",
+    "name": "send_to_user"
+   }
+  ],
+  "versions": {
+   "policy": "policy-2026-10-27",
+   "skill": "collector:collector-v1"
+  }
+ },
+ "3b5bd4ad2c9dce5ba27e741980d8f4cb612c2784837c3d64c0b39eb993edafe1": {
+  "cached_tokens": 7665,
+  "completion_tokens": 136,
+  "content": "",
+  "finish_reason": "tool_calls",
+  "latency_s": 0.89,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 8279,
+  "request": "1b6979c9d74a8063a01fc7c2b804c6c96f43d9f9a04d411e7eb25aa9617d35af",
+  "tool_calls": [
+   {
+    "arguments": "{\"items\":[{\"shop_id\":\"shop-001\"},{\"shop_id\":\"shop-002\"},{\"shop_id\":\"shop-004\"},{\"shop_id\":\"shop-005\"},{\"shop_id\":\"shop-012\"}],\"note\":\"5 shops over N500k, total N5,464,300\"}",
+    "id": "call_3da4d1a1-f937-49e4-8e28-f05704831cb0",
+    "name": "propose_reminder_plan"
+   }
+  ],
+  "versions": {
+   "policy": "policy-2026-10-27",
+   "skill": "collector:collector-v1"
+  }
+ },
+ "3bd14ae82e746611aff8b42b5b15240f4ff69cc19fa66cac5cd584246114c493": {
+  "cached_tokens": 4081,
+  "completion_tokens": 307,
+  "content": "",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.842,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 4990,
+  "request": "00e0266ae92fc26baca8ac5449757d9d16bb34bcb4f968bf6b9e45e618310f2f",
+  "tool_calls": [
+   {
+    "arguments": "{\"body\":\"Noted, your payment is pending confirmation from the bank. I will confirm once it reflects. Thank you.\",\"channel\":\"shop_whatsapp\",\"ends_turn\":true,\"shop_id\":\"shop-002\"}",
+    "id": "call_025d87e3-2880-4809-bc04-2d1eb366360e",
+    "name": "send_to_user"
+   }
+  ],
+  "versions": {
+   "policy": "policy-2026-10-27",
+   "skill": "collector:collector-v1"
+  }
+ },
+ "4192783642eeb80cf3098ec33a2dde1a2f7285483dab4dfd183fd77c20984fd0": {
+  "cached_tokens": 4081,
+  "completion_tokens": 175,
+  "content": "I'll verify the claimed payment against your recent transfer.",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.428,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 4518,
+  "request": "1bedbd3df5d0bb7a8b157166230ec50cc94d56c0e736419e80c3c25cf6cbb134",
+  "tool_calls": [
+   {
+    "arguments": "{\"amount_kobo\":12420000,\"reference\":\"CLT-00023\",\"shop_id\":\"shop-011\"}",
+    "id": "call_97a46090-b065-419e-9132-88121a0c6c2a",
+    "name": "check_payment"
+   }
+  ],
+  "versions": {
+   "policy": "policy-2026-10-27",
+   "skill": "collector:collector-v1"
+  }
+ },
+ "41a8f25defe2674d4b71a6190e16e735b9f3a4b614ca7ba158de473c05d98e59": {
+  "cached_tokens": 4081,
+  "completion_tokens": 202,
+  "content": "",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.567,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 6051,
+  "request": "53911a204891a07344bb9bae0a09bd57d55f08e2ac45ed267b3e34a57672da38",
+  "tool_calls": [
+   {
+    "arguments": "{\"body\":\"Noted, thank you. I will check back tomorrow on your promise to pay on Monday.\",\"channel\":\"shop_whatsapp\",\"ends_turn\":true,\"shop_id\":\"shop-002\"}",
+    "id": "call_8f504abe-50d8-48c4-976c-c5ee1aaa638d",
+    "name": "send_to_user"
+   }
+  ],
+  "versions": {
+   "policy": "policy-2026-10-27",
+   "skill": "collector:collector-v1"
+  }
+ },
+ "42536adc9e36fa749355fb2ce578e956c1ceb9990ce2d32b53c75e3b97f3dcdf": {
+  "cached_tokens": 3441,
+  "completion_tokens": 265,
+  "content": "Payment verified \u2014 I'll send the receipt.",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.509,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 4788,
+  "request": "74766b685a806d1d45f1ab449bb60cba0dc1555d9de8778bd7a84826e6ce98e6",
+  "tool_calls": [
+   {
+    "arguments": "{\"amount_kobo\":14620000,\"reference\":\"CLT-00005\",\"shop_id\":\"shop-013\"}",
+    "id": "call_98c3eee4-bf66-43ab-a5f3-575aae134870",
+    "name": "send_receipt"
+   }
+  ],
+  "versions": {
+   "policy": "policy-2026-10-27",
+   "skill": "collector:collector-v1"
+  }
+ },
+ "4bd0598857c6cdf84d4c8513834a3a49e0573cd386febe090909131ef3f3e12d": {
+  "cached_tokens": 3441,
+  "completion_tokens": 155,
+  "content": "I'll verify your N69,100 payment now.",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.279,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 4526,
+  "request": "d4d4b4b2bc4155f32e12c9fedf988a8f33a2a7fc92d8fc0871523e34a6083d2b",
   "tool_calls": [
    {
     "arguments": "{\"amount_kobo\":6910000,\"reference\":\"CLT-00004\",\"shop_id\":\"shop-019\"}",
-    "id": "call_0068008d-c759-41dd-9833-74788a2a89fe",
-    "name": "send_receipt"
+    "id": "call_5c1833ea-27d2-4f10-9c78-744a9b064326",
+    "name": "check_payment"
    }
-  ]
+  ],
+  "versions": {
+   "policy": "policy-2026-10-27",
+   "skill": "collector:collector-v1"
+  }
  },
- "f998f80d2fa6f86b2bf21f0e298efd61a002a876b94912f314e51afed9f6b2d1": {
-  "cached_tokens": 4081,
-  "completion_tokens": 677,
-  "content": "Promise noted for tomorrow \u2014 I'll set the check and confirm to the shop.",
+ "529ebe0d9790044b4fd07d14c22cd0eae7e30ebf24821661d0a060c0cf71ee0b": {
+  "cached_tokens": 4721,
+  "completion_tokens": 277,
+  "content": "",
   "finish_reason": "tool_calls",
-  "latency_s": 2.835,
+  "latency_s": 1.845,
   "model": "muse-spark-1.3",
-  "prompt_tokens": 4738,
+  "prompt_tokens": 4978,
+  "request": "d2ea2635cc8f342efa85838a8fe33e394a3b8733db7273b0de7809b1adfc7a3e",
   "tool_calls": [
    {
-    "arguments": "{\"in_hours\":48,\"reason\":\"Shop-004 promised to pay tomorrow 2026-10-27, recheck day after\",\"shop_id\":\"shop-004\"}",
-    "id": "call_c38afd04-7c74-4fcf-8db8-6a5894f9e615",
+    "arguments": "{\"body\":\"Noted, we will expect your payment on Saturday. Thank you.\",\"channel\":\"shop_whatsapp\",\"ends_turn\":true,\"shop_id\":\"shop-007\"}",
+    "id": "call_a152cc3c-efe5-4035-9515-83d0035d92b7",
+    "name": "send_to_user"
+   }
+  ],
+  "versions": {
+   "policy": "policy-2026-10-27",
+   "skill": "collector:collector-v1"
+  }
+ },
+ "535eccaef497a6b067187f89e5369d7fe55a9e4632ea70083ffe52d8b4d9ce00": {
+  "cached_tokens": 4081,
+  "completion_tokens": 129,
+  "content": "I'll verify your \u20a615,000 payment against the bank feed.",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.05,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 4841,
+  "request": "988e5e883edebc2035c238624c8737495ad0131ba9fe6777dd8af19cb2ea7b0b",
+  "tool_calls": [
+   {
+    "arguments": "{\"amount_kobo\":1500000,\"shop_id\":\"shop-030\"}",
+    "id": "call_10e3a01a-6b51-4e03-8682-ea943ad31590",
+    "name": "check_payment"
+   }
+  ],
+  "versions": {
+   "policy": "policy-2026-10-27",
+   "skill": "collector:collector-v1"
+  }
+ },
+ "54483f5d4560e3f8fd488f934020141732ea527e90c36731cc8e184d3da2f63e": {
+  "cached_tokens": 4721,
+  "completion_tokens": 206,
+  "content": "",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.289,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 5007,
+  "request": "96feac4d2cfa4177d7687307d097f48e24173847ded9b787ff385144dfadf5e8",
+  "tool_calls": [
+   {
+    "arguments": "{\"body\":\"Thanks for letting me know. I checked and it is still pending, not showing yet. I will confirm once the bank shows it. Please keep your receipt.\",\"channel\":\"shop_whatsapp\",\"ends_turn\":true,\"shop_id\":\"shop-030\"}",
+    "id": "call_bcac3bab-fde4-4d96-9291-b3b208e9c41a",
+    "name": "send_to_user"
+   }
+  ],
+  "versions": {
+   "policy": "policy-2026-10-27",
+   "skill": "collector:collector-v1"
+  }
+ },
+ "562cf0683b299b4a964df86019c31b4532417c7ee59a1d411b1ea3d236462abd": {
+  "cached_tokens": 3441,
+  "completion_tokens": 581,
+  "content": "I'll record your Thursday promise and set a check for the day after.",
+  "finish_reason": "tool_calls",
+  "latency_s": 2.73,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 4698,
+  "request": "f1956a6a9f271beac5942ca960240b7830cfd68e220493480ca6ee004f51ce54",
+  "tool_calls": [
+   {
+    "arguments": "{\"in_hours\":96,\"reason\":\"Shop promised to pay on Thursday 2026-10-29\",\"shop_id\":\"shop-010\"}",
+    "id": "call_47bf6f6f-227f-4592-893f-52fc203666d4",
     "name": "set_followup"
    }
-  ]
+  ],
+  "versions": {
+   "policy": "policy-2026-10-27",
+   "skill": "collector:collector-v1"
+  }
  },
- "fc72932d2e1798db5fa34509d433c178132af2724a07f68d5e7262c32840e07f": {
+ "565066acab3ded74b6603245a32ec830a01312ba026e28557eed65ade72e3d67": {
+  "cached_tokens": 4081,
+  "completion_tokens": 534,
+  "content": "",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.956,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 5854,
+  "request": "4c6ab11294a6f882103f757059983bf6c28277745e7fa74bd274829b1f672e1e",
+  "tool_calls": [
+   {
+    "arguments": "{\"question\":\"Shop-005 (Funke & Sons Mini Mart) disputes the balance, says \\\"I paid part already\\\" with no amount given. Overdue is N1,070,050, recent bank-confirmed payments show N350 on 2026-10-24, N4,800 on 2026-10-19, N375,000 on 2026-10-18. How should I respond?\",\"shop_id\":\"shop-005\",\"to\":\"owner\"}",
+    "id": "call_41bbb139-ef83-4f31-880f-ceb9f2bf0531",
+    "name": "ask_question"
+   }
+  ],
+  "versions": {
+   "policy": "policy-2026-10-27",
+   "skill": "collector:collector-v1"
+  }
+ },
+ "581e29310f92ba777559ce960c5d4b1dc286bb34220bd01a4f9a9e40ae0aaf1c": {
+  "cached_tokens": 3953,
+  "completion_tokens": 166,
+  "content": "Over 300k chase \u2014 I'll pull the overdue list.",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.092,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 4080,
+  "request": "98eab544656a4dcb0c5ee68c684724126d178a295d2e0fc34f768bb1768840b5",
+  "tool_calls": [
+   {
+    "arguments": "{\"limit\":50,\"min_overdue_naira\":300000,\"overdue_only\":true}",
+    "id": "call_2aaa4e73-ac78-4748-b95d-cf4babee140f",
+    "name": "get_invoices"
+   }
+  ],
+  "versions": {
+   "policy": "policy-2026-10-27",
+   "skill": "collector:collector-v1"
+  }
+ },
+ "59b798f97794101d6a8a829a0ad6c3053ceb89944c1117a9bb6593460132fc8c": {
+  "cached_tokens": 5873,
+  "completion_tokens": 409,
+  "content": "That total doesn't sound right to you \u2014 I'll flag it for review.",
+  "finish_reason": "tool_calls",
+  "latency_s": 2.149,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 5922,
+  "request": "91b2192dfd6c8a5f12cdeacbae09db090c602b90af8f796914367e86b04d256d",
+  "tool_calls": [
+   {
+    "arguments": "{\"body\":\"Noted. I will recheck your balance and get back to you shortly.\",\"channel\":\"shop_whatsapp\",\"shop_id\":\"shop-001\"}",
+    "id": "call_58cbe78a-6cd5-41ff-a96a-bec76cb9df64",
+    "name": "send_to_user"
+   }
+  ],
+  "versions": {
+   "policy": "policy-2026-10-27",
+   "skill": "collector:collector-v1"
+  }
+ },
+ "602a81ac644ee910d6f0cf9aea803a41a226cc4b26d703b2701c9432be711358": {
+  "cached_tokens": 3953,
+  "completion_tokens": 243,
+  "content": "Over 1m chase \u2014 checking who qualifies.",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.827,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 4805,
+  "request": "8ff5549ff2dbcaeb61f574409cd84314e5192101939cd55b39edde1dfbd47fcd",
+  "tool_calls": [
+   {
+    "arguments": "{\"limit\":50,\"min_overdue_naira\":1000000,\"overdue_only\":true}",
+    "id": "call_26b1e426-00d1-4543-b992-ebade691b704",
+    "name": "get_invoices"
+   }
+  ],
+  "versions": {
+   "policy": "policy-2026-10-27",
+   "skill": "collector:collector-v1"
+  }
+ },
+ "618add87e9213656354cf3185741f86b7a0336426dbe9521f2f25301f8f6683c": {
+  "cached_tokens": 4977,
+  "completion_tokens": 289,
+  "content": "You flagged a possible dispute on that balance \u2014 I'll escalate it.",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.594,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 7043,
+  "request": "4fd567efb1f399f6026c368ec7f2740a67bcba0a36543dd31e32861a1a3684e4",
+  "tool_calls": [
+   {
+    "arguments": "{\"question\":\"Shop-002 Iya Tolu Foodstuff disputes balance: book shows outstanding N1,056,450 overdue N652,850. How should I respond?\",\"shop_id\":\"shop-002\",\"to\":\"owner\"}",
+    "id": "call_25469a92-7fd3-402e-a8ae-3cafcc8db2ea",
+    "name": "ask_question"
+   }
+  ],
+  "versions": {
+   "policy": "policy-2026-10-27",
+   "skill": "collector:collector-v1"
+  }
+ },
+ "655dac26913ab14f23d4e509b5a6dafcafdd815495e8ef898f443a260499ee88": {
+  "cached_tokens": 3441,
+  "completion_tokens": 631,
+  "content": "Promise noted for Saturday \u2014 I'll set the follow-up and confirm.",
+  "finish_reason": "tool_calls",
+  "latency_s": 3.897,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 4760,
+  "request": "0f18554b73925bc510f10d48b75a546503441ca0e845819faf7d28e16db84111",
+  "tool_calls": [
+   {
+    "arguments": "{\"in_hours\":144,\"reason\":\"Shop-007 promised to pay on Saturday 2026-10-31, check payment\",\"shop_id\":\"shop-007\"}",
+    "id": "call_c04a8ea4-b46a-44b1-b594-1e749b0b8f9f",
+    "name": "set_followup"
+   }
+  ],
+  "versions": {
+   "policy": "policy-2026-10-27",
+   "skill": "collector:collector-v1"
+  }
+ },
+ "66381c2867320dbeed914cc136a7290b3d690def710649414513f12b58f95f28": {
+  "cached_tokens": 4209,
+  "completion_tokens": 176,
+  "content": "I'll verify this payment claim.",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.148,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 5554,
+  "request": "a69fa9d677d071e692a6be79c8e6304264c2551d3ff90c88bf24dd5651bb3523",
+  "tool_calls": [
+   {
+    "arguments": "{\"amount_kobo\":14720000,\"reference\":\"CLT-00005\",\"shop_id\":\"shop-013\"}",
+    "id": "call_022b5aed-cc65-4140-bffa-a62b002c5537",
+    "name": "check_payment"
+   }
+  ],
+  "versions": {
+   "policy": "policy-2026-10-27",
+   "skill": "collector:collector-v1"
+  }
+ },
+ "666cfce5ec52d4f565b469bd18ef155694c9b7a42a0c7f5d92333f0c263f2b51": {
+  "cached_tokens": 4081,
+  "completion_tokens": 506,
+  "content": "I'll record that Tuesday payment promise and set a follow-up.",
+  "finish_reason": "tool_calls",
+  "latency_s": 2.229,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 4759,
+  "request": "b1eb7870e17a31d8967cb07142eca7ac539e42c9dbccd465648adb3c08b64648",
+  "tool_calls": [
+   {
+    "arguments": "{\"in_hours\":216,\"reason\":\"Shop promised to pay on Tuesday 3 Nov, recheck\",\"shop_id\":\"shop-012\"}",
+    "id": "call_dc520177-3287-46aa-a18d-272b9b7c397e",
+    "name": "set_followup"
+   }
+  ],
+  "versions": {
+   "policy": "policy-2026-10-27",
+   "skill": "collector:collector-v1"
+  }
+ },
+ "66b9e689264c27e923008e4926587b963a2edc4a1071a1f6e2e592c409cae173": {
+  "cached_tokens": 4081,
+  "completion_tokens": 157,
+  "content": "",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.006,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 4897,
+  "request": "6d5e37255e7fa0da7bff11539b4e207258836089fd69a0b826d7539436ad5db5",
+  "tool_calls": [
+   {
+    "arguments": "{\"body\":\"Thank you, N33,600 received.\",\"channel\":\"shop_whatsapp\",\"ends_turn\":true,\"shop_id\":\"shop-035\"}",
+    "id": "call_2489a701-78fb-4546-9f91-e7aa1cae58d7",
+    "name": "send_to_user"
+   }
+  ],
+  "versions": {
+   "policy": "policy-2026-10-27",
+   "skill": "collector:collector-v1"
+  }
+ },
+ "678c894dbdb00c5f75f5c72be017c367eda916d6b6643495f65454bfdc91b46a": {
+  "cached_tokens": 4081,
+  "completion_tokens": 238,
+  "content": "",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.188,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 6129,
+  "request": "5671f31d188e2e738289d885ac3ffe028dbfc08c26cd82b338f1e912e1c1605b",
+  "tool_calls": [
+   {
+    "arguments": "{\"question\":\"Mama Sola Provisions (shop-001) disputes balance. Book shows outstanding N3,497,300, overdue N2,387,250 across 14 open invoices. Recent bank-confirmed payments: N505,000 and N275,000 on 2026-10-24, N460,000 on 2026-10-12. How should I resolve the disputed amount?\",\"shop_id\":\"shop-001\",\"to\":\"owner\"}",
+    "id": "call_a0ad9d59-6a63-49ba-839a-42d49cff3ccd",
+    "name": "ask_question"
+   }
+  ],
+  "versions": {
+   "policy": "policy-2026-10-27",
+   "skill": "collector:collector-v1"
+  }
+ },
+ "6cc048256222013e637e76421bee9d15d93186a81719b087ef2e13085a68db0c": {
+  "cached_tokens": 3441,
+  "completion_tokens": 132,
+  "content": "Checking that N55,000 claim against the bank feed.",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.239,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 4835,
+  "request": "2b2c4ef11f8ab05b506abcfeed620317a5fdb8cd947edad62703fe19c781b94e",
+  "tool_calls": [
+   {
+    "arguments": "{\"amount_kobo\":5500000,\"shop_id\":\"shop-017\"}",
+    "id": "call_937ecf49-4e03-4a96-b9cf-e9d2656ca3b1",
+    "name": "check_payment"
+   }
+  ],
+  "versions": {
+   "policy": "policy-2026-10-27",
+   "skill": "collector:collector-v1"
+  }
+ },
+ "712571e41787c2135b7eb1fe5ffbb85a28cbf4218aa2a4b8f778120ca5caad2d": {
+  "cached_tokens": 4081,
+  "completion_tokens": 539,
+  "content": "I'll note your Friday payment promise and schedule a follow-up.",
+  "finish_reason": "tool_calls",
+  "latency_s": 2.241,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 4742,
+  "request": "008c14e1d474229739d78a4139b0bb4ebdd577768cc802241e62754120226b0d",
+  "tool_calls": [
+   {
+    "arguments": "{\"in_hours\":120,\"reason\":\"Shop promised to pay on Friday 2026-10-30 - recheck\",\"shop_id\":\"shop-005\"}",
+    "id": "call_343cadff-e22f-4d70-9ab7-06fadddc0531",
+    "name": "set_followup"
+   }
+  ],
+  "versions": {
+   "policy": "policy-2026-10-27",
+   "skill": "collector:collector-v1"
+  }
+ },
+ "71c023f8ef4b525c661e388f2c787abbf91ef49c9fcef94af7a24488a44c2861": {
+  "cached_tokens": 3953,
+  "completion_tokens": 225,
+  "content": "On it \u2014 pulling the over 100k list now.",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.796,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 5779,
+  "request": "9a8694ddd32c04502fc001ca64d74236f0df6d6f511c319cf79ccb47417f8a8d",
+  "tool_calls": [
+   {
+    "arguments": "{\"limit\":50,\"min_overdue_naira\":100000,\"overdue_only\":true}",
+    "id": "call_1227030e-5355-4ad6-9811-20e6f99c2bdb",
+    "name": "get_invoices"
+   }
+  ],
+  "versions": {
+   "policy": "policy-2026-10-27",
+   "skill": "collector:collector-v1"
+  }
+ },
+ "740f21e3584b3b61baeb824ad6f9b51e5642c9a0593767925ed1aabe5e646013": {
+  "cached_tokens": 3441,
+  "completion_tokens": 133,
+  "content": "I'll verify that N355,000 payment now.",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.124,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 4828,
+  "request": "3b78fee5254b97c217340a04e5b853192f570bf8746dbb5597b753ab9b1652a8",
+  "tool_calls": [
+   {
+    "arguments": "{\"amount_kobo\":35500000,\"shop_id\":\"shop-002\"}",
+    "id": "call_b985b595-017e-4e6f-ba4f-e43b4cc60c55",
+    "name": "check_payment"
+   }
+  ],
+  "versions": {
+   "policy": "policy-2026-10-27",
+   "skill": "collector:collector-v1"
+  }
+ },
+ "74e296709b367b3bb698e9ab80765aa7452fd13ef158e883d97d6435ce36551a": {
+  "cached_tokens": 3441,
+  "completion_tokens": 39,
+  "content": "No-op: routine heartbeat, nothing new \u2014 ending turn silently.",
+  "finish_reason": "stop",
+  "latency_s": 0.873,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 3641,
+  "request": "7d36e9bfb629d87b1e8807c9eca6d07e647a03e18ce34cc3a085d88e6d3cf4e6",
+  "tool_calls": [],
+  "versions": {
+   "policy": "policy-2026-10-27",
+   "skill": "collector:collector-v1"
+  }
+ },
+ "76cda218075faa28d54eb5a794df6f8b6c970695cece349d28cf11d0fc9b6669": {
+  "cached_tokens": 4721,
+  "completion_tokens": 316,
+  "content": "",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.732,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 5934,
+  "request": "dd6be2eb6ca80456eb857d0445b01fb16ba716d3392eef130aeef32219dd5d22",
+  "tool_calls": [
+   {
+    "arguments": "{\"question\":\"Divine Favour Provisions (shop-004) disputes the amount, says last delivery was short. Overdue N718,650, outstanding N1,983,550. How should I handle the dispute?\",\"shop_id\":\"shop-004\",\"to\":\"owner\"}",
+    "id": "call_dee26906-4ed1-4375-8ef0-ba7df91b3ef6",
+    "name": "ask_question"
+   }
+  ],
+  "versions": {
+   "policy": "policy-2026-10-27",
+   "skill": "collector:collector-v1"
+  }
+ },
+ "788db8516eb29e12f32ba60ed484c51e162f20d763289ec45ab2bc2696048bf2": {
+  "cached_tokens": 3441,
+  "completion_tokens": 295,
+  "content": "",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.37,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 6442,
+  "request": "0e1df95aeb89a5357889ae3821f34894b7f17b79164a69f709cd64762627460a",
+  "tool_calls": [
+   {
+    "arguments": "{\"items\":[{\"shop_id\":\"shop-001\"},{\"shop_id\":\"shop-002\"},{\"shop_id\":\"shop-005\"},{\"shop_id\":\"shop-006\"},{\"shop_id\":\"shop-007\"},{\"shop_id\":\"shop-008\"},{\"shop_id\":\"shop-009\"},{\"shop_id\":\"shop-010\"},{\"shop_id\":\"shop-012\"},{\"shop_id\":\"shop-014\"},{\"shop_id\":\"shop-017\"},{\"shop_id\":\"shop-027\"},{\"shop_id\":\"shop-028\"},{\"shop_id\":\"shop-030\"},{\"shop_id\":\"shop-033\"},{\"shop_id\":\"shop-039\"},{\"shop_id\":\"shop-040\"}],\"note\":\"17 shops over N50k, total N6,352,050\"}",
+    "id": "call_fab1a7c7-1c33-40a6-819e-f4a4d585353b",
+    "name": "propose_reminder_plan"
+   }
+  ],
+  "versions": {
+   "policy": "policy-2026-10-27",
+   "skill": "collector:collector-v1"
+  }
+ },
+ "78a5ebe1bcc81f4e48eef65c884939e9f3dd21ff6b6292f94fdda627e8e6f629": {
   "cached_tokens": 3441,
   "completion_tokens": 323,
   "content": "",
@@ -1507,12 +1003,1001 @@
   "latency_s": 10.292,
   "model": "muse-spark-1.3",
   "prompt_tokens": 5355,
+  "request": "fc72932d2e1798db5fa34509d433c178132af2724a07f68d5e7262c32840e07f",
   "tool_calls": [
    {
     "arguments": "{\"items\":[{\"shop_id\":\"shop-001\"},{\"shop_id\":\"shop-005\"},{\"shop_id\":\"shop-004\"},{\"shop_id\":\"shop-002\"},{\"shop_id\":\"shop-012\"},{\"shop_id\":\"shop-008\"},{\"shop_id\":\"shop-007\"},{\"shop_id\":\"shop-010\"},{\"shop_id\":\"shop-006\"},{\"shop_id\":\"shop-014\"},{\"shop_id\":\"shop-030\"},{\"shop_id\":\"shop-009\"},{\"shop_id\":\"shop-027\"},{\"shop_id\":\"shop-033\"},{\"shop_id\":\"shop-039\"},{\"shop_id\":\"shop-040\"},{\"shop_id\":\"shop-017\"},{\"shop_id\":\"shop-028\"}],\"note\":\"18 shops over N50k, total N7,070,700\"}",
     "id": "call_c906dffa-e53e-4540-87e0-6c052a131d4f",
     "name": "propose_reminder_plan"
    }
-  ]
+  ],
+  "versions": {
+   "policy": "policy-2026-10-27",
+   "skill": "collector:collector-v1"
+  }
+ },
+ "7936133ecb770b8e0578a9de67dba6da7f4dcdd4451783356e58b44295948485": {
+  "cached_tokens": 3825,
+  "completion_tokens": 560,
+  "content": "",
+  "finish_reason": "stop",
+  "latency_s": 2.988,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 4038,
+  "request": "33a7f6db05eae6ab3f9b25dd5dd5ac3e436f7b16a0abd172f0a81d0fae812bac",
+  "tool_calls": [],
+  "versions": {
+   "policy": "policy-2026-10-27",
+   "skill": "collector:collector-v1"
+  }
+ },
+ "7c2c32e6c4889d55993ccf08a1fdc748335d744468270e5c5f4e2859bea61cd9": {
+  "cached_tokens": 6769,
+  "completion_tokens": 188,
+  "content": "",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.397,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 7527,
+  "request": "2405b2736459d01426766d83c6e0874686f65b1c35e26a0c51d21d91c9340c6b",
+  "tool_calls": [
+   {
+    "arguments": "{\"items\":[{\"shop_id\":\"shop-001\"},{\"shop_id\":\"shop-002\"},{\"shop_id\":\"shop-004\"},{\"shop_id\":\"shop-005\"},{\"shop_id\":\"shop-007\"},{\"shop_id\":\"shop-008\"},{\"shop_id\":\"shop-010\"},{\"shop_id\":\"shop-012\"}],\"note\":\"8 shops over N150k, total N6,243,850\"}",
+    "id": "call_7db7b73f-1aa6-4095-bed7-b7f631f238a2",
+    "name": "propose_reminder_plan"
+   }
+  ],
+  "versions": {
+   "policy": "policy-2026-10-27",
+   "skill": "collector:collector-v1"
+  }
+ },
+ "7fe05b4f901ec68e5836f87e7a43e6ec8254d720c5d22fd301a31050657f4a90": {
+  "cached_tokens": 4721,
+  "completion_tokens": 488,
+  "content": "",
+  "finish_reason": "tool_calls",
+  "latency_s": 2.288,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 5108,
+  "request": "a7394b1bf25bba4c87f5a4a55a5e21e60ebcaf50ee941641c75af2530e86b327",
+  "tool_calls": [
+   {
+    "arguments": "{\"items\":[{\"shop_id\":\"shop-001\"},{\"shop_id\":\"shop-005\"}],\"note\":\"Over 1m: 2 shops, N3,457,300 total overdue.\"}",
+    "id": "call_71c20f4b-886b-4480-bce8-7a1b2727e576",
+    "name": "propose_reminder_plan"
+   }
+  ],
+  "versions": {
+   "policy": "policy-2026-10-27",
+   "skill": "collector:collector-v1"
+  }
+ },
+ "808d495e3eff061c5ff207d7a2189262b0d1dcf34348513ba6735e6e85fc440d": {
+  "cached_tokens": 5617,
+  "completion_tokens": 232,
+  "content": "",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.267,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 6301,
+  "request": "5336a417fdf545ad9a8c828f660269e793869f7acb6a62028f10a1003ec33ef2",
+  "tool_calls": [
+   {
+    "arguments": "{\"body\":\"N0 outstanding, N0 overdue. Ronke Foodstuff & Provisions: 0 open invoices. Limit N840,000.\",\"channel\":\"owner_console\",\"ends_turn\":true,\"kind\":\"reply\"}",
+    "id": "call_bdf16de3-eda4-4f87-b671-36ee374dcac8",
+    "name": "send_to_user"
+   }
+  ],
+  "versions": {
+   "policy": "policy-2026-10-27",
+   "skill": "collector:collector-v1"
+  }
+ },
+ "815d0afa0304fd3218fbc0a91ab336aae24ed7124f38bec520b70d68c923f513": {
+  "cached_tokens": 3953,
+  "completion_tokens": 123,
+  "content": "Pulling the over 200k list to build the reminder plan.",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.895,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 6924,
+  "request": "afb2e44fc72b2732428420008d1a7cfe3ed9e9eb7c28d853befc646d85e5b7a4",
+  "tool_calls": [
+   {
+    "arguments": "{\"limit\":50,\"min_overdue_naira\":200000,\"overdue_only\":true}",
+    "id": "call_fb828900-e5ee-4b93-8743-a14a5b3cf8ea",
+    "name": "get_invoices"
+   }
+  ],
+  "versions": {
+   "policy": "policy-2026-10-27",
+   "skill": "collector:collector-v1"
+  }
+ },
+ "851d56324ee35b7b9f9876134aa8bb642d78bfeae7cb2af7f62eccea49c12d04": {
+  "cached_tokens": 5105,
+  "completion_tokens": 78,
+  "content": "I'll get Iya Tolu's current balance.",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.05,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 6946,
+  "request": "dbe0790a8c93575af1b66e522a53b100dbd0c426bb132238265d23f080076c96",
+  "tool_calls": [
+   {
+    "arguments": "{\"shop_id\":\"shop-002\"}",
+    "id": "call_2bb96681-5814-4baa-9da2-0ca7e10809c3",
+    "name": "get_balance"
+   }
+  ],
+  "versions": {
+   "policy": "policy-2026-10-27",
+   "skill": "collector:collector-v1"
+  }
+ },
+ "87752825a12d1e5dd690c4e43fe3f118317dc1f2fbca542e0306fe4044fae233": {
+  "cached_tokens": 5361,
+  "completion_tokens": 79,
+  "content": "I'll get Funke & Sons' current balance.",
+  "finish_reason": "tool_calls",
+  "latency_s": 0.932,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 5915,
+  "request": "798d3735ed3c4fb4cd15965bccb1588c2f3233157df8cb20762d10246e7d5d27",
+  "tool_calls": [
+   {
+    "arguments": "{\"shop_id\":\"shop-005\"}",
+    "id": "call_5fe24a7f-112b-4247-be80-49d6dab87aa4",
+    "name": "get_balance"
+   }
+  ],
+  "versions": {
+   "policy": "policy-2026-10-27",
+   "skill": "collector:collector-v1"
+  }
+ },
+ "89b25e8c4a4716a75873e420c167eae4468872f17b54e26219677e51cdfb6f2d": {
+  "cached_tokens": 4465,
+  "completion_tokens": 105,
+  "content": "I'll get Mama Sola's current balance.",
+  "finish_reason": "tool_calls",
+  "latency_s": 0.932,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 5397,
+  "request": "61d4e43025b7d24d252c051c099fe0996158fbe5b9a5a2ecb7eea693ec3340b7",
+  "tool_calls": [
+   {
+    "arguments": "{\"shop_id\":\"shop-001\"}",
+    "id": "call_eb5bfbad-8d45-4e0d-bebc-2cffa25a5d58",
+    "name": "get_balance"
+   }
+  ],
+  "versions": {
+   "policy": "policy-2026-10-27",
+   "skill": "collector:collector-v1"
+  }
+ },
+ "89dcc1319b26452be7918d8751222f4bbea8534f5e962bcbbd0f6894fabce1ca": {
+  "cached_tokens": 3953,
+  "completion_tokens": 127,
+  "content": "Balance check for Yemisi \u2014 pulling the book figures.",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.066,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 4090,
+  "request": "aba553d2311b946292e68e65a4966cbeb7f126140d5dfda33e6f1c0fd2afcb17",
+  "tool_calls": [
+   {
+    "arguments": "{\"shop_id\":\"shop-012\"}",
+    "id": "call_1bbeb93c-cdc1-4e89-b1cd-79d5067aad41",
+    "name": "get_balance"
+   }
+  ],
+  "versions": {
+   "policy": "policy-2026-10-27",
+   "skill": "collector:collector-v1"
+  }
+ },
+ "8b2968abd97646fbdfd058cd7a8672df3d8f77dfa36aa8c88a96b1b0fe39a981": {
+  "cached_tokens": 3441,
+  "completion_tokens": 146,
+  "content": "",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.297,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 4890,
+  "request": "c33772a2dac9618d70c3fc8036e877f574063edaefd6462fb150430397a25c20",
+  "tool_calls": [
+   {
+    "arguments": "{\"body\":\"N63,300 received. Thank you.\",\"channel\":\"shop_whatsapp\",\"ends_turn\":true,\"shop_id\":\"shop-024\"}",
+    "id": "call_8e440b42-fbea-408c-939e-4fbbe8656be6",
+    "name": "send_to_user"
+   }
+  ],
+  "versions": {
+   "policy": "policy-2026-10-27",
+   "skill": "collector:collector-v1"
+  }
+ },
+ "932cd4162dd7fe38240314873f6de8b907216f1f1e4b69b7f7c0532da8b9baa1": {
+  "cached_tokens": 4081,
+  "completion_tokens": 172,
+  "content": "I'll verify that N561,800 payment claim right away.",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.563,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 4528,
+  "request": "78adb6a66a3119d41f87da289169fa5575336deb0230a3175ccc42ff7f6ad1fa",
+  "tool_calls": [
+   {
+    "arguments": "{\"amount_kobo\":56180000,\"reference\":\"CLT-00025\",\"shop_id\":\"shop-003\"}",
+    "id": "call_d7538232-e83d-488c-a194-167dff6ab46a",
+    "name": "check_payment"
+   }
+  ],
+  "versions": {
+   "policy": "policy-2026-10-27",
+   "skill": "collector:collector-v1"
+  }
+ },
+ "96260f5acd6748da9ee6f6e8333e320e6ee9a14b7442e88d93f3c1dd940ab20c": {
+  "cached_tokens": 3441,
+  "completion_tokens": 145,
+  "content": "",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.127,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 7473,
+  "request": "1e0f82211e37fc330d1226f54b0f425acaf3bd0c0615a300d2147a2b5f14389e",
+  "tool_calls": [
+   {
+    "arguments": "{\"items\":[{\"shop_id\":\"shop-001\"},{\"shop_id\":\"shop-002\"},{\"shop_id\":\"shop-004\"},{\"shop_id\":\"shop-005\"},{\"shop_id\":\"shop-008\"},{\"shop_id\":\"shop-012\"}],\"note\":\"6 shops over N200k, total N5,907,700\"}",
+    "id": "call_91dd6561-9806-4784-a9d8-0c7219d0aa7e",
+    "name": "propose_reminder_plan"
+   }
+  ],
+  "versions": {
+   "policy": "policy-2026-10-27",
+   "skill": "collector:collector-v1"
+  }
+ },
+ "9ba0cb113145f1e425ba662c4a7b77bf46c506d1c937add508f17c590a1cd325": {
+  "cached_tokens": 4081,
+  "completion_tokens": 214,
+  "content": "",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.421,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 4768,
+  "request": "1c46aebecb8ebd90b5a8ce88036fd4de2a515baaa04e7ed899620d0a98647da6",
+  "tool_calls": [
+   {
+    "arguments": "{\"amount_kobo\":1310000,\"reference\":\"CLT-00032\",\"shop_id\":\"shop-038\"}",
+    "id": "call_39f663cb-3ab5-4005-a56c-b52be9646a93",
+    "name": "send_receipt"
+   }
+  ],
+  "versions": {
+   "policy": "policy-2026-10-27",
+   "skill": "collector:collector-v1"
+  }
+ },
+ "9eee4ea305a40e48b69f7c7effdb33aa862f16a4ffbd3a175489357701173291": {
+  "cached_tokens": 3441,
+  "completion_tokens": 215,
+  "content": "Heartbeat acknowledged \u2014 no pending collections work, ending turn without message.",
+  "finish_reason": "stop",
+  "latency_s": 1.291,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 3838,
+  "request": "71e4d409e4fc3c50a5185bf8e143102cc1e048ccb4f4bde4650ff5a87c250267",
+  "tool_calls": [],
+  "versions": {
+   "policy": "policy-2026-10-27",
+   "skill": "collector:collector-v1"
+  }
+ },
+ "9ef4faa7b8062b5faf34d2454b543d0c3346932f6c70d312eda9aab1155d83bc": {
+  "cached_tokens": 3953,
+  "completion_tokens": 195,
+  "content": "",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.16,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 4297,
+  "request": "3f2a44c5e4639a8f28a1ade493884b78ad4d8684f604d753a4885f3846485e34",
+  "tool_calls": [
+   {
+    "arguments": "{\"body\":\"Yemisi & Sons Mini Mart: N770,200 outstanding, N635,500 overdue. 7 open invoices, oldest 47 days overdue. Limit N630,000.\",\"channel\":\"owner_console\",\"ends_turn\":true,\"kind\":\"reply\"}",
+    "id": "call_d8baa186-c115-45a9-845c-2129d6acc409",
+    "name": "send_to_user"
+   }
+  ],
+  "versions": {
+   "policy": "policy-2026-10-27",
+   "skill": "collector:collector-v1"
+  }
+ },
+ "9fa32aeac026652f575644f1a13a3d0b1e54e92ab93b602b702056fd32444c49": {
+  "cached_tokens": 3953,
+  "completion_tokens": 135,
+  "content": "I'll pull everyone over 50k and build today's reminder plan.",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.928,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 4080,
+  "request": "44bb924684034e52141e227d3d153f01c2a0964cde7cd47350269835460d6d02",
+  "tool_calls": [
+   {
+    "arguments": "{\"limit\":50,\"min_overdue_naira\":50000,\"overdue_only\":true}",
+    "id": "call_fb46af89-2728-4266-a66e-69398ed4ec20",
+    "name": "get_invoices"
+   }
+  ],
+  "versions": {
+   "policy": "policy-2026-10-27",
+   "skill": "collector:collector-v1"
+  }
+ },
+ "a636275479788f120cce14f8ccbc3c095bd6f43eb875023d35444af4e16ffbc7": {
+  "cached_tokens": 3441,
+  "completion_tokens": 301,
+  "content": "Heartbeat with no task and no new message \u2014 nothing to do.",
+  "finish_reason": "stop",
+  "latency_s": 1.286,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 3540,
+  "request": "71ef15f9ac32baa94731090ebb0f1b6ff0dfaa6ca40f53daf4a34d6870ca34a0",
+  "tool_calls": [],
+  "versions": {
+   "policy": "policy-2026-10-27",
+   "skill": "collector:collector-v1"
+  }
+ },
+ "a772bfca05d2a012e93bbce3a9838346272cf76a6f9aa54913278d3a4e19637b": {
+  "cached_tokens": 4209,
+  "completion_tokens": 195,
+  "content": "",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.167,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 4812,
+  "request": "4e621bdb8f1f97e2ce632f5a2bf33d83e865f01eed7275004e34f705a3a361e0",
+  "tool_calls": [
+   {
+    "arguments": "{\"body\":\"Yinka Provision Store: N788,000 outstanding, N443,400 overdue. 11 open invoices, oldest 44 days overdue. Limit N840,000.\",\"channel\":\"owner_console\",\"ends_turn\":true,\"kind\":\"reply\"}",
+    "id": "call_28d2b410-1579-4f02-a782-2172600e03c8",
+    "name": "send_to_user"
+   }
+  ],
+  "versions": {
+   "policy": "policy-2026-10-27",
+   "skill": "collector:collector-v1"
+  }
+ },
+ "aaef4db8e41560ae0ed98550f7ab2e801586b946109ec093dc669e9396a3c797": {
+  "cached_tokens": 4721,
+  "completion_tokens": 272,
+  "content": "",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.739,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 4973,
+  "request": "8a06562d3bed330c4c84b9462cc2126c4ec0bf3f981687faa184927558556600",
+  "tool_calls": [
+   {
+    "arguments": "{\"body\":\"Thanks for the update. Your payment is not showing in our bank feed yet, so it is still pending. I will keep checking and confirm once it reflects. If you have a receipt reference, please share it.\",\"channel\":\"shop_whatsapp\",\"ends_turn\":true,\"shop_id\":\"shop-001\"}",
+    "id": "call_c0fe645f-87ec-497a-a8f8-4d3a484220a8",
+    "name": "send_to_user"
+   }
+  ],
+  "versions": {
+   "policy": "policy-2026-10-27",
+   "skill": "collector:collector-v1"
+  }
+ },
+ "ac2ea083445638b73d242ace0d1f0595172b3013aed94c47cb5ae637a8ad588a": {
+  "cached_tokens": 4465,
+  "completion_tokens": 265,
+  "content": "Payment verified \u2014 I'll send your receipt.",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.417,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 4760,
+  "request": "91a17a3db66e00148b3cfe7736ff852116720a5444772ddf2f82b75721923e6f",
+  "tool_calls": [
+   {
+    "arguments": "{\"amount_kobo\":2060000,\"reference\":\"CLT-00046\",\"shop_id\":\"shop-031\"}",
+    "id": "call_b7c9f857-65e0-4560-a547-4edfc0423f51",
+    "name": "send_receipt"
+   }
+  ],
+  "versions": {
+   "policy": "policy-2026-10-27",
+   "skill": "collector:collector-v1"
+  }
+ },
+ "b2de2a21b701ee6a1209c8657309b7c260952007aa0db63fcdcbbaed5826627d": {
+  "cached_tokens": 3953,
+  "completion_tokens": 161,
+  "content": "Yinka balance check \u2014 getting the figures.",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.67,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 4610,
+  "request": "6e449be533bacbd2b2c24fdd47c27a538731b2d7241a4885e320b639df0d7fa1",
+  "tool_calls": [
+   {
+    "arguments": "{\"shop_id\":\"shop-008\"}",
+    "id": "call_f8705250-8892-41e4-bfcd-a2940a5e84ef",
+    "name": "get_balance"
+   }
+  ],
+  "versions": {
+   "policy": "policy-2026-10-27",
+   "skill": "collector:collector-v1"
+  }
+ },
+ "b3d5bb91529e99a2962eae078c487b99fd8cf6bc7f52ce0162fecfac23987148": {
+  "cached_tokens": 3441,
+  "completion_tokens": 332,
+  "content": "",
+  "finish_reason": "tool_calls",
+  "latency_s": 2.168,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 4999,
+  "request": "abfc4c8bac4e5dac8d6e135831474bd5f2b89de062459b4f30575835dfc2e6a2",
+  "tool_calls": [
+   {
+    "arguments": "{\"body\":\"Thanks for letting us know. I checked and it is not showing in our bank yet \u2014 still pending. Please keep the alert/receipt and I will confirm once it lands.\",\"channel\":\"shop_whatsapp\",\"ends_turn\":true,\"shop_id\":\"shop-017\"}",
+    "id": "call_d9965f3b-3578-468c-b18d-5fce86e954f4",
+    "name": "send_to_user"
+   }
+  ],
+  "versions": {
+   "policy": "policy-2026-10-27",
+   "skill": "collector:collector-v1"
+  }
+ },
+ "b549581885b1e0d78d6bb85472f41d06b5c9590b5013a3f43abb6fa87a71e1d5": {
+  "cached_tokens": 3313,
+  "completion_tokens": 166,
+  "content": "",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.068,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 5607,
+  "request": "a8f2909d29c8de224b7f41be785bfb3cc5f79caf0d7a63c9e3190f908fa9987f",
+  "tool_calls": [
+   {
+    "arguments": "{\"body\":\"N3,497,300 outstanding, N2,387,250 overdue. Mama Sola Provisions: 14 open invoices, 45 days oldest, limit N1,700,000.\",\"channel\":\"owner_console\",\"ends_turn\":true}",
+    "id": "call_35319196-1589-4dd2-9908-ff190664e950",
+    "name": "send_to_user"
+   }
+  ],
+  "versions": {
+   "policy": "policy-2026-10-27",
+   "skill": "collector:collector-v1"
+  }
+ },
+ "ba784fa2e75091f54fffef4fcee34421fbbd6c277b4ba00b0a0230f959f49974": {
+  "cached_tokens": 4593,
+  "completion_tokens": 76,
+  "content": "His Mercy balance \u2014 checking the book.",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.053,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 5620,
+  "request": "8c0a282e4d999f282c4dcadf9fd74625948b95c5d011ff50439114fa46b9844a",
+  "tool_calls": [
+   {
+    "arguments": "{\"shop_id\":\"shop-011\"}",
+    "id": "call_0353a326-4014-4a3c-b6dd-0bbb41ec5551",
+    "name": "get_balance"
+   }
+  ],
+  "versions": {
+   "policy": "policy-2026-10-27",
+   "skill": "collector:collector-v1"
+  }
+ },
+ "bac90e29ef59ff350cb155ab3d778a7e1535deedebe66e00ac7cb1f01c9e1fa6": {
+  "cached_tokens": 4593,
+  "completion_tokens": 255,
+  "content": "",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.431,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 4906,
+  "request": "5594127592cd515706ffaf085995f02ac4a837da1a305c3ee2112d588cd2cef0",
+  "tool_calls": [
+   {
+    "arguments": "{\"body\":\"Noted, thank you. We will check on Friday after your Thursday payment.\",\"channel\":\"shop_whatsapp\",\"ends_turn\":true,\"shop_id\":\"shop-010\"}",
+    "id": "call_4942b604-66a6-4cd4-9a9e-a301927870a2",
+    "name": "send_to_user"
+   }
+  ],
+  "versions": {
+   "policy": "policy-2026-10-27",
+   "skill": "collector:collector-v1"
+  }
+ },
+ "bbf6ae07e96bfa34f9d6e4931974c1b842b035dc71272f09964bf615019d0831": {
+  "cached_tokens": 4081,
+  "completion_tokens": 104,
+  "content": "Checking that N71,600 payment now.",
+  "finish_reason": "tool_calls",
+  "latency_s": 0.916,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 5463,
+  "request": "14b0edfc5ccc82d3a878160ec5e7fd73faabd316dbc3fd0b8b97d4bf73747dd5",
+  "tool_calls": [
+   {
+    "arguments": "{\"amount_kobo\":7160000,\"shop_id\":\"shop-019\"}",
+    "id": "call_4cea375d-c5e6-476e-a83a-be5dbf08cdb1",
+    "name": "check_payment"
+   }
+  ],
+  "versions": {
+   "policy": "policy-2026-10-27",
+   "skill": "collector:collector-v1"
+  }
+ },
+ "bf75380c27196382bd0c31ec518890f0e1a935c366585c5081dcbd373862de77": {
+  "cached_tokens": 3441,
+  "completion_tokens": 120,
+  "content": "Compiling shops over 150k for the chase plan.",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.138,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 6857,
+  "request": "4aa006c38c82b680b19aaa534049667f3bcc8571270abed26ad8f74ba3bb22b3",
+  "tool_calls": [
+   {
+    "arguments": "{\"limit\":50,\"min_overdue_naira\":150000,\"overdue_only\":true}",
+    "id": "call_0656acde-1a4f-47f7-af16-efc806854b4c",
+    "name": "get_invoices"
+   }
+  ],
+  "versions": {
+   "policy": "policy-2026-10-27",
+   "skill": "collector:collector-v1"
+  }
+ },
+ "bf8bc8b486f6f3d1a697704e156ffd9dd02df4e81c0ce95a345a3421eb50f028": {
+  "cached_tokens": 3953,
+  "completion_tokens": 181,
+  "content": "",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.052,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 6126,
+  "request": "e72d6b8f0d6b67a92ee8f574f732e497ac42b20a8d71425b84187c9bc6813fa5",
+  "tool_calls": [
+   {
+    "arguments": "{\"body\":\"N2,211,200 outstanding, N1,070,050 overdue. Funke & Sons Mini Mart: 8 open invoices, 49 days oldest, limit N2,480,000.\",\"channel\":\"owner_console\",\"ends_turn\":true}",
+    "id": "call_6d34dce9-d7a8-4133-879a-d3fc08da8a57",
+    "name": "send_to_user"
+   }
+  ],
+  "versions": {
+   "policy": "policy-2026-10-27",
+   "skill": "collector:collector-v1"
+  }
+ },
+ "c087f21e07ef92c9590f2007e18912eb5d4caa97d424f8fdd8481c41b3364080": {
+  "cached_tokens": 3441,
+  "completion_tokens": 390,
+  "content": "I'll verify that payment claim against the bank feed.",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.852,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 4566,
+  "request": "56a8c06311ff916ad2b8624e4974873f931f112b0cd31380c2e7471b106811e6",
+  "tool_calls": [
+   {
+    "arguments": "{\"amount_kobo\":1310000,\"reference\":\"CLT-00032\",\"shop_id\":\"shop-038\"}",
+    "id": "call_30eaf886-9952-45a4-84bf-ccc28919aca9",
+    "name": "check_payment"
+   }
+  ],
+  "versions": {
+   "policy": "policy-2026-10-27",
+   "skill": "collector:collector-v1"
+  }
+ },
+ "c11bd49a4f4061bd086f9714e1dcb3ee427001dd9fb98d135c1dc601dbb5375f": {
+  "cached_tokens": 3441,
+  "completion_tokens": 178,
+  "content": "",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.646,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 4959,
+  "request": "77a5e8ec35792e9bbc7982bc47ddb3100d4ec9bd5490e7d91aba36eab117cac6",
+  "tool_calls": [
+   {
+    "arguments": "{\"body\":\"Noted, thank you. I will check tomorrow.\",\"channel\":\"shop_whatsapp\",\"ends_turn\":true,\"shop_id\":\"shop-004\"}",
+    "id": "call_f4d909da-7793-4997-abe6-157d077e44ee",
+    "name": "send_to_user"
+   }
+  ],
+  "versions": {
+   "policy": "policy-2026-10-27",
+   "skill": "collector:collector-v1"
+  }
+ },
+ "c81020397ec32e1c0cfc333bf67218a9fa812bc6f50ce77c046d33e035c161a7": {
+  "cached_tokens": 4081,
+  "completion_tokens": 158,
+  "content": "Checking your claimed payment now.",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.215,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 4530,
+  "request": "167355aed9f0df119436ba211e5c91bafd0c5869ac66cad0d8aaa480e945368b",
+  "tool_calls": [
+   {
+    "arguments": "{\"amount_kobo\":6330000,\"reference\":\"CLT-00039\",\"shop_id\":\"shop-024\"}",
+    "id": "call_31257e80-4ac3-40c7-bc7d-b4ec3e2cecbb",
+    "name": "check_payment"
+   }
+  ],
+  "versions": {
+   "policy": "policy-2026-10-27",
+   "skill": "collector:collector-v1"
+  }
+ },
+ "c85f3f90ab540648f5c438dc855468fd853456c5ff8e4f2870bb1f4880b95fb7": {
+  "cached_tokens": 4081,
+  "completion_tokens": 141,
+  "content": "",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.081,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 5323,
+  "request": "f454fa554ef9d592fac3f1b4da1046e5c2c528eb0fb516c9f95f9524fe959ac3",
+  "tool_calls": [
+   {
+    "arguments": "{\"body\":\"Blessed Funke Mini Mart: N0 outstanding, N0 overdue. 0 open invoices. Limit N1,790,000.\",\"channel\":\"owner_console\",\"ends_turn\":true,\"kind\":\"reply\"}",
+    "id": "call_bb68a401-c131-45d5-829b-641f25255922",
+    "name": "send_to_user"
+   }
+  ],
+  "versions": {
+   "policy": "policy-2026-10-27",
+   "skill": "collector:collector-v1"
+  }
+ },
+ "c971c143f2211b94cf0d0cf2ef43d8255d11947f0fe15932c52c5e69042df157": {
+  "cached_tokens": 5233,
+  "completion_tokens": 213,
+  "content": "",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.236,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 6572,
+  "request": "de206df2be6093a415888971c3d2d967ee2729f13ea0885a88b82ca1ca9f96f6",
+  "tool_calls": [
+   {
+    "arguments": "{\"items\":[{\"shop_id\":\"shop-001\"},{\"shop_id\":\"shop-005\"},{\"shop_id\":\"shop-004\"},{\"shop_id\":\"shop-002\"},{\"shop_id\":\"shop-012\"},{\"shop_id\":\"shop-008\"},{\"shop_id\":\"shop-007\"},{\"shop_id\":\"shop-010\"},{\"shop_id\":\"shop-006\"},{\"shop_id\":\"shop-014\"}],\"note\":\"10 shops over N100k, total N6,524,750\"}",
+    "id": "call_fe395eeb-0e67-4d5d-af1d-41b5200e70f6",
+    "name": "propose_reminder_plan"
+   }
+  ],
+  "versions": {
+   "policy": "policy-2026-10-27",
+   "skill": "collector:collector-v1"
+  }
+ },
+ "c97cc940caea966dc0f5b5ab55f76585d2db802322f33a33268e7c42117092b2": {
+  "cached_tokens": 4465,
+  "completion_tokens": 256,
+  "content": "",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.499,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 4728,
+  "request": "dfa79767e45d898b300f28a5b33a736ac1988d2403d92c6ed5285e9051099fdb",
+  "tool_calls": [
+   {
+    "arguments": "{\"amount_kobo\":6330000,\"reference\":\"CLT-00039\",\"shop_id\":\"shop-024\"}",
+    "id": "call_5d4e74ee-c753-453a-8bfd-f8fd052f60fc",
+    "name": "send_receipt"
+   }
+  ],
+  "versions": {
+   "policy": "policy-2026-10-27",
+   "skill": "collector:collector-v1"
+  }
+ },
+ "cb796e13f07b1611f6eb3450c11610b9df9a2421f7e384978eb7a6c9a8e13743": {
+  "cached_tokens": 6897,
+  "completion_tokens": 124,
+  "content": "I'll pull everyone over 500k and put together the chase plan.",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.409,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 7789,
+  "request": "682806e56d72fd910935a4ae60a11ddf131bb8b2464162b2bfc628d571bd60d0",
+  "tool_calls": [
+   {
+    "arguments": "{\"limit\":50,\"min_overdue_naira\":500000,\"overdue_only\":true}",
+    "id": "call_f60216ea-2279-4e39-8ced-b860cacbce47",
+    "name": "get_invoices"
+   }
+  ],
+  "versions": {
+   "policy": "policy-2026-10-27",
+   "skill": "collector:collector-v1"
+  }
+ },
+ "d069547522ccd7b6ee723f3dad6ead55c5e031005d04a8903495a95259169723": {
+  "cached_tokens": 4081,
+  "completion_tokens": 165,
+  "content": "",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.316,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 4938,
+  "request": "3a5646d67a3597863d72feae5a4c20fe591ccadb8eb866d8a7d73a5ab87a2963",
+  "tool_calls": [
+   {
+    "arguments": "{\"body\":\"N20,600 received, thank you. Receipt to follow.\",\"channel\":\"shop_whatsapp\",\"ends_turn\":true,\"shop_id\":\"shop-031\",\"kind\":\"receipt\"}",
+    "id": "call_7a1f71ef-3194-42aa-b871-c5e415adb3cb",
+    "name": "send_to_user"
+   }
+  ],
+  "versions": {
+   "policy": "policy-2026-10-27",
+   "skill": "collector:collector-v1"
+  }
+ },
+ "d07e810e8c330a59075b3e1588b1d000c013d5c112d704674c237fbdfb73f41c": {
+  "cached_tokens": 4465,
+  "completion_tokens": 342,
+  "content": "Payment verified \u2014 I'll send the receipt and thank you.",
+  "finish_reason": "tool_calls",
+  "latency_s": 2.08,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 4716,
+  "request": "d0141146c0279a61d4d1bda369769386c02c7430023252edf679b33ab155d37a",
+  "tool_calls": [
+   {
+    "arguments": "{\"amount_kobo\":3360000,\"reference\":\"CLT-00013\",\"shop_id\":\"shop-035\"}",
+    "id": "call_4e0925ab-958b-4fc0-90d0-33c668e15542",
+    "name": "send_receipt"
+   }
+  ],
+  "versions": {
+   "policy": "policy-2026-10-27",
+   "skill": "collector:collector-v1"
+  }
+ },
+ "d3e1b9ec423c4f8d7342663cf095df2fa18511e53c799f5bd6e122187cfe1230": {
+  "cached_tokens": 6385,
+  "completion_tokens": 187,
+  "content": "",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.534,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 6642,
+  "request": "96b177b6ae5eca28270060e918ab4761c2f40fe588097c887227c12c0548fb25",
+  "tool_calls": [
+   {
+    "arguments": "{\"body\":\"N1,983,550 outstanding, N718,650 overdue. Divine Favour Provisions: 9 open invoices, 44 days oldest, limit N2,410,000.\",\"channel\":\"owner_console\",\"ends_turn\":true}",
+    "id": "call_d42b7eff-0faf-4f5e-8268-4a65a38483eb",
+    "name": "send_to_user"
+   }
+  ],
+  "versions": {
+   "policy": "policy-2026-10-27",
+   "skill": "collector:collector-v1"
+  }
+ },
+ "da3b79d6cf69001744b6ab3ebfb019235806397b72c1666ec1bb750ec54ddc4b": {
+  "cached_tokens": 5233,
+  "completion_tokens": 173,
+  "content": "",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.237,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 5813,
+  "request": "362311151ed28eb1070d4119a452a02a142bc6964a63c353205201be1fbaa450",
+  "tool_calls": [
+   {
+    "arguments": "{\"body\":\"N0 outstanding, N0 overdue. His Mercy Mini Mart: 0 open invoices. Limit N640,000.\",\"channel\":\"owner_console\",\"ends_turn\":true,\"kind\":\"reply\"}",
+    "id": "call_dbaa3ffa-784a-4129-a8b1-bf559fdc1240",
+    "name": "send_to_user"
+   }
+  ],
+  "versions": {
+   "policy": "policy-2026-10-27",
+   "skill": "collector:collector-v1"
+  }
+ },
+ "dd37562a02b348864ee56cb3a2f7cbe7bc5414324648d14dcb8129f41f543f3f": {
+  "cached_tokens": 5105,
+  "completion_tokens": 76,
+  "content": "Ronke balance check \u2014 getting the figures.",
+  "finish_reason": "tool_calls",
+  "latency_s": 0.821,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 6104,
+  "request": "dce9dcb6757e7a79dd88fff36a86cece6b143058b4857ebeb353a8adc59e8a0b",
+  "tool_calls": [
+   {
+    "arguments": "{\"shop_id\":\"shop-013\"}",
+    "id": "call_a61cd1d8-b828-4fca-a4f1-c1d4b779ac94",
+    "name": "get_balance"
+   }
+  ],
+  "versions": {
+   "policy": "policy-2026-10-27",
+   "skill": "collector:collector-v1"
+  }
+ },
+ "e0801a2995b976c21d3376b173466a3268d8d868382822c6b6425d7dd431a7ee": {
+  "cached_tokens": 5489,
+  "completion_tokens": 91,
+  "content": "I'll check Divine Favour's balance.",
+  "finish_reason": "tool_calls",
+  "latency_s": 0.984,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 6435,
+  "request": "3ac5eba0b610adeaa5e82a15448747808d2186cdfb02db40b142e77023a00f5e",
+  "tool_calls": [
+   {
+    "arguments": "{\"shop_id\":\"shop-004\"}",
+    "id": "call_95a46527-0d50-43ee-ad1a-37de5f21be25",
+    "name": "get_balance"
+   }
+  ],
+  "versions": {
+   "policy": "policy-2026-10-27",
+   "skill": "collector:collector-v1"
+  }
+ },
+ "ece118590a701e15a790056cb5c678be6c7105668c017a1bd5e6015f9659d12a": {
+  "cached_tokens": 4721,
+  "completion_tokens": 220,
+  "content": "",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.16,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 4954,
+  "request": "607069d4de67aa53b7ba8a2613751ab0d86e10583977243cdd270c20467bfa48",
+  "tool_calls": [
+   {
+    "arguments": "{\"body\":\"Noted, I will check on Saturday. Thank you.\",\"channel\":\"shop_whatsapp\",\"ends_turn\":true,\"shop_id\":\"shop-005\"}",
+    "id": "call_9984dfa5-9e58-4008-b87c-2dda2d3ac99e",
+    "name": "send_to_user"
+   }
+  ],
+  "versions": {
+   "policy": "policy-2026-10-27",
+   "skill": "collector:collector-v1"
+  }
+ },
+ "ee45551fb93c4f8027148d5f2ae25f9f19dbf9c6583ad3dee524264cc20388bd": {
+  "cached_tokens": 4081,
+  "completion_tokens": 677,
+  "content": "Promise noted for tomorrow \u2014 I'll set the check and confirm to the shop.",
+  "finish_reason": "tool_calls",
+  "latency_s": 2.835,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 4738,
+  "request": "f998f80d2fa6f86b2bf21f0e298efd61a002a876b94912f314e51afed9f6b2d1",
+  "tool_calls": [
+   {
+    "arguments": "{\"in_hours\":48,\"reason\":\"Shop-004 promised to pay tomorrow 2026-10-27, recheck day after\",\"shop_id\":\"shop-004\"}",
+    "id": "call_c38afd04-7c74-4fcf-8db8-6a5894f9e615",
+    "name": "set_followup"
+   }
+  ],
+  "versions": {
+   "policy": "policy-2026-10-27",
+   "skill": "collector:collector-v1"
+  }
+ },
+ "eec9d0dc22827942d04bfce73891b09cfcf6915e361c88b12fe4663a27fdd3ba": {
+  "cached_tokens": 6257,
+  "completion_tokens": 300,
+  "content": "",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.241,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 6793,
+  "request": "e637a4d02efdbfd293f1543af13e5f12ea9144a55c197586a7b0b224515773bb",
+  "tool_calls": [
+   {
+    "arguments": "{\"body\":\"N0 outstanding, N0 overdue. Femi POS & Provisions: 0 open invoices. Limit N760,000.\",\"channel\":\"owner_console\",\"ends_turn\":true,\"kind\":\"reply\"}",
+    "id": "call_a0303653-1c1d-4e9b-b89f-8240c536244c",
+    "name": "send_to_user"
+   }
+  ],
+  "versions": {
+   "policy": "policy-2026-10-27",
+   "skill": "collector:collector-v1"
+  }
+ },
+ "f83689d67315e6fa85034848ebc44677b70660058da1b13527420e185d5c6580": {
+  "cached_tokens": 3441,
+  "completion_tokens": 164,
+  "content": "",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.598,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 4728,
+  "request": "f642a1ca8923d74052c3ec41d316ab2fc38b32923f3048bc149f7d697afe4568",
+  "tool_calls": [
+   {
+    "arguments": "{\"amount_kobo\":6910000,\"reference\":\"CLT-00004\",\"shop_id\":\"shop-019\"}",
+    "id": "call_0068008d-c759-41dd-9833-74788a2a89fe",
+    "name": "send_receipt"
+   }
+  ],
+  "versions": {
+   "policy": "policy-2026-10-27",
+   "skill": "collector:collector-v1"
+  }
+ },
+ "fbeb9af176c678e0ce68ff7719ceef067bfde8e5bdf9009c08e53a21e926f6e0": {
+  "cached_tokens": 4081,
+  "completion_tokens": 162,
+  "content": "I'll verify your payment claim against the bank records.",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.394,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 4558,
+  "request": "35838edc0c7d00073314606a8924b013645410f37aee5172c65bdbd1a08d278c",
+  "tool_calls": [
+   {
+    "arguments": "{\"amount_kobo\":2060000,\"reference\":\"CLT-00046\",\"shop_id\":\"shop-031\"}",
+    "id": "call_b47fb62c-8c62-4b56-bfb4-5981bc3d5d77",
+    "name": "check_payment"
+   }
+  ],
+  "versions": {
+   "policy": "policy-2026-10-27",
+   "skill": "collector:collector-v1"
+  }
+ },
+ "fc2dd8651efe91248dfbbc4adf7fe48e1541676e52c680cc01d8e8e82799ab66": {
+  "cached_tokens": 4721,
+  "completion_tokens": 488,
+  "content": "Noted for Monday \u2014 I'll set the follow-up.",
+  "finish_reason": "tool_calls",
+  "latency_s": 2.554,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 5846,
+  "request": "a3273c43b8db51c0d3fff252136a6e03817ac0fa6b9a80f6e7f955fcc9afd6b1",
+  "tool_calls": [
+   {
+    "arguments": "{\"in_hours\":24,\"reason\":\"Shop promised to pay on Monday 2026-10-26\",\"shop_id\":\"shop-002\"}",
+    "id": "call_09f5723f-0d56-41c6-959d-f46a287b0ab6",
+    "name": "set_followup"
+   }
+  ],
+  "versions": {
+   "policy": "policy-2026-10-27",
+   "skill": "collector:collector-v1"
+  }
+ },
+ "fea193ecd4c58174a2920f173f775d524064b0dd083f427cd6cdebabfff555e0": {
+  "cached_tokens": 3569,
+  "completion_tokens": 44,
+  "content": "Silently ignoring routine heartbeat with no pending work.",
+  "finish_reason": "stop",
+  "latency_s": 0.601,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 3740,
+  "request": "14b9223ef63e7b8cbe50a7888c1e21c09634223f3caf599fee02a8d99b1ed4db",
+  "tool_calls": [],
+  "versions": {
+   "policy": "policy-2026-10-27",
+   "skill": "collector:collector-v1"
+  }
  }
 }

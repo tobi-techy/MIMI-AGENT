@@ -57,7 +57,7 @@ from collections import defaultdict
 from collections.abc import Mapping, Sequence
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any
 
@@ -73,6 +73,7 @@ from mimi.receipts.promises import reading_of
 from mimi.receipts.receipt import receipt_keywords
 from mimi.receipts.verdict import ReceiptJudge, fake_verdict
 from mimi.runtime.steps import StepContext, StepOutcome
+from mimi.tz import WAT
 from mimi.voice.audio import inspect
 from mimi.voice.base import Transcriber, Transcript, VoiceContext
 from mimi.voice.cache import CachedTranscriber
@@ -86,7 +87,6 @@ from mimi.world.model import World
 
 VERDICT_CACHE = VOICE_DIR / "verdicts.cache.json"
 REPORT = VOICE_DIR / "voice.report.json"
-WAT = timezone(timedelta(hours=1))
 PROVIDERS = ("spitch", "muse")
 
 

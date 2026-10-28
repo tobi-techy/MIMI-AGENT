@@ -25,13 +25,14 @@ import hashlib
 import json
 import os
 import time
-from collections.abc import Callable, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Protocol
 
 import httpx
 
+from mimi.models.cache import note_migration, requests_index, versioned_key
 from mimi.observe.turns import TOKEN_PRICES
 
 # Naira per US dollar for cost accounting. A planning figure, not a quote:
@@ -279,18 +280,39 @@ class CacheMiss(KeyError):
     pass
 
 
-class RecordedToolModel:
-    """Record live tool-calling turns by request hash; replay them offline."""
+# Per-call versions for a recorded loop call: the messages and tools in, a
+# stamp out (``mimi.harness.versions.tool_call_versions``: the Go policy
+# version and the calling helper's skill version).
+VersionsFor = Callable[[Sequence[dict[str, Any]], Sequence[dict[str, Any]]], Mapping[str, str]]
 
-    def __init__(self, path: Path, live: ToolModel | None = None, *, name: str = "") -> None:
+
+def _default_versions(messages: Sequence[dict[str, Any]],
+                      tools: Sequence[dict[str, Any]]) -> Mapping[str, str]:
+    from mimi.harness.versions import tool_call_versions
+
+    return tool_call_versions(messages, tools)
+
+
+class RecordedToolModel:
+    """Record live tool-calling turns by request hash; replay them offline.
+
+    Keys carry the policy and skill versions (RAI-309): an answer recorded
+    under one policy or skill version misses under another, counted as
+    ``stale``. ``versions=None`` turns the stamp off (plain request keys)."""
+
+    def __init__(self, path: Path, live: ToolModel | None = None, *, name: str = "",
+                 versions: VersionsFor | None = _default_versions) -> None:
         self.path = path
         self.live = live
         self.name = name or (live.name if live else "replay")
+        self.versions = versions
         self.hits = 0
         self.misses = 0
+        self.stale = 0
         self._data: dict[str, Any] = (
             json.loads(path.read_text(encoding="utf-8")) if path.exists() else {}
         )
+        self._requests = requests_index(self._data)
 
     @staticmethod
     def key(name: str, messages: Sequence[dict[str, Any]], tools: Sequence[dict[str, Any]]) -> str:
@@ -302,15 +324,30 @@ class RecordedToolModel:
         self, messages: Sequence[dict[str, Any]], tools: Sequence[dict[str, Any]], *,
         max_tokens: int,
     ) -> ModelTurn:
-        k = self.key(self.name, messages, tools)
+        base = self.key(self.name, messages, tools)
+        v = dict(self.versions(messages, tools)) if self.versions else {}
+        k = versioned_key(base, v)
         if k in self._data:
             self.hits += 1
             return _turn_from(self._data[k])
+        if v and os.environ.get("MIMI_CACHE_MAP") and base in self._data \
+                and "versions" not in self._data[base]:
+            note_migration(self.path, base, k, v)
+            self.hits += 1
+            return _turn_from(self._data[base])
+        stale = bool(v) and base in self._requests
         if self.live is None:
             self.misses += 1
+            if stale:
+                self.stale += 1
+                raise CacheMiss(f"stale: {base} was recorded under {self._requests[base]}, "
+                                f"now {v}; re-record")
             raise CacheMiss(k)
+        self.stale += stale
         turn = self.live.chat(messages, tools, max_tokens=max_tokens)
-        self._data[k] = _turn_to(turn)
+        self._data[k] = _turn_to(turn) | ({"request": base, "versions": v} if v else {})
+        if v:
+            self._requests[base] = v
         self.path.parent.mkdir(parents=True, exist_ok=True)
         # Atomic: a process killed mid-write (the worker-kill run) must not
         # leave a torn cache behind.

@@ -50,7 +50,6 @@ from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any
-from zoneinfo import ZoneInfo
 
 import sqlalchemy as sa
 
@@ -61,9 +60,9 @@ from mimi.store import schema as s
 from mimi.store.db import ensure_schema, make_engine
 from mimi.store.queue import turn_id_for
 from mimi.store.seed import seed_world
+from mimi.tz import LAGOS
 from mimi.world.loader import load_world
 
-LAGOS = ZoneInfo("Africa/Lagos")
 DAY = datetime(2026, 10, 26, tzinfo=LAGOS)
 KEYS = {"owner": "e2e-owner-key-coral-0001", "channel": "e2e-channel-key-coral-01",
         "other_owner": "e2e-owner-key-palmway-01"}

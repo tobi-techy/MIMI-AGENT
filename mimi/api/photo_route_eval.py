@@ -34,12 +34,13 @@ import sys
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Literal
-from zoneinfo import ZoneInfo
+
+from mimi.harness.versions import ROUTER_VERSIONS
+from mimi.tz import LAGOS
 
 ROOT = Path(__file__).resolve().parents[2]
 EVAL = ROOT / "eval"
 DIR = EVAL / "photo_route"
-LAGOS = ZoneInfo("Africa/Lagos")
 NOW = datetime(2026, 10, 28, 10, 15, tzinfo=LAGOS)
 TENANT = "coral-lane"
 MODEL = "muse-spark-1.3"
@@ -82,7 +83,8 @@ def run(split: str, live: bool, words_only: bool) -> dict[str, Any]:
         raise SystemExit("--live needs META_API_KEY")
     inner = from_env("mimi") if live else None
     mode: Literal["through", "replay"] = "through" if live else "replay"
-    router_m = CachedModel(inner, DIR / f"{split}.router.cache.json", mode=mode, name=MODEL)
+    router_m = CachedModel(inner, DIR / f"{split}.router.cache.json", mode=mode, name=MODEL,
+                           versions=ROUTER_VERSIONS)
     vision_m = CachedModel(inner, DIR / f"{split}.vision.cache.json", mode=mode, name=MODEL)
     reader = ListReader(vision_m)
     world = load_world()

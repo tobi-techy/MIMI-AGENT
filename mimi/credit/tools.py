@@ -563,7 +563,10 @@ def credit_helper(registry: ToolRegistry, policy: RiskPolicy, *,
                   budget: RunBudget | None = None) -> Helper:
     ts = build_toolset(registry, "credit", CREDIT_TOOLS + BUILTIN_TOOLS, policy)
     skill = CREDIT_SKILL.replace("{needs_consent}", copy.needs_consent(distributor))
-    return Helper("credit", skill, ts, budget or CREDIT_BUDGET, skill_version="credit-v0.1")
+    from mimi.harness.versions import register
+
+    return register(Helper("credit", skill, ts, budget or CREDIT_BUDGET,
+                           skill_version="credit-v0.1"))
 
 
 def credit_registry(ports: CreditPorts) -> ToolRegistry:

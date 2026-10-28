@@ -23,6 +23,7 @@ from mimi.harness.errors import ToolError
 from mimi.harness.loop import Helper, RunBudget
 from mimi.harness.policy import RiskPolicy
 from mimi.harness.registry import ToolContext, ToolRegistry, build_toolset
+from mimi.tz import lagos_day as _lagos_day
 
 REGISTRY_VERSION = "harness-2026-10-27.1"
 
@@ -477,10 +478,9 @@ class FollowupOut(_Out):
 def set_followup(ctx: ToolContext, args: FollowupIn) -> FollowupOut:
     """Set a timer to look at this again (a promised payment date, a recheck). The job sleeps until then."""
     at = ctx.now + timedelta(hours=args.in_hours)
-    from zoneinfo import ZoneInfo
 
     return FollowupOut(shop_id=args.shop_id, at=at.isoformat(),
-                       due_on=at.astimezone(ZoneInfo("Africa/Lagos")).date().isoformat(),
+                       due_on=_lagos_day(at).isoformat(),
                        reason=args.reason)
 
 
@@ -624,10 +624,14 @@ def collector_helper(registry: ToolRegistry, policy: RiskPolicy, *,
                      budget: RunBudget | None = None, shadow: bool = False,
                      enabled: bool = True) -> Helper:
     ts = build_toolset(registry, "collector", COLLECTOR_TOOLS + BUILTIN_TOOLS, policy)
-    return Helper("collector", COLLECTOR_SKILL, ts, budget or RunBudget(), enabled=enabled,
-                  shadow=shadow, skill_version="collector-v1")
+    from mimi.harness.versions import register
+
+    return register(Helper("collector", COLLECTOR_SKILL, ts, budget or RunBudget(),
+                           enabled=enabled, shadow=shadow, skill_version="collector-v1"))
 
 
 def proof_helper(registry: ToolRegistry, policy: RiskPolicy) -> Helper:
     ts = build_toolset(registry, "proof", PROOF_TOOLS + BUILTIN_TOOLS, policy)
-    return Helper("proof", PROOF_SKILL, ts, skill_version="proof-v0")
+    from mimi.harness.versions import register
+
+    return register(Helper("proof", PROOF_SKILL, ts, skill_version="proof-v0"))
