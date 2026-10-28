@@ -105,6 +105,8 @@ All in code, none from the model: `mimi.harness.guards.LoopLimits`,
   item detail, as before; amounts in a claim's clause need to overlap the
   outcome's, not each be covered, so "received N4,000 and N4,100" with one
   credit of N4,000 goes out.
+  A plural claim with nothing named ("they have all been sent", "Done")
+  needs at least one matching outcome, not one per item.
 * Follow-up and shop-message counts read Go's own records; a store that cannot
   count falls back to the in-run limits.
 * No job-tree spawner exists in the API path yet: `ask_helper` there is a
