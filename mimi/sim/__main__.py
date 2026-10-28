@@ -28,6 +28,11 @@
     --stock-history H  reorders (default: regular lines reordered when low)
                        or route (the world's own deliveries)
     --stock-words      in the stock scene, shops type answers instead of tapping
+    --credit           the credit-bump scene (RAI-271): a shop asks for more
+                       credit, Mimi asks for a shelf photo, SAM 3.1 counts it,
+                       the request goes to the owner's approvals as a draft; a
+                       blurry photo gets one ask again; the owner asks about a
+                       shop. Offline: scripted Credit and recorded SAM answers
     --voice-replies    every shop sends "VOICE ON" at the start (its consent),
                        and Mimi's short replies also go as a voice note
                        (Spitch speech with SPITCH_API_KEY, else the fake)
@@ -79,9 +84,14 @@ def main(argv: list[str] | None = None, *, exporter: TurnExporter | None = None)
     ap.add_argument("--stock", action="store_true")
     ap.add_argument("--stock-history", default="reorders", choices=("reorders", "route"))
     ap.add_argument("--stock-words", action="store_true")
+    ap.add_argument("--credit", action="store_true")
     args = ap.parse_args(argv)
     if args.stock:
         return _stock(args, exporter)
+    if args.credit:
+        from mimi.credit.scene import main as credit_scene
+
+        return credit_scene(transcript=args.transcript, cache=args.cache)
 
     world = load_world()
     shop_ids = None
