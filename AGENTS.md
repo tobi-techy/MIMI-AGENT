@@ -91,7 +91,10 @@ re-recorded. A new helper factory calls `versions.register(helper)`.
   verification gate (`mimi.harness.claims`): figures, dates and shop or
   product names must come from this run's records or the owner's own words
   (never shop text, RAI-313); "done", "sent", "recorded", "approved" need a
-  confirmed tool outcome in the run; a promise needs a follow-up set in the
+  confirmed tool outcome in the run for the item the claim names (shop,
+  invoice or order id, amount), and a claim that names nothing needs exactly
+  one such outcome (RAI-316); a short name ("Mama Sola") must map to one name
+  the run read; a promise needs a follow-up set in the
   run; a claim that money moved is always held. Run `make claims-eval`.
 * Traces carry no private model text, no hardcoded tenant tag, and no long
   digit run, as text or as a number.

@@ -340,6 +340,11 @@ class FakeGo:
         self._tenant(tenant_id)
         return [s.name for s in self.world.shops] + [k.name for k in self.world.skus]
 
+    def known_shops(self, tenant_id: str) -> dict[str, str]:
+        """Shop name to shop id (the gate binds a claim to the shop it names)."""
+        self._tenant(tenant_id)
+        return {s.name: s.shop_id for s in self.world.shops}
+
     def recent_count(self, tenant_id: str, kind: str, shop_id: str, window_s: float) -> int:
         """Loop guards (``mimi.harness.guards``): shop messages or follow-ups
         Go applied for this shop. The fake world is one synthetic day, so the

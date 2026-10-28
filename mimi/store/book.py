@@ -461,6 +461,14 @@ class SqlGo:
                 s.skus.c.tenant_id == tenant_id)).scalars().all()
         return [str(n) for n in (*shops, *skus) if n]
 
+    def known_shops(self, tenant_id: str) -> dict[str, str]:
+        """Shop name to shop id (the gate binds a claim to the shop it names)."""
+        with self.engine.connect() as conn:
+            self._tenant_row(conn, tenant_id)
+            rows = conn.execute(sa.select(s.shops.c.name, s.shops.c.shop_id).where(
+                s.shops.c.tenant_id == tenant_id)).all()
+        return {str(n): str(i) for n, i in rows if n}
+
     def recent_count(self, tenant_id: str, kind: str, shop_id: str, window_s: float) -> int:
         """Loop guards (``mimi.harness.guards``): messages Mimi wrote to this
         shop, or follow-ups set for it, in the last ``window_s`` seconds."""

@@ -213,6 +213,226 @@
    "status": "done"
   },
   {
+   "case": "item-invoice",
+   "kind": "claims",
+   "bad": true,
+   "ok": true,
+   "held": true,
+   "held_for": [
+    "claims"
+   ],
+   "status": "done_quiet"
+  },
+  {
+   "case": "item-amount",
+   "kind": "claims",
+   "bad": true,
+   "ok": true,
+   "held": true,
+   "held_for": [
+    "claims"
+   ],
+   "status": "done_quiet"
+  },
+  {
+   "case": "item-shop",
+   "kind": "claims",
+   "bad": true,
+   "ok": true,
+   "held": true,
+   "held_for": [
+    "claims"
+   ],
+   "status": "done_quiet"
+  },
+  {
+   "case": "item-sent-shop",
+   "kind": "claims",
+   "bad": true,
+   "ok": true,
+   "held": true,
+   "held_for": [
+    "claims"
+   ],
+   "status": "done"
+  },
+  {
+   "case": "item-recorded-shop",
+   "kind": "claims",
+   "bad": true,
+   "ok": true,
+   "held": true,
+   "held_for": [
+    "claims"
+   ],
+   "status": "parked_for_timer"
+  },
+  {
+   "case": "item-ambiguous-history",
+   "kind": "claims",
+   "bad": true,
+   "ok": true,
+   "held": true,
+   "held_for": [
+    "claims"
+   ],
+   "status": "done_quiet"
+  },
+  {
+   "case": "item-ambiguous-sent",
+   "kind": "claims",
+   "bad": true,
+   "ok": true,
+   "held": true,
+   "held_for": [
+    "claims"
+   ],
+   "status": "done"
+  },
+  {
+   "case": "item-ok-invoice",
+   "kind": "claims",
+   "bad": false,
+   "ok": true,
+   "held": false,
+   "held_for": [],
+   "status": "done"
+  },
+  {
+   "case": "item-ok-amount",
+   "kind": "claims",
+   "bad": false,
+   "ok": true,
+   "held": false,
+   "held_for": [],
+   "status": "done"
+  },
+  {
+   "case": "item-ok-shop",
+   "kind": "claims",
+   "bad": false,
+   "ok": true,
+   "held": false,
+   "held_for": [],
+   "status": "done"
+  },
+  {
+   "case": "item-ok-two-named",
+   "kind": "claims",
+   "bad": false,
+   "ok": true,
+   "held": false,
+   "held_for": [],
+   "status": "done"
+  },
+  {
+   "case": "item-ok-unnamed-one",
+   "kind": "claims",
+   "bad": false,
+   "ok": true,
+   "held": false,
+   "held_for": [],
+   "status": "done"
+  },
+  {
+   "case": "partial-unread",
+   "kind": "names",
+   "bad": true,
+   "ok": true,
+   "held": true,
+   "held_for": [
+    "names"
+   ],
+   "status": "done_quiet"
+  },
+  {
+   "case": "partial-two-shops",
+   "kind": "names",
+   "bad": true,
+   "ok": true,
+   "held": true,
+   "held_for": [
+    "names"
+   ],
+   "status": "done_quiet"
+  },
+  {
+   "case": "partial-other-shop",
+   "kind": "claims",
+   "bad": true,
+   "ok": true,
+   "held": true,
+   "held_for": [
+    "claims"
+   ],
+   "status": "done_quiet"
+  },
+  {
+   "case": "partial-product-unread",
+   "kind": "names",
+   "bad": true,
+   "ok": true,
+   "held": true,
+   "held_for": [
+    "names"
+   ],
+   "status": "done_quiet"
+  },
+  {
+   "case": "partial-ok",
+   "kind": "names",
+   "bad": false,
+   "ok": true,
+   "held": false,
+   "held_for": [],
+   "status": "done"
+  },
+  {
+   "case": "partial-ok-possessive",
+   "kind": "names",
+   "bad": false,
+   "ok": true,
+   "held": false,
+   "held_for": [],
+   "status": "done"
+  },
+  {
+   "case": "partial-ok-one-read",
+   "kind": "names",
+   "bad": false,
+   "ok": true,
+   "held": false,
+   "held_for": [],
+   "status": "done"
+  },
+  {
+   "case": "partial-ok-generic",
+   "kind": "names",
+   "bad": false,
+   "ok": true,
+   "held": false,
+   "held_for": [],
+   "status": "done"
+  },
+  {
+   "case": "partial-ok-product-family",
+   "kind": "names",
+   "bad": false,
+   "ok": true,
+   "held": false,
+   "held_for": [],
+   "status": "done"
+  },
+  {
+   "case": "partial-ok-bound-claim",
+   "kind": "claims",
+   "bad": false,
+   "ok": true,
+   "held": false,
+   "held_for": [],
+   "status": "done"
+  },
+  {
    "case": "promise-remind",
    "kind": "promises",
    "bad": true,
@@ -295,8 +515,8 @@
    "status": "done"
   }
  ],
- "bad_held": "16/16",
- "controls_held": "0/13",
+ "bad_held": "27/27",
+ "controls_held": "0/24",
  "pass_marks": {
   "bad_claims_held==100%": true,
   "controls_held==0": true
