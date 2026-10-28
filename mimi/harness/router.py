@@ -200,6 +200,9 @@ class ThreadState:
     # The owner has an approval card open from this route.
     approval_skill: str = ""
     last_skill: str = ""
+    # A correction Mimi asked the shop to confirm (RAI-301): JSON with the
+    # task, the shop's words and when the question was sent. Empty when none.
+    fix: str = ""
 
 
 @dataclass
@@ -366,6 +369,11 @@ class Router:
                                          folded):
             return rule("mimi/shop-onboarding", "shop_stop", language=lang)
         live = ask_is_live(thread.pending_skill, thread.asked_at, lead.received_at)
+        if live and p.part_of and p.steer != "new|open":
+            # A part split off an earlier message as a separate request
+            # (RAI-301): it is not the answer to the open ask, which stays open.
+            live = False
+            thread = replace(thread, pending_skill="", expects="", asked_at="", ask_ref="")
         if thread.pending_skill and not live:
             base = {**base, "thread_note": f"ask for {thread.pending_skill} expired; "
                                            "routed as a new message"}
@@ -420,6 +428,9 @@ class Router:
                 return rule(picked, "clarify_answer", language=lang)
 
         shape = media_shape(p.media)
+        if shape != "screenshot" and any(media_shape(e.payload.media) == "screenshot"
+                                         for e in batch):
+            shape = "screenshot"  # a burst with a screenshot in it (RAI-301)
         if shape == "screenshot":
             # A screenshot from a shop is a payment claim until Proof says
             # otherwise; Proof only ever makes a payment "likely".

@@ -1,4 +1,11 @@
 {
+ "2afd50cfb90757718a14822472d8f742": {
+  "completion_tokens": 1014,
+  "latency_s": 4.613,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 640,
+  "text": "{\"parts\": [{\"confidence\": 0.92, \"id\": \"p1\", \"label\": \"corrects\", \"task\": \"t0\"}]}"
+ },
  "3066a4efb1d5fb33bda1ae25140d292c": {
   "completion_tokens": 315,
   "latency_s": 1.912,
@@ -6,12 +13,47 @@
   "prompt_tokens": 422,
   "text": "{\"confidence\": 0.96, \"label\": \"short\"}"
  },
+ "3c4063d8edc2d868ab5a980532f82ac5": {
+  "completion_tokens": 478,
+  "latency_s": 1.85,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 621,
+  "text": "{\"parts\": [{\"confidence\": 0.95, \"id\": \"p1\", \"label\": \"current\", \"task\": \"\"}, {\"confidence\": 0.97, \"id\": \"p2\", \"label\": \"new\", \"task\": \"\"}]}"
+ },
  "65b38dbc0b3ac6d56fded86b7e5c1654": {
   "completion_tokens": 330,
   "latency_s": 2.437,
   "model": "muse-spark-1.3",
   "prompt_tokens": 409,
   "text": "{\"confidence\": 0.92, \"label\": \"yes\"}"
+ },
+ "67086ef1f193f77dbda9f60b9c0c3646": {
+  "completion_tokens": 796,
+  "latency_s": 4.274,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 634,
+  "text": "{\"parts\": [{\"confidence\": 0.98, \"id\": \"p1\", \"label\": \"chat\", \"task\": \"\"}, {\"confidence\": 0.9, \"id\": \"p2\", \"label\": \"current\", \"task\": \"t0\"}, {\"confidence\": 0.99, \"id\": \"p3\", \"label\": \"current\", \"task\": \"t0\"}]}"
+ },
+ "7810eb3c5ee98806c6842ad7c4bc6c98": {
+  "completion_tokens": 1052,
+  "latency_s": 4.614,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 620,
+  "text": "{\"parts\": [{\"confidence\": 0.8, \"id\": \"p1\", \"label\": \"current\", \"task\": \"\"}, {\"confidence\": 0.95, \"id\": \"p2\", \"label\": \"current\", \"task\": \"\"}]}"
+ },
+ "a9cae4cc1f0613a260c80a3745c3a1e4": {
+  "completion_tokens": 711,
+  "latency_s": 3.245,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 627,
+  "text": "{\"parts\": [{\"confidence\": 0.95, \"id\": \"p1\", \"label\": \"current\", \"task\": \"\"}, {\"confidence\": 0.85, \"id\": \"p2\", \"label\": \"adds\", \"task\": \"t0\"}, {\"confidence\": 0.8, \"id\": \"p3\", \"label\": \"adds\", \"task\": \"t0\"}]}"
+ },
+ "e1bf9f6729a372a48cb847618c962d88": {
+  "completion_tokens": 1567,
+  "latency_s": 5.881,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 634,
+  "text": "{\"parts\": [{\"confidence\": 0.92, \"id\": \"p1\", \"label\": \"corrects\", \"task\": \"t0\"}, {\"confidence\": 0.85, \"id\": \"p2\", \"label\": \"adds\", \"task\": \"t0\"}]}"
  },
  "eb06c325f69238a6921e2c5fad7780fe": {
   "completion_tokens": 540,
@@ -26,5 +68,12 @@
   "model": "muse-spark-1.3",
   "prompt_tokens": 418,
   "text": "{\"confidence\": 0.98, \"label\": \"yes\"}"
+ },
+ "f4e4d3a1b9879aaa9bd93dce40ca4cb3": {
+  "completion_tokens": 337,
+  "latency_s": 1.648,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 410,
+  "text": "{\"confidence\": 0.95, \"label\": \"yes\"}"
  }
 }

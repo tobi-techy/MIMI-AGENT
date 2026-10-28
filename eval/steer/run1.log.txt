@@ -1,0 +1,12 @@
+steer, held out: 44/53 correct (83.0%); lost 0, no_disposition 0, duplicates 0, money_moves 0, decided_edits 0, pending_changed 0; 63 model calls, cost N388.78
+by kind: ambiguous 1/1, correction 17/20, document 1/1, mid_task 14/15, multi_part 11/16, with_media 13/18
+  miss mp-04 [multi_part] expect ['order', 'collector'] got ['question', 'collector'] routes [('mimi', 'mimi/steer', 'steer_question', 'steer:question'), ('collector', 'collector/promise-to-pay', 'done', '')] labels [[{'confidence': 0.9, 'label': 'corrects', 'pid': 'p1', 'task': ''}, {'confidence': 0.9, 'label': 'new', 'pid': 'p2', 'task': ''}], None]
+  miss mp-12 [multi_part] expect ['proof'] got ['collector', 'question'] routes [('collector', 'collector/payment-check', 'done', ''), ('mimi', 'mimi/steer', 'steer_question', 'steer:question')] labels [[{'confidence': 0.95, 'label': 'current', 'pid': 'p1', 'task': ''}, {'confidence': 0.9, 'label': 'adds', 'pid': 'p2', 'task': ''}], []]
+  miss mp-14 [multi_part] expect ['collector', 'order'] got ['question', 'order'] routes [('mimi', 'mimi/chat', 'asked_to_clarify', 'model_unusable:not json'), ('order', 'order/order-intake', 'done', 'fast_non_money')] labels [[{'confidence': 0.99, 'label': 'chat', 'pid': 'p1', 'task': ''}, {'confidence': 0.9, 'label': 'current', 'pid': 'p2', 'task': ''}, {'confidence': 0.95, 'label': 'new', 'pid': 'p3', 'task': ''}], None]
+  miss mp-15 [multi_part] expect ['order', 'collector'] got ['order'] routes [('order', 'order/drop-confirmation', 'done', 'pending_bind:yes')] labels [None]
+  miss mp-16 [multi_part] expect ['order', 'collector'] got ['order'] routes [('order', 'order/drop-confirmation', 'done', 'pending_bind:yes')] labels [None]
+  miss mt-04 [mid_task] expect ['proof'] got ['absorbed'] routes [] labels []
+  miss co-05 [correction] expect ['owner'] got ['owner', 'question'] routes [('mimi', 'mimi/steer', 'steer_owner', 'steer:owner'), ('mimi', 'collector/collections', 'asked_to_clarify', 'too_short_to_tell')] labels [[{'confidence': 0.85, 'label': 'new', 'pid': 'p1', 'task': ''}, {'confidence': 0.8, 'label': 'adds', 'pid': 'p2', 'task': ''}], None]
+  miss co-13 [correction] expect ['question'] got ['stock:revise'] routes [('stock', 'stock/stock-count', 'done', 'steer:revise')] labels [[{'confidence': 0.65, 'label': 'corrects', 'pid': 'p1', 'task': 't1'}]]
+  miss co-17 [correction] expect ['credit'] got ['stock'] routes [('stock', 'stock/stock-count', 'done', '')] labels [[{'confidence': 0.95, 'label': 'current', 'pid': 'p1', 'task': ''}]]
+FAILED

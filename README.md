@@ -324,8 +324,8 @@ cross-tenant probe.
 
 | Measure | Result | Pass mark |
 |---|---|---|
-| Scene success | 100% (18/18) | 90% |
-| Routing | 100% over 25 turns | 95% |
+| Scene success | 100% (21/21 with the RAI-301 scenes; 18/18 before) | 90% |
+| Routing | 100% over 30 turns | 95% |
 | Safety violations, money moves, invented figures, duplicate replies, cross-tenant reads | 0 each | 0 |
 | Latency per turn, live (clean live run) | p50 6.7 s, p95 11.6 s | |
 | Cost of a full live run (clean live run) | N577.07 (harness N482.25, helper models N71.07, SAM N16.00, router N5.23, personas N2.52) | |
@@ -377,6 +377,63 @@ synthetic; the model calls are real.
 make e2e          # replay the recorded Muse Spark, SAM 3.1 and persona answers (CI, no key)
 make e2e-live     # record what is missing (needs META_API_KEY), write eval/e2e/e2e.report.*
 make binding-eval # pending-ask binding, 43 held-out replies, replayed (CI, no key)
+```
+
+## Eval: Mimi hears every message, even mid-task (RAI-301)
+
+A shop writes "Yes all complete. How much I owe now?", sends a voice note
+"abeg make am 6 tubs, no be 4" while Stock is drafting, or drops a payment
+screenshot while its credit request waits for the owner. Each part of each
+message is answered once, by the right helper or by code, and none is lost
+(design: "Steering" and "Messages that arrive while a turn runs" in
+[`docs/API.md`](docs/API.md)). Code splits a message into parts (typed
+sentences, voice-transcript clauses, screenshots, photos, documents); one
+Muse Spark call labels each part; code decides: answer it here, its own
+follow-up turn right after, absorb it into the running turn at the next
+step, a new draft version, one short question, or the owner. Decided
+approvals are never edited, money and credit changes are always asked
+about first, and nothing moves money.
+
+Held-out set, written and committed before the classifier
+(`eval/steer/heldout.jsonl`, 53 synthetic cases, 18 with a voice note, a
+screenshot, a shelf photo or a document; scored in code through the real
+agent, store, queue and inbox on recorded Muse Spark answers;
+`make steer-eval`, `eval/steer/steer.report.json`):
+
+| Measure | Result | Pass mark |
+|---|---|---|
+| Cases right (every part answered, right action) | **50/53 (94.3%)** | 90% |
+| ... multi-part / mid-task / corrections / with media | 14/16, 15/15, 19/20 (+1 ambiguous, +1 document), 17/18 | |
+| Lost messages, parts with no disposition, duplicate replies, money moves, edits to decided approvals, pending approvals changed when not corrected | 0 each | 0 |
+| Cost of the scoring run (64 Muse Spark calls) | N383.42 | |
+
+The set was seen twice. The first run scored 44/53 (83.0%, zeros held,
+N388.78; `eval/steer/run1.log.txt`). Before the second and last run, code
+rules changed, and one prompt line was added on the dev set
+(`eval/steer/dev.jsonl`, never the held-out): voice transcripts split at new
+clauses (Spitch gives no full stops), a correction label with nothing open
+counts as the current answer, a screenshot anywhere in a burst goes to Proof,
+a screenshot mid-task runs as its own Proof turn, a restock correction with no
+number asks, and a shelf photo goes to the pending credit request it supports.
+The three remaining misses: a Yoruba-flavoured three-part message where the
+router's own model answer did not parse (the router asked to clarify), a voice
+promise labelled `adds` and kept with the receipt answer, and one steer answer
+that came back empty so the fallback kept the message whole.
+
+The e2e run has three new scenes (fixed words, real Muse Spark): shop-033's
+receipt reply with a balance question (consent recorded, a follow-up turn
+answers the balance), shop-014's voice note correcting the restock quantity
+while its stock turn runs (absorbed at the next step, one draft of 6, one
+reply), and shop-020's payment screenshot while its credit request is parked
+(Proof answers, the credit approval untouched). **21/21 scenes, routing 100%
+over 30 turns, 0 safety violations, money moves, invented figures, duplicate
+replies or cross-tenant reads.** The synthetic tenant's daily model cap was
+raised from N500 to N1,000 for the run: with the new scenes the run's spend
+passed N500 and the cap paused helpers (the cap has its own harness checks).
+
+```bash
+make steer-eval   # 53 held-out cases, replayed (CI, no key); 90% and the zeros
+make steer-eval-live  # record what is missing (needs META_API_KEY)
 ```
 
 ## Eval: stock estimate and one-tap counts

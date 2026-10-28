@@ -1,0 +1,2171 @@
+{
+ "cases": 53,
+ "correct": 50,
+ "correct_rate": 0.9434,
+ "zeros": {
+  "lost": 0,
+  "no_disposition": 0,
+  "duplicates": 0,
+  "money_moves": 0,
+  "decided_edits": 0,
+  "pending_changed": 0
+ },
+ "by_kind": {
+  "ambiguous": "1/1",
+  "correction": "19/20",
+  "document": "1/1",
+  "mid_task": "15/15",
+  "multi_part": "14/16",
+  "with_media": "17/18"
+ },
+ "misses": [
+  {
+   "id": "mp-14",
+   "kind": "multi_part",
+   "lang": "yo-en",
+   "media": false,
+   "expect": [
+    "collector",
+    "order"
+   ],
+   "got": [
+    "question",
+    "order"
+   ],
+   "ok": false,
+   "lost": [],
+   "no_disposition": [],
+   "duplicates": [],
+   "money_moves": [],
+   "decided_edits": [],
+   "pending_changed": [],
+   "routes": [
+    [
+     "mimi",
+     "mimi/chat",
+     "asked_to_clarify",
+     "model_unusable:not json"
+    ],
+    [
+     "order",
+     "order/order-intake",
+     "done",
+     "fast_non_money"
+    ]
+   ],
+   "labels": [
+    [
+     {
+      "confidence": 0.98,
+      "label": "chat",
+      "pid": "p1",
+      "task": ""
+     },
+     {
+      "confidence": 0.96,
+      "label": "new",
+      "pid": "p2",
+      "task": ""
+     },
+     {
+      "confidence": 0.96,
+      "label": "new",
+      "pid": "p3",
+      "task": ""
+     }
+    ],
+    null
+   ]
+  },
+  {
+   "id": "mp-15",
+   "kind": "multi_part",
+   "lang": "en",
+   "media": true,
+   "expect": [
+    "order",
+    "collector"
+   ],
+   "got": [
+    "order"
+   ],
+   "ok": false,
+   "lost": [],
+   "no_disposition": [],
+   "duplicates": [],
+   "money_moves": [],
+   "decided_edits": [],
+   "pending_changed": [],
+   "routes": [
+    [
+     "order",
+     "order/drop-confirmation",
+     "done",
+     "pending_bind:yes"
+    ]
+   ],
+   "labels": [
+    [
+     {
+      "confidence": 0.96,
+      "label": "current",
+      "pid": "p1",
+      "task": ""
+     },
+     {
+      "confidence": 0.84,
+      "label": "adds",
+      "pid": "p2",
+      "task": ""
+     }
+    ]
+   ]
+  },
+  {
+   "id": "co-05",
+   "kind": "correction",
+   "lang": "pcm",
+   "media": false,
+   "expect": [
+    "owner"
+   ],
+   "got": [
+    "order"
+   ],
+   "ok": false,
+   "lost": [],
+   "no_disposition": [],
+   "duplicates": [],
+   "money_moves": [],
+   "decided_edits": [],
+   "pending_changed": [],
+   "routes": [
+    [
+     "order",
+     "order/order-intake",
+     "done",
+     ""
+    ]
+   ],
+   "labels": [
+    [
+     {
+      "confidence": 0.0,
+      "label": "current",
+      "pid": "p1",
+      "task": ""
+     },
+     {
+      "confidence": 0.0,
+      "label": "current",
+      "pid": "p2",
+      "task": ""
+     }
+    ]
+   ]
+  }
+ ],
+ "rows": [
+  {
+   "id": "mp-01",
+   "kind": "multi_part",
+   "lang": "en",
+   "media": false,
+   "expect": [
+    "order",
+    "collector"
+   ],
+   "got": [
+    "order",
+    "collector"
+   ],
+   "ok": true,
+   "lost": [],
+   "no_disposition": [],
+   "duplicates": [],
+   "money_moves": [],
+   "decided_edits": [],
+   "pending_changed": [],
+   "routes": [
+    [
+     "order",
+     "order/drop-confirmation",
+     "done",
+     "pending_bind:yes"
+    ],
+    [
+     "collector",
+     "collector/collections",
+     "done",
+     ""
+    ]
+   ],
+   "labels": [
+    [
+     {
+      "confidence": 0.97,
+      "label": "current",
+      "pid": "p1",
+      "task": ""
+     },
+     {
+      "confidence": 0.96,
+      "label": "new",
+      "pid": "p2",
+      "task": ""
+     }
+    ],
+    null
+   ]
+  },
+  {
+   "id": "mp-02",
+   "kind": "multi_part",
+   "lang": "pcm",
+   "media": false,
+   "expect": [
+    "order",
+    "collector"
+   ],
+   "got": [
+    "order",
+    "collector"
+   ],
+   "ok": true,
+   "lost": [],
+   "no_disposition": [],
+   "duplicates": [],
+   "money_moves": [],
+   "decided_edits": [],
+   "pending_changed": [],
+   "routes": [
+    [
+     "order",
+     "order/drop-confirmation",
+     "done",
+     "pending_bind:yes"
+    ],
+    [
+     "collector",
+     "collector/collections",
+     "done",
+     ""
+    ]
+   ],
+   "labels": [
+    [
+     {
+      "confidence": 0.8,
+      "label": "current",
+      "pid": "p1",
+      "task": ""
+     },
+     {
+      "confidence": 0.95,
+      "label": "new",
+      "pid": "p2",
+      "task": ""
+     }
+    ],
+    null
+   ]
+  },
+  {
+   "id": "mp-03",
+   "kind": "multi_part",
+   "lang": "en",
+   "media": false,
+   "expect": [
+    "order",
+    "order"
+   ],
+   "got": [
+    "order",
+    "order"
+   ],
+   "ok": true,
+   "lost": [],
+   "no_disposition": [],
+   "duplicates": [],
+   "money_moves": [],
+   "decided_edits": [],
+   "pending_changed": [],
+   "routes": [
+    [
+     "order",
+     "order/drop-confirmation",
+     "done",
+     "pending_bind:yes"
+    ],
+    [
+     "order",
+     "order/delivery-status",
+     "done",
+     "fast_non_money"
+    ]
+   ],
+   "labels": [
+    [
+     {
+      "confidence": 0.9,
+      "label": "current",
+      "pid": "p1",
+      "task": ""
+     },
+     {
+      "confidence": 0.95,
+      "label": "new",
+      "pid": "p2",
+      "task": ""
+     }
+    ],
+    null
+   ]
+  },
+  {
+   "id": "mp-04",
+   "kind": "multi_part",
+   "lang": "pcm",
+   "media": false,
+   "expect": [
+    "order",
+    "collector"
+   ],
+   "got": [
+    "order",
+    "collector"
+   ],
+   "ok": true,
+   "lost": [],
+   "no_disposition": [],
+   "duplicates": [],
+   "money_moves": [],
+   "decided_edits": [],
+   "pending_changed": [],
+   "routes": [
+    [
+     "order",
+     "order/drop-confirmation",
+     "done",
+     "pending_bind:short"
+    ],
+    [
+     "collector",
+     "collector/promise-to-pay",
+     "done",
+     ""
+    ]
+   ],
+   "labels": [
+    [
+     {
+      "confidence": 0.9,
+      "label": "corrects",
+      "pid": "p1",
+      "task": ""
+     },
+     {
+      "confidence": 0.9,
+      "label": "new",
+      "pid": "p2",
+      "task": ""
+     }
+    ],
+    null
+   ]
+  },
+  {
+   "id": "mp-05",
+   "kind": "multi_part",
+   "lang": "yo-en",
+   "media": false,
+   "expect": [
+    "order",
+    "collector"
+   ],
+   "got": [
+    "order",
+    "collector"
+   ],
+   "ok": true,
+   "lost": [],
+   "no_disposition": [],
+   "duplicates": [],
+   "money_moves": [],
+   "decided_edits": [],
+   "pending_changed": [],
+   "routes": [
+    [
+     "order",
+     "order/drop-confirmation",
+     "done",
+     "pending_bind:yes"
+    ],
+    [
+     "collector",
+     "collector/collections",
+     "done",
+     "fast_agrees_with_phrases"
+    ]
+   ],
+   "labels": [
+    [
+     {
+      "confidence": 0.85,
+      "label": "current",
+      "pid": "p1",
+      "task": ""
+     },
+     {
+      "confidence": 0.95,
+      "label": "new",
+      "pid": "p2",
+      "task": ""
+     }
+    ],
+    null
+   ]
+  },
+  {
+   "id": "mp-06",
+   "kind": "multi_part",
+   "lang": "pcm",
+   "media": false,
+   "expect": [
+    "order",
+    "collector"
+   ],
+   "got": [
+    "order",
+    "collector"
+   ],
+   "ok": true,
+   "lost": [],
+   "no_disposition": [],
+   "duplicates": [],
+   "money_moves": [],
+   "decided_edits": [],
+   "pending_changed": [],
+   "routes": [
+    [
+     "order",
+     "order/drop-confirmation",
+     "done",
+     "pending_bind:unclear"
+    ],
+    [
+     "collector",
+     "collector/collections",
+     "done",
+     ""
+    ]
+   ],
+   "labels": [
+    [
+     {
+      "confidence": 0.85,
+      "label": "current",
+      "pid": "p1",
+      "task": ""
+     },
+     {
+      "confidence": 0.95,
+      "label": "new",
+      "pid": "p2",
+      "task": ""
+     }
+    ],
+    null
+   ]
+  },
+  {
+   "id": "mp-07",
+   "kind": "multi_part",
+   "lang": "pcm",
+   "media": false,
+   "expect": [
+    "collector",
+    "order"
+   ],
+   "got": [
+    "collector",
+    "order"
+   ],
+   "ok": true,
+   "lost": [],
+   "no_disposition": [],
+   "duplicates": [],
+   "money_moves": [],
+   "decided_edits": [],
+   "pending_changed": [],
+   "routes": [
+    [
+     "collector",
+     "collector/collections",
+     "done",
+     ""
+    ],
+    [
+     "order",
+     "order/delivery-status",
+     "done",
+     "fast_non_money"
+    ]
+   ],
+   "labels": [
+    [
+     {
+      "confidence": 0.99,
+      "label": "chat",
+      "pid": "p1",
+      "task": ""
+     },
+     {
+      "confidence": 0.97,
+      "label": "current",
+      "pid": "p2",
+      "task": ""
+     },
+     {
+      "confidence": 0.92,
+      "label": "new",
+      "pid": "p3",
+      "task": ""
+     }
+    ],
+    null
+   ]
+  },
+  {
+   "id": "mp-08",
+   "kind": "multi_part",
+   "lang": "pcm",
+   "media": false,
+   "expect": [
+    "order",
+    "collector"
+   ],
+   "got": [
+    "order",
+    "collector"
+   ],
+   "ok": true,
+   "lost": [],
+   "no_disposition": [],
+   "duplicates": [],
+   "money_moves": [],
+   "decided_edits": [],
+   "pending_changed": [],
+   "routes": [
+    [
+     "order",
+     "order/order-intake",
+     "done",
+     ""
+    ],
+    [
+     "collector",
+     "collector/collections",
+     "done",
+     ""
+    ]
+   ],
+   "labels": [
+    [
+     {
+      "confidence": 0.95,
+      "label": "current",
+      "pid": "p1",
+      "task": ""
+     },
+     {
+      "confidence": 0.95,
+      "label": "new",
+      "pid": "p2",
+      "task": ""
+     }
+    ],
+    null
+   ]
+  },
+  {
+   "id": "mp-09",
+   "kind": "multi_part",
+   "lang": "en",
+   "media": false,
+   "expect": [
+    "collector",
+    "credit"
+   ],
+   "got": [
+    "collector",
+    "credit"
+   ],
+   "ok": true,
+   "lost": [],
+   "no_disposition": [],
+   "duplicates": [],
+   "money_moves": [],
+   "decided_edits": [],
+   "pending_changed": [],
+   "routes": [
+    [
+     "collector",
+     "collector/collections",
+     "done",
+     ""
+    ],
+    [
+     "credit",
+     "credit/credit-request",
+     "done",
+     ""
+    ]
+   ],
+   "labels": [
+    [
+     {
+      "confidence": 0.99,
+      "label": "current",
+      "pid": "p1",
+      "task": ""
+     },
+     {
+      "confidence": 0.95,
+      "label": "new",
+      "pid": "p2",
+      "task": ""
+     }
+    ],
+    null
+   ]
+  },
+  {
+   "id": "mp-10",
+   "kind": "multi_part",
+   "lang": "yo-en",
+   "media": false,
+   "expect": [
+    "collector"
+   ],
+   "got": [
+    "collector"
+   ],
+   "ok": true,
+   "lost": [],
+   "no_disposition": [],
+   "duplicates": [],
+   "money_moves": [],
+   "decided_edits": [],
+   "pending_changed": [],
+   "routes": [
+    [
+     "collector",
+     "collector/collections",
+     "done",
+     ""
+    ]
+   ],
+   "labels": [
+    [
+     {
+      "confidence": 0.99,
+      "label": "chat",
+      "pid": "p1",
+      "task": ""
+     },
+     {
+      "confidence": 0.99,
+      "label": "current",
+      "pid": "p2",
+      "task": ""
+     }
+    ]
+   ]
+  },
+  {
+   "id": "mp-11",
+   "kind": "multi_part",
+   "lang": "en",
+   "media": true,
+   "expect": [
+    "collector",
+    "order"
+   ],
+   "got": [
+    "collector",
+    "order"
+   ],
+   "ok": true,
+   "lost": [],
+   "no_disposition": [],
+   "duplicates": [],
+   "money_moves": [],
+   "decided_edits": [],
+   "pending_changed": [],
+   "routes": [
+    [
+     "collector",
+     "collector/collections",
+     "done",
+     ""
+    ],
+    [
+     "order",
+     "order/order-intake",
+     "done",
+     ""
+    ]
+   ],
+   "labels": [
+    [
+     {
+      "confidence": 0.98,
+      "label": "current",
+      "pid": "p1",
+      "task": ""
+     },
+     {
+      "confidence": 0.95,
+      "label": "new",
+      "pid": "p2",
+      "task": ""
+     }
+    ],
+    null
+   ]
+  },
+  {
+   "id": "mp-12",
+   "kind": "multi_part",
+   "lang": "pcm",
+   "media": true,
+   "expect": [
+    "proof"
+   ],
+   "got": [
+    "proof"
+   ],
+   "ok": true,
+   "lost": [],
+   "no_disposition": [],
+   "duplicates": [],
+   "money_moves": [],
+   "decided_edits": [],
+   "pending_changed": [],
+   "routes": [
+    [
+     "proof",
+     "proof/fake-alert-check",
+     "done",
+     "screenshot"
+    ]
+   ],
+   "labels": [
+    [
+     {
+      "confidence": 0.95,
+      "label": "current",
+      "pid": "p1",
+      "task": ""
+     },
+     {
+      "confidence": 0.99,
+      "label": "current",
+      "pid": "p2",
+      "task": ""
+     }
+    ]
+   ]
+  },
+  {
+   "id": "mp-13",
+   "kind": "multi_part",
+   "lang": "en",
+   "media": true,
+   "expect": [
+    "proof",
+    "order"
+   ],
+   "got": [
+    "proof",
+    "order"
+   ],
+   "ok": true,
+   "lost": [],
+   "no_disposition": [],
+   "duplicates": [],
+   "money_moves": [],
+   "decided_edits": [],
+   "pending_changed": [],
+   "routes": [
+    [
+     "proof",
+     "proof/fake-alert-check",
+     "done",
+     "screenshot"
+    ],
+    [
+     "order",
+     "order/delivery-status",
+     "done",
+     "fast_non_money"
+    ]
+   ],
+   "labels": [
+    [
+     {
+      "confidence": 0.99,
+      "label": "current",
+      "pid": "p1",
+      "task": ""
+     },
+     {
+      "confidence": 0.97,
+      "label": "new",
+      "pid": "p2",
+      "task": ""
+     }
+    ],
+    null
+   ]
+  },
+  {
+   "id": "mp-14",
+   "kind": "multi_part",
+   "lang": "yo-en",
+   "media": false,
+   "expect": [
+    "collector",
+    "order"
+   ],
+   "got": [
+    "question",
+    "order"
+   ],
+   "ok": false,
+   "lost": [],
+   "no_disposition": [],
+   "duplicates": [],
+   "money_moves": [],
+   "decided_edits": [],
+   "pending_changed": [],
+   "routes": [
+    [
+     "mimi",
+     "mimi/chat",
+     "asked_to_clarify",
+     "model_unusable:not json"
+    ],
+    [
+     "order",
+     "order/order-intake",
+     "done",
+     "fast_non_money"
+    ]
+   ],
+   "labels": [
+    [
+     {
+      "confidence": 0.98,
+      "label": "chat",
+      "pid": "p1",
+      "task": ""
+     },
+     {
+      "confidence": 0.96,
+      "label": "new",
+      "pid": "p2",
+      "task": ""
+     },
+     {
+      "confidence": 0.96,
+      "label": "new",
+      "pid": "p3",
+      "task": ""
+     }
+    ],
+    null
+   ]
+  },
+  {
+   "id": "mp-15",
+   "kind": "multi_part",
+   "lang": "en",
+   "media": true,
+   "expect": [
+    "order",
+    "collector"
+   ],
+   "got": [
+    "order"
+   ],
+   "ok": false,
+   "lost": [],
+   "no_disposition": [],
+   "duplicates": [],
+   "money_moves": [],
+   "decided_edits": [],
+   "pending_changed": [],
+   "routes": [
+    [
+     "order",
+     "order/drop-confirmation",
+     "done",
+     "pending_bind:yes"
+    ]
+   ],
+   "labels": [
+    [
+     {
+      "confidence": 0.96,
+      "label": "current",
+      "pid": "p1",
+      "task": ""
+     },
+     {
+      "confidence": 0.84,
+      "label": "adds",
+      "pid": "p2",
+      "task": ""
+     }
+    ]
+   ]
+  },
+  {
+   "id": "mp-16",
+   "kind": "multi_part",
+   "lang": "pcm",
+   "media": true,
+   "expect": [
+    "order",
+    "collector"
+   ],
+   "got": [
+    "order",
+    "collector"
+   ],
+   "ok": true,
+   "lost": [],
+   "no_disposition": [],
+   "duplicates": [],
+   "money_moves": [],
+   "decided_edits": [],
+   "pending_changed": [],
+   "routes": [
+    [
+     "order",
+     "order/drop-confirmation",
+     "done",
+     "pending_bind:yes"
+    ],
+    [
+     "collector",
+     "collector/promise-to-pay",
+     "done",
+     ""
+    ]
+   ],
+   "labels": [
+    [
+     {
+      "confidence": 0.9,
+      "label": "current",
+      "pid": "p1",
+      "task": ""
+     },
+     {
+      "confidence": 0.9,
+      "label": "new",
+      "pid": "p2",
+      "task": ""
+     }
+    ],
+    null
+   ]
+  },
+  {
+   "id": "mt-01",
+   "kind": "mid_task",
+   "lang": "pcm",
+   "media": false,
+   "expect": [
+    "absorbed"
+   ],
+   "got": [
+    "absorbed"
+   ],
+   "ok": true,
+   "lost": [],
+   "no_disposition": [],
+   "duplicates": [],
+   "money_moves": [],
+   "decided_edits": [],
+   "pending_changed": [],
+   "routes": [],
+   "labels": []
+  },
+  {
+   "id": "mt-02",
+   "kind": "mid_task",
+   "lang": "pcm",
+   "media": true,
+   "expect": [
+    "absorbed"
+   ],
+   "got": [
+    "absorbed"
+   ],
+   "ok": true,
+   "lost": [],
+   "no_disposition": [],
+   "duplicates": [],
+   "money_moves": [],
+   "decided_edits": [],
+   "pending_changed": [],
+   "routes": [],
+   "labels": []
+  },
+  {
+   "id": "mt-03",
+   "kind": "mid_task",
+   "lang": "pcm",
+   "media": false,
+   "expect": [
+    "absorbed"
+   ],
+   "got": [
+    "absorbed"
+   ],
+   "ok": true,
+   "lost": [],
+   "no_disposition": [],
+   "duplicates": [],
+   "money_moves": [],
+   "decided_edits": [],
+   "pending_changed": [],
+   "routes": [],
+   "labels": []
+  },
+  {
+   "id": "mt-04",
+   "kind": "mid_task",
+   "lang": "en",
+   "media": true,
+   "expect": [
+    "proof"
+   ],
+   "got": [
+    "released:proof"
+   ],
+   "ok": true,
+   "lost": [],
+   "no_disposition": [],
+   "duplicates": [],
+   "money_moves": [],
+   "decided_edits": [],
+   "pending_changed": [],
+   "routes": [
+    [
+     "proof",
+     "proof/fake-alert-check",
+     "done",
+     "screenshot"
+    ]
+   ],
+   "labels": [
+    null
+   ]
+  },
+  {
+   "id": "mt-05",
+   "kind": "mid_task",
+   "lang": "pcm",
+   "media": false,
+   "expect": [
+    "cancel"
+   ],
+   "got": [
+    "cancel"
+   ],
+   "ok": true,
+   "lost": [],
+   "no_disposition": [],
+   "duplicates": [],
+   "money_moves": [],
+   "decided_edits": [],
+   "pending_changed": [],
+   "routes": [],
+   "labels": []
+  },
+  {
+   "id": "mt-06",
+   "kind": "mid_task",
+   "lang": "en",
+   "media": false,
+   "expect": [
+    "order"
+   ],
+   "got": [
+    "released:order"
+   ],
+   "ok": true,
+   "lost": [],
+   "no_disposition": [],
+   "duplicates": [],
+   "money_moves": [],
+   "decided_edits": [],
+   "pending_changed": [],
+   "routes": [
+    [
+     "order",
+     "order/delivery-status",
+     "done",
+     "fast_non_money"
+    ]
+   ],
+   "labels": [
+    null
+   ]
+  },
+  {
+   "id": "mt-07",
+   "kind": "mid_task",
+   "lang": "pcm",
+   "media": false,
+   "expect": [
+    "absorbed"
+   ],
+   "got": [
+    "absorbed"
+   ],
+   "ok": true,
+   "lost": [],
+   "no_disposition": [],
+   "duplicates": [],
+   "money_moves": [],
+   "decided_edits": [],
+   "pending_changed": [],
+   "routes": [],
+   "labels": []
+  },
+  {
+   "id": "mt-08",
+   "kind": "mid_task",
+   "lang": "pcm",
+   "media": false,
+   "expect": [
+    "absorbed"
+   ],
+   "got": [
+    "absorbed"
+   ],
+   "ok": true,
+   "lost": [],
+   "no_disposition": [],
+   "duplicates": [],
+   "money_moves": [],
+   "decided_edits": [],
+   "pending_changed": [],
+   "routes": [],
+   "labels": []
+  },
+  {
+   "id": "mt-09",
+   "kind": "mid_task",
+   "lang": "en",
+   "media": false,
+   "expect": [
+    "absorbed"
+   ],
+   "got": [
+    "absorbed"
+   ],
+   "ok": true,
+   "lost": [],
+   "no_disposition": [],
+   "duplicates": [],
+   "money_moves": [],
+   "decided_edits": [],
+   "pending_changed": [],
+   "routes": [],
+   "labels": []
+  },
+  {
+   "id": "mt-10",
+   "kind": "mid_task",
+   "lang": "pcm",
+   "media": false,
+   "expect": [
+    "cancel"
+   ],
+   "got": [
+    "cancel"
+   ],
+   "ok": true,
+   "lost": [],
+   "no_disposition": [],
+   "duplicates": [],
+   "money_moves": [],
+   "decided_edits": [],
+   "pending_changed": [],
+   "routes": [],
+   "labels": []
+  },
+  {
+   "id": "mt-11",
+   "kind": "mid_task",
+   "lang": "pcm",
+   "media": false,
+   "expect": [
+    "collector"
+   ],
+   "got": [
+    "released:collector"
+   ],
+   "ok": true,
+   "lost": [],
+   "no_disposition": [],
+   "duplicates": [],
+   "money_moves": [],
+   "decided_edits": [],
+   "pending_changed": [],
+   "routes": [
+    [
+     "collector",
+     "collector/collections",
+     "done",
+     ""
+    ]
+   ],
+   "labels": [
+    null
+   ]
+  },
+  {
+   "id": "mt-12",
+   "kind": "mid_task",
+   "lang": "en",
+   "media": true,
+   "expect": [
+    "absorbed"
+   ],
+   "got": [
+    "absorbed"
+   ],
+   "ok": true,
+   "lost": [],
+   "no_disposition": [],
+   "duplicates": [],
+   "money_moves": [],
+   "decided_edits": [],
+   "pending_changed": [],
+   "routes": [],
+   "labels": []
+  },
+  {
+   "id": "mt-13",
+   "kind": "mid_task",
+   "lang": "en",
+   "media": false,
+   "expect": [
+    "absorbed"
+   ],
+   "got": [
+    "absorbed"
+   ],
+   "ok": true,
+   "lost": [],
+   "no_disposition": [],
+   "duplicates": [],
+   "money_moves": [],
+   "decided_edits": [],
+   "pending_changed": [],
+   "routes": [],
+   "labels": []
+  },
+  {
+   "id": "mt-14",
+   "kind": "mid_task",
+   "lang": "pcm",
+   "media": false,
+   "expect": [
+    "released"
+   ],
+   "got": [
+    "released:question"
+   ],
+   "ok": true,
+   "lost": [],
+   "no_disposition": [],
+   "duplicates": [],
+   "money_moves": [],
+   "decided_edits": [],
+   "pending_changed": [],
+   "routes": [
+    [
+     "mimi",
+     "mimi/escalate-owner",
+     "asked_to_clarify",
+     "too_short_to_tell"
+    ]
+   ],
+   "labels": [
+    null
+   ]
+  },
+  {
+   "id": "mt-15",
+   "kind": "mid_task",
+   "lang": "en",
+   "media": true,
+   "expect": [
+    "absorbed"
+   ],
+   "got": [
+    "absorbed"
+   ],
+   "ok": true,
+   "lost": [],
+   "no_disposition": [],
+   "duplicates": [],
+   "money_moves": [],
+   "decided_edits": [],
+   "pending_changed": [],
+   "routes": [],
+   "labels": []
+  },
+  {
+   "id": "co-01",
+   "kind": "correction",
+   "lang": "en",
+   "media": false,
+   "expect": [
+    "stock:revise"
+   ],
+   "got": [
+    "stock:revise"
+   ],
+   "ok": true,
+   "lost": [],
+   "no_disposition": [],
+   "duplicates": [],
+   "money_moves": [],
+   "decided_edits": [],
+   "pending_changed": [],
+   "routes": [
+    [
+     "stock",
+     "stock/stock-count",
+     "done",
+     "steer:revise"
+    ]
+   ],
+   "labels": [
+    [
+     {
+      "confidence": 0.95,
+      "label": "corrects",
+      "pid": "p1",
+      "task": "t1"
+     }
+    ]
+   ]
+  },
+  {
+   "id": "co-02",
+   "kind": "correction",
+   "lang": "pcm",
+   "media": true,
+   "expect": [
+    "stock:revise"
+   ],
+   "got": [
+    "stock:revise"
+   ],
+   "ok": true,
+   "lost": [],
+   "no_disposition": [],
+   "duplicates": [],
+   "money_moves": [],
+   "decided_edits": [],
+   "pending_changed": [],
+   "routes": [
+    [
+     "stock",
+     "stock/stock-count",
+     "done",
+     "steer:revise"
+    ]
+   ],
+   "labels": [
+    [
+     {
+      "confidence": 0.95,
+      "label": "corrects",
+      "pid": "p1",
+      "task": "t1"
+     }
+    ]
+   ]
+  },
+  {
+   "id": "co-03",
+   "kind": "correction",
+   "lang": "pcm",
+   "media": false,
+   "expect": [
+    "stock:revise"
+   ],
+   "got": [
+    "stock:revise"
+   ],
+   "ok": true,
+   "lost": [],
+   "no_disposition": [],
+   "duplicates": [],
+   "money_moves": [],
+   "decided_edits": [],
+   "pending_changed": [],
+   "routes": [
+    [
+     "stock",
+     "stock/stock-count",
+     "done",
+     "steer:revise"
+    ]
+   ],
+   "labels": [
+    [
+     {
+      "confidence": 0.95,
+      "label": "corrects",
+      "pid": "p1",
+      "task": "t1"
+     }
+    ]
+   ]
+  },
+  {
+   "id": "co-04",
+   "kind": "correction",
+   "lang": "en",
+   "media": false,
+   "expect": [
+    "owner"
+   ],
+   "got": [
+    "owner"
+   ],
+   "ok": true,
+   "lost": [],
+   "no_disposition": [],
+   "duplicates": [],
+   "money_moves": [],
+   "decided_edits": [],
+   "pending_changed": [],
+   "routes": [
+    [
+     "mimi",
+     "mimi/steer",
+     "steer_owner",
+     "steer:owner"
+    ]
+   ],
+   "labels": [
+    [
+     {
+      "confidence": 0.8,
+      "label": "corrects",
+      "pid": "p1",
+      "task": "t1"
+     }
+    ]
+   ]
+  },
+  {
+   "id": "co-05",
+   "kind": "correction",
+   "lang": "pcm",
+   "media": false,
+   "expect": [
+    "owner"
+   ],
+   "got": [
+    "order"
+   ],
+   "ok": false,
+   "lost": [],
+   "no_disposition": [],
+   "duplicates": [],
+   "money_moves": [],
+   "decided_edits": [],
+   "pending_changed": [],
+   "routes": [
+    [
+     "order",
+     "order/order-intake",
+     "done",
+     ""
+    ]
+   ],
+   "labels": [
+    [
+     {
+      "confidence": 0.0,
+      "label": "current",
+      "pid": "p1",
+      "task": ""
+     },
+     {
+      "confidence": 0.0,
+      "label": "current",
+      "pid": "p2",
+      "task": ""
+     }
+    ]
+   ]
+  },
+  {
+   "id": "co-06",
+   "kind": "correction",
+   "lang": "pcm",
+   "media": false,
+   "expect": [
+    "question"
+   ],
+   "got": [
+    "question"
+   ],
+   "ok": true,
+   "lost": [],
+   "no_disposition": [],
+   "duplicates": [],
+   "money_moves": [],
+   "decided_edits": [],
+   "pending_changed": [],
+   "routes": [
+    [
+     "mimi",
+     "mimi/steer",
+     "steer_question",
+     "steer:question"
+    ]
+   ],
+   "labels": [
+    [
+     {
+      "confidence": 0.95,
+      "label": "corrects",
+      "pid": "p1",
+      "task": "t1"
+     }
+    ]
+   ]
+  },
+  {
+   "id": "co-07",
+   "kind": "correction",
+   "lang": "en",
+   "media": true,
+   "expect": [
+    "question"
+   ],
+   "got": [
+    "question"
+   ],
+   "ok": true,
+   "lost": [],
+   "no_disposition": [],
+   "duplicates": [],
+   "money_moves": [],
+   "decided_edits": [],
+   "pending_changed": [],
+   "routes": [
+    [
+     "mimi",
+     "mimi/steer",
+     "steer_question",
+     "steer:question"
+    ]
+   ],
+   "labels": [
+    [
+     {
+      "confidence": 0.95,
+      "label": "corrects",
+      "pid": "p1",
+      "task": "t1"
+     }
+    ]
+   ]
+  },
+  {
+   "id": "co-08",
+   "kind": "correction",
+   "lang": "en",
+   "media": false,
+   "expect": [
+    "owner"
+   ],
+   "got": [
+    "owner"
+   ],
+   "ok": true,
+   "lost": [],
+   "no_disposition": [],
+   "duplicates": [],
+   "money_moves": [],
+   "decided_edits": [],
+   "pending_changed": [],
+   "routes": [
+    [
+     "mimi",
+     "mimi/steer",
+     "steer_owner",
+     "steer:owner"
+    ]
+   ],
+   "labels": [
+    [
+     {
+      "confidence": 0.95,
+      "label": "corrects",
+      "pid": "p1",
+      "task": "t1"
+     }
+    ]
+   ]
+  },
+  {
+   "id": "co-09",
+   "kind": "correction",
+   "lang": "en",
+   "media": true,
+   "expect": [
+    "owner"
+   ],
+   "got": [
+    "owner"
+   ],
+   "ok": true,
+   "lost": [],
+   "no_disposition": [],
+   "duplicates": [],
+   "money_moves": [],
+   "decided_edits": [],
+   "pending_changed": [],
+   "routes": [
+    [
+     "mimi",
+     "mimi/steer",
+     "steer_owner",
+     "steer:owner"
+    ]
+   ],
+   "labels": [
+    [
+     {
+      "confidence": 0.95,
+      "label": "corrects",
+      "pid": "p1",
+      "task": "t1"
+     }
+    ]
+   ]
+  },
+  {
+   "id": "co-10",
+   "kind": "correction",
+   "lang": "pcm",
+   "media": false,
+   "expect": [
+    "question"
+   ],
+   "got": [
+    "question"
+   ],
+   "ok": true,
+   "lost": [],
+   "no_disposition": [],
+   "duplicates": [],
+   "money_moves": [],
+   "decided_edits": [],
+   "pending_changed": [],
+   "routes": [
+    [
+     "mimi",
+     "mimi/steer",
+     "steer_question",
+     "steer:question"
+    ]
+   ],
+   "labels": [
+    [
+     {
+      "confidence": 0.95,
+      "label": "corrects",
+      "pid": "p1",
+      "task": "t1"
+     }
+    ]
+   ]
+  },
+  {
+   "id": "co-11",
+   "kind": "correction",
+   "lang": "pcm",
+   "media": false,
+   "expect": [
+    "question"
+   ],
+   "got": [
+    "question"
+   ],
+   "ok": true,
+   "lost": [],
+   "no_disposition": [],
+   "duplicates": [],
+   "money_moves": [],
+   "decided_edits": [],
+   "pending_changed": [],
+   "routes": [
+    [
+     "mimi",
+     "mimi/steer",
+     "steer_question",
+     "steer:question"
+    ]
+   ],
+   "labels": [
+    [
+     {
+      "confidence": 1.0,
+      "label": "cancels",
+      "pid": "p1",
+      "task": "t1"
+     }
+    ]
+   ]
+  },
+  {
+   "id": "co-12",
+   "kind": "correction",
+   "lang": "pcm",
+   "media": false,
+   "expect": [
+    "withdraw"
+   ],
+   "got": [
+    "withdraw"
+   ],
+   "ok": true,
+   "lost": [],
+   "no_disposition": [],
+   "duplicates": [],
+   "money_moves": [],
+   "decided_edits": [],
+   "pending_changed": [],
+   "routes": [
+    [
+     "mimi",
+     "mimi/steer",
+     "steer_withdraw",
+     "steer:withdraw"
+    ]
+   ],
+   "labels": [
+    [
+     {
+      "confidence": 0.95,
+      "label": "cancels",
+      "pid": "p1",
+      "task": "t1"
+     }
+    ]
+   ]
+  },
+  {
+   "id": "co-13",
+   "kind": "correction",
+   "lang": "pcm",
+   "media": false,
+   "expect": [
+    "question"
+   ],
+   "got": [
+    "question"
+   ],
+   "ok": true,
+   "lost": [],
+   "no_disposition": [],
+   "duplicates": [],
+   "money_moves": [],
+   "decided_edits": [],
+   "pending_changed": [],
+   "routes": [
+    [
+     "mimi",
+     "mimi/steer",
+     "steer_question",
+     "steer:question"
+    ]
+   ],
+   "labels": [
+    [
+     {
+      "confidence": 0.75,
+      "label": "corrects",
+      "pid": "p1",
+      "task": "t1"
+     }
+    ]
+   ]
+  },
+  {
+   "id": "co-14",
+   "kind": "correction",
+   "lang": "pcm",
+   "media": false,
+   "expect": [
+    "order"
+   ],
+   "got": [
+    "order"
+   ],
+   "ok": true,
+   "lost": [],
+   "no_disposition": [],
+   "duplicates": [],
+   "money_moves": [],
+   "decided_edits": [],
+   "pending_changed": [],
+   "routes": [
+    [
+     "order",
+     "order/delivery-status",
+     "done",
+     ""
+    ]
+   ],
+   "labels": [
+    [
+     {
+      "confidence": 0.95,
+      "label": "current",
+      "pid": "p1",
+      "task": ""
+     }
+    ]
+   ]
+  },
+  {
+   "id": "co-15",
+   "kind": "correction",
+   "lang": "en",
+   "media": true,
+   "expect": [
+    "proof"
+   ],
+   "got": [
+    "proof"
+   ],
+   "ok": true,
+   "lost": [],
+   "no_disposition": [],
+   "duplicates": [],
+   "money_moves": [],
+   "decided_edits": [],
+   "pending_changed": [],
+   "routes": [
+    [
+     "proof",
+     "proof/fake-alert-check",
+     "done",
+     "screenshot"
+    ]
+   ],
+   "labels": [
+    [
+     {
+      "confidence": 1.0,
+      "label": "current",
+      "pid": "p1",
+      "task": ""
+     }
+    ]
+   ]
+  },
+  {
+   "id": "co-16",
+   "kind": "correction",
+   "lang": "en",
+   "media": true,
+   "expect": [
+    "proof"
+   ],
+   "got": [
+    "proof"
+   ],
+   "ok": true,
+   "lost": [],
+   "no_disposition": [],
+   "duplicates": [],
+   "money_moves": [],
+   "decided_edits": [],
+   "pending_changed": [],
+   "routes": [
+    [
+     "proof",
+     "proof/fake-alert-check",
+     "done",
+     "screenshot"
+    ]
+   ],
+   "labels": [
+    [
+     {
+      "confidence": 1.0,
+      "label": "current",
+      "pid": "p1",
+      "task": ""
+     }
+    ]
+   ]
+  },
+  {
+   "id": "co-17",
+   "kind": "correction",
+   "lang": "en",
+   "media": true,
+   "expect": [
+    "credit"
+   ],
+   "got": [
+    "credit:adds"
+   ],
+   "ok": true,
+   "lost": [],
+   "no_disposition": [],
+   "duplicates": [],
+   "money_moves": [],
+   "decided_edits": [],
+   "pending_changed": [],
+   "routes": [
+    [
+     "credit",
+     "credit/credit-request",
+     "done",
+     "steer:adds"
+    ]
+   ],
+   "labels": [
+    [
+     {
+      "confidence": 1.0,
+      "label": "adds",
+      "pid": "p1",
+      "task": "t1"
+     }
+    ]
+   ]
+  },
+  {
+   "id": "co-18",
+   "kind": "correction",
+   "lang": "pcm",
+   "media": true,
+   "expect": [
+    "stock:revise"
+   ],
+   "got": [
+    "stock:revise"
+   ],
+   "ok": true,
+   "lost": [],
+   "no_disposition": [],
+   "duplicates": [],
+   "money_moves": [],
+   "decided_edits": [],
+   "pending_changed": [],
+   "routes": [
+    [
+     "stock",
+     "stock/stock-count",
+     "done",
+     "steer:revise"
+    ]
+   ],
+   "labels": [
+    [
+     {
+      "confidence": 0.9,
+      "label": "corrects",
+      "pid": "p1",
+      "task": "t1"
+     }
+    ]
+   ]
+  },
+  {
+   "id": "co-19",
+   "kind": "correction",
+   "lang": "pcm",
+   "media": true,
+   "expect": [
+    "collector"
+   ],
+   "got": [
+    "collector"
+   ],
+   "ok": true,
+   "lost": [],
+   "no_disposition": [],
+   "duplicates": [],
+   "money_moves": [],
+   "decided_edits": [],
+   "pending_changed": [],
+   "routes": [
+    [
+     "collector",
+     "collector/payment-check",
+     "done",
+     ""
+    ]
+   ],
+   "labels": [
+    [
+     {
+      "confidence": 0.95,
+      "label": "current",
+      "pid": "p1",
+      "task": ""
+     }
+    ]
+   ]
+  },
+  {
+   "id": "co-20",
+   "kind": "correction",
+   "lang": "yo-en",
+   "media": false,
+   "expect": [
+    "stock:revise"
+   ],
+   "got": [
+    "stock:revise"
+   ],
+   "ok": true,
+   "lost": [],
+   "no_disposition": [],
+   "duplicates": [],
+   "money_moves": [],
+   "decided_edits": [],
+   "pending_changed": [],
+   "routes": [
+    [
+     "stock",
+     "stock/stock-count",
+     "done",
+     "steer:revise"
+    ]
+   ],
+   "labels": [
+    [
+     {
+      "confidence": 0.92,
+      "label": "corrects",
+      "pid": "p1",
+      "task": "t1"
+     },
+     {
+      "confidence": 0.99,
+      "label": "chat",
+      "pid": "p2",
+      "task": ""
+     }
+    ]
+   ]
+  },
+  {
+   "id": "am-01",
+   "kind": "ambiguous",
+   "lang": "pcm",
+   "media": false,
+   "expect": [
+    "question"
+   ],
+   "got": [
+    "question"
+   ],
+   "ok": true,
+   "lost": [],
+   "no_disposition": [],
+   "duplicates": [],
+   "money_moves": [],
+   "decided_edits": [],
+   "pending_changed": [],
+   "routes": [
+    [
+     "mimi",
+     "mimi/steer",
+     "steer_question",
+     "steer:question"
+    ]
+   ],
+   "labels": [
+    [
+     {
+      "confidence": 0.7,
+      "label": "unclear",
+      "pid": "p1",
+      "task": ""
+     }
+    ]
+   ]
+  },
+  {
+   "id": "dc-01",
+   "kind": "document",
+   "lang": "pcm",
+   "media": true,
+   "expect": [
+    "order"
+   ],
+   "got": [
+    "order"
+   ],
+   "ok": true,
+   "lost": [],
+   "no_disposition": [],
+   "duplicates": [],
+   "money_moves": [],
+   "decided_edits": [],
+   "pending_changed": [],
+   "routes": [
+    [
+     "order",
+     "order/order-intake",
+     "done",
+     ""
+    ]
+   ],
+   "labels": [
+    null
+   ]
+  }
+ ],
+ "cost_kobo": 38342,
+ "model_calls": 64,
+ "mode": "live",
+ "steer_prompt_version": "steer-2026-10-28.2",
+ "pass_marks": {
+  "correct": 0.9,
+  "lost": 0,
+  "no_disposition": 0,
+  "duplicate_replies": 0,
+  "money_moves": 0,
+  "decided_edits": 0
+ },
+ "passed": true
+}

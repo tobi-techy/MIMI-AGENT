@@ -1,0 +1,254 @@
+{
+ "00faeaaf140d96bec3bd9cfeabdb6ae2": {
+  "completion_tokens": 445,
+  "latency_s": 1.77,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 575,
+  "text": "{\"parts\": [{\"confidence\": 0.98, \"id\": \"p1\", \"label\": \"new\", \"task\": \"\"}]}"
+ },
+ "033537014bbbff32d1cfdbdd9316dc0b": {
+  "completion_tokens": 496,
+  "latency_s": 2.329,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 746,
+  "text": "{\"route\": \"order/order-intake\", \"confidence\": 0.85, \"second\": \"\", \"language\": \"en\"}"
+ },
+ "0d819f5b50533d1eac3d786ce9433a57": {
+  "completion_tokens": 425,
+  "latency_s": 2.291,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 584,
+  "text": "{\"parts\": [{\"confidence\": 0.97, \"id\": \"p1\", \"label\": \"corrects\", \"task\": \"t1\"}]}"
+ },
+ "0f2f8544fce4babdca35906d63601b24": {
+  "completion_tokens": 774,
+  "latency_s": 5.328,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 623,
+  "text": "{\"parts\": [{\"confidence\": 0.9, \"id\": \"p1\", \"label\": \"current\", \"task\": \"\"}, {\"confidence\": 0.95, \"id\": \"p2\", \"label\": \"new\", \"task\": \"\"}]}"
+ },
+ "0fc98cd3c727f980efc7df76c54e776d": {
+  "completion_tokens": 468,
+  "latency_s": 2.17,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 636,
+  "text": "{\"parts\": [{\"confidence\": 0.95, \"id\": \"p1\", \"label\": \"corrects\", \"task\": \"t1\"}]}"
+ },
+ "110a6f7849a9e41ba7010b2cf933013d": {
+  "completion_tokens": 414,
+  "latency_s": 2.097,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 593,
+  "text": "{\"parts\": [{\"confidence\": 0.97, \"id\": \"p1\", \"label\": \"cancels\", \"task\": \"t0\"}]}"
+ },
+ "16275830b9cbad6fed02edbfcad5a7eb": {
+  "completion_tokens": 621,
+  "latency_s": 3.387,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 571,
+  "text": "{\"parts\": [{\"confidence\": 0.9, \"id\": \"p1\", \"label\": \"current\", \"task\": \"\"}, {\"confidence\": 0.95, \"id\": \"p2\", \"label\": \"new\", \"task\": \"\"}]}"
+ },
+ "1d9fd73a9175291627b57965e2aec4b4": {
+  "completion_tokens": 631,
+  "latency_s": 3.003,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 568,
+  "text": "{\"parts\": [{\"confidence\": 0.85, \"id\": \"p1\", \"label\": \"corrects\", \"task\": \"t1\"}]}"
+ },
+ "29964b3981a6da1663079d1b5ebc92fd": {
+  "completion_tokens": 675,
+  "latency_s": 3.075,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 609,
+  "text": "{\"parts\": [{\"confidence\": 0.95, \"id\": \"p1\", \"label\": \"corrects\", \"task\": \"t1\"}]}"
+ },
+ "38412c4f90a17b8cae406af5b60fa86b": {
+  "completion_tokens": 920,
+  "latency_s": 4.653,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 591,
+  "text": "{\"parts\": [{\"confidence\": 0.85, \"id\": \"p1\", \"label\": \"cancels\", \"task\": \"t0\"}]}"
+ },
+ "3d211a34ef4e5aad731cbe82541ff8af": {
+  "completion_tokens": 758,
+  "latency_s": 3.068,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 575,
+  "text": "{\"parts\": [{\"confidence\": 0.85, \"id\": \"p1\", \"label\": \"cancels\", \"task\": \"t0\"}]}"
+ },
+ "3d443cc0edb5fae95f6f05d83eb83860": {
+  "completion_tokens": 1120,
+  "latency_s": 5.226,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 597,
+  "text": "{\"parts\": [{\"confidence\": 0.9, \"id\": \"p1\", \"label\": \"new\", \"task\": \"\"}]}"
+ },
+ "43f6cdb1fe1a75f7cde4f58fffe997d1": {
+  "completion_tokens": 713,
+  "latency_s": 3.101,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 620,
+  "text": "{\"parts\": [{\"confidence\": 0.9, \"id\": \"p1\", \"label\": \"corrects\", \"task\": \"t1\"}]}"
+ },
+ "44b3f4c75eee964dd21a1b389bd95934": {
+  "completion_tokens": 480,
+  "latency_s": 2.513,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 577,
+  "text": "{\"parts\": [{\"confidence\": 0.98, \"id\": \"p1\", \"label\": \"cancels\", \"task\": \"t0\"}]}"
+ },
+ "4b669404081da9c06395a0edcaf8f59f": {
+  "completion_tokens": 388,
+  "latency_s": 2.886,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 629,
+  "text": "{\"parts\": [{\"confidence\": 0.95, \"id\": \"p1\", \"label\": \"cancels\", \"task\": \"t0\"}]}"
+ },
+ "4bdcf04fe48251257683dc4637f546bb": {
+  "completion_tokens": 524,
+  "latency_s": 1.967,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 591,
+  "text": "{\"parts\": [{\"confidence\": 0.95, \"id\": \"p1\", \"label\": \"new\", \"task\": \"\"}]}"
+ },
+ "5522b3ce9de39679f617aed77dcc7534": {
+  "completion_tokens": 1600,
+  "latency_s": 7.762,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 573,
+  "text": "{\"parts\": [{\"confidence\": 0.9, \"id\": \"p1\", \"label\": \"current\", \"task\": \"\"}]}"
+ },
+ "5542cfdf2df35981fb1be10dc3bcbe3b": {
+  "completion_tokens": 586,
+  "latency_s": 2.454,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 584,
+  "text": "{\"parts\": [{\"confidence\": 0.98, \"id\": \"p1\", \"label\": \"corrects\", \"task\": \"t1\"}]}"
+ },
+ "6f3751ad22de05cdcb0f7cdc6e4c50ae": {
+  "completion_tokens": 569,
+  "latency_s": 3.194,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 753,
+  "text": "{\"route\": \"order/order-intake\", \"confidence\": 0.55, \"second\": \"stock/stock-count\", \"language\": \"pcm\"}"
+ },
+ "78a397520067b460da16b91cc4795831": {
+  "completion_tokens": 579,
+  "latency_s": 2.434,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 627,
+  "text": "{\"parts\": [{\"confidence\": 0.96, \"id\": \"p1\", \"label\": \"new\", \"task\": \"\"}]}"
+ },
+ "7ab3c0b632d583d18feea8849c8c55a3": {
+  "completion_tokens": 995,
+  "latency_s": 3.964,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 627,
+  "text": "{\"parts\": [{\"confidence\": 0.85, \"id\": \"p1\", \"label\": \"cancels\", \"task\": \"t0\"}]}"
+ },
+ "804e08044921d21f2580a7308bc95cd4": {
+  "completion_tokens": 756,
+  "latency_s": 4.134,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 587,
+  "text": "{\"parts\": [{\"confidence\": 0.9, \"id\": \"p1\", \"label\": \"current\", \"task\": \"\"}, {\"confidence\": 0.95, \"id\": \"p2\", \"label\": \"new\", \"task\": \"\"}]}"
+ },
+ "8bf74ac8e8c9cab18681cc8f89b3b89a": {
+  "completion_tokens": 482,
+  "latency_s": 2.496,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 575,
+  "text": "{\"parts\": [{\"confidence\": 0.95, \"id\": \"p1\", \"label\": \"new\", \"task\": \"\"}]}"
+ },
+ "a53099b3ed77162537f13923a67a4507": {
+  "completion_tokens": 749,
+  "latency_s": 2.738,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 568,
+  "text": "{\"parts\": [{\"confidence\": 0.9, \"id\": \"p1\", \"label\": \"corrects\", \"task\": \"t1\"}]}"
+ },
+ "ab7ea48d20fa1ef1fea0ed0adcf4bb36": {
+  "completion_tokens": 1038,
+  "latency_s": 3.617,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 581,
+  "text": "{\"parts\": [{\"confidence\": 0.9, \"id\": \"p1\", \"label\": \"new\", \"task\": \"\"}]}"
+ },
+ "b08d4ae59efad012f46d2ebc323e841c": {
+  "completion_tokens": 492,
+  "latency_s": 2.741,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 749,
+  "text": "{\"route\": \"order/order-intake\", \"confidence\": 0.4, \"second\": \"stock/stock-count\", \"language\": \"en\"}"
+ },
+ "b2a34fd3c35ea65d36137af1726d397b": {
+  "completion_tokens": 611,
+  "latency_s": 3.208,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 575,
+  "text": "{\"parts\": [{\"confidence\": 0.9, \"id\": \"p1\", \"label\": \"cancels\", \"task\": \"t0\"}]}"
+ },
+ "c2bcfb000e76b9ee26c4975c8fd6cb66": {
+  "completion_tokens": 394,
+  "latency_s": 1.868,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 600,
+  "text": "{\"parts\": [{\"confidence\": 0.97, \"id\": \"p1\", \"label\": \"corrects\", \"task\": \"t1\"}]}"
+ },
+ "c99aab3afe57ae66aee4efdc3ff7d565": {
+  "completion_tokens": 900,
+  "latency_s": 3.931,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 581,
+  "text": ""
+ },
+ "d676b77c31a7075ae5c5e10805d39522": {
+  "completion_tokens": 1649,
+  "latency_s": 7.606,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 557,
+  "text": "{\"parts\": [{\"confidence\": 0.9, \"id\": \"p1\", \"label\": \"corrects\", \"task\": \"t1\"}]}"
+ },
+ "dd57821cdb8302d9d9de83434a4e9c0c": {
+  "completion_tokens": 420,
+  "latency_s": 1.814,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 577,
+  "text": "{\"parts\": [{\"confidence\": 0.95, \"id\": \"p1\", \"label\": \"cancels\", \"task\": \"t0\"}]}"
+ },
+ "dfe8498a4e141e249087d606de52bafd": {
+  "completion_tokens": 494,
+  "latency_s": 3.105,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 412,
+  "text": "{\"confidence\":0.92,\"label\":\"yes\"}"
+ },
+ "e2005693b19bb3e94351c257152dea08": {
+  "completion_tokens": 900,
+  "latency_s": 3.501,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 557,
+  "text": ""
+ },
+ "e4b8b7b3be54f7654d88827ef8a7a90e": {
+  "completion_tokens": 943,
+  "latency_s": 5.249,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 633,
+  "text": "{\"parts\": [{\"confidence\": 0.85, \"id\": \"p1\", \"label\": \"adds\", \"task\": \"t0\"}]}"
+ },
+ "e4e4a2ad8b2eebae948015b471250654": {
+  "completion_tokens": 503,
+  "latency_s": 2.642,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 584,
+  "text": "{\"parts\": [{\"confidence\": 0.92, \"id\": \"p1\", \"label\": \"corrects\", \"task\": \"t1\"}]}"
+ },
+ "ea3847becdd4ee28f02475ee590402e8": {
+  "completion_tokens": 892,
+  "latency_s": 4.665,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 571,
+  "text": "{\"parts\": [{\"confidence\": 0.92, \"id\": \"p1\", \"label\": \"current\", \"task\": \"\"}, {\"confidence\": 0.97, \"id\": \"p2\", \"label\": \"new\", \"task\": \"\"}]}"
+ }
+}

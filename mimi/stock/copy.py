@@ -33,6 +33,38 @@ def thanks_draft_text(quantity: int, unit: str, distributor: str) -> str:
     )
 
 
+def revised_draft_text(quantity: int, unit: str, distributor: str) -> str:
+    return (
+        f"Okay. I've changed it to {quantity} {unit_word(unit, quantity)}. {distributor} will "
+        "confirm before delivery."
+    )
+
+
+_WORDS = {"one": 1, "two": 2, "three": 3, "four": 4, "five": 5, "six": 6, "seven": 7,
+          "eight": 8, "nine": 9, "ten": 10, "eleven": 11, "twelve": 12, "fifteen": 15,
+          "twenty": 20, "meji": 2, "meta": 3, "merin": 4, "marun": 5, "mefa": 6, "meje": 7,
+          "mejo": 8, "mesan": 9, "mewa": 10}
+
+
+def numbers_in(text: str) -> set[int]:
+    """Whole numbers a shop wrote or said ("6", "six", "mefa"); code only."""
+    import unicodedata
+
+    t = "".join(c for c in unicodedata.normalize("NFKD", text.lower())
+                if not unicodedata.combining(c))
+    found = {int(x) for x in re.findall(r"(?<![\d.,])\d{1,3}(?![\d,]*\d{3})", t)}
+    found |= {n for w, n in _WORDS.items() if re.search(rf"\b{w}\b", t)}
+    return found
+
+
+_NEGATED = re.compile(r"\b(?:not|no be|nor|instead of|rather than|kii se|ki i se)\s+[\w-]+", re.I)
+
+
+def wanted_numbers(text: str) -> set[int]:
+    """The numbers a correction asks for: "make it 6, not 4" gives {6}."""
+    return numbers_in(_NEGATED.sub(" ", text))
+
+
 def thanks_noted_text() -> str:
     return "Thanks, noted. Nothing to order yet."
 

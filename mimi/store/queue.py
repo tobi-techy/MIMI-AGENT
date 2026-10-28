@@ -146,13 +146,20 @@ class TurnQueue:
             if busy is not None:
                 return None
             batch = list(loads(t.batch, []))
-            if not takeover:
+            if not takeover and t.solo:
+                # A follow-up for one part of a message runs alone (RAI-301).
+                batch = [r.external_id for r in conn.execute(
+                    sa.select(s.inbound_messages.c.external_id).where(
+                        s.inbound_messages.c.tenant_id == t.tenant_id,
+                        s.inbound_messages.c.turn_id == turn_id))]
+            elif not takeover:
                 # Fresh claim: this turn leads every waiting turn on the thread.
                 waiting = conn.execute(
                     sa.select(s.turns.c.turn_id).where(
                         s.turns.c.tenant_id == t.tenant_id,
                         s.turns.c.thread_id == t.thread_id,
-                        s.turns.c.state == "queued", s.turns.c.turn_id != turn_id)
+                        s.turns.c.state == "queued", s.turns.c.turn_id != turn_id,
+                        s.turns.c.solo.is_(False))
                     .order_by(s.turns.c.created_ts, s.turns.c.turn_id)).scalars().all()
                 ids = [turn_id, *waiting]
                 batch = [r.external_id for r in conn.execute(
@@ -173,6 +180,14 @@ class TurnQueue:
                         attempts=t.attempts + 1, batch=dumps(batch)))
             if res.rowcount != 1:
                 raise _Raced(turn_id)  # rolls the merge back with it
+            # Inbox rows for messages this claim now runs were never read by
+            # the turn that was running: they are this turn's input now.
+            conn.execute(s.thread_inbox.update().where(
+                s.thread_inbox.c.tenant_id == t.tenant_id,
+                s.thread_inbox.c.thread_id == t.thread_id,
+                s.thread_inbox.c.status == "waiting",
+                s.thread_inbox.c.external_id.in_(batch or [""]))
+                .values(status="released", taken_by=turn_id, taken_at=now_iso(now)))
             conn.execute(s.turn_attempts.insert().values(
                 turn_id=turn_id, worker_id=worker_id, takeover=takeover,
                 claimed_at=now_iso(now)))
@@ -203,6 +218,58 @@ class TurnQueue:
                 raise LeaseLost(claim.turn_id)
         return Claim(**{**claim.__dict__, "version": claim.version + 1,
                         "checkpoint": dict(data)})
+
+    def absorb(self, claim: Claim, data: dict[str, Any], *, merge: list[tuple[str, str]],
+               inbox: list[tuple[str, str, dict[str, Any]]],
+               extra: Any = None) -> Claim:
+        """A running turn read its inbox at a step boundary (RAI-301). One
+        compare-and-set saves the loop state with the absorbed messages in it,
+        merges their turns into this one (their ids join the batch) and marks
+        each inbox row ``absorbed``, ``released`` or ``cancelled_task``.
+
+        ``merge`` is (turn_id, external_id) per absorbed message; ``inbox`` is
+        (external_id, status, steer). A worker that lost its lease writes none
+        of it, and the next holder reads the same rows again from the store.
+        """
+        now = self.clock()
+        with self.engine.begin() as conn:
+            batch = list(claim.batch)
+            for turn_id, ext in merge:
+                res = conn.execute(s.turns.update().where(
+                    s.turns.c.turn_id == turn_id, s.turns.c.state == "queued",
+                    s.turns.c.tenant_id == claim.tenant_id)
+                    .values(state="merged", merged_into=claim.turn_id,
+                            version=s.turns.c.version + 1))
+                if res.rowcount == 1 and ext not in batch:
+                    batch.append(ext)
+            res = conn.execute(s.turns.update().where(
+                s.turns.c.turn_id == claim.turn_id, s.turns.c.version == claim.version,
+                s.turns.c.lease_owner == claim.worker_id, s.turns.c.state == "leased")
+                .values(checkpoint=dumps(data), version=claim.version + 1,
+                        batch=dumps(batch)))
+            if res.rowcount != 1:
+                raise LeaseLost(claim.turn_id)  # rolls the merges back with it
+            for ext, status, steer in inbox:
+                conn.execute(s.thread_inbox.update().where(
+                    s.thread_inbox.c.tenant_id == claim.tenant_id,
+                    s.thread_inbox.c.external_id == ext,
+                    s.thread_inbox.c.status == "waiting")
+                    .values(status=status, taken_by=claim.turn_id, steer=dumps(steer),
+                            taken_at=now_iso(now)))
+            if extra is not None:
+                extra(conn)  # follow-up turns for released parts, same transaction
+        return Claim(**{**claim.__dict__, "version": claim.version + 1,
+                        "checkpoint": dict(data), "batch": tuple(batch)})
+
+    def inbox_waiting(self, tenant_id: str, thread_id: str) -> list[Any]:
+        """Messages waiting for this thread's running turn, owner first, then oldest."""
+        with self.engine.connect() as conn:
+            rows = conn.execute(sa.select(s.thread_inbox).where(
+                s.thread_inbox.c.tenant_id == tenant_id,
+                s.thread_inbox.c.thread_id == thread_id,
+                s.thread_inbox.c.status == "waiting")).all()
+        return sorted(rows, key=lambda r: (PRIORITY.get(r.source, 3), r.created_ts,
+                                           r.external_id))
 
     def finish_in(self, conn: sa.Connection, claim: Claim, *, status: str, helper: str,
                   skill: str, run_id: str, result: dict[str, Any]) -> None:

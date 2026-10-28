@@ -29,6 +29,7 @@ tools, and approving an approval only releases what the helper drafted.
 
 from __future__ import annotations
 
+import json
 import logging
 import os
 import socket
@@ -43,8 +44,10 @@ from typing import Any
 import sqlalchemy as sa
 from sqlalchemy.engine import Engine
 
+from mimi.api import steering as sx
 from mimi.api.helpers import HelperDeps
 from mimi.harness import fastclass
+from mimi.harness import steer as st
 from mimi.harness.binding import AnswerBinder, ask_is_live, delivery_ids_in
 from mimi.harness.context import ContextBuilder
 from mimi.harness.frontdoor import FrontDoor
@@ -52,11 +55,13 @@ from mimi.harness.gateway import Gateway, ToolModel, kobo_cost
 from mimi.harness.inbound import Directory, Inbound, Payload
 from mimi.harness.loop import Harness, Helper, LoopState, business_key
 from mimi.harness.policy import GoPolicy, RiskPolicy
-from mimi.harness.router import RouteDecision, Router, ThreadState, lead_of
+from mimi.harness.router import _NO, _YES, RouteDecision, Router, ThreadState, lead_of
+from mimi.harness.router import label as skill_label
 from mimi.harness.tracing import trace_route, trace_run
 from mimi.harness.types import RunEvent
 from mimi.models.base import ChatModel
 from mimi.observe.langfuse_export import exporter_from_env
+from mimi.stock.copy import numbers_in
 from mimi.store import schema as s
 from mimi.store.book import SqlGo, moves_money
 from mimi.store.context_stores import (
@@ -94,7 +99,13 @@ MESSAGE_INTENTS: dict[str, tuple[str, str]] = {
 NOTICE_INTENTS: dict[str, tuple[str, str]] = {
     "flag_payment_proof": ("shop_whatsapp", "shop_notice"),
     "draft_restock": ("shop_whatsapp", "shop_notice"),
+    "revise_restock": ("shop_whatsapp", "shop_notice"),
 }
+# How long a correction question waits for the shop's YES or NO (RAI-301).
+FIX_TTL_S = 24 * 3600
+# Route rules a part keeps whatever the steer labels say: a screenshot is read
+# by Proof, a photo by the helper that asked for it.
+MEDIA_RULES = ("screenshot", "photo_for_pending", "pending_answer:photo", "photo_of_payment")
 
 # A write that asks the shop something leaves the thread waiting on that
 # skill, so the answer (a photo, a tap, a YES) routes back by rule.
@@ -183,6 +194,21 @@ def _settles(pending: str, routed: str, proposed: set[str], flagged: bool) -> bo
     return True if keys is None else bool(proposed & set(keys))
 
 
+def _replaced_in_turn(intents: Sequence[Any]) -> set[str]:
+    """Keys of drafts a later version in the same turn replaces (a shop
+    corrected the draft mid-task): only the newest version is applied."""
+    newest: dict[tuple[str, str, str], str] = {}
+    order: list[tuple[tuple[str, str, str], str]] = []
+    for rec in intents:
+        fam = sx.FAMILY.get(rec.tool)
+        if fam is None:
+            continue
+        k = (fam[0], rec.shop_id, str(rec.payload.get("sku", "")))
+        order.append((k, rec.idempotency_key))
+        newest[k] = rec.idempotency_key
+    return {key for k, key in order if newest[k] != key}
+
+
 def _state_to_json(ts: ThreadState) -> dict[str, Any]:
     return asdict(ts)
 
@@ -244,6 +270,10 @@ class Agent:
         self.router = Router(model=router_model, fast=fastclass.model(), price=kobo_cost,
                              binder=AnswerBinder(model=router_model))
         self.clock = clock or (lambda: datetime.now(UTC))
+        # Parts, mid-task messages and corrections (``mimi.harness.steer``);
+        # MIMI_STEER=0 turns the stage off (today's behaviour).
+        self.steerer = st.Steerer(model=router_model)
+        self.steer_on = os.environ.get("MIMI_STEER", "1").strip() != "0"
         self.artifacts = SqlArtifactStore(engine)
         self.harness = Harness(book=self.go, control=self.go, events=self.go,
                                gateway=Gateway(list(models)), policy=self.policy,
@@ -338,6 +368,20 @@ class Agent:
                         != "none" else "text", "status": "received", "idempotency_key": "",
                         "simulated": simulated, "at": inbound.received_at.isoformat(),
                         "ts": inbound.received_at.timestamp()})
+                if not stop and inbound.source in PERSON_SOURCES:
+                    running = conn.execute(sa.select(s.turns.c.turn_id).where(
+                        s.turns.c.tenant_id == tenant_id, s.turns.c.thread_id == thread_id,
+                        s.turns.c.state == "leased").order_by(s.turns.c.created_ts)).first()
+                    if running is not None:
+                        # A turn of this thread is running: it reads this at its
+                        # next step boundary (RAI-301). The queued turn stays the
+                        # durable fallback.
+                        insert_ignore(conn, s.thread_inbox, {
+                            "tenant_id": tenant_id, "external_id": inbound.external_id,
+                            "thread_id": thread_id, "turn_id": turn_id,
+                            "running_turn_id": running.turn_id, "source": inbound.source,
+                            "status": "waiting", "taken_by": "", "steer": "{}",
+                            "created_at": now_iso(now), "created_ts": now, "taken_at": None})
                 if stop:
                     # The owner's "stop" ends every running turn of this
                     # distributor at its next step boundary (fast lane).
@@ -451,44 +495,352 @@ class Agent:
             d = self.router.route_batch(events, directory, prior)
             ck["decision"] = d.model_dump(mode="json")
             self._checkpoint(holder, ck)
+        if "steer" not in ck:
+            # Parts, open tasks and corrections (RAI-301): decided once,
+            # checkpointed with the route, so a re-run never classifies twice.
+            ck["steer"] = self._steer_stage(claim, events, d, prior)
+            self._checkpoint(holder, ck)
+        sv: dict[str, Any] = ck["steer"]
+        if sv.get("route"):
+            r = sv["route"]
+            d = d.model_copy(update={"status": "routed", "helper": r["helper"],
+                                     "skill": r["skill"], "rule": r["rule"], "layer": "rule",
+                                     "clarify_question": "", "options": ()})
+        if sv.get("code"):
+            # Code answers this turn (a question, a withdrawal, the owner told):
+            # the router's own question, if it had one, is not also sent.
+            d = d.model_copy(update={"status": "routed", "helper": "mimi",
+                                     "skill": "mimi/steer", "clarify_question": "",
+                                     "options": (), "rule": f"steer:{sv['code']['kind']}"})
+            self._complete(holder, d, events, prior, status=f"steer_{sv['code']['kind']}",
+                           steer=sv)
+            return
         if d.status == "clarify":
-            self._complete(holder, d, events, prior, status="asked_to_clarify")
+            self._complete(holder, d, events, prior, status="asked_to_clarify", steer=sv)
             return
         helper = self.helpers.get(d.helper)
         if helper is None:
-            self._complete(holder, d, events, prior, status=f"no_helper_yet:{d.helper}")
+            self._complete(holder, d, events, prior, status=f"no_helper_yet:{d.helper}",
+                           steer=sv)
             return
         if "loop" in ck:
             state = LoopState.model_validate(ck["loop"])
             event = RunEvent.model_validate(ck["event"])
         else:
-            event, job, route = self._run_event(claim, events, directory, d)
-            ctx = self.builder.build(event, helper, d.skill, job=job)
+            event, job, route = self._run_event(claim, events, directory, d,
+                                                text=sv.get("primary_text"))
+            ctx = self.builder.build(event, helper, d.skill, job=job,
+                                     extra_notes=list(sv.get("notes") or []))
             state = self.harness.start(event, helper, context=ctx, route=route)
             ck.update(event=event.model_dump(mode="json"), loop=state.model_dump(mode="json"))
             self._checkpoint(holder, ck)
         while state.finished is None:
             if self._stop_requested(claim.turn_id):
                 self._complete(holder, d, events, prior, status="stopped_by_owner",
-                               state=state, event=event, apply=False)
+                               state=state, event=event, apply=False, steer=sv)
+                return
+            if self.steer_on:
+                state, ck = self._read_inbox(holder, ck, state, d, events, directory)
+            if ck.get("cancel"):
+                self._complete(holder, d, events, prior, status="cancelled_by_sender",
+                               state=state, event=event, apply=False, steer=sv)
                 return
             res = self.harness.step(state, helper)
             state = LoopState.model_validate(res.state)
             ck["loop"] = res.state
             self._checkpoint(holder, ck)
         self._complete(holder, d, events, prior, status=state.finished.status,
-                       state=state, event=event)
+                       state=state, event=event, steer=sv)
+
+    # ============================================================ steering
+
+    def _steer_stage(self, claim: Claim, events: Sequence[Inbound], d: RouteDecision,
+                     prior: ThreadState) -> dict[str, Any]:
+        """What each part of the message is, and what that means for the turn.
+
+        Returns plain JSON (checkpointed): ``parts``, ``labels``, ``plan``,
+        ``tasks``, and when the plan changes the turn, ``primary_text`` (the
+        parts the routed helper answers), ``route`` (another helper owns the
+        task), ``code`` (a question, a withdrawal or the owner, written by
+        code), ``followups`` and ``notes`` for the context. ``{}`` when the
+        stage does not apply; the turn then runs exactly as before.
+        """
+        lead = lead_of(events)
+        sender = lead.sender
+        if not self.steer_on or sender not in ("shop", "rep") or lead.source not in \
+                PERSON_SOURCES:
+            return {}
+        tenant, thread = claim.tenant_id, claim.thread_id
+        kind, shop_id = thread_kind(tenant, thread)
+        shop_id = shop_id or lead.payload.shop_id
+        tasks = sx.open_tasks(self.engine, tenant, thread, shop_id)
+        notes = [f"open task {t.line()}" for t in tasks]
+        out: dict[str, Any] = {"tasks": [sx.task_json(t) for t in tasks], "notes": notes}
+        text = "\n".join(e.text for e in events if e.text)
+        folded = " ".join(text.lower().split()).strip(" .!")
+        fix = json.loads(prior.fix) if prior.fix else {}
+        if fix and time.time() - float(fix.get("asked_ts", 0)) > FIX_TTL_S:
+            fix = {}
+        if fix and (_YES.match(folded) or _NO.match(folded)):
+            out["fix_done"] = True
+            return {**out, **self._fix_answer(fix, bool(_YES.match(folded)), text, tasks)}
+        if lead.payload.part_of:
+            # A follow-up: the first turn already decided what this part is.
+            action, _, rest = lead.payload.steer.partition("|")
+            label, _, key = rest.partition("|")
+            if action in ("revise", "adds", "owner", "question", "withdraw"):
+                task = next((t for t in tasks if key and t.key == key), None)
+                if task is None and action != "question":
+                    action = "question"  # the task is gone or changed: ask, never guess
+                return {**out, **self._task_plan(action, "decided by the first turn",
+                                                 label or "corrects", task, text, tasks),
+                        "plan": {"action": action, "via": "followup"}}
+            return out
+        parts = st.split_parts(events)
+        if len(parts) < 2 and not tasks and not fix:
+            return {}
+        keep = frozenset(p.pid for p in parts if p.is_media and d.rule in MEDIA_RULES)
+        forced = self._media_rules(parts, d, tasks)
+        if all(p.pid in keep or p.pid in forced for p in parts):
+            res = st.SteerResult([forced.get(p.pid) or st.PartLabel(p.pid, "current", "", 1.0)
+                                  for p in parts], "rule", "media routed by rule")
+        else:
+            res = self.steerer.classify(parts, current=self._current(d, prior), tasks=tasks,
+                                        sender=sender, asked=str(fix.get("question", "")))
+            if forced:
+                res.labels = [forced.get(lb.pid, lb) for lb in res.labels]
+        plan = st.plan_parts(parts, res, tasks, keep_pids=keep)
+        out.update({"parts": sx.parts_json(parts), "labels": [asdict(x) for x in res.labels],
+                    "layer": res.layer, "why": res.why, "plan": plan.to_json(),
+                    "cost_kobo": kobo_cost(res.model, res.prompt_tokens,
+                                           res.completion_tokens) if res.model else 0,
+                    "model": res.model, "model_ms": res.model_ms})
+        if fix:
+            out["fix_done"] = True  # the shop moved on; the question is not asked twice
+        tmap = {t.tid: t for t in tasks}
+        if plan.action != "keep":
+            task = tmap.get(plan.task)
+            label = next((lb.label for lb in res.labels if lb.pid in plan.primary
+                          and lb.label in st.TASK_LABELS), "corrects")
+            words = st.part_text(parts, plan.primary)
+            out.update(self._task_plan(plan.action, plan.why, label, task, words, tasks))
+        if plan.followups:
+            # A separate request split off a message that answered the open
+            # ask is not that answer ("new"); split off a message the binder let
+            # go, it may still be the answer ("new|open"), so it is bound alone.
+            bound = bool(d.bound) or d.rule.startswith("pending_")
+            out["followups"] = [{"pids": f.pids, "label": f.label,
+                                 "steer": ("new" if bound else "new|open")
+                                 if f.label == "new" else
+                                 f"{f.label}|{f.part_label}|"
+                                 f"{tmap[f.task].key if f.task in tmap else ''}"}
+                                for f in plan.followups]
+            if plan.action == "keep":
+                out["primary_text"] = self._primary_text(parts, plan.primary)
+            n = sum(len(f.pids) for f in plan.followups)
+            out["notes"] = [*out["notes"], f"only part of the {sender}'s message is for this "
+                            f"turn (shown below); {n} other part(s) are answered separately in "
+                            "their own turn: do not answer them here"]
+        return out
+
+    @staticmethod
+    def _media_rules(parts: Sequence[st.Part], d: RouteDecision,
+                     tasks: Sequence[st.OpenTask]) -> dict[str, st.PartLabel]:
+        """Media goes to the helper that reads it, by rule, before any label:
+        a shelf photo to the pending credit request it supports."""
+        credit = next((t for t in tasks if t.tool == "submit_credit_review"
+                       and t.status == "pending"), None)
+        out: dict[str, st.PartLabel] = {}
+        for p in parts:
+            if p.kind == "photo" and credit is not None and d.helper != "credit":
+                out[p.pid] = st.PartLabel(p.pid, "adds", credit.tid, 1.0)
+        return out
+
+    @staticmethod
+    def _primary_text(parts: Sequence[st.Part], pids: Sequence[str]) -> str:
+        want = set(pids)
+        return "\n".join(" ".join(x for x in (f"[{p.kind} {p.pointer}]" if p.pointer else "",
+                                              p.text) if x)
+                         for p in parts if p.pid in want and (p.text or p.pointer))
+
+    @staticmethod
+    def _current(d: RouteDecision, prior: ThreadState) -> str:
+        if d.bound or d.rule.startswith("pending_"):
+            from mimi.harness.binding import ASKS
+
+            return ("the shop's answer to Mimi's open question: "
+                    + ASKS.get(d.skill, "a question Mimi asked"))
+        if d.status == "clarify":
+            return "nothing yet; Mimi is not sure what the message is about"
+        return f"a request about {skill_label(d.skill, 'en')} (the {d.helper} helper)"
+
+    def _task_plan(self, action: str, why: str, label: str, task: st.OpenTask | None,
+                   words: str, tasks: Sequence[st.OpenTask]) -> dict[str, Any]:
+        """The turn for one task action: a helper route or a code reply."""
+        info = {"task": sx.task_json(task) if task else None, "action": action, "why": why,
+                "words": st.quote(words, 300)}
+        if (action == "revise" and task is not None and task.tool in sx.FAMILY
+                and task.tool != "submit_credit_review" and not numbers_in(words)):
+            # A new restock version needs the shop's number; the tool refuses
+            # without one, so code asks instead of waking the helper.
+            action, why = "question", "no quantity in the shop's words"
+        if action in ("revise", "adds") and task is not None:
+            helper, skill = task.helper, task.skill
+            verb = "corrects" if action == "revise" else "adds to"
+            return {"route": {"helper": helper, "skill": skill, "rule": f"steer:{action}"},
+                    "correction": info,
+                    "notes": [*(f"open task {t.line()}" for t in tasks),
+                              f"the shop's message {verb} open task {task.tid} ({task.summary})."
+                              + (" Make the new version with your tools (code withdraws the "
+                                 "old pending one); if the words give no clear figure, "
+                                 "ask_question" if action == "revise" else
+                                 " Use it for that task with your tools")]}
+        if action == "question":
+            q = st.question_text(label, words, tasks, task, words)
+            return {"code": {"kind": "question", "text": q, **info,
+                             "label": label, "tasks": [t.key for t in tasks]}}
+        if action in ("withdraw", "owner") and task is not None:
+            return {"code": {"kind": action, **info, "label": label}}
+        q = st.question_text(label, words, tasks, None, words)
+        return {"code": {"kind": "question", "text": q, **info, "label": label,
+                         "tasks": [t.key for t in tasks]}}
+
+    def _fix_answer(self, fix: dict[str, Any], yes: bool, text: str,
+                    tasks: Sequence[st.OpenTask]) -> dict[str, Any]:
+        """The shop answered Mimi's correction question with YES or NO."""
+        if not yes:
+            return {"code": {"kind": "left", "text": st.left_text(fix.get("words", text)),
+                             "task": fix.get("task"), "action": "left", "why": "shop said no",
+                             "words": fix.get("words", "")}}
+        task = next((t for t in tasks if fix.get("task") and t.key == fix["task"].get("key")),
+                    None)
+        words = str(fix.get("words", ""))
+        label = str(fix.get("label", "corrects"))
+        if task is None:
+            return {"code": {"kind": "left", "text": st.left_text(words), "task": None,
+                             "action": "left", "why": "the task is no longer open",
+                             "words": words}}
+        if task.tool == "set_followup":
+            plan = self._task_plan("adds", "confirmed by the shop", label, task, words, tasks)
+            plan["route"]["rule"] = "steer:confirmed"
+            plan["notes"] = [*(f"open task {t.line()}" for t in tasks),
+                             f"the shop confirmed this change to open task {task.tid} "
+                             f"({task.summary}): \"{words}\". Make it with your tools "
+                             "(set_followup for the new day) and confirm in one short message"]
+            return plan
+        if label == "cancels" and task.status == "pending":
+            return self._task_plan("withdraw", "confirmed by the shop", label, task, words,
+                                   tasks)
+        if not task.money and task.status == "pending":
+            return self._task_plan("revise", "confirmed by the shop", label, task, words,
+                                   tasks)
+        return self._task_plan("owner", "confirmed by the shop; only the owner can change it",
+                               label, task, words, tasks)
+
+    def _read_inbox(self, holder: list[Claim], ck: dict[str, Any], state: LoopState,
+                    d: RouteDecision, events: Sequence[Inbound],
+                    directory: Directory) -> tuple[LoopState, dict[str, Any]]:
+        """Messages that arrived while this turn runs, read at a step boundary."""
+        claim = holder[0]
+        rows = self.queue.inbox_waiting(claim.tenant_id, claim.thread_id)
+        if not rows:
+            return state, ck
+        lead = lead_of(events)
+        inbounds = {e.external_id: e for e in self._load_batch(
+            claim.tenant_id, [r.external_id for r in rows])}
+        _, shop_id = thread_kind(claim.tenant_id, claim.thread_id)
+        tasks = sx.open_tasks(self.engine, claim.tenant_id, claim.thread_id, shop_id)
+        state = state.model_copy(deep=True)
+        merge: list[tuple[str, str]] = []
+        marks: list[tuple[str, str, dict[str, Any]]] = []
+        followups: list[tuple[Inbound, Sequence[Inbound], list[st.Part], list[str]]] = []
+        log_rows: list[dict[str, Any]] = list(ck.get("inbox") or [])
+        cancel: dict[str, Any] | None = None
+        for r in rows:
+            ib = inbounds.get(r.external_id)
+            if ib is None:
+                continue
+            parts = st.split_parts([ib])
+            sender = ib.sender
+            if sender == "owner" and not directory.is_owner(ib):
+                sender = "shop"
+            if sender == "owner":
+                res = st.SteerResult([st.PartLabel(p.pid, "current", "", 1.0) for p in parts],
+                                     "rule", "owner message: absorbed first")
+                mp = st.plan_mid_task(parts, res, may_cancel=True)
+            else:
+                res = self.steerer.classify(
+                    parts, current=self._running(d, lead), tasks=tasks, sender=sender,
+                    running=True,
+                    running_words=lead.text if lead.sender in ("shop", "rep") else "")
+                if d.helper != "proof":
+                    # Only Proof reads a payment screenshot: it runs as its own
+                    # turn right after, whatever the label (rules first).
+                    res.labels = [st.PartLabel(lb.pid, "new", "", 1.0)
+                                  if next(p for p in parts if p.pid == lb.pid).kind
+                                  == "screenshot" else lb for lb in res.labels]
+                may_cancel = lead.source in PERSON_SOURCES and lead.sender == sender
+                mp = st.plan_mid_task(parts, res, may_cancel=may_cancel)
+            steer = {"parts": sx.parts_json(parts), "labels": [asdict(x) for x in res.labels],
+                     "layer": res.layer, "plan": mp.to_json(), "model": res.model,
+                     "cost_kobo": kobo_cost(res.model, res.prompt_tokens,
+                                            res.completion_tokens) if res.model else 0}
+            if mp.absorb:
+                want = [p for p in parts if p.pid in set(mp.absorb)]
+                state.messages.append({"role": "user", "content": st.injected_note(
+                    want, sender=sender, shop_id=shop_id, note=mp.note)})
+                state.must_speak = True
+            if mp.cancel:
+                cancel = {"external_id": ib.external_id, "words": st.part_text(parts, [
+                    pid for pid, v in mp.dispositions.items() if v == "cancel"])}
+            taken = bool(mp.absorb or mp.cancel)
+            if taken:
+                merge.append((r.turn_id, ib.external_id))
+                if mp.release:
+                    followups.append((ib, [ib], parts, mp.release))
+            status = ("cancelled_task" if mp.cancel else "absorbed") if taken else "released"
+            marks.append((ib.external_id, status, steer))
+            log_rows.append({"external_id": ib.external_id, "status": status,
+                             "dispositions": mp.dispositions, "cost_kobo": steer["cost_kobo"]})
+        ck = dict(ck)
+        ck["loop"] = state.model_dump(mode="json")
+        ck["inbox"] = log_rows
+        if cancel:
+            ck["cancel"] = cancel
+        tenant, thread = claim.tenant_id, claim.thread_id
+
+        def extra(conn: sa.Connection) -> None:
+            t = conn.execute(sa.select(s.turns.c.created_ts).where(
+                s.turns.c.turn_id == claim.turn_id)).scalar() or time.time()
+            for n, (ib, evs, parts, pids) in enumerate(followups):
+                fu = sx.followup_inbound(ib, evs, parts, pids, "new")
+                sx.insert_followup(conn, tenant, thread, fu, after_ts=float(t), order=n,
+                                   shop_id=shop_id, simulated=False,
+                                   media_ref=sx.media_ref_of(conn, tenant, ib.external_id))
+
+        holder[0] = self.queue.absorb(claim, ck, merge=merge, inbox=marks, extra=extra)
+        return state, ck
+
+    @staticmethod
+    def _running(d: RouteDecision, lead: Inbound) -> str:
+        who = {"routine": "a scheduled check", "webhook": "a system event",
+               "approval_answered": "the owner's decision"}.get(lead.source,
+                                                                f"the {lead.sender}'s message")
+        return (f"t0, the task in progress: the {d.helper} helper is working on "
+                f"{skill_label(d.skill, 'en')}, started by {who}")
 
     def _run_event(self, claim: Claim, events: Sequence[Inbound], directory: Directory,
-                   d: RouteDecision) -> tuple[RunEvent, str, dict[str, Any]]:
+                   d: RouteDecision, *, text: str | None = None
+                   ) -> tuple[RunEvent, str, dict[str, Any]]:
         """The harness's wake event for a routed batch (as ``wiring.TurnRunner`` builds it)."""
         lead = lead_of(events)
         shop_id = ""
         if lead.source in ("shop_message", "rep_message"):
             shop_id = directory.shop_for(lead.payload.from_phone)
         shop_id = shop_id or lead.payload.shop_id
-        text = "\n".join(" ".join(x for x in (media_pointer(e), e.text) if x)
-                         for e in events if e.text or media_pointer(e))
+        if text is None:
+            text = "\n".join(" ".join(x for x in (media_pointer(e), e.text) if x)
+                             for e in events if e.text or media_pointer(e))
         sender = {"owner_message": "owner", "shop_message": "shop",
                   "rep_message": "rep"}.get(lead.source, "system")
         if sender == "owner" and not directory.is_owner(lead):
@@ -510,8 +862,12 @@ class Agent:
 
     def _complete(self, holder: list[Claim], d: RouteDecision, events: Sequence[Inbound],
                   prior: ThreadState, *, status: str, state: LoopState | None = None,
-                  event: RunEvent | None = None, apply: bool = True) -> None:
+                  event: RunEvent | None = None, apply: bool = True,
+                  steer: dict[str, Any] | None = None) -> None:
         claim = holder[0]
+        sv = steer or {}
+        code = sv.get("code") or {}
+        all_events = self._load_batch(claim.tenant_id, claim.batch) or list(events)
         tenant, thread, turn_id = claim.tenant_id, claim.thread_id, claim.turn_id
         lead = lead_of(events)
         sender = lead.sender
@@ -542,6 +898,21 @@ class Agent:
                 next_state = ThreadState(clarify_options=d.options,
                                          clarify_text=d.clarify_question,
                                          last_skill=prior.last_skill)
+            if code:
+                self._code_action(conn, tenant, thread, turn_id, code, lead, result, now)
+                fix = ""
+                if code["kind"] == "question":
+                    fix = json.dumps({"task": code.get("task"), "label": code.get("label", ""),
+                                      "words": code.get("words", ""),
+                                      "question": code.get("text", ""), "asked_ts": now,
+                                      "tasks": code.get("tasks", [])}, sort_keys=True)
+                next_state = ThreadState(last_skill=prior.last_skill, fix=fix)
+            if status == "cancelled_by_sender":
+                words = str((claim.checkpoint.get("cancel") or {}).get("words", ""))
+                self._out(conn, tenant, thread, turn_id, key=f"cancel:{turn_id}",
+                          channel=_CHANNEL_FOR.get(sender, "owner_console"),
+                          shop_id=thread_kind(tenant, thread)[1], text=st.cancelled_text(words),
+                          kind="steer_cancelled", status="ready", ts=now)
             if state is not None and state.finished is not None:
                 r = state.finished
                 run_id = r.run_id
@@ -553,12 +924,18 @@ class Agent:
                                "context_manifest": r.context.get("context_manifest", {})})
                 if apply and r.status != "failed":
                     noticed: set[str] = set()
+                    dropped = _replaced_in_turn(r.intents)
+                    queued: dict[str, str] = {}
                     for rec in r.intents:
                         if rec.tool in ("send_to_user", "ask_question"):
                             continue  # recorded below with their draft
-                        outcome, _ = self.go.apply_intent(
+                        if rec.idempotency_key in dropped:
+                            continue  # a later version in this same turn replaces it
+                        outcome, apr = self.go.apply_intent(
                             conn, tenant, rec.model_dump(mode="json"), turn_id=turn_id,
                             thread_id=thread, helper=d.helper, skill=d.skill)
+                        if outcome == "queued_for_approval" and apr:
+                            queued[rec.idempotency_key] = apr
                         msg = MESSAGE_INTENTS.get(rec.tool)
                         text = str(rec.payload.get(msg[1], "")) if msg else ""
                         if msg and text and outcome in ("applied", "queued_for_approval"):
@@ -576,8 +953,13 @@ class Agent:
                                       shop_id=rec.shop_id, text=notice, kind=f"{rec.tool}_notice",
                                       status="ready", ts=now)
                             noticed.add(" ".join(notice.split()))
+                    superseded = self._supersede(conn, tenant, r.intents, queued, sv)
+                    if superseded:
+                        result["superseded"] = superseded
                     by_key = {i.idempotency_key: i for i in r.intents}
                     for n, dr in enumerate(r.outbound_drafts):
+                        if dr.idempotency_key in dropped:
+                            continue
                         if dr.channel == "shop_whatsapp" and " ".join(dr.body.split()) in noticed:
                             continue  # the notice above already says it, once
                         drec = by_key.get(dr.idempotency_key)
@@ -628,12 +1010,23 @@ class Agent:
                 next_state = replace(next_state, pending_skill=prior.pending_skill,
                                      expects=prior.expects, asked_at=prior.asked_at,
                                      ask_ref=prior.ask_ref)
+            if prior.fix and not sv.get("fix_done") and not next_state.fix:
+                next_state = replace(next_state, fix=prior.fix)
+            fus = self._followups(conn, claim, sv, events) if status not in (
+                "stopped_by_owner", "cancelled_by_sender") else []
+            if sv.get("plan") or fus or claim.checkpoint.get("inbox"):
+                result["steer"] = {
+                    "layer": sv.get("layer", ""), "plan": sv.get("plan", {}),
+                    "labels": sv.get("labels", []), "followups": fus,
+                    "code": code.get("kind", ""), "correction": sv.get("correction"),
+                    "cost_kobo": int(sv.get("cost_kobo") or 0),
+                    "inbox": claim.checkpoint.get("inbox", [])}
             conn.execute(s.threads.update().where(
                 s.threads.c.tenant_id == tenant, s.threads.c.thread_id == thread)
                 .values(state=dumps(_state_to_json(next_state)), last_at=now_iso(now),
                         last_ts=now))
             # The phone number was only needed to route; drop it from the queue.
-            for e in events:
+            for e in all_events:
                 if e.payload.from_phone:
                     scrubbed = e.model_copy(update={"payload": e.payload.model_copy(
                         update={"from_phone": ""})})
@@ -649,6 +1042,105 @@ class Agent:
         if state is not None and state.finished is not None:
             trace_run(state.finished, self.exporter,
                       shop_id=thread_kind(tenant, thread)[1] or "owner")
+
+    def _followups(self, conn: sa.Connection, claim: Claim, sv: dict[str, Any],
+                   events: Sequence[Inbound]) -> list[str]:
+        """Each separate part of the message as its own turn, right after this one."""
+        rows = sv.get("followups") or []
+        if not rows:
+            return []
+        parts = sx.parts_from(sv.get("parts") or [])
+        lead = lead_of(events)
+        t = conn.execute(sa.select(s.turns.c.created_ts).where(
+            s.turns.c.turn_id == claim.turn_id)).scalar() or time.time()
+        shop_id = thread_kind(claim.tenant_id, claim.thread_id)[1]
+        out = []
+        for n, f in enumerate(rows):
+            src = next((p.external_id for p in parts if p.pid in set(f["pids"])),
+                       lead.external_id)
+            parent = next((e for e in events if e.external_id == src), lead)
+            if not parent.payload.from_phone and lead.payload.from_phone:
+                parent = parent.model_copy(update={"payload": parent.payload.model_copy(
+                    update={"from_phone": lead.payload.from_phone})})
+            fu = sx.followup_inbound(parent, events, parts, f["pids"], str(f.get("steer", "new")))
+            out.append(sx.insert_followup(
+                conn, claim.tenant_id, claim.thread_id, fu, after_ts=float(t), order=n,
+                shop_id=shop_id, simulated=False,
+                media_ref=sx.media_ref_of(conn, claim.tenant_id, src)))
+        return out
+
+    def _supersede(self, conn: sa.Connection, tenant: str, intents: Sequence[Any],
+                   queued: dict[str, str], sv: dict[str, Any]) -> list[list[str]]:
+        """A new version replaces the pending one it corrects (never a decided one)."""
+        corr = sv.get("correction") or {}
+        task = corr.get("task") or {}
+        done: list[list[str]] = []
+        for rec in intents:
+            new_id = queued.get(rec.idempotency_key)
+            if not new_id:
+                continue
+            family = sx.FAMILY.get(rec.tool)
+            corrects = (corr.get("action") == "revise" and task.get("tool") in (family or ())
+                        and task.get("shop_id") == rec.shop_id)
+            if family is None or not (rec.tool == "revise_restock" or corrects):
+                continue
+            sku = str(rec.payload.get("sku", ""))
+            for old in sx.pending_of_family(conn, tenant, rec.shop_id, rec.tool, sku):
+                if old.approval_id != new_id and sx.supersede(conn, tenant, old.approval_id,
+                                                              new_id):
+                    done.append([old.approval_id, new_id])
+        return done
+
+    def _code_action(self, conn: sa.Connection, tenant: str, thread: str, turn_id: str,
+                     code: dict[str, Any], lead: Inbound, result: dict[str, Any],
+                     now: float) -> None:
+        """A reply written by code: a question, a withdrawal, the owner told."""
+        kind_, shop_id = thread_kind(tenant, thread)
+        channel = _CHANNEL_FOR.get(lead.sender, "owner_console")
+        words = str(code.get("words", ""))
+        task = sx.task_from(code["task"]) if code.get("task") else None
+        kind = str(code["kind"])
+        if kind == "withdraw" and task is not None:
+            if sx.withdraw(conn, tenant, task.approval_id, by=lead.external_id):
+                self._owner_note(conn, tenant, thread, turn_id, shop_id, task, words,
+                                 "withdraw", now)
+                text = st.withdrawn_text(words)
+                result["withdrawn"] = task.approval_id
+            else:
+                kind = "owner"  # decided in the meantime: never touched
+        if kind == "owner" and task is not None:
+            self._owner_note(conn, tenant, thread, turn_id, shop_id, task, words, "owner", now)
+            text = st.to_owner_text(sx.tenant_name(conn, tenant), words)
+        elif kind == "question":
+            text = str(code.get("text", ""))
+        elif kind == "left":
+            text = str(code.get("text", ""))
+        elif kind != "withdraw":
+            text = st.left_text(words)
+        result["steer_action"] = kind
+        self._out(conn, tenant, thread, turn_id, key=f"steer:{turn_id}", channel=channel,
+                  shop_id=shop_id, text=text, kind=f"steer_{kind}", status="ready", ts=now)
+
+    def _owner_note(self, conn: sa.Connection, tenant: str, thread: str, turn_id: str,
+                    shop_id: str, task: st.OpenTask, words: str, kind: str,
+                    now: float) -> None:
+        note = st.owner_note(shop_id or "a shop", task, words, kind=kind)
+        payload = {"message": note, "shop_id": shop_id, "about": task.key}
+        record = {
+            "tool": "notify_owner", "intent_kind": "notify_owner",
+            "tier": self.policy.tier(tenant, "notify_owner", payload), "scope": "org:plan",
+            "tenant_id": tenant, "shop_id": shop_id,
+            "idempotency_key": business_key(tenant, "notify_owner",
+                                            {"shop_id": shop_id, "about": task.key,
+                                             "kind": kind, "turn": turn_id}),
+            "attempt_key": f"steer:{turn_id}", "payload": payload,
+            "preview": f"Would tell the owner: {note[:120]}"}
+        outcome, _ = self.go.apply_intent(conn, tenant, record, turn_id=turn_id,
+                                          thread_id=thread, helper="mimi", skill="mimi/steer")
+        if outcome == "applied":
+            self._out(conn, tenant, thread, turn_id, key=str(record["idempotency_key"]),
+                      channel="owner_console", shop_id=shop_id, text=note, kind="notify_owner",
+                      status="ready", ts=now + 1e-3)
 
     def _flag_escalated_delivery(self, conn: sa.Connection, tenant: str, thread: str,
                                  turn_id: str, prior: ThreadState, events: Sequence[Inbound],
@@ -798,5 +1290,6 @@ def approval_dict(a: Any, draft: Any | None) -> dict[str, Any]:
         "draft": ({"text": draft.text, "channel": draft.channel, "status": draft.status}
                   if draft is not None else None),
         "created_at": a.created_at, "decided_at": a.decided_at, "decided_by": a.decided_by,
-        "note": a.note,
+        "note": a.note, "supersedes": getattr(a, "supersedes", None),
+        "superseded_by": getattr(a, "superseded_by", None),
     }

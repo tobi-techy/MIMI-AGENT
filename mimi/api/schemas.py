@@ -259,6 +259,10 @@ class ApprovalOut(_Out):
     decided_at: str | None
     decided_by: str
     note: str
+    # A shop's correction made a new version (RAI-301): the ids it replaced
+    # and that replaced it. A superseded or withdrawn item cannot be decided.
+    supersedes: str | None = None
+    superseded_by: str | None = None
 
 
 class ApprovalList(_Out):

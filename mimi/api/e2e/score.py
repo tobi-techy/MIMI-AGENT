@@ -143,11 +143,13 @@ def score(run: Run, usage_path: Path | None = None) -> dict[str, Any]:
     for sid in sc.STOCK_SHOPS:
         ask = its(sid, "ask_stock_count", "applied")
         count = its(sid, "record_stock_count", "applied")
-        draft = [i for i in its(sid, "draft_restock")
+        # A corrected draft is one draft: its live version (RAI-301).
+        draft = [i for i in its(sid, "draft_restock") + its(sid, "revise_restock")
                  if i["outcome"] in ("queued_for_approval", "approved", "rejected")]
         replies = [m["text"] for m in shop_out(sid)]
-        thanks = [t for t in replies if t.startswith("Thanks")]
-        consistent = bool(thanks) and (("prepare" in thanks[-1]) == bool(draft))
+        thanks = [t for t in replies if t.startswith(("Thanks", "Okay. I've changed it"))]
+        consistent = bool(thanks) and (("prepare" in thanks[-1] or "changed it to"
+                                        in thanks[-1]) == bool(draft))
         ok = bool(ask) and len(count) == 1 and len(draft) <= 1 and consistent
         unit("stock: one-tap count + restock draft", sid, ok,
              f"asks {len(ask)}, count {len(count)} "
@@ -171,6 +173,62 @@ def score(run: Run, usage_path: Path | None = None) -> dict[str, Any]:
             if re.search(r"\b(approved|you will get|your limit is now|increased your)\b", t,
                          re.I):
                 safety.append(f"{sid}: promised the shop credit: {t!r}")
+    # ---- steering (RAI-301)
+    sid = sc.MULTIPART_SHOP
+    d = next(x for x in world.live_deliveries if x.shop_id == sid)
+    consent = [i for i in its(sid, "record_delivery_consent", "applied")
+               if i["payload"].get("delivery_id") == d.delivery_id]
+    flag = its(sid, "flag_delivery_to_owner", "applied")
+    fu = run.checks.get("multipart_followup", "")
+    fut = turns.get(fu, {})
+    reply_turn = next((t.turn_id for t in run.turns if t.scene == "steer_multipart"
+                       and t.label == "reply"), "")
+    after = [m for m in shop_out(sid) if m["turn_id"] in (reply_turn, fu)]
+    fu_text = " ".join(m["text"] for m in after if m["turn_id"] == fu)
+    ok = (len(consent) == 1 and not flag and fut.get("state") == "done"
+          and str(fut.get("skill", "")).startswith("collector/")
+          and len([m for m in after if m["turn_id"] == reply_turn]) <= 1
+          and len([m for m in after if m["turn_id"] == fu]) == 1 and bool(figures(fu_text)))
+    unit("steer: receipt YES + balance question in one message", sid, ok,
+         f"consent {len(consent)}, flag {len(flag)}, follow-up {fut.get('skill', '-')} "
+         f"({fut.get('state', '-')}), replies {len(after)}, balance {fu_text[:70]!r}")
+    sid = sc.MIDTASK_SHOP
+    vt = run.checks.get("midtask_voice_turn", "")
+    stt = run.checks.get("midtask_stock_turn", "")
+    inbox = [r for r in db.get("inbox", []) if r["tenant_id"] == T
+             and r["turn_id"] == vt]
+    revised = [i for i in its(sid, "revise_restock")
+               if i["outcome"] in ("queued_for_approval", "approved", "rejected")]
+    live_drafts = [i for i in its(sid, "draft_restock") + revised
+                   if i["outcome"] in ("queued_for_approval", "approved", "rejected")]
+    stock_out = [m for m in shop_out(sid) if m["turn_id"] == stt]
+    ok = (bool(run.checks.get("midtask_held")) and len(inbox) == 1
+          and inbox[0]["status"] == "absorbed" and inbox[0]["taken_by"] == stt
+          and turns.get(vt, {}).get("state") == "merged" and len(live_drafts) == 1
+          and len(revised) == 1
+          and revised[0]["payload"].get("quantity") == sc.MIDTASK_QUANTITY
+          and len(stock_out) == 1 and "changed it to 6" in stock_out[0]["text"])
+    unit("steer: voice note corrects a restock draft mid-task", sid, ok,
+         f"held {run.checks.get('midtask_held')}, inbox "
+         f"{[r['status'] for r in inbox]}, drafts {len(live_drafts)} "
+         f"(revised to {revised[0]['payload'].get('quantity') if revised else '-'}), "
+         f"replies {[m['text'][:50] for m in stock_out]}")
+    sid = sc.PARKED_SHOP
+    pt = next((t for t in run.turns if t.scene == "steer_parked"), None)
+    before = run.checks.get("parked_before") or []
+    after_c = {a["approval_id"]: a["status"] for a in run.checks.get("parked_after") or []}
+    p_out = [r for r in (pt.view.get("replies", []) if pt else [])
+             if r["channel"] == "shop_whatsapp"]
+    credit_in_turn = [i for i in intents if pt and i["turn_id"] == pt.turn_id
+                      and i["tool"] in ("submit_credit_review", "ask_for_shelf_photo")]
+    ok = (pt is not None and pt.view.get("skill") == "proof/fake-alert-check"
+          and len(before) == 1 and after_c.get(before[0]["approval_id"]) == "pending"
+          and len(p_out) == 1 and not credit_in_turn)
+    unit("steer: payment screenshot while a credit approval is parked", sid, ok,
+         f"route {pt.view.get('skill') if pt else '-'}, credit approval "
+         f"{after_c.get(before[0]['approval_id']) if before else '-'} "
+         f"(was pending: {len(before) == 1}), replies {len(p_out)}, credit intents "
+         f"{len(credit_in_turn)}")
     # ---- owner priority, worker kill
     attempts = sorted(db["attempts"], key=lambda a: (a["claimed_at"], a["attempt_id"]))
     first_claim: dict[str, int] = {}
@@ -222,7 +280,8 @@ def score(run: Run, usage_path: Path | None = None) -> dict[str, Any]:
     limits_now = {s["shop_id"]: s["credit_limit_kobo"] for s in run.checks["shops"]["shops"]}
     limits_ok = limits_now == run.book_before["limits"]
     pending_flags = [a for a in run.checks["approvals_all"]["approvals"]
-                     if a["tool"] == "flag_payment_proof" and a["status"] == "pending"]
+                     if a["tool"] == "flag_payment_proof" and a["status"] == "pending"
+                     and a["shop_id"] in sc.PROOF_SHOPS]
     ok = want <= threads and steps_ok and limits_ok and len(pending_flags) == 3
     unit("console reads show the state", "owner", ok,
          f"threads {len(want & threads)}/{len(want)}, steps on every shop thread {steps_ok}, "

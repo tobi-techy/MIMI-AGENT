@@ -264,6 +264,9 @@ turns = sa.Table(
     # The owner said "stop": the turn ends at its next step boundary.
     sa.Column("stop", sa.Boolean(), nullable=False, default=False),
     sa.Column("simulated", sa.Boolean(), nullable=False, default=False),
+    # A follow-up turn for one part of a message (RAI-301): it runs on its
+    # own, never merged with other waiting turns and never leading a merge.
+    sa.Column("solo", sa.Boolean(), nullable=False, default=False),
     sa.Column("created_at", sa.String(40), nullable=False),
     sa.Column("created_ts", sa.Float(), nullable=False),
     sa.Column("finished_at", sa.String(40), nullable=True),
@@ -360,8 +363,12 @@ approvals = sa.Table(
     sa.Column("intent_kind", sa.String(100), nullable=False),
     sa.Column("preview", sa.Text(), nullable=False, default=""),
     sa.Column("payload", sa.Text(), nullable=False, default="{}"),
-    # pending | approved | rejected
+    # pending | approved | rejected | superseded | withdrawn
     sa.Column("status", sa.String(16), nullable=False),
+    # A correction makes a new version (RAI-301): the old pending item points
+    # at its replacement and the new one at what it replaced.
+    sa.Column("supersedes", sa.String(64), nullable=True),
+    sa.Column("superseded_by", sa.String(64), nullable=True),
     sa.Column("decided_by", sa.String(100), nullable=False, default=""),
     sa.Column("note", sa.Text(), nullable=False, default=""),
     sa.Column("created_at", sa.String(40), nullable=False),
@@ -369,6 +376,31 @@ approvals = sa.Table(
     sa.Column("decided_at", sa.String(40), nullable=True),
     sa.UniqueConstraint("tenant_id", "idempotency_key", name="uq_approvals_tenant_key"),
     sa.Index("ix_approvals_tenant_status", "tenant_id", "status"),
+)
+
+# A message for a thread whose turn is running (RAI-301). The running loop
+# reads it at its next step boundary: absorbed (its turn merges into the
+# running one) or released (it runs as its own turn right after). The queued
+# turn row is the durable fallback, so a crash never loses the message.
+thread_inbox = sa.Table(
+    "thread_inbox", metadata,
+    _tenant(),
+    sa.Column("external_id", sa.String(200), nullable=False),
+    sa.Column("thread_id", sa.String(200), nullable=False),
+    sa.Column("turn_id", sa.String(64), nullable=False),
+    # The turn that was running when the message arrived.
+    sa.Column("running_turn_id", sa.String(64), nullable=False),
+    sa.Column("source", sa.String(32), nullable=False),
+    # waiting | absorbed | released | cancelled_task
+    sa.Column("status", sa.String(16), nullable=False),
+    sa.Column("taken_by", sa.String(64), nullable=False, default=""),
+    # The steer labels and dispositions of the message's parts (JSON).
+    sa.Column("steer", sa.Text(), nullable=False, default="{}"),
+    sa.Column("created_at", sa.String(40), nullable=False),
+    sa.Column("created_ts", sa.Float(), nullable=False),
+    sa.Column("taken_at", sa.String(40), nullable=True),
+    sa.PrimaryKeyConstraint("tenant_id", "external_id"),
+    sa.Index("ix_thread_inbox_thread", "tenant_id", "thread_id", "status"),
 )
 
 credit_requests = sa.Table(
@@ -379,7 +411,7 @@ credit_requests = sa.Table(
     # What was asked for, from the intent's own payload (computed in code).
     sa.Column("amount_kobo", sa.BigInteger(), nullable=False, default=0),
     sa.Column("reason", sa.Text(), nullable=False, default=""),
-    # pending | approved | rejected
+    # pending | approved | rejected | noted | withdrawn
     sa.Column("status", sa.String(16), nullable=False),
     sa.Column("source_key", sa.String(100), nullable=False),
     sa.Column("approval_id", sa.String(64), nullable=True),

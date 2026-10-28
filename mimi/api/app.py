@@ -221,7 +221,7 @@ def create_app(settings: Settings | None = None, agent: Agent | None = None, *,
     @app.get("/v1/approvals", response_model=ApprovalList, responses=_ERRORS,
              summary="Approvals (pending by default)")
     def get_approvals(key: Owner, status: Annotated[
-            str, Query(pattern="^(pending|approved|rejected|all)$")] = "pending"
+            str, Query(pattern="^(pending|approved|rejected|superseded|withdrawn|all)$")] = "pending"
             ) -> dict[str, Any]:
         return reads.list_approvals(engine, key.tenant_id, status=status)
 

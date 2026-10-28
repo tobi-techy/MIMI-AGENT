@@ -77,6 +77,11 @@ class Payload(BaseModel):
     for_skill: str = ""
     shop_id: str = ""
     answer: str = ""
+    # A follow-up for one part of an earlier message (RAI-301): the message it
+    # came from, and what the steer stage already decided for it ("new", or
+    # "<action>:<task key>"), so it is never split or classified twice.
+    part_of: str = ""
+    steer: str = ""
 
 
 class Inbound(BaseModel):
