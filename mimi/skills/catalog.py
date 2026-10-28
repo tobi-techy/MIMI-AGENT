@@ -207,6 +207,10 @@ def load_catalog(root: Path | None = None, *, check_lock: bool = True) -> Catalo
                 raise SkillError(f"script {script} is defined twice")
             cat.script_owner[script] = doc.key
     for s in cat.skills.values():
+        for h in s.handoffs or ():
+            other = cat.skills.get(f"{s.helper}/{h}")
+            if other is None:
+                raise SkillError(f"{s.name}: handoff {h} is not a {s.helper} skill")
         for script in s.scripts:
             if script not in cat.script_owner:
                 raise SkillError(f"{s.name}: script {script} has no file in any skill's scripts/")

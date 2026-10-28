@@ -75,6 +75,10 @@ jobs:
         run: python -m mimi.harness.eval --no-write
       - name: Router eval, 300 labelled messages in five languages (rules, phrases, fast classifier, recorded Muse Spark answers; fails on accuracy < 95%, any money misroute, clarify > 8%, a rule case calling the model; the p95 < 800 ms mark is not measured on a replay)
         run: python -m mimi.harness.router_eval --no-write
+      - name: Router eval in skills mode (MIMI_SKILLS=1; must route exactly as with the flag off)
+        env:
+          MIMI_SKILLS: "1"
+        run: python -m mimi.harness.router_eval --no-write
       - name: Context builder eval (50 Collector scenarios vs a full-history baseline on recorded Muse Spark answers, two-distributor leakage, prefix stability, pointers, cache hits; fails on any pass mark)
         run: python -m mimi.harness.context_eval --no-write
       - name: Credit eval, 24 synthetic shelf photos + 6 stress, 10 conversations, routing (recorded SAM 3.1 and Muse Spark answers; fails on any pass mark, an auto-approval, a money move or an invented number)
@@ -98,6 +102,10 @@ jobs:
       - name: Pending-ask binding eval, 43 held-out replies to delivery receipt asks (recorded Muse Spark answers; fails under 95% correct route and action, or on any false consent)
         run: python -m mimi.api.binding_eval --no-write
       - name: Order intake eval, 47 held-out orders (typed, voice transcripts, list photos, Yoruba and Pidgin, unclear items, repeats, over credit, edits; recorded Muse Spark answers; fails under 90% or on any invented price or item, credit extended or edit to a decided order)
+        run: python -m mimi.api.order_eval --no-write
+      - name: Order intake eval in skills mode, the same 47 held-out orders with MIMI_SKILLS=1 (RAI-314; recorded Muse Spark answers in heldout.harness.skills.cache.json; same pass marks)
+        env:
+          MIMI_SKILLS: "1"
         run: python -m mimi.api.order_eval --no-write
       - name: Photo routing eval, 27 fresh camera photos (handwritten order lists with vague, Pidgin, Yoruba, Hausa, Igbo, emoji or empty captions, and look-alikes - shelves, POS slip, invoice, teller, certificate, a list of payments, a payment screenshot, list photos captioned as a complaint or a payment; recorded Muse Spark answers; fails under 90% or on any look-alike routed to Order)
         run: python -m mimi.api.photo_route_eval --no-write

@@ -24,9 +24,9 @@ TIER_ORDER: dict[str, int] = {"auto": 0, "notify": 1, "approve": 2}
 STATUSES = ("active", "draft")
 
 REQUIRED = ("name", "description", "helper", "version", "status", "tier", "consent", "tools")
-LISTS = ("consent", "tools", "scripts", "senders", "planned_tools")
+LISTS = ("consent", "tools", "scripts", "senders", "planned_tools", "handoffs")
 BOOLS = ("money",)
-OPTIONAL = ("scripts", "senders", "money", "planned_tools")
+OPTIONAL = ("scripts", "senders", "money", "planned_tools", "handoffs")
 KNOWN = frozenset(REQUIRED + OPTIONAL)
 
 NAME_RE = re.compile(r"^[a-z][a-z0-9-]{1,40}$")
@@ -56,6 +56,10 @@ class SkillDoc:
     money: bool
     planned_tools: tuple[str, ...]
     body: str
+    # The sibling skills (same helper) this one may hand a run to. None (the
+    # key left out) lists every sibling; [] lists none, and then read_skill is
+    # offered only when the body names one of the skill's own files.
+    handoffs: tuple[str, ...] | None = None
     digest: str = ""  # sha256 of the folder's vetted files (catalog fills it in)
 
     @property
@@ -124,7 +128,9 @@ def parse(text: str, *, where: str = "SKILL.md") -> SkillDoc:
         senders=tuple(data.get("senders", ())),  # type: ignore[arg-type]
         money=bool(data.get("money", False)),
         planned_tools=tuple(data.get("planned_tools", ())),  # type: ignore[arg-type]
-        body=body)
+        body=body,
+        handoffs=(tuple(data["handoffs"])  # type: ignore[arg-type]
+                  if "handoffs" in data else None))
     _check(doc, where)
     return doc
 
@@ -145,6 +151,9 @@ def _check(d: SkillDoc, where: str) -> None:
     for t in d.tools + d.scripts + d.planned_tools:
         if not TOOL_RE.match(t):
             raise SkillError(f"{where}: bad tool name {t!r}")
+    for h in d.handoffs or ():
+        if not NAME_RE.match(h) or h == d.name:
+            raise SkillError(f"{where}: bad handoff {h!r}")
     for s in d.consent:
         if not SCOPE_RE.match(s):
             raise SkillError(f"{where}: bad consent scope {s!r}")

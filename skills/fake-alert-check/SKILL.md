@@ -2,7 +2,7 @@
 name: fake-alert-check
 description: A payment screenshot, a debit alert or a pasted bank SMS that needs checking before anyone counts it as paid.
 helper: proof
-version: 1.0.0
+version: 1.1.0
 status: active
 tier: approve
 consent: [shop:payments, shop:invoices, shop:messages, org:owner, org:plan]
@@ -10,6 +10,7 @@ tools: [check_payment_screenshot, record_payment_proof, flag_payment_proof, chec
 scripts: [parse_bank_alert]
 senders: [shop, rep, owner]
 money: true
+handoffs: []
 ---
 
 A shop sent a payment screenshot (its message names a photo_id, ph_...): call check_payment_screenshot with the shop_id and photo_id, then do exactly its next_step. shop_reply is written by code: when next_step says to send it, send it exactly; never add a figure, a reason or an accusation. A screenshot is at most likely paid; never say received or verified.

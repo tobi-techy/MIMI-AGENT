@@ -8,9 +8,13 @@ picks it up. That entry is the load step: its prompt carries
 1. the helper's header (``skills/_core/<helper>.md``),
 2. the routed skill's SKILL.md body (level 2),
 3. the names and descriptions of the helper's other active skills (level 1),
+   or only those named in the skill's ``handoffs`` when it gives that key,
 
 and its tools are the skill's own list, cut down from the helper's toolset,
-plus the skill tools and the skill's vetted scripts.
+plus the skill's vetted scripts, plus ``read_skill`` when there is something
+to read: a file the body names, or a sibling skill listed in its prompt. A
+skill with neither (``handoffs: []`` and no file named) pays for no
+``read_skill`` schema and no sibling list.
 
 What a skill can never do (checked here, at startup):
 
@@ -39,6 +43,17 @@ from mimi.skills.tools import SKILL_TOOLS
 log = logging.getLogger(__name__)
 
 
+def siblings(cat: Catalog, doc: SkillDoc) -> list[SkillDoc]:
+    """The other skills this one's prompt lists (all, or only its handoffs)."""
+    return [s for s in cat.for_helper(doc.helper) if s.key != doc.key
+            and (doc.handoffs is None or s.name in doc.handoffs)]
+
+
+def offers_read(cat: Catalog, doc: SkillDoc) -> bool:
+    """Whether a run of this skill has anything for read_skill to read."""
+    return bool(FILE_REF_RE.search(doc.body) or siblings(cat, doc))
+
+
 def skill_text(cat: Catalog, doc: SkillDoc, values: Mapping[str, str] | None = None) -> str:
     """The helper prompt for one routed skill (after the core rules)."""
     if est_tokens(cat.metadata(doc.helper)) > HELPER_METADATA_CAP_TOKENS:
@@ -49,7 +64,7 @@ def skill_text(cat: Catalog, doc: SkillDoc, values: Mapping[str, str] | None = N
     files = (f"\n(Files named here: read_skill name={doc.name} with the file.)"
              if FILE_REF_RE.search(body) else "")
     parts.append(f"# Skill: {doc.name} {doc.version}+{doc.digest[:8]}\n{body}{files}")
-    others = [s.metadata_line() for s in cat.for_helper(doc.helper) if s.key != doc.key]
+    others = [s.metadata_line() for s in siblings(cat, doc)]
     if others:
         parts.append("<skills>\nYour other skills (read_skill gives one's instructions if "
                      "the message turns out to need it):\n" + "\n".join(others) + "\n</skills>")
@@ -57,7 +72,7 @@ def skill_text(cat: Catalog, doc: SkillDoc, values: Mapping[str, str] | None = N
 
 
 def skill_tools(doc: SkillDoc, base: Helper, policy: RiskPolicy, registry: ToolRegistry,
-                script_names: set[str]) -> tuple[str, ...]:
+                script_names: set[str], *, read: bool = True) -> tuple[str, ...]:
     """The tools one skill gets: never more than its helper has, never a higher tier."""
     have = set(base.toolset.names)
     granted: list[str] = []
@@ -84,7 +99,8 @@ def skill_tools(doc: SkillDoc, base: Helper, policy: RiskPolicy, registry: ToolR
     if ceiling > top:
         raise SkillError(f"{doc.key}: declares tier {doc.tier}, above anything the "
                          f"{base.name} helper can propose")
-    granted.extend(t for t in SKILL_TOOLS if t in registry and t not in granted)
+    if read:
+        granted.extend(t for t in SKILL_TOOLS if t in registry and t not in granted)
     return tuple(granted)
 
 
@@ -103,7 +119,8 @@ def bind_all(helpers: dict[str, Helper], registry: ToolRegistry, policy: RiskPol
         base = helpers.get(doc.key) or helpers.get(doc.helper)
         if base is None:
             continue
-        tools = skill_tools(doc, base, policy, registry, script_names)
+        tools = skill_tools(doc, base, policy, registry, script_names,
+                            read=offers_read(cat, doc))
         ts = build_toolset(registry, base.name, tools, policy)
         out[doc.key] = replace(base, skill=skill_text(cat, doc, values), toolset=ts,
                                skill_version=doc.tag)

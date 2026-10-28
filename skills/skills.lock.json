@@ -2,12 +2,12 @@
  "comment": "Reviewed skill contents. Regenerate with python -m mimi.skills lock in the PR that changes a skill; CI refuses a skill that does not match.",
  "skills": {
   "bank-credit": {
-   "sha256": "5d5560fb6b04507e64427dac62c0e1f2444acff0d531101dbdce326d9b6791c6",
-   "version": "1.0.0"
+   "sha256": "9608c8a1e78667a92045a6747903d02e72becffda41a78f01527769077f983c4",
+   "version": "1.1.0"
   },
   "brand-email": {
-   "sha256": "dc89db399c7ee652cf2397dd90bfcc80ca32ef4e790330f1b977c413ab94cbc2",
-   "version": "1.0.0"
+   "sha256": "b2fe640772c7f78bc70da2cd4397fcffb8687b8d2c4afc6a4811c2c7d91f1aa6",
+   "version": "1.1.0"
   },
   "chase": {
    "sha256": "93e9ce217f37576e70599c7697fa0149cfbcf868c172e32b55030a78d0aff407",
@@ -38,20 +38,20 @@
    "version": "1.0.0"
   },
   "drop-confirmation": {
-   "sha256": "280d2705ec574667638d0e4136180ecec94b8b93440b20f10639e3af5eca4974",
-   "version": "1.0.0"
+   "sha256": "0f308b303440de8f3ac87c846ac3d7def0713f2a3dceef73220e90b551c192a4",
+   "version": "1.1.0"
   },
   "escalate-owner": {
    "sha256": "909bd81626657a6f8df85bbbf85b1bf938e9c23a4a4f038a47ca457b91eab02e",
    "version": "1.0.0"
   },
   "fake-alert-check": {
-   "sha256": "d56fd89f8e44f42ca45fbeb73a5fb746146f3da6b908be2ffa22e45f127fd3aa",
-   "version": "1.0.0"
+   "sha256": "9fadb9553bb09501d5c5218c35c57936909bdbe4618e45b54b2c0c6d5669edd6",
+   "version": "1.1.0"
   },
   "low-stock-report": {
-   "sha256": "403ccd960a29fbd161c71fc94f8f02366c8e31ab606752d9f7c12f78b6e67d58",
-   "version": "1.0.0"
+   "sha256": "2e7c22cc4f360de359bc94b0f71773472b411492565949911be86de20dd747fb",
+   "version": "1.1.0"
   },
   "order-intake": {
    "sha256": "b903882c8ee24affcf7e18296a1dd71509579fbd93e153adf5d7535f3783c865",
@@ -70,8 +70,8 @@
    "version": "1.0.0"
   },
   "promo-info": {
-   "sha256": "6fbaeed884a84bceb91074343f353e37f71d56b41c7662e30edde0c162eb6198",
-   "version": "1.0.0"
+   "sha256": "d46240e98e60d41701feb6d60ae4212310d392d491d8a852bee3395af9ae1e6a",
+   "version": "1.1.0"
   },
   "route-load-out": {
    "sha256": "d35d3b4cd3489f6fca74f07fd573d1fb261ca98fe54bc3c041bb4bd5fff8ab01",
@@ -86,8 +86,8 @@
    "version": "1.0.0"
   },
   "stock-count": {
-   "sha256": "1fbbfde3607f0a3a7f7ecb8d446ce4d26b03e9f7ae8de817251e2f272ca579ba",
-   "version": "1.0.0"
+   "sha256": "8d8521fba28a048fcf64ecaf8e36656bef639a8f8903b3ff111e768d4938f629",
+   "version": "1.1.0"
   },
   "stop": {
    "sha256": "00142dc2158fd44476fe05fc30e9074f394885013c407ad4ca86499e033dec10",

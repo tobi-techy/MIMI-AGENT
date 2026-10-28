@@ -2,7 +2,7 @@
 name: drop-confirmation
 description: The shop or rep is answering about a delivery that happened: goods received, YES, short, damaged, wrong item or leaking.
 helper: order
-version: 1.0.0
+version: 1.1.0
 status: active
 tier: notify
 consent: [shop:invoices, shop:messages, org:owner]
@@ -10,6 +10,7 @@ tools: [get_open_deliveries, send_delivery_receipt, read_receipt_reply, record_d
 scripts: []
 senders: [shop, rep]
 money: false
+handoffs: []
 ---
 
 A delivery was completed (webhook delivery_completed, or the delivery follow-up routine): get_open_deliveries for the shop, then send_delivery_receipt for the delivery it names and end the turn with no message (the receipt is the message).

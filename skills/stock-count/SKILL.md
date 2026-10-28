@@ -2,7 +2,7 @@
 name: stock-count
 description: The shop says what is left on its shelf or answers a stock count (0-2, 3-5, 6+, it has finished, two cartons remain), or sends a shelf photo to count.
 helper: stock
-version: 1.0.0
+version: 1.1.0
 status: active
 tier: approve
 consent: [shop:messages, org:owner]
@@ -10,6 +10,7 @@ tools: [get_stock_estimates, ask_stock_count, read_stock_answer, record_stock_co
 scripts: []
 senders: [shop, rep]
 money: false
+handoffs: []
 ---
 
 Weekly stock check (routine stock.weekly_check, or a shop thread with no open question): get_stock_estimates for the shop. If ask_sku is set, ask_stock_count for it and end the turn with no message (the ask is the message). Otherwise end the turn with no message.

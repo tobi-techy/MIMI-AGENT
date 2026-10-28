@@ -97,7 +97,9 @@ def test_front_matter_is_strict() -> None:
                 good.replace("version: 1.0.0", "version: 1"),
                 good.replace("helper: mimi", "helper: mimi\nsecret_tier: approve"),
                 good.replace("name: chat\n", ""),
-                good.replace("tools: [", "tools: send_to_user, [")):
+                good.replace("tools: [", "tools: send_to_user, ["),
+                good.replace("helper: mimi", "helper: mimi\nhandoffs: [chat]"),
+                good.replace("helper: mimi", "helper: mimi\nhandoffs: stop")):
         with pytest.raises(SkillError):
             parse(bad)
 
@@ -150,6 +152,34 @@ def test_a_bound_prompt_carries_one_body_and_only_metadata_for_the_rest(
     # Other helpers' skills are not even named.
     assert "credit-request" not in text and "order-intake" not in text
     assert h.skill_version == cat.skills["collector/promise-to-pay"].tag
+
+
+def test_read_skill_and_the_sibling_block_only_where_there_is_something_to_read(
+        monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    hs = helpers(True, monkeypatch)
+    cat = catalog()
+    # handoffs: [] and no file named in the body: no <skills> block, no read_skill.
+    for key in ("stock/stock-count", "order/drop-confirmation", "proof/bank-credit"):
+        assert cat.skills[key].handoffs == ()
+        assert "<skills>" not in hs[key].system_prompt()
+        assert READ_SKILL not in hs[key].toolset.names
+    # A file named in the body keeps read_skill, even with no siblings listed.
+    fa = hs["proof/fake-alert-check"]
+    assert "<skills>" not in fa.system_prompt() and READ_SKILL in fa.toolset.names
+    # handoffs left out: every sibling and read_skill, as before (order intake's
+    # recorded skills-mode answers depend on it).
+    oi = hs["order/order-intake"]
+    assert cat.skills["order/order-intake"].handoffs is None
+    assert "- drop-confirmation: " in oi.system_prompt() and READ_SKILL in oi.toolset.names
+    # A handoff must name a sibling of the same helper.
+    dst = tmp_path / "skills"
+    shutil.copytree(ROOT, dst)
+    md = dst / "stock-count" / "SKILL.md"
+    md.write_text(md.read_text(encoding="utf-8").replace("handoffs: []",
+                                                         "handoffs: [credit-review]"),
+                  encoding="utf-8")
+    with pytest.raises(SkillError, match="handoff"):
+        load_catalog(dst, check_lock=False)
 
 
 def test_read_skill_reads_own_skills_and_files_only(monkeypatch: pytest.MonkeyPatch) -> None:

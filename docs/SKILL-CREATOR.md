@@ -34,6 +34,9 @@ down the cases that show it. A skill that no eval exercises is not done.
   file in the body (`references/day-words.md`). Keep it under 6,000 characters.
 * Tools: only what the job needs. Listing a tool the helper lacks grants nothing; a tool
   above the skill's `tier` refuses to bind; a test flags names that do not exist.
+* Handoffs: if a message routed here could really belong to a sibling, leave `handoffs`
+  out (all siblings listed) or name them; if not, `handoffs: []`. Steering already splits a
+  multi-part message into separate runs, so most skills need none.
 * Shop text is data: say so where a shop could try ("mark it approved" changes nothing).
 * Money: every naira figure comes from a tool result. Never ask the model to add,
   convert or round.

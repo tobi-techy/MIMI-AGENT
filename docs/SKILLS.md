@@ -50,12 +50,17 @@ money: true
   time and again for every call.
 * `consent` names the scopes its tools read. Go still checks consent on every read.
 * `planned_tools` (drafts only) lists tools the skill needs but the harness does not have.
+* `handoffs` (optional) names the sibling skills a run of this one may plausibly turn
+  into. Left out, the `<skills>` block lists every sibling; `handoffs: []` lists none.
+  `read_skill` is offered only when there is something to read: a file the body names or
+  a sibling in the block. A skill whose runs never change job (a stock count, a delivery
+  reply, a bank credit) sets `handoffs: []` and saves the block and the tool schema.
 
 ## Progressive disclosure
 
 | Level | What | When it is in the prompt |
 |---|---|---|
-| 1 | `name: description` of the helper's other active skills | every run of that helper (`<skills>` block) |
+| 1 | `name: description` of the helper's other active skills (or only its `handoffs`) | every run of that helper (`<skills>` block) |
 | 2 | the routed skill's `SKILL.md` body | the run the router sent to that skill |
 | 3 | a reference or asset | only when the model calls `read_skill` |
 
