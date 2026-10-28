@@ -115,6 +115,8 @@ jobs:
         run: python -m mimi.skills check
       - name: Skills eval (selection on the 300 router messages, one body loaded per run and no unused ones, script golden cases, skill-tool and bind attacks refused, tampered files refused, metadata under its cap, token use flag on vs off; fails on any pass mark)
         run: python -m mimi.api.skills_eval --no-write
+      - name: Per-skill evals, 222 cases across 20 active skills in five languages with adversarial shop text, order-line and bank-alert code checks (RAI-317; recorded Muse Spark router answers in eval/skills/cases.router.cache.json; fails on any skill under 10 cases, routing under 90%, an unsafe adversarial route, a money misroute, a wrong code check or a cache miss)
+        run: python -m mimi.skills eval --no-write
       - name: OpenAPI document matches the API (docs/api/openapi.json)
         run: python -m mimi.api openapi --check
       - name: Migrations run on a clean SQLite database

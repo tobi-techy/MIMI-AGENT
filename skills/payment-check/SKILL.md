@@ -2,7 +2,7 @@
 name: payment-check
 description: Someone says a payment was made, in words without a picture: I have paid, I sent the transfer, I gave the rep cash; or the owner asks whether a shop's payment landed.
 helper: collector
-version: 1.0.0
+version: 1.1.0
 status: active
 tier: notify
 consent: [shop:balance, shop:invoices, shop:payments, shop:messages, org:receivables, org:helpers, org:owner, org:reps, org:plan]
@@ -10,6 +10,7 @@ tools: [check_payment, get_balance, get_invoices, get_payment_history, send_rece
 scripts: []
 senders: [shop, rep, owner]
 money: true
+handoffs: []
 ---
 
 A shop says it paid: check_payment. Matched: send_receipt and thank them. Not matched: tell the shop it is pending, never "received". A screenshot goes to Proof with ask_helper.

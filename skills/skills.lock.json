@@ -1,97 +1,177 @@
 {
- "comment": "Reviewed skill contents. Regenerate with python -m mimi.skills lock in the PR that changes a skill; CI refuses a skill that does not match.",
+ "comment": "Reviewed skill contents. Regenerate with python -m mimi.skills lock in the PR that changes a skill; CI refuses a skill that does not match, and lock refuses changed contents without a version bump.",
  "skills": {
   "bank-credit": {
+   "history": {
+    "1.1.0": "9608c8a1e78667a92045a6747903d02e72becffda41a78f01527769077f983c4"
+   },
    "sha256": "9608c8a1e78667a92045a6747903d02e72becffda41a78f01527769077f983c4",
    "version": "1.1.0"
   },
   "brand-email": {
+   "history": {
+    "1.1.0": "b2fe640772c7f78bc70da2cd4397fcffb8687b8d2c4afc6a4811c2c7d91f1aa6"
+   },
    "sha256": "b2fe640772c7f78bc70da2cd4397fcffb8687b8d2c4afc6a4811c2c7d91f1aa6",
    "version": "1.1.0"
   },
   "chase": {
-   "sha256": "93e9ce217f37576e70599c7697fa0149cfbcf868c172e32b55030a78d0aff407",
-   "version": "1.0.0"
+   "history": {
+    "1.0.0": "93e9ce217f37576e70599c7697fa0149cfbcf868c172e32b55030a78d0aff407",
+    "1.1.0": "4dba3dd3757c642186eb6885361075d9aa99166cfbd897eb9593c1940300a575"
+   },
+   "sha256": "4dba3dd3757c642186eb6885361075d9aa99166cfbd897eb9593c1940300a575",
+   "version": "1.1.0"
   },
   "chat": {
-   "sha256": "faa7808516ab135f3286e8d1bac51ed15e95d8cc4846829bc682e00d75deb949",
-   "version": "1.0.0"
+   "history": {
+    "1.0.0": "faa7808516ab135f3286e8d1bac51ed15e95d8cc4846829bc682e00d75deb949",
+    "1.1.0": "5bac7fe5863dc210bd57f88abc5aebb3e4ca3a79c3458d36abcb1d7399a506a5"
+   },
+   "sha256": "5bac7fe5863dc210bd57f88abc5aebb3e4ca3a79c3458d36abcb1d7399a506a5",
+   "version": "1.1.0"
   },
   "collections": {
+   "history": {
+    "1.0.0": "73706cc5950a2489ef206626eb8c855410676008a929414b18479d67fb68ecb2"
+   },
    "sha256": "73706cc5950a2489ef206626eb8c855410676008a929414b18479d67fb68ecb2",
    "version": "1.0.0"
   },
   "credit-request": {
-   "sha256": "e183e698c5805fd696d3ac6c6a8a682d834323896647f3142f61a62531878fa8",
-   "version": "1.0.0"
+   "history": {
+    "1.0.0": "e183e698c5805fd696d3ac6c6a8a682d834323896647f3142f61a62531878fa8",
+    "1.1.0": "b5ca56b294afe752a9588f8711ccebd2fdfb10d4052e68fd3928718eab69c54a"
+   },
+   "sha256": "b5ca56b294afe752a9588f8711ccebd2fdfb10d4052e68fd3928718eab69c54a",
+   "version": "1.1.0"
   },
   "credit-review": {
-   "sha256": "72afa86dcdf9259202641096cbbdc16c49eb9681376f4ef8567a3499e2884389",
-   "version": "1.0.0"
+   "history": {
+    "1.0.0": "72afa86dcdf9259202641096cbbdc16c49eb9681376f4ef8567a3499e2884389",
+    "1.1.0": "60e27b491909b8bd6551303dcf5ec15d14f7b50d219980fafc4c4fd4088b6ed0"
+   },
+   "sha256": "60e27b491909b8bd6551303dcf5ec15d14f7b50d219980fafc4c4fd4088b6ed0",
+   "version": "1.1.0"
   },
   "day-end-reconciliation": {
+   "history": {
+    "1.0.0": "642a810e1b353bba7b21bf309f8714ac5544be5e350e0cdcce25a83df93b19f2"
+   },
    "sha256": "642a810e1b353bba7b21bf309f8714ac5544be5e350e0cdcce25a83df93b19f2",
    "version": "1.0.0"
   },
   "delivery-status": {
+   "history": {
+    "1.0.0": "496b7e4f7f1f459c283c421bc643117ed14137405ea9ddfefcac25722b3cd755"
+   },
    "sha256": "496b7e4f7f1f459c283c421bc643117ed14137405ea9ddfefcac25722b3cd755",
    "version": "1.0.0"
   },
   "drop-confirmation": {
+   "history": {
+    "1.1.0": "0f308b303440de8f3ac87c846ac3d7def0713f2a3dceef73220e90b551c192a4"
+   },
    "sha256": "0f308b303440de8f3ac87c846ac3d7def0713f2a3dceef73220e90b551c192a4",
    "version": "1.1.0"
   },
   "escalate-owner": {
-   "sha256": "909bd81626657a6f8df85bbbf85b1bf938e9c23a4a4f038a47ca457b91eab02e",
-   "version": "1.0.0"
-  },
-  "fake-alert-check": {
-   "sha256": "9fadb9553bb09501d5c5218c35c57936909bdbe4618e45b54b2c0c6d5669edd6",
+   "history": {
+    "1.0.0": "909bd81626657a6f8df85bbbf85b1bf938e9c23a4a4f038a47ca457b91eab02e",
+    "1.1.0": "1abccc1924fc8e784cc4e921c885a5f4929646a37a61b01f251be17394912c30"
+   },
+   "sha256": "1abccc1924fc8e784cc4e921c885a5f4929646a37a61b01f251be17394912c30",
    "version": "1.1.0"
   },
+  "fake-alert-check": {
+   "history": {
+    "1.1.0": "9fadb9553bb09501d5c5218c35c57936909bdbe4618e45b54b2c0c6d5669edd6",
+    "1.2.0": "79368e385007449bbd9ba43621c6db4943c29067ea8a7e623bcdf3f709fe86a6"
+   },
+   "sha256": "79368e385007449bbd9ba43621c6db4943c29067ea8a7e623bcdf3f709fe86a6",
+   "version": "1.2.0"
+  },
   "low-stock-report": {
+   "history": {
+    "1.1.0": "2e7c22cc4f360de359bc94b0f71773472b411492565949911be86de20dd747fb"
+   },
    "sha256": "2e7c22cc4f360de359bc94b0f71773472b411492565949911be86de20dd747fb",
    "version": "1.1.0"
   },
   "order-intake": {
+   "history": {
+    "1.0.0": "b903882c8ee24affcf7e18296a1dd71509579fbd93e153adf5d7535f3783c865"
+   },
    "sha256": "b903882c8ee24affcf7e18296a1dd71509579fbd93e153adf5d7535f3783c865",
    "version": "1.0.0"
   },
   "owner-brief": {
-   "sha256": "0e8bcff6e7c41fb669189b3d266c5a621b7f0013bdea4f64311b0e3de70b5e31",
-   "version": "1.0.0"
+   "history": {
+    "1.0.0": "0e8bcff6e7c41fb669189b3d266c5a621b7f0013bdea4f64311b0e3de70b5e31",
+    "1.1.0": "7bf0959edb7c6b2e6eaeb0953a5cf49b98081bc2d18c96015fe25cc1d1a175d3"
+   },
+   "sha256": "7bf0959edb7c6b2e6eaeb0953a5cf49b98081bc2d18c96015fe25cc1d1a175d3",
+   "version": "1.1.0"
   },
   "payment-check": {
-   "sha256": "85fe9e7e4ea3ca6891f91187dbe98dd613f3896b67d42c5f9217113f220dcbdb",
-   "version": "1.0.0"
+   "history": {
+    "1.0.0": "85fe9e7e4ea3ca6891f91187dbe98dd613f3896b67d42c5f9217113f220dcbdb",
+    "1.1.0": "ae73af05d14821e3e002630b575b9975d86d49d7c4cbc6b110f858840f04c845"
+   },
+   "sha256": "ae73af05d14821e3e002630b575b9975d86d49d7c4cbc6b110f858840f04c845",
+   "version": "1.1.0"
   },
   "promise-to-pay": {
-   "sha256": "e809e6e01f921566d82c37ca6461e9475ceb5aef9bf3c23b2d4a4fccfbd763b5",
-   "version": "1.0.0"
+   "history": {
+    "1.0.0": "e809e6e01f921566d82c37ca6461e9475ceb5aef9bf3c23b2d4a4fccfbd763b5",
+    "1.1.0": "ddb86b0a9614a60d934dc5c5a88974559f3a70faef46367c33177a9cf2fc36e5"
+   },
+   "sha256": "ddb86b0a9614a60d934dc5c5a88974559f3a70faef46367c33177a9cf2fc36e5",
+   "version": "1.1.0"
   },
   "promo-info": {
+   "history": {
+    "1.1.0": "d46240e98e60d41701feb6d60ae4212310d392d491d8a852bee3395af9ae1e6a"
+   },
    "sha256": "d46240e98e60d41701feb6d60ae4212310d392d491d8a852bee3395af9ae1e6a",
    "version": "1.1.0"
   },
   "route-load-out": {
+   "history": {
+    "1.0.0": "d35d3b4cd3489f6fca74f07fd573d1fb261ca98fe54bc3c041bb4bd5fff8ab01"
+   },
    "sha256": "d35d3b4cd3489f6fca74f07fd573d1fb261ca98fe54bc3c041bb4bd5fff8ab01",
    "version": "1.0.0"
   },
   "shop-onboarding": {
-   "sha256": "d6cea75be6b58dbd32bd74ccdab56aa2449904d6ead0f42290fc3c7bc66f66ef",
-   "version": "1.0.0"
+   "history": {
+    "1.0.0": "d6cea75be6b58dbd32bd74ccdab56aa2449904d6ead0f42290fc3c7bc66f66ef",
+    "1.1.0": "8bbf9a8529a1d1af2b22b6323031e1bf2e9f23775e5eedbde303a663019a193b"
+   },
+   "sha256": "8bbf9a8529a1d1af2b22b6323031e1bf2e9f23775e5eedbde303a663019a193b",
+   "version": "1.1.0"
   },
   "stock-book-reading": {
+   "history": {
+    "1.0.0": "05d404053dc36554debf85ea626548bc7840de1a1576dfe8309adc38c6f84830"
+   },
    "sha256": "05d404053dc36554debf85ea626548bc7840de1a1576dfe8309adc38c6f84830",
    "version": "1.0.0"
   },
   "stock-count": {
+   "history": {
+    "1.1.0": "8d8521fba28a048fcf64ecaf8e36656bef639a8f8903b3ff111e768d4938f629"
+   },
    "sha256": "8d8521fba28a048fcf64ecaf8e36656bef639a8f8903b3ff111e768d4938f629",
    "version": "1.1.0"
   },
   "stop": {
-   "sha256": "00142dc2158fd44476fe05fc30e9074f394885013c407ad4ca86499e033dec10",
-   "version": "1.0.0"
+   "history": {
+    "1.0.0": "00142dc2158fd44476fe05fc30e9074f394885013c407ad4ca86499e033dec10",
+    "1.1.0": "d3d9061dccff834712530551e65d3944da6fa63ede53e8c902688c0145c6c7c1"
+   },
+   "sha256": "d3d9061dccff834712530551e65d3944da6fa63ede53e8c902688c0145c6c7c1",
+   "version": "1.1.0"
   }
  }
 }

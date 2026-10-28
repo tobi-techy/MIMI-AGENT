@@ -24,6 +24,7 @@ import json
 import math
 import os
 import re
+from typing import Any
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -163,7 +164,7 @@ def load_catalog(root: Path | None = None, *, check_lock: bool = True) -> Catalo
     root = (root or skills_root()).resolve()
     if not root.is_dir():
         raise SkillError(f"no skills folder at {root}")
-    lock: dict[str, dict[str, str]] = {}
+    lock: dict[str, dict[str, Any]] = {}
     lock_path = root / LOCK_NAME
     if check_lock:
         if not lock_path.is_file():
@@ -218,13 +219,34 @@ def load_catalog(root: Path | None = None, *, check_lock: bool = True) -> Catalo
 
 
 def write_lock(root: Path | None = None) -> Path:
-    """Re-hash every skill (the reviewed step a person runs in a PR)."""
+    """Re-hash every skill (the reviewed step a person runs in a PR).
+
+    The lock keeps every version a skill has had with the contents it was
+    reviewed at (``history``). A folder whose contents changed under a version
+    already in the history is refused: bump ``version`` in its SKILL.md first,
+    so traces and cache keys show the change.
+    """
     cat = load_catalog(root, check_lock=False)
-    data = {"comment": "Reviewed skill contents. Regenerate with python -m mimi.skills lock "
-                       "in the PR that changes a skill; CI refuses a skill that does not match.",
-            "skills": {s.name: {"version": s.version, "sha256": s.digest}
-                       for s in sorted(cat.skills.values(), key=lambda s: s.name)}}
     path = cat.root / LOCK_NAME
+    old: dict[str, Any] = {}
+    if path.is_file():
+        old = json.loads(path.read_text(encoding="utf-8")).get("skills", {})
+    skills: dict[str, Any] = {}
+    for s in sorted(cat.skills.values(), key=lambda s: s.name):
+        prev = old.get(s.name, {})
+        history = dict(prev.get("history") or {})
+        if prev.get("version") and prev.get("sha256"):
+            history.setdefault(prev["version"], prev["sha256"])
+        seen = history.get(s.version)
+        if seen is not None and seen != s.digest:
+            raise SkillError(f"{s.name}: files changed but version {s.version} was already "
+                             f"reviewed with other contents; bump version in its SKILL.md")
+        history[s.version] = s.digest
+        skills[s.name] = {"version": s.version, "sha256": s.digest, "history": history}
+    data = {"comment": "Reviewed skill contents. Regenerate with python -m mimi.skills lock "
+                       "in the PR that changes a skill; CI refuses a skill that does not match, "
+                       "and lock refuses changed contents without a version bump.",
+            "skills": skills}
     path.write_text(json.dumps(data, indent=1, sort_keys=True) + "\n", encoding="utf-8")
     return path
 

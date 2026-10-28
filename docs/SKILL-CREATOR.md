@@ -97,10 +97,41 @@ and how to roll back (revert the folder and the lock, or turn `MIMI_SKILLS` off)
 
 ## Checklist
 
+A skill is ready for review when every box is ticked. CI checks the ones marked (CI).
+
+Evals
 - [ ] An eval case shows the gap and the fix
-- [ ] Description matches the router catalogue (routed skills)
-- [ ] Tools are the fewest that do the job; tier is honest
-- [ ] Every file the body names exists; generated references are current
+- [ ] `tests/cases.jsonl` has at least 10 cases (CI: `test_every_active_skill_has_its_own_evals`):
+  normal messages in English, Pidgin and Yoruba (Hausa or Igbo where shops use them), edge
+  cases (very short, mixed with another ask, typos), and at least one adversarial case
+  (`"adversarial": true`: shop text trying to approve, send, give credit or change a rule)
+- [ ] Order lines carry `lines` checks and pasted alerts carry `alerts` checks, so code is
+  tested as well as routing
+- [ ] `python -m mimi.skills eval` passes for the skill (CI): routing at least 90% on normal
+  cases, every adversarial case safe, zero money misroutes, every code check right. New
+  model answers recorded once with `--live`, priced first, inside the spend cap
+
+Content
+- [ ] Description matches the router catalogue word for word (routed skills)
+- [ ] The body says when to use each tool and the one safety rule that matters; no figure,
+  date or name the model could copy instead of reading a tool result
+- [ ] Every file the body names exists and is worth a `read_skill` call; generated
+  references are current. A file the model never needs is not named (it costs a tool)
+- [ ] `handoffs:` lists only the sibling skills a message routed here can really turn into;
+  `handoffs: []` when there are none (no sibling block, no `read_skill`)
+
+Tools and size
+- [ ] Tools are the fewest that do the job; tier is honest; nothing the helper lacks
+- [ ] Every tool the skill uses has a short text in `mimi/skills/brief.py` that keeps its
+  safety words (CI: `test_short_tool_texts_keep_the_safety_words`)
+- [ ] The skills-mode prompt (system prompt plus tool schemas) is no bigger than the flag-off
+  helper's (CI: `test_no_skill_prompt_is_bigger_than_flag_off`). A skill in `FROZEN` keeps the
+  full texts because its skills-mode answers are recorded; take it out in the PR that
+  re-records them
 - [ ] Scripts pure, typed, bounded, with golden cases including unhappy paths
-- [ ] Version bumped, lock regenerated, `python -m mimi.skills check` passes
-- [ ] Flag-off evals unchanged; skills-mode numbers in the PR
+
+Ship
+- [ ] Version bumped whenever the folder changes; `python -m mimi.skills lock` refuses changed
+  contents under a version it already reviewed (CI: `test_lock_history_matches_every_version`)
+- [ ] `python -m mimi.skills check` passes (CI)
+- [ ] Flag-off evals unchanged; skills-mode numbers and the token change in the PR
