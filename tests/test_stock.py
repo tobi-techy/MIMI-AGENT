@@ -234,7 +234,8 @@ def test_a_count_or_range_in_an_unknown_unit_is_not_accepted() -> None:
 def test_items_names_and_packs() -> None:
     assert display_name(NOODLES) == "Sunrise Instant Noodles 70g"
     assert pack_size(NOODLES) == 40 and pack_size("Palmside Vegetable Oil 5L") is None
-    assert copy.ask_text(NOODLES, "ctn") == "Sunrise Instant Noodles 70g left? Cartons: 0-2 | 3-5 | 6+"
+    assert copy.ask_text(NOODLES, "ctn") == ("Quick stock check: how many cartons of Sunrise "
+                                             "Instant Noodles 70g do you have left? 0-2 | 3-5 | 6+")
     text = copy.thanks_draft_text(10, "ctn", "Coral Lane Trading")
     assert text == ("Thanks. I've asked Coral Lane Trading to prepare 10 cartons for you. "
                     "They'll confirm before delivery.")

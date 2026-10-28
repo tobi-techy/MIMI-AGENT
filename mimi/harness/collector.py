@@ -418,16 +418,41 @@ class ReminderOut(_Out):
     text: str
 
 
+def say_day(iso_day: str) -> str:
+    """'2026-10-30' as 'Friday 30 October', the way an account officer writes it."""
+    from datetime import date
+
+    try:
+        d = date.fromisoformat(iso_day[:10])
+    except ValueError:
+        return iso_day
+    return f"{d:%A} {d.day} {d:%B}"
+
+
+def reminder_text(tone: str, shop_name: str, invoice_id: str, amount_naira: str,
+                  due_on: str) -> str:
+    """The reminder a shop reads (docs/MIMI-VOICE.md, Collector). Code-written; the
+    figure, the invoice and the day come from the book."""
+    day = say_day(due_on)
+    if tone == "heads_up":
+        return (f"Hello {shop_name}, this is Coral Lane Trading. Invoice {invoice_id} for "
+                f"{amount_naira} is due on {day}. If you have already paid, just reply here.")
+    if tone == "soft":
+        return (f"Hello {shop_name}, a gentle reminder from Coral Lane Trading: {amount_naira} "
+                f"on invoice {invoice_id} was due on {day}. Please let me know when you will "
+                "pay, or reply here if you have already paid.")
+    return (f"Hello {shop_name}, this is Coral Lane Trading. {amount_naira} on invoice "
+            f"{invoice_id} is still unpaid; it was due on {day}. Please pay today, or reply "
+            "here if there is a problem so we can sort it out.")
+
+
 def send_reminder(ctx: ToolContext, args: ReminderIn) -> ReminderOut:
     """Propose one payment reminder to a shop for one invoice. The text and amount are written by code from the book. Firm reminders, or ones above the owner's limit, wait for approval. One per shop, invoice and day."""
     inv = _invoice(ctx, args.shop_id, args.invoice_id)
     shop = ctx.book.shop(ctx.tenant_id, args.shop_id)
     amount = int(str(inv["outstanding_kobo"]))
-    opener = {"heads_up": "Quick heads-up", "soft": "Gentle reminder",
-              "firm": "Reminder"}[args.tone]
-    text = (f"{opener} from Coral Lane Trading, {shop['name']}: invoice {args.invoice_id} "
-            f"has {naira(amount)} outstanding (due {inv['due_on']}). Reply here if you have "
-            "paid or need to talk.")
+    text = reminder_text(args.tone, str(shop["name"]), args.invoice_id, naira(amount),
+                         str(inv["due_on"]))
     return ReminderOut(shop_id=args.shop_id, invoice_id=args.invoice_id, date=lagos_day(ctx),
                        tone=args.tone, amount_kobo=amount, text=text)
 

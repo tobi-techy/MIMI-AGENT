@@ -58,6 +58,7 @@ from mimi.harness.loop import LAGOS, Harness, Helper, LoopState, _naira, busines
 from mimi.harness.policy import GoPolicy, RiskPolicy
 from mimi.harness.router import _NO, _YES, RouteDecision, Router, ThreadState, lead_of
 from mimi.harness.router import label as skill_label
+from mimi.harness.style import clean_reply
 from mimi.harness.tracing import trace_job
 from mimi.harness.types import RunEvent
 from mimi.models.base import ChatModel
@@ -1181,7 +1182,7 @@ class Agent:
                                       key=f"{rec.idempotency_key}:notice", channel=note[0],
                                       shop_id=rec.shop_id, text=notice, kind=f"{rec.tool}_notice",
                                       status="ready", ts=now)
-                            noticed.add(" ".join(notice.split()))
+                            noticed.add(" ".join(clean_reply(notice).split()))
                     superseded = self._supersede(conn, tenant, r.intents, queued, sv)
                     if superseded:
                         result["superseded"] = superseded
@@ -1539,6 +1540,9 @@ class Agent:
     def _out(conn: sa.Connection, tenant: str, thread: str, turn_id: str, *, key: str,
              channel: str, shop_id: str, text: str, kind: str, status: str,
              ts: float) -> None:
+        # Every outbound message, model- or code-written, passes the style
+        # guard (RAI-303): no dashes, no filler, figures never change.
+        text = clean_reply(text, where=kind)
         insert_ignore(conn, s.messages, {
             "tenant_id": tenant, "message_id": f"out:{key}", "thread_id": thread,
             "turn_id": turn_id, "direction": "out", "sender": "mimi", "channel": channel,

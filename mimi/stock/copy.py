@@ -16,7 +16,8 @@ BUTTONS: tuple[str, str, str] = ("0-2", "3-5", "6+")
 
 
 def ask_text(item_name: str, unit: str) -> str:
-    return f"{display_name(item_name)} left? {unit_word(unit).capitalize()}: 0-2 | 3-5 | 6+"
+    return (f"Quick stock check: how many {unit_word(unit)} of {display_name(item_name)} do you "
+            "have left? 0-2 | 3-5 | 6+")
 
 
 def ask_again_text(item_name: str, unit: str) -> str:
