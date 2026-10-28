@@ -48,6 +48,7 @@ from sqlalchemy.engine import Engine
 from mimi.api import steering as sx
 from mimi.api import voice as vx
 from mimi.api.helpers import HelperDeps
+from mimi.api.media import checked_media
 from mimi.harness import fastclass
 from mimi.harness import steer as st
 from mimi.harness.binding import AnswerBinder, ask_is_live, delivery_ids_in
@@ -292,12 +293,19 @@ class Agent:
         self.engine = engine
         self.go = SqlGo(engine)
         self.policy = policy or GoPolicy()
+        self.deps = deps or HelperDeps()
         self.helpers: dict[str, Helper] = dict(helpers or build_helpers(
-            self.policy, go=self.go, deps=deps))
+            self.policy, go=self.go, deps=self.deps))
+        # A shop's camera photo with a vague caption is looked at once
+        # (RAI-304); the Order tool reuses the reading. MIMI_ROUTER_SEE=0
+        # routes photos on their words only (the behaviour before).
+        self.list_reader = self.deps.list_reader()
+        see_on = os.environ.get("MIMI_ROUTER_SEE", "1").strip() != "0"
         # A pending ask binds the shop's next reply to the helper that asked
         # (``mimi.harness.binding``); the router model only classifies it.
         self.router = Router(model=router_model, fast=fastclass.model(), price=kobo_cost,
-                             binder=AnswerBinder(model=router_model))
+                             binder=AnswerBinder(model=router_model),
+                             see=self.see_photo if see_on else None)
         self.clock = clock or (lambda: datetime.now(UTC))
         # Parts, mid-task messages and corrections (``mimi.harness.steer``);
         # MIMI_STEER=0 turns the stage off (today's behaviour).
@@ -492,6 +500,30 @@ class Agent:
         while not stop.is_set():
             if self.process() is None:
                 stop.wait(idle_s)
+
+    def see_photo(self, inbound: Inbound) -> str:
+        """What a shop's camera photo shows, for the router (RAI-304).
+
+        "order_list" when vision copied a list of goods with lines,
+        "not_list" when it read the photo and it is not one, "" when there is
+        no photo, no bytes matching its hash, or no model answer.
+        """
+        m = inbound.payload.media
+        if m.kind != "image" or not m.sha256:
+            return ""
+        with self.engine.connect() as conn:
+            ref = sx.media_ref_of(conn, inbound.org_id, inbound.external_id)
+        data = checked_media(self.deps.media, inbound.org_id, ref, m.sha256) if ref else None
+        if data is None:
+            return ""
+        try:
+            r = self.list_reader(data, m.mime or "image/jpeg")
+        except Exception:  # a replay miss or a client error: words decide
+            log.warning("photo look failed for %s", inbound.external_id, exc_info=True)
+            return ""
+        if r.via != "model":
+            return ""
+        return "order_list" if r.is_order_list and r.lines else "not_list"
 
     def _checkpoint(self, holder: list[Claim], ck: dict[str, Any]) -> None:
         holder[0] = self.queue.checkpoint(holder[0], ck)

@@ -12,7 +12,9 @@ settle it:
    (``mimi.harness.binding``): a fixed short answer (a 0-2 | 3-5 | 6+ tap,
    YES, a number) binds by rule, anything else is classified against the ask
    and binds to the asking helper unless it is about something else; a
-   quick-reply button -> its skill; a screenshot -> Proof.
+   quick-reply button -> its skill; a screenshot -> Proof; a shop's camera
+   photo whose caption names nothing else and that vision reads as an
+   order list -> Order (``see``, RAI-304).
 2. **Phrases** (``mimi.harness.lexicon``): multilingual phrase rules for the
    messages shops send most. Trusted only when one skill clearly leads.
 3. **Model**: Muse Spark with structured output over the skill catalogue for
@@ -258,6 +260,11 @@ class Router:
     # Binds replies to an open ask (``mimi.harness.binding``). None keeps the
     # old rule only (a fixed short answer binds); the API agent always sets it.
     binder: AnswerBinder | None = None
+    # What a shop's camera photo shows (RAI-304): ``see(inbound)`` gives
+    # "order_list", "not_list", or "" when it cannot tell (no model, no
+    # bytes, an error). The agent wires it to the Order list reader, whose
+    # reading the Order tool then reuses. None keeps routing on words only.
+    see: Callable[[Inbound], str] | None = None
 
     def threshold(self, helper: str) -> float:
         return THRESHOLDS.get(self.thresholds, THRESHOLDS[DEFAULT_THRESHOLDS]).get(helper, 0.7)
@@ -439,8 +446,18 @@ class Router:
             # A screenshot from a shop is a payment claim until Proof says
             # otherwise; Proof only ever makes a payment "likely".
             return rule("proof/fake-alert-check", "screenshot", language=lang)
+        seen = ""
+        look = self._can_look(lead, sender, shape)
+        if look and not lexicon.photo_says_other(text):
+            # The caption names nothing else (it is vague, a greeting, or
+            # empty): what the photo shows decides. An order list goes to
+            # Order by rule, with no router model call.
+            seen = self._look(lead)
+            if seen == "order_list":
+                return rule("order/order-intake", "photo_order_list_seen", conf=0.95,
+                            language=lang)
         dec = self._classify(lead, text, sender, thread, base, lang)
-        if (p.media.kind == "image" and dec.status == "clarify"
+        if (p.media.kind == "image" and dec.status == "clarify" and seen != "not_list"
                 and "order/order-intake" in dec.options
                 and (set(dec.options) <= _ORDER_OR_STATUS or _ORDER_WORDS.search(folded))):
             # A photo is never "where is my van", and a photo whose caption
@@ -450,6 +467,17 @@ class Router:
                                          "options": (), "rule": "photo_order_list"})
         if p.media.kind == "image" and dec.status == "routed":
             dec = self._photo(dec, thread)
+        if (look and dec.status == "routed" and dec.skill == "order/order-intake"
+                and lexicon.score(text).scores.get("order/order-intake", 0) < lexicon.STRONG):
+            # Order on weak words: only if the photo is a list. A photo vision
+            # says is not one (a slip, an invoice, a shelf) is asked about.
+            seen = seen or self._look(lead)
+            if seen == "not_list":
+                alt = next((k for k in (*dec.secondary, "proof/fake-alert-check")
+                            if k != "order/order-intake"), "proof/fake-alert-check")
+                dec = self._clarify(["order/order-intake", alt], sender, lang, base,
+                                    layer="rule", rule="photo_not_a_list",
+                                    **_spend_of(dec))
         if thread.clarify_options and dec.status == "clarify":
             # Asked once already: hand to the owner rather than ask twice.
             return dec.model_copy(update={
@@ -457,6 +485,21 @@ class Router:
                 "clarify_question": "", "options": (), "rule": "clarify_twice_to_owner",
                 "confidence": 1.0})
         return dec
+
+    def _can_look(self, lead: Inbound, sender: str, shape: str) -> bool:
+        """A camera photo from a shop or rep, with no injected text, and a look wired."""
+        m = lead.payload.media
+        return (self.see is not None and sender in ("shop", "rep") and m.kind == "image"
+                and shape != "screenshot" and not lexicon.injection_spans(lead.text)
+                and not lexicon.MENTION.search(lead.text))
+
+    def _look(self, lead: Inbound) -> str:
+        assert self.see is not None
+        try:
+            got = self.see(lead)
+        except Exception:  # a broken look never blocks routing: words decide
+            return ""
+        return got if got in ("order_list", "not_list") else ""
 
     @staticmethod
     def _answers(folded: str, expects: str, media: Media) -> bool:
@@ -707,6 +750,13 @@ def _short_options(text: str) -> tuple[str, str] | None:
     if _GOODS.search(t):
         return "order/order-intake", "stock/stock-count"
     return None
+
+
+def _spend_of(dec: RouteDecision) -> dict[str, Any]:
+    """The model spend a decision carried, for a decision that replaces it."""
+    return {"model_called": dec.model_called, "model": dec.model, "model_ms": dec.model_ms,
+            "prompt_tokens": dec.prompt_tokens, "completion_tokens": dec.completion_tokens,
+            "cost_kobo": dec.cost_kobo, "secondary": dec.secondary}
 
 
 def helper_of(key: str) -> str:

@@ -65,12 +65,26 @@ order is on credit.
 * Router: a photo whose words say order or list, or a photo the router would
   send to delivery status, is an order list. Lexicon: repeat orders,
   pay-on-delivery orders, Yoruba "e ba mi mu".
+* Photo look (RAI-304): a shop's camera photo with no open ask whose caption
+  names nothing else (vague, a greeting, emoji, empty) is read once by the
+  Order list reader before the router model; an order list goes to Order by
+  rule (`photo_order_list_seen`). A caption with payment, receipt, complaint
+  or shelf words (`lexicon.photo_says_other`) keeps its words' route. A photo
+  vision says is not a list is never pushed to Order on weak words; it is
+  asked about (`photo_not_a_list`). The reading is kept by image hash
+  (`HelperDeps.list_memo`) so the Order tool does not read the photo again.
+  A vision error or a missing photo routes on words, as before.
+  `MIMI_ROUTER_SEE=0` turns the look off.
 
 ## Eval
 
 `python -m mimi.api.order_eval` replays the 47-case held-out set
 (`eval/order/`, written before the helper; two label errors found from the
 book were fixed before the first held-out run). See `eval/order/README.md`.
+
+`python -m mimi.api.photo_route_eval` replays the photo routing fresh set
+(`eval/photo_route/`, 27 cases written before the photo look). See
+`eval/photo_route/README.md`.
 
 Rollback: drop `helpers["order/order-intake"]` in `mimi/api/helpers.py`;
 `order/order-intake` falls back to the receipt helper's one-line answer.

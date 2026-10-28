@@ -27,6 +27,13 @@
   "prompt_tokens": 341,
   "text": "{\"confidence\": 0.95, \"label\": \"answer\"}"
  },
+ "281ae41bd7d4bf6b9ff0c8af0b70bc89": {
+  "completion_tokens": 242,
+  "latency_s": 1.694,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 340,
+  "text": "{\"confidence\": 0.95, \"label\": \"answer\"}"
+ },
  "287abe84d9abc616bfb22bb406fefe87": {
   "completion_tokens": 579,
   "latency_s": 2.949,

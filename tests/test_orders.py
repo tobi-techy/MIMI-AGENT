@@ -375,3 +375,24 @@ def test_remove_a_line_when_the_quote_names_two_products(engine: Any) -> None:
     v1, v2 = r.orders("shop-037")
     assert v1["status"] == "superseded"
     assert [(x["sku"], x["quantity"]) for x in v2["payload"]["lines"]] == [("NDL-120-CTN", 3)]
+
+
+def test_list_reader_keeps_model_readings_by_image_hash() -> None:
+    """The router's photo look and the Order tool share one reading (RAI-304)."""
+    from mimi.models.base import ChatResult
+
+    class Once:
+        name = "muse-spark-1.3"
+        calls = 0
+
+        def complete(self, *a: object, **k: object) -> ChatResult:
+            Once.calls += 1
+            return ChatResult(json.dumps({"is_order_list": True, "heading": "",
+                                          "lines": ["Rice 5 bags"], "legibility": 1}),
+                              "muse-spark-1.3", 10, 10, 0.1)
+
+    memo: dict[str, object] = {}
+    a, b = ListReader(Once(), memo=memo), ListReader(Once(), memo=memo)  # type: ignore[arg-type]
+    assert a(b"page").lines == ("Rice 5 bags",)
+    assert b(b"page").lines == ("Rice 5 bags",) and Once.calls == 1
+    assert b(b"other page").is_order_list and Once.calls == 2

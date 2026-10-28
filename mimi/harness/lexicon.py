@@ -233,6 +233,41 @@ def score(text: str, allowed: frozenset[str] | None = None) -> LexScore:
     return LexScore(dict(s), top, ts, sec, ss)
 
 
+# ------------------------------------------------------------ photo captions
+
+# A caption that says what a camera photo is about when it is not an order
+# list: a payment or its proof, a receipt or document, a complaint about a
+# delivery, the shelf (RAI-304). Plain category words, in the languages the
+# phrase rules cover; anything here keeps the photo on its words' route.
+_PHOTO_OTHER = re.compile(
+    r"\b(?:receipts?|invoices?|teller|deposit|slip|evidence|proof|alert|pos|paid|payments?|"
+    r"transfer(?:red)?|debit|credit|balance|owe|account|statement|money|cash|kudi|owo|ego)\b"
+    r"|\b(?:no|not|never|neva|didn'?t|did not|una no|you no|dem no) (?:bring|deliver\w*|"
+    r"complete|reach|come|send)\b"
+    r"|\b(?:missing|short|damaged?|broken|spoil\w*|expired|wrong|leak\w*|rude|complain\w*|"
+    r"report)\b"
+    r"|\b(?:shelf|stock|remain\w*|left)\b", re.I)
+# Skills whose words do not explain away a photo: an order, a delivery
+# question (a photo is never "where is my van") and a greeting or thanks.
+_PHOTO_NEUTRAL = frozenset({"order/order-intake", "order/delivery-status", "mimi/chat"})
+
+
+def photo_says_other(caption: str) -> bool:
+    """True when a camera photo's caption points at a skill other than Order.
+
+    Then the photo keeps the route its words get, and vision is not asked
+    first. False for a vague caption ("my list", "see", "abeg"), a greeting,
+    an empty one, or words that only point at an order.
+    """
+    t = normalise(without_injection(caption))
+    if not t:
+        return False
+    if _PHOTO_OTHER.search(t):
+        return True
+    sc = score(t)
+    return any(v >= 2 for k, v in sc.scores.items() if k not in _PHOTO_NEUTRAL)
+
+
 # --------------------------------------------------------------- language
 
 _LANG_MARKERS: dict[str, tuple[str, ...]] = {

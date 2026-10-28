@@ -15,6 +15,22 @@
    }
   ]
  },
+ "08ba5a07dcddd0e86df11e6d547cd7f2037b87becd6e52976e5e279c5f439435": {
+  "cached_tokens": 3057,
+  "completion_tokens": 59,
+  "content": "",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.052,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 3334,
+  "tool_calls": [
+   {
+    "arguments": "{\"shop_id\":\"shop-024\"}",
+    "id": "call_c366a75d-9ca4-4885-8693-2fb99a52cf65",
+    "name": "ask_order_question"
+   }
+  ]
+ },
  "11325f30144e2bcf1b83b82f1fc4a4b9f463d6d94cf83c940bdada506ffaf7f0": {
   "cached_tokens": 241,
   "completion_tokens": 396,
@@ -44,6 +60,22 @@
     "arguments": "{\"lines\":[{\"as_written\":\"4 carton indomie\",\"item\":\"indomie\",\"quantity\":4,\"unit\":\"carton\"}],\"shop_id\":\"shop-023\"}",
     "id": "call_f97545d2-c509-4ef5-85f7-a4dbdc6d71a1",
     "name": "submit_order"
+   }
+  ]
+ },
+ "116b3a72af76205ac66a6f0f86693e1dd79b00b2147c9988261fffa45a16f727": {
+  "cached_tokens": 0,
+  "completion_tokens": 122,
+  "content": "I'll read your shelf photo to capture this week's order.",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.267,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 2955,
+  "tool_calls": [
+   {
+    "arguments": "{\"photo_id\":\"ph_947d4bf80387\",\"shop_id\":\"shop-024\"}",
+    "id": "call_46b49ffc-7076-43c0-b560-b2117fea9b01",
+    "name": "read_order_photo"
    }
   ]
  },
@@ -91,6 +123,22 @@
    {
     "arguments": "{\"lines\":[{\"as_written\":\"2 carton toilet roll\",\"item\":\"toilet roll\",\"quantity\":2,\"unit\":\"carton\"},{\"as_written\":\"3 pack spaghetti\",\"item\":\"spaghetti\",\"quantity\":3,\"unit\":\"pack\"}],\"shop_id\":\"shop-023\"}",
     "id": "call_e4c7a6c4-ab2b-4fd9-a2dd-16c2e010738b",
+    "name": "submit_order"
+   }
+  ]
+ },
+ "201ac44ac488d5fe17e0c2a93bd73ec3e69d7cc74674bc4c313105fd1e519e2d": {
+  "cached_tokens": 0,
+  "completion_tokens": 372,
+  "content": "Got it \u2014 5kg noted. I'll update your order now.",
+  "finish_reason": "tool_calls",
+  "latency_s": 2.021,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 3651,
+  "tool_calls": [
+   {
+    "arguments": "{\"lines\":[{\"as_written\":\"Rice - 5 bags\",\"item\":\"Rice 5kg\",\"quantity\":5,\"unit\":\"bags\"},{\"as_written\":\"Spaghetti ctn - 3\",\"item\":\"Spaghetti\",\"quantity\":3,\"unit\":\"ctn\"}],\"shop_id\":\"shop-024\"}",
+    "id": "call_893c200e-fad3-4a57-b44e-3c032ab7ef1c",
     "name": "submit_order"
    }
   ]
@@ -479,6 +527,22 @@
    }
   ]
  },
+ "8a8cb9cd875d8b947b0e98b6e8695ccbf32ea5c42ba9f1ca91fcfaa564fe1999": {
+  "cached_tokens": 2929,
+  "completion_tokens": 306,
+  "content": "",
+  "finish_reason": "tool_calls",
+  "latency_s": 2.215,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 3162,
+  "tool_calls": [
+   {
+    "arguments": "{\"lines\":[{\"as_written\":\"Peak milk tin 2 carton\",\"item\":\"Peak milk tin\",\"quantity\":2,\"unit\":\"carton\"},{\"as_written\":\"Vegetable oil 5L - 3\",\"item\":\"Vegetable oil 5L\",\"quantity\":3,\"unit\":\"\"},{\"as_written\":\"Biscuit 4 ctn\",\"item\":\"Biscuit\",\"quantity\":4,\"unit\":\"ctn\"}],\"shop_id\":\"shop-009\"}",
+    "id": "call_ebc96d78-e04b-4de7-b8a0-27cab71b77fb",
+    "name": "submit_order"
+   }
+  ]
+ },
  "8b45195209954401a2f750509cbcfafe857627de1b8df25b2230ea8f96794b66": {
   "cached_tokens": 0,
   "completion_tokens": 313,
@@ -543,6 +607,22 @@
    }
   ]
  },
+ "92bbf08a5b6e7d7cab9b89138b0ccfa6cb3a4aa75faf86d5b9e78d2e08821d24": {
+  "cached_tokens": 0,
+  "completion_tokens": 244,
+  "content": "",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.545,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 3150,
+  "tool_calls": [
+   {
+    "arguments": "{\"lines\":[{\"as_written\":\"Rice - 5 bags\",\"item\":\"Rice\",\"quantity\":5,\"unit\":\"bags\"},{\"as_written\":\"Spaghetti ctn - 3\",\"item\":\"Spaghetti\",\"quantity\":3,\"unit\":\"ctn\"}],\"shop_id\":\"shop-024\"}",
+    "id": "call_237344aa-e432-41ba-bc0c-4a3886dcf566",
+    "name": "submit_order"
+   }
+  ]
+ },
  "93d902a9a8eb2691363f9c7cf9c6781237e3387ed949cd6567ba2ed4c476c55f": {
   "cached_tokens": 241,
   "completion_tokens": 294,
@@ -588,6 +668,22 @@
     "arguments": "{\"lines\":[{\"as_written\":\"ten carton indomie small one\",\"item\":\"indomie small one\",\"quantity\":10,\"unit\":\"carton\"},{\"as_written\":\"five keg oil\",\"item\":\"oil\",\"quantity\":5,\"unit\":\"keg\"}],\"shop_id\":\"shop-002\"}",
     "id": "call_cac3b862-bdd1-4ca8-8103-8d8fe3f865e7",
     "name": "submit_order"
+   }
+  ]
+ },
+ "9d18c89168edb2c9ea6b98c980b965f781ff4da752c56387608409ced8b4df99": {
+  "cached_tokens": 0,
+  "completion_tokens": 117,
+  "content": "Your list photo is in \u2014 I'll copy it out for pricing.",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.441,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 2950,
+  "tool_calls": [
+   {
+    "arguments": "{\"photo_id\":\"ph_952b98cc03d5\",\"shop_id\":\"shop-036\"}",
+    "id": "call_e96449d1-2678-4ad7-9d15-4cc38d1a0a18",
+    "name": "read_order_photo"
    }
   ]
  },
@@ -767,6 +863,22 @@
    }
   ]
  },
+ "c61d8ea7cb32e0c623fcafaca78a74e7909ebaa3fe500de763c087b7996c8cd7": {
+  "cached_tokens": 2929,
+  "completion_tokens": 280,
+  "content": "",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.575,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 3151,
+  "tool_calls": [
+   {
+    "arguments": "{\"lines\":[{\"as_written\":\"Indomie super pack - 2 ctn\",\"item\":\"Indomie super pack\",\"quantity\":2,\"unit\":\"ctn\"},{\"as_written\":\"pure water 5 bag\",\"item\":\"pure water\",\"quantity\":5,\"unit\":\"bag\"}],\"shop_id\":\"shop-036\"}",
+    "id": "call_6ff81689-d9bc-4518-94a5-54f6cb75bb07",
+    "name": "submit_order"
+   }
+  ]
+ },
  "cc28f1a276e159a38bf106e0099956fd67c94bd17a7ab8ee807fd94b0c32cf95": {
   "cached_tokens": 241,
   "completion_tokens": 123,
@@ -828,6 +940,22 @@
     "arguments": "{\"body\":\"Thanks for your order request \u2014 the orders helper / your rep will help you with this shortly.\",\"channel\":\"shop_whatsapp\",\"ends_turn\":true,\"kind\":\"reply\",\"shop_id\":\"shop-024\"}",
     "id": "call_df7bb1ad-f4f5-4085-a59e-9e4567ab7e9f",
     "name": "send_to_user"
+   }
+  ]
+ },
+ "d3722d20519c4a93b5ac29fff3139ae9a142e1e1afee25ad53b20a8467ae5f26": {
+  "cached_tokens": 0,
+  "completion_tokens": 102,
+  "content": "Shelf photo order \u2014 I'll read your list.",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.576,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 2953,
+  "tool_calls": [
+   {
+    "arguments": "{\"photo_id\":\"ph_0791d4f3dc70\",\"shop_id\":\"shop-009\"}",
+    "id": "call_a364170a-7b94-4a20-99b9-f73cc1180ab2",
+    "name": "read_order_photo"
    }
   ]
  },

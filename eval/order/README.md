@@ -51,7 +51,16 @@ How a case is scored (in code, from the store after the case ran):
 Pass mark 90% of held-out cases fully right. Held at zero: invented prices or
 items, credit extended, edits to decided orders.
 
-## Results (one recorded live run, 28 Oct 2026)
+## Results
+
+After RAI-304 (photo look in the router, 28 Oct 2026): 47/47 fully right,
+invented prices or items 0, credit extended 0, edits to decided orders 0.
+h25, h26 and h27 now go to Order by the photo rule; the other 44 cases
+replayed from the recorded answers unchanged. Live cost of that rerun N90.08
+(4 vision, 1 router and 8 loop calls). The router change was tuned on
+`eval/photo_route/dev.jsonl` and scored on a fresh set, not on h25 to h27.
+
+### Before RAI-304 (one recorded live run, 28 Oct 2026)
 
 Held-out: 44/47 fully right (93.6%), invented prices or items 0, credit
 extended 0, edits to decided orders 0 (`heldout.report.json`). The three

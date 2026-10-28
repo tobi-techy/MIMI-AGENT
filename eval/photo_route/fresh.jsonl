@@ -1,0 +1,27 @@
+{"id": "f01", "shop_id": "shop-001", "photo": "photo_route/photos/fl-01.jpg", "caption": "abeg run am", "camera": true, "want": "order"}
+{"id": "f02", "shop_id": "shop-002", "photo": "photo_route/photos/fl-02.jpg", "caption": "", "camera": true, "want": "order"}
+{"id": "f03", "shop_id": "shop-003", "photo": "photo_route/photos/fl-03.jpg", "caption": "see", "camera": true, "want": "order"}
+{"id": "f04", "shop_id": "shop-004", "photo": "photo_route/photos/fl-04.jpg", "caption": "this one", "camera": true, "want": "order"}
+{"id": "f05", "shop_id": "shop-006", "photo": "photo_route/photos/fl-05.jpg", "caption": "e jọ̀ọ́", "camera": true, "want": "order"}
+{"id": "f06", "shop_id": "shop-007", "photo": "photo_route/photos/fl-06.jpg", "caption": "oja mi ree", "camera": true, "want": "order"}
+{"id": "f07", "shop_id": "shop-008", "photo": "photo_route/photos/fl-07.jpg", "caption": "for monday", "camera": true, "want": "order"}
+{"id": "f08", "shop_id": "shop-010", "photo": "photo_route/photos/fl-08.jpg", "caption": "🙏", "camera": true, "want": "order"}
+{"id": "f09", "shop_id": "shop-011", "photo": "photo_route/photos/fl-09.jpg", "caption": "Coral Lane abeg", "camera": true, "want": "order"}
+{"id": "f10", "shop_id": "shop-012", "photo": "photo_route/photos/fl-10.jpg", "caption": "na wetin I need be this", "camera": true, "want": "order"}
+{"id": "f11", "shop_id": "shop-014", "photo": "photo_route/photos/fl-11.jpg", "caption": "kaya na", "camera": true, "want": "order"}
+{"id": "f12", "shop_id": "shop-015", "photo": "photo_route/photos/fl-12.jpg", "caption": "biko", "camera": true, "want": "order"}
+{"id": "f13", "shop_id": "shop-016", "photo": "photo_route/photos/fl-13.jpg", "caption": "the usual and these ones", "camera": true, "want": "order"}
+{"id": "f14", "shop_id": "shop-017", "photo": "photo_route/photos/fl-14.jpg", "caption": "ehen", "camera": true, "want": "order"}
+{"id": "f15", "shop_id": "shop-018", "photo": "credit/shelves/s07.jpg", "caption": "", "camera": true, "want": "not_order", "ok": ["clarify", "stock/stock-count", "credit/credit-request"]}
+{"id": "f16", "shop_id": "shop-019", "photo": "credit/shelves/s08.jpg", "caption": "see my shelf", "camera": true, "want": "not_order", "ok": ["clarify", "stock/stock-count"]}
+{"id": "f17", "shop_id": "shop-020", "photo": "photo_route/photos/fx-pos.jpg", "caption": "", "camera": true, "want": "not_order", "ok": ["clarify", "proof/fake-alert-check"]}
+{"id": "f18", "shop_id": "shop-021", "photo": "photo_route/photos/fx-pos.jpg", "caption": "abeg check am", "camera": true, "want": "not_order", "ok": ["clarify", "proof/fake-alert-check"]}
+{"id": "f19", "shop_id": "shop-022", "photo": "photo_route/photos/fx-inv.jpg", "caption": "see the invoice una give me", "camera": true, "want": "not_order", "ok": ["clarify", "collector/collections", "mimi/escalate-owner", "proof/fake-alert-check", "order/drop-confirmation"]}
+{"id": "f20", "shop_id": "shop-023", "photo": "photo_route/photos/fx-inv.jpg", "caption": "", "camera": true, "want": "not_order", "ok": ["clarify", "collector/collections", "proof/fake-alert-check", "order/drop-confirmation"]}
+{"id": "f21", "shop_id": "shop-025", "photo": "photo_route/photos/fx-doc.jpg", "caption": "my CAC", "camera": true, "want": "not_order", "ok": ["clarify", "mimi/shop-onboarding", "mimi/chat", "mimi/escalate-owner", "credit/credit-request"]}
+{"id": "f22", "shop_id": "shop-026", "photo": "photo_route/photos/fx-paid.jpg", "caption": "my list", "camera": true, "want": "not_order", "ok": ["clarify", "collector/payment-check", "proof/fake-alert-check", "collector/collections"]}
+{"id": "f23", "shop_id": "shop-027", "photo": "photo_route/photos/fl-15.jpg", "caption": "una no bring everything for this list", "camera": true, "want": "not_order", "ok": ["clarify", "order/drop-confirmation", "order/delivery-status", "mimi/escalate-owner"]}
+{"id": "f24", "shop_id": "shop-028", "photo": "photo_route/photos/fl-16.jpg", "caption": "I don pay for this list", "camera": true, "want": "not_order", "ok": ["clarify", "proof/fake-alert-check", "collector/payment-check"]}
+{"id": "f25", "shop_id": "shop-029", "photo": "proof/screens/g02.jpg", "caption": "my list", "camera": false, "want": "not_order", "ok": ["proof/fake-alert-check"]}
+{"id": "f26", "shop_id": "shop-030", "photo": "photo_route/photos/fx-tel.jpg", "caption": "here", "camera": true, "want": "not_order", "ok": ["clarify", "proof/fake-alert-check", "collector/payment-check"]}
+{"id": "f27", "shop_id": "shop-031", "photo": "photo_route/photos/fl-01.jpg", "caption": "this list, your driver was rude to my boy", "camera": true, "want": "not_order", "ok": ["clarify", "mimi/escalate-owner"]}
