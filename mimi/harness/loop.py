@@ -987,7 +987,8 @@ class Harness:
         return C.check(tool, text, messages=state.messages, intents=state.intents,
                        today=now.astimezone(LAGOS).date(), wake_source=state.wake_source,
                        names=self._names(state.tenant_id), other_drafts=other,
-                       outcomes=False, history_end=self._history_end(state))
+                       outcomes=False, history_end=self._history_end(state),
+                       shops=self._shops(state.tenant_id))
 
     @staticmethod
     def _history_end(state: LoopState) -> int:
@@ -1006,9 +1007,13 @@ class Harness:
             channel = str(rec.payload.get("channel") or "")
             other = sum(1 for d in state.drafts if d.channel != channel
                         and d.kind != "question" and d.idempotency_key != rec.idempotency_key)
+            to_shop = str(rec.payload.get("shop_id") or "") if channel == "shop_whatsapp" else ""
             problems = C.check_outcomes(rec.tool, text, messages=state.messages,
                                         intents=state.intents, wake_source=state.wake_source,
-                                        other_drafts=other, history_end=self._history_end(state))
+                                        other_drafts=other, history_end=self._history_end(state),
+                                        names=self._names(state.tenant_id),
+                                        shops=self._shops(state.tenant_id), channel=channel,
+                                        to_shop=to_shop, exclude=rec.idempotency_key)
             if problems:
                 held.append((rec, problems))
         if not held:
@@ -1046,6 +1051,18 @@ class Harness:
             self._emit(state, "model_output_invalid", tool=held[0][0].tool,
                        short=why_all[0][:200])
             state.fail_reason = f"unbacked claim after one repair: {why_all[0]}"[:300]
+
+    def _shops(self, tenant_id: str) -> dict[str, str]:
+        """This distributor's shop names and their ids (claims bind to a shop)."""
+        cache = self.__dict__.setdefault("_shop_cache", {})
+        if tenant_id not in cache:
+            fn = getattr(self.book, "known_shops", None)
+            try:
+                cache[tenant_id] = dict(fn(tenant_id)) if fn is not None else {}
+            except Exception as exc:  # a lookup failure never breaks a turn
+                log.warning("known_shops failed: %s", type(exc).__name__)
+                cache[tenant_id] = {}
+        return cast(dict[str, str], cache[tenant_id])
 
     def _names(self, tenant_id: str) -> tuple[str, ...]:
         """This distributor's shop and product names (for the names check)."""
