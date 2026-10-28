@@ -596,6 +596,9 @@ class Agent:
         fix = json.loads(prior.fix) if prior.fix else {}
         if fix and time.time() - float(fix.get("asked_ts", 0)) > FIX_TTL_S:
             fix = {}
+        two = self._two_asks(fix, prior, lead, text, tasks)
+        if two is not None:
+            return {**out, **two}
         if fix and (_YES.match(folded) or _NO.match(folded)):
             out["fix_done"] = True
             return {**out, **self._fix_answer(fix, bool(_YES.match(folded)), text, tasks)}
@@ -719,6 +722,80 @@ class Agent:
         q = st.question_text(label, words, tasks, None, words)
         return {"code": {"kind": "question", "text": q, **info, "label": label,
                          "tasks": [t.key for t in tasks]}}
+
+    def _two_asks(self, fix: dict[str, Any], prior: ThreadState, lead: Inbound, text: str,
+                  tasks: Sequence[st.OpenTask]) -> dict[str, Any] | None:
+        """A delivery receipt and a correction question both open (RAI-272).
+
+        A yes or no that fits both binds to neither: code asks one short
+        question ("Yes to the delivery receipt or the order change?"). The
+        answer to that question, or a yes or no whose own words say which,
+        goes to that ask; a reply that still does not say which goes to the
+        owner, never to a second question. ``None`` when this does not apply.
+        """
+        if not fix:
+            return None
+        receipt_open = (prior.pending_skill == "order/drop-confirmation"
+                        and ask_is_live(prior.pending_skill, prior.asked_at, lead.received_at))
+        which = fix.get("which") or {}
+        base = {k: v for k, v in fix.items() if k != "which"}
+        task = base.get("task") or {}
+        if which:
+            if not receipt_open:
+                return None  # the receipt was settled or expired: the fix rules apply
+            side = st.which_side(text)
+            yn = str(which.get("answer", "yes"))
+            if side == "receipt":
+                words = f"{which.get('words', '')}\n{text}".strip()
+                return self._which_receipt(words, base, via="answered")
+            if side == "fix":
+                plan = self._fix_answer(base, yn == "yes", str(base.get("words", "")), tasks)
+                return {**plan, "fix_done": True,
+                        "which": {"side": "fix", "via": "answered", "yn": yn}}
+            return self._which_owner(base, prior, f"{which.get('words', '')} / {text}",
+                                     handed=bool(which.get("handed")))
+        if not receipt_open:
+            return None
+        yn, rest = st.yes_no_lead(text)
+        if not yn:
+            return None
+        side = st.which_side(rest) if rest else ""
+        if side == "receipt":
+            return self._which_receipt(text, base, via="own_words")
+        if side == "fix":
+            plan = self._fix_answer(base, yn == "yes", str(base.get("words", "")), tasks)
+            return {**plan, "fix_done": True, "which": {"side": "fix", "via": "own_words",
+                                                        "yn": yn}}
+        if side == "both":
+            return self._which_owner(base, prior, text, handed=False)
+        q = st.which_question(yn, str(task.get("tool", "")), str(base.get("words", "")) or text)
+        return {"code": {"kind": "which", "text": q, "task": task or None, "action": "which",
+                         "why": "a delivery receipt and a correction question are both open; "
+                                "the reply fits both", "words": st.quote(text, 300),
+                         "label": str(base.get("label", "")), "answer": yn,
+                         "tasks": base.get("tasks", [])},
+                "which": {"side": "", "via": "asked", "yn": yn}}
+
+    @staticmethod
+    def _which_receipt(words: str, base: dict[str, Any], *, via: str) -> dict[str, Any]:
+        """The reply is about the delivery receipt: Order reads it, the
+        correction question stays open (without the which question)."""
+        return {"route": {"helper": "order", "skill": "order/drop-confirmation",
+                          "rule": f"steer:which_receipt:{via}"},
+                "primary_text": words, "fix_keep": json.dumps(base, sort_keys=True),
+                "which": {"side": "receipt", "via": via},
+                "notes": ["the shop's reply is about the delivery receipt (it said so), not "
+                          "the other open question"]}
+
+    @staticmethod
+    def _which_owner(base: dict[str, Any], prior: ThreadState, words: str, *,
+                     handed: bool) -> dict[str, Any]:
+        return {"code": {"kind": "which_owner", "task": base.get("task") or None,
+                         "action": "which_owner", "why": "still not clear which ask the "
+                         "reply answers: the owner checks", "words": st.quote(words, 300),
+                         "delivery_id": prior.ask_ref, "handed": handed,
+                         "base": base},
+                "which": {"side": "owner", "via": "unclear"}}
 
     def _fix_answer(self, fix: dict[str, Any], yes: bool, text: str,
                     tasks: Sequence[st.OpenTask]) -> dict[str, Any]:
@@ -921,6 +998,14 @@ class Agent:
                                       "words": code.get("words", ""),
                                       "question": code.get("text", ""), "asked_ts": now,
                                       "tasks": code.get("tasks", [])}, sort_keys=True)
+                elif code["kind"] in ("which", "which_owner") and prior.fix:
+                    # Both asks stay open; the correction carries the which question
+                    # (asked once: a later unclear reply goes to the owner).
+                    base = {k: v for k, v in json.loads(prior.fix).items() if k != "which"}
+                    fix = json.dumps({**base, "which": {
+                        "answer": code.get("answer", "yes"), "words": code.get("words", ""),
+                        "question": code.get("text", ""), "asked_ts": now,
+                        "handed": code["kind"] == "which_owner"}}, sort_keys=True)
                 next_state = ThreadState(last_skill=prior.last_skill, fix=fix)
             if status == "cancelled_by_sender":
                 words = str((claim.checkpoint.get("cancel") or {}).get("words", ""))
@@ -1025,12 +1110,15 @@ class Agent:
                 next_state = replace(next_state, pending_skill=prior.pending_skill,
                                      expects=prior.expects, asked_at=prior.asked_at,
                                      ask_ref=prior.ask_ref)
-            if prior.fix and not sv.get("fix_done") and not next_state.fix:
+            if sv.get("fix_keep") is not None and not next_state.fix:
+                next_state = replace(next_state, fix=str(sv["fix_keep"]))
+            elif prior.fix and not sv.get("fix_done") and not next_state.fix:
                 next_state = replace(next_state, fix=prior.fix)
             fus = self._followups(conn, claim, sv, events) if status not in (
                 "stopped_by_owner", "cancelled_by_sender") else []
-            if sv.get("plan") or fus or claim.checkpoint.get("inbox"):
+            if sv.get("plan") or fus or claim.checkpoint.get("inbox") or sv.get("which"):
                 result["steer"] = {
+                    "which": sv.get("which"),
                     "layer": sv.get("layer", ""), "plan": sv.get("plan", {}),
                     "labels": sv.get("labels", []), "followups": fus,
                     "code": code.get("kind", ""), "correction": sv.get("correction"),
@@ -1179,6 +1267,11 @@ class Agent:
             text = str(code.get("text", ""))
         elif kind == "left":
             text = str(code.get("text", ""))
+        elif kind == "which":
+            text = str(code.get("text", ""))
+        elif kind == "which_owner":
+            self._which_note(conn, tenant, thread, turn_id, shop_id, code, now)
+            text = st.which_owner_text(sx.tenant_name(conn, tenant), words)
         elif kind != "withdraw":
             text = st.left_text(words)
         result["steer_action"] = kind
@@ -1198,6 +1291,30 @@ class Agent:
                                             {"shop_id": shop_id, "about": task.key,
                                              "kind": kind, "turn": turn_id}),
             "attempt_key": f"steer:{turn_id}", "payload": payload,
+            "preview": f"Would tell the owner: {note[:120]}"}
+        outcome, _ = self.go.apply_intent(conn, tenant, record, turn_id=turn_id,
+                                          thread_id=thread, helper="mimi", skill="mimi/steer")
+        if outcome == "applied":
+            self._out(conn, tenant, thread, turn_id, key=str(record["idempotency_key"]),
+                      channel="owner_console", shop_id=shop_id, text=note, kind="notify_owner",
+                      status="ready", ts=now + 1e-3)
+
+    def _which_note(self, conn: sa.Connection, tenant: str, thread: str, turn_id: str,
+                    shop_id: str, code: dict[str, Any], now: float) -> None:
+        """The owner checks a reply that fits two open asks (never bound by a guess)."""
+        task = code.get("task") or {}
+        note = st.which_owner_note(shop_id or "a shop", str(code.get("delivery_id", "")),
+                                   str(task.get("summary", "")), str(code.get("words", "")))
+        payload = {"message": note, "shop_id": shop_id, "about": "two_open_asks",
+                   "delivery_id": str(code.get("delivery_id", ""))}
+        record = {
+            "tool": "notify_owner", "intent_kind": "notify_owner",
+            "tier": self.policy.tier(tenant, "notify_owner", payload), "scope": "org:plan",
+            "tenant_id": tenant, "shop_id": shop_id,
+            "idempotency_key": business_key(tenant, "notify_owner",
+                                            {"shop_id": shop_id, "about": "two_open_asks",
+                                             "turn": turn_id}),
+            "attempt_key": f"which:{turn_id}", "payload": payload,
             "preview": f"Would tell the owner: {note[:120]}"}
         outcome, _ = self.go.apply_intent(conn, tenant, record, turn_id=turn_id,
                                           thread_id=thread, helper="mimi", skill="mimi/steer")

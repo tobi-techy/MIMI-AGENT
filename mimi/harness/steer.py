@@ -688,3 +688,74 @@ def part_text(parts: Sequence[Part], pids: Sequence[str]) -> str:
 __all__ = ["Part", "split_parts", "OpenTask", "task_summary", "Steerer", "SteerResult",
            "PartLabel", "SteerPlan", "FollowUp", "MidPlan", "plan_parts", "plan_mid_task",
            "task_action", "fallback", "steer_messages", "question_text", "injected_note"]
+
+
+# ------------------------------------------- two open asks on one thread (RAI-272)
+# A delivery receipt ("Reply YES to confirm") and a correction question ("Reply
+# YES or NO") can both be open on one shop thread. A bare YES or NO then fits
+# both, so it binds to neither: code asks one short question, and a reply that
+# still does not say which goes to the owner. Never consent on ambiguity.
+
+_YN_LEAD = re.compile(
+    r"^(?P<yn>yes(?: o| sir| ma)?|yeah|yep|ok(?:ay)?|confirm(?:ed)?|i confirm|ee|eh|ehh|toh|"
+    r"beeni|no(?: o)?|nope|not yet|rara|mba|a'a|aa|no be so)\b[\s,.!]*", re.I)
+_NO_WORDS = frozenset({"no", "no o", "nope", "not yet", "rara", "mba", "a'a", "aa",
+                       "no be so"})
+_RECEIPT_CUES = re.compile(
+    r"\b(?:deliver\w*|receipt|goods|supply|supplies|reach(?:ed)?|arriv\w*|land(?:ed)?|"
+    r"wey come|came|complete|everything|items?|cartons? (?:dey|don)|market wey)\b", re.I)
+_CHANGE_CUES = re.compile(
+    r"\b(?:chang\w*|correct\w*|instead|credit|restock|make (?:am|it)|"
+    r"\d+(?:[.,]\d+)?\s?k)\b|\b\d+\b", re.I)
+_BOTH = re.compile(r"\b(?:both|all two|the two|everything two|di two|na both)\b", re.I)
+_Q_WHICH_ASK = {
+    "en": "{yn} to the delivery receipt or the {what} change?",
+    "pcm": "{yn} for the delivery receipt or the {what} change?",
+}
+_WHICH_OWNER = {
+    "en": "I've asked {dist} to check with you, so I don't record the wrong thing.",
+    "pcm": "I don tell {dist} make dem check with you, so I no go record the wrong thing.",
+}
+
+
+def yes_no_lead(text: str) -> tuple[str, str]:
+    """('yes' | 'no' | '', the rest) for a reply that starts with a yes or a no."""
+    t = " ".join((text or "").split()).strip()
+    m = _YN_LEAD.match(t)
+    if m is None:
+        return "", t
+    word = m.group("yn").lower()
+    return ("no" if word in _NO_WORDS else "yes"), t[m.end():].strip(" .!,")
+
+
+def which_side(text: str) -> str:
+    """Which open ask the words name, by phrase rules only: 'receipt', 'fix',
+    'both' or '' (they do not say)."""
+    t = " ".join((text or "").split())
+    if _BOTH.search(t):
+        return "both"
+    receipt, change = bool(_RECEIPT_CUES.search(t)), bool(_CHANGE_CUES.search(t))
+    if receipt and change:
+        return "both"
+    return "receipt" if receipt else "fix" if change else ""
+
+
+def which_what(task_tool: str) -> str:
+    return "credit" if task_tool == "submit_credit_review" else "order"
+
+
+def which_question(yn: str, task_tool: str, lang_of: str) -> str:
+    lang = _lang(lang_of)
+    word = "Yes" if yn == "yes" else "No"
+    return _Q_WHICH_ASK[lang].format(yn=word, what=which_what(task_tool))
+
+
+def which_owner_text(dist: str, lang_of: str) -> str:
+    return _WHICH_OWNER[_lang(lang_of)].format(dist=dist)
+
+
+def which_owner_note(shop_id: str, delivery_id: str, task_summary: str, words: str) -> str:
+    return (f"{shop_id} replied \"{quote(words, 200)}\" while two things were open: the "
+            f"delivery receipt for {delivery_id or 'its last delivery'} and a question about "
+            f"{task_summary or 'a pending change'}. It did not say which one, so nothing was "
+            "recorded for either. Please check with the shop.")
