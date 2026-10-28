@@ -75,6 +75,7 @@ _R: list[tuple[str, float, str]] = [
     ("collector/collections", 3, r"\bi (?:no|don't|do not|dont) owe\b"),
     ("collector/collections", 2, r"\b(?:statement|balance)\b"),
     ("collector/collections", 3, r"\b(?:elo|melo) (?:ni|lo) (?:mo|a) (?:je|jẹ|ku)\b|\bowo (?:ti )?mo je\b|\bgbese mi\b|\belo lo ku\b"),
+    ("collector/collections", 4, r"\b(?:owo )?(?:elo|melo) lo ku\b"),
     ("collector/collections", 3, r"\bnawa (?:nake|ake|muke) (?:bi|ci)\b|\bbashi na nawa\b|\bnawa ya rage\b|\blambar (?:asusu|account)\b"),
     ("collector/collections", 3, r"\bego ole ka (?:m|anyi) (?:ji|ruru)\b|\bole ka m ji\b|\bugwo m\b"),
     ("collector/collections", 3, r"\bhow much (?:does|do) .{2,40} owe\b|\bwhat does .{2,40} owe\b|\bhow much is .{2,40} owing\b"),
@@ -85,6 +86,7 @@ _R: list[tuple[str, float, str]] = [
     ("collector/payment-check", 3, r"\b(?:payment|transfer|money) (?:is |has been |don )?(?:done|made|sent|gone|go|enter)\b"),
     ("collector/payment-check", 3, r"\b(?:gave|give|handed|don give) (?:the |your |una )?(?:rep|driver|boy|sales ?man|marketer) (?:the )?(?:cash|money|\d)"),
     ("collector/payment-check", 3, r"\b(?:confirm|check) (?:my |the |am |if (?:my )?)?(?:payment|transfer|money)\b|\babeg confirm\b"),
+    ("collector/payment-check", 3, r"\btransfer (?:don |has |have )?(?:land(?:ed)?|enter|reach)\b"),
     ("collector/payment-check", 3, r"\b(?:did|has) .{2,40} (?:pay|paid)\b|\b(?:did|has) .{2,40} (?:payment|transfer|money) (?:land|come|enter|arrive|clear)\b"),
     ("collector/payment-check", 2, r"\bpaid (?:in )?(?:full|part|half|\d)"),
     ("collector/payment-check", 3, r"\b(?:pay|paid|don pay|give) (?:me|us|the rep) .{0,20}(?:cash|\d+k?\b)"),
@@ -105,6 +107,9 @@ _R: list[tuple[str, float, str]] = [
     ("collector/chase", 3, r"\bchase\b|\bremind (?:everyone|everybody|all|them|the shops|debtors)\b"),
     ("collector/chase", 3, r"\bwho (?:still )?(?:owes|dey owe|is owing)\b|\bdebtors?\b|\boverdue (?:list|shops|accounts)\b"),
     ("collector/chase", 3, r"\bsend (?:out )?reminders\b|\bcollect (?:my |our )?money from\b"),
+    ("collector/chase", 3, r"\b(?:gentle|polite|soft|friendly) reminders?\b|\bremind (?:the )?(?:\w+ )?shops\b"),
+    ("collector/chase", 3, r"\bfollow up (?:the ones|those|everybody|everyone|all)\b"),
+    ("collector/chase", 2, r"\bremind (?:the )?(?:\w+ )?shops\b.{0,30}\b(?:balance|owe|debt|money)\b"),
     # ---------------- proof/fake-alert-check (text alerts, screenshots in words)
     ("proof/fake-alert-check", 3, r"\b(?:acct|a/c|acc)\s*[:#]?\s*[\*x]{2,}\d{2,}"),
     ("proof/fake-alert-check", 3, r"\b(?:credit|cr) alert\b|\balert (?:don|has|have) (?:come|enter|drop)\b|\bdebit alert\b"),
@@ -142,6 +147,7 @@ _R: list[tuple[str, float, str]] = [
     ("order/delivery-status", 3, r"\b(?:goods|order|delivery|load|van|motor) (?:has |have |is )?(?:never|not|no|still not|neva) (?:yet )?(?:arrive[d]?|deliver(?:ed)?|come|reach|land)\b"),
     ("order/delivery-status", 3, r"\bi (?:still )?(?:dey|am) (?:wait|waiting) (?:for|since)\b|\bstill waiting\b|\bhaven't (?:received|seen) (?:my|the|any)\b|\bnever bring\b"),
     ("order/delivery-status", 3, r"\bnigba wo ni (?:oja|moto|van|e)\b|\boja mi ko ti de\b"),
+    ("order/delivery-status", 3, r"\bwhat time (?:una|you|the van|the driver|una van) (?:dey |go |will )?(?:come|reach|arrive)\b|\bbring my goods\b"),
     ("order/delivery-status", 3, r"\byaushe (?:motar|kaya|za ku)\b|\bkaya ba su iso ba\b|\bina kayana\b"),
     ("order/delivery-status", 3, r"\bolee mgbe\b|\bngwa m abia(?:beghi)?\b"),
     # ---------------- credit/credit-request
@@ -176,6 +182,8 @@ _R: list[tuple[str, float, str]] = [
     # ---------------- brand/brand-email (owner)
     ("brand/brand-email", 3, r"\b(?:draft|write|prepare|send) (?:an? |the )?(?:email|e-mail|mail|letter) (?:to|for)\b"),
     ("brand/brand-email", 3, r"\bemail (?:the )?(?:brand|manufacturer|supplier|bank|nestle|unilever|dangote|cadbury|promasidor|nigerian breweries)\b"),
+    # Owner @Brand mentions are scored on the text with the tag kept, only among brand skills.
+    ("brand/brand-email", 4, r"@brand\b.{0,12}\b(?:draft|write|email|e-mail|complain|request|follow up|thank|letter|ask|send)\b"),
     # ---------------- mimi/shop-onboarding
     ("mimi/shop-onboarding", 3, r"\bwho (?:are you|is this|be this|dey message|is mimi)\b|\bwhat is mimi\b|\bwho be mimi\b|\bwhat (?:do you|does mimi) (?:do|share)\b"),
     ("mimi/shop-onboarding", 3, r"\bhow (?:did|una) (?:you )?(?:take )?(?:get|take|see) my (?:number|contact)\b|\bprivacy\b|\bmy data\b"),
@@ -185,6 +193,7 @@ _R: list[tuple[str, float, str]] = [
     ("mimi/owner-brief", 3, r"\bhow (?:are we|is business|is the business|did we do|we dey|far with the business)\b"),
     ("mimi/owner-brief", 3, r"\b(?:morning|daily|today'?s|yesterday'?s) (?:brief|briefing|summary|update|report)\b|\bgive me (?:the |a |my )?(?:summary|update|brief|rundown)\b"),
     ("mimi/owner-brief", 3, r"\bwhat happened (?:today|yesterday|this week)\b"),
+    ("mimi/owner-brief", 3, r"\bbrief me\b"),
     # ---------------- mimi/escalate-owner
     ("mimi/escalate-owner", 3, r"\b(?:complain|complaint|report your|rude|insult(?:ed)?|harass|cheat(?:ed|ing)?|fraud|thief|stole|steal|scam(?:mer)?)\b"),
     ("mimi/escalate-owner", 3, r"\b(?:police|lawyer|court|sue)\b|\b(?:talk|speak) (?:to|with) (?:your )?(?:oga|boss|owner|manager|madam)\b"),

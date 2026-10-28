@@ -5,6 +5,7 @@ from __future__ import annotations
 import ast
 import dataclasses
 import json
+import re
 import shutil
 import socket
 from datetime import UTC, datetime
@@ -94,7 +95,7 @@ def test_front_matter_is_strict() -> None:
     good = (ROOT / "chat" / "SKILL.md").read_text(encoding="utf-8")
     parse(good)
     for bad in (good.replace("tier: auto", "tier: never"),
-                good.replace("version: 1.0.0", "version: 1"),
+                re.sub(r"^version: .*$", "version: 1", good, flags=re.M),
                 good.replace("helper: mimi", "helper: mimi\nsecret_tier: approve"),
                 good.replace("name: chat\n", ""),
                 good.replace("tools: [", "tools: send_to_user, ["),
@@ -141,17 +142,18 @@ def test_a_bound_prompt_carries_one_body_and_only_metadata_for_the_rest(
         monkeypatch: pytest.MonkeyPatch) -> None:
     hs = helpers(True, monkeypatch)
     cat = catalog()
-    h = hs["collector/promise-to-pay"]
+    h = hs["collector/collections"]
     text = h.system_prompt()
-    assert f"# Skill: promise-to-pay 1.0.0+{cat.skills['collector/promise-to-pay'].digest[:8]}" in text
+    doc = cat.skills["collector/collections"]
+    assert f"# Skill: collections {doc.version}+{doc.digest[:8]}" in text
     assert text.count("# Skill:") == 1
-    for other in ("collections", "chase", "payment-check"):
+    for other in ("promise-to-pay", "chase", "payment-check"):
         body_first = cat.skills[f"collector/{other}"].body.splitlines()[0]
         assert body_first not in text  # level 2 for the routed skill only
         assert f"- {other}: " in text  # level 1 for the others
     # Other helpers' skills are not even named.
     assert "credit-request" not in text and "order-intake" not in text
-    assert h.skill_version == cat.skills["collector/promise-to-pay"].tag
+    assert h.skill_version == cat.skills["collector/collections"].tag
 
 
 def test_read_skill_and_the_sibling_block_only_where_there_is_something_to_read(
@@ -164,7 +166,7 @@ def test_read_skill_and_the_sibling_block_only_where_there_is_something_to_read(
         assert "<skills>" not in hs[key].system_prompt()
         assert READ_SKILL not in hs[key].toolset.names
     # A file named in the body keeps read_skill, even with no siblings listed.
-    fa = hs["proof/fake-alert-check"]
+    fa = hs["mimi/shop-onboarding"]  # names assets/replies.md, lists no siblings
     assert "<skills>" not in fa.system_prompt() and READ_SKILL in fa.toolset.names
     # handoffs left out: every sibling and read_skill, as before (order intake's
     # recorded skills-mode answers depend on it).
@@ -541,11 +543,15 @@ def test_the_review_queue_only_ever_holds_drafts(tmp_path: Path) -> None:
 def test_write_lock_round_trip(tmp_path: Path) -> None:
     root = copy_skills(tmp_path)
     md = root / "chat" / "SKILL.md"
-    md.write_text(md.read_text(encoding="utf-8").replace("warm lines", "kind lines"),
-                  encoding="utf-8")
+    text = md.read_text(encoding="utf-8").replace("warm lines", "kind lines")
+    md.write_text(text, encoding="utf-8")
     with pytest.raises(SkillError):
         load_catalog(root)
-    write_lock(root)  # the reviewed step
+    with pytest.raises(SkillError, match="bump version"):
+        write_lock(root)  # changed words under a reviewed version
+    md.write_text(re.sub(r"^version: .*$", "version: 9.0.0", text, flags=re.M),
+                  encoding="utf-8")
+    write_lock(root)  # the reviewed step, with the bump
     assert "kind lines" in load_catalog(root).skills["mimi/chat"].body
 
 

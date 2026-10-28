@@ -24,9 +24,10 @@ said) and the skus the shop has bought before:
 
 from __future__ import annotations
 
+import re
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass, field
-from typing import Literal
+from typing import Any, Literal
 
 from mimi.orders.words import fold
 
@@ -171,9 +172,79 @@ def family_of(text: str) -> tuple[list[str], int]:
     return keys, best
 
 
+_SIZE = re.compile(r"\b\d+(?:\.\d+)?\s?(?:g|kg|l|cl|ml)\b")
+_PACK_WORDS = ("sachet", "sachets", "tin", "can", "refill", "pet", "bottle", "big pack")
+
+
+@dataclass(frozen=True)
+class BookNames:
+    """The distributor's own product names, read from its book (RAI-314).
+
+    The nickname families above are the words every shop uses; this is the
+    second layer: each distributor's brands, sizes and pack words, built from
+    the skus in its book, never typed in by hand. It is only used when the
+    families find nothing ("Smile", "Mamaland 2kg", "Ekiti Spring 75cl"), so
+    a line the families already read is read the same way.
+    """
+
+    brands: Mapping[str, tuple[str, ...]]  # folded brand phrase -> skus
+    sizes: Mapping[str, tuple[str, ...]]  # sku -> size tokens ("2kg", "75cl")
+    packs: Mapping[str, tuple[str, ...]]  # sku -> pack words in its name
+
+    @classmethod
+    def from_skus(cls, skus: Iterable[Any]) -> BookNames:
+        brands: dict[str, list[str]] = {}
+        sizes: dict[str, tuple[str, ...]] = {}
+        packs: dict[str, tuple[str, ...]] = {}
+        for s in skus:
+            b = fold(str(s.brand).replace("-", " "))
+            if b:
+                brands.setdefault(b, []).append(s.sku)
+            name = fold(str(s.name).replace("-", " "))
+            sizes[s.sku] = tuple(sorted({t.replace(" ", "") for t in _SIZE.findall(name)}))
+            packs[s.sku] = tuple(w for w in _PACK_WORDS if _has(name, w))
+        return cls({k: tuple(v) for k, v in sorted(brands.items())}, sizes, packs)
+
+    def match(self, text: str, unit_word: str, units: Mapping[str, str]) -> Match | None:
+        """The skus a line names by brand, or None when it names no brand."""
+        t = fold(text.replace("-", " "))
+        found = [b for b in self.brands if _has(t, b)]
+        if not found:
+            return None
+        cands = sorted({s for b in found for s in self.brands[b] if s in units})
+        if not cands:
+            return None
+        squash = t.replace(" ", "")
+        sized = [s for s in cands if any(z in squash for z in self.sizes.get(s, ()))]
+        cands = sized or cands
+        packed = [s for s in cands if any(_has(t, w) for w in self.packs.get(s, ()))]
+        cands = packed or cands
+        unit = UNIT_SYNONYMS.get(fold(unit_word), "") or unit_of(unit_word)
+        if unit:
+            in_unit = [s for s in cands if units[s] == unit]
+            if not in_unit:
+                return Match("unit", tuple(cands), SKU_FAMILY.get(cands[0], ""), "book")
+            cands = in_unit
+        if len(cands) == 1:
+            return Match("one", (cands[0],), SKU_FAMILY.get(cands[0], ""), "book")
+        return Match("several", tuple(cands), "+".join(sorted({SKU_FAMILY.get(s, s)
+                                                               for s in cands})), "book")
+
+
 def match(item: str, unit_word: str, units: Mapping[str, str],
-          bought: Iterable[str] = ()) -> Match:
-    """Which sku a line names. ``units`` is the catalogue's sku -> unit."""
+          bought: Iterable[str] = (), book: BookNames | None = None) -> Match:
+    """Which sku a line names. ``units`` is the catalogue's sku -> unit.
+
+    ``book`` (the distributor's own names) is read only when the nickname
+    families find nothing."""
+    m = _match(item, unit_word, units, bought)
+    if m.kind == "none" and book is not None:
+        return book.match(item, unit_word, units) or m
+    return m
+
+
+def _match(item: str, unit_word: str, units: Mapping[str, str],
+           bought: Iterable[str] = ()) -> Match:
     text = fold(item)
     keys, _ = family_of(text)
     if not keys:

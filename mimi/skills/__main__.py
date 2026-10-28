@@ -1,9 +1,10 @@
-"""python -m mimi.skills {lock,refs,check,list,learn}
+"""python -m mimi.skills {lock,refs,check,list,learn,eval}
 
 * ``lock``: re-hash every skill into skills/skills.lock.json (the reviewed step);
 * ``refs``: regenerate the references written from code;
 * ``check``: the catalogue loads, the lock and references match, scripts are pure;
 * ``list``: every skill with its helper, version, status, tools and scripts;
+* ``eval``: every active skill's own cases (``mimi.skills.evals``);
 * ``learn``: mine an event log (JSONL) for draft skill changes (``mimi.skills.learn``).
 """
 
@@ -19,7 +20,7 @@ from mimi.skills.scripts import load_scripts
 
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(prog="python -m mimi.skills")
-    ap.add_argument("cmd", choices=("lock", "refs", "check", "list", "learn"))
+    ap.add_argument("cmd", choices=("lock", "refs", "check", "list", "learn", "eval"))
     ap.add_argument("rest", nargs=argparse.REMAINDER)
     a = ap.parse_args(argv)
     root = skills_root()
@@ -46,6 +47,10 @@ def main(argv: list[str] | None = None) -> int:
             print(f"{s.key:32} {s.version:6} {s.status:6} tier={s.tier:7} "
                   f"tools={len(s.tools)} scripts={','.join(s.scripts) or '-'}")
         return 0
+    if a.cmd == "eval":
+        from mimi.skills.evals import main as eval_main
+
+        return eval_main(a.rest)
     from mimi.skills.learn import main as learn_main
 
     return learn_main(a.rest)

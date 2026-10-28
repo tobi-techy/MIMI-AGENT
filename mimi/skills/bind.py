@@ -36,6 +36,7 @@ from typing import Any
 from mimi.harness.loop import Helper
 from mimi.harness.policy import RiskPolicy
 from mimi.harness.registry import ToolRegistry, build_toolset
+from mimi.skills.brief import FROZEN, short
 from mimi.skills.catalog import FILE_REF_RE, HELPER_METADATA_CAP_TOKENS, Catalog, est_tokens
 from mimi.skills.spec import TIER_ORDER, SkillDoc, SkillError
 from mimi.skills.tools import SKILL_TOOLS
@@ -122,6 +123,9 @@ def bind_all(helpers: dict[str, Helper], registry: ToolRegistry, policy: RiskPol
         tools = skill_tools(doc, base, policy, registry, script_names,
                             read=offers_read(cat, doc))
         ts = build_toolset(registry, base.name, tools, policy)
+        if doc.key not in FROZEN:
+            ts = replace(ts, specs=tuple(replace(sp, description=short(sp.name, sp.description))
+                                         for sp in ts.specs))
         out[doc.key] = replace(base, skill=skill_text(cat, doc, values), toolset=ts,
                                skill_version=doc.tag)
     return out

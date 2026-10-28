@@ -2,7 +2,7 @@
 name: credit-request
 description: The shop wants more credit: raise my limit, give me goods now and I pay later, credit bump, sometimes with a shelf photo.
 helper: credit
-version: 1.0.0
+version: 1.1.0
 status: active
 tier: approve
 consent: [shop:balance, shop:payments, shop:promises, shop:messages, org:receivables, org:owner]
@@ -10,6 +10,7 @@ tools: [get_credit_file, ask_for_shelf_photo, count_shelf_photo, prepare_credit_
 scripts: []
 senders: [shop, rep]
 money: true
+handoffs: []
 ---
 
 A shop asks for more credit (shop_ask):

@@ -45,7 +45,7 @@ from mimi.harness.builtins import lagos_day
 from mimi.harness.errors import ToolError
 from mimi.harness.registry import ToolContext, ToolRegistry
 from mimi.orders import order as od
-from mimi.orders.catalogue import BY_KEY, UNIT_SYNONYMS, family_of, match, unit_of
+from mimi.orders.catalogue import BY_KEY, UNIT_SYNONYMS, BookNames, family_of, match, unit_of
 from mimi.orders.reading import ListReading
 from mimi.orders.words import NUMBER_WORDS, fold, pays_now_in, quantities_in
 from mimi.world.model import Sku
@@ -368,7 +368,7 @@ def register_order_tools(registry: ToolRegistry, ports: OrderPorts) -> None:
         for ln in lines:
             check_line(ln, said)
             unit_word = ln.unit or unit_of(ln.as_written)
-            m = match(line_text(ln), unit_word, units, have)
+            m = match(line_text(ln), unit_word, units, have, book=BookNames.from_skus(skus.values()))
             label = BY_KEY[m.family].label if m.family in BY_KEY else ln.item
             opts = tuple(od.option(skus[s], day, rise) for s in m.skus)
             if m.kind == "none":
@@ -454,7 +454,7 @@ def register_order_tools(registry: ToolRegistry, ports: OrderPorts) -> None:
             if miss:
                 raise ToolError(f"\"{words}\" is not in the shop's words.",
                                 "Copy the shop's own words exactly.")
-            m = match(words, unit_of(words), units)
+            m = match(words, unit_of(words), units, book=BookNames.from_skus(skus.values()))
             if m.kind == "none":
                 missing.append(" ".join(words.split())[:60])
             opts += [od.option(skus[x], day, rise) for x in m.skus]
@@ -546,7 +546,7 @@ def register_order_tools(registry: ToolRegistry, ports: OrderPorts) -> None:
                 continue
             if m is None or m.kind != "one":
                 m = match(text, ch.unit or unit_of(ch.as_written), units_all,
-                          bought(ctx, args.shop_id))
+                          bought(ctx, args.shop_id), book=BookNames.from_skus(skus.values()))
                 if m.kind != "one":
                     raise ToolError(f"\"{ch.item}\" is not clear (size or item).",
                                     "ask_question: one short question about which one.")

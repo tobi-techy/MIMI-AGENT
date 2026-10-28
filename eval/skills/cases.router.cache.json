@@ -1,0 +1,434 @@
+{
+ "1088fcc037cff1c05705c411566c4d3a": {
+  "completion_tokens": 117,
+  "latency_s": 1.133,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 751,
+  "request": "838d200cf64648c73cb82c1b0d5f2413",
+  "text": "{\"route\": \"mimi/shop-onboarding\", \"confidence\": 0.95, \"second\": \"\", \"language\": \"en\"}",
+  "versions": {
+   "catalogue": "skills-2026-10-27.1",
+   "router_prompt": "router-2026-10-27.1"
+  }
+ },
+ "266e047d007695bf48c70a2be72ebf4c": {
+  "completion_tokens": 179,
+  "latency_s": 1.601,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 749,
+  "request": "e613243b2faddbd38820d378c8c4547f",
+  "text": "{\"route\": \"collector/collections\", \"confidence\": 0.85, \"second\": \"\", \"language\": \"pcm\"}",
+  "versions": {
+   "catalogue": "skills-2026-10-27.1",
+   "router_prompt": "router-2026-10-27.1"
+  }
+ },
+ "26cbbb472a3bd89ff2e04be77856bafb": {
+  "completion_tokens": 74,
+  "latency_s": 1.682,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 747,
+  "request": "31b6938ea8a0bb02020e346d62586eb5",
+  "text": "{\"route\": \"collector/collections\", \"confidence\": 0.85, \"second\": \"\", \"language\": \"en\"}",
+  "versions": {
+   "catalogue": "skills-2026-10-27.1",
+   "router_prompt": "router-2026-10-27.1"
+  }
+ },
+ "283511d1636294a2779ce38e1d176c67": {
+  "completion_tokens": 131,
+  "latency_s": 1.111,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 614,
+  "request": "874d804db19a078e23047b4695823242",
+  "text": "{\"route\": \"mimi/owner-brief\", \"confidence\": 0.9, \"second\": \"\", \"language\": \"en\"}",
+  "versions": {
+   "catalogue": "skills-2026-10-27.1",
+   "router_prompt": "router-2026-10-27.1"
+  }
+ },
+ "285076f8f2c0a67781c2c3c7d8522710": {
+  "completion_tokens": 101,
+  "latency_s": 1.621,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 753,
+  "request": "3cf7ba9d5c3aa5ef69f79570f448f55c",
+  "text": "{\"route\": \"collector/collections\", \"confidence\": 0.95, \"second\": \"\", \"language\": \"yo\"}",
+  "versions": {
+   "catalogue": "skills-2026-10-27.1",
+   "router_prompt": "router-2026-10-27.1"
+  }
+ },
+ "29ef5fd50381e9e572e71f8fa51ce4c2": {
+  "completion_tokens": 126,
+  "latency_s": 1.043,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 409,
+  "request": "b5430b541420e9b0a66bf5324521415f",
+  "text": "{\"confidence\": 0.97, \"label\": \"short\"}",
+  "versions": {
+   "catalogue": "skills-2026-10-27.1",
+   "router_prompt": "router-2026-10-27.1"
+  }
+ },
+ "2e178579b06d762a2fb876a8cd090c28": {
+  "completion_tokens": 82,
+  "latency_s": 0.791,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 748,
+  "request": "48c31c093b87e2ddb7eab01a726d08ad",
+  "text": "{\"route\": \"order/order-intake\", \"confidence\": 0.95, \"second\": \"\", \"language\": \"en\"}",
+  "versions": {
+   "catalogue": "skills-2026-10-27.1",
+   "router_prompt": "router-2026-10-27.1"
+  }
+ },
+ "3118eb404c3e0b951d45f7f58cde6bf7": {
+  "completion_tokens": 132,
+  "latency_s": 1.011,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 746,
+  "request": "41c3e105f80b1cae59c5554844823f40",
+  "text": "{\"route\": \"mimi/chat\", \"confidence\": 0.95, \"second\": \"\", \"language\": \"yo\"}",
+  "versions": {
+   "catalogue": "skills-2026-10-27.1",
+   "router_prompt": "router-2026-10-27.1"
+  }
+ },
+ "3480af34131a694716786ff56dc50339": {
+  "completion_tokens": 97,
+  "latency_s": 1.34,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 754,
+  "request": "bbfce86b2b265f9202ac63815179136b",
+  "text": "{\"route\": \"order/order-intake\", \"confidence\": 0.97, \"second\": \"\", \"language\": \"yo\"}",
+  "versions": {
+   "catalogue": "skills-2026-10-27.1",
+   "router_prompt": "router-2026-10-27.1"
+  }
+ },
+ "3e3e99fed0bf1916f97f850f36fec743": {
+  "completion_tokens": 154,
+  "latency_s": 1.084,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 367,
+  "request": "8f4204a7017cb344d492a566cd72d817",
+  "text": "{\"confidence\": 0.97, \"label\": \"count\"}",
+  "versions": {
+   "catalogue": "skills-2026-10-27.1",
+   "router_prompt": "router-2026-10-27.1"
+  }
+ },
+ "3e60973ba99c6c029cff28dd833d9c1d": {
+  "completion_tokens": 139,
+  "latency_s": 1.047,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 409,
+  "request": "332b6f24f7cb474e04c8be8ec1c307d3",
+  "text": "{\"confidence\": 0.95, \"label\": \"yes\"}",
+  "versions": {
+   "catalogue": "skills-2026-10-27.1",
+   "router_prompt": "router-2026-10-27.1"
+  }
+ },
+ "3e9517e397574b4c2db29f97e85511f2": {
+  "completion_tokens": 215,
+  "latency_s": 2.44,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 752,
+  "request": "6b4876371406bc748f00ba927177a1c7",
+  "text": "{\"route\": \"brand/promo-info\", \"confidence\": 0.85, \"second\": \"order/order-intake\", \"language\": \"en\"}",
+  "versions": {
+   "catalogue": "skills-2026-10-27.1",
+   "router_prompt": "router-2026-10-27.1"
+  }
+ },
+ "441e7e47906c299a8b406d3a08a77442": {
+  "completion_tokens": 136,
+  "latency_s": 1.177,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 755,
+  "request": "51ecd1ec414ec9a755712b20d1929d87",
+  "text": "{\"route\": \"order/order-intake\", \"confidence\": 0.97, \"second\": \"\", \"language\": \"yo\"}",
+  "versions": {
+   "catalogue": "skills-2026-10-27.1",
+   "router_prompt": "router-2026-10-27.1"
+  }
+ },
+ "458cce2b6938859b552064fd9800e437": {
+  "completion_tokens": 258,
+  "latency_s": 2.048,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 752,
+  "request": "3cf58b3481e9e5b1752d953e102c7cd0",
+  "text": "{\"route\": \"collector/collections\", \"confidence\": 0.8, \"second\": \"order/delivery-status\", \"language\": \"pcm\"}",
+  "versions": {
+   "catalogue": "skills-2026-10-27.1",
+   "router_prompt": "router-2026-10-27.1"
+  }
+ },
+ "4c5a393548570ecfcf8d2ac52e4af757": {
+  "completion_tokens": 109,
+  "latency_s": 1.188,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 409,
+  "request": "1e2cdbcf336b5a670ab5e923a4210292",
+  "text": "{\"confidence\": 0.95, \"label\": \"wrong_items\"}",
+  "versions": {
+   "catalogue": "skills-2026-10-27.1",
+   "router_prompt": "router-2026-10-27.1"
+  }
+ },
+ "4d813c075f9b05361be61baa5fd06a02": {
+  "completion_tokens": 139,
+  "latency_s": 1.214,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 751,
+  "request": "07ef2cc0e14100817d7880f4bd23ec90",
+  "text": "{\"route\": \"credit/credit-request\", \"confidence\": 0.95, \"second\": \"\", \"language\": \"en\"}",
+  "versions": {
+   "catalogue": "skills-2026-10-27.1",
+   "router_prompt": "router-2026-10-27.1"
+  }
+ },
+ "4f4de2237350f7128eca4ea9dff52ac9": {
+  "completion_tokens": 99,
+  "latency_s": 1.912,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 411,
+  "request": "5c63679c7820003a8838dae534a6814c",
+  "text": "{\"confidence\": 0.95, \"label\": \"yes\"}",
+  "versions": {
+   "catalogue": "skills-2026-10-27.1",
+   "router_prompt": "router-2026-10-27.1"
+  }
+ },
+ "690492920923e4d045d23193d16e19bb": {
+  "completion_tokens": 337,
+  "latency_s": 1.812,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 618,
+  "request": "69eb3e6b607eb607031cce5709b3a6bd",
+  "text": "{\"route\": \"mimi/chat\", \"confidence\": 0.55, \"second\": \"mimi/owner-brief\", \"language\": \"yo\"}",
+  "versions": {
+   "catalogue": "skills-2026-10-27.1",
+   "router_prompt": "router-2026-10-27.1"
+  }
+ },
+ "690584c651eeea9a22e4b5ba2ed43fae": {
+  "completion_tokens": 312,
+  "latency_s": 1.967,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 753,
+  "request": "603bfd937f87818720d76ce8f73536d7",
+  "text": "{\"route\": \"stock/stock-count\", \"confidence\": 0.85, \"second\": \"order/order-intake\", \"language\": \"yo\"}",
+  "versions": {
+   "catalogue": "skills-2026-10-27.1",
+   "router_prompt": "router-2026-10-27.1"
+  }
+ },
+ "7a70c75c062d342097cd5979e68ad9ab": {
+  "completion_tokens": 104,
+  "latency_s": 1.042,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 354,
+  "request": "c5b25a7f09b5f4fabb32081495eda188",
+  "text": "{\"confidence\": 0.97, \"label\": \"count\"}",
+  "versions": {
+   "catalogue": "skills-2026-10-27.1",
+   "router_prompt": "router-2026-10-27.1"
+  }
+ },
+ "7becd58e2b11a0efb324f46e356a0cb3": {
+  "completion_tokens": 117,
+  "latency_s": 1.653,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 754,
+  "request": "d281f40c9dbab08c5263ce37586e402f",
+  "text": "{\"route\": \"credit/credit-request\", \"confidence\": 0.95, \"second\": \"\", \"language\": \"pcm\"}",
+  "versions": {
+   "catalogue": "skills-2026-10-27.1",
+   "router_prompt": "router-2026-10-27.1"
+  }
+ },
+ "8022d90bf4717247fe2f4904050c0426": {
+  "completion_tokens": 71,
+  "latency_s": 0.828,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 770,
+  "request": "c20d9bcaa878c0e8adb31de10d23e894",
+  "text": "{\"route\": \"proof/fake-alert-check\", \"confidence\": 0.95, \"second\": \"\", \"language\": \"en\"}",
+  "versions": {
+   "catalogue": "skills-2026-10-27.1",
+   "router_prompt": "router-2026-10-27.1"
+  }
+ },
+ "905b32db209c26dcc9a8b1f3f77e1d08": {
+  "completion_tokens": 108,
+  "latency_s": 1.036,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 408,
+  "request": "d66144a697013a9b3a373b1a2410f210",
+  "text": "{\"confidence\": 0.96, \"label\": \"short\"}",
+  "versions": {
+   "catalogue": "skills-2026-10-27.1",
+   "router_prompt": "router-2026-10-27.1"
+  }
+ },
+ "9e117d560923b9502789985bc197975a": {
+  "completion_tokens": 97,
+  "latency_s": 1.314,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 751,
+  "request": "29b996d3c5e2f2c44173ad046a330558",
+  "text": "{\"route\": \"order/delivery-status\", \"confidence\": 0.95, \"second\": \"\", \"language\": \"en\"}",
+  "versions": {
+   "catalogue": "skills-2026-10-27.1",
+   "router_prompt": "router-2026-10-27.1"
+  }
+ },
+ "a56b0b0239aab15bc3277f02ac4e40a3": {
+  "completion_tokens": 156,
+  "latency_s": 1.093,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 749,
+  "request": "55c89f736a36d1b306bc7ec45c8579e2",
+  "text": "{\"route\": \"stock/stock-count\", \"confidence\": 0.95, \"second\": \"\", \"language\": \"en\"}",
+  "versions": {
+   "catalogue": "skills-2026-10-27.1",
+   "router_prompt": "router-2026-10-27.1"
+  }
+ },
+ "b0d326a16ee970ff64aab6c5ecb397d5": {
+  "completion_tokens": 88,
+  "latency_s": 1.218,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 614,
+  "request": "4a15d1ac6a0ed1dba40ab4701db68b41",
+  "text": "{\"route\": \"mimi/owner-brief\", \"confidence\": 0.85, \"second\": \"\", \"language\": \"en\"}",
+  "versions": {
+   "catalogue": "skills-2026-10-27.1",
+   "router_prompt": "router-2026-10-27.1"
+  }
+ },
+ "b181f5e0e384c63214ee3f4eb0331f22": {
+  "completion_tokens": 83,
+  "latency_s": 1.34,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 748,
+  "request": "a137b2096a2476e6d87e68c22ae2e864",
+  "text": "{\"route\": \"collector/payment-check\", \"confidence\": 0.85, \"second\": \"\", \"language\": \"en\"}",
+  "versions": {
+   "catalogue": "skills-2026-10-27.1",
+   "router_prompt": "router-2026-10-27.1"
+  }
+ },
+ "b4be88de0d4fa754dc0a6c35285d6c79": {
+  "completion_tokens": 109,
+  "latency_s": 1.208,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 752,
+  "request": "3326f16f6aa5ff8ac73d0892106930cd",
+  "text": "{\"route\": \"order/order-intake\", \"confidence\": 0.95, \"second\": \"\", \"language\": \"yo\"}",
+  "versions": {
+   "catalogue": "skills-2026-10-27.1",
+   "router_prompt": "router-2026-10-27.1"
+  }
+ },
+ "b7fd015f910e0e3582f8a4bc54ab1c07": {
+  "completion_tokens": 387,
+  "latency_s": 2.277,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 416,
+  "request": "d603f8341b7ace73a3893b389570e985",
+  "text": "{\"confidence\": 0.85, \"label\": \"unclear\"}",
+  "versions": {
+   "catalogue": "skills-2026-10-27.1",
+   "router_prompt": "router-2026-10-27.1"
+  }
+ },
+ "ba413c81e99a2fd98038b34851a056d0": {
+  "completion_tokens": 84,
+  "latency_s": 1.165,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 777,
+  "request": "9ec3bdfcea948a3fdb491a08d2e8d86d",
+  "text": "{\"route\": \"proof/fake-alert-check\", \"confidence\": 0.95, \"second\": \"\", \"language\": \"en\"}",
+  "versions": {
+   "catalogue": "skills-2026-10-27.1",
+   "router_prompt": "router-2026-10-27.1"
+  }
+ },
+ "d4b358c5fc859b4afc0168391890781d": {
+  "completion_tokens": 57,
+  "latency_s": 0.879,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 407,
+  "request": "138fa9414c0617cd6dcd30f04ef16aee",
+  "text": "{\"confidence\": 0.95, \"label\": \"damaged\"}",
+  "versions": {
+   "catalogue": "skills-2026-10-27.1",
+   "router_prompt": "router-2026-10-27.1"
+  }
+ },
+ "d953171e6f97cd00178d971d6f20dec5": {
+  "completion_tokens": 137,
+  "latency_s": 1.057,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 752,
+  "request": "abca2b1a03eb8322cb244e90f562b1d3",
+  "text": "{\"route\": \"credit/credit-request\", \"confidence\": 0.95, \"second\": \"\", \"language\": \"pcm\"}",
+  "versions": {
+   "catalogue": "skills-2026-10-27.1",
+   "router_prompt": "router-2026-10-27.1"
+  }
+ },
+ "e1219d6ca9c9700705e9b6835671a495": {
+  "completion_tokens": 225,
+  "latency_s": 1.344,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 752,
+  "request": "67849cdf6f4d9ab58a4fdc6a4e972d4d",
+  "text": "{\"route\": \"stock/stock-count\", \"confidence\": 0.9, \"second\": \"order/order-intake\", \"language\": \"pcm\"}",
+  "versions": {
+   "catalogue": "skills-2026-10-27.1",
+   "router_prompt": "router-2026-10-27.1"
+  }
+ },
+ "e19fda59280d70990f10584c76b006b6": {
+  "completion_tokens": 126,
+  "latency_s": 1.425,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 755,
+  "request": "1755a4067b97878d2c79f50f355b987a",
+  "text": "{\"route\": \"order/order-intake\", \"confidence\": 0.95, \"second\": \"\", \"language\": \"yo\"}",
+  "versions": {
+   "catalogue": "skills-2026-10-27.1",
+   "router_prompt": "router-2026-10-27.1"
+  }
+ },
+ "e49ba47a74444847cd5d8d53a7500b34": {
+  "completion_tokens": 147,
+  "latency_s": 1.745,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 752,
+  "request": "7f36278eafa3d6081b1411baa26880f3",
+  "text": "{\"route\": \"collector/promise-to-pay\", \"confidence\": 0.9, \"second\": \"\", \"language\": \"pcm\"}",
+  "versions": {
+   "catalogue": "skills-2026-10-27.1",
+   "router_prompt": "router-2026-10-27.1"
+  }
+ },
+ "e77c314fc35bf21eabf7429b51946156": {
+  "completion_tokens": 75,
+  "latency_s": 1.171,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 408,
+  "request": "6b04c295d0bdbbeb5a221accce101db2",
+  "text": "{\"confidence\": 0.97, \"label\": \"yes\"}",
+  "versions": {
+   "catalogue": "skills-2026-10-27.1",
+   "router_prompt": "router-2026-10-27.1"
+  }
+ }
+}

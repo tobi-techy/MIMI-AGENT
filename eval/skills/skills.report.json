@@ -1,6 +1,6 @@
 {
  "generated_by": "python -m mimi.api.skills_eval",
- "catalogue": "skills-b9c2fc2332ad",
+ "catalogue": "skills-cf739c9ae618",
  "selection": {
   "cases": 300,
   "correct": 296,
@@ -56,15 +56,15 @@
   "per_skill": {
    "brand/brand-email": {
     "off": 1637,
-    "on": 1423
+    "on": 1336
    },
    "brand/promo-info": {
     "off": 1637,
-    "on": 1217
+    "on": 1148
    },
    "collector/chase": {
     "off": 3497,
-    "on": 2926
+    "on": 2334
    },
    "collector/collections": {
     "off": 3497,
@@ -72,39 +72,39 @@
    },
    "collector/payment-check": {
     "off": 3497,
-    "on": 2873
+    "on": 2371
    },
    "collector/promise-to-pay": {
     "off": 3497,
-    "on": 2627
+    "on": 1997
    },
    "credit/credit-request": {
     "off": 3005,
-    "on": 2831
+    "on": 2330
    },
    "credit/credit-review": {
     "off": 3005,
-    "on": 2564
+    "on": 2046
    },
    "mimi/chat": {
     "off": 1316,
-    "on": 1321
+    "on": 1169
    },
    "mimi/escalate-owner": {
     "off": 1316,
-    "on": 1295
+    "on": 923
    },
    "mimi/owner-brief": {
     "off": 1316,
-    "on": 1401
+    "on": 966
    },
    "mimi/shop-onboarding": {
     "off": 1316,
-    "on": 1399
+    "on": 1178
    },
    "mimi/stop": {
     "off": 1316,
-    "on": 1319
+    "on": 919
    },
    "order/delivery-status": {
     "off": 2329,
@@ -120,24 +120,24 @@
    },
    "proof/bank-credit": {
     "off": 2474,
-    "on": 1530
+    "on": 1446
    },
    "proof/fake-alert-check": {
     "off": 2474,
-    "on": 2850
+    "on": 2338
    },
    "stock/low-stock-report": {
     "off": 2620,
-    "on": 1249
+    "on": 1137
    },
    "stock/stock-count": {
     "off": 2620,
-    "on": 2631
+    "on": 2317
    }
   },
   "weighted_off": 738452,
-  "weighted_on": 662206,
-  "saving": 0.1033,
+  "weighted_on": 587835,
+  "saving": 0.204,
   "metadata_all_skills_tokens": 784,
   "metadata_cap_tokens": 2000
  },

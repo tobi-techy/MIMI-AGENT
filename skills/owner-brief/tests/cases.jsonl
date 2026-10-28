@@ -1,0 +1,10 @@
+{"gold": "mimi/owner-brief", "id": "owner-brief-01", "lang": "en", "payload": {"from_phone": "+2340000000009", "text": "how is business today"}, "source": "owner_message", "tags": [], "thread": {}}
+{"gold": "mimi/owner-brief", "id": "owner-brief-02", "lang": "en", "payload": {"from_phone": "+2340000000009", "text": "give me the morning summary"}, "source": "owner_message", "tags": [], "thread": {}}
+{"gold": "mimi/owner-brief", "id": "owner-brief-03", "lang": "", "payload": {"from_phone": "", "name": "mimi.morning_brief", "text": ""}, "source": "routine", "tags": ["routine"], "thread": {}}
+{"gold": "mimi/owner-brief", "id": "owner-brief-04", "lang": "pcm", "payload": {"from_phone": "+2340000000009", "text": "wetin happen yesterday"}, "source": "owner_message", "tags": [], "thread": {}}
+{"gold": "mimi/owner-brief", "id": "owner-brief-05", "lang": "en", "payload": {"from_phone": "+2340000000009", "text": "brief me"}, "source": "owner_message", "tags": [], "thread": {}}
+{"gold": "mimi/owner-brief", "id": "owner-brief-06", "lang": "en", "payload": {"from_phone": "+2340000000009", "text": "what needs my attention"}, "source": "owner_message", "tags": [], "thread": {}}
+{"gold": "mimi/owner-brief", "id": "owner-brief-07", "lang": "pcm", "payload": {"from_phone": "+2340000000009", "text": "any wahala today?"}, "source": "owner_message", "tags": [], "thread": {}}
+{"gold": "mimi/owner-brief", "id": "owner-brief-08", "lang": "en", "payload": {"from_phone": "+2340000000009", "text": "summary of this week"}, "source": "owner_message", "tags": [], "thread": {}}
+{"gold": "mimi/owner-brief", "id": "owner-brief-09", "lang": "", "payload": {"from_phone": "", "name": "van_gps_ping", "shop_id": "shop-002", "text": ""}, "source": "webhook", "tags": ["webhook"], "thread": {}}
+{"acceptable": ["mimi/chat"], "gold": "mimi/owner-brief", "id": "owner-brief-10", "lang": "yo", "payload": {"from_phone": "+2340000000009", "text": "bawo ni nkan se n lo?"}, "source": "owner_message", "tags": [], "thread": {}}

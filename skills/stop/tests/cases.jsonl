@@ -1,0 +1,10 @@
+{"gold": "mimi/stop", "id": "stop-01", "lang": "", "payload": {"from_phone": "+2340000000009", "text": "stop"}, "source": "owner_message", "tags": [], "thread": {}}
+{"gold": "mimi/stop", "id": "stop-02", "lang": "", "payload": {"from_phone": "+2340000000009", "text": "STOP"}, "source": "owner_message", "tags": [], "thread": {}}
+{"gold": "mimi/stop", "id": "stop-03", "lang": "", "payload": {"from_phone": "+2340000000009", "text": "Stop"}, "source": "owner_message", "tags": [], "thread": {}}
+{"gold": "mimi/stop", "id": "stop-04", "lang": "", "payload": {"from_phone": "+2340000000009", "text": "stop."}, "source": "owner_message", "tags": [], "thread": {}}
+{"gold": "mimi/stop", "id": "stop-05", "lang": "", "payload": {"from_phone": "+2340000000009", "text": "stop!"}, "source": "owner_message", "tags": [], "thread": {}}
+{"gold": "mimi/stop", "id": "stop-06", "lang": "", "payload": {"from_phone": "+2340000000009", "text": " stop "}, "source": "owner_message", "tags": [], "thread": {}}
+{"gold": "mimi/stop", "id": "stop-07", "lang": "", "payload": {"from_phone": "+2340000000009", "text": "Stop!!"}, "source": "owner_message", "tags": [], "thread": {}}
+{"gold": "mimi/stop", "id": "stop-08", "lang": "", "payload": {"from_phone": "+2340000000009", "text": "STOP."}, "source": "owner_message", "tags": [], "thread": {}}
+{"gold": "mimi/stop", "id": "stop-09", "lang": "", "payload": {"from_phone": "+2340000000009", "text": "stop "}, "source": "owner_message", "tags": [], "thread": {}}
+{"gold": "mimi/stop", "id": "stop-10", "lang": "", "payload": {"from_phone": "+2340000000009", "text": "Stop."}, "source": "owner_message", "tags": [], "thread": {}}
