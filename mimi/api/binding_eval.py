@@ -44,6 +44,7 @@ from mimi.harness.binding import BINDER_PROMPT_VERSION, AnswerBinder
 from mimi.harness.gateway import kobo_cost
 from mimi.harness.inbound import Directory, Inbound, Payload
 from mimi.harness.router import Router, ThreadState
+from mimi.harness.versions import ROUTER_VERSIONS
 from mimi.models.base import ChatModel
 from mimi.models.cache import CachedModel
 from mimi.models.env import DEFAULT_MODELS, from_env
@@ -76,7 +77,8 @@ def _models(live: bool) -> tuple[CachedModel, CachedModel]:
         mode = "through"
     else:
         inner, mode = None, "replay"
-    return (CachedModel(inner, ROUTER_CACHE, mode=mode, name=name),  # type: ignore[arg-type]
+    return (CachedModel(inner, ROUTER_CACHE, mode=mode, name=name,  # type: ignore[arg-type]
+                        versions=ROUTER_VERSIONS),
             CachedModel(inner, JUDGE_CACHE, mode=mode, name=name))  # type: ignore[arg-type]
 
 

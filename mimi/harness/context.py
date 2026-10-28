@@ -49,15 +49,14 @@ from collections.abc import Callable, Sequence
 from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Any, Protocol
-from zoneinfo import ZoneInfo
 
 from pydantic import BaseModel, ConfigDict, Field
 
 from mimi.harness.go import BookAPI, ConsentGrants, CrossTenant, NoConsent
 from mimi.harness.types import RunEvent
 from mimi.harness.untrusted import defang
+from mimi.tz import LAGOS
 
-LAGOS = ZoneInfo("Africa/Lagos")
 # Muse Spark averages about 3.25 characters a token on these prompts
 # (3,539 tokens for 11,490 characters on the Collector's first call); 3.2
 # keeps the estimate a little high, so the budget is never under-counted.

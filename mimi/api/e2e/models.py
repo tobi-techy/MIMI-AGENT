@@ -25,6 +25,7 @@ from mimi.api.helpers import HelperDeps
 from mimi.api.media import LocalMedia
 from mimi.credit.sam import CachedSegmenter, Segmentation, sam_from_env
 from mimi.harness.gateway import OpenAIToolModel, RecordedToolModel, ToolModel
+from mimi.harness.versions import ROUTER_VERSIONS
 from mimi.models.base import ChatModel, ChatResult
 from mimi.models.cache import CachedModel
 from mimi.models.env import from_env
@@ -122,7 +123,8 @@ def agent_models(live: bool, paths: CachePaths, env: Mapping[str, str] | None = 
                                 ) if live else None
     tool = RecordedToolModel(paths.harness, tool_live, name=MODEL)
     inner = from_env("mimi", env=e) if live else None
-    router = CachedModel(inner, paths.router, mode="through" if live else "replay", name=MODEL)
+    router = CachedModel(inner, paths.router, mode="through" if live else "replay", name=MODEL,
+                         versions=ROUTER_VERSIONS)
     helpers = CachedModel(inner, paths.helpers, mode="through" if live else "replay",
                           name=MODEL)
     sam = CachedSegmenter(sam_from_env(e) if live else None, paths.sam,

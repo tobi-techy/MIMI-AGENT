@@ -10,11 +10,10 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass
-from datetime import datetime, timedelta, timezone
+from datetime import datetime
 
 from mimi.proof.banks import ALL_TIME_FORMATS, FictionalBank
-
-LAGOS = timezone(timedelta(hours=1), "WAT")  # Africa/Lagos, no DST
+from mimi.tz import LAGOS
 
 _AMOUNT = re.compile(
     r"^(?:NGN|N|\u20a6|#)?\s*(?P<whole>\d{1,3}(?:,\d{3})+|\d+)(?:\.(?P<kobo>\d{2}))?$"

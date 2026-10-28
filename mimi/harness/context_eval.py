@@ -781,10 +781,12 @@ def main(argv: list[str] | None = None) -> int:
         rec_b = RecordedToolModel(BUILDER_CACHE, live, name=MODEL)
         arms["builder"] = arm_summary(run_arm(world, scenarios, "builder", lambda sc: rec_b,
                                               router))
+        arms["builder"]["stale_cache_misses"] = rec_b.stale
     if "baseline" in args.arm:
         rec_f = RecordedToolModel(BASELINE_CACHE, live, name=MODEL)
         arms["baseline"] = arm_summary(run_arm(world, scenarios, "baseline", lambda sc: rec_f,
                                                router))
+        arms["baseline"]["stale_cache_misses"] = rec_f.stale
     if args.only or set(arms) != {"builder", "baseline"}:
         print(json.dumps({k: {x: v[x] for x in v if x != "failures"} for k, v in arms.items()},
                          indent=1)[:6000])

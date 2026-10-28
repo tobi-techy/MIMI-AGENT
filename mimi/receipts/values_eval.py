@@ -52,6 +52,7 @@ from typing import Any
 
 from mimi.receipts.inbox import ShopReply
 from mimi.receipts.promises import message_for, pending_from, promise_step
+from mimi.tz import now_lagos
 from mimi.voice.audio import inspect
 from mimi.voice.base import Transcriber, VoiceContext
 from mimi.voice.cache import CachedTranscriber
@@ -456,7 +457,7 @@ def main(argv: list[str] | None = None) -> int:
         if REPORT.exists():
             recorded_at = json.loads(REPORT.read_text()).get("recorded_at")
         if args.live or recorded_at is None:
-            recorded_at = datetime.now().astimezone().isoformat(timespec="seconds")
+            recorded_at = now_lagos().isoformat(timespec="seconds")
         REPORT.write_text(json.dumps({
             "pass_marks": marks, "safety_every_pass": safety, "accuracy_floor": ACCURACY_FLOOR,
             "pass": ok, "clips_without_audio": dict(no_audio),

@@ -1,17 +1,27 @@
 {
- "005fce7e65690f4c25050f6e8500fea4": {
-  "completion_tokens": 1420,
-  "latency_s": 5.651,
+ "0164319efbda7915f3f901151356c2ad": {
+  "completion_tokens": 1271,
+  "latency_s": 5.228,
   "model": "muse-spark-1.3",
-  "prompt_tokens": 619,
-  "text": "{\"parts\": [{\"confidence\": 0.8, \"id\": \"p1\", \"label\": \"corrects\", \"task\": \"t1\"}]}"
+  "prompt_tokens": 622,
+  "request": "e9a856c28537ebb546063281e3bb6fee",
+  "text": "{\"parts\": [{\"confidence\": 0.85, \"id\": \"p1\", \"label\": \"current\", \"task\": \"\"}, {\"confidence\": 0.95, \"id\": \"p2\", \"label\": \"new\", \"task\": \"\"}]}",
+  "versions": {
+   "catalogue": "skills-2026-10-27.1",
+   "router_prompt": "router-2026-10-27.1"
+  }
  },
- "01ade626e1067e264358d884bb598070": {
-  "completion_tokens": 751,
-  "latency_s": 2.749,
+ "032d27d758f3062af631a1d914d0a27e": {
+  "completion_tokens": 678,
+  "latency_s": 2.931,
   "model": "muse-spark-1.3",
-  "prompt_tokens": 602,
-  "text": "{\"parts\": [{\"confidence\": 0.99, \"id\": \"p1\", \"label\": \"current\", \"task\": \"\"}, {\"confidence\": 0.95, \"id\": \"p2\", \"label\": \"new\", \"task\": \"\"}]}"
+  "prompt_tokens": 612,
+  "request": "31eb1dc5d69b50d22efe66b94fb05f63",
+  "text": "{\"parts\": [{\"confidence\": 0.95, \"id\": \"p1\", \"label\": \"corrects\", \"task\": \"t1\"}]}",
+  "versions": {
+   "catalogue": "skills-2026-10-27.1",
+   "router_prompt": "router-2026-10-27.1"
+  }
  },
  "035c0e04f7c80bd63ca51979a4c7858a": {
   "completion_tokens": 1474,
@@ -20,6 +30,18 @@
   "prompt_tokens": 575,
   "text": "{\"parts\": [{\"confidence\": 0.95, \"id\": \"p1\", \"label\": \"corrects\", \"task\": \"t1\"}]}"
  },
+ "0705c732e20480ff923faa33c3fbc44f": {
+  "completion_tokens": 344,
+  "latency_s": 2.046,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 605,
+  "request": "64c13a867c658bd7ffcec926333b0ebf",
+  "text": "{\"parts\": [{\"confidence\": 0.95, \"id\": \"p1\", \"label\": \"new\", \"task\": \"\"}]}",
+  "versions": {
+   "catalogue": "skills-2026-10-27.1",
+   "router_prompt": "router-2026-10-27.1"
+  }
+ },
  "073d745a6d1fd2edccd7e95bb1240ff0": {
   "completion_tokens": 461,
   "latency_s": 1.73,
@@ -27,12 +49,41 @@
   "prompt_tokens": 584,
   "text": "{\"parts\": [{\"confidence\": 0.96, \"id\": \"p1\", \"label\": \"current\", \"task\": \"\"}, {\"confidence\": 0.98, \"id\": \"p2\", \"label\": \"new\", \"task\": \"\"}]}"
  },
- "12a7742ab6f4987710a2be61d87d72bb": {
-  "completion_tokens": 400,
-  "latency_s": 2.442,
+ "083ca18536e5cdf7c861dd1579716e60": {
+  "completion_tokens": 740,
+  "latency_s": 2.935,
   "model": "muse-spark-1.3",
-  "prompt_tokens": 422,
-  "text": "{\"confidence\": 0.95, \"label\": \"yes\"}"
+  "prompt_tokens": 611,
+  "request": "c155e0066b2a105f6a421862ff840a36",
+  "text": "{\"parts\": [{\"confidence\": 0.95, \"id\": \"p1\", \"label\": \"corrects\", \"task\": \"t1\"}]}",
+  "versions": {
+   "catalogue": "skills-2026-10-27.1",
+   "router_prompt": "router-2026-10-27.1"
+  }
+ },
+ "115668f0fc4abb45eac26d806fc6e84b": {
+  "completion_tokens": 1382,
+  "latency_s": 5.562,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 625,
+  "request": "d8336244a459959ddaf36e6728927378",
+  "text": "{\"parts\": [{\"confidence\": 0.8, \"id\": \"p1\", \"label\": \"current\", \"task\": \"\"}, {\"confidence\": 0.95, \"id\": \"p2\", \"label\": \"new\", \"task\": \"\"}]}",
+  "versions": {
+   "catalogue": "skills-2026-10-27.1",
+   "router_prompt": "router-2026-10-27.1"
+  }
+ },
+ "146e250d02962d967f4251a725c07818": {
+  "completion_tokens": 900,
+  "latency_s": 3.453,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 636,
+  "request": "b9b589dc6edc4a6aec44ec941e86797a",
+  "text": "{\"parts\": [{\"confidence\": 0.9, \"id\": \"p1\", \"label\": \"corrects\", \"task\": \"t0\"}]}",
+  "versions": {
+   "catalogue": "skills-2026-10-27.1",
+   "router_prompt": "router-2026-10-27.1"
+  }
  },
  "16af04fdd75c8c7705178de7fe027b04": {
   "completion_tokens": 588,
@@ -41,6 +92,42 @@
   "prompt_tokens": 569,
   "text": "{\"parts\": [{\"confidence\": 0.97, \"id\": \"p1\", \"label\": \"new\", \"task\": \"\"}]}"
  },
+ "17ccc42998640156f24d721592bddc54": {
+  "completion_tokens": 854,
+  "latency_s": 4.088,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 624,
+  "request": "4af01d733f6df3ec08192409150cb0f9",
+  "text": "{\"parts\": [{\"confidence\": 0.98, \"id\": \"p1\", \"label\": \"chat\", \"task\": \"\"}, {\"confidence\": 0.96, \"id\": \"p2\", \"label\": \"new\", \"task\": \"\"}, {\"confidence\": 0.96, \"id\": \"p3\", \"label\": \"new\", \"task\": \"\"}]}",
+  "versions": {
+   "catalogue": "skills-2026-10-27.1",
+   "router_prompt": "router-2026-10-27.1"
+  }
+ },
+ "1868291aa335af0de401e8b7e77c62b8": {
+  "completion_tokens": 646,
+  "latency_s": 2.577,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 630,
+  "request": "d3377534fb72baf235c15fd9671c076c",
+  "text": "{\"parts\": [{\"confidence\": 0.92, \"id\": \"p1\", \"label\": \"cancels\", \"task\": \"t0\"}]}",
+  "versions": {
+   "catalogue": "skills-2026-10-27.1",
+   "router_prompt": "router-2026-10-27.1"
+  }
+ },
+ "1c2a7537781fbfdd5c0040e33da073d9": {
+  "completion_tokens": 1420,
+  "latency_s": 5.651,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 619,
+  "request": "005fce7e65690f4c25050f6e8500fea4",
+  "text": "{\"parts\": [{\"confidence\": 0.8, \"id\": \"p1\", \"label\": \"corrects\", \"task\": \"t1\"}]}",
+  "versions": {
+   "catalogue": "skills-2026-10-27.1",
+   "router_prompt": "router-2026-10-27.1"
+  }
+ },
  "1f99b25d16216321f1a6b5a1d1ce4f19": {
   "completion_tokens": 1001,
   "latency_s": 3.319,
@@ -48,12 +135,17 @@
   "prompt_tokens": 586,
   "text": "{\"parts\": [{\"confidence\": 0.92, \"id\": \"p1\", \"label\": \"corrects\", \"task\": \"t1\"}]}"
  },
- "206130c871129dd58b6ea561cbcf7b70": {
-  "completion_tokens": 490,
-  "latency_s": 1.827,
+ "1fd05014c90f955653db9655d2edbf44": {
+  "completion_tokens": 554,
+  "latency_s": 2.404,
   "model": "muse-spark-1.3",
-  "prompt_tokens": 754,
-  "text": "{\"route\": \"stock/stock-count\", \"confidence\": 0.85, \"second\": \"\", \"language\": \"en\"}"
+  "prompt_tokens": 600,
+  "request": "a6ff46564b490ee04df9cd0203b9ea7c",
+  "text": "{\"parts\": [{\"confidence\": 0.99, \"id\": \"p1\", \"label\": \"chat\", \"task\": \"\"}, {\"confidence\": 0.99, \"id\": \"p2\", \"label\": \"current\", \"task\": \"\"}]}",
+  "versions": {
+   "catalogue": "skills-2026-10-27.1",
+   "router_prompt": "router-2026-10-27.1"
+  }
  },
  "23506d84f85f35227ac27d44766915c1": {
   "completion_tokens": 465,
@@ -62,19 +154,41 @@
   "prompt_tokens": 601,
   "text": "{\"parts\": [{\"confidence\": 0.97, \"id\": \"p1\", \"label\": \"cancels\", \"task\": \"t0\"}]}"
  },
- "287ae7bd56364282c232145146adf553": {
-  "completion_tokens": 835,
-  "latency_s": 2.639,
+ "2401316f4b29f9d20f46e64c82258a30": {
+  "completion_tokens": 251,
+  "latency_s": 1.323,
   "model": "muse-spark-1.3",
-  "prompt_tokens": 611,
-  "text": "{\"parts\": [{\"confidence\": 0.95, \"id\": \"p1\", \"label\": \"current\", \"task\": \"\"}]}"
+  "prompt_tokens": 755,
+  "request": "a484545d19473081e8e8dc5d223d0860",
+  "text": "{\"route\": \"order/order-intake\", \"confidence\": 0.99, \"second\": \"\", \"language\": \"en\"}",
+  "versions": {
+   "catalogue": "skills-2026-10-27.1",
+   "router_prompt": "router-2026-10-27.1"
+  }
  },
- "2881bcea74b2f9dbd7e543af88e8816b": {
-  "completion_tokens": 666,
-  "latency_s": 2.772,
+ "28de5e3567e7fc49200cea8bbc33e90b": {
+  "completion_tokens": 751,
+  "latency_s": 2.749,
   "model": "muse-spark-1.3",
-  "prompt_tokens": 615,
-  "text": "{\"parts\": [{\"confidence\": 0.95, \"id\": \"p1\", \"label\": \"corrects\", \"task\": \"t1\"}]}"
+  "prompt_tokens": 602,
+  "request": "01ade626e1067e264358d884bb598070",
+  "text": "{\"parts\": [{\"confidence\": 0.99, \"id\": \"p1\", \"label\": \"current\", \"task\": \"\"}, {\"confidence\": 0.95, \"id\": \"p2\", \"label\": \"new\", \"task\": \"\"}]}",
+  "versions": {
+   "catalogue": "skills-2026-10-27.1",
+   "router_prompt": "router-2026-10-27.1"
+  }
+ },
+ "29190c893f8890f78a25ff6a93288157": {
+  "completion_tokens": 490,
+  "latency_s": 1.827,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 754,
+  "request": "206130c871129dd58b6ea561cbcf7b70",
+  "text": "{\"route\": \"stock/stock-count\", \"confidence\": 0.85, \"second\": \"\", \"language\": \"en\"}",
+  "versions": {
+   "catalogue": "skills-2026-10-27.1",
+   "router_prompt": "router-2026-10-27.1"
+  }
  },
  "2a9d8515b20340b345e577a6c6e1c88e": {
   "completion_tokens": 886,
@@ -83,26 +197,41 @@
   "prompt_tokens": 583,
   "text": "{\"parts\": [{\"confidence\": 0.85, \"id\": \"p1\", \"label\": \"adds\", \"task\": \"t0\"}]}"
  },
- "2b214d48165b25776b756148757232c7": {
-  "completion_tokens": 794,
-  "latency_s": 3.192,
+ "2b7a85a5c06f150ee8881d8c3ed444d9": {
+  "completion_tokens": 508,
+  "latency_s": 3.088,
   "model": "muse-spark-1.3",
-  "prompt_tokens": 638,
-  "text": "{\"parts\": [{\"confidence\": 0.9, \"id\": \"p1\", \"label\": \"adds\", \"task\": \"t0\"}]}"
+  "prompt_tokens": 754,
+  "request": "78acd38f231199a690fe488179388688",
+  "text": "{\"route\": \"credit/credit-request\", \"confidence\": 0.55, \"second\": \"order/order-intake\", \"language\": \"pcm\"}",
+  "versions": {
+   "catalogue": "skills-2026-10-27.1",
+   "router_prompt": "router-2026-10-27.1"
+  }
  },
- "2ccf136273a65ad62e54f2dfc8774e04": {
-  "completion_tokens": 390,
-  "latency_s": 2.019,
+ "2d5bfd37c18620464d586ad57794a52e": {
+  "completion_tokens": 666,
+  "latency_s": 2.772,
   "model": "muse-spark-1.3",
-  "prompt_tokens": 412,
-  "text": "{\"confidence\": 0.95, \"label\": \"yes\"}"
+  "prompt_tokens": 615,
+  "request": "2881bcea74b2f9dbd7e543af88e8816b",
+  "text": "{\"parts\": [{\"confidence\": 0.95, \"id\": \"p1\", \"label\": \"corrects\", \"task\": \"t1\"}]}",
+  "versions": {
+   "catalogue": "skills-2026-10-27.1",
+   "router_prompt": "router-2026-10-27.1"
+  }
  },
- "2d3f68c2fcbc8569884391d8f2f2f5e1": {
+ "2e7658eaa35986ea61faeb124c79ee52": {
   "completion_tokens": 2000,
   "latency_s": 7.934,
   "model": "muse-spark-1.3",
   "prompt_tokens": 631,
-  "text": ""
+  "request": "2d3f68c2fcbc8569884391d8f2f2f5e1",
+  "text": "",
+  "versions": {
+   "catalogue": "skills-2026-10-27.1",
+   "router_prompt": "router-2026-10-27.1"
+  }
  },
  "2e7f3470341d7888e35ae147beb4e6f0": {
   "completion_tokens": 1319,
@@ -111,19 +240,29 @@
   "prompt_tokens": 586,
   "text": "{\"parts\": [{\"confidence\": 0.8, \"id\": \"p1\", \"label\": \"current\", \"task\": \"\"}, {\"confidence\": 0.95, \"id\": \"p2\", \"label\": \"new\", \"task\": \"\"}]}"
  },
- "31eb1dc5d69b50d22efe66b94fb05f63": {
-  "completion_tokens": 678,
-  "latency_s": 2.931,
+ "2ec516ae219968f15756a618d79d1d21": {
+  "completion_tokens": 522,
+  "latency_s": 2.202,
   "model": "muse-spark-1.3",
-  "prompt_tokens": 612,
-  "text": "{\"parts\": [{\"confidence\": 0.95, \"id\": \"p1\", \"label\": \"corrects\", \"task\": \"t1\"}]}"
+  "prompt_tokens": 637,
+  "request": "687641f800e5efba29fa1b28efb27332",
+  "text": "{\"parts\": [{\"confidence\": 0.95, \"id\": \"p1\", \"label\": \"corrects\", \"task\": \"t1\"}]}",
+  "versions": {
+   "catalogue": "skills-2026-10-27.1",
+   "router_prompt": "router-2026-10-27.1"
+  }
  },
- "35777ef5fec1ea5a9f2c97578ef35b17": {
-  "completion_tokens": 563,
-  "latency_s": 2.51,
+ "381aca6b6c2e20467267ebaff87c525f": {
+  "completion_tokens": 510,
+  "latency_s": 2.435,
   "model": "muse-spark-1.3",
-  "prompt_tokens": 631,
-  "text": "{\"parts\": [{\"confidence\": 0.95, \"id\": \"p1\", \"label\": \"cancels\", \"task\": \"t1\"}]}"
+  "prompt_tokens": 635,
+  "request": "9e7aaa390690435486db6a47337ad4ab",
+  "text": "{\"parts\": [{\"confidence\": 0.9, \"id\": \"p1\", \"label\": \"adds\", \"task\": \"t0\"}]}",
+  "versions": {
+   "catalogue": "skills-2026-10-27.1",
+   "router_prompt": "router-2026-10-27.1"
+  }
  },
  "3eb3c16260599d1e5ec9eac15555fd12": {
   "completion_tokens": 521,
@@ -132,19 +271,24 @@
   "prompt_tokens": 573,
   "text": "{\"parts\": [{\"confidence\": 0.98, \"id\": \"p1\", \"label\": \"chat\", \"task\": \"\"}, {\"confidence\": 0.97, \"id\": \"p2\", \"label\": \"current\", \"task\": \"\"}, {\"confidence\": 0.95, \"id\": \"p3\", \"label\": \"new\", \"task\": \"\"}]}"
  },
- "407a02cf24af95f243baf82ecc42ed96": {
-  "completion_tokens": 614,
-  "latency_s": 2.127,
-  "model": "muse-spark-1.3",
-  "prompt_tokens": 622,
-  "text": "{\"parts\": [{\"confidence\": 0.95, \"id\": \"p1\", \"label\": \"corrects\", \"task\": \"t1\"}]}"
- },
  "43d155b0a70681344ab60217c230f7de": {
   "completion_tokens": 958,
   "latency_s": 4.515,
   "model": "muse-spark-1.3",
   "prompt_tokens": 601,
   "text": "{\"parts\": [{\"confidence\": 0.8, \"id\": \"p1\", \"label\": \"adds\", \"task\": \"t0\"}]}"
+ },
+ "448b00032d2e781f96ee66f66db8d0ca": {
+  "completion_tokens": 372,
+  "latency_s": 1.985,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 760,
+  "request": "e58a797baf3d364eaa2c82cabc8eb233",
+  "text": "{\"route\": \"order/order-intake\", \"confidence\": 0.85, \"second\": \"collector/collections\", \"language\": \"pcm\"}",
+  "versions": {
+   "catalogue": "skills-2026-10-27.1",
+   "router_prompt": "router-2026-10-27.1"
+  }
  },
  "451bd8b029e7881c2696ab926d3b0c12": {
   "completion_tokens": 788,
@@ -153,26 +297,17 @@
   "prompt_tokens": 567,
   "text": "{\"parts\": [{\"confidence\": 0.95, \"id\": \"p1\", \"label\": \"current\", \"task\": \"\"}, {\"confidence\": 0.9, \"id\": \"p2\", \"label\": \"adds\", \"task\": \"t0\"}]}"
  },
- "468f90ffa57179c24bd53ee69a63895e": {
-  "completion_tokens": 757,
-  "latency_s": 3.553,
+ "4a3227c8e628bf7af3928357bc45dda9": {
+  "completion_tokens": 670,
+  "latency_s": 3.022,
   "model": "muse-spark-1.3",
-  "prompt_tokens": 609,
-  "text": "{\"parts\": [{\"confidence\": 0.99, \"id\": \"p1\", \"label\": \"chat\", \"task\": \"\"}, {\"confidence\": 0.97, \"id\": \"p2\", \"label\": \"current\", \"task\": \"\"}, {\"confidence\": 0.92, \"id\": \"p3\", \"label\": \"new\", \"task\": \"\"}]}"
- },
- "4881e5ee603ae94f353977611d04496a": {
-  "completion_tokens": 696,
-  "latency_s": 2.598,
-  "model": "muse-spark-1.3",
-  "prompt_tokens": 650,
-  "text": "{\"parts\": [{\"confidence\": 0.95, \"id\": \"p1\", \"label\": \"adds\", \"task\": \"t0\"}]}"
- },
- "4af01d733f6df3ec08192409150cb0f9": {
-  "completion_tokens": 854,
-  "latency_s": 4.088,
-  "model": "muse-spark-1.3",
-  "prompt_tokens": 624,
-  "text": "{\"parts\": [{\"confidence\": 0.98, \"id\": \"p1\", \"label\": \"chat\", \"task\": \"\"}, {\"confidence\": 0.96, \"id\": \"p2\", \"label\": \"new\", \"task\": \"\"}, {\"confidence\": 0.96, \"id\": \"p3\", \"label\": \"new\", \"task\": \"\"}]}"
+  "prompt_tokens": 633,
+  "request": "f1305b09e25e4d7d54a0284d02cd45c4",
+  "text": "{\"parts\": [{\"confidence\": 0.92, \"id\": \"p1\", \"label\": \"adds\", \"task\": \"t0\"}]}",
+  "versions": {
+   "catalogue": "skills-2026-10-27.1",
+   "router_prompt": "router-2026-10-27.1"
+  }
  },
  "4be803dd3365b335f6e6d190cdf156c8": {
   "completion_tokens": 1474,
@@ -181,12 +316,53 @@
   "prompt_tokens": 606,
   "text": "{\"parts\": [{\"confidence\": 0.85, \"id\": \"p1\", \"label\": \"corrects\", \"task\": \"t1\"}]}"
  },
- "50a5d9e34a31269b02f3ac31fc13deb8": {
+ "4fb6e9981431ae6639660cd23d2a000f": {
+  "completion_tokens": 390,
+  "latency_s": 1.458,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 411,
+  "request": "7e1a67d980e9bebd738bcec455fd2750",
+  "text": "{\"confidence\": 0.95, \"label\": \"yes\"}",
+  "versions": {
+   "catalogue": "skills-2026-10-27.1",
+   "router_prompt": "router-2026-10-27.1"
+  }
+ },
+ "4fd420713701a63a08f739cb7a482fca": {
   "completion_tokens": 344,
   "latency_s": 2.479,
   "model": "muse-spark-1.3",
   "prompt_tokens": 409,
-  "text": "{\"confidence\": 0.95, \"label\": \"yes\"}"
+  "request": "50a5d9e34a31269b02f3ac31fc13deb8",
+  "text": "{\"confidence\": 0.95, \"label\": \"yes\"}",
+  "versions": {
+   "catalogue": "skills-2026-10-27.1",
+   "router_prompt": "router-2026-10-27.1"
+  }
+ },
+ "52bfc8941bbffcbb41b7ca2ca04a9ed7": {
+  "completion_tokens": 341,
+  "latency_s": 2.213,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 410,
+  "request": "f781c0b16c0a9209e3df9c650863e168",
+  "text": "{\"confidence\": 0.9, \"label\": \"yes\"}",
+  "versions": {
+   "catalogue": "skills-2026-10-27.1",
+   "router_prompt": "router-2026-10-27.1"
+  }
+ },
+ "55c8b4e77eb13bc0b4f061306232a69f": {
+  "completion_tokens": 700,
+  "latency_s": 2.777,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 748,
+  "request": "cbff6074c0420e15c7d07765059ade5e",
+  "text": "{\"route\": \"order/order",
+  "versions": {
+   "catalogue": "skills-2026-10-27.1",
+   "router_prompt": "router-2026-10-27.1"
+  }
  },
  "57a8b24b01015f623fff6bef99cf6d89": {
   "completion_tokens": 542,
@@ -195,26 +371,17 @@
   "prompt_tokens": 594,
   "text": "{\"parts\": [{\"confidence\": 0.92, \"id\": \"p1\", \"label\": \"cancels\", \"task\": \"t0\"}]}"
  },
- "58468304e4e95286fa83fcf292f2ca0f": {
-  "completion_tokens": 1118,
-  "latency_s": 4.644,
+ "5a8869a75dad88a25a340c2ea375fd3e": {
+  "completion_tokens": 755,
+  "latency_s": 3.397,
   "model": "muse-spark-1.3",
-  "prompt_tokens": 628,
-  "text": "{\"parts\": [{\"confidence\": 0.9, \"id\": \"p1\", \"label\": \"corrects\", \"task\": \"t0\"}, {\"confidence\": 0.9, \"id\": \"p2\", \"label\": \"new\", \"task\": \"\"}]}"
- },
- "588c585d4af6e5a3b3bc679a8f50d85c": {
-  "completion_tokens": 862,
-  "latency_s": 3.387,
-  "model": "muse-spark-1.3",
-  "prompt_tokens": 646,
-  "text": "{\"parts\": [{\"confidence\": 0.7, \"id\": \"p1\", \"label\": \"unclear\", \"task\": \"\"}]}"
- },
- "5bdc4f626d226b7868cf9605f26f51bf": {
-  "completion_tokens": 434,
-  "latency_s": 1.609,
-  "model": "muse-spark-1.3",
-  "prompt_tokens": 627,
-  "text": "{\"parts\": [{\"confidence\": 0.99, \"id\": \"p1\", \"label\": \"chat\", \"task\": \"\"}]}"
+  "prompt_tokens": 637,
+  "request": "a53caf99c1332529b1cc13d3fa197c34",
+  "text": "{\"parts\": [{\"confidence\": 0.85, \"id\": \"p1\", \"label\": \"adds\", \"task\": \"t0\"}]}",
+  "versions": {
+   "catalogue": "skills-2026-10-27.1",
+   "router_prompt": "router-2026-10-27.1"
+  }
  },
  "5eeb6e6870e1286af9cfc9c9f8e20db9": {
   "completion_tokens": 953,
@@ -223,33 +390,65 @@
   "prompt_tokens": 588,
   "text": "{\"parts\": [{\"confidence\": 0.99, \"id\": \"p1\", \"label\": \"chat\", \"task\": \"\"}, {\"confidence\": 0.9, \"id\": \"p2\", \"label\": \"current\", \"task\": \"\"}, {\"confidence\": 0.95, \"id\": \"p3\", \"label\": \"new\", \"task\": \"\"}]}"
  },
- "64c13a867c658bd7ffcec926333b0ebf": {
-  "completion_tokens": 344,
-  "latency_s": 2.046,
+ "626cf0555d6c9bcc39dccaccc314169f": {
+  "completion_tokens": 633,
+  "latency_s": 2.446,
   "model": "muse-spark-1.3",
-  "prompt_tokens": 605,
-  "text": "{\"parts\": [{\"confidence\": 0.95, \"id\": \"p1\", \"label\": \"new\", \"task\": \"\"}]}"
+  "prompt_tokens": 603,
+  "request": "bb3fcd5fb764c010442b127b230eade6",
+  "text": "{\"parts\": [{\"confidence\": 0.9, \"id\": \"p1\", \"label\": \"cancels\", \"task\": \"t0\"}]}",
+  "versions": {
+   "catalogue": "skills-2026-10-27.1",
+   "router_prompt": "router-2026-10-27.1"
+  }
  },
- "67adc6e4a75be059bf33f94748bb6b1a": {
-  "completion_tokens": 610,
-  "latency_s": 2.061,
+ "64c006f6c851b8b8f1b284e03ab63570": {
+  "completion_tokens": 481,
+  "latency_s": 2.427,
   "model": "muse-spark-1.3",
-  "prompt_tokens": 632,
-  "text": "{\"parts\": [{\"confidence\": 0.95, \"id\": \"p1\", \"label\": \"corrects\", \"task\": \"t1\"}]}"
+  "prompt_tokens": 610,
+  "request": "b0829d23b2581406fa019219b1356388",
+  "text": "{\"parts\": [{\"confidence\": 0.99, \"id\": \"p1\", \"label\": \"current\", \"task\": \"\"}, {\"confidence\": 0.97, \"id\": \"p2\", \"label\": \"new\", \"task\": \"\"}]}",
+  "versions": {
+   "catalogue": "skills-2026-10-27.1",
+   "router_prompt": "router-2026-10-27.1"
+  }
  },
- "687641f800e5efba29fa1b28efb27332": {
-  "completion_tokens": 522,
-  "latency_s": 2.202,
+ "66283c5a2320eeb25776b088d00fc165": {
+  "completion_tokens": 579,
+  "latency_s": 2.69,
   "model": "muse-spark-1.3",
-  "prompt_tokens": 637,
-  "text": "{\"parts\": [{\"confidence\": 0.95, \"id\": \"p1\", \"label\": \"corrects\", \"task\": \"t1\"}]}"
+  "prompt_tokens": 411,
+  "request": "b7a7df4ce55e84c9d16f6b0a01173c55",
+  "text": "{\"confidence\": 0.85, \"label\": \"unclear\"}",
+  "versions": {
+   "catalogue": "skills-2026-10-27.1",
+   "router_prompt": "router-2026-10-27.1"
+  }
  },
- "6a8549578dab63550e975f65d679d0ed": {
-  "completion_tokens": 594,
-  "latency_s": 1.995,
+ "667b43008ca66839c8ab01401fb1c722": {
+  "completion_tokens": 681,
+  "latency_s": 2.872,
   "model": "muse-spark-1.3",
-  "prompt_tokens": 637,
-  "text": "{\"parts\": [{\"confidence\": 0.98, \"id\": \"p1\", \"label\": \"cancels\", \"task\": \"t0\"}]}"
+  "prompt_tokens": 620,
+  "request": "b3302d25d4f0c4678c8ba2bc2fcd1b89",
+  "text": "{\"parts\": [{\"confidence\": 0.97, \"id\": \"p1\", \"label\": \"current\", \"task\": \"\"}, {\"confidence\": 0.96, \"id\": \"p2\", \"label\": \"new\", \"task\": \"\"}]}",
+  "versions": {
+   "catalogue": "skills-2026-10-27.1",
+   "router_prompt": "router-2026-10-27.1"
+  }
+ },
+ "68ac6c2cbf7e6d4bccbced6a1e9cbc10": {
+  "completion_tokens": 835,
+  "latency_s": 2.639,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 611,
+  "request": "287ae7bd56364282c232145146adf553",
+  "text": "{\"parts\": [{\"confidence\": 0.95, \"id\": \"p1\", \"label\": \"current\", \"task\": \"\"}]}",
+  "versions": {
+   "catalogue": "skills-2026-10-27.1",
+   "router_prompt": "router-2026-10-27.1"
+  }
  },
  "6ae29a643b11904422507e014f5d9027": {
   "completion_tokens": 928,
@@ -258,12 +457,48 @@
   "prompt_tokens": 573,
   "text": "{\"parts\": [{\"confidence\": 0.97, \"id\": \"p1\", \"label\": \"cancels\", \"task\": \"t1\"}]}"
  },
+ "6b6f181209ae97d291746fc39e6ad59c": {
+  "completion_tokens": 696,
+  "latency_s": 2.598,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 650,
+  "request": "4881e5ee603ae94f353977611d04496a",
+  "text": "{\"parts\": [{\"confidence\": 0.95, \"id\": \"p1\", \"label\": \"adds\", \"task\": \"t0\"}]}",
+  "versions": {
+   "catalogue": "skills-2026-10-27.1",
+   "router_prompt": "router-2026-10-27.1"
+  }
+ },
  "6ba6f43daa55d0d3961835f5f7d427f5": {
   "completion_tokens": 980,
   "latency_s": 3.915,
   "model": "muse-spark-1.3",
   "prompt_tokens": 600,
   "text": "{\"parts\": [{\"confidence\": 0.9, \"id\": \"p1\", \"label\": \"corrects\", \"task\": \"t0\"}]}"
+ },
+ "6ffdc6b81a05afe17dd911fb4ae8c986": {
+  "completion_tokens": 594,
+  "latency_s": 1.995,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 637,
+  "request": "6a8549578dab63550e975f65d679d0ed",
+  "text": "{\"parts\": [{\"confidence\": 0.98, \"id\": \"p1\", \"label\": \"cancels\", \"task\": \"t0\"}]}",
+  "versions": {
+   "catalogue": "skills-2026-10-27.1",
+   "router_prompt": "router-2026-10-27.1"
+  }
+ },
+ "738ebf32c2c55e3bb2660541a01a168a": {
+  "completion_tokens": 794,
+  "latency_s": 3.192,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 638,
+  "request": "2b214d48165b25776b756148757232c7",
+  "text": "{\"parts\": [{\"confidence\": 0.9, \"id\": \"p1\", \"label\": \"adds\", \"task\": \"t0\"}]}",
+  "versions": {
+   "catalogue": "skills-2026-10-27.1",
+   "router_prompt": "router-2026-10-27.1"
+  }
  },
  "75e57e5c414a54963682d2759df931dc": {
   "completion_tokens": 439,
@@ -272,12 +507,17 @@
   "prompt_tokens": 591,
   "text": "{\"parts\": [{\"confidence\": 0.97, \"id\": \"p1\", \"label\": \"chat\", \"task\": \"\"}]}"
  },
- "78acd38f231199a690fe488179388688": {
-  "completion_tokens": 508,
-  "latency_s": 3.088,
+ "7666853a2419b372153357b2e80c03a3": {
+  "completion_tokens": 696,
+  "latency_s": 2.568,
   "model": "muse-spark-1.3",
-  "prompt_tokens": 754,
-  "text": "{\"route\": \"credit/credit-request\", \"confidence\": 0.55, \"second\": \"order/order-intake\", \"language\": \"pcm\"}"
+  "prompt_tokens": 764,
+  "request": "97bbd2f181b0eba52d550b82c9368d2e",
+  "text": "{\"route\": \"order/order-intake\", \"confidence\": 0.95, \"second\": \"\", \"language\": \"yo\"}",
+  "versions": {
+   "catalogue": "skills-2026-10-27.1",
+   "router_prompt": "router-2026-10-27.1"
+  }
  },
  "7a66d9b6f95f475fcaf8f89a8bc8fd6a": {
   "completion_tokens": 1245,
@@ -286,12 +526,17 @@
   "prompt_tokens": 591,
   "text": "{\"parts\": [{\"confidence\": 0.65, \"id\": \"p1\", \"label\": \"corrects\", \"task\": \"t1\"}]}"
  },
- "7e1a67d980e9bebd738bcec455fd2750": {
-  "completion_tokens": 390,
-  "latency_s": 1.458,
+ "7cc6ae725f2e1b293c0feac007ce3a54": {
+  "completion_tokens": 830,
+  "latency_s": 3.256,
   "model": "muse-spark-1.3",
-  "prompt_tokens": 411,
-  "text": "{\"confidence\": 0.95, \"label\": \"yes\"}"
+  "prompt_tokens": 602,
+  "request": "b4c2d209b3f3869b869713323d717bf3",
+  "text": "{\"parts\": [{\"confidence\": 0.95, \"id\": \"p1\", \"label\": \"current\", \"task\": \"\"}, {\"confidence\": 0.99, \"id\": \"p2\", \"label\": \"current\", \"task\": \"\"}]}",
+  "versions": {
+   "catalogue": "skills-2026-10-27.1",
+   "router_prompt": "router-2026-10-27.1"
+  }
  },
  "8239a7696155434f52fd20d3afc9ba58": {
   "completion_tokens": 670,
@@ -328,12 +573,29 @@
   "prompt_tokens": 589,
   "text": "{\"parts\": [{\"confidence\": 0.85, \"id\": \"p1\", \"label\": \"current\", \"task\": \"\"}, {\"confidence\": 0.95, \"id\": \"p2\", \"label\": \"new\", \"task\": \"\"}]}"
  },
- "87356b75a9a28cde71e846f3463a9581": {
-  "completion_tokens": 1468,
-  "latency_s": 4.719,
+ "89fedae99094da1b2dc428b199f64bb8": {
+  "completion_tokens": 654,
+  "latency_s": 2.228,
   "model": "muse-spark-1.3",
-  "prompt_tokens": 625,
-  "text": "{\"parts\": [{\"confidence\": 0.96, \"id\": \"p1\", \"label\": \"current\", \"task\": \"\"}, {\"confidence\": 0.84, \"id\": \"p2\", \"label\": \"adds\", \"task\": \"t0\"}]}"
+  "prompt_tokens": 629,
+  "request": "9d30b15c8ed3a0f475499bc8a9460d03",
+  "text": "{\"parts\": [{\"confidence\": 0.96, \"id\": \"p1\", \"label\": \"new\", \"task\": \"\"}]}",
+  "versions": {
+   "catalogue": "skills-2026-10-27.1",
+   "router_prompt": "router-2026-10-27.1"
+  }
+ },
+ "8a14ca0f648a458c6b440a222561d9c6": {
+  "completion_tokens": 757,
+  "latency_s": 3.553,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 609,
+  "request": "468f90ffa57179c24bd53ee69a63895e",
+  "text": "{\"parts\": [{\"confidence\": 0.99, \"id\": \"p1\", \"label\": \"chat\", \"task\": \"\"}, {\"confidence\": 0.97, \"id\": \"p2\", \"label\": \"current\", \"task\": \"\"}, {\"confidence\": 0.92, \"id\": \"p3\", \"label\": \"new\", \"task\": \"\"}]}",
+  "versions": {
+   "catalogue": "skills-2026-10-27.1",
+   "router_prompt": "router-2026-10-27.1"
+  }
  },
  "8c2ca8e390ea43a3443fadf08086010e": {
   "completion_tokens": 825,
@@ -349,12 +611,53 @@
   "prompt_tokens": 567,
   "text": "{\"parts\": [{\"confidence\": 0.95, \"id\": \"p1\", \"label\": \"cancels\", \"task\": \"t0\"}]}"
  },
- "9067062010e4759b0035b1178a1ea50c": {
-  "completion_tokens": 455,
-  "latency_s": 1.94,
+ "90352e5db1a40fa9e9ebe149cf70d3a2": {
+  "completion_tokens": 610,
+  "latency_s": 2.061,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 632,
+  "request": "67adc6e4a75be059bf33f94748bb6b1a",
+  "text": "{\"parts\": [{\"confidence\": 0.95, \"id\": \"p1\", \"label\": \"corrects\", \"task\": \"t1\"}]}",
+  "versions": {
+   "catalogue": "skills-2026-10-27.1",
+   "router_prompt": "router-2026-10-27.1"
+  }
+ },
+ "9149aea08ee152b7b4fd0af0cfb3c837": {
+  "completion_tokens": 775,
+  "latency_s": 2.524,
   "model": "muse-spark-1.3",
   "prompt_tokens": 611,
-  "text": "{\"parts\": [{\"confidence\": 0.95, \"id\": \"p1\", \"label\": \"corrects\", \"task\": \"t1\"}]}"
+  "request": "d844e3a0432799e14784d4743eabea98",
+  "text": "{\"parts\": [{\"confidence\": 0.98, \"id\": \"p1\", \"label\": \"current\", \"task\": \"\"}, {\"confidence\": 0.95, \"id\": \"p2\", \"label\": \"new\", \"task\": \"\"}]}",
+  "versions": {
+   "catalogue": "skills-2026-10-27.1",
+   "router_prompt": "router-2026-10-27.1"
+  }
+ },
+ "91501b86afb35a5760c7a7604a8e4ca8": {
+  "completion_tokens": 1468,
+  "latency_s": 4.719,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 625,
+  "request": "87356b75a9a28cde71e846f3463a9581",
+  "text": "{\"parts\": [{\"confidence\": 0.96, \"id\": \"p1\", \"label\": \"current\", \"task\": \"\"}, {\"confidence\": 0.84, \"id\": \"p2\", \"label\": \"adds\", \"task\": \"t0\"}]}",
+  "versions": {
+   "catalogue": "skills-2026-10-27.1",
+   "router_prompt": "router-2026-10-27.1"
+  }
+ },
+ "921450c3f6abd353a4d5bccc2de15244": {
+  "completion_tokens": 576,
+  "latency_s": 2.707,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 631,
+  "request": "bc025691ea2eee69beda5f8885abc26a",
+  "text": "{\"parts\": [{\"confidence\": 0.95, \"id\": \"p1\", \"label\": \"corrects\", \"task\": \"t1\"}]}",
+  "versions": {
+   "catalogue": "skills-2026-10-27.1",
+   "router_prompt": "router-2026-10-27.1"
+  }
  },
  "93267abf1d0f02dd2abd0d7511be1145": {
   "completion_tokens": 464,
@@ -363,19 +666,17 @@
   "prompt_tokens": 593,
   "text": "{\"parts\": [{\"confidence\": 0.97, \"id\": \"p1\", \"label\": \"new\", \"task\": \"\"}]}"
  },
- "937ecb79d3c88ba05ca2ad014a88de71": {
-  "completion_tokens": 511,
-  "latency_s": 2.097,
+ "9574b4e92298d3912981a0dc99b1494c": {
+  "completion_tokens": 707,
+  "latency_s": 2.835,
   "model": "muse-spark-1.3",
-  "prompt_tokens": 609,
-  "text": "{\"parts\": [{\"confidence\": 1, \"id\": \"p1\", \"label\": \"cancels\", \"task\": \"t1\"}]}"
- },
- "95e69a75d18427f7ead6eff479443331": {
-  "completion_tokens": 650,
-  "latency_s": 2.561,
-  "model": "muse-spark-1.3",
-  "prompt_tokens": 623,
-  "text": "{\"parts\": [{\"confidence\": 0.9, \"id\": \"p1\", \"label\": \"current\", \"task\": \"\"}, {\"confidence\": 0.95, \"id\": \"p2\", \"label\": \"new\", \"task\": \"\"}]}"
+  "prompt_tokens": 637,
+  "request": "9dfa814a6c92a4b74e036632341368fa",
+  "text": "{\"parts\": [{\"confidence\": 0.9, \"id\": \"p1\", \"label\": \"corrects\", \"task\": \"t0\"}]}",
+  "versions": {
+   "catalogue": "skills-2026-10-27.1",
+   "router_prompt": "router-2026-10-27.1"
+  }
  },
  "95f82c793d55561dd0015555943abcf3": {
   "completion_tokens": 729,
@@ -384,13 +685,6 @@
   "prompt_tokens": 566,
   "text": "{\"parts\": [{\"confidence\": 0.98, \"id\": \"p1\", \"label\": \"current\", \"task\": \"\"}, {\"confidence\": 0.92, \"id\": \"p2\", \"label\": \"new\", \"task\": \"\"}]}"
  },
- "97bbd2f181b0eba52d550b82c9368d2e": {
-  "completion_tokens": 696,
-  "latency_s": 2.568,
-  "model": "muse-spark-1.3",
-  "prompt_tokens": 764,
-  "text": "{\"route\": \"order/order-intake\", \"confidence\": 0.95, \"second\": \"\", \"language\": \"yo\"}"
- },
  "98a7251b15f1e28dfa7bf07d865cdf70": {
   "completion_tokens": 1102,
   "latency_s": 3.937,
@@ -398,26 +692,17 @@
   "prompt_tokens": 592,
   "text": "{\"parts\": [{\"confidence\": 0.9, \"id\": \"p1\", \"label\": \"corrects\", \"task\": \"t0\"}, {\"confidence\": 0.9, \"id\": \"p2\", \"label\": \"new\", \"task\": \"\"}]}"
  },
- "9d30b15c8ed3a0f475499bc8a9460d03": {
-  "completion_tokens": 654,
-  "latency_s": 2.228,
+ "9ca9e7198cccc7ae080c0766b0e7d3c0": {
+  "completion_tokens": 434,
+  "latency_s": 1.609,
   "model": "muse-spark-1.3",
-  "prompt_tokens": 629,
-  "text": "{\"parts\": [{\"confidence\": 0.96, \"id\": \"p1\", \"label\": \"new\", \"task\": \"\"}]}"
- },
- "9dfa814a6c92a4b74e036632341368fa": {
-  "completion_tokens": 707,
-  "latency_s": 2.835,
-  "model": "muse-spark-1.3",
-  "prompt_tokens": 637,
-  "text": "{\"parts\": [{\"confidence\": 0.9, \"id\": \"p1\", \"label\": \"corrects\", \"task\": \"t0\"}]}"
- },
- "9e7aaa390690435486db6a47337ad4ab": {
-  "completion_tokens": 510,
-  "latency_s": 2.435,
-  "model": "muse-spark-1.3",
-  "prompt_tokens": 635,
-  "text": "{\"parts\": [{\"confidence\": 0.9, \"id\": \"p1\", \"label\": \"adds\", \"task\": \"t0\"}]}"
+  "prompt_tokens": 627,
+  "request": "5bdc4f626d226b7868cf9605f26f51bf",
+  "text": "{\"parts\": [{\"confidence\": 0.99, \"id\": \"p1\", \"label\": \"chat\", \"task\": \"\"}]}",
+  "versions": {
+   "catalogue": "skills-2026-10-27.1",
+   "router_prompt": "router-2026-10-27.1"
+  }
  },
  "a0f7749f9496e259d2b1b57794b1839a": {
   "completion_tokens": 604,
@@ -426,33 +711,17 @@
   "prompt_tokens": 597,
   "text": "{\"parts\": [{\"confidence\": 0.92, \"id\": \"p1\", \"label\": \"adds\", \"task\": \"t0\"}]}"
  },
- "a484545d19473081e8e8dc5d223d0860": {
-  "completion_tokens": 251,
-  "latency_s": 1.323,
+ "a4ebedb4bb9e59780c5aee56b6f75290": {
+  "completion_tokens": 449,
+  "latency_s": 2.332,
   "model": "muse-spark-1.3",
-  "prompt_tokens": 755,
-  "text": "{\"route\": \"order/order-intake\", \"confidence\": 0.99, \"second\": \"\", \"language\": \"en\"}"
- },
- "a53caf99c1332529b1cc13d3fa197c34": {
-  "completion_tokens": 755,
-  "latency_s": 3.397,
-  "model": "muse-spark-1.3",
-  "prompt_tokens": 637,
-  "text": "{\"parts\": [{\"confidence\": 0.85, \"id\": \"p1\", \"label\": \"adds\", \"task\": \"t0\"}]}"
- },
- "a6ff46564b490ee04df9cd0203b9ea7c": {
-  "completion_tokens": 554,
-  "latency_s": 2.404,
-  "model": "muse-spark-1.3",
-  "prompt_tokens": 600,
-  "text": "{\"parts\": [{\"confidence\": 0.99, \"id\": \"p1\", \"label\": \"chat\", \"task\": \"\"}, {\"confidence\": 0.99, \"id\": \"p2\", \"label\": \"current\", \"task\": \"\"}]}"
- },
- "a7a8d608149ece8800dc76b767e9df38": {
-  "completion_tokens": 454,
-  "latency_s": 2.03,
-  "model": "muse-spark-1.3",
-  "prompt_tokens": 414,
-  "text": "{\"confidence\": 0.92, \"label\": \"yes\"}"
+  "prompt_tokens": 635,
+  "request": "c34645cc501daf25dcd95ad3740ccbab",
+  "text": "{\"parts\": [{\"confidence\": 0.99, \"id\": \"p1\", \"label\": \"corrects\", \"task\": \"t0\"}]}",
+  "versions": {
+   "catalogue": "skills-2026-10-27.1",
+   "router_prompt": "router-2026-10-27.1"
+  }
  },
  "acb3dacc998d6b6986e5ff0b4307679d": {
   "completion_tokens": 487,
@@ -475,19 +744,17 @@
   "prompt_tokens": 582,
   "text": "{\"parts\": [{\"confidence\": 0.95, \"id\": \"p1\", \"label\": \"current\", \"task\": \"\"}]}"
  },
- "b0829d23b2581406fa019219b1356388": {
-  "completion_tokens": 481,
-  "latency_s": 2.427,
+ "b2d2310724f8fa448a5cd8f667c12f74": {
+  "completion_tokens": 700,
+  "latency_s": 2.991,
   "model": "muse-spark-1.3",
-  "prompt_tokens": 610,
-  "text": "{\"parts\": [{\"confidence\": 0.99, \"id\": \"p1\", \"label\": \"current\", \"task\": \"\"}, {\"confidence\": 0.97, \"id\": \"p2\", \"label\": \"new\", \"task\": \"\"}]}"
- },
- "b3302d25d4f0c4678c8ba2bc2fcd1b89": {
-  "completion_tokens": 681,
-  "latency_s": 2.872,
-  "model": "muse-spark-1.3",
-  "prompt_tokens": 620,
-  "text": "{\"parts\": [{\"confidence\": 0.97, \"id\": \"p1\", \"label\": \"current\", \"task\": \"\"}, {\"confidence\": 0.96, \"id\": \"p2\", \"label\": \"new\", \"task\": \"\"}]}"
+  "prompt_tokens": 769,
+  "request": "bd2560c0456af357dc0b5b8413e231be",
+  "text": "",
+  "versions": {
+   "catalogue": "skills-2026-10-27.1",
+   "router_prompt": "router-2026-10-27.1"
+  }
  },
  "b39e67d4af6407501948e25b479a94ce": {
   "completion_tokens": 545,
@@ -496,19 +763,17 @@
   "prompt_tokens": 571,
   "text": "{\"parts\": [{\"confidence\": 0.99, \"id\": \"p1\", \"label\": \"current\", \"task\": \"t0\"}, {\"confidence\": 0.97, \"id\": \"p2\", \"label\": \"new\", \"task\": \"\"}]}"
  },
- "b4c2d209b3f3869b869713323d717bf3": {
-  "completion_tokens": 830,
-  "latency_s": 3.256,
+ "b58588b8cd28078180deb28dcab322af": {
+  "completion_tokens": 511,
+  "latency_s": 2.097,
   "model": "muse-spark-1.3",
-  "prompt_tokens": 602,
-  "text": "{\"parts\": [{\"confidence\": 0.95, \"id\": \"p1\", \"label\": \"current\", \"task\": \"\"}, {\"confidence\": 0.99, \"id\": \"p2\", \"label\": \"current\", \"task\": \"\"}]}"
- },
- "b7a7df4ce55e84c9d16f6b0a01173c55": {
-  "completion_tokens": 579,
-  "latency_s": 2.69,
-  "model": "muse-spark-1.3",
-  "prompt_tokens": 411,
-  "text": "{\"confidence\": 0.85, \"label\": \"unclear\"}"
+  "prompt_tokens": 609,
+  "request": "937ecb79d3c88ba05ca2ad014a88de71",
+  "text": "{\"parts\": [{\"confidence\": 1, \"id\": \"p1\", \"label\": \"cancels\", \"task\": \"t1\"}]}",
+  "versions": {
+   "catalogue": "skills-2026-10-27.1",
+   "router_prompt": "router-2026-10-27.1"
+  }
  },
  "b7bea17769bd3a393577c796e6f44cf5": {
   "completion_tokens": 898,
@@ -524,20 +789,6 @@
   "prompt_tokens": 614,
   "text": "{\"parts\": [{\"confidence\": 0.9, \"id\": \"p1\", \"label\": \"adds\", \"task\": \"t0\"}]}"
  },
- "b9b589dc6edc4a6aec44ec941e86797a": {
-  "completion_tokens": 900,
-  "latency_s": 3.453,
-  "model": "muse-spark-1.3",
-  "prompt_tokens": 636,
-  "text": "{\"parts\": [{\"confidence\": 0.9, \"id\": \"p1\", \"label\": \"corrects\", \"task\": \"t0\"}]}"
- },
- "bb3fcd5fb764c010442b127b230eade6": {
-  "completion_tokens": 633,
-  "latency_s": 2.446,
-  "model": "muse-spark-1.3",
-  "prompt_tokens": 603,
-  "text": "{\"parts\": [{\"confidence\": 0.9, \"id\": \"p1\", \"label\": \"cancels\", \"task\": \"t0\"}]}"
- },
  "bb44309649ce27e20138886c8ef70d26": {
   "completion_tokens": 916,
   "latency_s": 3.709,
@@ -545,54 +796,29 @@
   "prompt_tokens": 599,
   "text": "{\"parts\": [{\"confidence\": 0.9, \"id\": \"p1\", \"label\": \"adds\", \"task\": \"t0\"}]}"
  },
- "bc025691ea2eee69beda5f8885abc26a": {
-  "completion_tokens": 576,
-  "latency_s": 2.707,
+ "bc9ed39f83335eda2ae615d85323acb1": {
+  "completion_tokens": 400,
+  "latency_s": 2.442,
   "model": "muse-spark-1.3",
-  "prompt_tokens": 631,
-  "text": "{\"parts\": [{\"confidence\": 0.95, \"id\": \"p1\", \"label\": \"corrects\", \"task\": \"t1\"}]}"
+  "prompt_tokens": 422,
+  "request": "12a7742ab6f4987710a2be61d87d72bb",
+  "text": "{\"confidence\": 0.95, \"label\": \"yes\"}",
+  "versions": {
+   "catalogue": "skills-2026-10-27.1",
+   "router_prompt": "router-2026-10-27.1"
+  }
  },
- "bd2560c0456af357dc0b5b8413e231be": {
-  "completion_tokens": 700,
-  "latency_s": 2.991,
+ "c31df16ec1d63b48f8e5cac427b61bcf": {
+  "completion_tokens": 547,
+  "latency_s": 3.038,
   "model": "muse-spark-1.3",
-  "prompt_tokens": 769,
-  "text": ""
- },
- "c155e0066b2a105f6a421862ff840a36": {
-  "completion_tokens": 740,
-  "latency_s": 2.935,
-  "model": "muse-spark-1.3",
-  "prompt_tokens": 611,
-  "text": "{\"parts\": [{\"confidence\": 0.95, \"id\": \"p1\", \"label\": \"corrects\", \"task\": \"t1\"}]}"
- },
- "c24600243d90c2111500d7bf4784e45d": {
-  "completion_tokens": 544,
-  "latency_s": 2.578,
-  "model": "muse-spark-1.3",
-  "prompt_tokens": 632,
-  "text": "{\"parts\": [{\"confidence\": 0.95, \"id\": \"p1\", \"label\": \"current\", \"task\": \"\"}]}"
- },
- "c34645cc501daf25dcd95ad3740ccbab": {
-  "completion_tokens": 449,
-  "latency_s": 2.332,
-  "model": "muse-spark-1.3",
-  "prompt_tokens": 635,
-  "text": "{\"parts\": [{\"confidence\": 0.99, \"id\": \"p1\", \"label\": \"corrects\", \"task\": \"t0\"}]}"
- },
- "c3dce74d1b6a9780beda24c87ca08ab8": {
-  "completion_tokens": 216,
-  "latency_s": 1.377,
-  "model": "muse-spark-1.3",
-  "prompt_tokens": 416,
-  "text": "{\"confidence\": 0.95, \"label\": \"short\"}"
- },
- "c41bf5f275131d3da06346d98b26a547": {
-  "completion_tokens": 549,
-  "latency_s": 2.21,
-  "model": "muse-spark-1.3",
-  "prompt_tokens": 607,
-  "text": "{\"parts\": [{\"confidence\": 0.95, \"id\": \"p1\", \"label\": \"current\", \"task\": \"\"}, {\"confidence\": 0.95, \"id\": \"p2\", \"label\": \"new\", \"task\": \"\"}]}"
+  "prompt_tokens": 752,
+  "request": "cb54c721e7e423bb76488054466d1fc5",
+  "text": "{\"route\": \"credit/credit-request\", \"confidence\": 0.85, \"second\": \"\", \"language\": \"pcm\"}",
+  "versions": {
+   "catalogue": "skills-2026-10-27.1",
+   "router_prompt": "router-2026-10-27.1"
+  }
  },
  "c53a872af7e9c849a4e8924949368554": {
   "completion_tokens": 475,
@@ -615,26 +841,41 @@
   "prompt_tokens": 596,
   "text": "{\"parts\": [{\"confidence\": 0.97, \"id\": \"p1\", \"label\": \"corrects\", \"task\": \"t1\"}]}"
  },
- "cb54c721e7e423bb76488054466d1fc5": {
-  "completion_tokens": 547,
-  "latency_s": 3.038,
+ "cc8d4bc97220da2b044b50180bb5a4c6": {
+  "completion_tokens": 614,
+  "latency_s": 2.127,
   "model": "muse-spark-1.3",
-  "prompt_tokens": 752,
-  "text": "{\"route\": \"credit/credit-request\", \"confidence\": 0.85, \"second\": \"\", \"language\": \"pcm\"}"
+  "prompt_tokens": 622,
+  "request": "407a02cf24af95f243baf82ecc42ed96",
+  "text": "{\"parts\": [{\"confidence\": 0.95, \"id\": \"p1\", \"label\": \"corrects\", \"task\": \"t1\"}]}",
+  "versions": {
+   "catalogue": "skills-2026-10-27.1",
+   "router_prompt": "router-2026-10-27.1"
+  }
  },
- "cbff6074c0420e15c7d07765059ade5e": {
-  "completion_tokens": 700,
-  "latency_s": 2.777,
+ "cccb05205a97c9da0e4a39cf3c261957": {
+  "completion_tokens": 549,
+  "latency_s": 2.21,
   "model": "muse-spark-1.3",
-  "prompt_tokens": 748,
-  "text": "{\"route\": \"order/order"
+  "prompt_tokens": 607,
+  "request": "c41bf5f275131d3da06346d98b26a547",
+  "text": "{\"parts\": [{\"confidence\": 0.95, \"id\": \"p1\", \"label\": \"current\", \"task\": \"\"}, {\"confidence\": 0.95, \"id\": \"p2\", \"label\": \"new\", \"task\": \"\"}]}",
+  "versions": {
+   "catalogue": "skills-2026-10-27.1",
+   "router_prompt": "router-2026-10-27.1"
+  }
  },
- "d02e3e83ee3162e38fbac86b111b3fcd": {
-  "completion_tokens": 1183,
-  "latency_s": 4.931,
+ "cd21e3f64ba67ad6d6988c0a254bf2a8": {
+  "completion_tokens": 866,
+  "latency_s": 3.003,
   "model": "muse-spark-1.3",
-  "prompt_tokens": 627,
-  "text": "{\"parts\": [{\"confidence\": 0.75, \"id\": \"p1\", \"label\": \"corrects\", \"task\": \"t1\"}]}"
+  "prompt_tokens": 642,
+  "request": "f5e6b5d51a55a3710bcd0c349a0d18f7",
+  "text": "{\"parts\": [{\"confidence\": 0.9, \"id\": \"p1\", \"label\": \"corrects\", \"task\": \"t1\"}]}",
+  "versions": {
+   "catalogue": "skills-2026-10-27.1",
+   "router_prompt": "router-2026-10-27.1"
+  }
  },
  "d18192ac2bbdbb74c69a4fe91887ab1a": {
   "completion_tokens": 1256,
@@ -643,26 +884,29 @@
   "prompt_tokens": 602,
   "text": "{\"parts\": [{\"confidence\": 0.85, \"id\": \"p1\", \"label\": \"adds\", \"task\": \"t0\"}]}"
  },
- "d3377534fb72baf235c15fd9671c076c": {
-  "completion_tokens": 646,
-  "latency_s": 2.577,
+ "d2efe9cb24e97453507d752069b4691b": {
+  "completion_tokens": 544,
+  "latency_s": 2.578,
   "model": "muse-spark-1.3",
-  "prompt_tokens": 630,
-  "text": "{\"parts\": [{\"confidence\": 0.92, \"id\": \"p1\", \"label\": \"cancels\", \"task\": \"t0\"}]}"
+  "prompt_tokens": 632,
+  "request": "c24600243d90c2111500d7bf4784e45d",
+  "text": "{\"parts\": [{\"confidence\": 0.95, \"id\": \"p1\", \"label\": \"current\", \"task\": \"\"}]}",
+  "versions": {
+   "catalogue": "skills-2026-10-27.1",
+   "router_prompt": "router-2026-10-27.1"
+  }
  },
- "d8336244a459959ddaf36e6728927378": {
-  "completion_tokens": 1382,
-  "latency_s": 5.562,
+ "d6cdd60e295ed0d0581d2ab2edcd9ee4": {
+  "completion_tokens": 1183,
+  "latency_s": 4.931,
   "model": "muse-spark-1.3",
-  "prompt_tokens": 625,
-  "text": "{\"parts\": [{\"confidence\": 0.8, \"id\": \"p1\", \"label\": \"current\", \"task\": \"\"}, {\"confidence\": 0.95, \"id\": \"p2\", \"label\": \"new\", \"task\": \"\"}]}"
- },
- "d844e3a0432799e14784d4743eabea98": {
-  "completion_tokens": 775,
-  "latency_s": 2.524,
-  "model": "muse-spark-1.3",
-  "prompt_tokens": 611,
-  "text": "{\"parts\": [{\"confidence\": 0.98, \"id\": \"p1\", \"label\": \"current\", \"task\": \"\"}, {\"confidence\": 0.95, \"id\": \"p2\", \"label\": \"new\", \"task\": \"\"}]}"
+  "prompt_tokens": 627,
+  "request": "d02e3e83ee3162e38fbac86b111b3fcd",
+  "text": "{\"parts\": [{\"confidence\": 0.75, \"id\": \"p1\", \"label\": \"corrects\", \"task\": \"t1\"}]}",
+  "versions": {
+   "catalogue": "skills-2026-10-27.1",
+   "router_prompt": "router-2026-10-27.1"
+  }
  },
  "db51fbd6e0586215f81a27dc1e546ee5": {
   "completion_tokens": 792,
@@ -671,6 +915,30 @@
   "prompt_tokens": 575,
   "text": "{\"parts\": [{\"confidence\": 0.99, \"id\": \"p1\", \"label\": \"current\", \"task\": \"\"}, {\"confidence\": 0.95, \"id\": \"p2\", \"label\": \"new\", \"task\": \"\"}]}"
  },
+ "dcbd316f3dfdc44316a8c8015130512f": {
+  "completion_tokens": 882,
+  "latency_s": 3.106,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 646,
+  "request": "e4230c1f5bdba122696cf693bba4652d",
+  "text": "{\"parts\": [{\"confidence\": 0.92, \"id\": \"p1\", \"label\": \"corrects\", \"task\": \"t1\"}, {\"confidence\": 0.99, \"id\": \"p2\", \"label\": \"chat\", \"task\": \"\"}]}",
+  "versions": {
+   "catalogue": "skills-2026-10-27.1",
+   "router_prompt": "router-2026-10-27.1"
+  }
+ },
+ "dea8db2f280d303a410a67d50a72b446": {
+  "completion_tokens": 650,
+  "latency_s": 2.561,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 623,
+  "request": "95e69a75d18427f7ead6eff479443331",
+  "text": "{\"parts\": [{\"confidence\": 0.9, \"id\": \"p1\", \"label\": \"current\", \"task\": \"\"}, {\"confidence\": 0.95, \"id\": \"p2\", \"label\": \"new\", \"task\": \"\"}]}",
+  "versions": {
+   "catalogue": "skills-2026-10-27.1",
+   "router_prompt": "router-2026-10-27.1"
+  }
+ },
  "e08469bbaf2ac40faf49ad0e05c9243b": {
   "completion_tokens": 708,
   "latency_s": 2.828,
@@ -678,19 +946,29 @@
   "prompt_tokens": 601,
   "text": "{\"parts\": [{\"confidence\": 0.92, \"id\": \"p1\", \"label\": \"corrects\", \"task\": \"t0\"}]}"
  },
- "e4230c1f5bdba122696cf693bba4652d": {
-  "completion_tokens": 882,
-  "latency_s": 3.106,
+ "e52b1c8cc609e43c5cf9d502c96b0c40": {
+  "completion_tokens": 937,
+  "latency_s": 4.134,
   "model": "muse-spark-1.3",
-  "prompt_tokens": 646,
-  "text": "{\"parts\": [{\"confidence\": 0.92, \"id\": \"p1\", \"label\": \"corrects\", \"task\": \"t1\"}, {\"confidence\": 0.99, \"id\": \"p2\", \"label\": \"chat\", \"task\": \"\"}]}"
+  "prompt_tokens": 634,
+  "request": "e8e4e66426dedc289ba5217610c18ec7",
+  "text": "{\"parts\": [{\"confidence\": 0.85, \"id\": \"p1\", \"label\": \"current\", \"task\": \"\"}, {\"confidence\": 0.95, \"id\": \"p2\", \"label\": \"new\", \"task\": \"\"}]}",
+  "versions": {
+   "catalogue": "skills-2026-10-27.1",
+   "router_prompt": "router-2026-10-27.1"
+  }
  },
- "e58a797baf3d364eaa2c82cabc8eb233": {
-  "completion_tokens": 372,
-  "latency_s": 1.985,
+ "e541e1e7b83bcd24c40e55c48a4bd2b6": {
+  "completion_tokens": 1070,
+  "latency_s": 4.459,
   "model": "muse-spark-1.3",
-  "prompt_tokens": 760,
-  "text": "{\"route\": \"order/order-intake\", \"confidence\": 0.85, \"second\": \"collector/collections\", \"language\": \"pcm\"}"
+  "prompt_tokens": 624,
+  "request": "fa6221527ff83384baeba8e4c7020dbd",
+  "text": "{\"parts\": [{\"confidence\": 0.9, \"id\": \"p1\", \"label\": \"current\", \"task\": \"\"}, {\"confidence\": 0.9, \"id\": \"p2\", \"label\": \"new\", \"task\": \"\"}]}",
+  "versions": {
+   "catalogue": "skills-2026-10-27.1",
+   "router_prompt": "router-2026-10-27.1"
+  }
  },
  "e5ba2fc98b1e65a9f5dd21aa0106efee": {
   "completion_tokens": 466,
@@ -699,19 +977,29 @@
   "prompt_tokens": 575,
   "text": "{\"parts\": [{\"confidence\": 0.95, \"id\": \"p1\", \"label\": \"current\", \"task\": \"\"}]}"
  },
- "e8e4e66426dedc289ba5217610c18ec7": {
-  "completion_tokens": 937,
-  "latency_s": 4.134,
+ "eb07d4a7fe927dc77f7ec79f628d0889": {
+  "completion_tokens": 455,
+  "latency_s": 1.94,
   "model": "muse-spark-1.3",
-  "prompt_tokens": 634,
-  "text": "{\"parts\": [{\"confidence\": 0.85, \"id\": \"p1\", \"label\": \"current\", \"task\": \"\"}, {\"confidence\": 0.95, \"id\": \"p2\", \"label\": \"new\", \"task\": \"\"}]}"
+  "prompt_tokens": 611,
+  "request": "9067062010e4759b0035b1178a1ea50c",
+  "text": "{\"parts\": [{\"confidence\": 0.95, \"id\": \"p1\", \"label\": \"corrects\", \"task\": \"t1\"}]}",
+  "versions": {
+   "catalogue": "skills-2026-10-27.1",
+   "router_prompt": "router-2026-10-27.1"
+  }
  },
- "e9a856c28537ebb546063281e3bb6fee": {
-  "completion_tokens": 1271,
-  "latency_s": 5.228,
+ "ec3577937d0cb91ac3a5ab6187046e25": {
+  "completion_tokens": 862,
+  "latency_s": 3.387,
   "model": "muse-spark-1.3",
-  "prompt_tokens": 622,
-  "text": "{\"parts\": [{\"confidence\": 0.85, \"id\": \"p1\", \"label\": \"current\", \"task\": \"\"}, {\"confidence\": 0.95, \"id\": \"p2\", \"label\": \"new\", \"task\": \"\"}]}"
+  "prompt_tokens": 646,
+  "request": "588c585d4af6e5a3b3bc679a8f50d85c",
+  "text": "{\"parts\": [{\"confidence\": 0.7, \"id\": \"p1\", \"label\": \"unclear\", \"task\": \"\"}]}",
+  "versions": {
+   "catalogue": "skills-2026-10-27.1",
+   "router_prompt": "router-2026-10-27.1"
+  }
  },
  "eca62f36cd0259063d9a6b044bee8e77": {
   "completion_tokens": 596,
@@ -720,19 +1008,29 @@
   "prompt_tokens": 596,
   "text": "{\"parts\": [{\"confidence\": 0.92, \"id\": \"p1\", \"label\": \"current\", \"task\": \"\"}]}"
  },
- "f1305b09e25e4d7d54a0284d02cd45c4": {
-  "completion_tokens": 670,
-  "latency_s": 3.022,
+ "f57da4a6aa9165485c37b39e58bb737d": {
+  "completion_tokens": 1118,
+  "latency_s": 4.644,
   "model": "muse-spark-1.3",
-  "prompt_tokens": 633,
-  "text": "{\"parts\": [{\"confidence\": 0.92, \"id\": \"p1\", \"label\": \"adds\", \"task\": \"t0\"}]}"
+  "prompt_tokens": 628,
+  "request": "58468304e4e95286fa83fcf292f2ca0f",
+  "text": "{\"parts\": [{\"confidence\": 0.9, \"id\": \"p1\", \"label\": \"corrects\", \"task\": \"t0\"}, {\"confidence\": 0.9, \"id\": \"p2\", \"label\": \"new\", \"task\": \"\"}]}",
+  "versions": {
+   "catalogue": "skills-2026-10-27.1",
+   "router_prompt": "router-2026-10-27.1"
+  }
  },
- "f5e6b5d51a55a3710bcd0c349a0d18f7": {
-  "completion_tokens": 866,
-  "latency_s": 3.003,
+ "f5c62814d469924980c9ab232fac6b3f": {
+  "completion_tokens": 216,
+  "latency_s": 1.377,
   "model": "muse-spark-1.3",
-  "prompt_tokens": 642,
-  "text": "{\"parts\": [{\"confidence\": 0.9, \"id\": \"p1\", \"label\": \"corrects\", \"task\": \"t1\"}]}"
+  "prompt_tokens": 416,
+  "request": "c3dce74d1b6a9780beda24c87ca08ab8",
+  "text": "{\"confidence\": 0.95, \"label\": \"short\"}",
+  "versions": {
+   "catalogue": "skills-2026-10-27.1",
+   "router_prompt": "router-2026-10-27.1"
+  }
  },
  "f6fdd560d76354d1d000747065a5a630": {
   "completion_tokens": 662,
@@ -741,12 +1039,17 @@
   "prompt_tokens": 598,
   "text": "{\"parts\": [{\"confidence\": 0.9, \"id\": \"p1\", \"label\": \"current\", \"task\": \"t0\"}, {\"confidence\": 0.95, \"id\": \"p2\", \"label\": \"new\", \"task\": \"\"}]}"
  },
- "f781c0b16c0a9209e3df9c650863e168": {
-  "completion_tokens": 341,
-  "latency_s": 2.213,
+ "f78a2602ebc6a3777776530db027a3d4": {
+  "completion_tokens": 454,
+  "latency_s": 2.03,
   "model": "muse-spark-1.3",
-  "prompt_tokens": 410,
-  "text": "{\"confidence\": 0.9, \"label\": \"yes\"}"
+  "prompt_tokens": 414,
+  "request": "a7a8d608149ece8800dc76b767e9df38",
+  "text": "{\"confidence\": 0.92, \"label\": \"yes\"}",
+  "versions": {
+   "catalogue": "skills-2026-10-27.1",
+   "router_prompt": "router-2026-10-27.1"
+  }
  },
  "fa02c558a70c152cc3ddb48154d39c83": {
   "completion_tokens": 1497,
@@ -755,12 +1058,17 @@
   "prompt_tokens": 601,
   "text": "{\"parts\": [{\"confidence\": 0.85, \"id\": \"p1\", \"label\": \"corrects\", \"task\": \"t1\"}]}"
  },
- "fa6221527ff83384baeba8e4c7020dbd": {
-  "completion_tokens": 1070,
-  "latency_s": 4.459,
+ "fa70a8dacd75f6868796328c460fcbab": {
+  "completion_tokens": 390,
+  "latency_s": 2.019,
   "model": "muse-spark-1.3",
-  "prompt_tokens": 624,
-  "text": "{\"parts\": [{\"confidence\": 0.9, \"id\": \"p1\", \"label\": \"current\", \"task\": \"\"}, {\"confidence\": 0.9, \"id\": \"p2\", \"label\": \"new\", \"task\": \"\"}]}"
+  "prompt_tokens": 412,
+  "request": "2ccf136273a65ad62e54f2dfc8774e04",
+  "text": "{\"confidence\": 0.95, \"label\": \"yes\"}",
+  "versions": {
+   "catalogue": "skills-2026-10-27.1",
+   "router_prompt": "router-2026-10-27.1"
+  }
  },
  "fd689a32723ececf357a1f0f68efcac5": {
   "completion_tokens": 591,
@@ -768,6 +1076,18 @@
   "model": "muse-spark-1.3",
   "prompt_tokens": 595,
   "text": "{\"parts\": [{\"confidence\": 0.97, \"id\": \"p1\", \"label\": \"cancels\", \"task\": \"t1\"}]}"
+ },
+ "fdecd00f57ca2f27f103e0bd69755e4e": {
+  "completion_tokens": 563,
+  "latency_s": 2.51,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 631,
+  "request": "35777ef5fec1ea5a9f2c97578ef35b17",
+  "text": "{\"parts\": [{\"confidence\": 0.95, \"id\": \"p1\", \"label\": \"cancels\", \"task\": \"t1\"}]}",
+  "versions": {
+   "catalogue": "skills-2026-10-27.1",
+   "router_prompt": "router-2026-10-27.1"
+  }
  },
  "fef15a22aad4d602fbbcab7b01cda722": {
   "completion_tokens": 450,

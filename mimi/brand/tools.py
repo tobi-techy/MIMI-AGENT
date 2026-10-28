@@ -23,6 +23,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from mimi.harness.errors import ToolError
 from mimi.harness.registry import ToolContext, ToolRegistry
+from mimi.tz import lagos_day
 
 
 @dataclass(frozen=True)
@@ -122,9 +123,8 @@ def register_brand_tools(registry: ToolRegistry, ports: BrandPorts) -> None:
 
     def get_brand_promos(ctx: ToolContext, args: PromoIn) -> PromoOut:
         """The manufacturers' promos running today (Africa/Lagos day), optionally for one brand, with shop_reply written by code from them. Read only."""
-        from zoneinfo import ZoneInfo
 
-        day = ctx.now.astimezone(ZoneInfo("Africa/Lagos")).date()
+        day = lagos_day(ctx.now)
         rows = promos_on(day, args.brand)
         return PromoOut(
             on_day=day.isoformat(),

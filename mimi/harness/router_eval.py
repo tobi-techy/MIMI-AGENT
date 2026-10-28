@@ -46,6 +46,7 @@ from mimi.harness.gateway import kobo_cost
 from mimi.harness.inbound import Directory, Inbound, Media, Payload
 from mimi.harness.router import RouteDecision, Router, ThreadState, risk
 from mimi.harness.skills import MONEY_SKILLS
+from mimi.harness.versions import ROUTER_VERSIONS
 from mimi.models.cache import CachedModel, CacheMiss
 from mimi.models.meta import MetaChatModel
 from mimi.world.loader import load_world
@@ -241,7 +242,8 @@ def make_model(live: bool) -> CachedModel:
             raise SystemExit("--live needs META_API_KEY")
         inner = MetaChatModel(api_key=key, model=MODEL, reasoning_effort="minimal",
                               timeout_s=30.0)
-    return CachedModel(inner, CACHE, mode="through" if live else "replay", name=MODEL)
+    return CachedModel(inner, CACHE, mode="through" if live else "replay", name=MODEL,
+                       versions=ROUTER_VERSIONS)
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -279,6 +281,7 @@ def main(argv: list[str] | None = None) -> int:
         # nothing was checked (RAI-311).
         print(json.dumps(results, indent=1)[:4000])
         return exit_code({})
+    c["stale_cache_misses"] = model.stale  # recorded under other versions (RAI-309)
     latency_measured = bool(args.live) and model.cached_calls == 0
     marks = pass_marks(c, latency_measured=latency_measured)
     report = {

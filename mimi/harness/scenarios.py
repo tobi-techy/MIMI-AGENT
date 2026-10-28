@@ -21,15 +21,15 @@ from __future__ import annotations
 import json
 from collections.abc import Sequence
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta, timezone
+from datetime import datetime
 from typing import Any, Literal
 
 from mimi.harness.gateway import ModelTurn, ProviderError, say
 from mimi.harness.loop import naira_text
 from mimi.harness.types import RunEvent, RunStatus, WakeSource
+from mimi.tz import WAT
 from mimi.world.model import World
 
-WAT = timezone(timedelta(hours=1))
 Kind = Literal["chase", "balance", "paid_match", "paid_no_match", "promise", "quiet", "dispute"]
 Fault = Literal["", "provider_5xx", "bad_args_once", "tier_spoof"]
 

@@ -52,7 +52,6 @@ from dataclasses import dataclass, field
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from typing import Any, cast
-from zoneinfo import ZoneInfo
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
@@ -79,9 +78,9 @@ from mimi.harness.types import (
     Tier,
 )
 from mimi.harness.untrusted import defang
+from mimi.tz import LAGOS
 
 log = logging.getLogger(__name__)
-LAGOS = ZoneInfo("Africa/Lagos")
 
 CORE_RULES = """You are Mimi, an AI helper working for a Nigerian FMCG distributor (the owner).
 Rules that always hold:

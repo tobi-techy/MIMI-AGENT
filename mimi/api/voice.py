@@ -29,20 +29,18 @@ import os
 from collections.abc import Mapping
 from datetime import datetime
 from typing import Any
-from zoneinfo import ZoneInfo
 
 import sqlalchemy as sa
 from sqlalchemy.engine import Engine
 
 from mimi.store import schema as s
+from mimi.tz import LAGOS
 from mimi.voice.prefs import (
     VoicePreference,
     parse_voice_command,
     shop_voice_consent,
 )
 from mimi.voice.render import render_voice
-
-LAGOS = ZoneInfo("Africa/Lagos")
 
 VOICE_ON_TEXT = (
     "Voice replies are on. When you send me a voice note, I will answer with a "

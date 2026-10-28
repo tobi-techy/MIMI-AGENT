@@ -614,6 +614,7 @@ def main(argv: list[str] | None = None) -> int:
     idle = idle_suite(world)
 
     s, lv = scripted.summary(), live.summary()
+    lv["stale_cache_misses"] = rec.stale  # recorded under other versions (RAI-309)
     # Which latency each overhead number is (RAI-312). The scripted model
     # answers at once, so its overhead is the loop's own code time: a real
     # measurement and the one the mark checks. The live set replays recorded
@@ -656,7 +657,7 @@ def main(argv: list[str] | None = None) -> int:
     print("scripted:", {k: s[k] for k in ("task_completion", "median_model_calls_per_turn",
                                           "p95_loop_overhead_ms")})
     print("live:", {k: lv[k] for k in ("task_completion", "median_model_calls_per_turn",
-                                       "cache_misses", "model_spend_kobo", "by_kind")})
+                                       "cache_misses", "stale_cache_misses", "model_spend_kobo", "by_kind")})
     for f in (s["failures"] + lv["failures"])[:20]:
         print("  miss", f)
     return exit_code(marks)

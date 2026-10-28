@@ -69,6 +69,7 @@ from mimi.harness.registry import RegistryError, build_toolset
 from mimi.harness.router import Router, ThreadState
 from mimi.harness.skills import MONEY_SKILLS
 from mimi.harness.types import RunEvent
+from mimi.harness.versions import ROUTER_VERSIONS
 from mimi.models.cache import CachedModel
 from mimi.models.meta import MetaChatModel
 from mimi.runtime.outbox import MONEY_VERBS
@@ -500,7 +501,8 @@ def router_model(live: bool) -> CachedModel:
         key = os.environ.get("META_API_KEY", "").strip()
         inner = MetaChatModel(api_key=key, model=MODEL, reasoning_effort="minimal",
                               timeout_s=30.0)
-    return CachedModel(inner, ROUTER_CACHE, mode="through" if live else "replay", name=MODEL)
+    return CachedModel(inner, ROUTER_CACHE, mode="through" if live else "replay", name=MODEL,
+                       versions=ROUTER_VERSIONS)
 
 
 MARKS_DOC = {

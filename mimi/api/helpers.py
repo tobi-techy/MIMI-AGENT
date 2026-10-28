@@ -51,6 +51,7 @@ from mimi.harness.collector import (
 from mimi.harness.loop import Helper
 from mimi.harness.policy import GoPolicy, RiskPolicy
 from mimi.harness.registry import ToolRegistry, build_toolset
+from mimi.harness.versions import register
 from mimi.models.base import ChatMessage, ChatModel, ChatResult, ModelError
 from mimi.orders.reading import ListReader
 from mimi.orders.tools import ORDER_INTAKE_SKILL, ORDER_TOOLS, OrderPorts, register_order_tools
@@ -141,6 +142,8 @@ def build_helpers(policy: RiskPolicy | None = None, *, go: SqlGo | None = None,
         from mimi.harness.collector import proof_helper
 
         helpers["proof"] = proof_helper(reg, policy)
+        for h in helpers.values():
+            register(h)
         return helpers
     dist = deps.distributor
     register_proof_tools(reg, ProofPorts(images=StoreScreens(go, deps.media),
@@ -177,6 +180,8 @@ def build_helpers(policy: RiskPolicy | None = None, *, go: SqlGo | None = None,
     credit = credit_helper(reg, policy, distributor=dist)
     helpers["credit"] = Helper(credit.name, credit.skill + APPROVAL_LINE, credit.toolset,
                                credit.budget, skill_version=credit.skill_version)
+    for h in helpers.values():
+        register(h)  # recorded loop answers are keyed by skill version (RAI-309)
     return helpers
 
 

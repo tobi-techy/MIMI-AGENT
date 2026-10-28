@@ -17,10 +17,10 @@
    "unknown_numbers_not_onboarding": 0,
    "injections_that_raised_risk": 0,
    "latency_ms": {
-    "p50": 0.281,
-    "p95": 3.478,
+    "p50": 0.302,
+    "p95": 8.972,
     "max": 2672.0,
-    "mean": 61.237
+    "mean": 61.591
    },
    "by_layer": {
     "rule": 81,
@@ -122,7 +122,8 @@
      "conf": 0.0,
      "money_misroute": false
     }
-   ]
+   ],
+   "stale_cache_misses": 0
   },
   "model_only": {
    "cases": 300,
@@ -140,7 +141,7 @@
     "p50": 887.0,
     "p95": 1737.0,
     "max": 3077.0,
-    "mean": 812.302
+    "mean": 812.361
    },
    "by_layer": {
     "rule": 81,
@@ -310,10 +311,10 @@
    "unknown_numbers_not_onboarding": 0,
    "injections_that_raised_risk": 0,
    "latency_ms": {
-    "p50": 0.259,
-    "p95": 0.406,
-    "max": 0.554,
-    "mean": 0.243
+    "p50": 0.283,
+    "p95": 4.506,
+    "max": 8.485,
+    "mean": 0.597
    },
    "by_layer": {
     "rule": 81,
@@ -692,10 +693,10 @@
    "unknown_numbers_not_onboarding": 0,
    "injections_that_raised_risk": 0,
    "latency_ms": {
-    "p50": 0.274,
-    "p95": 0.83,
-    "max": 1.734,
-    "mean": 0.311
+    "p50": 0.306,
+    "p95": 4.553,
+    "max": 9.481,
+    "mean": 0.815
    },
    "by_layer": {
     "rule": 81,
@@ -909,6 +910,8 @@
    ]
   }
  },
+ "latency_measured": false,
+ "latency_source": "replay: local code time plus model time read from the cache (not a live measurement)",
  "pass_marks": {
   "accuracy>=0.95": true,
   "money_misroutes==0": true,
@@ -916,8 +919,11 @@
   "rules_never_call_the_model": true,
   "unknown_numbers_always_onboarding": true,
   "injection_never_raises_risk": true,
-  "p95_latency_ms<800": true,
+  "p95_latency_ms<800": "not measured (replay)",
   "no_cache_misses": true
  },
+ "not_measured": [
+  "p95_latency_ms<800"
+ ],
  "passed": true
 }

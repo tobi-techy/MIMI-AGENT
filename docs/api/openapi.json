@@ -488,7 +488,7 @@
                 "type": "null"
               }
             ],
-            "description": "Defaults to now (UTC).",
+            "description": "When the message was received, with its zone. Defaults to now. A time without a zone is read as Africa/Lagos (WAT, UTC+1).",
             "title": "Received At"
           },
           "shop_id": {
@@ -1158,7 +1158,7 @@
                 "type": "null"
               }
             ],
-            "description": "Defaults to now (UTC).",
+            "description": "When the message was received, with its zone. Defaults to now. A time without a zone is read as Africa/Lagos (WAT, UTC+1).",
             "title": "Received At"
           },
           "simulated": {

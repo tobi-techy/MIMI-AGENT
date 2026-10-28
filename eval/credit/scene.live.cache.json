@@ -1,31 +1,67 @@
 {
- "00de2ab51b7d6abedd908c4dfc13ddcf06321e87909f5c38227ee7abcd666500": {
-  "cached_tokens": 4209,
-  "completion_tokens": 40,
-  "content": "",
-  "finish_reason": "stop",
-  "latency_s": 0.982,
-  "model": "muse-spark-1.3",
-  "prompt_tokens": 4695,
-  "tool_calls": []
- },
- "059a2306adbaf6927a026999bb6cc3daacd1e3496289cb1a6113cc2b069b02e4": {
-  "cached_tokens": 5873,
-  "completion_tokens": 190,
+ "01d830a343b1da00ac10ce972d71eea0f58f6c452b3af4e026f2678eb5a54547": {
+  "cached_tokens": 3313,
+  "completion_tokens": 99,
   "content": "",
   "finish_reason": "tool_calls",
-  "latency_s": 1.254,
+  "latency_s": 0.942,
   "model": "muse-spark-1.3",
-  "prompt_tokens": 6352,
+  "prompt_tokens": 4524,
+  "request": "acde17e404f168bf0ba14da1300f9ac5b7fcde031ed68d58555856be6b5cd2ee",
   "tool_calls": [
    {
-    "arguments": "{\"body\":\"Your request is already with Coral Lane Trading. They decide the limit.\",\"channel\":\"shop_whatsapp\",\"ends_turn\":true,\"kind\":\"reply\",\"shop_id\":\"shop-003\"}",
-    "id": "call_53510c8c-4352-48c2-9d43-c4edfb64e260",
-    "name": "send_to_user"
+    "arguments": "{\"again\":true,\"shop_id\":\"shop-005\",\"why\":\"the photo is blurry\"}",
+    "id": "call_a0ccc746-b19b-4603-a056-7b991594fc2e",
+    "name": "ask_for_shelf_photo"
    }
-  ]
+  ],
+  "versions": {
+   "policy": "policy-2026-10-27",
+   "skill": "credit:credit-v0.1"
+  }
  },
- "0ad5511a6e831edba4942a5da732b8a3c0851976e04cfe5d762fc141fc2215f1": {
+ "085f806494c2eca02be47acdb8d55ab9c7ec8b1ce8fbd08c86acabb048f94296": {
+  "cached_tokens": 0,
+  "completion_tokens": 179,
+  "content": "",
+  "finish_reason": "stop",
+  "latency_s": 1.465,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 3818,
+  "request": "47068304143ad9405509c36ba8446f6d4d8741f7c8b90747632cda22d2d73de9",
+  "tool_calls": [],
+  "versions": {
+   "policy": "policy-2026-10-27",
+   "skill": "credit:credit-v0.1"
+  }
+ },
+ "086cc3d676137b391872fa9fa91b73242827b747e472cce58f30edb91d24f32b": {
+  "cached_tokens": 4465,
+  "completion_tokens": 570,
+  "content": "",
+  "finish_reason": "tool_calls",
+  "latency_s": 2.46,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 5519,
+  "request": "4938b3a450bc740a36857299cd2b67f2f0174e9795d312df86aa21daed3bfba1",
+  "tool_calls": [
+   {
+    "arguments": "{\"body\":\"I've sent your request to Coral Lane Trading with your payment history. They decide the limit.\",\"channel\":\"shop_whatsapp\",\"ends_turn\":true,\"shop_id\":\"shop-005\"}",
+    "id": "call_a9561927-1fbd-4283-8c00-0c54ed3e9f3c",
+    "name": "send_to_user"
+   },
+   {
+    "arguments": "{\"note_for_owner\":\"Funke & Sons Mini Mart owes N2,211,200 on a N2,480,000 limit with N1,070,050 overdue. 0 of 18 bank-verified payments on time and 9 of 13 payment promises broken.\",\"origin\":\"shop_ask\",\"photo_id\":\"\",\"review_id\":\"cr_7074650b57b254b8\",\"shop_id\":\"shop-005\"}",
+    "id": "call_407b8281-18b1-45a4-9df2-551edb11f0a2",
+    "name": "submit_credit_review"
+   }
+  ],
+  "versions": {
+   "policy": "policy-2026-10-27",
+   "skill": "credit:credit-v0.1"
+  }
+ },
+ "0f99a7c65399c36fc595dbbbefaf7008a022a7f29efa80c135d34c423fc564c2": {
   "cached_tokens": 3057,
   "completion_tokens": 209,
   "content": "",
@@ -33,121 +69,125 @@
   "latency_s": 1.295,
   "model": "muse-spark-1.3",
   "prompt_tokens": 3255,
+  "request": "0ad5511a6e831edba4942a5da732b8a3c0851976e04cfe5d762fc141fc2215f1",
   "tool_calls": [
    {
     "arguments": "{\"body\":\"To ask Coral Lane Trading for more credit, they need to see your payment history with them, and you have not shared it. Reply SHARE if you are happy to share it, or tell me if you'd rather not.\",\"channel\":\"shop_whatsapp\",\"ends_turn\":true,\"shop_id\":\"shop-016\"}",
     "id": "call_45bb21ed-2af3-4f0c-a16e-d1df08f8bdb5",
     "name": "send_to_user"
    }
-  ]
+  ],
+  "versions": {
+   "policy": "policy-2026-10-27",
+   "skill": "credit:credit-v0.1"
+  }
  },
- "165a736c79d13bff82edb1a2ad07d79389c0ec72b9885a00ba78dc7bc1965ccc": {
-  "cached_tokens": 3057,
-  "completion_tokens": 224,
+ "114ca3c4dce5b533f75bd42284ba96c8c817a4859ff206c58c22f9ce88606953": {
+  "cached_tokens": 3697,
+  "completion_tokens": 714,
   "content": "",
   "finish_reason": "tool_calls",
-  "latency_s": 1.247,
+  "latency_s": 4.749,
   "model": "muse-spark-1.3",
-  "prompt_tokens": 3497,
+  "prompt_tokens": 5033,
+  "request": "66f73dbec4869b87ab60dccd545523603710ca445f9371883f6caf693d79ae9d",
   "tool_calls": [
    {
-    "arguments": "{\"origin\":\"weekly_review\",\"shop_id\":\"shop-035\"}",
-    "id": "call_945faab2-61a8-4f78-b042-503f773bf54f",
-    "name": "prepare_credit_review"
-   },
-   {
-    "arguments": "{\"origin\":\"weekly_review\",\"shop_id\":\"shop-011\"}",
-    "id": "call_c942e399-55ca-4739-8ea3-97be8ed1f871",
-    "name": "prepare_credit_review"
-   },
-   {
-    "arguments": "{\"origin\":\"weekly_review\",\"shop_id\":\"shop-003\"}",
-    "id": "call_ca09fb2e-6825-4432-8b12-948addb9ab76",
-    "name": "prepare_credit_review"
-   }
-  ]
- },
- "16c2d2d77abf8b12b1691678338864b3fe917d958971d664d6435fd2f89e9657": {
-  "cached_tokens": 3825,
-  "completion_tokens": 129,
-  "content": "Photo received \u2014 counting your shelf stock now.",
-  "finish_reason": "tool_calls",
-  "latency_s": 1.116,
-  "model": "muse-spark-1.3",
-  "prompt_tokens": 4299,
-  "tool_calls": [
-   {
-    "arguments": "{\"photo_id\":\"ph_6c1d135d6c00\",\"shop_id\":\"shop-002\"}",
-    "id": "call_3ae4d0f2-5391-4661-85a4-64bcd94ec604",
+    "arguments": "{\"photo_id\":\"ph_c94787826bab\",\"shop_id\":\"shop-020\"}",
+    "id": "call_0d8ab9de-4df1-4d6a-8d14-0a3fc8907ea2",
     "name": "count_shelf_photo"
    }
-  ]
+  ],
+  "versions": {
+   "policy": "policy-2026-10-27",
+   "skill": "credit:credit-v0.1"
+  }
  },
- "1a32436fe5d631730ec019c4e7c2f3bc4381d85b9a9416154c556062b30189ee": {
+ "1ed1114dd5f7fc86b0b9249ad20bc60fda3e64068a8ae20b728af035262c0412": {
   "cached_tokens": 0,
-  "completion_tokens": 185,
-  "content": "Got the photo \u2014 I'll verify it works for the review.",
-  "finish_reason": "tool_calls",
-  "latency_s": 1.499,
-  "model": "muse-spark-1.3",
-  "prompt_tokens": 4105,
-  "tool_calls": [
-   {
-    "arguments": "{\"photo_id\":\"ph_ee32116d117f\",\"shop_id\":\"shop-013\"}",
-    "id": "call_29af4579-1a9f-4525-be20-50da05d6cdd7",
-    "name": "count_shelf_photo"
-   }
-  ]
- },
- "1a8f9d5e3424335821a100b74e0259e6c8f78e1676bf40043d3c31f411dc9626": {
-  "cached_tokens": 0,
-  "completion_tokens": 146,
+  "completion_tokens": 59,
   "content": "",
   "finish_reason": "tool_calls",
-  "latency_s": 1.199,
+  "latency_s": 0.953,
   "model": "muse-spark-1.3",
-  "prompt_tokens": 3588,
+  "prompt_tokens": 3124,
+  "request": "d95de1a572e32103dc96f4a2b43b7bc6301742216c2efe3854765238c33ed30f",
   "tool_calls": [
    {
-    "arguments": "{\"shop_id\":\"shop-013\"}",
-    "id": "call_48837b87-4d4e-4765-af86-0954e1bb4ec3",
-    "name": "ask_for_shelf_photo"
+    "arguments": "{\"limit\":3}",
+    "id": "call_46fd5d05-761d-4f1e-8af9-35d30dd77478",
+    "name": "find_credit_candidates"
    }
-  ]
+  ],
+  "versions": {
+   "policy": "policy-2026-10-27",
+   "skill": "credit:credit-v0.1"
+  }
  },
- "1f7c7973895050d393086a38a79ea54e955346f331a8bdd27225458ff364bf68": {
-  "cached_tokens": 2801,
-  "completion_tokens": 99,
-  "content": "Found the shop \u2014 now I'll gather its payment records.",
+ "20566017129a328fa76fadd185a0658f08b749e849c63f6c301cc5e17039061d": {
+  "cached_tokens": 5873,
+  "completion_tokens": 190,
+  "content": "",
   "finish_reason": "tool_calls",
-  "latency_s": 1.125,
+  "latency_s": 1.254,
   "model": "muse-spark-1.3",
-  "prompt_tokens": 3079,
+  "prompt_tokens": 6352,
+  "request": "059a2306adbaf6927a026999bb6cc3daacd1e3496289cb1a6113cc2b069b02e4",
+  "tool_calls": [
+   {
+    "arguments": "{\"body\":\"Your request is already with Coral Lane Trading. They decide the limit.\",\"channel\":\"shop_whatsapp\",\"ends_turn\":true,\"kind\":\"reply\",\"shop_id\":\"shop-003\"}",
+    "id": "call_53510c8c-4352-48c2-9d43-c4edfb64e260",
+    "name": "send_to_user"
+   }
+  ],
+  "versions": {
+   "policy": "policy-2026-10-27",
+   "skill": "credit:credit-v0.1"
+  }
+ },
+ "25a0531541da0fb5ca52bb8301e2ff01823aaf0cfe0ec6e03211921177f48105": {
+  "cached_tokens": 0,
+  "completion_tokens": 143,
+  "content": "",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.896,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 3597,
+  "request": "a3d6c94c69debb408a71da76cd3c244829ce94ef7a4d3e663fe4c009f9fe2cf5",
   "tool_calls": [
    {
     "arguments": "{\"shop_id\":\"shop-003\"}",
-    "id": "call_64e00628-b435-4c41-a729-8677ba91cf51",
-    "name": "get_credit_file"
+    "id": "call_e10af101-967d-4dd3-816a-e7defbedddff",
+    "name": "ask_for_shelf_photo"
    }
-  ]
+  ],
+  "versions": {
+   "policy": "policy-2026-10-27",
+   "skill": "credit:credit-v0.1"
+  }
  },
- "218bdf11be4b418305a47da7e85c2984da499bd2bd6f637330003261f4465567": {
-  "cached_tokens": 4081,
-  "completion_tokens": 152,
-  "content": "",
+ "27965315045a59901375256e954a5a0543c004a828bf252e947bf733ac6f0861": {
+  "cached_tokens": 4849,
+  "completion_tokens": 388,
+  "content": "That new photo came after the final retry \u2014 I'll prepare your review using your payment history.",
   "finish_reason": "tool_calls",
-  "latency_s": 1.448,
+  "latency_s": 3.103,
   "model": "muse-spark-1.3",
-  "prompt_tokens": 4600,
+  "prompt_tokens": 4880,
+  "request": "c1b9470ca895c560817cff0205c111417f72d8dffa26dfaae45a6662e47a8363",
   "tool_calls": [
    {
-    "arguments": "{\"origin\":\"shop_ask\",\"photo_id\":\"ph_2fec025771d4\",\"shop_id\":\"shop-003\"}",
-    "id": "call_75012b05-6437-4a55-947a-bfa32d86bd37",
+    "arguments": "{\"origin\":\"shop_ask\",\"shop_id\":\"shop-020\"}",
+    "id": "call_5ec65991-bca7-43c8-94e1-219cb9ff5c51",
     "name": "prepare_credit_review"
    }
-  ]
+  ],
+  "versions": {
+   "policy": "policy-2026-10-27",
+   "skill": "credit:credit-v0.1"
+  }
  },
- "238eb8924295ae0e346358c80c0f55f161bfe527e933df94a6d3cab4b6a7d095": {
+ "31b9c52bef4a616ba56e807a41497c794514b1b004261a25ab95ab9037f2f02b": {
   "cached_tokens": 4593,
   "completion_tokens": 398,
   "content": "That photo came through blurry \u2014 I'll put together your request for review.",
@@ -155,15 +195,140 @@
   "latency_s": 2.257,
   "model": "muse-spark-1.3",
   "prompt_tokens": 5138,
+  "request": "238eb8924295ae0e346358c80c0f55f161bfe527e933df94a6d3cab4b6a7d095",
   "tool_calls": [
    {
     "arguments": "{\"origin\":\"shop_ask\",\"photo_id\":\"\",\"shop_id\":\"shop-005\"}",
     "id": "call_59c1be13-f783-447c-8689-6d38b3e72f97",
     "name": "prepare_credit_review"
    }
-  ]
+  ],
+  "versions": {
+   "policy": "policy-2026-10-27",
+   "skill": "credit:credit-v0.1"
+  }
  },
- "28020180f8530e3b66606e51bae773a9633fff8754652ee2b7d538d014c6436c": {
+ "34310489ef7f7310a873de153d9be94f920d6bbc97d66685a1e6a4d7e08c761f": {
+  "cached_tokens": 0,
+  "completion_tokens": 146,
+  "content": "",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.199,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 3588,
+  "request": "1a8f9d5e3424335821a100b74e0259e6c8f78e1676bf40043d3c31f411dc9626",
+  "tool_calls": [
+   {
+    "arguments": "{\"shop_id\":\"shop-013\"}",
+    "id": "call_48837b87-4d4e-4765-af86-0954e1bb4ec3",
+    "name": "ask_for_shelf_photo"
+   }
+  ],
+  "versions": {
+   "policy": "policy-2026-10-27",
+   "skill": "credit:credit-v0.1"
+  }
+ },
+ "39531e661096458d33d21689ee9c29d28be23a36db34b77b15909d936e10cab1": {
+  "cached_tokens": 0,
+  "completion_tokens": 78,
+  "content": "",
+  "finish_reason": "stop",
+  "latency_s": 0.873,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 3737,
+  "request": "654cd0652e1c3b6aac1ea9246ba22079a96a872b78aae2f06ef08e6936d84df2",
+  "tool_calls": [],
+  "versions": {
+   "policy": "policy-2026-10-27",
+   "skill": "credit:credit-v0.1"
+  }
+ },
+ "3c1b19d9cd6c9ea61ceeea9ba076b89b4c98d30668f9128600de6325b0b2195c": {
+  "cached_tokens": 0,
+  "completion_tokens": 154,
+  "content": "Starting your weekly credit review \u2014 I'll pull the shortlist to send to the owner.",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.376,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 2934,
+  "request": "8a771a04523af65cbcfcb6781b56d9a7ea05be29d6d496f14753aa09ba671fc5",
+  "tool_calls": [
+   {
+    "arguments": "{\"note\":\"Weekly review started, fetching candidates\",\"plan\":[\"Find candidates\",\"Prepare and submit each review\"],\"todo\":[\"find candidates\",\"prepare+submit reviews\"]}",
+    "id": "call_a4a02b2f-49fe-4bf7-9b41-9e34ddf8e00c",
+    "name": "update_plan"
+   }
+  ],
+  "versions": {
+   "policy": "policy-2026-10-27",
+   "skill": "credit:credit-v0.1"
+  }
+ },
+ "3df88952894a0003e8c54e32766a398aa0bdba9e9713569954fc44a9cb312df8": {
+  "cached_tokens": 3697,
+  "completion_tokens": 136,
+  "content": "Just received your follow-up \u2014 I'll verify the current status of your request.",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.419,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 5973,
+  "request": "96d0bd17c79b237ee1599b17b315a3270a3104834a4df04c881b01ef3fedbb28",
+  "tool_calls": [
+   {
+    "arguments": "{\"shop_id\":\"shop-003\"}",
+    "id": "call_6c03f8b2-255d-4a2a-8db5-c03284c04acc",
+    "name": "get_credit_file"
+   }
+  ],
+  "versions": {
+   "policy": "policy-2026-10-27",
+   "skill": "credit:credit-v0.1"
+  }
+ },
+ "43f4eaac826e22219429f9fe700a45e505bbb44522b7a5755de9b2ab046f8025": {
+  "cached_tokens": 0,
+  "completion_tokens": 96,
+  "content": "I'll pull your credit file to review the limit request.",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.075,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 3111,
+  "request": "dcbc67fc03c673587f0756f21d00be5467a00919b9f3aaee920bb7c4a1f877d9",
+  "tool_calls": [
+   {
+    "arguments": "{\"shop_id\":\"shop-016\"}",
+    "id": "call_2a1da7e9-b4c6-4b20-bd18-6f996208fa4a",
+    "name": "get_credit_file"
+   }
+  ],
+  "versions": {
+   "policy": "policy-2026-10-27",
+   "skill": "credit:credit-v0.1"
+  }
+ },
+ "492292dcb72aa8ea649246d38f3167b7e6d75d1ba44e3a02952b218afa0c9d8e": {
+  "cached_tokens": 0,
+  "completion_tokens": 185,
+  "content": "Got the photo \u2014 I'll verify it works for the review.",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.499,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 4105,
+  "request": "1a32436fe5d631730ec019c4e7c2f3bc4381d85b9a9416154c556062b30189ee",
+  "tool_calls": [
+   {
+    "arguments": "{\"photo_id\":\"ph_ee32116d117f\",\"shop_id\":\"shop-013\"}",
+    "id": "call_29af4579-1a9f-4525-be20-50da05d6cdd7",
+    "name": "count_shelf_photo"
+   }
+  ],
+  "versions": {
+   "policy": "policy-2026-10-27",
+   "skill": "credit:credit-v0.1"
+  }
+ },
+ "4c490c81cbb254e928a580c16963f8e6d6d47890f403222cae8c2caa912b87fd": {
   "cached_tokens": 2929,
   "completion_tokens": 613,
   "content": "Shortlist ready \u2014 I'll submit these for the owner's approval now.",
@@ -171,6 +336,7 @@
   "latency_s": 2.459,
   "model": "muse-spark-1.3",
   "prompt_tokens": 4324,
+  "request": "28020180f8530e3b66606e51bae773a9633fff8754652ee2b7d538d014c6436c",
   "tool_calls": [
    {
     "arguments": "{\"note_for_owner\":\"Mama Chidi Kiosk paid 11 of 11 times on time (N591,600 verified) and owes N0 on a N60,000 limit. History supports more credit; you decide the limit.\",\"origin\":\"weekly_review\",\"photo_id\":\"\",\"review_id\":\"cr_66499219b04bc832\",\"shop_id\":\"shop-035\"}",
@@ -187,107 +353,11 @@
     "id": "call_f0111b21-963e-4960-a8fb-0329d58e10c4",
     "name": "submit_credit_review"
    }
-  ]
- },
- "2c99446bf3cf6db6a84b4ce3dd5109b59e9e83210edf52bddc7db8ec08320255": {
-  "cached_tokens": 0,
-  "completion_tokens": 72,
-  "content": "",
-  "finish_reason": "tool_calls",
-  "latency_s": 0.808,
-  "model": "muse-spark-1.3",
-  "prompt_tokens": 3338,
-  "tool_calls": [
-   {
-    "arguments": "{\"shop_id\":\"shop-005\"}",
-    "id": "call_48088572-f20a-4f17-819f-f46718e30883",
-    "name": "get_credit_file"
-   }
-  ]
- },
- "335782760a40f929d8d2540b06559ff5d5f83534f0660d45463fc228902e5e7c": {
-  "cached_tokens": 0,
-  "completion_tokens": 122,
-  "content": "Photo received \u2014 I'll count the shelf stock now.",
-  "finish_reason": "tool_calls",
-  "latency_s": 1.386,
-  "model": "muse-spark-1.3",
-  "prompt_tokens": 4079,
-  "tool_calls": [
-   {
-    "arguments": "{\"photo_id\":\"ph_7cec31ddd22e\",\"shop_id\":\"shop-029\"}",
-    "id": "call_14cffc51-03a7-47b5-b1c5-900b4e9ca014",
-    "name": "count_shelf_photo"
-   }
-  ]
- },
- "3bcbc62e5f88757c6a66ff5a2be23e42618b4987d15308a938e78618ba8deef7": {
-  "cached_tokens": 4081,
-  "completion_tokens": 106,
-  "content": "",
-  "finish_reason": "tool_calls",
-  "latency_s": 1.127,
-  "model": "muse-spark-1.3",
-  "prompt_tokens": 4356,
-  "tool_calls": [
-   {
-    "arguments": "{\"again\":true,\"shop_id\":\"shop-020\",\"why\":\"the photo is too dark to see the items\"}",
-    "id": "call_b6babd31-da58-4681-9d8f-688a5cdd4aba",
-    "name": "ask_for_shelf_photo"
-   }
-  ]
- },
- "3fde7e252beb6bea499595a4e5a30fe4ec5c7188fcc94fd21aa1c44c2c8d4c40": {
-  "cached_tokens": 3569,
-  "completion_tokens": 624,
-  "content": "Shelf count looks good \u2014 I'll forward your request to Coral Lane Trading.",
-  "finish_reason": "tool_calls",
-  "latency_s": 3.021,
-  "model": "muse-spark-1.3",
-  "prompt_tokens": 5028,
-  "tool_calls": [
-   {
-    "arguments": "{\"body\":\"I counted about 11 Sunrise Big Pack Noodles 120g packets, 6 Smile Toothpaste 140g tube boxes and 4 Fizzup Cola 50cl PET bottles, plus 1 more item, worth about N17,200 at Coral Lane Trading prices. I've sent your request with this to Coral Lane Trading. They decide the limit.\",\"channel\":\"shop_whatsapp\",\"ends_turn\":true,\"kind\":\"reply\",\"shop_id\":\"shop-029\"}",
-    "id": "call_a38de2d0-a20d-46f7-9af4-b38304a16522",
-    "name": "send_to_user"
-   },
-   {
-    "arguments": "{\"note_for_owner\":\"Mama Wale Kiosk has 7 of 7 bank-verified payments on time (N401,850 verified) with nothing overdue. Owes N0 on a N130,000 limit and shelf is worth about N17,200.\",\"origin\":\"shop_ask\",\"photo_id\":\"ph_7cec31ddd22e\",\"review_id\":\"cr_213b561d8cca500b\",\"shop_id\":\"shop-029\"}",
-    "id": "call_ed344719-35d5-4889-81f7-27875704a8d1",
-    "name": "submit_credit_review"
-   }
-  ]
- },
- "47068304143ad9405509c36ba8446f6d4d8741f7c8b90747632cda22d2d73de9": {
-  "cached_tokens": 0,
-  "completion_tokens": 179,
-  "content": "",
-  "finish_reason": "stop",
-  "latency_s": 1.465,
-  "model": "muse-spark-1.3",
-  "prompt_tokens": 3818,
-  "tool_calls": []
- },
- "4938b3a450bc740a36857299cd2b67f2f0174e9795d312df86aa21daed3bfba1": {
-  "cached_tokens": 4465,
-  "completion_tokens": 570,
-  "content": "",
-  "finish_reason": "tool_calls",
-  "latency_s": 2.46,
-  "model": "muse-spark-1.3",
-  "prompt_tokens": 5519,
-  "tool_calls": [
-   {
-    "arguments": "{\"body\":\"I've sent your request to Coral Lane Trading with your payment history. They decide the limit.\",\"channel\":\"shop_whatsapp\",\"ends_turn\":true,\"shop_id\":\"shop-005\"}",
-    "id": "call_a9561927-1fbd-4283-8c00-0c54ed3e9f3c",
-    "name": "send_to_user"
-   },
-   {
-    "arguments": "{\"note_for_owner\":\"Funke & Sons Mini Mart owes N2,211,200 on a N2,480,000 limit with N1,070,050 overdue. 0 of 18 bank-verified payments on time and 9 of 13 payment promises broken.\",\"origin\":\"shop_ask\",\"photo_id\":\"\",\"review_id\":\"cr_7074650b57b254b8\",\"shop_id\":\"shop-005\"}",
-    "id": "call_407b8281-18b1-45a4-9df2-551edb11f0a2",
-    "name": "submit_credit_review"
-   }
-  ]
+  ],
+  "versions": {
+   "policy": "policy-2026-10-27",
+   "skill": "credit:credit-v0.1"
+  }
  },
  "4cb6a42229761ee0407751b125ca67ef5471377cccc366805e086bc8f067fc71": {
   "cached_tokens": 4337,
@@ -310,23 +380,147 @@
    }
   ]
  },
- "4f322dfcd311096670c014bd721a970245e785e14247f46acb12c88656afe5f5": {
-  "cached_tokens": 4081,
-  "completion_tokens": 126,
-  "content": "",
+ "4ee4c6188231534c1d6a7c2048f2f4c24d04be2aa627f737b266011936b37c2d": {
+  "cached_tokens": 3569,
+  "completion_tokens": 624,
+  "content": "Shelf count looks good \u2014 I'll forward your request to Coral Lane Trading.",
   "finish_reason": "tool_calls",
-  "latency_s": 1.144,
+  "latency_s": 3.021,
   "model": "muse-spark-1.3",
-  "prompt_tokens": 4618,
+  "prompt_tokens": 5028,
+  "request": "3fde7e252beb6bea499595a4e5a30fe4ec5c7188fcc94fd21aa1c44c2c8d4c40",
   "tool_calls": [
    {
-    "arguments": "{\"origin\":\"shop_ask\",\"photo_id\":\"ph_ee32116d117f\",\"shop_id\":\"shop-013\"}",
-    "id": "call_ac5b60bf-a222-4ae1-9a5d-0493050efe50",
-    "name": "prepare_credit_review"
+    "arguments": "{\"body\":\"I counted about 11 Sunrise Big Pack Noodles 120g packets, 6 Smile Toothpaste 140g tube boxes and 4 Fizzup Cola 50cl PET bottles, plus 1 more item, worth about N17,200 at Coral Lane Trading prices. I've sent your request with this to Coral Lane Trading. They decide the limit.\",\"channel\":\"shop_whatsapp\",\"ends_turn\":true,\"kind\":\"reply\",\"shop_id\":\"shop-029\"}",
+    "id": "call_a38de2d0-a20d-46f7-9af4-b38304a16522",
+    "name": "send_to_user"
+   },
+   {
+    "arguments": "{\"note_for_owner\":\"Mama Wale Kiosk has 7 of 7 bank-verified payments on time (N401,850 verified) with nothing overdue. Owes N0 on a N130,000 limit and shelf is worth about N17,200.\",\"origin\":\"shop_ask\",\"photo_id\":\"ph_7cec31ddd22e\",\"review_id\":\"cr_213b561d8cca500b\",\"shop_id\":\"shop-029\"}",
+    "id": "call_ed344719-35d5-4889-81f7-27875704a8d1",
+    "name": "submit_credit_review"
    }
-  ]
+  ],
+  "versions": {
+   "policy": "policy-2026-10-27",
+   "skill": "credit:credit-v0.1"
+  }
  },
- "4f81b7d3b4d6c820bb853c04677fef41e9a62a297fa5eb6d354b89b0d5cd698a": {
+ "4fc6267bb0726f9f4986d3210350ceca3c0688b1612f98758f77adb8a66c50a1": {
+  "cached_tokens": 0,
+  "completion_tokens": 87,
+  "content": "(no user-visible message; shelf-photo request sent by Go)",
+  "finish_reason": "stop",
+  "latency_s": 1.124,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 3843,
+  "request": "bb21135dc07c16f352f86918aeed064c164e23b4635238c6c5fcfc4ec2ebddc5",
+  "tool_calls": [],
+  "versions": {
+   "policy": "policy-2026-10-27",
+   "skill": "credit:credit-v0.1"
+  }
+ },
+ "50c670243a4e145deb79333d2d14e9b735e81ab1f23143fda97decd6c1cf8360": {
+  "cached_tokens": 4081,
+  "completion_tokens": 106,
+  "content": "",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.127,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 4356,
+  "request": "3bcbc62e5f88757c6a66ff5a2be23e42618b4987d15308a938e78618ba8deef7",
+  "tool_calls": [
+   {
+    "arguments": "{\"again\":true,\"shop_id\":\"shop-020\",\"why\":\"the photo is too dark to see the items\"}",
+    "id": "call_b6babd31-da58-4681-9d8f-688a5cdd4aba",
+    "name": "ask_for_shelf_photo"
+   }
+  ],
+  "versions": {
+   "policy": "policy-2026-10-27",
+   "skill": "credit:credit-v0.1"
+  }
+ },
+ "57f42cd5773e2487078357c975b07c786e81087471f2403c44910a1f6ef6d2ec": {
+  "cached_tokens": 0,
+  "completion_tokens": 133,
+  "content": "I'll pull Blessed Funke's credit history to assess the request.",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.244,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 2942,
+  "request": "bcd24a930318edb95917e1e0b429a1317c030c2596e05b7805331c1c16d3749f",
+  "tool_calls": [
+   {
+    "arguments": "{\"name\":\"Blessed Funke Mini Mart\"}",
+    "id": "call_b5d2c765-b846-4cf2-b853-8841202ad8cf",
+    "name": "find_shop"
+   }
+  ],
+  "versions": {
+   "policy": "policy-2026-10-27",
+   "skill": "credit:credit-v0.1"
+  }
+ },
+ "5c2e608f3e9781a844aa35b1013fbecb14c84cc545bf99080a8f74f01d56b7d1": {
+  "cached_tokens": 0,
+  "completion_tokens": 91,
+  "content": "I'll pull your credit file to start your limit review.",
+  "finish_reason": "tool_calls",
+  "latency_s": 0.918,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 3241,
+  "request": "b7aeb5e80eae87526399e42292498fbd2afb1ae3d2818cb424caa1de6084b119",
+  "tool_calls": [
+   {
+    "arguments": "{\"shop_id\":\"shop-013\"}",
+    "id": "call_b19010ff-a078-45fa-829c-499d944b4a77",
+    "name": "get_credit_file"
+   }
+  ],
+  "versions": {
+   "policy": "policy-2026-10-27",
+   "skill": "credit:credit-v0.1"
+  }
+ },
+ "5de682f706033ac661187bcb018fbbe3aa7f594f03c3212fe6a5f4ff124f0257": {
+  "cached_tokens": 0,
+  "completion_tokens": 3,
+  "content": "",
+  "finish_reason": "stop",
+  "latency_s": 0.921,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 4531,
+  "request": "9fe30011463e8ae2958305520b8b6008595c33ef3c310a151a3a11d279082f8b",
+  "tool_calls": [],
+  "versions": {
+   "policy": "policy-2026-10-27",
+   "skill": "credit:credit-v0.1"
+  }
+ },
+ "62107853fc1d435f5cb9e84a428e6733eeb135c62013551800a64e2c97d37bb4": {
+  "cached_tokens": 0,
+  "completion_tokens": 209,
+  "content": "",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.564,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 3598,
+  "request": "633cdd0ff80949d461ae094bfa7a5a54198692eeef7c5e3f7ed9d89cfad4b80f",
+  "tool_calls": [
+   {
+    "arguments": "{\"shop_id\":\"shop-020\"}",
+    "id": "call_5ec5203c-e217-4726-bf0e-3ebac6bf0cec",
+    "name": "ask_for_shelf_photo"
+   }
+  ],
+  "versions": {
+   "policy": "policy-2026-10-27",
+   "skill": "credit:credit-v0.1"
+  }
+ },
+ "624705aef037a9ead12de64804f79d3b07cfb8c9a53f6cfc8851b86f3b4626d2": {
   "cached_tokens": 4849,
   "completion_tokens": 628,
   "content": "Review ready \u2014 I'll send your update and forward the request to Coral Lane Trading.",
@@ -334,6 +528,7 @@
   "latency_s": 3.132,
   "model": "muse-spark-1.3",
   "prompt_tokens": 5993,
+  "request": "4f81b7d3b4d6c820bb853c04677fef41e9a62a297fa5eb6d354b89b0d5cd698a",
   "tool_calls": [
    {
     "arguments": "{\"body\":\"I counted about 9 Mamaland Spaghetti 500g packets, 7 Sunrise Big Pack Noodles 120g packets and 6 Sunrise Instant Noodles 70g packets, plus 1 more item, worth about N17,800 at Coral Lane Trading prices. I've sent your request with this to Coral Lane Trading. They decide the limit.\",\"channel\":\"shop_whatsapp\",\"kind\":\"reply\",\"shop_id\":\"shop-020\"}",
@@ -345,9 +540,86 @@
     "id": "call_75b772f7-1d74-450f-88b8-f0a2136d5ded",
     "name": "submit_credit_review"
    }
-  ]
+  ],
+  "versions": {
+   "policy": "policy-2026-10-27",
+   "skill": "credit:credit-v0.1"
+  }
  },
- "6135066d1a725e4094fbdfaac3c54a12c90d322d5a2cce2194611e34e4024914": {
+ "665e2632dc043c401ab06bb09541f00ea08b65d8acef7117d800c8ddb40cd95c": {
+  "cached_tokens": 3185,
+  "completion_tokens": 160,
+  "content": "",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.296,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 4596,
+  "request": "d4293ccc815c68ab262d5de115715dea19581563814149edc374e3822e083e8b",
+  "tool_calls": [
+   {
+    "arguments": "{\"origin\":\"shop_ask\",\"photo_id\":\"ph_7cec31ddd22e\",\"shop_id\":\"shop-029\"}",
+    "id": "call_00f884f2-0005-470b-80e1-74de24b92671",
+    "name": "prepare_credit_review"
+   }
+  ],
+  "versions": {
+   "policy": "policy-2026-10-27",
+   "skill": "credit:credit-v0.1"
+  }
+ },
+ "72b8473ee463de15bee0492a33fe4942be13ea052201823181056ca77bafe1ca": {
+  "cached_tokens": 3057,
+  "completion_tokens": 224,
+  "content": "",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.247,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 3497,
+  "request": "165a736c79d13bff82edb1a2ad07d79389c0ec72b9885a00ba78dc7bc1965ccc",
+  "tool_calls": [
+   {
+    "arguments": "{\"origin\":\"weekly_review\",\"shop_id\":\"shop-035\"}",
+    "id": "call_945faab2-61a8-4f78-b042-503f773bf54f",
+    "name": "prepare_credit_review"
+   },
+   {
+    "arguments": "{\"origin\":\"weekly_review\",\"shop_id\":\"shop-011\"}",
+    "id": "call_c942e399-55ca-4739-8ea3-97be8ed1f871",
+    "name": "prepare_credit_review"
+   },
+   {
+    "arguments": "{\"origin\":\"weekly_review\",\"shop_id\":\"shop-003\"}",
+    "id": "call_ca09fb2e-6825-4432-8b12-948addb9ab76",
+    "name": "prepare_credit_review"
+   }
+  ],
+  "versions": {
+   "policy": "policy-2026-10-27",
+   "skill": "credit:credit-v0.1"
+  }
+ },
+ "783849b6a54d2d2d1c568675b76408123e65040433bba28a0c223b35bbf97eb0": {
+  "cached_tokens": 3313,
+  "completion_tokens": 192,
+  "content": "",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.23,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 3704,
+  "request": "f951718a3487db94aa037210d4bc45e7a39044557f1ba13ed3d1875e0dc6fc8c",
+  "tool_calls": [
+   {
+    "arguments": "{\"shop_id\":\"shop-002\"}",
+    "id": "call_4932a510-9d56-4356-8fc2-9ac1246dbf0e",
+    "name": "ask_for_shelf_photo"
+   }
+  ],
+  "versions": {
+   "policy": "policy-2026-10-27",
+   "skill": "credit:credit-v0.1"
+  }
+ },
+ "841c36053976b94a4b2a1f0e5614e7b84c4e9ed228333142978123b2d5c9ccf9": {
   "cached_tokens": 0,
   "completion_tokens": 80,
   "content": "",
@@ -355,110 +627,41 @@
   "latency_s": 0.88,
   "model": "muse-spark-1.3",
   "prompt_tokens": 3428,
+  "request": "6135066d1a725e4094fbdfaac3c54a12c90d322d5a2cce2194611e34e4024914",
   "tool_calls": [
    {
     "arguments": "{\"origin\":\"owner_ask\",\"shop_id\":\"shop-003\"}",
     "id": "call_f5719c0a-4367-4c0b-9fee-dae61b38e4c7",
     "name": "prepare_credit_review"
    }
-  ]
+  ],
+  "versions": {
+   "policy": "policy-2026-10-27",
+   "skill": "credit:credit-v0.1"
+  }
  },
- "633cdd0ff80949d461ae094bfa7a5a54198692eeef7c5e3f7ed9d89cfad4b80f": {
-  "cached_tokens": 0,
-  "completion_tokens": 209,
-  "content": "",
-  "finish_reason": "tool_calls",
-  "latency_s": 1.564,
-  "model": "muse-spark-1.3",
-  "prompt_tokens": 3598,
-  "tool_calls": [
-   {
-    "arguments": "{\"shop_id\":\"shop-020\"}",
-    "id": "call_5ec5203c-e217-4726-bf0e-3ebac6bf0cec",
-    "name": "ask_for_shelf_photo"
-   }
-  ]
- },
- "63dd927ec7d359ab8b0ce836151569097fc15e58056400004540cd9011a91b02": {
-  "cached_tokens": 3185,
-  "completion_tokens": 137,
-  "content": "Shelf photo received \u2014 I'll review it for your request.",
-  "finish_reason": "tool_calls",
-  "latency_s": 1.407,
-  "model": "muse-spark-1.3",
-  "prompt_tokens": 4085,
-  "tool_calls": [
-   {
-    "arguments": "{\"photo_id\":\"ph_2fec025771d4\",\"shop_id\":\"shop-003\"}",
-    "id": "call_5f2fd0c3-33cb-4171-a7a8-943e41fc8046",
-    "name": "count_shelf_photo"
-   }
-  ]
- },
- "654cd0652e1c3b6aac1ea9246ba22079a96a872b78aae2f06ef08e6936d84df2": {
-  "cached_tokens": 0,
-  "completion_tokens": 78,
-  "content": "",
-  "finish_reason": "stop",
-  "latency_s": 0.873,
-  "model": "muse-spark-1.3",
-  "prompt_tokens": 3737,
-  "tool_calls": []
- },
- "66f73dbec4869b87ab60dccd545523603710ca445f9371883f6caf693d79ae9d": {
-  "cached_tokens": 3697,
-  "completion_tokens": 714,
-  "content": "",
-  "finish_reason": "tool_calls",
-  "latency_s": 4.749,
-  "model": "muse-spark-1.3",
-  "prompt_tokens": 5033,
-  "tool_calls": [
-   {
-    "arguments": "{\"photo_id\":\"ph_c94787826bab\",\"shop_id\":\"shop-020\"}",
-    "id": "call_0d8ab9de-4df1-4d6a-8d14-0a3fc8907ea2",
-    "name": "count_shelf_photo"
-   }
-  ]
- },
- "675d55999b8ccb21f9aab15f2840550869626c8ec050c6965a980e36725d122f": {
-  "cached_tokens": 4209,
-  "completion_tokens": 158,
-  "content": "",
-  "finish_reason": "tool_calls",
-  "latency_s": 1.247,
-  "model": "muse-spark-1.3",
-  "prompt_tokens": 4757,
-  "tool_calls": [
-   {
-    "arguments": "{\"origin\":\"shop_ask\",\"photo_id\":\"ph_6c1d135d6c00\",\"shop_id\":\"shop-002\"}",
-    "id": "call_085c790d-b6c6-4e02-a259-a848643dac26",
-    "name": "prepare_credit_review"
-   }
-  ]
- },
- "6beddd81c36d331b9ede2f7cbd5073fb4567c5b8a34d7174c90b26d8e0dbef09": {
+ "861a7fc4723f30dd044703766c54a6d5c254f7e925d9626ed4ef78bf17108d0e": {
   "cached_tokens": 3569,
-  "completion_tokens": 554,
-  "content": "Review ready \u2014 I'll submit it to the owner and update you.",
+  "completion_tokens": 106,
+  "content": "Photo received \u2014 I'll count your stock from the shelf image.",
   "finish_reason": "tool_calls",
-  "latency_s": 2.458,
+  "latency_s": 1.067,
   "model": "muse-spark-1.3",
-  "prompt_tokens": 5097,
+  "prompt_tokens": 4088,
+  "request": "ec6e6a4bbbcc9868a97451a55506f83f9184d91c704031eb5ca5d7853604b8fd",
   "tool_calls": [
    {
-    "arguments": "{\"body\":\"I counted about 15 Mamaland Spaghetti 500g packets, 12 Seaview Sardines 125g tins and 6 Brightwash Detergent 900g packs, plus 1 more item, worth about N83,700 at Coral Lane Trading prices. I've sent your request with this to Coral Lane Trading. They decide the limit.\",\"channel\":\"shop_whatsapp\",\"ends_turn\":true,\"shop_id\":\"shop-013\"}",
-    "id": "call_d7db49dc-e1fd-4fff-b61e-d0fcf2dd72cf",
-    "name": "send_to_user"
-   },
-   {
-    "arguments": "{\"note_for_owner\":\"Ronke has 14 of 14 bank-verified payments on time (N2,562,550) with N0 owed on a N840,000 limit. Shelf worth about N83,700; code recommends hold as shelf shows more spaghetti than delivered.\",\"origin\":\"shop_ask\",\"photo_id\":\"ph_ee32116d117f\",\"review_id\":\"cr_12eff9a991b3e61b\",\"shop_id\":\"shop-013\"}",
-    "id": "call_74d4440c-484a-488d-8553-9f3edc0aa4c2",
-    "name": "submit_credit_review"
+    "arguments": "{\"photo_id\":\"ph_dd3d36aeb082\",\"shop_id\":\"shop-020\"}",
+    "id": "call_9c376f6d-1a82-4666-8770-facd5bfd7f42",
+    "name": "count_shelf_photo"
    }
-  ]
+  ],
+  "versions": {
+   "policy": "policy-2026-10-27",
+   "skill": "credit:credit-v0.1"
+  }
  },
- "79522ff4f8efa790cabbe6ac364f33f0cb1dcb9c4e44e1b33743d30ba0dcec5e": {
+ "8838726ab734305a4d0ad8584be6448784ca2c5d3c527b032f3d610b5a9e5a57": {
   "cached_tokens": 0,
   "completion_tokens": 91,
   "content": "Your credit request is in \u2014 pulling your file to start the review.",
@@ -466,15 +669,20 @@
   "latency_s": 1.256,
   "model": "muse-spark-1.3",
   "prompt_tokens": 3339,
+  "request": "79522ff4f8efa790cabbe6ac364f33f0cb1dcb9c4e44e1b33743d30ba0dcec5e",
   "tool_calls": [
    {
     "arguments": "{\"shop_id\":\"shop-002\"}",
     "id": "call_dcd8ce27-ca75-4012-a29a-9dcaa66bdbc4",
     "name": "get_credit_file"
    }
-  ]
+  ],
+  "versions": {
+   "policy": "policy-2026-10-27",
+   "skill": "credit:credit-v0.1"
+  }
  },
- "7a2171fced816bae1f8fe287806ed5518c0830d65353b9642b2e0f9b6bf628bc": {
+ "886c87884cb377124d0af86dc91fbebcf97acddbd5c932c46e17aeb0d41b3a39": {
   "cached_tokens": 0,
   "completion_tokens": 73,
   "content": "",
@@ -482,62 +690,35 @@
   "latency_s": 1.046,
   "model": "muse-spark-1.3",
   "prompt_tokens": 3736,
-  "tool_calls": []
+  "request": "7a2171fced816bae1f8fe287806ed5518c0830d65353b9642b2e0f9b6bf628bc",
+  "tool_calls": [],
+  "versions": {
+   "policy": "policy-2026-10-27",
+   "skill": "credit:credit-v0.1"
+  }
  },
- "8a771a04523af65cbcfcb6781b56d9a7ea05be29d6d496f14753aa09ba671fc5": {
+ "9217e0e283f13b5ea0944b5e50454c2119048e6cf7f4b1af243834a6c14caba6": {
   "cached_tokens": 0,
-  "completion_tokens": 154,
-  "content": "Starting your weekly credit review \u2014 I'll pull the shortlist to send to the owner.",
+  "completion_tokens": 72,
+  "content": "",
   "finish_reason": "tool_calls",
-  "latency_s": 1.376,
+  "latency_s": 0.808,
   "model": "muse-spark-1.3",
-  "prompt_tokens": 2934,
+  "prompt_tokens": 3338,
+  "request": "2c99446bf3cf6db6a84b4ce3dd5109b59e9e83210edf52bddc7db8ec08320255",
   "tool_calls": [
    {
-    "arguments": "{\"note\":\"Weekly review started, fetching candidates\",\"plan\":[\"Find candidates\",\"Prepare and submit each review\"],\"todo\":[\"find candidates\",\"prepare+submit reviews\"]}",
-    "id": "call_a4a02b2f-49fe-4bf7-9b41-9e34ddf8e00c",
-    "name": "update_plan"
-   }
-  ]
- },
- "8b124def8ee074d4bec79db0ddaebb0f5b05733b97ad2f5d6507e38d9434148b": {
-  "cached_tokens": 4721,
-  "completion_tokens": 384,
-  "content": "Review ready \u2014 sending your update and filing the request for approval.",
-  "finish_reason": "tool_calls",
-  "latency_s": 1.968,
-  "model": "muse-spark-1.3",
-  "prompt_tokens": 5250,
-  "tool_calls": [
-   {
-    "arguments": "{\"body\":\"I counted about 6 Mamaland Custard 2kg tubs, 3 Sunrise Instant Noodles 70g packets and 3 Smile Toothpaste 140g tube boxes, worth about N47,600 at Coral Lane Trading prices. I've sent your request with this to Coral Lane Trading. They decide the limit.\",\"channel\":\"shop_whatsapp\",\"ends_turn\":true,\"shop_id\":\"shop-002\"}",
-    "id": "call_6d710055-1f03-439e-a2c7-4f6f068f43d0",
-    "name": "send_to_user"
-   },
-   {
-    "arguments": "{\"note_for_owner\":\"Request not supported right now. N652,850 overdue, oldest 47 days, with 0 of 16 bank-verified payments on time.\",\"origin\":\"shop_ask\",\"photo_id\":\"ph_6c1d135d6c00\",\"review_id\":\"cr_bb0c27e1e7a0bd1e\",\"shop_id\":\"shop-002\"}",
-    "id": "call_9782c958-2e6d-4bf4-8895-480cafaa7545",
-    "name": "submit_credit_review"
-   }
-  ]
- },
- "925ed5c55d6c87e7f1ea7b325930339f4908f8bcdbfa1b5d56126bd9eafc7485": {
-  "cached_tokens": 0,
-  "completion_tokens": 91,
-  "content": "Your request is in \u2014 I'll pull your credit file to get started.",
-  "finish_reason": "tool_calls",
-  "latency_s": 0.919,
-  "model": "muse-spark-1.3",
-  "prompt_tokens": 3253,
-  "tool_calls": [
-   {
-    "arguments": "{\"shop_id\":\"shop-020\"}",
-    "id": "call_79147d29-326b-41ee-8b5f-16a86a775427",
+    "arguments": "{\"shop_id\":\"shop-005\"}",
+    "id": "call_48088572-f20a-4f17-819f-f46718e30883",
     "name": "get_credit_file"
    }
-  ]
+  ],
+  "versions": {
+   "policy": "policy-2026-10-27",
+   "skill": "credit:credit-v0.1"
+  }
  },
- "93eec6926a7b6e5000e1a023eaa5f861e435306aa3340e8b8820688735a67604": {
+ "9f847f9b4014a7e532cd455233af0f8a1b30d4e499ce9d32a07504c0f678335b": {
   "cached_tokens": 0,
   "completion_tokens": 146,
   "content": "",
@@ -545,87 +726,107 @@
   "latency_s": 1.303,
   "model": "muse-spark-1.3",
   "prompt_tokens": 3586,
+  "request": "93eec6926a7b6e5000e1a023eaa5f861e435306aa3340e8b8820688735a67604",
   "tool_calls": [
    {
     "arguments": "{\"shop_id\":\"shop-029\"}",
     "id": "call_e2b99e4e-a702-40da-ad04-33173ff08ded",
     "name": "ask_for_shelf_photo"
    }
-  ]
+  ],
+  "versions": {
+   "policy": "policy-2026-10-27",
+   "skill": "credit:credit-v0.1"
+  }
  },
- "9560393c2fc943581828b35fc0b1c4866437f8d3fc030a1ffe5c3e13525c95f0": {
-  "cached_tokens": 3057,
-  "completion_tokens": 256,
-  "content": "",
+ "9f9bbf6b155c9180b26c7a68ad2ba329b21015d84e5f4ccbe19be625f15a7b7a": {
+  "cached_tokens": 0,
+  "completion_tokens": 122,
+  "content": "Photo received \u2014 I'll count the shelf stock now.",
   "finish_reason": "tool_calls",
-  "latency_s": 1.453,
+  "latency_s": 1.386,
   "model": "muse-spark-1.3",
-  "prompt_tokens": 3713,
+  "prompt_tokens": 4079,
+  "request": "335782760a40f929d8d2540b06559ff5d5f83534f0660d45463fc228902e5e7c",
   "tool_calls": [
    {
-    "arguments": "{\"body\":\"Blessed Funke Mini Mart \u2014 recommendation: support (medium confidence).\\n\\n- 17 of 17 bank-verified payments on time in 8 weeks (N7,414,300 verified).\\n- Nothing overdue.\\n- Owes N0 on a N1,790,000 limit (0% used).\\n- No shelf photo: history only.\\n\\nYou set the limit \u2014 let me know if you want me to submit this for approval or adjust anything.\",\"channel\":\"owner_console\",\"ends_turn\":true,\"kind\":\"reply\"}",
-    "id": "call_9f5a122c-69de-4a59-b6aa-84aa1ee7c94c",
-    "name": "send_to_user"
+    "arguments": "{\"photo_id\":\"ph_7cec31ddd22e\",\"shop_id\":\"shop-029\"}",
+    "id": "call_14cffc51-03a7-47b5-b1c5-900b4e9ca014",
+    "name": "count_shelf_photo"
    }
-  ]
+  ],
+  "versions": {
+   "policy": "policy-2026-10-27",
+   "skill": "credit:credit-v0.1"
+  }
  },
- "96d0bd17c79b237ee1599b17b315a3270a3104834a4df04c881b01ef3fedbb28": {
-  "cached_tokens": 3697,
-  "completion_tokens": 136,
-  "content": "Just received your follow-up \u2014 I'll verify the current status of your request.",
+ "ad271bd6f9362bc85dab24b0145eb83be0195c7a296db060463aca32f53e0e61": {
+  "cached_tokens": 4081,
+  "completion_tokens": 126,
+  "content": "",
   "finish_reason": "tool_calls",
-  "latency_s": 1.419,
+  "latency_s": 1.144,
   "model": "muse-spark-1.3",
-  "prompt_tokens": 5973,
+  "prompt_tokens": 4618,
+  "request": "4f322dfcd311096670c014bd721a970245e785e14247f46acb12c88656afe5f5",
+  "tool_calls": [
+   {
+    "arguments": "{\"origin\":\"shop_ask\",\"photo_id\":\"ph_ee32116d117f\",\"shop_id\":\"shop-013\"}",
+    "id": "call_ac5b60bf-a222-4ae1-9a5d-0493050efe50",
+    "name": "prepare_credit_review"
+   }
+  ],
+  "versions": {
+   "policy": "policy-2026-10-27",
+   "skill": "credit:credit-v0.1"
+  }
+ },
+ "add9392cdf301a9e3c827ada7cd9d8604702226213d43918aa707b27d6f815bc": {
+  "cached_tokens": 2801,
+  "completion_tokens": 99,
+  "content": "Found the shop \u2014 now I'll gather its payment records.",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.125,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 3079,
+  "request": "1f7c7973895050d393086a38a79ea54e955346f331a8bdd27225458ff364bf68",
   "tool_calls": [
    {
     "arguments": "{\"shop_id\":\"shop-003\"}",
-    "id": "call_6c03f8b2-255d-4a2a-8db5-c03284c04acc",
+    "id": "call_64e00628-b435-4c41-a729-8677ba91cf51",
     "name": "get_credit_file"
    }
-  ]
+  ],
+  "versions": {
+   "policy": "policy-2026-10-27",
+   "skill": "credit:credit-v0.1"
+  }
  },
- "9fe30011463e8ae2958305520b8b6008595c33ef3c310a151a3a11d279082f8b": {
-  "cached_tokens": 0,
-  "completion_tokens": 3,
-  "content": "",
-  "finish_reason": "stop",
-  "latency_s": 0.921,
-  "model": "muse-spark-1.3",
-  "prompt_tokens": 4531,
-  "tool_calls": []
- },
- "a3d6c94c69debb408a71da76cd3c244829ce94ef7a4d3e663fe4c009f9fe2cf5": {
-  "cached_tokens": 0,
-  "completion_tokens": 143,
-  "content": "",
+ "af71bdd68a3411c6bea5b8c44b03382522245074630eb3949fe4d0d29a94c6fe": {
+  "cached_tokens": 4593,
+  "completion_tokens": 608,
+  "content": "Credit file reviewed \u2014 I'll forward your request to Coral Lane Trading.",
   "finish_reason": "tool_calls",
-  "latency_s": 1.896,
+  "latency_s": 2.824,
   "model": "muse-spark-1.3",
-  "prompt_tokens": 3597,
+  "prompt_tokens": 5038,
+  "request": "c037f5dc9d919eff5f2f311e7ab011538350644250cf62ef3a13472fcc638d05",
   "tool_calls": [
    {
-    "arguments": "{\"shop_id\":\"shop-003\"}",
-    "id": "call_e10af101-967d-4dd3-816a-e7defbedddff",
-    "name": "ask_for_shelf_photo"
-   }
-  ]
- },
- "acde17e404f168bf0ba14da1300f9ac5b7fcde031ed68d58555856be6b5cd2ee": {
-  "cached_tokens": 3313,
-  "completion_tokens": 99,
-  "content": "",
-  "finish_reason": "tool_calls",
-  "latency_s": 0.942,
-  "model": "muse-spark-1.3",
-  "prompt_tokens": 4524,
-  "tool_calls": [
+    "arguments": "{\"body\":\"I counted about 10 Brightwash Detergent 900g packs, 6 Mamaland Custard 2kg tubs and 5 Smile Toothpaste 140g tube boxes, plus 1 more item, worth about N77,900 at Coral Lane Trading prices. I've sent your request with this to Coral Lane Trading. They decide the limit.\",\"channel\":\"shop_whatsapp\",\"ends_turn\":true,\"kind\":\"reply\",\"shop_id\":\"shop-003\"}",
+    "id": "call_c63d92e5-6718-4b02-ab3d-f9a4b8945d80",
+    "name": "send_to_user"
+   },
    {
-    "arguments": "{\"again\":true,\"shop_id\":\"shop-005\",\"why\":\"the photo is blurry\"}",
-    "id": "call_a0ccc746-b19b-4603-a056-7b991594fc2e",
-    "name": "ask_for_shelf_photo"
+    "arguments": "{\"note_for_owner\":\"Blessed Funke Mini Mart made 17 of 17 bank-verified payments on time (N7,414,300 verified) and owes N0 on a N1,790,000 limit. Shelf worth about N77,900 supports steady sales.\",\"origin\":\"shop_ask\",\"photo_id\":\"ph_2fec025771d4\",\"review_id\":\"cr_2b60f1bed6861927\",\"shop_id\":\"shop-003\"}",
+    "id": "call_e16825c5-b777-4fc3-8f57-082cf725108d",
+    "name": "submit_credit_review"
    }
-  ]
+  ],
+  "versions": {
+   "policy": "policy-2026-10-27",
+   "skill": "credit:credit-v0.1"
+  }
  },
  "b19cb69d8c444bd60cd023d4d75e7f9b4c55c833131e406de3940a4334c1d48c": {
   "cached_tokens": 4465,
@@ -648,134 +849,7 @@
    }
   ]
  },
- "b7aeb5e80eae87526399e42292498fbd2afb1ae3d2818cb424caa1de6084b119": {
-  "cached_tokens": 0,
-  "completion_tokens": 91,
-  "content": "I'll pull your credit file to start your limit review.",
-  "finish_reason": "tool_calls",
-  "latency_s": 0.918,
-  "model": "muse-spark-1.3",
-  "prompt_tokens": 3241,
-  "tool_calls": [
-   {
-    "arguments": "{\"shop_id\":\"shop-013\"}",
-    "id": "call_b19010ff-a078-45fa-829c-499d944b4a77",
-    "name": "get_credit_file"
-   }
-  ]
- },
- "b930efefe2bb5be1b58166485618c3529c91a946188d23dc564060660359bab8": {
-  "cached_tokens": 3697,
-  "completion_tokens": 224,
-  "content": "Photo received \u2014 I'll review it for your credit request.",
-  "finish_reason": "tool_calls",
-  "latency_s": 1.731,
-  "model": "muse-spark-1.3",
-  "prompt_tokens": 4261,
-  "tool_calls": [
-   {
-    "arguments": "{\"photo_id\":\"ph_aac618f41a18\",\"shop_id\":\"shop-005\"}",
-    "id": "call_e82b61d1-429f-4851-b85c-b577ca094dc3",
-    "name": "count_shelf_photo"
-   }
-  ]
- },
- "bb21135dc07c16f352f86918aeed064c164e23b4635238c6c5fcfc4ec2ebddc5": {
-  "cached_tokens": 0,
-  "completion_tokens": 87,
-  "content": "(no user-visible message; shelf-photo request sent by Go)",
-  "finish_reason": "stop",
-  "latency_s": 1.124,
-  "model": "muse-spark-1.3",
-  "prompt_tokens": 3843,
-  "tool_calls": []
- },
- "bc9a4ac78c2b9300dfd4fe3732e63504dbdce80c941d9c9ad114c1eb6f262450": {
-  "cached_tokens": 0,
-  "completion_tokens": 90,
-  "content": "I'll pull together your credit request details to get things started.",
-  "finish_reason": "tool_calls",
-  "latency_s": 1.414,
-  "model": "muse-spark-1.3",
-  "prompt_tokens": 3247,
-  "tool_calls": [
-   {
-    "arguments": "{\"shop_id\":\"shop-003\"}",
-    "id": "call_328aabb4-1856-422a-8f93-613f9f2172be",
-    "name": "get_credit_file"
-   }
-  ]
- },
- "bcd24a930318edb95917e1e0b429a1317c030c2596e05b7805331c1c16d3749f": {
-  "cached_tokens": 0,
-  "completion_tokens": 133,
-  "content": "I'll pull Blessed Funke's credit history to assess the request.",
-  "finish_reason": "tool_calls",
-  "latency_s": 1.244,
-  "model": "muse-spark-1.3",
-  "prompt_tokens": 2942,
-  "tool_calls": [
-   {
-    "arguments": "{\"name\":\"Blessed Funke Mini Mart\"}",
-    "id": "call_b5d2c765-b846-4cf2-b853-8841202ad8cf",
-    "name": "find_shop"
-   }
-  ]
- },
- "c037f5dc9d919eff5f2f311e7ab011538350644250cf62ef3a13472fcc638d05": {
-  "cached_tokens": 4593,
-  "completion_tokens": 608,
-  "content": "Credit file reviewed \u2014 I'll forward your request to Coral Lane Trading.",
-  "finish_reason": "tool_calls",
-  "latency_s": 2.824,
-  "model": "muse-spark-1.3",
-  "prompt_tokens": 5038,
-  "tool_calls": [
-   {
-    "arguments": "{\"body\":\"I counted about 10 Brightwash Detergent 900g packs, 6 Mamaland Custard 2kg tubs and 5 Smile Toothpaste 140g tube boxes, plus 1 more item, worth about N77,900 at Coral Lane Trading prices. I've sent your request with this to Coral Lane Trading. They decide the limit.\",\"channel\":\"shop_whatsapp\",\"ends_turn\":true,\"kind\":\"reply\",\"shop_id\":\"shop-003\"}",
-    "id": "call_c63d92e5-6718-4b02-ab3d-f9a4b8945d80",
-    "name": "send_to_user"
-   },
-   {
-    "arguments": "{\"note_for_owner\":\"Blessed Funke Mini Mart made 17 of 17 bank-verified payments on time (N7,414,300 verified) and owes N0 on a N1,790,000 limit. Shelf worth about N77,900 supports steady sales.\",\"origin\":\"shop_ask\",\"photo_id\":\"ph_2fec025771d4\",\"review_id\":\"cr_2b60f1bed6861927\",\"shop_id\":\"shop-003\"}",
-    "id": "call_e16825c5-b777-4fc3-8f57-082cf725108d",
-    "name": "submit_credit_review"
-   }
-  ]
- },
- "c1b9470ca895c560817cff0205c111417f72d8dffa26dfaae45a6662e47a8363": {
-  "cached_tokens": 4849,
-  "completion_tokens": 388,
-  "content": "That new photo came after the final retry \u2014 I'll prepare your review using your payment history.",
-  "finish_reason": "tool_calls",
-  "latency_s": 3.103,
-  "model": "muse-spark-1.3",
-  "prompt_tokens": 4880,
-  "tool_calls": [
-   {
-    "arguments": "{\"origin\":\"shop_ask\",\"shop_id\":\"shop-020\"}",
-    "id": "call_5ec65991-bca7-43c8-94e1-219cb9ff5c51",
-    "name": "prepare_credit_review"
-   }
-  ]
- },
- "c9d7af51276ee3532ce1b17f96d3ee77b9eacc2780ed6cd0efd17da2328f4002": {
-  "cached_tokens": 0,
-  "completion_tokens": 90,
-  "content": "I'll start by pulling your credit history to review the request.",
-  "finish_reason": "tool_calls",
-  "latency_s": 0.825,
-  "model": "muse-spark-1.3",
-  "prompt_tokens": 3243,
-  "tool_calls": [
-   {
-    "arguments": "{\"shop_id\":\"shop-029\"}",
-    "id": "call_e7c08daa-32a4-43b8-a50f-c3f4bee67407",
-    "name": "get_credit_file"
-   }
-  ]
- },
- "cb59c49b839bc20d128b96af609aff7fc05b4ea4440b51856aeae6651d1a629f": {
+ "b9f9cb93b0fcd93dfe207387af5eeec9b4cfea433410e152b6cfd70266793a83": {
   "cached_tokens": 0,
   "completion_tokens": 54,
   "content": "(no message \u2013 ask is the message)",
@@ -783,57 +857,14 @@
   "latency_s": 0.88,
   "model": "muse-spark-1.3",
   "prompt_tokens": 3725,
-  "tool_calls": []
+  "request": "cb59c49b839bc20d128b96af609aff7fc05b4ea4440b51856aeae6651d1a629f",
+  "tool_calls": [],
+  "versions": {
+   "policy": "policy-2026-10-27",
+   "skill": "credit:credit-v0.1"
+  }
  },
- "d4293ccc815c68ab262d5de115715dea19581563814149edc374e3822e083e8b": {
-  "cached_tokens": 3185,
-  "completion_tokens": 160,
-  "content": "",
-  "finish_reason": "tool_calls",
-  "latency_s": 1.296,
-  "model": "muse-spark-1.3",
-  "prompt_tokens": 4596,
-  "tool_calls": [
-   {
-    "arguments": "{\"origin\":\"shop_ask\",\"photo_id\":\"ph_7cec31ddd22e\",\"shop_id\":\"shop-029\"}",
-    "id": "call_00f884f2-0005-470b-80e1-74de24b92671",
-    "name": "prepare_credit_review"
-   }
-  ]
- },
- "d95de1a572e32103dc96f4a2b43b7bc6301742216c2efe3854765238c33ed30f": {
-  "cached_tokens": 0,
-  "completion_tokens": 59,
-  "content": "",
-  "finish_reason": "tool_calls",
-  "latency_s": 0.953,
-  "model": "muse-spark-1.3",
-  "prompt_tokens": 3124,
-  "tool_calls": [
-   {
-    "arguments": "{\"limit\":3}",
-    "id": "call_46fd5d05-761d-4f1e-8af9-35d30dd77478",
-    "name": "find_credit_candidates"
-   }
-  ]
- },
- "dcbc67fc03c673587f0756f21d00be5467a00919b9f3aaee920bb7c4a1f877d9": {
-  "cached_tokens": 0,
-  "completion_tokens": 96,
-  "content": "I'll pull your credit file to review the limit request.",
-  "finish_reason": "tool_calls",
-  "latency_s": 1.075,
-  "model": "muse-spark-1.3",
-  "prompt_tokens": 3111,
-  "tool_calls": [
-   {
-    "arguments": "{\"shop_id\":\"shop-016\"}",
-    "id": "call_2a1da7e9-b4c6-4b20-bd18-6f996208fa4a",
-    "name": "get_credit_file"
-   }
-  ]
- },
- "e8379a75257b2e749953dd0265f13c6352d96b4e44bb3f1e1e70e9bed498244d": {
+ "bc4c0392fd6c67aa198f435aa0ce425a5f262958dba9e6157bb44371683ae5a2": {
   "cached_tokens": 4849,
   "completion_tokens": 120,
   "content": "Shelf count looks good \u2014 I'll finalize your credit review now.",
@@ -841,31 +872,234 @@
   "latency_s": 1.331,
   "model": "muse-spark-1.3",
   "prompt_tokens": 5529,
+  "request": "e8379a75257b2e749953dd0265f13c6352d96b4e44bb3f1e1e70e9bed498244d",
   "tool_calls": [
    {
     "arguments": "{\"origin\":\"shop_ask\",\"photo_id\":\"ph_c94787826bab\",\"shop_id\":\"shop-020\"}",
     "id": "call_8998a40e-99ce-48f5-99dd-65054675a942",
     "name": "prepare_credit_review"
    }
-  ]
+  ],
+  "versions": {
+   "policy": "policy-2026-10-27",
+   "skill": "credit:credit-v0.1"
+  }
  },
- "ec6e6a4bbbcc9868a97451a55506f83f9184d91c704031eb5ca5d7853604b8fd": {
+ "c51945ce49d10ab219f7c92430b47e5ee3907c6965d3eef6012619f3a6b953cd": {
   "cached_tokens": 3569,
-  "completion_tokens": 106,
-  "content": "Photo received \u2014 I'll count your stock from the shelf image.",
+  "completion_tokens": 554,
+  "content": "Review ready \u2014 I'll submit it to the owner and update you.",
   "finish_reason": "tool_calls",
-  "latency_s": 1.067,
+  "latency_s": 2.458,
   "model": "muse-spark-1.3",
-  "prompt_tokens": 4088,
+  "prompt_tokens": 5097,
+  "request": "6beddd81c36d331b9ede2f7cbd5073fb4567c5b8a34d7174c90b26d8e0dbef09",
   "tool_calls": [
    {
-    "arguments": "{\"photo_id\":\"ph_dd3d36aeb082\",\"shop_id\":\"shop-020\"}",
-    "id": "call_9c376f6d-1a82-4666-8770-facd5bfd7f42",
+    "arguments": "{\"body\":\"I counted about 15 Mamaland Spaghetti 500g packets, 12 Seaview Sardines 125g tins and 6 Brightwash Detergent 900g packs, plus 1 more item, worth about N83,700 at Coral Lane Trading prices. I've sent your request with this to Coral Lane Trading. They decide the limit.\",\"channel\":\"shop_whatsapp\",\"ends_turn\":true,\"shop_id\":\"shop-013\"}",
+    "id": "call_d7db49dc-e1fd-4fff-b61e-d0fcf2dd72cf",
+    "name": "send_to_user"
+   },
+   {
+    "arguments": "{\"note_for_owner\":\"Ronke has 14 of 14 bank-verified payments on time (N2,562,550) with N0 owed on a N840,000 limit. Shelf worth about N83,700; code recommends hold as shelf shows more spaghetti than delivered.\",\"origin\":\"shop_ask\",\"photo_id\":\"ph_ee32116d117f\",\"review_id\":\"cr_12eff9a991b3e61b\",\"shop_id\":\"shop-013\"}",
+    "id": "call_74d4440c-484a-488d-8553-9f3edc0aa4c2",
+    "name": "submit_credit_review"
+   }
+  ],
+  "versions": {
+   "policy": "policy-2026-10-27",
+   "skill": "credit:credit-v0.1"
+  }
+ },
+ "c84ebdd23c039b91dbddf4d4f0f27629329655f94fcec872a4da9fd96b8bee3e": {
+  "cached_tokens": 3697,
+  "completion_tokens": 224,
+  "content": "Photo received \u2014 I'll review it for your credit request.",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.731,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 4261,
+  "request": "b930efefe2bb5be1b58166485618c3529c91a946188d23dc564060660359bab8",
+  "tool_calls": [
+   {
+    "arguments": "{\"photo_id\":\"ph_aac618f41a18\",\"shop_id\":\"shop-005\"}",
+    "id": "call_e82b61d1-429f-4851-b85c-b577ca094dc3",
     "name": "count_shelf_photo"
    }
-  ]
+  ],
+  "versions": {
+   "policy": "policy-2026-10-27",
+   "skill": "credit:credit-v0.1"
+  }
  },
- "efc91864eae46bc5b89527fabc62ee3cc0cf2508f4f3c6116bfd1319838cbc83": {
+ "cb5a8dc3360b6414239ccfbdeaf3aef5c61d0ecfe0b28749fa71276acc73dc8f": {
+  "cached_tokens": 0,
+  "completion_tokens": 90,
+  "content": "I'll pull together your credit request details to get things started.",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.414,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 3247,
+  "request": "bc9a4ac78c2b9300dfd4fe3732e63504dbdce80c941d9c9ad114c1eb6f262450",
+  "tool_calls": [
+   {
+    "arguments": "{\"shop_id\":\"shop-003\"}",
+    "id": "call_328aabb4-1856-422a-8f93-613f9f2172be",
+    "name": "get_credit_file"
+   }
+  ],
+  "versions": {
+   "policy": "policy-2026-10-27",
+   "skill": "credit:credit-v0.1"
+  }
+ },
+ "d234d4b7e4d0fb1974fe4668ae06f2c2eab28867380c41576e62851800d34241": {
+  "cached_tokens": 4721,
+  "completion_tokens": 384,
+  "content": "Review ready \u2014 sending your update and filing the request for approval.",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.968,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 5250,
+  "request": "8b124def8ee074d4bec79db0ddaebb0f5b05733b97ad2f5d6507e38d9434148b",
+  "tool_calls": [
+   {
+    "arguments": "{\"body\":\"I counted about 6 Mamaland Custard 2kg tubs, 3 Sunrise Instant Noodles 70g packets and 3 Smile Toothpaste 140g tube boxes, worth about N47,600 at Coral Lane Trading prices. I've sent your request with this to Coral Lane Trading. They decide the limit.\",\"channel\":\"shop_whatsapp\",\"ends_turn\":true,\"shop_id\":\"shop-002\"}",
+    "id": "call_6d710055-1f03-439e-a2c7-4f6f068f43d0",
+    "name": "send_to_user"
+   },
+   {
+    "arguments": "{\"note_for_owner\":\"Request not supported right now. N652,850 overdue, oldest 47 days, with 0 of 16 bank-verified payments on time.\",\"origin\":\"shop_ask\",\"photo_id\":\"ph_6c1d135d6c00\",\"review_id\":\"cr_bb0c27e1e7a0bd1e\",\"shop_id\":\"shop-002\"}",
+    "id": "call_9782c958-2e6d-4bf4-8895-480cafaa7545",
+    "name": "submit_credit_review"
+   }
+  ],
+  "versions": {
+   "policy": "policy-2026-10-27",
+   "skill": "credit:credit-v0.1"
+  }
+ },
+ "d36bc3fd8dc08bb03075c8adc3446820040003e892ee40812bfa2c8f0ed27bca": {
+  "cached_tokens": 4209,
+  "completion_tokens": 40,
+  "content": "",
+  "finish_reason": "stop",
+  "latency_s": 0.982,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 4695,
+  "request": "00de2ab51b7d6abedd908c4dfc13ddcf06321e87909f5c38227ee7abcd666500",
+  "tool_calls": [],
+  "versions": {
+   "policy": "policy-2026-10-27",
+   "skill": "credit:credit-v0.1"
+  }
+ },
+ "d7c88fd7c4699882ee1c4dea762a36671b86386cd54a1781665b9e27c2e7dc50": {
+  "cached_tokens": 4081,
+  "completion_tokens": 152,
+  "content": "",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.448,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 4600,
+  "request": "218bdf11be4b418305a47da7e85c2984da499bd2bd6f637330003261f4465567",
+  "tool_calls": [
+   {
+    "arguments": "{\"origin\":\"shop_ask\",\"photo_id\":\"ph_2fec025771d4\",\"shop_id\":\"shop-003\"}",
+    "id": "call_75012b05-6437-4a55-947a-bfa32d86bd37",
+    "name": "prepare_credit_review"
+   }
+  ],
+  "versions": {
+   "policy": "policy-2026-10-27",
+   "skill": "credit:credit-v0.1"
+  }
+ },
+ "dfe05704aa91086229352cb2613b5fe23835fb97940a4c0bf00fb660b1893b30": {
+  "cached_tokens": 3825,
+  "completion_tokens": 129,
+  "content": "Photo received \u2014 counting your shelf stock now.",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.116,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 4299,
+  "request": "16c2d2d77abf8b12b1691678338864b3fe917d958971d664d6435fd2f89e9657",
+  "tool_calls": [
+   {
+    "arguments": "{\"photo_id\":\"ph_6c1d135d6c00\",\"shop_id\":\"shop-002\"}",
+    "id": "call_3ae4d0f2-5391-4661-85a4-64bcd94ec604",
+    "name": "count_shelf_photo"
+   }
+  ],
+  "versions": {
+   "policy": "policy-2026-10-27",
+   "skill": "credit:credit-v0.1"
+  }
+ },
+ "e7f08a809a6938da3966feaadac90e295331da69959c220248e6c47a06f55648": {
+  "cached_tokens": 3185,
+  "completion_tokens": 137,
+  "content": "Shelf photo received \u2014 I'll review it for your request.",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.407,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 4085,
+  "request": "63dd927ec7d359ab8b0ce836151569097fc15e58056400004540cd9011a91b02",
+  "tool_calls": [
+   {
+    "arguments": "{\"photo_id\":\"ph_2fec025771d4\",\"shop_id\":\"shop-003\"}",
+    "id": "call_5f2fd0c3-33cb-4171-a7a8-943e41fc8046",
+    "name": "count_shelf_photo"
+   }
+  ],
+  "versions": {
+   "policy": "policy-2026-10-27",
+   "skill": "credit:credit-v0.1"
+  }
+ },
+ "eb090ac752ac1f5e3b0fa4eb791a2f677932fe45ba06cf10ac35a36d953ad474": {
+  "cached_tokens": 4209,
+  "completion_tokens": 158,
+  "content": "",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.247,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 4757,
+  "request": "675d55999b8ccb21f9aab15f2840550869626c8ec050c6965a980e36725d122f",
+  "tool_calls": [
+   {
+    "arguments": "{\"origin\":\"shop_ask\",\"photo_id\":\"ph_6c1d135d6c00\",\"shop_id\":\"shop-002\"}",
+    "id": "call_085c790d-b6c6-4e02-a259-a848643dac26",
+    "name": "prepare_credit_review"
+   }
+  ],
+  "versions": {
+   "policy": "policy-2026-10-27",
+   "skill": "credit:credit-v0.1"
+  }
+ },
+ "ee578e19209c4b1ab4ce1cce7e3db95f9b0465b9f642d537ea9e70dfb13510fd": {
+  "cached_tokens": 3057,
+  "completion_tokens": 256,
+  "content": "",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.453,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 3713,
+  "request": "9560393c2fc943581828b35fc0b1c4866437f8d3fc030a1ffe5c3e13525c95f0",
+  "tool_calls": [
+   {
+    "arguments": "{\"body\":\"Blessed Funke Mini Mart \u2014 recommendation: support (medium confidence).\\n\\n- 17 of 17 bank-verified payments on time in 8 weeks (N7,414,300 verified).\\n- Nothing overdue.\\n- Owes N0 on a N1,790,000 limit (0% used).\\n- No shelf photo: history only.\\n\\nYou set the limit \u2014 let me know if you want me to submit this for approval or adjust anything.\",\"channel\":\"owner_console\",\"ends_turn\":true,\"kind\":\"reply\"}",
+    "id": "call_9f5a122c-69de-4a59-b6aa-84aa1ee7c94c",
+    "name": "send_to_user"
+   }
+  ],
+  "versions": {
+   "policy": "policy-2026-10-27",
+   "skill": "credit:credit-v0.1"
+  }
+ },
+ "f06f8c3e894b075582cc799a17201ce1b508ee2296a07ef687134b070ece9fa8": {
   "cached_tokens": 0,
   "completion_tokens": 144,
   "content": "",
@@ -873,15 +1107,20 @@
   "latency_s": 1.036,
   "model": "muse-spark-1.3",
   "prompt_tokens": 3679,
+  "request": "efc91864eae46bc5b89527fabc62ee3cc0cf2508f4f3c6116bfd1319838cbc83",
   "tool_calls": [
    {
     "arguments": "{\"shop_id\":\"shop-005\"}",
     "id": "call_f1ba181b-e60e-454d-b8bd-0ec304fd1a8f",
     "name": "ask_for_shelf_photo"
    }
-  ]
+  ],
+  "versions": {
+   "policy": "policy-2026-10-27",
+   "skill": "credit:credit-v0.1"
+  }
  },
- "f59fbc957521ae5eda6626e93c4af3d7b29439eebd2c2964471a5af4edadc159": {
+ "f51d0e4d941bbfc3efe009f9a3daaaadcaff9fd58674bbf274ddf8b89d7b3609": {
   "cached_tokens": 0,
   "completion_tokens": 60,
   "content": "No further text - ask sent via tool, end turn silently per workflow.",
@@ -889,7 +1128,33 @@
   "latency_s": 1.413,
   "model": "muse-spark-1.3",
   "prompt_tokens": 3727,
-  "tool_calls": []
+  "request": "f59fbc957521ae5eda6626e93c4af3d7b29439eebd2c2964471a5af4edadc159",
+  "tool_calls": [],
+  "versions": {
+   "policy": "policy-2026-10-27",
+   "skill": "credit:credit-v0.1"
+  }
+ },
+ "f76fc7a926251b6fcca0467751b6e4be49f93cdf64355d6388024675f5107682": {
+  "cached_tokens": 0,
+  "completion_tokens": 91,
+  "content": "Your request is in \u2014 I'll pull your credit file to get started.",
+  "finish_reason": "tool_calls",
+  "latency_s": 0.919,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 3253,
+  "request": "925ed5c55d6c87e7f1ea7b325930339f4908f8bcdbfa1b5d56126bd9eafc7485",
+  "tool_calls": [
+   {
+    "arguments": "{\"shop_id\":\"shop-020\"}",
+    "id": "call_79147d29-326b-41ee-8b5f-16a86a775427",
+    "name": "get_credit_file"
+   }
+  ],
+  "versions": {
+   "policy": "policy-2026-10-27",
+   "skill": "credit:credit-v0.1"
+  }
  },
  "f77c77d72d80cc70789aa378993f58aaffe98b0ac1c1f8d9dc8dfeb7ec18ec45": {
   "cached_tokens": 3185,
@@ -907,20 +1172,25 @@
    }
   ]
  },
- "f951718a3487db94aa037210d4bc45e7a39044557f1ba13ed3d1875e0dc6fc8c": {
-  "cached_tokens": 3313,
-  "completion_tokens": 192,
-  "content": "",
+ "fbb1e85c995dc862047ded84d52b71b88acf490c5d10ff10b688468457e86281": {
+  "cached_tokens": 0,
+  "completion_tokens": 90,
+  "content": "I'll start by pulling your credit history to review the request.",
   "finish_reason": "tool_calls",
-  "latency_s": 1.23,
+  "latency_s": 0.825,
   "model": "muse-spark-1.3",
-  "prompt_tokens": 3704,
+  "prompt_tokens": 3243,
+  "request": "c9d7af51276ee3532ce1b17f96d3ee77b9eacc2780ed6cd0efd17da2328f4002",
   "tool_calls": [
    {
-    "arguments": "{\"shop_id\":\"shop-002\"}",
-    "id": "call_4932a510-9d56-4356-8fc2-9ac1246dbf0e",
-    "name": "ask_for_shelf_photo"
+    "arguments": "{\"shop_id\":\"shop-029\"}",
+    "id": "call_e7c08daa-32a4-43b8-a50f-c3f4bee67407",
+    "name": "get_credit_file"
    }
-  ]
+  ],
+  "versions": {
+   "policy": "policy-2026-10-27",
+   "skill": "credit:credit-v0.1"
+  }
  }
 }
