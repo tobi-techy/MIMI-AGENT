@@ -20,6 +20,7 @@ from typing import Literal
 from pydantic import BaseModel, ConfigDict, Field
 
 from mimi.harness.registry import ToolContext, ToolRegistry
+from mimi.harness.style import clean_reply
 
 
 class _In(BaseModel):
@@ -66,10 +67,12 @@ def send_to_user(ctx: ToolContext, args: SendToUserIn) -> SendToUserOut:
     if args.channel == "shop_whatsapp" and not args.shop_id:
         raise ToolError("A shop message needs shop_id.",
                         "Call send_to_user again with the shop_id.")
+    # The style guard (RAI-303): no dashes, no filler; figures never change.
+    body = clean_reply(args.body.strip(), where="send_to_user")
     return SendToUserOut(
-        channel=args.channel, body=args.body.strip(), kind=args.kind, shop_id=args.shop_id,
+        channel=args.channel, body=body, kind=args.kind, shop_id=args.shop_id,
         ends_turn=args.ends_turn, date=lagos_day(ctx),
-        body_digest=digest(args.body),
+        body_digest=digest(body),
     )
 
 
@@ -99,8 +102,9 @@ class AskQuestionOut(_Out):
 
 def ask_question(ctx: ToolContext, args: AskQuestionIn) -> AskQuestionOut:
     """Ask the owner (or the shop) one clear question when you are unsure, instead of guessing. Ends the turn until they answer."""
-    return AskQuestionOut(to=args.to, question=args.question.strip(), shop_id=args.shop_id,
-                          date=lagos_day(ctx), question_digest=digest(args.question))
+    question = clean_reply(args.question.strip(), where="ask_question")
+    return AskQuestionOut(to=args.to, question=question, shop_id=args.shop_id,
+                          date=lagos_day(ctx), question_digest=digest(question))
 
 
 def _ask_scope(args: AskQuestionIn) -> str:
