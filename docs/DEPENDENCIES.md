@@ -13,7 +13,8 @@ starts with no intent types of its own. The module rules test
 |---|---|---|
 | `sqlalchemy` | MIT | `mimi/runtime/sql_store.py`, `mimi/receipts/inbox.py`, `mimi/voice/prefs.py`, sim `--db`, `mimi/store/` (the API's durable store) |
 | `alembic` | MIT | migrations `0001_runtime_jobs` to `0006_api_store` |
-| `httpx` | BSD-3-Clause | `mimi/models/meta.py` (Meta Model API client), `mimi/harness/gateway.py` (tool-calling client), `mimi/voice/` (Spitch and Muse Voice Transcribe clients) |
+| `httpx` | BSD-3-Clause | `mimi/models/meta.py` (Meta Model API client), `mimi/credit/sam.py` (SAM 3.1 on the Responses API), `mimi/harness/gateway.py` (tool-calling client), `mimi/voice/` (Spitch and Muse Voice Transcribe clients) |
+| `pillow` >= 10.1 | MIT-CMU (HPND) | `mimi/credit/photo.py` and `mimi/credit/shelf.py` (Credit, RAI-271: shelf-photo checks for blur, light and size, and the colour of each pack SAM 3.1 found, before anything is counted; the photo is read, never kept in a prompt or trace). Also the synthetic shelf photos (`mimi/credit/render.py`, `scripts/make_shelf_fixtures.py`). Was dev-only before RAI-271 |
 | `fastapi` | MIT | `mimi/api/app.py` only (the HTTP API); a test keeps every other module free of web frameworks |
 | `uvicorn` | BSD-3-Clause | `python -m mimi.api serve` (the ASGI server) |
 | `pydantic` | MIT | `mimi/receipts/verdict.py` (typed verdict), `mimi/proof/reading.py`, `mimi/stock/answers.py` (typed stock answer), `mimi/harness/` (tool inputs and outputs, events, intents, run results, the front-door envelope, route decisions, context manifests) |
@@ -78,8 +79,10 @@ licence). Nothing is added to it beyond this package and its dependencies.
 ## Services
 
 Meta Model API (`https://api.meta.ai/v1`): `muse-spark-1.3` (text, and
-vision input for payment screenshots), `muse-spark-1.3-contributor` and
-`muse-voice-transcribe-1.0`, used under Meta's terms for the hackathon.
+vision input for payment screenshots), `muse-spark-1.3-contributor`,
+`muse-voice-transcribe-1.0` and `sam-3.1` (shelf-photo segmentation over
+`POST /v1/responses`, USD 2.50 per 1,000 images), used under Meta's terms for
+the hackathon.
 
 Spitch (`https://api.spitch.app/v1`), a third-party paid API, usage-based:
 speech to text (USD 0.00042 per second of audio) for voice notes, and text to

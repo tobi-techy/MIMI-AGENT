@@ -23,6 +23,9 @@ dependencies = [
     "alembic>=1.13.0",
     "httpx>=0.25.0",
     "pydantic>=2.5.0",
+    # Credit (RAI-271) checks shelf photos in code (blur, light, size, colour)
+    # before and after SAM 3.1. Also draws the synthetic fixtures.
+    "pillow>=10.1",
     # The HTTP API (mimi/api) only; nothing else in mimi imports them.
     "fastapi>=0.115",
     "uvicorn>=0.30",

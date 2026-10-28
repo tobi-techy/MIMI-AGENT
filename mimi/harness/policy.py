@@ -34,6 +34,11 @@ NEVER_TOOLS: frozenset[str] = frozenset(
         "extend_due_date",
         "give_discount",
         "request_pin_or_otp",
+        # Credit (RAI-271): the distributor sets credit; Mimi never does.
+        "set_credit_limit",
+        "change_credit_limit",
+        "raise_credit_limit",
+        "approve_credit_request",
     }
 )
 
@@ -60,7 +65,19 @@ BASE_TIERS: dict[str, Tier] = {
     # Proof (minimal, for the connector-down rule).
     "check_bank_feed": "auto",
     "open_bank_portal": "approve",
+    # Credit (RAI-271). The review is always a draft in the owner's approvals.
+    "get_credit_file": "auto",
+    "ask_for_shelf_photo": "notify",
+    "count_shelf_photo": "auto",
+    "prepare_credit_review": "auto",
+    "submit_credit_review": "approve",
+    "find_credit_candidates": "auto",
+    "find_shop": "auto",
 }
+
+# Tools whose intent only the owner may accept: no table edit or amount rule
+# lowers them below approve.
+ALWAYS_APPROVE: frozenset[str] = frozenset({"submit_credit_review"})
 
 
 class RiskPolicy(Protocol):
@@ -93,6 +110,8 @@ class GoPolicy:
         base = self.base_tier(tool)
         if base == "never":
             return "never"
+        if tool in ALWAYS_APPROVE:
+            return "approve"
         limit = self.limits.get(tenant_id, OwnerLimits()).auto_limit_kobo
         if tool == "send_reminder":
             if payload.get("tone") == "firm" or int(payload.get("amount_kobo") or 0) > limit:

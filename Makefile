@@ -1,5 +1,6 @@
 PY ?= python
 
+.PHONY: credit-eval credit-eval-live credit-fixtures sim-credit
 .PHONY: install test eval eval-live eval-fake voice-eval voice-eval-live voice-fixtures proof-eval proof-eval-live proof-fixtures stock-backtest stock-eval stock-eval-live stock-eval-fake sim-stock trace-stock sim sim-live sim-voice sim-voice-v2 sim-screens trace-smoke langfuse-setup langfuse-monitor langfuse-datasets proof-experiment voice-experiment receipts-experiment judge-calibration world-check lint typecheck secrets provenance migrate check harness-eval harness-eval-live trace-harness router-eval router-eval-live context-eval context-eval-live router-train trace-router api api-worker api-seed api-openapi api-openapi-check
 
 install:            ## editable install with dev tools
@@ -77,7 +78,7 @@ provenance:         ## every commit was made in the hackathon window
 migrate:            ## create Mimi's tables; set MIMI_DB_URL first
 	alembic upgrade head
 
-check: lint typecheck test api-openapi-check eval voice-eval proof-eval stock-backtest stock-eval harness-eval router-eval context-eval world-check secrets provenance
+check: lint typecheck test api-openapi-check eval voice-eval proof-eval stock-backtest stock-eval harness-eval router-eval context-eval credit-eval world-check secrets provenance
 
 sim-voice-v2:       ## offline sim: voice notes, payment promises, voice replies
 	META_API_KEY= SPITCH_API_KEY= $(PY) -m mimi.sim --shops 3 --transcript --voice 1 --promises 1 --voice-replies
@@ -144,6 +145,20 @@ router-train:       ## regenerate the fast classifier's synthetic training set (
 
 trace-router:       ## eight routing decisions and four context-built runs traced to Langfuse (replayed; no model cost)
 	$(PY) scripts/trace_router_context.py --public
+
+# --- Credit helper (RAI-271) ---
+
+credit-eval:        ## shelf counts (24 synthetic photos + 6 stress), recommendations, 10 conversations, routing; recorded SAM 3.1 and Muse Spark; pass marks
+	META_API_KEY= $(PY) -m mimi.credit.eval
+
+credit-eval-live:   ## record what is missing (needs META_API_KEY; about N800 from empty)
+	$(PY) -m mimi.credit.eval --live
+
+credit-fixtures:    ## redraw the synthetic shelf photos and labels (new bytes: re-record SAM after)
+	$(PY) scripts/make_shelf_fixtures.py
+
+sim-credit:         ## offline credit-bump scene: ask, shelf photo, SAM 3.1 count, approvals draft
+	META_API_KEY= $(PY) -m mimi.sim --credit --transcript
 
 # --- Agent HTTP API and durable store (RAI-266) ---
 # Local demo keys only; set MIMI_API_KEYS (and META_API_KEY for real Muse Spark) yourself.

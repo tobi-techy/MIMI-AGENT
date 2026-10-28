@@ -203,7 +203,14 @@ permission and no faces in frame, and each will be listed here.
   (`mimi/stock/answers.py`); taps and numbers are read in code, and code
   decides the bucket and every quantity. Measured on a 30-answer synthetic
   eval, recorded live (`docs/STOCK.md`).
-* Planned during the window: **SAM 3.1** for shelf-photo segmentation.
+* **SAM 3.1** (`sam-3.1`, `POST /v1/responses`) segments shelf photos a shop
+  sends with a credit ask (`mimi/credit/sam.py`): one concept phrase per call,
+  boxes and confidences back; code checks the photo first, decides which
+  delivered item each box is, counts and values it in integer kobo and builds
+  the recommendation (`mimi/credit/shelf.py`, `review.py`). Measured on 24
+  synthetic shelf photos (dev 10, held-out 14) plus 6 stress photos,
+  recorded live (`docs/CREDIT.md`). Mimi never sets or changes a limit; the
+  request is a draft in the owner's approvals.
 
 ## Pre-submit checklist
 
@@ -213,7 +220,7 @@ permission and no faces in frame, and each will be listed here.
 - [ ] Demo video opens with one line on what was pre-existing and what was
       built this week.
 - [ ] Hosted demo (if any): a judge login and step-by-step instructions.
-- [ ] Shelf photos (if any) added with the permission note above.
+- [x] Shelf photos are synthetic (drawn with Pillow, invented brands, labelled synthetic); no real shop photos.
 - [x] Voice fixtures are synthetic-generated and labelled; no real voices.
 - [x] Payment screenshots are synthetic, fictional banks only; no real screenshots.
 - [x] Langfuse tracing off without keys and in CI; redaction tested; only synthetic media attached.
