@@ -1,6 +1,6 @@
 PY ?= python
 
-.PHONY: credit-eval credit-eval-live credit-fixtures sim-credit
+.PHONY: credit-eval credit-eval-live credit-fixtures sim-credit e2e e2e-live
 .PHONY: install test eval eval-live eval-fake voice-eval voice-eval-live voice-fixtures proof-eval proof-eval-live proof-fixtures stock-backtest stock-eval stock-eval-live stock-eval-fake sim-stock trace-stock sim sim-live sim-voice sim-voice-v2 sim-screens trace-smoke langfuse-setup langfuse-monitor langfuse-datasets proof-experiment voice-experiment receipts-experiment judge-calibration world-check lint typecheck secrets provenance migrate check harness-eval harness-eval-live trace-harness router-eval router-eval-live context-eval context-eval-live router-train trace-router api api-worker api-seed api-openapi api-openapi-check
 
 install:            ## editable install with dev tools
@@ -78,7 +78,7 @@ provenance:         ## every commit was made in the hackathon window
 migrate:            ## create Mimi's tables; set MIMI_DB_URL first
 	alembic upgrade head
 
-check: lint typecheck test api-openapi-check eval voice-eval proof-eval stock-backtest stock-eval harness-eval router-eval context-eval credit-eval world-check secrets provenance
+check: lint typecheck test api-openapi-check eval voice-eval proof-eval stock-backtest stock-eval harness-eval router-eval context-eval credit-eval e2e world-check secrets provenance
 
 sim-voice-v2:       ## offline sim: voice notes, payment promises, voice replies
 	META_API_KEY= SPITCH_API_KEY= $(PY) -m mimi.sim --shops 3 --transcript --voice 1 --promises 1 --voice-replies
@@ -180,3 +180,11 @@ api-openapi:        ## regenerate docs/api/openapi.json
 
 api-openapi-check:  ## fail when docs/api/openapi.json is stale
 	$(PY) -m mimi.api openapi --check
+
+# --- End-to-end eval (RAI-272) ---
+
+e2e:                ## 10 simulated shops through the real API, store and worker processes; replays recorded Muse Spark, SAM 3.1 and persona answers; pass marks
+	META_API_KEY= $(PY) -m mimi.api.e2e --no-write
+
+e2e-live:           ## record what is missing (needs META_API_KEY; about N600 from empty) and write eval/e2e/e2e.report.*
+	$(PY) -m mimi.api.e2e --live

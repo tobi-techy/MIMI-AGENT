@@ -429,6 +429,68 @@
         "title": "ErrorOut",
         "type": "object"
       },
+      "EventIn": {
+        "additionalProperties": false,
+        "description": "A system event from Go or the scheduler: a delivery done, a routine due.",
+        "properties": {
+          "event_id": {
+            "description": "The sender's own event id. The same id twice is one turn.",
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Event Id",
+            "type": "string"
+          },
+          "kind": {
+            "enum": [
+              "webhook",
+              "routine"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "name": {
+            "description": "Webhook kind (delivery_completed, bank_credit, ...) or routine name (stock.weekly_check, ...).",
+            "maxLength": 100,
+            "minLength": 1,
+            "pattern": "^[a-z0-9_.]+$",
+            "title": "Name",
+            "type": "string"
+          },
+          "received_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Defaults to now (UTC).",
+            "title": "Received At"
+          },
+          "shop_id": {
+            "default": "",
+            "description": "The shop the event is about; empty for the distributor.",
+            "maxLength": 64,
+            "pattern": "^[A-Za-z0-9_.-]*$",
+            "title": "Shop Id",
+            "type": "string"
+          },
+          "simulated": {
+            "default": false,
+            "title": "Simulated",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "event_id",
+          "kind",
+          "name"
+        ],
+        "title": "EventIn",
+        "type": "object"
+      },
       "HTTPValidationError": {
         "properties": {
           "detail": {
@@ -1672,6 +1734,90 @@
           }
         ],
         "summary": "Credit limits per shop and credit requests"
+      }
+    },
+    "/v1/events": {
+      "post": {
+        "description": "Queues the event as a turn on the shop's thread (or the job thread).\n\nThe words the helper sees are written here from the event's kind and\nshop, never taken from the caller: a system event carries no free text.",
+        "operationId": "post_event_v1_events_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EventIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TurnOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Send one system event (a Go webhook or a routine) to Mimi"
       }
     },
     "/v1/health": {

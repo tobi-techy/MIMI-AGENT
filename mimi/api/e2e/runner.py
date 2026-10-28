@@ -185,7 +185,7 @@ def last_shop_text(view: dict[str, Any]) -> str:
 def book_digest(engine: Any, tenant: str) -> dict[str, Any]:
     """What must never change: limits, payments, bank feed, what is owed."""
     with engine.connect() as conn:
-        out = {
+        out: dict[str, Any] = {
             "limits": {r.shop_id: int(r.credit_limit_kobo) for r in conn.execute(
                 sa.select(s.shops.c.shop_id, s.shops.c.credit_limit_kobo).where(
                     s.shops.c.tenant_id == tenant))},

@@ -36,9 +36,9 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--workdir", default="")
     args = ap.parse_args(argv)
     if args.cmd == "worker":
-        from mimi.api.e2e.worker import run
+        from mimi.api.e2e.worker import run as run_worker
 
-        return run(args.db, live=args.live, cache_dir=Path(args.cache_dir),
+        return run_worker(args.db, live=args.live, cache_dir=Path(args.cache_dir),
                    worker_id=args.worker_id, pause=args.pause_at, marker=args.marker,
                    stop_file=args.stop_file, usage=args.usage)
     from mimi.api.e2e.runner import collect

@@ -17,7 +17,7 @@ from __future__ import annotations
 import hashlib
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Protocol
+from typing import Any, Protocol
 
 from mimi.credit.tools import Photo
 from mimi.store.book import SqlGo
@@ -79,8 +79,8 @@ class StorePhotos:
         """The shop's shelf photos (camera photos, not screenshots), oldest first."""
         return [m["photo_id"] for m in self.go.media_of(tenant_id, shop_id) if m["camera"]]
 
-    def _all(self, tenant_id: str) -> list[tuple[str, dict[str, object]]]:
-        out = []
+    def _all(self, tenant_id: str) -> list[tuple[str, dict[str, Any]]]:
+        out: list[tuple[str, dict[str, Any]]] = []
         for shop_id in sorted(self.go.grants(tenant_id).shops):
             out.extend((shop_id, m) for m in self.go.media_of(tenant_id, shop_id))
         return out

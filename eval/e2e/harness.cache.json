@@ -9,6 +9,16 @@
   "prompt_tokens": 5928,
   "tool_calls": []
  },
+ "09955554efe40fc31662160d348c7ddac6d77d81c29b5c89da67c1fa0086faa8": {
+  "cached_tokens": 2801,
+  "completion_tokens": 56,
+  "content": "(empty \u2013 ask sent via tool, no message)",
+  "finish_reason": "stop",
+  "latency_s": 0.816,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 3060,
+  "tool_calls": []
+ },
  "0d4fb261e97c2c384e05bfe8c9e1d21c82ea4f90e6bad6b6f0e557ce9730b810": {
   "cached_tokens": 0,
   "completion_tokens": 129,
@@ -41,6 +51,22 @@
    }
   ]
  },
+ "1704d17468a901a7b2a82c8bd974a7e4febcf0c3ee15135857c3b3755631bb47": {
+  "cached_tokens": 3057,
+  "completion_tokens": 100,
+  "content": "Recorded. Now I'll draft the restock request.",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.057,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 4102,
+  "tool_calls": [
+   {
+    "arguments": "{\"shop_id\":\"shop-012\",\"sku\":\"SEMO-1KG\"}",
+    "id": "call_cc45b697-f6c0-4b11-810d-ca263d5f50f1",
+    "name": "draft_restock"
+   }
+  ]
+ },
  "19c998088aa5b1d0085edb41a35640a445880c9e5c5339469209333d2a89cb08": {
   "cached_tokens": 0,
   "completion_tokens": 137,
@@ -54,6 +80,22 @@
     "arguments": "{\"photo_id\":\"ph_cce311a2ab43\",\"shop_id\":\"shop-038\"}",
     "id": "call_0e60c08b-eb6d-4ef7-9780-63aee6d2ab85",
     "name": "check_payment_screenshot"
+   }
+  ]
+ },
+ "1ac2af14349aa41de9a04d29f7ff9b054a18a6b642a4c14251c8b9c9c1fb2b0c": {
+  "cached_tokens": 0,
+  "completion_tokens": 342,
+  "content": "Evening check-in \u2014 I'll give you a quick status update.",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.943,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 1640,
+  "tool_calls": [
+   {
+    "arguments": "{\"body\":\"Good evening. The daily brief is not ready yet, so I can't say how business is going today.\\n\\nI can help with deliveries, what shops owe, payments and the approvals waiting \u2014 just let me know what you need.\",\"channel\":\"owner_console\",\"ends_turn\":true,\"kind\":\"reply\"}",
+    "id": "call_866c3dd5-ed7f-4187-83aa-4526b020a3ba",
+    "name": "send_to_user"
    }
   ]
  },
@@ -86,6 +128,22 @@
     "arguments": "{\"delivery_id\":\"dlv-56-9007\",\"shop_id\":\"shop-008\"}",
     "id": "call_c493d6bd-0dd8-4ca7-802c-01d678dfb81a",
     "name": "send_delivery_receipt"
+   }
+  ]
+ },
+ "21a29c160b62bdae3de87611c31550c9249302d8638663f941ff17da43aa142e": {
+  "cached_tokens": 241,
+  "completion_tokens": 103,
+  "content": "Got your new receipt \u2014 I'll verify it now.",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.176,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 3935,
+  "tool_calls": [
+   {
+    "arguments": "{\"photo_id\":\"ph_fef0fca0493e\",\"shop_id\":\"shop-025\"}",
+    "id": "call_f9b3e313-e916-4cb1-a76d-c204bd579726",
+    "name": "check_payment_screenshot"
    }
   ]
  },
@@ -179,6 +237,22 @@
    }
   ]
  },
+ "36dd657ab7b6676451c99e0478623fe981c3347f46ea9e1ceb149088914d32b9": {
+  "cached_tokens": 241,
+  "completion_tokens": 134,
+  "content": "Checking that receipt against the code and bank rules.",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.848,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 3001,
+  "tool_calls": [
+   {
+    "arguments": "{\"photo_id\":\"ph_4dbc324bf104\",\"shop_id\":\"shop-025\"}",
+    "id": "call_d59f44cb-f082-4402-8e9d-4eba7a60a6df",
+    "name": "check_payment_screenshot"
+   }
+  ]
+ },
  "39de5d85bf22795c46c682395055f500ffd373d6365557484059d9338abf26b9": {
   "cached_tokens": 3313,
   "completion_tokens": 22,
@@ -215,6 +289,32 @@
   "prompt_tokens": 3043,
   "tool_calls": []
  },
+ "408d7004fb5fc976a91eee6e961231b8872e8fe58569eab139b53b0d75a49686": {
+  "cached_tokens": 3825,
+  "completion_tokens": 25,
+  "content": "",
+  "finish_reason": "stop",
+  "latency_s": 1.25,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 4348,
+  "tool_calls": []
+ },
+ "41e8f6349a0c14af64834a5dfe4e575247520d3b264cd47f1e774c73a951d112": {
+  "cached_tokens": 2801,
+  "completion_tokens": 89,
+  "content": "",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.548,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 3682,
+  "tool_calls": [
+   {
+    "arguments": "{\"shop_id\":\"shop-014\",\"sku\":\"CUSTARD-2KG\"}",
+    "id": "call_79a2de6f-32e0-4983-a004-a6039d8e6e20",
+    "name": "read_stock_answer"
+   }
+  ]
+ },
  "42e8649a94c978018001fb6e1570b59dc66b720a0ea685797e241eba769fa30e": {
   "cached_tokens": 0,
   "completion_tokens": 184,
@@ -231,6 +331,22 @@
    }
   ]
  },
+ "478c96937814ba6c7070ecc4bf57845d9558b9ea3a066beabd96cbd145d20082": {
+  "cached_tokens": 2929,
+  "completion_tokens": 106,
+  "content": "",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.336,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 3286,
+  "tool_calls": [
+   {
+    "arguments": "{\"photo_id\":\"ph_4dbc324bf104\",\"shop_id\":\"shop-025\"}",
+    "id": "call_c096aa6b-3119-4657-a1f7-557a46c79691",
+    "name": "flag_payment_proof"
+   }
+  ]
+ },
  "47cc5854a8f45fa14ee490af248d557e54940b932ada03d788b153b169cc10fa": {
   "cached_tokens": 3057,
   "completion_tokens": 165,
@@ -244,6 +360,22 @@
     "arguments": "{\"body\":\"Thank you. Delivery dlv-56-9039 is confirmed.\",\"channel\":\"shop_whatsapp\",\"ends_turn\":true,\"kind\":\"reply\",\"shop_id\":\"shop-040\"}",
     "id": "call_d9ceded4-7d7a-4fdc-838d-e1d37f4737a4",
     "name": "send_to_user"
+   }
+  ]
+ },
+ "49ed7bafd1301308744a60c82a5457a8582e0cacb4ac7ddaedd37fe3d62aa49d": {
+  "cached_tokens": 2801,
+  "completion_tokens": 180,
+  "content": "Got the count range \u2014 I'll process it and plan the restock.",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.175,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 3164,
+  "tool_calls": [
+   {
+    "arguments": "{\"shop_id\":\"shop-014\"}",
+    "id": "call_52a4d051-3a4a-4632-9b00-50bf6b9a3491",
+    "name": "get_stock_estimates"
    }
   ]
  },
@@ -308,6 +440,16 @@
   "latency_s": 1.115,
   "model": "muse-spark-1.3",
   "prompt_tokens": 2915,
+  "tool_calls": []
+ },
+ "5822c3e45581b3eae940090461210a8546e0b03ccd8299821f67cf15f96fab85": {
+  "cached_tokens": 2801,
+  "completion_tokens": 68,
+  "content": "",
+  "finish_reason": "stop",
+  "latency_s": 0.867,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 3090,
   "tool_calls": []
  },
  "582b2137986e12b007ef7b437eafb20e9429d040a2b830d24cee136670a0bd70": {
@@ -549,6 +691,70 @@
    }
   ]
  },
+ "96d3837ddd3436a8267c5f1eb2bd8fb721378fce227fa48bab2eebe006f5773c": {
+  "cached_tokens": 2801,
+  "completion_tokens": 333,
+  "content": "I'll confirm the pending stock question to process the count.",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.866,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 3144,
+  "tool_calls": [
+   {
+    "arguments": "{\"shop_id\":\"shop-012\"}",
+    "id": "call_09c3c28c-8d50-4d9d-b1e3-1c264b62513c",
+    "name": "get_stock_estimates"
+   }
+  ]
+ },
+ "97f26fccfbe03c02562815c31a32081d377308235acf5159d223f473c5d7c946": {
+  "cached_tokens": 2801,
+  "completion_tokens": 109,
+  "content": "Confirmed 3-5 packs. I'll record the count and draft the restock.",
+  "finish_reason": "tool_calls",
+  "latency_s": 0.963,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 3926,
+  "tool_calls": [
+   {
+    "arguments": "{\"shop_id\":\"shop-012\",\"sku\":\"SEMO-1KG\"}",
+    "id": "call_113db462-d182-4e6e-98c1-664653a8ebc0",
+    "name": "record_stock_count"
+   }
+  ]
+ },
+ "9933db496ff7dfe9d6d769daeb65a88477fbfea086342d6b730c5610330fd2ab": {
+  "cached_tokens": 241,
+  "completion_tokens": 71,
+  "content": "",
+  "finish_reason": "tool_calls",
+  "latency_s": 0.952,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 2423,
+  "tool_calls": [
+   {
+    "arguments": "{\"shop_id\":\"shop-012\"}",
+    "id": "call_e5371c99-ae85-4d76-b379-b59330d08a9b",
+    "name": "get_stock_estimates"
+   }
+  ]
+ },
+ "a04653bf0e1d9b4f51e40860acd7fd7fa08f59c15fbd820c170aac5c80a40690": {
+  "cached_tokens": 3057,
+  "completion_tokens": 175,
+  "content": "That count matches the open question. I'll read the answer to decide next steps.",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.271,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 3652,
+  "tool_calls": [
+   {
+    "arguments": "{\"shop_id\":\"shop-012\",\"sku\":\"SEMO-1KG\"}",
+    "id": "call_f8a0bfd2-ff8f-40c4-97c8-317d4ee5c22b",
+    "name": "read_stock_answer"
+   }
+  ]
+ },
  "a53a73713a08be8baaa596a0a5c58b27ae8a83e81e80eaf85df4bbcfdb931610": {
   "cached_tokens": 241,
   "completion_tokens": 108,
@@ -612,6 +818,22 @@
   "prompt_tokens": 3777,
   "tool_calls": []
  },
+ "b1efa2d0b0fb87750bd54364902d889f99dd84f1f0f47906bfc00675854dcb3a": {
+  "cached_tokens": 0,
+  "completion_tokens": 71,
+  "content": "",
+  "finish_reason": "tool_calls",
+  "latency_s": 0.79,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 2423,
+  "tool_calls": [
+   {
+    "arguments": "{\"shop_id\":\"shop-014\"}",
+    "id": "call_dccbac74-73eb-4e26-b5ef-0d368fca2952",
+    "name": "get_stock_estimates"
+   }
+  ]
+ },
  "b463b6ee2c0aaeb9d1c34de15f03c11ef2ac6ed7dd944c33ae7eeab12927fd35": {
   "cached_tokens": 0,
   "completion_tokens": 101,
@@ -641,6 +863,22 @@
     "arguments": "{\"delivery_id\":\"dlv-56-9022\",\"shop_id\":\"shop-023\"}",
     "id": "call_c428566a-d3c8-4f7d-8d3f-cb8ae230f90d",
     "name": "read_receipt_reply"
+   }
+  ]
+ },
+ "ba71f20dd9883107544d3ca0ba6690d9f2d918bb9c3ad90191df6a1bb1f185ff": {
+  "cached_tokens": 2801,
+  "completion_tokens": 93,
+  "content": "",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.85,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 2911,
+  "tool_calls": [
+   {
+    "arguments": "{\"shop_id\":\"shop-012\",\"sku\":\"SEMO-1KG\"}",
+    "id": "call_c21de9c6-82c2-4d1f-8eab-9575691a7e93",
+    "name": "ask_stock_count"
    }
   ]
  },
@@ -711,6 +949,37 @@
     "name": "check_payment_screenshot"
    }
   ]
+ },
+ "c3cdc24a3606f6c073b28711dace66448ecbf3528cc9f7decea9e58bc5fbaee2": {
+  "cached_tokens": 3825,
+  "completion_tokens": 322,
+  "content": "",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.691,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 4236,
+  "tool_calls": [
+   {
+    "arguments": "{\"photo_id\":\"ph_fef0fca0493e\",\"shop_id\":\"shop-025\"}",
+    "id": "call_d7542348-4ab8-4bd7-a338-23b7cd53a6a6",
+    "name": "record_payment_proof"
+   },
+   {
+    "arguments": "{\"body\":\"Thanks. I can see N13,600 from KUNLE AKINOLA on your screenshot. I've sent it to Coral Lane Trading to confirm with the bank. It shows as likely paid until the bank confirms.\",\"channel\":\"shop_whatsapp\",\"ends_turn\":true,\"kind\":\"reply\",\"shop_id\":\"shop-025\"}",
+    "id": "call_1c1892e7-ae40-4cf9-a380-448ee8ca1478",
+    "name": "send_to_user"
+   }
+  ]
+ },
+ "c4dd73854645c0ce57527ad2d1f7f0d52c8813602e623e4108f8a62dc6a4b951": {
+  "cached_tokens": 4081,
+  "completion_tokens": 34,
+  "content": "(empty \u2013 approval handled, no message)",
+  "finish_reason": "stop",
+  "latency_s": 0.838,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 4381,
+  "tool_calls": []
  },
  "c6723bcf1205cc6310baba020112b36ac0a95b654739b5bd72eead154f3ab75f": {
   "cached_tokens": 0,
@@ -949,6 +1218,27 @@
    }
   ]
  },
+ "ea0632d0d0f1515b2e65ddc16527e9da81ae574f280a702ae1ca85d7dec61eae": {
+  "cached_tokens": 3057,
+  "completion_tokens": 174,
+  "content": "",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.179,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 3935,
+  "tool_calls": [
+   {
+    "arguments": "{\"shop_id\":\"shop-014\",\"sku\":\"CUSTARD-2KG\"}",
+    "id": "call_3290bf19-ed4c-43f4-aff0-6da5cef70f74",
+    "name": "record_stock_count"
+   },
+   {
+    "arguments": "{\"shop_id\":\"shop-014\",\"sku\":\"CUSTARD-2KG\"}",
+    "id": "call_f0085100-a5cf-42b9-a85b-5d5ca6c06f2d",
+    "name": "draft_restock"
+   }
+  ]
+ },
  "eb0f54ac98c81076de5b2b0dd88530583f08e103a4c4b083807c59526b69f082": {
   "cached_tokens": 0,
   "completion_tokens": 340,
@@ -1048,5 +1338,21 @@
   "model": "muse-spark-1.3",
   "prompt_tokens": 3214,
   "tool_calls": []
+ },
+ "feb7bb925619c49581704bc7f5226ebddd5b0d57ede1d455819fa64fe149acb9": {
+  "cached_tokens": 0,
+  "completion_tokens": 115,
+  "content": "I'll check the low stock item and send the count request.",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.268,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 2919,
+  "tool_calls": [
+   {
+    "arguments": "{\"shop_id\":\"shop-014\",\"sku\":\"CUSTARD-2KG\"}",
+    "id": "call_84a30969-3115-468c-9e50-2bcc63becc1b",
+    "name": "ask_stock_count"
+   }
+  ]
  }
 }

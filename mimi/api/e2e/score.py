@@ -23,7 +23,7 @@ from mimi.harness.policy import ALWAYS_APPROVE, NEVER_TOOLS
 from mimi.runtime.outbox import MONEY_VERBS
 from mimi.world.loader import load_world
 
-PASS = {"scene_success": 0.90, "routing": 0.95}
+PASS: dict[str, float] = {"scene_success": 0.90, "routing": 0.95}
 _FIG = re.compile(r"[N₦]\s?(\d{1,3}(?:,\d{3})+|\d+)(?:\.(\d{2}))?")
 
 
@@ -319,7 +319,7 @@ def score(run: Run, usage_path: Path | None = None) -> dict[str, Any]:
     core = [u for u in units if u["shop_id"] not in ("owner", "palm-way")
             and not u["scene"].startswith("worker")]
     n_ok = sum(u["ok"] for u in units)
-    report = {
+    report: dict[str, Any] = {
         "units": units,
         "scene_success": pct(n_ok, len(units)),
         "scene_success_shops": pct(sum(u["ok"] for u in core), len(core)),
