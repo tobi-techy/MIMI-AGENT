@@ -69,8 +69,11 @@ All in code, none from the model: `mimi.harness.guards.LoopLimits`,
   the gate.
 * False blocks: the e2e, two open asks, binding, Order, photo route, steer,
   context, credit and harness evals were replayed with `MIMI_GUARD_TRIPS` set.
-  Zero trips on legitimate replies (the only trips were the harness security
-  suite's planted N7,777,777 figures).
+  Zero trips on legitimate replies. The only trips are the harness security
+  suite's planted N7,777,777 figures and the scripted `bad_args_once` promise
+  scenarios, where the step's `set_followup` is refused (9999 hours) so "We
+  will check in then" has nothing scheduled behind it; the repair turn sets a
+  valid follow-up and the message goes out. Both are true holds.
 
 ## Known gaps
 
