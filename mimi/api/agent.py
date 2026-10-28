@@ -49,6 +49,7 @@ from mimi.api import steering as sx
 from mimi.api import voice as vx
 from mimi.api.helpers import HelperDeps
 from mimi.api.media import checked_media
+from mimi.api.photo_label import media_pointer
 from mimi.harness import fastclass
 from mimi.harness import steer as st
 from mimi.harness.batch import is_mixed, mixed_text, run_sender
@@ -156,18 +157,6 @@ SETTLES: dict[str, tuple[str, ...]] = {
     "credit/credit-request": ("submit_credit_review",),
     "order/order-intake": ("submit_order", "revise_order"),
 }
-
-
-def media_pointer(inbound: Inbound) -> str:
-    """What the model sees for an image: its id, never its pixels."""
-    m = inbound.payload.media
-    if m.kind != "image" or not m.sha256:
-        return ""
-    from mimi.harness.router import media_shape
-
-    what = {"photo": "shelf photo", "screenshot": "payment screenshot"}.get(
-        "photo" if m.camera_exif else media_shape(m), "image")
-    return f"[{what} ph_{m.sha256[:12]}]"
 
 
 class NotFound(LookupError):
@@ -1134,8 +1123,8 @@ class Agent:
         shop_id = shop_id or lead.payload.shop_id
         given = text is not None
         if text is None:
-            text = "\n".join(" ".join(x for x in (media_pointer(e), e.text) if x)
-                             for e in events if e.text or media_pointer(e))
+            text = "\n".join(" ".join(x for x in (media_pointer(e, d.skill), e.text) if x)
+                             for e in events if e.text or media_pointer(e, d.skill))
         sender = {"owner_message": "owner", "shop_message": "shop",
                   "rep_message": "rep"}.get(lead.source, "system")
         if sender == "owner" and not directory.is_owner(lead):
@@ -1144,7 +1133,8 @@ class Agent:
             # The owner (or Mimi) and someone from outside in one burst: each
             # event tagged and stripped, and the turn runs untrusted (finding 2).
             if not given:
-                parts = [" ".join(x for x in (media_pointer(e), e.text) if x) for e in events]
+                parts = [" ".join(x for x in (media_pointer(e, d.skill), e.text) if x)
+                         for e in events]
                 text, _spans = mixed_text(events, directory, parts)
             sender = run_sender(events, directory)
         ext = [e.external_id for e in events]

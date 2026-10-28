@@ -36,12 +36,12 @@
  },
  "cost_kobo": {
   "agent_per_turn_mean": 2076,
-  "harness": 71348,
+  "harness": 71351,
   "helper_models": 12687,
   "persona": 261,
   "router": 2864,
   "sam": 2400,
-  "total": 89560
+  "total": 89563
  },
  "cross_tenant": [],
  "duplicate_replies": [],
@@ -216,10 +216,10 @@
  ],
  "latency_s": {
   "n": 32,
-  "run_p50": 0.076,
-  "run_p95": 5.0,
-  "turn_p50": 0.121,
-  "turn_p95": 5.174
+  "run_p50": 0.068,
+  "run_p95": 5.38,
+  "turn_p50": 0.119,
+  "turn_p95": 6.221
  },
  "lost_jobs": [],
  "misroutes": [],
@@ -392,7 +392,7 @@
    "ok": true,
    "scene": "daily naira cap: helpers pause, holding reply, one owner note, resume on approve",
    "shop_id": "owner",
-   "why": "parked ['parked', 'parked'], raise items 1, owner notes 1, decision 200, cap 69360 -> 138720 kobo, resumed and answered 2/2"
+   "why": "parked ['parked', 'parked'], raise items 1, owner notes 1, decision 200, cap 69363 -> 138726 kobo, resumed and answered 2/2"
   },
   {
    "ok": true,

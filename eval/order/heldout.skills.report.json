@@ -27,11 +27,11 @@
  "decided_edits": 0,
  "invented": 0,
  "live_calls": {
-  "loop": 75,
+  "loop": 14,
   "router": 0,
   "vision": 0
  },
- "live_cost_kobo_this_run": 64984,
+ "live_cost_kobo_this_run": 11284,
  "mode": "live",
  "model_calls": {
   "loop": 75,
@@ -1423,7 +1423,7 @@
    "kind": [
     "photo"
    ],
-   "loop_spend_kobo": 1633,
+   "loop_spend_kobo": 1588,
    "misses": [],
    "shop_id": "shop-005",
    "turns": [
@@ -1470,7 +1470,7 @@
       {
        "helper": "order",
        "skill": "order/order-intake",
-       "spend_kobo": 1633,
+       "spend_kobo": 1588,
        "state": "done",
        "status": "parked_for_approval",
        "turn_id": "turn_c64ee100f0295b73ae95"
@@ -1488,7 +1488,7 @@
    "kind": [
     "photo"
    ],
-   "loop_spend_kobo": 1580,
+   "loop_spend_kobo": 1587,
    "misses": [],
    "shop_id": "shop-032",
    "turns": [
@@ -1535,7 +1535,7 @@
       {
        "helper": "order",
        "skill": "order/order-intake",
-       "spend_kobo": 1580,
+       "spend_kobo": 1587,
        "state": "done",
        "status": "parked_for_approval",
        "turn_id": "turn_0e4ceb18a43ccfc72ba8"
@@ -1554,7 +1554,7 @@
     "photo",
     "credit_edge"
    ],
-   "loop_spend_kobo": 1626,
+   "loop_spend_kobo": 1619,
    "misses": [],
    "shop_id": "shop-009",
    "turns": [
@@ -1601,7 +1601,7 @@
       {
        "helper": "order",
        "skill": "order/order-intake",
-       "spend_kobo": 1626,
+       "spend_kobo": 1619,
        "state": "done",
        "status": "parked_for_approval",
        "turn_id": "turn_11b751192b9a4e6be67c"
@@ -1620,7 +1620,7 @@
     "photo",
     "over_credit"
    ],
-   "loop_spend_kobo": 1567,
+   "loop_spend_kobo": 1588,
    "misses": [],
    "shop_id": "shop-036",
    "turns": [
@@ -1663,7 +1663,7 @@
       {
        "helper": "order",
        "skill": "order/order-intake",
-       "spend_kobo": 1567,
+       "spend_kobo": 1588,
        "state": "done",
        "status": "parked_for_approval",
        "turn_id": "turn_0f2a3905d3d7b7e2bb14"
@@ -1682,7 +1682,7 @@
     "photo",
     "unclear"
    ],
-   "loop_spend_kobo": 3287,
+   "loop_spend_kobo": 3312,
    "misses": [],
    "shop_id": "shop-024",
    "turns": [
@@ -1701,7 +1701,7 @@
       {
        "helper": "order",
        "skill": "order/order-intake",
-       "spend_kobo": 2326,
+       "spend_kobo": 2336,
        "state": "done",
        "status": "done",
        "turn_id": "turn_6547f8d39560fdf5dc53"
@@ -1747,7 +1747,7 @@
       {
        "helper": "order",
        "skill": "order/order-intake",
-       "spend_kobo": 961,
+       "spend_kobo": 976,
        "state": "done",
        "status": "parked_for_approval",
        "turn_id": "turn_9e4f24c50c64ae1880ea"

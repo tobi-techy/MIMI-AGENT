@@ -335,6 +335,27 @@
    "skill": "order:skill:order/order-intake@1.0.0+b903882c"
   }
  },
+ "2387573669b74d0eaf9b845280d2dd9cbb84d531ee2351f8d4fdd411035cd03c": {
+  "cached_tokens": 2929,
+  "completion_tokens": 122,
+  "content": "I'll read that order list photo to see what you need.",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.394,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 3217,
+  "request": "784ffb452d4f1d2f52c580454a8b33ddb2e2ce33d0ac1a714cac7a09bc9ed3f6",
+  "tool_calls": [
+   {
+    "arguments": "{\"photo_id\":\"ph_0791d4f3dc70\",\"shop_id\":\"shop-009\"}",
+    "id": "call_a51b50f6-54f1-41f6-9e9e-da129e0dcc3c",
+    "name": "read_order_photo"
+   }
+  ],
+  "versions": {
+   "policy": "policy-2026-10-27",
+   "skill": "order:skill:order/order-intake@1.0.0+b903882c"
+  }
+ },
  "23cd0f8fee14452a6d99e50e532ddeed0710919edc6b9b8680985a8b7d309f27": {
   "cached_tokens": 3185,
   "completion_tokens": 152,
@@ -579,6 +600,27 @@
    {
     "arguments": "{\"photo_id\":\"ph_0791d4f3dc70\",\"shop_id\":\"shop-009\"}",
     "id": "call_4bc00bbd-436a-4437-ae33-8fca636c0e62",
+    "name": "read_order_photo"
+   }
+  ],
+  "versions": {
+   "policy": "policy-2026-10-27",
+   "skill": "order:skill:order/order-intake@1.0.0+b903882c"
+  }
+ },
+ "342fc8bd26aa886467c7a2266fd5974a219a976ee95c2c3bd1421affc9ee4e15": {
+  "cached_tokens": 2929,
+  "completion_tokens": 111,
+  "content": "I'll read your handwritten order before pricing it.",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.079,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 3227,
+  "request": "7b8a48471efb54a54cdcfe9113e664df38735e32558dae6845bbebcbd2adcb1b",
+  "tool_calls": [
+   {
+    "arguments": "{\"photo_id\":\"ph_947d4bf80387\",\"shop_id\":\"shop-024\"}",
+    "id": "call_e0c387f8-d585-4fea-82c1-ddd611ccfb23",
     "name": "read_order_photo"
    }
   ],
@@ -1028,6 +1070,27 @@
    "skill": "order:skill:order/order-intake@1.0.0+b903882c"
   }
  },
+ "5777437c417bcc4a51db5e5d7aaf7d20caf41c4e74d2d78156572d4bda64fe2a": {
+  "cached_tokens": 3185,
+  "completion_tokens": 270,
+  "content": "",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.945,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 3420,
+  "request": "2e28fa94b964965856a005b5ca3764ac3347ffba3a0095e6423f32e9735fd3d2",
+  "tool_calls": [
+   {
+    "arguments": "{\"lines\":[{\"as_written\":\"Sugar 50kg - 2 bags\",\"item\":\"Sugar 50kg\",\"quantity\":2,\"unit\":\"bags\"},{\"as_written\":\"Cubes - 1 ctn\",\"item\":\"Cubes\",\"quantity\":1,\"unit\":\"ctn\"},{\"as_written\":\"Toothpaste - 12\",\"item\":\"Toothpaste\",\"quantity\":12,\"unit\":\"\"}],\"shop_id\":\"shop-005\"}",
+    "id": "call_ff8acb5e-4774-4571-b15c-a8bd307239f9",
+    "name": "submit_order"
+   }
+  ],
+  "versions": {
+   "policy": "policy-2026-10-27",
+   "skill": "order:skill:order/order-intake@1.0.0+b903882c"
+  }
+ },
  "59c823f1f84e5c3bd63f1d52bed7ca833d4779c6576e70c82b638d2498b7f3fa": {
   "cached_tokens": 4337,
   "completion_tokens": 305,
@@ -1280,6 +1343,48 @@
    "skill": "order:skill:order/order-intake@1.0.0+b903882c"
   }
  },
+ "6c1dcd6d7475da6a5fe65e2e8235bae5a430195922adb1817a5d9ffb7c275316": {
+  "cached_tokens": 2929,
+  "completion_tokens": 303,
+  "content": "",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.482,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 3429,
+  "request": "0ac6b56a1dd5c2d4268b7b2184a4e15ba6c4026be29b25cf958c2aa19555858b",
+  "tool_calls": [
+   {
+    "arguments": "{\"lines\":[{\"as_written\":\"Peak milk tin 2 carton\",\"item\":\"Peak milk tin\",\"quantity\":2,\"unit\":\"carton\"},{\"as_written\":\"Vegetable oil 5L - 3\",\"item\":\"Vegetable oil 5L\",\"quantity\":3,\"unit\":\"\"},{\"as_written\":\"Biscuit 4 ctn\",\"item\":\"Biscuit\",\"quantity\":4,\"unit\":\"ctn\"}],\"shop_id\":\"shop-009\"}",
+    "id": "call_98f1d8d4-5669-4173-a709-c2998dac5747",
+    "name": "submit_order"
+   }
+  ],
+  "versions": {
+   "policy": "policy-2026-10-27",
+   "skill": "order:skill:order/order-intake@1.0.0+b903882c"
+  }
+ },
+ "6c70cd4b43bfc132ea00f785e558ecd867bb04e8085ca12530aa90d22cb507ac": {
+  "cached_tokens": 2929,
+  "completion_tokens": 247,
+  "content": "",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.937,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 3420,
+  "request": "10b15d63c1a648e3a4a7ec2d0e75b1fe88f0cffdaf48f5de6fdcac68caf34b94",
+  "tool_calls": [
+   {
+    "arguments": "{\"lines\":[{\"as_written\":\"Rice - 5 bags\",\"item\":\"Rice\",\"quantity\":5,\"unit\":\"bags\"},{\"as_written\":\"Spaghetti ctn - 3\",\"item\":\"Spaghetti\",\"quantity\":3,\"unit\":\"ctn\"}],\"shop_id\":\"shop-024\"}",
+    "id": "call_8d2382b2-e241-4114-b28e-9901b60995fe",
+    "name": "submit_order"
+   }
+  ],
+  "versions": {
+   "policy": "policy-2026-10-27",
+   "skill": "order:skill:order/order-intake@1.0.0+b903882c"
+  }
+ },
  "6f94176ea204245767724b092acebaf11623521e879c8655c8c9de3d53a026e9": {
   "cached_tokens": 3441,
   "completion_tokens": 263,
@@ -1419,6 +1524,27 @@
    {
     "arguments": "{\"lines\":[{\"as_written\":\"3 carton tin milk\",\"item\":\"tin milk\",\"quantity\":3,\"unit\":\"carton\"}],\"shop_id\":\"shop-010\"}",
     "id": "call_d7d8f685-5fd9-4966-8742-363dd5838643",
+    "name": "submit_order"
+   }
+  ],
+  "versions": {
+   "policy": "policy-2026-10-27",
+   "skill": "order:skill:order/order-intake@1.0.0+b903882c"
+  }
+ },
+ "77f5cdc104054ee3350c0dfb3cca46cd59fcaf8e197462aa21a9587146eb044b": {
+  "cached_tokens": 3185,
+  "completion_tokens": 270,
+  "content": "Got your list \u2014 I'll price it and send confirmation next.",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.487,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 3414,
+  "request": "6d324dd20c99f0565132f736e2e8eed3b72d7df7c358b11288c7d2503d2cac1d",
+  "tool_calls": [
+   {
+    "arguments": "{\"lines\":[{\"as_written\":\"Indomie super pack - 2 ctn\",\"item\":\"Indomie super pack\",\"quantity\":2,\"unit\":\"ctn\"},{\"as_written\":\"pure water 5 bag\",\"item\":\"pure water\",\"quantity\":5,\"unit\":\"bag\"}],\"shop_id\":\"shop-036\"}",
+    "id": "call_af55e18d-5346-4aeb-9c00-7ce21cb397a3",
     "name": "submit_order"
    }
   ],
@@ -1763,6 +1889,27 @@
    "skill": "order:skill:order/order-intake@1.0.0+b903882c"
   }
  },
+ "917a76375e1bc1e334d0b05f8d0a40fa5eee9b42320273efe862143beeaf975c": {
+  "cached_tokens": 0,
+  "completion_tokens": 119,
+  "content": "Your photo order is in \u2014 I'll copy it out for pricing.",
+  "finish_reason": "tool_calls",
+  "latency_s": 2.252,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 3232,
+  "request": "4efa7eba08126542538ed1f7482903c0c1728d6ce0c354c68f1494ac2372207e",
+  "tool_calls": [
+   {
+    "arguments": "{\"photo_id\":\"ph_85ac0cf910a7\",\"shop_id\":\"shop-013\"}",
+    "id": "call_0c8f7eae-5231-471d-b754-a391668dd59b",
+    "name": "read_order_photo"
+   }
+  ],
+  "versions": {
+   "policy": "policy-2026-10-27",
+   "skill": "order:skill:order/order-intake@1.0.0+b903882c"
+  }
+ },
  "923481b802d1ea2f19ba44fc1babfefb2f4975085f9c5cbc75aa966d3e548248": {
   "cached_tokens": 2929,
   "completion_tokens": 62,
@@ -1798,6 +1945,27 @@
     "arguments": "{\"lines\":[{\"as_written\":\"bag rice meji (5kg)\",\"item\":\"bag rice (5kg)\",\"quantity\":2,\"unit\":\"bag\"},{\"as_written\":\"igo oil merin\",\"item\":\"igo oil\",\"quantity\":4,\"unit\":\"igo\"}],\"shop_id\":\"shop-021\"}",
     "id": "call_b6db4cee-4052-4594-bed7-c30259f2ac00",
     "name": "submit_order"
+   }
+  ],
+  "versions": {
+   "policy": "policy-2026-10-27",
+   "skill": "order:skill:order/order-intake@1.0.0+b903882c"
+  }
+ },
+ "935731359a7ff461e82b690b1d5a4759ba0a12be17d40522d138ebc8ee090fe0": {
+  "cached_tokens": 2929,
+  "completion_tokens": 112,
+  "content": "I'll read your order list photo to capture each item.",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.004,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 3226,
+  "request": "947bc2225d0ec3013e7a3aa3217ba1198fa7dfb4c50ffb6a8d2c72fb93bc0552",
+  "tool_calls": [
+   {
+    "arguments": "{\"photo_id\":\"ph_8447595654a0\",\"shop_id\":\"shop-032\"}",
+    "id": "call_2d0db5ce-6cfd-478b-9e6a-936182d9214d",
+    "name": "read_order_photo"
    }
   ],
   "versions": {
@@ -2062,6 +2230,27 @@
    "skill": "order:skill:order/order-intake@1.0.0+b903882c"
   }
  },
+ "aac066f9bfccfb499de8c4cc98e29c2383f0c7700fa5cc51d37f485f8dc90151": {
+  "cached_tokens": 0,
+  "completion_tokens": 114,
+  "content": "I'll read your order list photo to get your items ready.",
+  "finish_reason": "tool_calls",
+  "latency_s": 0.976,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 3214,
+  "request": "eb69b8b3264f2f22d1fd02b444818cdfc5d3c012cc6107596b3485f1159d9e47",
+  "tool_calls": [
+   {
+    "arguments": "{\"photo_id\":\"ph_952b98cc03d5\",\"shop_id\":\"shop-036\"}",
+    "id": "call_22c17708-8bbf-4099-bc25-15f71c0ff08d",
+    "name": "read_order_photo"
+   }
+  ],
+  "versions": {
+   "policy": "policy-2026-10-27",
+   "skill": "order:skill:order/order-intake@1.0.0+b903882c"
+  }
+ },
  "aac544c198cb1509085cc6088f50cba660c14d745afacc9a4871b8d5b654a7ee": {
   "cached_tokens": 0,
   "completion_tokens": 188,
@@ -2097,6 +2286,48 @@
     "arguments": "{\"file\":\"references/product-nicknames.md\",\"name\":\"order-intake\"}",
     "id": "call_84737252-5105-4a36-985a-bd8ecabef5c8",
     "name": "read_skill"
+   }
+  ],
+  "versions": {
+   "policy": "policy-2026-10-27",
+   "skill": "order:skill:order/order-intake@1.0.0+b903882c"
+  }
+ },
+ "ace76c5f454a69485857cee691cb968e67d6ed1b230a2c4a02928fefda3827f5": {
+  "cached_tokens": 2929,
+  "completion_tokens": 113,
+  "content": "I'll read your order list photo to get your items.",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.672,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 3214,
+  "request": "75116f280a5bd7ccf521d1ef0e95ce82f9568abcf6568375f3b01965e3dd9146",
+  "tool_calls": [
+   {
+    "arguments": "{\"photo_id\":\"ph_a8bbc172dd83\",\"shop_id\":\"shop-005\"}",
+    "id": "call_d4446580-bdfe-41c3-bc04-1a7ad4de742e",
+    "name": "read_order_photo"
+   }
+  ],
+  "versions": {
+   "policy": "policy-2026-10-27",
+   "skill": "order:skill:order/order-intake@1.0.0+b903882c"
+  }
+ },
+ "acf31810d2c6068ae41d495b551883ea2989c3ca6438659d4901cb9c98152e92": {
+  "cached_tokens": 2929,
+  "completion_tokens": 256,
+  "content": "",
+  "finish_reason": "tool_calls",
+  "latency_s": 2.153,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 3436,
+  "request": "9f6b57adfaf5fbb0f1a5ce02e8688d1a04236dd4d283715a061612a09513fffd",
+  "tool_calls": [
+   {
+    "arguments": "{\"lines\":[{\"as_written\":\"5 ctn Indomie (big)\",\"item\":\"Indomie (big)\",\"quantity\":5,\"unit\":\"ctn\"},{\"as_written\":\"3 ctn Tin milk\",\"item\":\"Tin milk\",\"quantity\":3,\"unit\":\"ctn\"},{\"as_written\":\"10 pk spaghetti\",\"item\":\"spaghetti\",\"quantity\":10,\"unit\":\"pk\"}],\"shop_id\":\"shop-013\"}",
+    "id": "call_746f5f52-3650-4c47-b43c-7497cbcf2ef9",
+    "name": "submit_order"
    }
   ],
   "versions": {
@@ -2314,6 +2545,27 @@
    "skill": "order:skill:order/order-intake@1.0.0+b903882c"
   }
  },
+ "bfb5e8247027770908206d046fb41439d294e3e0b91ea6433ccc840c70deeefa": {
+  "cached_tokens": 2929,
+  "completion_tokens": 263,
+  "content": "",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.565,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 3427,
+  "request": "ccd81c11ef96600960d538076fe0d7ec5a4583e7cf32fb0d3e1be478330c8719",
+  "tool_calls": [
+   {
+    "arguments": "{\"lines\":[{\"as_written\":\"Sachet milk x6 bags\",\"item\":\"Sachet milk\",\"quantity\":6,\"unit\":\"bags\"},{\"as_written\":\"Omo small x 10\",\"item\":\"Omo small\",\"quantity\":10,\"unit\":\"\"},{\"as_written\":\"Semo 5\",\"item\":\"Semo\",\"quantity\":5,\"unit\":\"\"}],\"shop_id\":\"shop-032\"}",
+    "id": "call_6a211d98-a54c-4ea9-b950-091f8d2b2c3f",
+    "name": "submit_order"
+   }
+  ],
+  "versions": {
+   "policy": "policy-2026-10-27",
+   "skill": "order:skill:order/order-intake@1.0.0+b903882c"
+  }
+ },
  "c0086622c4540a8cb9616066eab0551db0e45b6e9a936abcb8e70a2132874473": {
   "cached_tokens": 2929,
   "completion_tokens": 62,
@@ -2370,6 +2622,27 @@
     "arguments": "{\"lines\":[{\"as_written\":\"3 carton indomie\",\"item\":\"indomie\",\"quantity\":3,\"unit\":\"carton\"},{\"as_written\":\"5 tin sardine\",\"item\":\"sardine\",\"quantity\":5,\"unit\":\"tin\"}],\"shop_id\":\"shop-037\"}",
     "id": "call_7af655f5-0c97-43bb-b60b-045229e9d18e",
     "name": "submit_order"
+   }
+  ],
+  "versions": {
+   "policy": "policy-2026-10-27",
+   "skill": "order:skill:order/order-intake@1.0.0+b903882c"
+  }
+ },
+ "c260c9dced0cec9e45f247d27d1ee231cb6f80c908f2dbc4274e9f63e3c03feb": {
+  "cached_tokens": 3313,
+  "completion_tokens": 62,
+  "content": "",
+  "finish_reason": "tool_calls",
+  "latency_s": 0.856,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 3604,
+  "request": "eba9e583a5b6ab4ac9eab7609556f3c9bb06b3c2568966c270b33ad4fbc92352",
+  "tool_calls": [
+   {
+    "arguments": "{\"shop_id\":\"shop-024\"}",
+    "id": "call_03f67b4e-7975-44ad-a5c8-8001bb7b1643",
+    "name": "ask_order_question"
    }
   ],
   "versions": {
@@ -2836,6 +3109,27 @@
    {
     "arguments": "{\"lines\":[{\"as_written\":\"5 carton of bar soap\",\"item\":\"bar soap\",\"quantity\":5,\"unit\":\"carton\"}],\"shop_id\":\"shop-008\"}",
     "id": "call_5278074b-bd56-4657-8f3b-b540c417be8b",
+    "name": "submit_order"
+   }
+  ],
+  "versions": {
+   "policy": "policy-2026-10-27",
+   "skill": "order:skill:order/order-intake@1.0.0+b903882c"
+  }
+ },
+ "dee66edb1f803e15091d70a14f79b6f1ea0c1d31ab1e729a2dac61ff52ec9243": {
+  "cached_tokens": 0,
+  "completion_tokens": 301,
+  "content": "",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.459,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 3856,
+  "request": "86aec5b91bb39ea1a7b94f18d75fc40ef1fae628b6d8323fb4162aa6b5ac2d08",
+  "tool_calls": [
+   {
+    "arguments": "{\"lines\":[{\"as_written\":\"Rice - 5 bags\",\"item\":\"Rice 5kg\",\"quantity\":5,\"unit\":\"bags\"},{\"as_written\":\"Spaghetti ctn - 3\",\"item\":\"Spaghetti\",\"quantity\":3,\"unit\":\"ctn\"}],\"shop_id\":\"shop-024\"}",
+    "id": "call_38e59a8d-2fe8-4d36-a49e-0bc4623273c4",
     "name": "submit_order"
    }
   ],
