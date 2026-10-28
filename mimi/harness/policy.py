@@ -58,6 +58,12 @@ BASE_TIERS: dict[str, Tier] = {
     "ask_helper": "auto",
     "notify_rep": "auto",
     "notify_owner": "auto",
+    # The owner raises the day's model allowance when the daily cap parks
+    # helpers (RAI-272). Mimi's own spend, never the book's money.
+    "raise_daily_allowance": "approve",
+    # Brand's Promo Check (RAI-272): reads promos; brand emails stay drafts.
+    "get_brand_promos": "auto",
+    "draft_brand_email": "approve",
     # Harness built-ins.
     "send_to_user": "auto",
     "ask_question": "auto",
@@ -96,7 +102,8 @@ BASE_TIERS: dict[str, Tier] = {
 # Tools whose intent only the owner may accept: no table edit or amount rule
 # lowers them below approve.
 ALWAYS_APPROVE: frozenset[str] = frozenset({"submit_credit_review", "flag_payment_proof",
-                                            "draft_restock", "revise_restock"})
+                                            "draft_restock", "revise_restock",
+                                            "draft_brand_email", "raise_daily_allowance"})
 
 
 class RiskPolicy(Protocol):

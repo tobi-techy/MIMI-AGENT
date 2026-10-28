@@ -201,6 +201,16 @@
    }
   ]
  },
+ "2e050d26ed86e892db5872bd1de465bf09872e5f1c9545cf84acd29dcfb1a18e": {
+  "cached_tokens": 0,
+  "completion_tokens": 74,
+  "content": "",
+  "finish_reason": "stop",
+  "latency_s": 2.373,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 7114,
+  "tool_calls": []
+ },
  "318a1da517a8f971da5b9dc67dd927891871d69667eea7bb373068bc0ebe3b69": {
   "cached_tokens": 0,
   "completion_tokens": 131,
@@ -257,6 +267,16 @@
   "latency_s": 0.92,
   "model": "muse-spark-1.3",
   "prompt_tokens": 3832,
+  "tool_calls": []
+ },
+ "3929b5e1c524d1ea96c64279960197d841c3d4486fa3f9a432dbcb922feaa455": {
+  "cached_tokens": 241,
+  "completion_tokens": 56,
+  "content": "",
+  "finish_reason": "stop",
+  "latency_s": 1.153,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 5988,
   "tool_calls": []
  },
  "3952891cfde21b1ec32f4cbfb2e9343b685adf01b67a01a73dfc9aa6895601de": {
@@ -365,6 +385,16 @@
    }
   ]
  },
+ "45925f669676128bb8790aad14fddcc9b6b4953860eb71d3325692c1a5c3033e": {
+  "cached_tokens": 0,
+  "completion_tokens": 79,
+  "content": "",
+  "finish_reason": "stop",
+  "latency_s": 1.003,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 6059,
+  "tool_calls": []
+ },
  "463e1bc31bf965201920484e636e8f9d2cc467049564d5698df76ff07663a1b6": {
   "cached_tokens": 241,
   "completion_tokens": 121,
@@ -415,6 +445,22 @@
     "arguments": "{\"note_for_owner\":\"Bisi has no bank-verified payments in 8 weeks, with N176,100 shown but not counted. Owes N0 on a N220,000 limit with nothing overdue.\",\"origin\":\"shop_ask\",\"photo_id\":\"ph_c94787826bab\",\"review_id\":\"cr_c8e747617ba099e0\",\"shop_id\":\"shop-020\"}",
     "id": "call_b4cf3de2-c2c1-41b9-9ed5-3a19ae12fc8a",
     "name": "submit_credit_review"
+   }
+  ]
+ },
+ "4b4a606de0a3c544a91753f1d6bf4a432313349cbe260a1f16ac4564909eb40c": {
+  "cached_tokens": 0,
+  "completion_tokens": 124,
+  "content": "I'll check today's Sunrise noodles promos for you.",
+  "finish_reason": "tool_calls",
+  "latency_s": 0.818,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 1927,
+  "tool_calls": [
+   {
+    "arguments": "{\"brand\":\"Sunrise noodles\"}",
+    "id": "call_880253a1-6f28-4b06-8d16-dcf749b77199",
+    "name": "get_brand_promos"
    }
   ]
  },
@@ -569,6 +615,22 @@
   "prompt_tokens": 6038,
   "tool_calls": []
  },
+ "6a9cb6d735823651c19555c0247a5615e3389428b8116a9e4114232813bf414d": {
+  "cached_tokens": 5105,
+  "completion_tokens": 99,
+  "content": "",
+  "finish_reason": "tool_calls",
+  "latency_s": 3.673,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 5374,
+  "tool_calls": [
+   {
+    "arguments": "{\"delivery_id\":\"dlv-56-9010\",\"shop_id\":\"shop-011\"}",
+    "id": "call_c0f40157-6030-4a91-9648-addd367a0acf",
+    "name": "send_delivery_receipt"
+   }
+  ]
+ },
  "6ae2786b0d354d713ad90d7c75379d2c25b33455a274e664622e83ea608ed1dc": {
   "cached_tokens": 2929,
   "completion_tokens": 50,
@@ -669,6 +731,22 @@
    }
   ]
  },
+ "77025a6fa00757deaca12f0446392fd429728840acc42f049eed155f99860f75": {
+  "cached_tokens": 5745,
+  "completion_tokens": 158,
+  "content": "I'll forward the receipt confirmation to wrap this up.",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.52,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 6003,
+  "tool_calls": [
+   {
+    "arguments": "{\"body\":\"Thank you. Delivery dlv-56-9010 is confirmed.\",\"channel\":\"shop_whatsapp\",\"ends_turn\":true,\"kind\":\"reply\",\"shop_id\":\"shop-011\"}",
+    "id": "call_d1205972-7096-4cea-bdff-3a58699c78fb",
+    "name": "send_to_user"
+   }
+  ]
+ },
  "7e110cb82144088554ab27a69580cdce03c6cc420f2a4f83f1266fb4f6313cd2": {
   "cached_tokens": 0,
   "completion_tokens": 225,
@@ -682,6 +760,38 @@
     "arguments": "{\"delivery_id\":\"dlv-56-9007\",\"shop_id\":\"shop-008\"}",
     "id": "call_aa23f72d-cb65-43d4-8675-4d0a79c302b0",
     "name": "read_receipt_reply"
+   }
+  ]
+ },
+ "7ef67ccac4868de6073d6911edb1d25a1f98132eb1f3ec0862437d967ce29e50": {
+  "cached_tokens": 0,
+  "completion_tokens": 280,
+  "content": "Your balance \u2014 pulling the exact book figures now.",
+  "finish_reason": "tool_calls",
+  "latency_s": 2.339,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 4090,
+  "tool_calls": [
+   {
+    "arguments": "{\"body\":\"Hello! Your balance is N72,350, and overdue is N72,350. You have 3 open invoices. Let us know if you need the invoice details or payment account.\",\"channel\":\"shop_whatsapp\",\"ends_turn\":true,\"kind\":\"reply\",\"shop_id\":\"shop-027\"}",
+    "id": "call_99ec7d52-354a-4da7-bde7-68361674dace",
+    "name": "send_to_user"
+   }
+  ]
+ },
+ "7fd8a5dd73ea297ffbab24612bcf8d3fcea9c868f07504cba1c29150e0e1136d": {
+  "cached_tokens": 0,
+  "completion_tokens": 263,
+  "content": "",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.488,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 2231,
+  "tool_calls": [
+   {
+    "arguments": "{\"body\":\"Promos running today:\\n- Sunrise noodles: buy 10 cartons, get 1 carton free (until 10 Nov): Order 10 cartons of any Sunrise noodles in one delivery and the 11th carton comes free from Sunrise. Ask your rep to add it to the order.\",\"channel\":\"shop_whatsapp\",\"ends_turn\":true,\"kind\":\"reply\",\"shop_id\":\"shop-031\"}",
+    "id": "call_eecee142-3668-457c-81a0-a5577907c25f",
+    "name": "send_to_user"
    }
   ]
  },
@@ -733,6 +843,22 @@
    }
   ]
  },
+ "89939a4189d316519529a812b5cf633711eceff45f6345b16ee0c3a890f3fe8a": {
+  "cached_tokens": 5489,
+  "completion_tokens": 257,
+  "content": "YES confirmed \u2014 I'll verify your delivery receipt now.",
+  "finish_reason": "tool_calls",
+  "latency_s": 2.269,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 5686,
+  "tool_calls": [
+   {
+    "arguments": "{\"delivery_id\":\"dlv-56-9010\",\"shop_id\":\"shop-011\"}",
+    "id": "call_5e1dd383-7020-45f3-9ed1-9543dccc5cb9",
+    "name": "read_receipt_reply"
+   }
+  ]
+ },
  "89eedd03a6a3d9508e4c991ae77022c51dc933edf64f147bf875e35c2b97ce8e": {
   "cached_tokens": 4593,
   "completion_tokens": 53,
@@ -741,6 +867,16 @@
   "latency_s": 1.512,
   "model": "muse-spark-1.3",
   "prompt_tokens": 5920,
+  "tool_calls": []
+ },
+ "8a6d1d18cd21d2be4cb3b386635d82dd1a4bbc9ab6c81d3f733a714dbfb7a3ce": {
+  "cached_tokens": 0,
+  "completion_tokens": 31,
+  "content": "",
+  "finish_reason": "stop",
+  "latency_s": 1.801,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 6877,
   "tool_calls": []
  },
  "8d986900e886e7b1c588a716de8458138d49392894f005d017194c87df4c344f": {
@@ -801,6 +937,16 @@
    }
   ]
  },
+ "99aee0e9daccde7ddfbd97406190539f8b928f7ea357d980d16781a095daf692": {
+  "cached_tokens": 0,
+  "completion_tokens": 37,
+  "content": "",
+  "finish_reason": "stop",
+  "latency_s": 0.869,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 5527,
+  "tool_calls": []
+ },
  "9a6d822acdf759433cfb56b2f8cedaeb636dd346f31eecda9b507e2d1a2f558d": {
   "cached_tokens": 0,
   "completion_tokens": 45,
@@ -810,6 +956,22 @@
   "model": "muse-spark-1.3",
   "prompt_tokens": 3412,
   "tool_calls": []
+ },
+ "9a85c824ba44847a5d841dd7e8fee9de9da74446de1dcf28ed9bdf91e76c3186": {
+  "cached_tokens": 0,
+  "completion_tokens": 112,
+  "content": "Delivery noted \u2014 I'll get your receipt to you.",
+  "finish_reason": "tool_calls",
+  "latency_s": 2.006,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 5159,
+  "tool_calls": [
+   {
+    "arguments": "{\"shop_id\":\"shop-011\"}",
+    "id": "call_0ba4a3db-82ca-4344-a9b2-f5a66d06e642",
+    "name": "get_open_deliveries"
+   }
+  ]
  },
  "9a9db41e85bbdc2caf1d04979489a44dd37e1aca0b3eb3dc7a6ed8f42953c9aa": {
   "cached_tokens": 0,
@@ -845,6 +1007,22 @@
     "arguments": "{\"quantity\":6,\"shop_id\":\"shop-014\",\"sku\":\"CUSTARD-2KG\"}",
     "id": "call_696d30ec-f5b1-4247-bcb5-a64b6d712ace",
     "name": "revise_restock"
+   }
+  ]
+ },
+ "9d8625211d023fde519c8f2a5a59c4d86232866d5d16f7a80327111bd7c0061a": {
+  "cached_tokens": 5617,
+  "completion_tokens": 151,
+  "content": "",
+  "finish_reason": "tool_calls",
+  "latency_s": 2.76,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 5850,
+  "tool_calls": [
+   {
+    "arguments": "{\"delivery_id\":\"dlv-56-9010\",\"shop_id\":\"shop-011\"}",
+    "id": "call_c2b4287b-2861-4d76-849b-31c3eba862fd",
+    "name": "record_delivery_consent"
    }
   ]
  },
@@ -922,6 +1100,22 @@
    }
   ]
  },
+ "a67ca1447c6cf87706e36bffb4a5db10a7b3c5f2df4fec9b693918b4f168daeb": {
+  "cached_tokens": 5361,
+  "completion_tokens": 102,
+  "content": "",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.976,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 5901,
+  "tool_calls": [
+   {
+    "arguments": "{\"delivery_id\":\"dlv-56-9010\",\"shop_id\":\"shop-011\"}",
+    "id": "call_476fde4b-fb77-4c87-b412-df21af0b3e5f",
+    "name": "ask_receipt_again"
+   }
+  ]
+ },
  "abfbd81f843ce02bc74c3bcf7cfa98a19696beb06129368d9750eeb305ccf5d7": {
   "cached_tokens": 2417,
   "completion_tokens": 210,
@@ -977,6 +1171,22 @@
     "arguments": "{\"shop_id\":\"shop-014\"}",
     "id": "call_32708002-7ff2-4886-9bbd-980e65e3fc18",
     "name": "get_stock_estimates"
+   }
+  ]
+ },
+ "b232c58b7cb2b8ae8aa34c5fad0c2fcbc80c2ec33b5a25f9bb242876cb01c636": {
+  "cached_tokens": 0,
+  "completion_tokens": 319,
+  "content": "Balance is clear \u2014 I'll confirm what Moji Kiosk owes.",
+  "finish_reason": "tool_calls",
+  "latency_s": 2.377,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 3806,
+  "tool_calls": [
+   {
+    "arguments": "{\"body\":\"Good evening Moji Kiosk. As of now you owe N0. No open invoices. Thank you for clearing your balance.\",\"channel\":\"shop_whatsapp\",\"ends_turn\":true,\"kind\":\"reply\",\"shop_id\":\"shop-019\"}",
+    "id": "call_e1c9246d-8798-41e4-a686-7a4dc4974072",
+    "name": "send_to_user"
    }
   ]
  },
@@ -1169,6 +1379,22 @@
    }
   ]
  },
+ "c8ca9ca0c7624353eaefa216e040442240b7af2234e218d0eeb3f4e34160f8c6": {
+  "cached_tokens": 5489,
+  "completion_tokens": 253,
+  "content": "Confirmed \u2014 I'll log your receipt confirmation.",
+  "finish_reason": "tool_calls",
+  "latency_s": 2.549,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 5617,
+  "tool_calls": [
+   {
+    "arguments": "{\"delivery_id\":\"dlv-56-9010\",\"shop_id\":\"shop-011\"}",
+    "id": "call_3cd05f9f-0ef6-4df6-9350-2a0df20f2fe9",
+    "name": "read_receipt_reply"
+   }
+  ]
+ },
  "c92d51650a3ad89add4cdc25721500851eb81c018c0160c7082b553c1523382f": {
   "cached_tokens": 3057,
   "completion_tokens": 100,
@@ -1198,6 +1424,22 @@
     "arguments": "{\"delivery_id\":\"dlv-56-9007\",\"shop_id\":\"shop-008\"}",
     "id": "call_f99c4511-e671-469f-8df0-e31d25d7b50d",
     "name": "flag_delivery_to_owner"
+   }
+  ]
+ },
+ "cb81930b7e6b610d43f37b115b8e8a8adba361067a9b2302acc9563d8b438645": {
+  "cached_tokens": 0,
+  "completion_tokens": 261,
+  "content": "Drafting that request for Okin shelf posters now.",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.8,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 2197,
+  "tool_calls": [
+   {
+    "arguments": "{\"body\":\"Dear Okin team,\\n\\nI hope you are well. Our shops are requesting more of your shelf posters to support displays.\\n\\nPlease assist us with additional posters when convenient, and let us know how collection or delivery will work.\\n\\nThank you for your continued support.\\n\\nKind regards,\\nCoral Lane Distributor\",\"subject\":\"Request for additional shelf posters for our shops\",\"to_brand\":\"Okin\"}",
+    "id": "call_ad5b3317-dbe0-4d3c-be89-555a5e9ca1a3",
+    "name": "draft_brand_email"
    }
   ]
  },
@@ -1256,6 +1498,22 @@
     "arguments": "{\"body\":\"Thanks. I can see N13,600 from KUNLE AKINOLA on your screenshot. I've sent it to Coral Lane Trading to confirm with the bank. It shows as likely paid until the bank confirms.\",\"channel\":\"shop_whatsapp\",\"ends_turn\":true,\"kind\":\"reply\",\"shop_id\":\"shop-025\"}",
     "id": "call_cb208010-d24b-4b2e-96ad-4741aa0ee613",
     "name": "send_to_user"
+   }
+  ]
+ },
+ "d29fc713994c495d20c10750698d41fafc5e04c2e772d4a7534bf89e3afe657f": {
+  "cached_tokens": 5617,
+  "completion_tokens": 93,
+  "content": "",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.841,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 5830,
+  "tool_calls": [
+   {
+    "arguments": "{\"delivery_id\":\"dlv-56-9010\",\"shop_id\":\"shop-011\"}",
+    "id": "call_4ca9fa1b-567f-42b7-9a6e-5f53cfc0f38e",
+    "name": "ask_receipt_again"
    }
   ]
  },
@@ -1450,5 +1708,15 @@
     "name": "check_payment_screenshot"
    }
   ]
+ },
+ "ffa6e09fff25fdd9fc96a973947721a75dd51a27c94842ba1a3fdacc868c36dc": {
+  "cached_tokens": 0,
+  "completion_tokens": 55,
+  "content": "",
+  "finish_reason": "stop",
+  "latency_s": 1.653,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 6948,
+  "tool_calls": []
  }
 }

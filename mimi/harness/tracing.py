@@ -20,7 +20,7 @@ the toolset hash, the registry and skill versions.
 from __future__ import annotations
 
 from collections.abc import Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from typing import Any
 
 from mimi.harness.types import Event, RunResult
@@ -228,4 +228,71 @@ def trace_run(result: RunResult, exporter: TurnExporter, **kw: Any) -> HarnessTu
         exporter.export(turn)
         return turn
     except Exception:  # tracing never breaks a run
+        return None
+
+
+@dataclass
+class JobTurn(HarnessTurn):
+    """One durable job (a turn of the API's queue): its route, its run, its
+    state changes across worker crashes, parks and resumes, and its spend."""
+
+    @property
+    def name(self) -> str:  # type: ignore[override]
+        return f"job-{self.helper or 'mimi'}"
+
+    @property
+    def feature(self) -> str:  # type: ignore[override]
+        return "job"
+
+    @property
+    def tags(self) -> list[str]:  # type: ignore[override]
+        return ["job", f"helper:{self.helper}", f"status:{self.status}",
+                f"wake:{self.wake_source}", "distributor:coral-lane"]
+
+
+def build_job_turn(decision: Any, result: RunResult | None, *, job_id: str, status: str,
+                   job: dict[str, Any], shop_id: str = "owner",
+                   synthetic: bool = True) -> JobTurn:
+    """The job's one trace: the route as its first span, then the run's steps."""
+    route = build_route_turn(decision, synthetic=synthetic)
+    base = build_turn(result, shop_id=shop_id, synthetic=synthetic) if result else None
+    turn = JobTurn(job_id=job_id, flow="receipt_reply", shop_id=shop_id,
+                   thread_id=decision.thread_id, started_ns=route.started_ns,
+                   ended_ns=max(route.ended_ns, base.ended_ns if base else 0),
+                   synthetic=synthetic, helper=decision.helper, status=status,
+                   wake_source=str(decision.source))
+    turn.verdict = status
+    turn.input = {"source": decision.source, "external_id": decision.external_id}
+    turn.output = base.output if base else {"status": status, "skill": decision.skill}
+    if base:
+        turn.metadata.update(base.metadata)
+    route_obs = Observation("span", "route", route.started_ns,
+                            duration_ns=max(1, route.ended_ns - route.started_ns),
+                            output=route.output, metadata=dict(route.metadata))
+    route_obs.children.extend(route.observations)
+    turn.observations.append(route_obs)
+    if base:
+        turn.observations.extend(base.observations)
+    run_kobo = int(result.spend.kobo) if result else 0
+    route_kobo = int(getattr(decision, "cost_kobo", 0) or 0)
+    turn.metadata["job"] = {**job, "status": status, "spend_kobo": run_kobo + route_kobo,
+                            "route_kobo": route_kobo, "run_kobo": run_kobo}
+    if base:
+        turn.scores.extend(replace(f, trace_seed=turn.trace_seed) for f in base.scores)
+    turn.score("job_attempts", float(job.get("attempts", 1)), "NUMERIC")
+    turn.score("job_resumed", bool(job.get("resumed")), "BOOLEAN")
+    turn.score("job_spend_kobo", float(run_kobo + route_kobo), "NUMERIC")
+    return turn
+
+
+def trace_job(decision: Any, result: RunResult | None, exporter: TurnExporter, *,
+              job_id: str, status: str, job: dict[str, Any], **kw: Any) -> JobTurn | None:
+    """Export one job as one trace (no-op when the exporter is off). Never raises."""
+    if not getattr(exporter, "enabled", False):
+        return None
+    try:
+        t = build_job_turn(decision, result, job_id=job_id, status=status, job=job, **kw)
+        exporter.export(t)
+        return t
+    except Exception:
         return None

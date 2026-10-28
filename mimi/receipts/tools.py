@@ -189,6 +189,11 @@ def register_receipt_tools(registry: ToolRegistry, ports: ReceiptPorts) -> None:
             raise ToolError("No shop reply in this turn.", "End the turn.")
         key = (ctx.tenant_id, ctx.job_id, delivery_id)
         sent = [text] + [str(a["payload"].get("text", "")) for a in h["asked"]]
+        asked = getattr(ctx.book, "asked_since_receipt", None)
+        if asked is not None:
+            # A code-written question in between (two open asks, RAI-272): the
+            # shop's answer ("the delivery") answers it, not the receipt alone.
+            sent += asked(ctx.tenant_id, shop_id, str(h["sent"][0].get("idempotency_key", "")))
         if key not in ports.verdicts:
             ports.verdicts[key] = ports.judge(delivery=delivery, earlier=[], new=new,
                                               mimi_sent=sent)

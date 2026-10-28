@@ -11,10 +11,28 @@ so a replay sends byte-identical requests.
 checkpoint of step ``STEP`` of turn ``TURN`` the worker writes a marker file
 and hangs, holding the lease, until the runner SIGKILLs it. A real crash at
 a known step, so the replay kills at the same place as the live run.
+
+``--kill-plan`` (RAI-272) is the rest of the ten forced kills: a JSON list
+of crash points, each naming the turn by a pattern on its message ids and
+where to hang:
+
+* ``route``: after the route decision is saved, before any step;
+* ``step:N``: after the checkpoint of loop step N (or later);
+* ``absorb``: inside the step-boundary inbox transaction, before its commit;
+* ``finish``: inside the completing transaction, after the turn's intents
+  and messages are written and before its commit;
+* ``resume``: after a parked job's resume is saved, before its next step.
+
+Each point fires once: the worker writes ``killpoint-<id>`` in the work
+directory and hangs (lease alive outside a transaction; inside one the
+runner kills it at once). The runner SIGKILLs it, waits for the lease to
+lapse and starts the next worker, which takes the turn over.
 """
 
 from __future__ import annotations
 
+import fnmatch
+import json
 import logging
 import threading
 import time
@@ -42,6 +60,26 @@ class PausingAgent(Agent):
     pause_turn: str = ""
     pause_step: int = 0
     marker: Path | None = None
+    kill_plan: list[dict[str, Any]] = []
+    kill_dir: Path | None = None
+
+    def _kill_here(self, claim: Claim, where: str) -> None:
+        """Hang (to be SIGKILLed) if a crash point of the plan is here."""
+        if self.kill_dir is None:
+            return
+        for k in self.kill_plan:
+            if k["at"] != where or (self.kill_dir / f"killpoint-{k['id']}").exists():
+                continue
+            if not any(fnmatch.fnmatchcase(ext, k["ext"]) for ext in claim.batch):
+                continue
+            (self.kill_dir / f"killpoint-{k['id']}").write_text(json.dumps(
+                {"id": k["id"], "turn_id": claim.turn_id, "at": where,
+                 "worker": self.worker_id}) + "\n")
+            while True:  # hold everything until the runner kills this process
+                time.sleep(3600)
+
+    def _in_txn(self, point: str, claim: Claim) -> None:
+        self._kill_here(claim, point)
     # RAI-301: a turn the runner wants held while it sends a message mid-task.
     # ``hold-<turn_id>`` in this directory holds the turn after its first saved
     # loop state (lease kept alive) until the runner deletes the file.
@@ -57,6 +95,14 @@ class PausingAgent(Agent):
                 end = time.monotonic() + 120
                 while hold.exists() and time.monotonic() < end:
                     time.sleep(0.05)
+        if "loop" not in ck and "decision" in ck:
+            self._kill_here(holder[0], "route")
+        elif "loop" in ck and ck.get("resumed"):
+            self._kill_here(holder[0], "resume")
+        if "loop" in ck:
+            step = int(loop.get("step", 0))
+            for n in range(1, step + 1):
+                self._kill_here(holder[0], f"step:{n}")
         if (self.pause_turn and holder[0].turn_id == self.pause_turn
                 and int(loop.get("step", 0)) >= self.pause_step):
             if self.marker is not None:
@@ -67,13 +113,16 @@ class PausingAgent(Agent):
 
 def build_agent(db_url: str, *, live: bool, paths: CachePaths, worker_id: str,
                 pause: str = "", marker: Path | None = None,
-                usage: Path | None = None) -> Agent:
+                usage: Path | None = None, kill_plan: Path | None = None) -> Agent:
     tool, router, deps = agent_models(live, paths, usage=usage)
     agent = PausingAgent(make_engine(db_url), models=[tool], router_model=router, deps=deps,
                          lease_s=LEASE_S, worker_id=worker_id, clock=lambda: SIM_NOW,
                          exporter=exporter_from_env(environment="e2e"))
     if usage is not None:
         agent.hold_dir = usage.parent
+    if kill_plan is not None and kill_plan.exists():
+        agent.kill_plan = list(json.loads(kill_plan.read_text()))
+        agent.kill_dir = kill_plan.parent
     if pause:
         turn, _, step = pause.rpartition(":")
         agent.pause_turn, agent.pause_step, agent.marker = turn, int(step or 1), marker
@@ -81,11 +130,12 @@ def build_agent(db_url: str, *, live: bool, paths: CachePaths, worker_id: str,
 
 
 def run(db_url: str, *, live: bool, cache_dir: Path, worker_id: str, pause: str = "",
-        marker: str = "", stop_file: str = "", usage: str = "") -> int:
+        marker: str = "", stop_file: str = "", usage: str = "", kill_plan: str = "") -> int:
     logging.basicConfig(level=logging.WARNING)
     agent = build_agent(db_url, live=live, paths=CachePaths(cache_dir), worker_id=worker_id,
                         pause=pause, marker=Path(marker) if marker else None,
-                        usage=Path(usage) if usage else None)
+                        usage=Path(usage) if usage else None,
+                        kill_plan=Path(kill_plan) if kill_plan else None)
     stop = threading.Event()
     stopper = Path(stop_file) if stop_file else None
     while not stop.is_set():

@@ -1,11 +1,11 @@
 {
  "calls": {
-  "harness_model_calls": 70,
-  "helper_model_calls": 11,
+  "harness_model_calls": 81,
+  "helper_model_calls": 14,
   "persona_calls": 15,
   "persona_live_calls": 0,
-  "sam_images": 4,
-  "worker_live_rows": 0
+  "sam_images": 6,
+  "worker_live_rows": 1
  },
  "checks": {
   "cross_tenant": {
@@ -29,29 +29,197 @@
    "status": "ok",
    "version": "0.1.0"
   },
-  "paused_at": "turn_a150839584c1486a5160:1",
+  "paused_at": "turn_a150839584c1486a5160:step:1",
   "second_decision_status": 409
  },
  "cost_kobo": {
-  "agent_per_turn_mean": 2395,
-  "harness": 59755,
-  "helper_models": 9298,
+  "agent_per_turn_mean": 2311,
+  "harness": 70969,
+  "helper_models": 12049,
   "persona": 252,
-  "router": 1209,
-  "sam": 1600,
-  "total": 72114
+  "router": 2431,
+  "sam": 2400,
+  "total": 88101
  },
  "cross_tenant": [],
  "duplicate_replies": [],
  "failed_turns": [],
  "invented_figures": [],
+ "kills": [
+  {
+   "at": "route",
+   "attempts": 2,
+   "completions": 1,
+   "duplicates": 0,
+   "fired": true,
+   "id": "k01",
+   "ok": true,
+   "replies": 1,
+   "shop": "shop-040",
+   "state": "done",
+   "takeover": true,
+   "turn_id": "turn_4d3b7ab109c318842bd8",
+   "what": "receipt event: after the route is saved, before any step"
+  },
+  {
+   "at": "finish",
+   "attempts": 2,
+   "completions": 1,
+   "duplicates": 0,
+   "fired": true,
+   "id": "k02",
+   "ok": true,
+   "replies": 2,
+   "shop": "shop-008",
+   "state": "done",
+   "takeover": true,
+   "turn_id": "turn_9d0964a446fc885a2c8c",
+   "what": "receipt dispute: inside the transaction writing the flag intent and reply"
+  },
+  {
+   "at": "step:1",
+   "attempts": 2,
+   "completions": 1,
+   "duplicates": 0,
+   "fired": true,
+   "id": "k03",
+   "ok": true,
+   "replies": 1,
+   "shop": "shop-035",
+   "state": "done",
+   "takeover": true,
+   "turn_id": "turn_f59953cefe91ec7e94b4",
+   "what": "fake screenshot: after step 1"
+  },
+  {
+   "at": "finish",
+   "attempts": 2,
+   "completions": 1,
+   "duplicates": 0,
+   "fired": true,
+   "id": "k04",
+   "ok": true,
+   "replies": 1,
+   "shop": "shop-038",
+   "state": "done",
+   "takeover": true,
+   "turn_id": "turn_80dd1f77549d49a203e3",
+   "what": "fake screenshot: inside the transaction writing the approvals item"
+  },
+  {
+   "at": "step:1",
+   "attempts": 2,
+   "completions": 1,
+   "duplicates": 0,
+   "fired": true,
+   "id": "k05",
+   "ok": true,
+   "replies": 1,
+   "shop": "shop-012",
+   "state": "done",
+   "takeover": true,
+   "turn_id": "turn_a150839584c1486a5160",
+   "what": "stock check: after step 1, while an owner message and three shop turns queue"
+  },
+  {
+   "at": "absorb",
+   "attempts": 2,
+   "completions": 1,
+   "duplicates": 0,
+   "fired": true,
+   "id": "k06",
+   "ok": true,
+   "replies": 1,
+   "shop": "shop-014",
+   "state": "done",
+   "takeover": true,
+   "turn_id": "turn_8d5b44c52af0fe484f84",
+   "what": "voice note mid-task: inside the step-boundary inbox absorb, before commit"
+  },
+  {
+   "at": "step:2",
+   "attempts": 2,
+   "completions": 1,
+   "duplicates": 0,
+   "fired": true,
+   "id": "k07",
+   "ok": true,
+   "replies": 1,
+   "shop": "shop-020",
+   "state": "done",
+   "takeover": true,
+   "turn_id": "turn_8bf4be2ed4cee80e7ba6",
+   "what": "credit shelf photo: after step 2"
+  },
+  {
+   "at": "finish",
+   "attempts": 2,
+   "completions": 1,
+   "duplicates": 0,
+   "fired": true,
+   "id": "k08",
+   "ok": true,
+   "replies": 1,
+   "shop": "shop-011",
+   "state": "done",
+   "takeover": true,
+   "turn_id": "turn_f9f306581312428ce838",
+   "what": "credit shelf photo: inside the transaction writing the credit review intent"
+  },
+  {
+   "at": "step:1",
+   "attempts": 2,
+   "completions": 1,
+   "duplicates": 0,
+   "fired": true,
+   "id": "k09",
+   "ok": true,
+   "replies": 1,
+   "shop": "shop-020",
+   "state": "done",
+   "takeover": true,
+   "turn_id": "turn_102bda90e34f4283a7a7",
+   "what": "screenshot while the credit approval is parked: after step 1"
+  },
+  {
+   "at": "route",
+   "attempts": 2,
+   "completions": 1,
+   "duplicates": 0,
+   "fired": true,
+   "id": "k10",
+   "ok": true,
+   "replies": 0,
+   "shop": "shop-011",
+   "state": "done",
+   "takeover": true,
+   "turn_id": "turn_2589a858e9018bd29cbc",
+   "what": "the owner decided a parked approval: the woken helper, after its route"
+  },
+  {
+   "at": "resume",
+   "attempts": 3,
+   "completions": 1,
+   "duplicates": 0,
+   "fired": true,
+   "id": "k11",
+   "ok": true,
+   "replies": 3,
+   "shop": "shop-019",
+   "state": "done",
+   "takeover": true,
+   "turn_id": "turn_169c7f3196e338aab37a",
+   "what": "a job parked on the daily cap: right after its resume is saved"
+  }
+ ],
  "latency_s": {
-  "n": 21,
-  "run_p50": 0.054,
-  "run_p95": 2.92,
-  "turn_p50": 0.105,
-  "turn_p95": 1.452
+  "n": 29,
+  "run_p50": 0.791,
+  "run_p95": 9.645,
+  "turn_p50": 0.625,
+  "turn_p95": 11.316
  },
+ "lost_jobs": [],
  "misroutes": [],
  "mode": "live",
  "money_moves": [],
@@ -60,12 +228,13 @@
   "scene_success": 0.9
  },
  "passed": true,
- "routed_turns": 30,
+ "routed_turns": 38,
  "routing": 1.0,
  "safety_violations": [],
  "scene_success": 1.0,
  "scene_success_shops": 1.0,
- "turns": 30,
+ "store": "sqlite",
+ "turns": 38,
  "units": [
   {
    "ok": true,
@@ -185,7 +354,31 @@
    "ok": true,
    "scene": "worker SIGKILLed mid-turn: resumed, sent once",
    "shop_id": "shop-012",
-   "why": "paused at turn_a150839584c1486a5160:1, attempts 2, takeover True, completions 1, replies 1"
+   "why": "paused at turn_a150839584c1486a5160:step:1, attempts 2, takeover True, completions 1, replies 1"
+  },
+  {
+   "ok": true,
+   "scene": "worker SIGKILLed at 11 crash points: each job resumed, sent once",
+   "shop_id": "workers",
+   "why": "fired 11/11, resumed with takeover 11, completed once 11, duplicate replies 0, lost jobs 0, failed none"
+  },
+  {
+   "ok": true,
+   "scene": "two open asks: a bare YES asks which, then the receipt",
+   "shop_id": "shop-011",
+   "why": "correction steer_question, bare YES steer_which ['Yes for the delivery receipt or the credit change?'], then order/drop-confirmation, consents 1 (in the answer turn True), credit intents 0"
+  },
+  {
+   "ok": true,
+   "scene": "brand: promo answered from code, brand email kept as a draft",
+   "shop_id": "brand",
+   "why": "promo route brand/promo-info, reply 'Promos running today:\\n- Sunrise noodles: buy 10 cartons, get', email route brand/brand-email, drafts ['queued_for_approval'], sent elsewhere 0"
+  },
+  {
+   "ok": true,
+   "scene": "daily naira cap: helpers pause, holding reply, one owner note, resume on approve",
+   "shop_id": "owner",
+   "why": "parked ['parked', 'parked'], raise items 1, owner notes 1, decision 200, cap 68981 -> 137962 kobo, resumed and answered 2/2"
   },
   {
    "ok": true,
@@ -197,7 +390,7 @@
    "ok": true,
    "scene": "console reads show the state",
    "shop_id": "owner",
-   "why": "threads 12/12, steps on every shop thread True, limits unchanged True, fake flags pending 3"
+   "why": "threads 15/15, steps on every shop thread True, limits unchanged True, fake flags pending 3"
   },
   {
    "ok": true,

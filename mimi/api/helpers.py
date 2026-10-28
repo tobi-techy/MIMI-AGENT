@@ -13,7 +13,11 @@ harness loop (RAI-272):
 * Credit: the shelf photo, the SAM 3.1 count and the credit request to
   approvals (``mimi.credit.tools``).
 
-Brand is not hired yet; its turns report ``no_helper_yet:brand``. Order only
+* Brand: the Promo Check (``mimi.brand.tools``): promos read from a fixed
+  synthetic list, a shop reply written by code, brand emails kept as drafts
+  in the owner's approvals. It reads and drafts; it never sends.
+
+Order only
 does delivery receipts; order intake and delivery status get a one-line
 answer pointing to the rep.
 
@@ -32,6 +36,7 @@ from pathlib import Path
 from typing import Any
 
 from mimi.api.media import LocalMedia, MediaSource, NoMedia, StorePhotos, StoreScreens
+from mimi.brand.tools import BRAND_SKILL, BRAND_TOOLS, BrandPorts, register_brand_tools
 from mimi.credit.sam import SamError, Segmentation, Segmenter
 from mimi.credit.tools import CreditPorts, credit_helper, register_credit
 from mimi.harness.collector import (
@@ -146,6 +151,11 @@ def build_helpers(policy: RiskPolicy | None = None, *, go: SqlGo | None = None,
     helpers["stock"] = Helper(
         "stock", STOCK_SKILL, build_toolset(reg, "stock", STOCK_TOOLS + BUILTIN_TOOLS, policy),
         skill_version="stock-v0.1")
+    register_brand_tools(reg, BrandPorts(distributor=dist))
+    helpers["brand"] = Helper(
+        "brand", BRAND_SKILL,
+        build_toolset(reg, "brand", BRAND_TOOLS + BUILTIN_TOOLS, policy),
+        skill_version="brand-v0.1")
     credit = credit_helper(reg, policy, distributor=dist)
     helpers["credit"] = Helper(credit.name, credit.skill + APPROVAL_LINE, credit.toolset,
                                credit.budget, skill_version=credit.skill_version)

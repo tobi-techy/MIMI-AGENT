@@ -86,3 +86,31 @@ def test_which_question_is_asked_once_then_the_owner_checks() -> None:
     assert len(owner) == 2 and all("did not say which" in t for t in owner)
     assert state["pending_skill"] == "order/drop-confirmation" and state["fix"]
     assert consent == 0
+
+
+def test_the_answer_turn_reads_the_shops_yes_too() -> None:
+    """After "the delivery", Order reads the shop's own YES as well (its batch)."""
+    from mimi.api import which_eval as we
+    from mimi.api.agent import Agent
+    from mimi.api.offline import OfflineModel
+    from mimi.harness.inbound import Inbound, Payload
+    from mimi.store import ensure_schema, make_engine, seed_world
+
+    e = make_engine("sqlite://")
+    ensure_schema(e)
+    seed_world(e, W)
+    we._setup(e, W, case("join", "both", "restock", [], []))
+    a = Agent(e, models=[OfflineModel()], router_model=None, lease_s=30.0)
+    phone = W.shop(we.SHOP).phone
+    ids = []
+    for n, text in enumerate(["Yes", "the delivery one"]):
+        v = a.submit(we.TENANT, Inbound(source="shop_message", org_id=we.TENANT,
+                                        external_id=f"join.{n}", received_at=we.T0,
+                                        payload=Payload(text=text, from_phone=phone)))
+        ids.append(v.turn_id)
+        while a.process() is not None:
+            pass
+    with e.connect() as conn:
+        t = conn.execute(sa.select(s.turns).where(s.turns.c.turn_id == ids[1])).one()
+    assert t.skill == "order/drop-confirmation"
+    assert json.loads(t.batch) == ["join.0", "join.1"]

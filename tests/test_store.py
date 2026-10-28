@@ -192,6 +192,27 @@ def test_one_thread_runs_one_turn_at_a_time_and_a_dead_lease_is_taken_over(
     assert q.get(second).state == "queued"
 
 
+def test_postgres_claims_skip_a_locked_thread_instead_of_waiting(engine: Any) -> None:
+    """River-style: a thread row another transaction holds is skipped at once."""
+    if engine.dialect.name != "postgresql":
+        pytest.skip("SKIP LOCKED is the Postgres path; SQLite has one writer at a time")
+    import time as _t
+
+    tid = _enqueue(engine, "sk1")
+    q = TurnQueue(engine, lease_s=30)
+    thread = q.get(tid).thread_id
+    with engine.connect() as holder:
+        tx = holder.begin()
+        holder.execute(sa.select(s.threads.c.thread_id).where(
+            s.threads.c.thread_id == thread).with_for_update())
+        t0 = _t.monotonic()
+        assert q.claim("w1") is None  # skipped, not blocked
+        assert _t.monotonic() - t0 < 5
+        tx.rollback()
+    c = q.claim("w1")
+    assert c is not None and c.turn_id == tid
+
+
 def test_a_turn_that_keeps_failing_stops_after_three_tries(engine: Any) -> None:
     q = TurnQueue(engine, lease_s=30)
     tid = _enqueue(engine, "f1")
