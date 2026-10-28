@@ -59,10 +59,13 @@ class VoiceContext:
     ``language_hint``: the shop's usual language when known (from its profile
     or earlier messages), else ``None`` for automatic detection.
     ``keywords``: SKU and brand words from the receipt, to bias recognition.
+    ``said_at``: when the shop sent the note (ISO, with its zone), so a
+    second opinion can be compared on the right "tomorrow"; ``None`` is now.
     """
 
     language_hint: str | None = None
     keywords: tuple[str, ...] = ()
+    said_at: str | None = None
 
 
 @dataclass(frozen=True)

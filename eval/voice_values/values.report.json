@@ -3,21 +3,26 @@
   "accuracy >= 95%": false,
   "0 recorded without YES": true,
   "0 recorded wrong": true,
-  "0 voice figures not in text": true
+  "0 voice figures not in text": true,
+  "fresh held-out >= 90%": false
  },
  "safety_every_pass": true,
- "accuracy_floor": 0.74,
+ "accuracy_floor": 0.84,
  "pass": false,
+ "clips_without_audio": {
+  "fresh": 60,
+  "dev": 20
+ },
  "cost": {
   "spitch_stt_recorded_calls": 89,
   "spitch_stt_audio_s": 321.3,
   "spitch_stt_usd": 0.135,
-  "muse_stt_recorded_calls": 16,
-  "muse_stt_audio_s": 118.3,
-  "muse_stt_usd": 0.0059,
+  "muse_stt_recorded_calls": 54,
+  "muse_stt_audio_s": 261.4,
+  "muse_stt_usd": 0.0131,
   "fixtures_tts_audio_s": 136.55,
   "fixtures_tts_usd": 0.1912,
-  "usd_total": 0.4392,
+  "usd_total": 0.4464,
   "voice_replies_tts_audio_s": 76.5,
   "voice_replies_tts_usd": 0.1071
  },
@@ -25,42 +30,37 @@
  "voice_replies_heard_back": {
   "replies": [
    {
-    "clip": "vv-01",
+    "clip": "vv-04",
     "voice": "english",
-    "seconds": 13.663,
-    "heard": "You said you will pay twenty five thousand Naira on Thursday the twenty ninth of October for this delivery. Reply yes if that is right or tell me me the right amount and day. I only note your promise. I do not take or move money..",
-    "right": true
+    "heard": "",
+    "right": null
    },
    {
-    "clip": "vv-14",
+    "clip": "vv-12",
     "voice": "pidgin",
-    "seconds": 16.276,
-    "heard": "He said you you will pay twenty thousand naira on Friday the thirtieth of October for this delivery. Reply yes if that is right or tell me the right amount and day I only note your promise I do not take or move money..",
-    "right": true
+    "heard": "",
+    "right": null
    },
    {
     "clip": "vv-21",
     "voice": "yoruba:en",
-    "seconds": 15.684,
-    "heard": "you said you will pay twenty thousand naira on Thursday the 29th of October for this delivery. Reply yes if that is right or tell me the right amount amount and day I only note your promise I do not take or move money..",
-    "right": true
+    "heard": "",
+    "right": null
    },
    {
     "clip": "vv-36",
     "voice": "igbo:en",
-    "seconds": 18.47,
-    "heard": "as he said, you will pay fifteen thousand Naira on Thursday, the 29th of October October, for this delivery. reply yes if that is right right or tell me the right amount and day I only note your promise I do not take or move money.",
-    "right": true
+    "heard": "",
+    "right": null
    },
    {
     "clip": "vv-42",
     "voice": "hausa:en",
-    "seconds": 12.389,
-    "heard": "you said you said you would pay fifteen thousand naira on Thursday. The twenty-ninth of October for this delivery. Reply yes if that is right or tell me the right amount and day. I only note your promise. I do not take or move money..",
-    "right": true
+    "heard": "",
+    "right": null
    }
   ],
-  "right": 5,
+  "right": 0,
   "n": 5,
   "tts_audio_s": 76.5,
   "tts_usd": 0.1071
@@ -69,27 +69,27 @@
   "router": {
    "summary": {
     "all": {
-     "right": 37,
+     "right": 42,
      "n": 50,
-     "accuracy": 0.74
+     "accuracy": 0.84
     },
     "by_split": {
      "dev": {
-      "right": 17,
+      "right": 18,
       "n": 20,
-      "accuracy": 0.85
+      "accuracy": 0.9
      },
      "heldout": {
-      "right": 20,
+      "right": 24,
       "n": 30,
-      "accuracy": 0.6667
+      "accuracy": 0.8
      }
     },
     "by_language": {
      "english": {
-      "right": 8,
+      "right": 10,
       "n": 11,
-      "accuracy": 0.7273
+      "accuracy": 0.9091
      },
      "hausa": {
       "right": 6,
@@ -102,34 +102,34 @@
       "accuracy": 1.0
      },
      "pidgin": {
-      "right": 9,
+      "right": 11,
       "n": 12,
-      "accuracy": 0.75
+      "accuracy": 0.9167
      },
      "yoruba": {
-      "right": 5,
+      "right": 4,
       "n": 7,
-      "accuracy": 0.7143
+      "accuracy": 0.5714
      },
      "yoruba_english": {
-      "right": 3,
+      "right": 5,
       "n": 8,
-      "accuracy": 0.375
+      "accuracy": 0.625
      }
     },
     "read_back_wrong": 0,
     "recorded_without_yes": 0,
     "recorded_wrong": 0,
-    "recorded_after_yes": 20,
+    "recorded_after_yes": 23,
     "low_or_failed_transcripts": 0,
-    "voice_replies": 36,
+    "voice_replies": 42,
     "voice_replies_text_only": 0,
     "voice_figures_not_in_text": 0,
     "statuses": {
-     "promise": 20,
-     "unclear": 16,
-     "none": 8,
-     "paid_claim": 6
+     "unclear": 19,
+     "promise": 23,
+     "paid_claim": 6,
+     "none": 2
     }
    },
    "clips": [
@@ -138,25 +138,25 @@
      "split": "dev",
      "lang": "english",
      "phenomenon": "naira in words",
-     "transcript": "i will pay twenty five thousand naira tomorrow.",
+     "transcript": "i will pay twenty five five thousand naira tomorrow.",
      "status": "ok",
      "provider": "muse",
      "reading": {
-      "status": "promise",
-      "issue": "",
-      "amount_kobo": 2500000,
+      "status": "unclear",
+      "issue": "several_amounts",
+      "amount_kobo": null,
       "due_on": "2026-10-29",
       "amount_options": [],
       "date_options": []
      },
-     "right": true,
-     "why": "",
-     "message_purpose": "promise_readback",
-     "message": "You said you will pay N25,000 on Thursday 29 October 2026 for delivery dlv-eval-01. Reply YES if that is right, or tell me the right amount and day. I only note your promise; I do not take or move money.",
+     "right": false,
+     "why": "unclear:several_amounts",
+     "message_purpose": "promise_clarify",
+     "message": "I heard more than one amount for delivery dlv-eval-01. How much will you pay, and on what day?",
      "recorded_without_yes": false,
      "recorded_wrong": false,
-     "recorded_after_yes": true,
-     "voice_script": "You said you will pay twenty five thousand naira on Thursday the twenty-ninth of October for this delivery. Reply YES if that is right, or tell me the right amount and day. I only note your promise; I do not take or move money.",
+     "recorded_after_yes": false,
+     "voice_script": "I heard more than one amount for this delivery. How much will you pay, and on what day?",
      "voice_language": "english",
      "voice_why_not": "",
      "voice_figures_ok": true
@@ -166,7 +166,7 @@
      "split": "dev",
      "lang": "english",
      "phenomenon": "two thousand five",
-     "transcript": "I will pay two thousand five on Friday.",
+     "transcript": "i will pay two thousand five on Friday",
      "status": "ok",
      "provider": "muse",
      "reading": {
@@ -187,7 +187,7 @@
      "recorded_without_yes": false,
      "recorded_wrong": false,
      "recorded_after_yes": false,
-     "voice_script": "Did you mean two thousand five hundred naira or two thousand and five naira for this delivery on Friday the thirtieth of October? Please write the full amount in naira.",
+     "voice_script": "Did you mean two thousand five hundred naira or two thousand and five naira for this delivery on Friday, the thirtieth of October? Please write the full amount in naira.",
      "voice_language": "english",
      "voice_why_not": "",
      "voice_figures_ok": true
@@ -197,7 +197,7 @@
      "split": "heldout",
      "lang": "english",
      "phenomenon": "next Friday",
-     "transcript": "i will pay will pay one thousand five hundred naira next next Friday.",
+     "transcript": "i will pay one thousand five hundred naira next Friday.",
      "status": "ok",
      "provider": "muse",
      "reading": {
@@ -218,7 +218,7 @@
      "recorded_without_yes": false,
      "recorded_wrong": false,
      "recorded_after_yes": false,
-     "voice_script": "Which day will you pay one thousand five hundred naira for this delivery: Friday the thirtieth of October or Friday the sixth of November?",
+     "voice_script": "Which day will you pay one thousand five hundred naira for this delivery: Friday, the thirtieth of October, or Friday, the sixth of November?",
      "voice_language": "english",
      "voice_why_not": "",
      "voice_figures_ok": true
@@ -228,7 +228,7 @@
      "split": "heldout",
      "lang": "english",
      "phenomenon": "naira only, month end",
-     "transcript": "let me pay fifty thousand Naira only at the end of the month.",
+     "transcript": "let me pay fifty thousand naira only at the end of the month.",
      "status": "ok",
      "provider": "muse",
      "reading": {
@@ -246,7 +246,7 @@
      "recorded_without_yes": false,
      "recorded_wrong": false,
      "recorded_after_yes": true,
-     "voice_script": "You said you will pay fifty thousand naira on Saturday the thirty-first of October for this delivery. Reply YES if that is right, or tell me the right amount and day. I only note your promise; I do not take or move money.",
+     "voice_script": "You said you will pay fifty thousand naira on Saturday, the thirty-first of October, for this delivery. Reply YES if that is right, or tell me the right amount and day. I only note your promise. I do not take or move money.",
      "voice_language": "english",
      "voice_why_not": "",
      "voice_figures_ok": true
@@ -256,7 +256,7 @@
      "split": "heldout",
      "lang": "english",
      "phenomenon": "ordinal date",
-     "transcript": "I'll transfer 120,000 Naira on the fifth of November.",
+     "transcript": "I'll transfer one hundred and twenty thousand naira on the fifth of November.",
      "status": "ok",
      "provider": "muse",
      "reading": {
@@ -274,7 +274,7 @@
      "recorded_without_yes": false,
      "recorded_wrong": false,
      "recorded_after_yes": true,
-     "voice_script": "You said you will pay one hundred and twenty thousand naira on Thursday the fifth of November for this delivery. Reply YES if that is right, or tell me the right amount and day. I only note your promise; I do not take or move money.",
+     "voice_script": "You said you will pay one hundred and twenty thousand naira on Thursday, the fifth of November, for this delivery. Reply YES if that is right, or tell me the right amount and day. I only note your promise. I do not take or move money.",
      "voice_language": "english",
      "voice_why_not": "",
      "voice_figures_ok": true
@@ -284,26 +284,29 @@
      "split": "heldout",
      "lang": "english",
      "phenomenon": "ten thousand five",
-     "transcript": "paupi ten thousand five on Monday,",
+     "transcript": "I will pay ten thousand five on Monday.",
      "status": "ok",
      "provider": "muse",
      "reading": {
-      "status": "none",
-      "issue": "",
+      "status": "unclear",
+      "issue": "ambiguous_amount",
       "amount_kobo": null,
-      "due_on": null,
-      "amount_options": [],
+      "due_on": "2026-11-02",
+      "amount_options": [
+       1050000,
+       1000500
+      ],
       "date_options": []
      },
-     "right": false,
-     "why": "none None None",
-     "message_purpose": "",
-     "message": "",
+     "right": true,
+     "why": "",
+     "message_purpose": "promise_clarify",
+     "message": "Did you mean N10,500 or N10,005 for delivery dlv-eval-01 on Monday 2 November 2026? Please write the full amount in naira.",
      "recorded_without_yes": false,
      "recorded_wrong": false,
      "recorded_after_yes": false,
-     "voice_script": "",
-     "voice_language": "",
+     "voice_script": "Did you mean ten thousand five hundred naira or ten thousand and five naira for this delivery on Monday, the second of November? Please write the full amount in naira.",
+     "voice_language": "english",
      "voice_why_not": "",
      "voice_figures_ok": true
     },
@@ -312,7 +315,7 @@
      "split": "dev",
      "lang": "english",
      "phenomenon": "no day",
-     "transcript": "I'll pay pay forty thousand naira.",
+     "transcript": "i'll pay forty thousand naira.",
      "status": "ok",
      "provider": "muse",
      "reading": {
@@ -368,7 +371,7 @@
      "split": "heldout",
      "lang": "english",
      "phenomenon": "next Monday, already next week",
-     "transcript": "I will pay two hundred and fifty thousand Naira next Monday.",
+     "transcript": "i will pay two hundred and fifty thousand naira next Monday. Monday.",
      "status": "ok",
      "provider": "muse",
      "reading": {
@@ -386,7 +389,7 @@
      "recorded_without_yes": false,
      "recorded_wrong": false,
      "recorded_after_yes": true,
-     "voice_script": "You said you will pay two hundred and fifty thousand naira on Monday the second of November for this delivery. Reply YES if that is right, or tell me the right amount and day. I only note your promise; I do not take or move money.",
+     "voice_script": "You said you will pay two hundred and fifty thousand naira on Monday, the second of November, for this delivery. Reply YES if that is right, or tell me the right amount and day. I only note your promise. I do not take or move money.",
      "voice_language": "english",
      "voice_why_not": "",
      "voice_figures_ok": true
@@ -396,26 +399,26 @@
      "split": "dev",
      "lang": "english",
      "phenomenon": "next Friday said on Saturday",
-     "transcript": "There willthere will be thirty thousand naira next Friday.",
+     "transcript": "I will pay thirty thousand naira next Friday.",
      "status": "ok",
      "provider": "muse",
      "reading": {
-      "status": "none",
+      "status": "promise",
       "issue": "",
-      "amount_kobo": null,
-      "due_on": null,
+      "amount_kobo": 3000000,
+      "due_on": "2026-11-06",
       "amount_options": [],
       "date_options": []
      },
-     "right": false,
-     "why": "none:",
-     "message_purpose": "",
-     "message": "",
+     "right": true,
+     "why": "",
+     "message_purpose": "promise_readback",
+     "message": "You said you will pay N30,000 on Friday 6 November 2026 for delivery dlv-eval-01. Reply YES if that is right, or tell me the right amount and day. I only note your promise; I do not take or move money.",
      "recorded_without_yes": false,
      "recorded_wrong": false,
-     "recorded_after_yes": false,
-     "voice_script": "",
-     "voice_language": "",
+     "recorded_after_yes": true,
+     "voice_script": "You said you will pay thirty thousand naira on Friday, the sixth of November, for this delivery. Reply YES if that is right, or tell me the right amount and day. I only note your promise. I do not take or move money.",
+     "voice_language": "english",
      "voice_why_not": "",
      "voice_figures_ok": true
     },
@@ -445,7 +448,7 @@
      "recorded_without_yes": false,
      "recorded_wrong": false,
      "recorded_after_yes": false,
-     "voice_script": "Did you mean two thousand five hundred naira or two thousand and five naira for this delivery on Thursday the twenty-ninth of October? Please write the full amount in naira.",
+     "voice_script": "Did you mean two thousand five hundred naira or two thousand and five naira for this delivery on Thursday, the twenty-ninth of October? Please write the full amount in naira.",
      "voice_language": "pidgin",
      "voice_why_not": "",
      "voice_figures_ok": true
@@ -455,25 +458,25 @@
      "split": "dev",
      "lang": "pidgin",
      "phenomenon": "Friday next week",
-     "transcript": "make i pay 30 k for fried next week",
+     "transcript": "make I pay thirty K for Friday next week.",
      "status": "ok",
-     "provider": "spitch",
+     "provider": "muse",
      "reading": {
-      "status": "unclear",
-      "issue": "ambiguous_date",
+      "status": "promise",
+      "issue": "",
       "amount_kobo": 3000000,
-      "due_on": null,
+      "due_on": "2026-11-06",
       "amount_options": [],
       "date_options": []
      },
-     "right": false,
-     "why": "unclear:ambiguous_date",
-     "message_purpose": "promise_clarify",
-     "message": "On what day will you pay N30,000 for delivery dlv-eval-01? Please name the day, for example Friday.",
+     "right": true,
+     "why": "",
+     "message_purpose": "promise_readback",
+     "message": "You said you will pay N30,000 on Friday 6 November 2026 for delivery dlv-eval-01. Reply YES if that is right, or tell me the right amount and day. I only note your promise; I do not take or move money.",
      "recorded_without_yes": false,
      "recorded_wrong": false,
-     "recorded_after_yes": false,
-     "voice_script": "On what day will you pay thirty thousand naira for this delivery? Please name the day, for example Friday.",
+     "recorded_after_yes": true,
+     "voice_script": "You said you will pay thirty thousand naira on Friday, the sixth of November, for this delivery. Reply YES if that is right, or tell me the right amount and day. I only note your promise. I do not take or move money.",
      "voice_language": "pidgin",
      "voice_why_not": "",
      "voice_figures_ok": true
@@ -483,26 +486,26 @@
      "split": "heldout",
      "lang": "pidgin",
      "phenomenon": "send the money",
-     "transcript": "i go send de money fifteen thousand end of the month",
+     "transcript": "I go send the money fifteen thousand end of the month.",
      "status": "ok",
-     "provider": "spitch",
+     "provider": "muse",
      "reading": {
-      "status": "none",
+      "status": "promise",
       "issue": "",
-      "amount_kobo": null,
-      "due_on": null,
+      "amount_kobo": 1500000,
+      "due_on": "2026-10-31",
       "amount_options": [],
       "date_options": []
      },
-     "right": false,
-     "why": "none:",
-     "message_purpose": "",
-     "message": "",
+     "right": true,
+     "why": "",
+     "message_purpose": "promise_readback",
+     "message": "You said you will pay N15,000 on Saturday 31 October 2026 for delivery dlv-eval-01. Reply YES if that is right, or tell me the right amount and day. I only note your promise; I do not take or move money.",
      "recorded_without_yes": false,
      "recorded_wrong": false,
-     "recorded_after_yes": false,
-     "voice_script": "",
-     "voice_language": "",
+     "recorded_after_yes": true,
+     "voice_script": "You said you will pay fifteen thousand naira on Saturday, the thirty-first of October, for this delivery. Reply YES if that is right, or tell me the right amount and day. I only note your promise. I do not take or move money.",
+     "voice_language": "pidgin",
      "voice_why_not": "",
      "voice_figures_ok": true
     },
@@ -529,7 +532,7 @@
      "recorded_without_yes": false,
      "recorded_wrong": false,
      "recorded_after_yes": true,
-     "voice_script": "You said you will pay twenty thousand naira on Friday the thirtieth of October for this delivery. Reply YES if that is right, or tell me the right amount and day. I only note your promise; I do not take or move money.",
+     "voice_script": "You said you will pay twenty thousand naira on Friday, the thirtieth of October, for this delivery. Reply YES if that is right, or tell me the right amount and day. I only note your promise. I do not take or move money.",
      "voice_language": "pidgin",
      "voice_why_not": "",
      "voice_figures_ok": true
@@ -588,7 +591,7 @@
      "recorded_without_yes": false,
      "recorded_wrong": false,
      "recorded_after_yes": false,
-     "voice_script": "Did you mean twenty naira or twenty thousand naira for this delivery on Thursday the twenty-ninth of October? Please write the full amount in naira.",
+     "voice_script": "Did you mean twenty naira or twenty thousand naira for this delivery on Thursday, the twenty-ninth of October? Please write the full amount in naira.",
      "voice_language": "pidgin",
      "voice_why_not": "",
      "voice_figures_ok": true
@@ -647,7 +650,7 @@
      "recorded_without_yes": false,
      "recorded_wrong": false,
      "recorded_after_yes": false,
-     "voice_script": "Which day will you pay fifty thousand naira for this delivery: Saturday the thirty-first of October or Sunday the first of November?",
+     "voice_script": "Which day will you pay fifty thousand naira for this delivery: Saturday, the thirty-first of October, or Sunday, the first of November?",
      "voice_language": "pidgin",
      "voice_why_not": "",
      "voice_figures_ok": true
@@ -678,7 +681,7 @@
      "recorded_without_yes": false,
      "recorded_wrong": false,
      "recorded_after_yes": false,
-     "voice_script": "Which day will you pay thirty five thousand naira for this delivery: Thursday the twenty-ninth of October or Thursday the fifth of November?",
+     "voice_script": "Which day will you pay thirty-five thousand naira for this delivery: Thursday, the twenty-ninth of October, or Thursday, the fifth of November?",
      "voice_language": "pidgin",
      "voice_why_not": "",
      "voice_figures_ok": true
@@ -706,7 +709,7 @@
      "recorded_without_yes": false,
      "recorded_wrong": false,
      "recorded_after_yes": true,
-     "voice_script": "You said you will pay twelve thousand naira on Saturday the thirty-first of October for this delivery. Reply YES if that is right, or tell me the right amount and day. I only note your promise; I do not take or move money.",
+     "voice_script": "You said you will pay twelve thousand naira on Saturday, the thirty-first of October, for this delivery. Reply YES if that is right, or tell me the right amount and day. I only note your promise. I do not take or move money.",
      "voice_language": "pidgin",
      "voice_why_not": "",
      "voice_figures_ok": true
@@ -734,7 +737,7 @@
      "recorded_without_yes": false,
      "recorded_wrong": false,
      "recorded_after_yes": true,
-     "voice_script": "You said you will pay twenty thousand naira on Thursday the twenty-ninth of October for this delivery. Reply YES if that is right, or tell me the right amount and day. I only note your promise; I do not take or move money.",
+     "voice_script": "You said you will pay twenty thousand naira on Thursday, the twenty-ninth of October, for this delivery. Reply YES if that is right, or tell me the right amount and day. I only note your promise. I do not take or move money.",
      "voice_language": "yoruba:en",
      "voice_why_not": "",
      "voice_figures_ok": true
@@ -772,26 +775,26 @@
      "split": "heldout",
      "lang": "yoruba_english",
      "phenomenon": "Yoruba weekday",
-     "transcript": "eji agope fifteen thousand ojo eti",
+     "transcript": "eji, ago pay fifteen thousand ọjo yesterday.",
      "status": "ok",
-     "provider": "spitch",
+     "provider": "muse",
      "reading": {
-      "status": "none",
-      "issue": "",
-      "amount_kobo": null,
+      "status": "unclear",
+      "issue": "past_date",
+      "amount_kobo": 1500000,
       "due_on": null,
       "amount_options": [],
       "date_options": []
      },
      "right": false,
-     "why": "none:",
-     "message_purpose": "",
-     "message": "",
+     "why": "unclear:past_date",
+     "message_purpose": "promise_clarify",
+     "message": "That day has passed. On what day will you pay N15,000 for delivery dlv-eval-01?",
      "recorded_without_yes": false,
      "recorded_wrong": false,
      "recorded_after_yes": false,
-     "voice_script": "",
-     "voice_language": "",
+     "voice_script": "That day has passed. On what day will you pay fifteen thousand naira for this delivery?",
+     "voice_language": "yoruba:en",
      "voice_why_not": "",
      "voice_figures_ok": true
     },
@@ -821,7 +824,7 @@
      "recorded_without_yes": false,
      "recorded_wrong": false,
      "recorded_after_yes": false,
-     "voice_script": "Did you mean two thousand five hundred naira or two thousand and five naira for this delivery on Thursday the twenty-ninth of October? Please write the full amount in naira.",
+     "voice_script": "Did you mean two thousand five hundred naira or two thousand and five naira for this delivery on Thursday, the twenty-ninth of October? Please write the full amount in naira.",
      "voice_language": "yoruba:en",
      "voice_why_not": "",
      "voice_figures_ok": true
@@ -831,26 +834,29 @@
      "split": "heldout",
      "lang": "yoruba_english",
      "phenomenon": "next Friday",
-     "transcript": "àwùpé yu ẹgbẹ̀rún mẹ́wàá next friday sa",
+     "transcript": "I will pay will pay you ẹgbẹrún méwa next Friday. Sir.",
      "status": "ok",
-     "provider": "spitch",
+     "provider": "muse",
      "reading": {
-      "status": "none",
-      "issue": "",
-      "amount_kobo": null,
+      "status": "unclear",
+      "issue": "ambiguous_date",
+      "amount_kobo": 1000000,
       "due_on": null,
       "amount_options": [],
-      "date_options": []
+      "date_options": [
+       "2026-10-30",
+       "2026-11-06"
+      ]
      },
-     "right": false,
-     "why": "none None None",
-     "message_purpose": "",
-     "message": "",
+     "right": true,
+     "why": "",
+     "message_purpose": "promise_clarify",
+     "message": "Which day will you pay N10,000 for delivery dlv-eval-01: Friday 30 October 2026 or Friday 6 November 2026?",
      "recorded_without_yes": false,
      "recorded_wrong": false,
      "recorded_after_yes": false,
-     "voice_script": "",
-     "voice_language": "",
+     "voice_script": "Which day will you pay ten thousand naira for this delivery: Friday, the thirtieth of October, or Friday, the sixth of November?",
+     "voice_language": "yoruba:en",
      "voice_why_not": "",
      "voice_figures_ok": true
     },
@@ -915,26 +921,26 @@
      "split": "heldout",
      "lang": "yoruba_english",
      "phenomenon": "hyphenated words",
-     "transcript": "mape forty-five thousand naira on saturday e j",
+     "transcript": "ma pay pay forty five thousand naira on Saturday Eji.",
      "status": "ok",
-     "provider": "spitch",
+     "provider": "muse",
      "reading": {
-      "status": "none",
+      "status": "promise",
       "issue": "",
-      "amount_kobo": null,
-      "due_on": null,
+      "amount_kobo": 4500000,
+      "due_on": "2026-10-31",
       "amount_options": [],
       "date_options": []
      },
-     "right": false,
-     "why": "none:",
-     "message_purpose": "",
-     "message": "",
+     "right": true,
+     "why": "",
+     "message_purpose": "promise_readback",
+     "message": "You said you will pay N45,000 on Saturday 31 October 2026 for delivery dlv-eval-01. Reply YES if that is right, or tell me the right amount and day. I only note your promise; I do not take or move money.",
      "recorded_without_yes": false,
      "recorded_wrong": false,
-     "recorded_after_yes": false,
-     "voice_script": "",
-     "voice_language": "",
+     "recorded_after_yes": true,
+     "voice_script": "You said you will pay forty-five thousand naira on Saturday, the thirty-first of October, for this delivery. Reply YES if that is right, or tell me the right amount and day. I only note your promise. I do not take or move money.",
+     "voice_language": "yoruba:en",
      "voice_why_not": "",
      "voice_figures_ok": true
     },
@@ -989,7 +995,7 @@
      "recorded_without_yes": false,
      "recorded_wrong": false,
      "recorded_after_yes": true,
-     "voice_script": "You said you will pay twenty thousand naira on Friday the thirtieth of October for this delivery. Reply YES if that is right, or tell me the right amount and day. I only note your promise; I do not take or move money.",
+     "voice_script": "You said you will pay twenty thousand naira on Friday, the thirtieth of October, for this delivery. Reply YES if that is right, or tell me the right amount and day. I only note your promise. I do not take or move money.",
      "voice_language": "yoruba:en",
      "voice_why_not": "",
      "voice_figures_ok": true
@@ -1045,7 +1051,7 @@
      "recorded_without_yes": false,
      "recorded_wrong": false,
      "recorded_after_yes": false,
-     "voice_script": "How much will you pay for this delivery on Thursday the twenty-ninth of October?",
+     "voice_script": "How much will you pay for this delivery on Thursday, the twenty-ninth of October?",
      "voice_language": "yoruba:en",
      "voice_why_not": "",
      "voice_figures_ok": true
@@ -1083,25 +1089,25 @@
      "split": "heldout",
      "lang": "yoruba",
      "phenomenon": "Yoruba 12,000",
-     "transcript": "má san ẹgbẹ̀rún méjìlá ní ọjọ́ àbámẹ́ta",
+     "transcript": "másan ẹgbẹrúnmaa san ẹgbẹrún mẹjìllàn ní ọjọ aba meta,",
      "status": "ok",
-     "provider": "spitch",
+     "provider": "muse",
      "reading": {
-      "status": "promise",
-      "issue": "",
-      "amount_kobo": 1200000,
-      "due_on": "2026-10-31",
+      "status": "unclear",
+      "issue": "ambiguous_amount",
+      "amount_kobo": null,
+      "due_on": null,
       "amount_options": [],
       "date_options": []
      },
-     "right": true,
-     "why": "",
-     "message_purpose": "promise_readback",
-     "message": "You said you will pay N12,000 on Saturday 31 October 2026 for delivery dlv-eval-01. Reply YES if that is right, or tell me the right amount and day. I only note your promise; I do not take or move money.",
+     "right": false,
+     "why": "unclear:ambiguous_amount",
+     "message_purpose": "promise_clarify",
+     "message": "I am not sure of the amount for delivery dlv-eval-01. Please write the full amount in naira and the day you will pay.",
      "recorded_without_yes": false,
      "recorded_wrong": false,
-     "recorded_after_yes": true,
-     "voice_script": "You said you will pay twelve thousand naira on Saturday the thirty-first of October for this delivery. Reply YES if that is right, or tell me the right amount and day. I only note your promise; I do not take or move money.",
+     "recorded_after_yes": false,
+     "voice_script": "I am not sure of the amount for this delivery. Please write the full amount in naira and the day you will pay.",
      "voice_language": "yoruba:en",
      "voice_why_not": "",
      "voice_figures_ok": true
@@ -1129,7 +1135,7 @@
      "recorded_without_yes": false,
      "recorded_wrong": false,
      "recorded_after_yes": true,
-     "voice_script": "You said you will pay four thousand naira on Wednesday the twenty-eighth of October for this delivery. Reply YES if that is right, or tell me the right amount and day. I only note your promise; I do not take or move money.",
+     "voice_script": "You said you will pay four thousand naira on Wednesday, the twenty-eighth of October, for this delivery. Reply YES if that is right, or tell me the right amount and day. I only note your promise. I do not take or move money.",
      "voice_language": "yoruba:en",
      "voice_why_not": "",
      "voice_figures_ok": true
@@ -1157,7 +1163,7 @@
      "recorded_without_yes": false,
      "recorded_wrong": false,
      "recorded_after_yes": true,
-     "voice_script": "You said you will pay fifteen thousand naira on Thursday the twenty-ninth of October for this delivery. Reply YES if that is right, or tell me the right amount and day. I only note your promise; I do not take or move money.",
+     "voice_script": "You said you will pay fifteen thousand naira on Thursday, the twenty-ninth of October, for this delivery. Reply YES if that is right, or tell me the right amount and day. I only note your promise. I do not take or move money.",
      "voice_language": "igbo:en",
      "voice_why_not": "",
      "voice_figures_ok": true
@@ -1185,7 +1191,7 @@
      "recorded_without_yes": false,
      "recorded_wrong": false,
      "recorded_after_yes": true,
-     "voice_script": "You said you will pay twenty thousand naira on Friday the thirtieth of October for this delivery. Reply YES if that is right, or tell me the right amount and day. I only note your promise; I do not take or move money.",
+     "voice_script": "You said you will pay twenty thousand naira on Friday, the thirtieth of October, for this delivery. Reply YES if that is right, or tell me the right amount and day. I only note your promise. I do not take or move money.",
      "voice_language": "igbo:en",
      "voice_why_not": "",
      "voice_figures_ok": true
@@ -1213,7 +1219,7 @@
      "recorded_without_yes": false,
      "recorded_wrong": false,
      "recorded_after_yes": true,
-     "voice_script": "You said you will pay five thousand naira on Friday the thirtieth of October for this delivery. Reply YES if that is right, or tell me the right amount and day. I only note your promise; I do not take or move money.",
+     "voice_script": "You said you will pay five thousand naira on Friday, the thirtieth of October, for this delivery. Reply YES if that is right, or tell me the right amount and day. I only note your promise. I do not take or move money.",
      "voice_language": "igbo:en",
      "voice_why_not": "",
      "voice_figures_ok": true
@@ -1241,7 +1247,7 @@
      "recorded_without_yes": false,
      "recorded_wrong": false,
      "recorded_after_yes": false,
-     "voice_script": "How much will you pay for this delivery on Thursday the twenty-ninth of October?",
+     "voice_script": "How much will you pay for this delivery on Thursday, the twenty-ninth of October?",
      "voice_language": "igbo:en",
      "voice_why_not": "",
      "voice_figures_ok": true
@@ -1297,7 +1303,7 @@
      "recorded_without_yes": false,
      "recorded_wrong": false,
      "recorded_after_yes": true,
-     "voice_script": "You said you will pay thirty thousand naira on Saturday the thirty-first of October for this delivery. Reply YES if that is right, or tell me the right amount and day. I only note your promise; I do not take or move money.",
+     "voice_script": "You said you will pay thirty thousand naira on Saturday, the thirty-first of October, for this delivery. Reply YES if that is right, or tell me the right amount and day. I only note your promise. I do not take or move money.",
      "voice_language": "igbo:en",
      "voice_why_not": "",
      "voice_figures_ok": true
@@ -1325,7 +1331,7 @@
      "recorded_without_yes": false,
      "recorded_wrong": false,
      "recorded_after_yes": true,
-     "voice_script": "You said you will pay fifteen thousand naira on Thursday the twenty-ninth of October for this delivery. Reply YES if that is right, or tell me the right amount and day. I only note your promise; I do not take or move money.",
+     "voice_script": "You said you will pay fifteen thousand naira on Thursday, the twenty-ninth of October, for this delivery. Reply YES if that is right, or tell me the right amount and day. I only note your promise. I do not take or move money.",
      "voice_language": "hausa:en",
      "voice_why_not": "",
      "voice_figures_ok": true
@@ -1353,7 +1359,7 @@
      "recorded_without_yes": false,
      "recorded_wrong": false,
      "recorded_after_yes": true,
-     "voice_script": "You said you will pay fifty thousand naira on Friday the thirtieth of October for this delivery. Reply YES if that is right, or tell me the right amount and day. I only note your promise; I do not take or move money.",
+     "voice_script": "You said you will pay fifty thousand naira on Friday, the thirtieth of October, for this delivery. Reply YES if that is right, or tell me the right amount and day. I only note your promise. I do not take or move money.",
      "voice_language": "hausa:en",
      "voice_why_not": "",
      "voice_figures_ok": true
@@ -1381,7 +1387,7 @@
      "recorded_without_yes": false,
      "recorded_wrong": false,
      "recorded_after_yes": true,
-     "voice_script": "You said you will pay two thousand five hundred naira on Friday the thirtieth of October for this delivery. Reply YES if that is right, or tell me the right amount and day. I only note your promise; I do not take or move money.",
+     "voice_script": "You said you will pay two thousand five hundred naira on Friday, the thirtieth of October, for this delivery. Reply YES if that is right, or tell me the right amount and day. I only note your promise. I do not take or move money.",
      "voice_language": "hausa:en",
      "voice_why_not": "",
      "voice_figures_ok": true
@@ -1409,7 +1415,7 @@
      "recorded_without_yes": false,
      "recorded_wrong": false,
      "recorded_after_yes": false,
-     "voice_script": "How much will you pay for this delivery on Thursday the twenty-ninth of October?",
+     "voice_script": "How much will you pay for this delivery on Thursday, the twenty-ninth of October?",
      "voice_language": "hausa:en",
      "voice_why_not": "",
      "voice_figures_ok": true
@@ -1465,7 +1471,7 @@
      "recorded_without_yes": false,
      "recorded_wrong": false,
      "recorded_after_yes": true,
-     "voice_script": "You said you will pay thirty thousand naira on Saturday the thirty-first of October for this delivery. Reply YES if that is right, or tell me the right amount and day. I only note your promise; I do not take or move money.",
+     "voice_script": "You said you will pay thirty thousand naira on Saturday, the thirty-first of October, for this delivery. Reply YES if that is right, or tell me the right amount and day. I only note your promise. I do not take or move money.",
      "voice_language": "hausa:en",
      "voice_why_not": "",
      "voice_figures_ok": true
@@ -1493,7 +1499,7 @@
      "recorded_without_yes": false,
      "recorded_wrong": false,
      "recorded_after_yes": true,
-     "voice_script": "You said you will pay twenty thousand naira on Thursday the fifth of November for this delivery. Reply YES if that is right, or tell me the right amount and day. I only note your promise; I do not take or move money.",
+     "voice_script": "You said you will pay twenty thousand naira on Thursday, the fifth of November, for this delivery. Reply YES if that is right, or tell me the right amount and day. I only note your promise. I do not take or move money.",
      "voice_language": "pidgin",
      "voice_why_not": "",
      "voice_figures_ok": true
@@ -1503,25 +1509,25 @@
      "split": "heldout",
      "lang": "english",
      "phenomenon": "ordinal day in words",
-     "transcript": "I will pay pay five hundred thousand Naira on the the thirtieth.",
+     "transcript": "i will pay five hundred thousand naira on the thirtieth.",
      "status": "ok",
      "provider": "muse",
      "reading": {
-      "status": "unclear",
-      "issue": "no_date",
+      "status": "promise",
+      "issue": "",
       "amount_kobo": 50000000,
-      "due_on": null,
+      "due_on": "2026-10-30",
       "amount_options": [],
       "date_options": []
      },
-     "right": false,
-     "why": "unclear:no_date",
-     "message_purpose": "promise_clarify",
-     "message": "On what day will you pay N500,000 for delivery dlv-eval-01?",
+     "right": true,
+     "why": "",
+     "message_purpose": "promise_readback",
+     "message": "You said you will pay N500,000 on Friday 30 October 2026 for delivery dlv-eval-01. Reply YES if that is right, or tell me the right amount and day. I only note your promise; I do not take or move money.",
      "recorded_without_yes": false,
      "recorded_wrong": false,
-     "recorded_after_yes": false,
-     "voice_script": "On what day will you pay five hundred thousand naira for this delivery?",
+     "recorded_after_yes": true,
+     "voice_script": "You said you will pay five hundred thousand naira on Friday, the thirtieth of October, for this delivery. Reply YES if that is right, or tell me the right amount and day. I only note your promise. I do not take or move money.",
      "voice_language": "english",
      "voice_why_not": "",
      "voice_figures_ok": true
@@ -1549,7 +1555,7 @@
      "recorded_without_yes": false,
      "recorded_wrong": false,
      "recorded_after_yes": true,
-     "voice_script": "You said you will pay twenty five thousand naira on Monday the second of November for this delivery. Reply YES if that is right, or tell me the right amount and day. I only note your promise; I do not take or move money.",
+     "voice_script": "You said you will pay twenty-five thousand naira on Monday, the second of November, for this delivery. Reply YES if that is right, or tell me the right amount and day. I only note your promise. I do not take or move money.",
      "voice_language": "pidgin",
      "voice_why_not": "",
      "voice_figures_ok": true
@@ -1646,7 +1652,7 @@
      "recorded_without_yes": false,
      "recorded_wrong": false,
      "recorded_after_yes": true,
-     "voice_script": "You said you will pay twenty five thousand naira on Thursday the twenty-ninth of October for this delivery. Reply YES if that is right, or tell me the right amount and day. I only note your promise; I do not take or move money.",
+     "voice_script": "You said you will pay twenty-five thousand naira on Thursday, the twenty-ninth of October, for this delivery. Reply YES if that is right, or tell me the right amount and day. I only note your promise. I do not take or move money.",
      "voice_language": "english",
      "voice_why_not": "",
      "voice_figures_ok": true
@@ -1705,7 +1711,7 @@
      "recorded_without_yes": false,
      "recorded_wrong": false,
      "recorded_after_yes": false,
-     "voice_script": "Which day will you pay one thousand five hundred naira for this delivery: Friday the thirtieth of October or Friday the sixth of November?",
+     "voice_script": "Which day will you pay one thousand five hundred naira for this delivery: Friday, the thirtieth of October, or Friday, the sixth of November?",
      "voice_language": "english",
      "voice_why_not": "",
      "voice_figures_ok": true
@@ -1733,7 +1739,7 @@
      "recorded_without_yes": false,
      "recorded_wrong": false,
      "recorded_after_yes": true,
-     "voice_script": "You said you will pay fifty thousand naira on Saturday the thirty-first of October for this delivery. Reply YES if that is right, or tell me the right amount and day. I only note your promise; I do not take or move money.",
+     "voice_script": "You said you will pay fifty thousand naira on Saturday, the thirty-first of October, for this delivery. Reply YES if that is right, or tell me the right amount and day. I only note your promise. I do not take or move money.",
      "voice_language": "english",
      "voice_why_not": "",
      "voice_figures_ok": true
@@ -1761,7 +1767,7 @@
      "recorded_without_yes": false,
      "recorded_wrong": false,
      "recorded_after_yes": true,
-     "voice_script": "You said you will pay one hundred and twenty thousand naira on Thursday the fifth of November for this delivery. Reply YES if that is right, or tell me the right amount and day. I only note your promise; I do not take or move money.",
+     "voice_script": "You said you will pay one hundred and twenty thousand naira on Thursday, the fifth of November, for this delivery. Reply YES if that is right, or tell me the right amount and day. I only note your promise. I do not take or move money.",
      "voice_language": "english",
      "voice_why_not": "",
      "voice_figures_ok": true
@@ -1873,7 +1879,7 @@
      "recorded_without_yes": false,
      "recorded_wrong": false,
      "recorded_after_yes": true,
-     "voice_script": "You said you will pay two hundred and fifty thousand naira on Monday the second of November for this delivery. Reply YES if that is right, or tell me the right amount and day. I only note your promise; I do not take or move money.",
+     "voice_script": "You said you will pay two hundred and fifty thousand naira on Monday, the second of November, for this delivery. Reply YES if that is right, or tell me the right amount and day. I only note your promise. I do not take or move money.",
      "voice_language": "english",
      "voice_why_not": "",
      "voice_figures_ok": true
@@ -1932,7 +1938,7 @@
      "recorded_without_yes": false,
      "recorded_wrong": false,
      "recorded_after_yes": false,
-     "voice_script": "Did you mean two thousand five hundred naira or two thousand and five naira for this delivery on Thursday the twenty-ninth of October? Please write the full amount in naira.",
+     "voice_script": "Did you mean two thousand five hundred naira or two thousand and five naira for this delivery on Thursday, the twenty-ninth of October? Please write the full amount in naira.",
      "voice_language": "pidgin",
      "voice_why_not": "",
      "voice_figures_ok": true
@@ -1960,7 +1966,7 @@
      "recorded_without_yes": false,
      "recorded_wrong": false,
      "recorded_after_yes": true,
-     "voice_script": "You said you will pay thirty thousand naira on Friday the sixth of November for this delivery. Reply YES if that is right, or tell me the right amount and day. I only note your promise; I do not take or move money.",
+     "voice_script": "You said you will pay thirty thousand naira on Friday, the sixth of November, for this delivery. Reply YES if that is right, or tell me the right amount and day. I only note your promise. I do not take or move money.",
      "voice_language": "pidgin",
      "voice_why_not": "",
      "voice_figures_ok": true
@@ -2016,7 +2022,7 @@
      "recorded_without_yes": false,
      "recorded_wrong": false,
      "recorded_after_yes": true,
-     "voice_script": "You said you will pay twenty thousand naira on Friday the thirtieth of October for this delivery. Reply YES if that is right, or tell me the right amount and day. I only note your promise; I do not take or move money.",
+     "voice_script": "You said you will pay twenty thousand naira on Friday, the thirtieth of October, for this delivery. Reply YES if that is right, or tell me the right amount and day. I only note your promise. I do not take or move money.",
      "voice_language": "pidgin",
      "voice_why_not": "",
      "voice_figures_ok": true
@@ -2075,7 +2081,7 @@
      "recorded_without_yes": false,
      "recorded_wrong": false,
      "recorded_after_yes": false,
-     "voice_script": "Did you mean twenty naira or twenty thousand naira for this delivery on Thursday the twenty-ninth of October? Please write the full amount in naira.",
+     "voice_script": "Did you mean twenty naira or twenty thousand naira for this delivery on Thursday, the twenty-ninth of October? Please write the full amount in naira.",
      "voice_language": "pidgin",
      "voice_why_not": "",
      "voice_figures_ok": true
@@ -2134,7 +2140,7 @@
      "recorded_without_yes": false,
      "recorded_wrong": false,
      "recorded_after_yes": false,
-     "voice_script": "Which day will you pay fifty thousand naira for this delivery: Saturday the thirty-first of October or Sunday the first of November?",
+     "voice_script": "Which day will you pay fifty thousand naira for this delivery: Saturday, the thirty-first of October, or Sunday, the first of November?",
      "voice_language": "pidgin",
      "voice_why_not": "",
      "voice_figures_ok": true
@@ -2165,7 +2171,7 @@
      "recorded_without_yes": false,
      "recorded_wrong": false,
      "recorded_after_yes": false,
-     "voice_script": "Which day will you pay thirty five thousand naira for this delivery: Thursday the twenty-ninth of October or Thursday the fifth of November?",
+     "voice_script": "Which day will you pay thirty-five thousand naira for this delivery: Thursday, the twenty-ninth of October, or Thursday, the fifth of November?",
      "voice_language": "pidgin",
      "voice_why_not": "",
      "voice_figures_ok": true
@@ -2221,7 +2227,7 @@
      "recorded_without_yes": false,
      "recorded_wrong": false,
      "recorded_after_yes": true,
-     "voice_script": "You said you will pay twenty thousand naira on Thursday the twenty-ninth of October for this delivery. Reply YES if that is right, or tell me the right amount and day. I only note your promise; I do not take or move money.",
+     "voice_script": "You said you will pay twenty thousand naira on Thursday, the twenty-ninth of October, for this delivery. Reply YES if that is right, or tell me the right amount and day. I only note your promise. I do not take or move money.",
      "voice_language": "yoruba:en",
      "voice_why_not": "",
      "voice_figures_ok": true
@@ -2308,7 +2314,7 @@
      "recorded_without_yes": false,
      "recorded_wrong": false,
      "recorded_after_yes": false,
-     "voice_script": "Did you mean two thousand five hundred naira or two thousand and five naira for this delivery on Thursday the twenty-ninth of October? Please write the full amount in naira.",
+     "voice_script": "Did you mean two thousand five hundred naira or two thousand and five naira for this delivery on Thursday, the twenty-ninth of October? Please write the full amount in naira.",
      "voice_language": "yoruba:en",
      "voice_why_not": "",
      "voice_figures_ok": true
@@ -2476,7 +2482,7 @@
      "recorded_without_yes": false,
      "recorded_wrong": false,
      "recorded_after_yes": true,
-     "voice_script": "You said you will pay twenty thousand naira on Friday the thirtieth of October for this delivery. Reply YES if that is right, or tell me the right amount and day. I only note your promise; I do not take or move money.",
+     "voice_script": "You said you will pay twenty thousand naira on Friday, the thirtieth of October, for this delivery. Reply YES if that is right, or tell me the right amount and day. I only note your promise. I do not take or move money.",
      "voice_language": "yoruba:en",
      "voice_why_not": "",
      "voice_figures_ok": true
@@ -2532,7 +2538,7 @@
      "recorded_without_yes": false,
      "recorded_wrong": false,
      "recorded_after_yes": false,
-     "voice_script": "How much will you pay for this delivery on Thursday the twenty-ninth of October?",
+     "voice_script": "How much will you pay for this delivery on Thursday, the twenty-ninth of October?",
      "voice_language": "yoruba:en",
      "voice_why_not": "",
      "voice_figures_ok": true
@@ -2588,7 +2594,7 @@
      "recorded_without_yes": false,
      "recorded_wrong": false,
      "recorded_after_yes": true,
-     "voice_script": "You said you will pay twelve thousand naira on Saturday the thirty-first of October for this delivery. Reply YES if that is right, or tell me the right amount and day. I only note your promise; I do not take or move money.",
+     "voice_script": "You said you will pay twelve thousand naira on Saturday, the thirty-first of October, for this delivery. Reply YES if that is right, or tell me the right amount and day. I only note your promise. I do not take or move money.",
      "voice_language": "yoruba:en",
      "voice_why_not": "",
      "voice_figures_ok": true
@@ -2616,7 +2622,7 @@
      "recorded_without_yes": false,
      "recorded_wrong": false,
      "recorded_after_yes": true,
-     "voice_script": "You said you will pay four thousand naira on Wednesday the twenty-eighth of October for this delivery. Reply YES if that is right, or tell me the right amount and day. I only note your promise; I do not take or move money.",
+     "voice_script": "You said you will pay four thousand naira on Wednesday, the twenty-eighth of October, for this delivery. Reply YES if that is right, or tell me the right amount and day. I only note your promise. I do not take or move money.",
      "voice_language": "yoruba:en",
      "voice_why_not": "",
      "voice_figures_ok": true
@@ -2644,7 +2650,7 @@
      "recorded_without_yes": false,
      "recorded_wrong": false,
      "recorded_after_yes": true,
-     "voice_script": "You said you will pay fifteen thousand naira on Thursday the twenty-ninth of October for this delivery. Reply YES if that is right, or tell me the right amount and day. I only note your promise; I do not take or move money.",
+     "voice_script": "You said you will pay fifteen thousand naira on Thursday, the twenty-ninth of October, for this delivery. Reply YES if that is right, or tell me the right amount and day. I only note your promise. I do not take or move money.",
      "voice_language": "igbo:en",
      "voice_why_not": "",
      "voice_figures_ok": true
@@ -2672,7 +2678,7 @@
      "recorded_without_yes": false,
      "recorded_wrong": false,
      "recorded_after_yes": true,
-     "voice_script": "You said you will pay twenty thousand naira on Friday the thirtieth of October for this delivery. Reply YES if that is right, or tell me the right amount and day. I only note your promise; I do not take or move money.",
+     "voice_script": "You said you will pay twenty thousand naira on Friday, the thirtieth of October, for this delivery. Reply YES if that is right, or tell me the right amount and day. I only note your promise. I do not take or move money.",
      "voice_language": "igbo:en",
      "voice_why_not": "",
      "voice_figures_ok": true
@@ -2700,7 +2706,7 @@
      "recorded_without_yes": false,
      "recorded_wrong": false,
      "recorded_after_yes": true,
-     "voice_script": "You said you will pay five thousand naira on Friday the thirtieth of October for this delivery. Reply YES if that is right, or tell me the right amount and day. I only note your promise; I do not take or move money.",
+     "voice_script": "You said you will pay five thousand naira on Friday, the thirtieth of October, for this delivery. Reply YES if that is right, or tell me the right amount and day. I only note your promise. I do not take or move money.",
      "voice_language": "igbo:en",
      "voice_why_not": "",
      "voice_figures_ok": true
@@ -2728,7 +2734,7 @@
      "recorded_without_yes": false,
      "recorded_wrong": false,
      "recorded_after_yes": false,
-     "voice_script": "How much will you pay for this delivery on Thursday the twenty-ninth of October?",
+     "voice_script": "How much will you pay for this delivery on Thursday, the twenty-ninth of October?",
      "voice_language": "igbo:en",
      "voice_why_not": "",
      "voice_figures_ok": true
@@ -2784,7 +2790,7 @@
      "recorded_without_yes": false,
      "recorded_wrong": false,
      "recorded_after_yes": true,
-     "voice_script": "You said you will pay thirty thousand naira on Saturday the thirty-first of October for this delivery. Reply YES if that is right, or tell me the right amount and day. I only note your promise; I do not take or move money.",
+     "voice_script": "You said you will pay thirty thousand naira on Saturday, the thirty-first of October, for this delivery. Reply YES if that is right, or tell me the right amount and day. I only note your promise. I do not take or move money.",
      "voice_language": "igbo:en",
      "voice_why_not": "",
      "voice_figures_ok": true
@@ -2812,7 +2818,7 @@
      "recorded_without_yes": false,
      "recorded_wrong": false,
      "recorded_after_yes": true,
-     "voice_script": "You said you will pay fifteen thousand naira on Thursday the twenty-ninth of October for this delivery. Reply YES if that is right, or tell me the right amount and day. I only note your promise; I do not take or move money.",
+     "voice_script": "You said you will pay fifteen thousand naira on Thursday, the twenty-ninth of October, for this delivery. Reply YES if that is right, or tell me the right amount and day. I only note your promise. I do not take or move money.",
      "voice_language": "hausa:en",
      "voice_why_not": "",
      "voice_figures_ok": true
@@ -2840,7 +2846,7 @@
      "recorded_without_yes": false,
      "recorded_wrong": false,
      "recorded_after_yes": true,
-     "voice_script": "You said you will pay fifty thousand naira on Friday the thirtieth of October for this delivery. Reply YES if that is right, or tell me the right amount and day. I only note your promise; I do not take or move money.",
+     "voice_script": "You said you will pay fifty thousand naira on Friday, the thirtieth of October, for this delivery. Reply YES if that is right, or tell me the right amount and day. I only note your promise. I do not take or move money.",
      "voice_language": "hausa:en",
      "voice_why_not": "",
      "voice_figures_ok": true
@@ -2868,7 +2874,7 @@
      "recorded_without_yes": false,
      "recorded_wrong": false,
      "recorded_after_yes": true,
-     "voice_script": "You said you will pay two thousand five hundred naira on Friday the thirtieth of October for this delivery. Reply YES if that is right, or tell me the right amount and day. I only note your promise; I do not take or move money.",
+     "voice_script": "You said you will pay two thousand five hundred naira on Friday, the thirtieth of October, for this delivery. Reply YES if that is right, or tell me the right amount and day. I only note your promise. I do not take or move money.",
      "voice_language": "hausa:en",
      "voice_why_not": "",
      "voice_figures_ok": true
@@ -2896,7 +2902,7 @@
      "recorded_without_yes": false,
      "recorded_wrong": false,
      "recorded_after_yes": false,
-     "voice_script": "How much will you pay for this delivery on Thursday the twenty-ninth of October?",
+     "voice_script": "How much will you pay for this delivery on Thursday, the twenty-ninth of October?",
      "voice_language": "hausa:en",
      "voice_why_not": "",
      "voice_figures_ok": true
@@ -2952,7 +2958,7 @@
      "recorded_without_yes": false,
      "recorded_wrong": false,
      "recorded_after_yes": true,
-     "voice_script": "You said you will pay thirty thousand naira on Saturday the thirty-first of October for this delivery. Reply YES if that is right, or tell me the right amount and day. I only note your promise; I do not take or move money.",
+     "voice_script": "You said you will pay thirty thousand naira on Saturday, the thirty-first of October, for this delivery. Reply YES if that is right, or tell me the right amount and day. I only note your promise. I do not take or move money.",
      "voice_language": "hausa:en",
      "voice_why_not": "",
      "voice_figures_ok": true
@@ -2980,7 +2986,7 @@
      "recorded_without_yes": false,
      "recorded_wrong": false,
      "recorded_after_yes": true,
-     "voice_script": "You said you will pay twenty thousand naira on Thursday the fifth of November for this delivery. Reply YES if that is right, or tell me the right amount and day. I only note your promise; I do not take or move money.",
+     "voice_script": "You said you will pay twenty thousand naira on Thursday, the fifth of November, for this delivery. Reply YES if that is right, or tell me the right amount and day. I only note your promise. I do not take or move money.",
      "voice_language": "pidgin",
      "voice_why_not": "",
      "voice_figures_ok": true
@@ -3008,7 +3014,7 @@
      "recorded_without_yes": false,
      "recorded_wrong": false,
      "recorded_after_yes": true,
-     "voice_script": "You said you will pay five hundred thousand naira on Friday the thirtieth of October for this delivery. Reply YES if that is right, or tell me the right amount and day. I only note your promise; I do not take or move money.",
+     "voice_script": "You said you will pay five hundred thousand naira on Friday, the thirtieth of October, for this delivery. Reply YES if that is right, or tell me the right amount and day. I only note your promise. I do not take or move money.",
      "voice_language": "english",
      "voice_why_not": "",
      "voice_figures_ok": true
@@ -3036,7 +3042,7 @@
      "recorded_without_yes": false,
      "recorded_wrong": false,
      "recorded_after_yes": true,
-     "voice_script": "You said you will pay twenty five thousand naira on Monday the second of November for this delivery. Reply YES if that is right, or tell me the right amount and day. I only note your promise; I do not take or move money.",
+     "voice_script": "You said you will pay twenty-five thousand naira on Monday, the second of November, for this delivery. Reply YES if that is right, or tell me the right amount and day. I only note your promise. I do not take or move money.",
      "voice_language": "pidgin",
      "voice_why_not": "",
      "voice_figures_ok": true
@@ -3132,7 +3138,7 @@
      "recorded_without_yes": false,
      "recorded_wrong": false,
      "recorded_after_yes": true,
-     "voice_script": "You said you will pay twenty five thousand naira on Thursday the twenty-ninth of October for this delivery. Reply YES if that is right, or tell me the right amount and day. I only note your promise; I do not take or move money.",
+     "voice_script": "You said you will pay twenty-five thousand naira on Thursday, the twenty-ninth of October, for this delivery. Reply YES if that is right, or tell me the right amount and day. I only note your promise. I do not take or move money.",
      "voice_language": "english",
      "voice_why_not": "",
      "voice_figures_ok": true
@@ -3163,7 +3169,7 @@
      "recorded_without_yes": false,
      "recorded_wrong": false,
      "recorded_after_yes": false,
-     "voice_script": "Did you mean two thousand five hundred naira or two thousand and five naira for this delivery on Friday the thirtieth of October? Please write the full amount in naira.",
+     "voice_script": "Did you mean two thousand five hundred naira or two thousand and five naira for this delivery on Friday, the thirtieth of October? Please write the full amount in naira.",
      "voice_language": "english",
      "voice_why_not": "",
      "voice_figures_ok": true
@@ -3194,7 +3200,7 @@
      "recorded_without_yes": false,
      "recorded_wrong": false,
      "recorded_after_yes": false,
-     "voice_script": "Which day will you pay one thousand five hundred naira for this delivery: Friday the thirtieth of October or Friday the sixth of November?",
+     "voice_script": "Which day will you pay one thousand five hundred naira for this delivery: Friday, the thirtieth of October, or Friday, the sixth of November?",
      "voice_language": "english",
      "voice_why_not": "",
      "voice_figures_ok": true
@@ -3222,7 +3228,7 @@
      "recorded_without_yes": false,
      "recorded_wrong": false,
      "recorded_after_yes": true,
-     "voice_script": "You said you will pay fifty thousand naira on Saturday the thirty-first of October for this delivery. Reply YES if that is right, or tell me the right amount and day. I only note your promise; I do not take or move money.",
+     "voice_script": "You said you will pay fifty thousand naira on Saturday, the thirty-first of October, for this delivery. Reply YES if that is right, or tell me the right amount and day. I only note your promise. I do not take or move money.",
      "voice_language": "english",
      "voice_why_not": "",
      "voice_figures_ok": true
@@ -3250,7 +3256,7 @@
      "recorded_without_yes": false,
      "recorded_wrong": false,
      "recorded_after_yes": true,
-     "voice_script": "You said you will pay one hundred and twenty thousand naira on Thursday the fifth of November for this delivery. Reply YES if that is right, or tell me the right amount and day. I only note your promise; I do not take or move money.",
+     "voice_script": "You said you will pay one hundred and twenty thousand naira on Thursday, the fifth of November, for this delivery. Reply YES if that is right, or tell me the right amount and day. I only note your promise. I do not take or move money.",
      "voice_language": "english",
      "voice_why_not": "",
      "voice_figures_ok": true
@@ -3281,7 +3287,7 @@
      "recorded_without_yes": false,
      "recorded_wrong": false,
      "recorded_after_yes": false,
-     "voice_script": "Did you mean ten thousand five hundred naira or ten thousand and five naira for this delivery on Monday the second of November? Please write the full amount in naira.",
+     "voice_script": "Did you mean ten thousand five hundred naira or ten thousand and five naira for this delivery on Monday, the second of November? Please write the full amount in naira.",
      "voice_language": "english",
      "voice_why_not": "",
      "voice_figures_ok": true
@@ -3365,7 +3371,7 @@
      "recorded_without_yes": false,
      "recorded_wrong": false,
      "recorded_after_yes": true,
-     "voice_script": "You said you will pay two hundred and fifty thousand naira on Monday the second of November for this delivery. Reply YES if that is right, or tell me the right amount and day. I only note your promise; I do not take or move money.",
+     "voice_script": "You said you will pay two hundred and fifty thousand naira on Monday, the second of November, for this delivery. Reply YES if that is right, or tell me the right amount and day. I only note your promise. I do not take or move money.",
      "voice_language": "english",
      "voice_why_not": "",
      "voice_figures_ok": true
@@ -3393,7 +3399,7 @@
      "recorded_without_yes": false,
      "recorded_wrong": false,
      "recorded_after_yes": true,
-     "voice_script": "You said you will pay thirty thousand naira on Friday the sixth of November for this delivery. Reply YES if that is right, or tell me the right amount and day. I only note your promise; I do not take or move money.",
+     "voice_script": "You said you will pay thirty thousand naira on Friday, the sixth of November, for this delivery. Reply YES if that is right, or tell me the right amount and day. I only note your promise. I do not take or move money.",
      "voice_language": "english",
      "voice_why_not": "",
      "voice_figures_ok": true
@@ -3424,7 +3430,7 @@
      "recorded_without_yes": false,
      "recorded_wrong": false,
      "recorded_after_yes": false,
-     "voice_script": "Did you mean two thousand five hundred naira or two thousand and five naira for this delivery on Thursday the twenty-ninth of October? Please write the full amount in naira.",
+     "voice_script": "Did you mean two thousand five hundred naira or two thousand and five naira for this delivery on Thursday, the twenty-ninth of October? Please write the full amount in naira.",
      "voice_language": "pidgin",
      "voice_why_not": "",
      "voice_figures_ok": true
@@ -3452,7 +3458,7 @@
      "recorded_without_yes": false,
      "recorded_wrong": false,
      "recorded_after_yes": true,
-     "voice_script": "You said you will pay thirty thousand naira on Friday the sixth of November for this delivery. Reply YES if that is right, or tell me the right amount and day. I only note your promise; I do not take or move money.",
+     "voice_script": "You said you will pay thirty thousand naira on Friday, the sixth of November, for this delivery. Reply YES if that is right, or tell me the right amount and day. I only note your promise. I do not take or move money.",
      "voice_language": "pidgin",
      "voice_why_not": "",
      "voice_figures_ok": true
@@ -3480,7 +3486,7 @@
      "recorded_without_yes": false,
      "recorded_wrong": false,
      "recorded_after_yes": false,
-     "voice_script": "How much will you pay for this delivery on Saturday the thirty-first of October?",
+     "voice_script": "How much will you pay for this delivery on Saturday, the thirty-first of October?",
      "voice_language": "pidgin",
      "voice_why_not": "",
      "voice_figures_ok": true
@@ -3508,7 +3514,7 @@
      "recorded_without_yes": false,
      "recorded_wrong": false,
      "recorded_after_yes": true,
-     "voice_script": "You said you will pay twenty thousand naira on Friday the thirtieth of October for this delivery. Reply YES if that is right, or tell me the right amount and day. I only note your promise; I do not take or move money.",
+     "voice_script": "You said you will pay twenty thousand naira on Friday, the thirtieth of October, for this delivery. Reply YES if that is right, or tell me the right amount and day. I only note your promise. I do not take or move money.",
      "voice_language": "pidgin",
      "voice_why_not": "",
      "voice_figures_ok": true
@@ -3567,7 +3573,7 @@
      "recorded_without_yes": false,
      "recorded_wrong": false,
      "recorded_after_yes": false,
-     "voice_script": "Did you mean twenty naira or twenty thousand naira for this delivery on Thursday the twenty-ninth of October? Please write the full amount in naira.",
+     "voice_script": "Did you mean twenty naira or twenty thousand naira for this delivery on Thursday, the twenty-ninth of October? Please write the full amount in naira.",
      "voice_language": "pidgin",
      "voice_why_not": "",
      "voice_figures_ok": true
@@ -3626,7 +3632,7 @@
      "recorded_without_yes": false,
      "recorded_wrong": false,
      "recorded_after_yes": false,
-     "voice_script": "Which day will you pay fifty thousand naira for this delivery: Saturday the thirty-first of October or Sunday the first of November?",
+     "voice_script": "Which day will you pay fifty thousand naira for this delivery: Saturday, the thirty-first of October, or Sunday, the first of November?",
      "voice_language": "pidgin",
      "voice_why_not": "",
      "voice_figures_ok": true
@@ -3657,7 +3663,7 @@
      "recorded_without_yes": false,
      "recorded_wrong": false,
      "recorded_after_yes": false,
-     "voice_script": "Which day will you pay thirty five thousand naira for this delivery: Thursday the twenty-ninth of October or Thursday the fifth of November?",
+     "voice_script": "Which day will you pay thirty-five thousand naira for this delivery: Thursday, the twenty-ninth of October, or Thursday, the fifth of November?",
      "voice_language": "pidgin",
      "voice_why_not": "",
      "voice_figures_ok": true
@@ -3685,7 +3691,7 @@
      "recorded_without_yes": false,
      "recorded_wrong": false,
      "recorded_after_yes": true,
-     "voice_script": "You said you will pay twelve thousand naira on Saturday the thirty-first of October for this delivery. Reply YES if that is right, or tell me the right amount and day. I only note your promise; I do not take or move money.",
+     "voice_script": "You said you will pay twelve thousand naira on Saturday, the thirty-first of October, for this delivery. Reply YES if that is right, or tell me the right amount and day. I only note your promise. I do not take or move money.",
      "voice_language": "pidgin",
      "voice_why_not": "",
      "voice_figures_ok": true
@@ -3713,7 +3719,7 @@
      "recorded_without_yes": false,
      "recorded_wrong": false,
      "recorded_after_yes": true,
-     "voice_script": "You said you will pay twenty thousand naira on Thursday the twenty-ninth of October for this delivery. Reply YES if that is right, or tell me the right amount and day. I only note your promise; I do not take or move money.",
+     "voice_script": "You said you will pay twenty thousand naira on Thursday, the twenty-ninth of October, for this delivery. Reply YES if that is right, or tell me the right amount and day. I only note your promise. I do not take or move money.",
      "voice_language": "yoruba:en",
      "voice_why_not": "",
      "voice_figures_ok": true
@@ -3741,7 +3747,7 @@
      "recorded_without_yes": false,
      "recorded_wrong": false,
      "recorded_after_yes": true,
-     "voice_script": "You said you will pay five thousand naira on Friday the thirtieth of October for this delivery. Reply YES if that is right, or tell me the right amount and day. I only note your promise; I do not take or move money.",
+     "voice_script": "You said you will pay five thousand naira on Friday, the thirtieth of October, for this delivery. Reply YES if that is right, or tell me the right amount and day. I only note your promise. I do not take or move money.",
      "voice_language": "yoruba:en",
      "voice_why_not": "",
      "voice_figures_ok": true
@@ -3769,7 +3775,7 @@
      "recorded_without_yes": false,
      "recorded_wrong": false,
      "recorded_after_yes": true,
-     "voice_script": "You said you will pay fifteen thousand naira on Friday the thirtieth of October for this delivery. Reply YES if that is right, or tell me the right amount and day. I only note your promise; I do not take or move money.",
+     "voice_script": "You said you will pay fifteen thousand naira on Friday, the thirtieth of October, for this delivery. Reply YES if that is right, or tell me the right amount and day. I only note your promise. I do not take or move money.",
      "voice_language": "yoruba:en",
      "voice_why_not": "",
      "voice_figures_ok": true
@@ -3800,7 +3806,7 @@
      "recorded_without_yes": false,
      "recorded_wrong": false,
      "recorded_after_yes": false,
-     "voice_script": "Did you mean two thousand five hundred naira or two thousand and five naira for this delivery on Thursday the twenty-ninth of October? Please write the full amount in naira.",
+     "voice_script": "Did you mean two thousand five hundred naira or two thousand and five naira for this delivery on Thursday, the twenty-ninth of October? Please write the full amount in naira.",
      "voice_language": "yoruba:en",
      "voice_why_not": "",
      "voice_figures_ok": true
@@ -3831,7 +3837,7 @@
      "recorded_without_yes": false,
      "recorded_wrong": false,
      "recorded_after_yes": false,
-     "voice_script": "Which day will you pay ten thousand naira for this delivery: Friday the thirtieth of October or Friday the sixth of November?",
+     "voice_script": "Which day will you pay ten thousand naira for this delivery: Friday, the thirtieth of October, or Friday, the sixth of November?",
      "voice_language": "yoruba:en",
      "voice_why_not": "",
      "voice_figures_ok": true
@@ -3859,7 +3865,7 @@
      "recorded_without_yes": false,
      "recorded_wrong": false,
      "recorded_after_yes": true,
-     "voice_script": "You said you will pay thirty thousand naira on Friday the thirtieth of October for this delivery. Reply YES if that is right, or tell me the right amount and day. I only note your promise; I do not take or move money.",
+     "voice_script": "You said you will pay thirty thousand naira on Friday, the thirtieth of October, for this delivery. Reply YES if that is right, or tell me the right amount and day. I only note your promise. I do not take or move money.",
      "voice_language": "yoruba:en",
      "voice_why_not": "",
      "voice_figures_ok": true
@@ -3915,7 +3921,7 @@
      "recorded_without_yes": false,
      "recorded_wrong": false,
      "recorded_after_yes": true,
-     "voice_script": "You said you will pay forty five thousand naira on Saturday the thirty-first of October for this delivery. Reply YES if that is right, or tell me the right amount and day. I only note your promise; I do not take or move money.",
+     "voice_script": "You said you will pay forty-five thousand naira on Saturday, the thirty-first of October, for this delivery. Reply YES if that is right, or tell me the right amount and day. I only note your promise. I do not take or move money.",
      "voice_language": "yoruba:en",
      "voice_why_not": "",
      "voice_figures_ok": true
@@ -3943,7 +3949,7 @@
      "recorded_without_yes": false,
      "recorded_wrong": false,
      "recorded_after_yes": true,
-     "voice_script": "You said you will pay fifteen thousand naira on Thursday the twenty-ninth of October for this delivery. Reply YES if that is right, or tell me the right amount and day. I only note your promise; I do not take or move money.",
+     "voice_script": "You said you will pay fifteen thousand naira on Thursday, the twenty-ninth of October, for this delivery. Reply YES if that is right, or tell me the right amount and day. I only note your promise. I do not take or move money.",
      "voice_language": "yoruba:en",
      "voice_why_not": "",
      "voice_figures_ok": true
@@ -3971,7 +3977,7 @@
      "recorded_without_yes": false,
      "recorded_wrong": false,
      "recorded_after_yes": true,
-     "voice_script": "You said you will pay twenty thousand naira on Friday the thirtieth of October for this delivery. Reply YES if that is right, or tell me the right amount and day. I only note your promise; I do not take or move money.",
+     "voice_script": "You said you will pay twenty thousand naira on Friday, the thirtieth of October, for this delivery. Reply YES if that is right, or tell me the right amount and day. I only note your promise. I do not take or move money.",
      "voice_language": "yoruba:en",
      "voice_why_not": "",
      "voice_figures_ok": true
@@ -3999,7 +4005,7 @@
      "recorded_without_yes": false,
      "recorded_wrong": false,
      "recorded_after_yes": true,
-     "voice_script": "You said you will pay three thousand naira on Friday the thirtieth of October for this delivery. Reply YES if that is right, or tell me the right amount and day. I only note your promise; I do not take or move money.",
+     "voice_script": "You said you will pay three thousand naira on Friday, the thirtieth of October, for this delivery. Reply YES if that is right, or tell me the right amount and day. I only note your promise. I do not take or move money.",
      "voice_language": "yoruba:en",
      "voice_why_not": "",
      "voice_figures_ok": true
@@ -4027,7 +4033,7 @@
      "recorded_without_yes": false,
      "recorded_wrong": false,
      "recorded_after_yes": false,
-     "voice_script": "How much will you pay for this delivery on Thursday the twenty-ninth of October?",
+     "voice_script": "How much will you pay for this delivery on Thursday, the twenty-ninth of October?",
      "voice_language": "yoruba:en",
      "voice_why_not": "",
      "voice_figures_ok": true
@@ -4083,7 +4089,7 @@
      "recorded_without_yes": false,
      "recorded_wrong": false,
      "recorded_after_yes": true,
-     "voice_script": "You said you will pay twelve thousand naira on Saturday the thirty-first of October for this delivery. Reply YES if that is right, or tell me the right amount and day. I only note your promise; I do not take or move money.",
+     "voice_script": "You said you will pay twelve thousand naira on Saturday, the thirty-first of October, for this delivery. Reply YES if that is right, or tell me the right amount and day. I only note your promise. I do not take or move money.",
      "voice_language": "yoruba:en",
      "voice_why_not": "",
      "voice_figures_ok": true
@@ -4111,7 +4117,7 @@
      "recorded_without_yes": false,
      "recorded_wrong": false,
      "recorded_after_yes": true,
-     "voice_script": "You said you will pay four thousand naira on Wednesday the twenty-eighth of October for this delivery. Reply YES if that is right, or tell me the right amount and day. I only note your promise; I do not take or move money.",
+     "voice_script": "You said you will pay four thousand naira on Wednesday, the twenty-eighth of October, for this delivery. Reply YES if that is right, or tell me the right amount and day. I only note your promise. I do not take or move money.",
      "voice_language": "yoruba:en",
      "voice_why_not": "",
      "voice_figures_ok": true
@@ -4139,7 +4145,7 @@
      "recorded_without_yes": false,
      "recorded_wrong": false,
      "recorded_after_yes": true,
-     "voice_script": "You said you will pay fifteen thousand naira on Thursday the twenty-ninth of October for this delivery. Reply YES if that is right, or tell me the right amount and day. I only note your promise; I do not take or move money.",
+     "voice_script": "You said you will pay fifteen thousand naira on Thursday, the twenty-ninth of October, for this delivery. Reply YES if that is right, or tell me the right amount and day. I only note your promise. I do not take or move money.",
      "voice_language": "igbo:en",
      "voice_why_not": "",
      "voice_figures_ok": true
@@ -4167,7 +4173,7 @@
      "recorded_without_yes": false,
      "recorded_wrong": false,
      "recorded_after_yes": true,
-     "voice_script": "You said you will pay twenty thousand naira on Friday the thirtieth of October for this delivery. Reply YES if that is right, or tell me the right amount and day. I only note your promise; I do not take or move money.",
+     "voice_script": "You said you will pay twenty thousand naira on Friday, the thirtieth of October, for this delivery. Reply YES if that is right, or tell me the right amount and day. I only note your promise. I do not take or move money.",
      "voice_language": "igbo:en",
      "voice_why_not": "",
      "voice_figures_ok": true
@@ -4195,7 +4201,7 @@
      "recorded_without_yes": false,
      "recorded_wrong": false,
      "recorded_after_yes": true,
-     "voice_script": "You said you will pay five thousand naira on Friday the thirtieth of October for this delivery. Reply YES if that is right, or tell me the right amount and day. I only note your promise; I do not take or move money.",
+     "voice_script": "You said you will pay five thousand naira on Friday, the thirtieth of October, for this delivery. Reply YES if that is right, or tell me the right amount and day. I only note your promise. I do not take or move money.",
      "voice_language": "igbo:en",
      "voice_why_not": "",
      "voice_figures_ok": true
@@ -4223,7 +4229,7 @@
      "recorded_without_yes": false,
      "recorded_wrong": false,
      "recorded_after_yes": false,
-     "voice_script": "How much will you pay for this delivery on Thursday the twenty-ninth of October?",
+     "voice_script": "How much will you pay for this delivery on Thursday, the twenty-ninth of October?",
      "voice_language": "igbo:en",
      "voice_why_not": "",
      "voice_figures_ok": true
@@ -4279,7 +4285,7 @@
      "recorded_without_yes": false,
      "recorded_wrong": false,
      "recorded_after_yes": true,
-     "voice_script": "You said you will pay thirty thousand naira on Saturday the thirty-first of October for this delivery. Reply YES if that is right, or tell me the right amount and day. I only note your promise; I do not take or move money.",
+     "voice_script": "You said you will pay thirty thousand naira on Saturday, the thirty-first of October, for this delivery. Reply YES if that is right, or tell me the right amount and day. I only note your promise. I do not take or move money.",
      "voice_language": "igbo:en",
      "voice_why_not": "",
      "voice_figures_ok": true
@@ -4307,7 +4313,7 @@
      "recorded_without_yes": false,
      "recorded_wrong": false,
      "recorded_after_yes": true,
-     "voice_script": "You said you will pay fifteen thousand naira on Thursday the twenty-ninth of October for this delivery. Reply YES if that is right, or tell me the right amount and day. I only note your promise; I do not take or move money.",
+     "voice_script": "You said you will pay fifteen thousand naira on Thursday, the twenty-ninth of October, for this delivery. Reply YES if that is right, or tell me the right amount and day. I only note your promise. I do not take or move money.",
      "voice_language": "hausa:en",
      "voice_why_not": "",
      "voice_figures_ok": true
@@ -4335,7 +4341,7 @@
      "recorded_without_yes": false,
      "recorded_wrong": false,
      "recorded_after_yes": true,
-     "voice_script": "You said you will pay fifty thousand naira on Friday the thirtieth of October for this delivery. Reply YES if that is right, or tell me the right amount and day. I only note your promise; I do not take or move money.",
+     "voice_script": "You said you will pay fifty thousand naira on Friday, the thirtieth of October, for this delivery. Reply YES if that is right, or tell me the right amount and day. I only note your promise. I do not take or move money.",
      "voice_language": "hausa:en",
      "voice_why_not": "",
      "voice_figures_ok": true
@@ -4363,7 +4369,7 @@
      "recorded_without_yes": false,
      "recorded_wrong": false,
      "recorded_after_yes": true,
-     "voice_script": "You said you will pay two thousand five hundred naira on Friday the thirtieth of October for this delivery. Reply YES if that is right, or tell me the right amount and day. I only note your promise; I do not take or move money.",
+     "voice_script": "You said you will pay two thousand five hundred naira on Friday, the thirtieth of October, for this delivery. Reply YES if that is right, or tell me the right amount and day. I only note your promise. I do not take or move money.",
      "voice_language": "hausa:en",
      "voice_why_not": "",
      "voice_figures_ok": true
@@ -4391,7 +4397,7 @@
      "recorded_without_yes": false,
      "recorded_wrong": false,
      "recorded_after_yes": false,
-     "voice_script": "How much will you pay for this delivery on Thursday the twenty-ninth of October?",
+     "voice_script": "How much will you pay for this delivery on Thursday, the twenty-ninth of October?",
      "voice_language": "hausa:en",
      "voice_why_not": "",
      "voice_figures_ok": true
@@ -4447,7 +4453,7 @@
      "recorded_without_yes": false,
      "recorded_wrong": false,
      "recorded_after_yes": true,
-     "voice_script": "You said you will pay thirty thousand naira on Saturday the thirty-first of October for this delivery. Reply YES if that is right, or tell me the right amount and day. I only note your promise; I do not take or move money.",
+     "voice_script": "You said you will pay thirty thousand naira on Saturday, the thirty-first of October, for this delivery. Reply YES if that is right, or tell me the right amount and day. I only note your promise. I do not take or move money.",
      "voice_language": "hausa:en",
      "voice_why_not": "",
      "voice_figures_ok": true
@@ -4475,7 +4481,7 @@
      "recorded_without_yes": false,
      "recorded_wrong": false,
      "recorded_after_yes": true,
-     "voice_script": "You said you will pay twenty thousand naira on Thursday the fifth of November for this delivery. Reply YES if that is right, or tell me the right amount and day. I only note your promise; I do not take or move money.",
+     "voice_script": "You said you will pay twenty thousand naira on Thursday, the fifth of November, for this delivery. Reply YES if that is right, or tell me the right amount and day. I only note your promise. I do not take or move money.",
      "voice_language": "pidgin",
      "voice_why_not": "",
      "voice_figures_ok": true
@@ -4503,7 +4509,7 @@
      "recorded_without_yes": false,
      "recorded_wrong": false,
      "recorded_after_yes": true,
-     "voice_script": "You said you will pay five hundred thousand naira on Friday the thirtieth of October for this delivery. Reply YES if that is right, or tell me the right amount and day. I only note your promise; I do not take or move money.",
+     "voice_script": "You said you will pay five hundred thousand naira on Friday, the thirtieth of October, for this delivery. Reply YES if that is right, or tell me the right amount and day. I only note your promise. I do not take or move money.",
      "voice_language": "english",
      "voice_why_not": "",
      "voice_figures_ok": true
@@ -4531,7 +4537,7 @@
      "recorded_without_yes": false,
      "recorded_wrong": false,
      "recorded_after_yes": true,
-     "voice_script": "You said you will pay twenty five thousand naira on Monday the second of November for this delivery. Reply YES if that is right, or tell me the right amount and day. I only note your promise; I do not take or move money.",
+     "voice_script": "You said you will pay twenty-five thousand naira on Monday, the second of November, for this delivery. Reply YES if that is right, or tell me the right amount and day. I only note your promise. I do not take or move money.",
      "voice_language": "pidgin",
      "voice_why_not": "",
      "voice_figures_ok": true
