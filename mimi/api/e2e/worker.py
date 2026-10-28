@@ -138,9 +138,17 @@ def run(db_url: str, *, live: bool, cache_dir: Path, worker_id: str, pause: str 
                         kill_plan=Path(kill_plan) if kill_plan else None)
     stop = threading.Event()
     stopper = Path(stop_file) if stop_file else None
+    flush = getattr(agent.exporter, "flush", None)
     while not stop.is_set():
         if stopper is not None and stopper.exists():
             break
         if agent.process() is None:
             time.sleep(0.05)
+        elif flush is not None:
+            # Traces on: send this job's trace before the next claim, so a
+            # planned SIGKILL during a later job never loses it (RAI-272).
+            flush(10.0)
+    close = getattr(agent.exporter, "close", None)
+    if close is not None:
+        close(10.0)
     return 0

@@ -206,6 +206,19 @@ def test_exporter_sends_redacted_traces_and_scores() -> None:
     assert all(s["trace_id"] for s in client.scores)
 
 
+def test_flush_sends_each_job_before_the_next_claim() -> None:
+    # A worker that may be SIGKILLed next calls flush() after every job, so a
+    # finished job's trace is out before the kill (RAI-272: 37 jobs, 37 roots).
+    client = FakeClient()
+    ex = _exporter(client, media=False)
+    _sim(SCREENS, ex)
+    assert ex.flush(5.0) is True
+    roots = [o for o in client.obs if o.get("as_type") == "agent"]
+    assert len(roots) == len(ex.sent) and ex._pending == 0
+    before = client.flushed
+    assert ex.flush(5.0) is True and client.flushed == before + 1
+
+
 def test_broken_langfuse_never_breaks_a_turn() -> None:
     client = FakeClient(fail=True)
     ex = _exporter(client)
