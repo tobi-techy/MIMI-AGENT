@@ -23,6 +23,9 @@ dependencies = [
     "alembic>=1.13.0",
     "httpx>=0.25.0",
     "pydantic>=2.5.0",
+    # Credit (RAI-271) checks shelf photos in code (blur, light, size, colour)
+    # before and after SAM 3.1. Also draws the synthetic fixtures.
+    "pillow>=10.1",
 ]
 
 [project.optional-dependencies]
