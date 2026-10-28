@@ -45,16 +45,15 @@ from __future__ import annotations
 import hashlib
 import json
 import logging
-import re
 import time
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass, field
 from datetime import UTC, date, datetime
-from decimal import Decimal
 from typing import Any, cast
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
+from mimi.harness import claims as C
 from mimi.harness import guards as G
 from mimi.harness.context import pointer
 from mimi.harness.errors import ConnectorDown, ToolError, error_text
@@ -472,6 +471,8 @@ class Harness:
             names.append(call.name)
             shorts.append(short)
             tools_ms += ms
+        if turn.tool_calls and not state.guard and not state.fail_reason:
+            self._verify_outcomes(state, n_int)
         if turn.tool_calls and not state.guard and not state.fail_reason:
             moved = len(state.intents) > n_int
             for m in state.messages[n_msgs:]:
@@ -964,17 +965,99 @@ class Harness:
                 {"ok": True, "data": data}, ensure_ascii=False)))
             return short, ms
         if spec.name in FIGURE_CHECKED:
+            # The verification gate (mimi.harness.claims): figures, dates, names,
+            # done claims and promises must match this run's records.
             text = str(getattr(parsed, FIGURE_CHECKED[spec.name], "") or "")
-            unknown = invented_figures(state.messages, text)
-            if unknown:
-                return self._invalid(
-                    state, call_id, name,
-                    f"These figures are not in any tool result or the owner's words: "
-                    f"{', '.join(unknown)}.",
-                    "Copy every naira figure exactly from a tool result, then call "
-                    f"{name} again."), (self.perf() - t) * 1000
+            problems = self._verify(state, spec.name, text, parsed, now)
+            if problems:
+                why, nxt = C.repair_text(problems)
+                self._emit(state, "claim_blocked", tool=name, short=why[:200],
+                           data={"problems": problems})
+                G.record_trip("claim_blocked", tool=name, problems=problems, text=text[:240],
+                              helper=state.helper, run_id=state.run_id)
+                return self._invalid(state, call_id, name, why, nxt), (self.perf() - t) * 1000
         return self._propose(state, helper, spec, ctx, call_id, parsed, out, scope,
                              position, t)
+
+    def _verify(self, state: LoopState, tool: str, text: str, parsed: BaseModel,
+                now: datetime) -> dict[str, list[str]]:
+        args = parsed.model_dump(mode="json")
+        channel = str(args.get("channel") or "")
+        other = sum(1 for d in state.drafts if d.channel != channel and d.kind != "question")
+        return C.check(tool, text, messages=state.messages, intents=state.intents,
+                       today=now.astimezone(LAGOS).date(), wake_source=state.wake_source,
+                       names=self._names(state.tenant_id), other_drafts=other,
+                       outcomes=False, history_end=self._history_end(state))
+
+    @staticmethod
+    def _history_end(state: LoopState) -> int:
+        return state.prefix_len + state.history_len if state.prefix_len else 0
+
+    def _verify_outcomes(self, state: LoopState, n_int: int) -> None:
+        """After the step: every message proposed in it that says something was
+        done, or promises a later action, must be backed by what the step's
+        tools actually did. A held message is withdrawn (it never leaves) and
+        the model gets the run's one repair; a second miss fails safe."""
+        held: list[tuple[IntentRecord, dict[str, list[str]]]] = []
+        for rec in state.intents[n_int:]:
+            if rec.tool not in FIGURE_CHECKED or rec.tool not in C.PERSON_FACING:
+                continue
+            text = str(rec.payload.get(FIGURE_CHECKED[rec.tool]) or "")
+            channel = str(rec.payload.get("channel") or "")
+            other = sum(1 for d in state.drafts if d.channel != channel
+                        and d.kind != "question" and d.idempotency_key != rec.idempotency_key)
+            problems = C.check_outcomes(rec.tool, text, messages=state.messages,
+                                        intents=state.intents, wake_source=state.wake_source,
+                                        other_drafts=other, history_end=self._history_end(state))
+            if problems:
+                held.append((rec, problems))
+        if not held:
+            return
+        keys = {r.idempotency_key for r, _ in held}
+        state.intents = [i for i in state.intents if i.idempotency_key not in keys]
+        state.drafts = [d for d in state.drafts if d.idempotency_key not in keys]
+        if any(r.tool == "ask_question" for r, _ in held):
+            state.question = ""
+        state.ends_turn = False
+        why_all = []
+        for rec, problems in held:
+            why, _ = C.repair_text(problems)
+            why_all.append(why)
+            text = str(rec.payload.get(FIGURE_CHECKED[rec.tool]) or "")
+            self._emit(state, "claim_blocked", tool=rec.tool, short=why[:200],
+                       data={"problems": problems, "withdrawn": rec.idempotency_key})
+            G.record_trip("claim_blocked", tool=rec.tool, problems=problems, text=text[:240],
+                          helper=state.helper, run_id=state.run_id)
+        _, nxt = C.repair_text(held[0][1])
+        if state.repair_step == state.step:
+            # A tool call in this same step is already being repaired (say the
+            # follow-up the message promises had bad arguments): one repair
+            # turn fixes both.
+            state.messages.append({"role": "user", "content": (
+                "[Mimi harness] " + " ".join(why_all) + " It was not sent. " + nxt)})
+        elif state.repairs_used < self.max_repairs:
+            state.repairs_used += 1
+            state.repair_step = state.step
+            self._emit(state, "repair_requested", tool=held[0][0].tool,
+                       short=why_all[0][:200], data={"reason": "claims"})
+            state.messages.append({"role": "user", "content": (
+                "[Mimi harness] " + " ".join(why_all) + " It was not sent. " + nxt)})
+        else:
+            self._emit(state, "model_output_invalid", tool=held[0][0].tool,
+                       short=why_all[0][:200])
+            state.fail_reason = f"unbacked claim after one repair: {why_all[0]}"[:300]
+
+    def _names(self, tenant_id: str) -> tuple[str, ...]:
+        """This distributor's shop and product names (for the names check)."""
+        cache = self.__dict__.setdefault("_name_cache", {})
+        if tenant_id not in cache:
+            fn = getattr(self.book, "known_names", None)
+            try:
+                cache[tenant_id] = tuple(fn(tenant_id)) if fn is not None else ()
+            except Exception as exc:  # a lookup failure never breaks a turn
+                log.warning("known_names failed: %s", type(exc).__name__)
+                cache[tenant_id] = ()
+        return cast(tuple[str, ...], cache[tenant_id])
 
     def _tool_bug(self, state: LoopState, call_id: str, name: str, exc: Exception,
                   t: float, *, scope: str = "") -> tuple[str, float]:
@@ -1145,68 +1228,15 @@ FIGURE_CHECKED: dict[str, str] = {
     "notify_owner": "message",
     "ask_helper": "task",
 }
-_NAIRA_IN_TEXT = re.compile(r"(?:\bN|₦|NGN\s?)\s?(\d[\d,]*(?:\.\d{1,2})?)\s?(k|m)?\b", re.I)
-_SLICE = re.compile(r"<book_slice[^>]*>\s*(\{.*?\})\s*</book_slice>", re.S)
-_OWNER_NUM = re.compile(r"(?:N|₦)?\s?(\d[\d,]*(?:\.\d+)?)\s?(k|m)?\b", re.I)
-
-
-def _kobo_of(num: str, suffix: str | None) -> int:
-    value = Decimal(num.replace(",", ""))
-    mult = {"k": 1_000, "m": 1_000_000}.get((suffix or "").lower(), 1)
-    return int(value * mult * 100)
-
-
 def _known_kobo(messages: Sequence[dict[str, Any]]) -> set[int]:
-    known: set[int] = set()
-
-    def walk(node: Any, key: str = "") -> None:
-        if isinstance(node, dict):
-            for k, v in node.items():
-                walk(v, k)
-        elif isinstance(node, list):
-            for v in node:
-                walk(v, key)
-        elif isinstance(node, int) and not isinstance(node, bool) and key.endswith("_kobo"):
-            known.add(node)
-        elif isinstance(node, str) and key == "preview":
-            for m in _NAIRA_IN_TEXT.finditer(node):
-                known.add(_kobo_of(m.group(1), m.group(2)))
-
-    for m in messages:
-        if m.get("role") == "tool":
-            try:
-                walk(json.loads(m.get("content") or ""))
-            except ValueError:
-                continue
-        elif m.get("role") == "user":
-            # The book slice the context builder read from Go (RAI-281).
-            for block in _SLICE.findall(str(m.get("content") or "")):
-                try:
-                    walk(json.loads(block))
-                except ValueError:
-                    pass
-            # The owner's own figures ("over 50k") may be repeated back.
-            for hit in _OWNER_NUM.finditer(str(m.get("content") or "")):
-                try:
-                    known.add(_kobo_of(hit.group(1), hit.group(2)))
-                except ArithmeticError:
-                    continue
-    return known
+    """Figures this run may state: tool results, the book slice, helper
+    verdicts and the owner's own words. Never shop text (RAI-313)."""
+    return C.sources(messages).kobo
 
 
 def invented_figures(messages: Sequence[dict[str, Any]], text: str) -> list[str]:
     """Naira figures in ``text`` that no tool result (or the owner) gave."""
-    known = _known_kobo(messages)
-    bad = []
-    for m in _NAIRA_IN_TEXT.finditer(text):
-        try:
-            kobo = _kobo_of(m.group(1), m.group(2))
-        except ArithmeticError:
-            bad.append(m.group(0))
-            continue
-        if kobo not in known:
-            bad.append(m.group(0).strip())
-    return bad
+    return C.invented_figures(C.sources(messages), text)
 
 
 def _short(out: BaseModel, name: str) -> str:

@@ -334,6 +334,12 @@ class FakeGo:
             self.accepted[business] = GateDecision(business, kind, tier, outcome)
             return business
 
+    def known_names(self, tenant_id: str) -> list[str]:
+        """This distributor's shop and product names (the verification gate's
+        names check, ``mimi.harness.claims``)."""
+        self._tenant(tenant_id)
+        return [s.name for s in self.world.shops] + [k.name for k in self.world.skus]
+
     def recent_count(self, tenant_id: str, kind: str, shop_id: str, window_s: float) -> int:
         """Loop guards (``mimi.harness.guards``): shop messages or follow-ups
         Go applied for this shop. The fake world is one synthetic day, so the

@@ -348,7 +348,12 @@ def test_invented_figures_in_a_message_are_refused_and_repaired() -> None:
     assert r.status == "done"
     assert [d.body for d in r.outbound_drafts] == ["Mama Sola Provisions owes N3,497,300."]
     assert any("N3,500,000" in t for t in tool_texts(model))
-    assert invented_figures([{"role": "user", "content": "over 50k"}], "over N50,000") == []
+    owner = {"role": "user", "content": "<owner_message>\nover 50k\n</owner_message>"}
+    assert invented_figures([owner], "over N50,000") == []
+    # A number only in shop text is not an owner figure (RAI-313).
+    shop = {"role": "user", "content": '<shop_message untrusted="true">\nover 50k\n'
+            "</shop_message>"}
+    assert invented_figures([shop], "over N50,000") == ["N50,000"]
 
 
 def test_reads_carry_naira_text_written_by_code() -> None:
