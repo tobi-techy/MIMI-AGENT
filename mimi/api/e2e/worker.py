@@ -42,10 +42,21 @@ class PausingAgent(Agent):
     pause_turn: str = ""
     pause_step: int = 0
     marker: Path | None = None
+    # RAI-301: a turn the runner wants held while it sends a message mid-task.
+    # ``hold-<turn_id>`` in this directory holds the turn after its first saved
+    # loop state (lease kept alive) until the runner deletes the file.
+    hold_dir: Path | None = None
 
     def _checkpoint(self, holder: list[Claim], ck: dict[str, Any]) -> None:
         super()._checkpoint(holder, ck)
         loop = ck.get("loop") or {}
+        if self.hold_dir is not None and "loop" in ck and int(loop.get("step", 0)) == 0:
+            hold = self.hold_dir / f"hold-{holder[0].turn_id}"
+            if hold.exists():
+                (self.hold_dir / f"held-{holder[0].turn_id}").write_text("held\n")
+                end = time.monotonic() + 120
+                while hold.exists() and time.monotonic() < end:
+                    time.sleep(0.05)
         if (self.pause_turn and holder[0].turn_id == self.pause_turn
                 and int(loop.get("step", 0)) >= self.pause_step):
             if self.marker is not None:
@@ -61,6 +72,8 @@ def build_agent(db_url: str, *, live: bool, paths: CachePaths, worker_id: str,
     agent = PausingAgent(make_engine(db_url), models=[tool], router_model=router, deps=deps,
                          lease_s=LEASE_S, worker_id=worker_id, clock=lambda: SIM_NOW,
                          exporter=exporter_from_env(environment="e2e"))
+    if usage is not None:
+        agent.hold_dir = usage.parent
     if pause:
         turn, _, step = pause.rpartition(":")
         agent.pause_turn, agent.pause_step, agent.marker = turn, int(step or 1), marker

@@ -90,12 +90,13 @@ BASE_TIERS: dict[str, Tier] = {
     "read_stock_answer": "auto",
     "record_stock_count": "notify",
     "draft_restock": "approve",
+    "revise_restock": "approve",
 }
 
 # Tools whose intent only the owner may accept: no table edit or amount rule
 # lowers them below approve.
 ALWAYS_APPROVE: frozenset[str] = frozenset({"submit_credit_review", "flag_payment_proof",
-                                            "draft_restock"})
+                                            "draft_restock", "revise_restock"})
 
 
 class RiskPolicy(Protocol):

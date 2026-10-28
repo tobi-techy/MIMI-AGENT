@@ -26,7 +26,8 @@ console / WhatsApp webhook
   framework), the agent (`agent.py`), settings (`config.py`), console reads
   (`reads.py`), the helpers it hires (`helpers.py`) and the no-key model
   (`offline.py`).
-* `mimi/store/`: tables (`schema.py`, alembic `0006_api_store`, `0007_tenant_days`), the engine
+* `mimi/store/`: tables (`schema.py`, alembic `0006_api_store`, `0007_tenant_days`,
+  `0008_thread_inbox`), the engine
   (`db.py`), `SqlGo` (`book.py`, the same ports as `FakeGo`), the turn queue
   (`queue.py`), the context builder's stores (`context_stores.py`) and the
   seed (`seed.py`).
@@ -123,7 +124,7 @@ approval reads as 404. Keys are compared by SHA-256 in constant time; give
 | `GET /v1/threads/{thread_id}` | owner | Messages, reasoning steps (routing and every harness step: tool, tier, short line, model, cost, time; never the model's private text), turns, router state |
 | `GET /v1/shops` | owner | Shops with credit limit, outstanding and overdue (kobo and naira, summed in code), phone as last four digits |
 | `GET /v1/shops/{shop_id}` | owner | Plus open invoices, payments, promises, the last 10 deliveries with lines, disputes |
-| `GET /v1/approvals` | owner | `status=pending` (default), `approved`, `rejected`, `all`; each with the tool, preview, payload and the drafted message |
+| `GET /v1/approvals` | owner | `status=pending` (default), `approved`, `rejected`, `superseded`, `withdrawn`, `all`; each with the tool, preview, payload, the drafted message and `supersedes` / `superseded_by` (RAI-301) |
 | `POST /v1/approvals/{id}/approve` | owner | Releases the drafted message, marks the intent approved and wakes the helper on its thread (`approval_answered`, through the router). A money verb is refused (409). Deciding twice is 409 |
 | `POST /v1/approvals/{id}/reject` | owner | Nothing is sent; the helper is told |
 | `GET /v1/credit` | owner | Per-shop limit, outstanding, available, and credit requests from helpers' credit intents (Credit, RAI-271) |
@@ -145,7 +146,7 @@ and write only intents Go applies:
 | Collector | what a shop owes, reminders, promises | its 13 tools (RAI-279) |
 | Order | `order/drop-confirmation` | `get_open_deliveries`, `read_receipt_reply` (auto); `send_delivery_receipt`, `record_delivery_consent`, `flag_delivery_to_owner`, `ask_receipt_again` (notify) |
 | Proof | `proof/fake-alert-check` | `check_payment_screenshot` (auto), `record_payment_proof` (notify, level likely, never money), `flag_payment_proof` (approve, always) |
-| Stock | `stock/stock-count` | `get_stock_estimates`, `read_stock_answer` (auto); `ask_stock_count`, `record_stock_count` (notify); `draft_restock` (approve, always; `places_order: false`) |
+| Stock | `stock/stock-count` | `get_stock_estimates`, `read_stock_answer` (auto); `ask_stock_count`, `record_stock_count` (notify); `draft_restock`, `revise_restock` (approve, always; `places_order: false`) |
 | Credit | `credit/credit-request` | `get_credit_file`, `count_shelf_photo` (SAM 3.1), `prepare_credit_review` (auto); `ask_for_shelf_photo` (notify); `submit_credit_review` (approve, always; never a limit change) |
 | Mimi | `mimi/chat`, `mimi/owner-brief` | `send_to_user` only. The owner brief has no data in this build, so it says the daily brief is not ready yet and gives no figures |
 
@@ -189,6 +190,86 @@ An open ask binds the shop's next reply to the helper that asked
   tier, reason `escalated`, the shop's words quoted, the same business key
   as Order's own flag, so it is never recorded twice). Never consent, never
   a money move. The route result carries `delivery_flagged`.
+
+### Steering: every part of every message, even mid-task (RAI-301)
+
+Mimi hears everything a shop or the owner sends, in any form, and answers
+each thing once (`mimi/harness/steer.py`, `mimi/api/steering.py`, wired in
+`Agent`):
+
+* **Parts (code).** A message, or a burst of them, is split into parts: each
+  typed sentence, each sentence of a voice-note transcript (split where a
+  new clause starts too, since speech-to-text has no full stops), an image
+  (a payment screenshot or a photo, with its caption) and a document (with
+  its caption). The path is the same for every modality; nothing new reads
+  media. A voice note's words are its transcript (`mimi.voice`), a
+  screenshot is read by Proof, a shelf photo by the helper that asked for it
+  or whose open item it supports, a document by nobody yet.
+* **Labels (model).** One Muse Spark call with a strict schema labels each
+  part: `current` (what Mimi is handling now, including the answer to its
+  open ask), `adds`, `corrects`, `cancels` (with the open task it is about),
+  `new` (a separate request), `chat` or `unclear`. The stage runs only when a
+  message has two or more parts or the thread has open work; otherwise the
+  turn runs exactly as before. A model error or an unparseable answer labels
+  everything `current` (no split, nothing changed).
+* **Plan (code).** The routed helper answers the `current` parts (its event
+  carries only those, and a note says the rest is answered elsewhere). Each
+  `new` part becomes its own follow-up turn on the same thread
+  (`turns.solo`: never merged), queued right after the turn it came from and
+  before any later message. A follow-up split off a message that answered
+  the open ask does not bind to that ask; the ask stays open. Every part's
+  disposition is on the turn result (`result.steer.plan.dispositions`).
+* **Open tasks.** Pending approvals on the thread, items decided in the last
+  48 hours, and receipts, payment promises and proofs recorded in the last
+  48 hours (`steering.open_tasks`), each with a line written by code, go in
+  the newest-message notes so "that order" resolves, and are what a
+  correction can be about.
+* **Corrections (code order).** Unsure (`corrects` or `cancels` below 0.6, or
+  no single task it is about) -> one short question. Money or credit
+  (Collector, Credit, Proof, a payment promise) -> one short question. Already
+  decided (approved, rejected, applied) -> never edited: the owner gets a
+  console note quoting the shop and the shop is told it went to the owner.
+  Cancel of a pending item -> withdrawn (`approvals.status = withdrawn`).
+  Correction of a pending item -> the owning helper makes a new version
+  (`revise_restock` for a restock draft: the quantity must be a number in the
+  shop's own words, checked in code, priced and capped by code); code then
+  marks the old pending approval `superseded` (`superseded_by`, the new one
+  `supersedes`), a compare-and-set on `pending`. A superseded or withdrawn
+  item cannot be approved (409). A restock correction with no number asks.
+* **The question.** A correction question is written by code and waits 24
+  hours for YES or NO (`ThreadState.fix`). YES makes the change through the
+  owning helper when it is a pending non-money item or a payment promise,
+  and tells the owner otherwise; NO leaves it as it is.
+
+### Messages that arrive while a turn runs (RAI-301)
+
+A message for a thread whose turn is running is written to `thread_inbox`
+in the same transaction as its queued turn (alembic `0008_thread_inbox`).
+No second turn starts on the thread. At its next step boundary the running
+loop reads the inbox (owner rows first, then oldest), labels the parts
+against the task in progress (`t0`) and the open tasks, and:
+
+* `current`, `adds`, `corrects`, `unclear` and `chat` parts are **absorbed**:
+  appended to the loop as an untrusted note on the newest message ("New
+  message on this thread while you were working ... answer it in this
+  turn's one reply"). The message's turn is merged into the running one and
+  its id joins the batch, so tools read it (a stock answer reader skips it,
+  `mid_task`).
+* `cancels` of the task in progress, from the person who started it or the
+  owner, ends the turn `cancelled_by_sender` with nothing applied and one
+  short reply. A shop can never cancel a routine or the owner's work.
+* `new` parts, a payment screenshot (only Proof reads one) and anything about
+  another open task are **released**: the queued turn runs right after, or a
+  follow-up turn for those parts when the rest was absorbed.
+
+Absorbing is one compare-and-set (`TurnQueue.absorb`): the loop state with
+the note in it, the merge, the batch and the inbox rows. A worker that lost
+its lease writes none of it, and a new worker carries on from the saved
+state with the message absorbed exactly once
+(`tests/test_steer.py::test_absorbed_message_survives_a_worker_kill_exactly_once`).
+A message that lands after the last step is never lost: its queued turn is
+claimed next and the claim marks the inbox row `released`.
+`MIMI_STEER=0` turns the steer stage and the inbox reading off.
 
 The queue takes a lapsed lease first, then the owner, then shops and reps,
 then webhooks and routines; oldest first within each.
@@ -240,8 +321,9 @@ returns the last four digits only.
 
 * WhatsApp send and the webhook adapter (signature check, media download)
   are not here yet; the API returns the replies for the adapter to send.
-* The owner's mid-run steering (a second owner message reaching a running
-  turn) is queued as the next turn instead.
+* A message mid-run reaches the running turn through the inbox (RAI-301). A
+  receipt ask and a correction question open at once on one thread: a bare
+  YES binds to the receipt.
 * Brand turns still report `no_helper_yet:brand`; the other helpers are
   hired (see "Helpers hired" above).
 * One live day per tenant (`tenants.live_date`) stands in for the book's

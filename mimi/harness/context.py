@@ -409,10 +409,13 @@ class ContextBuilder:
     # ------------------------------------------------------------ build
 
     def build(self, event: RunEvent, helper: Any, skill: str, *,
-              verdicts: Sequence[str] = (), job: str = "") -> Context:
+              verdicts: Sequence[str] = (), job: str = "",
+              extra_notes: Sequence[str] = ()) -> Context:
         """``helper`` is a ``mimi.harness.loop.Helper``. ``verdicts`` are other
         helpers' findings (Proof on a screenshot): text only, never media.
-        ``job`` names the routine or check-in that fired, if one did."""
+        ``job`` names the routine or check-in that fired, if one did.
+        ``extra_notes`` change per turn (the thread's open tasks, a correction
+        the shop made: RAI-301), so they go on the newest message only."""
         tenant, thread = event.tenant_id, event.thread_id
         budget = self.budget(helper.name)
         man = Manifest(tenant_id=tenant, thread_id=thread, helper=helper.name, skill=skill,
@@ -460,6 +463,7 @@ class ContextBuilder:
         focus = SKILL_FOCUS.get(skill, "")
         if focus:
             notes = [f"routed to {skill}: {focus}", *notes]
+        notes.extend(n for n in extra_notes if n not in notes)
         newest = self._newest(event, notes, slice_data, verdicts, job)
         man.notes = notes
 

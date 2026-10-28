@@ -1,6 +1,6 @@
 PY ?= python
 
-.PHONY: credit-eval credit-eval-live credit-fixtures sim-credit e2e e2e-live binding-eval binding-eval-live
+.PHONY: credit-eval credit-eval-live credit-fixtures sim-credit e2e e2e-live binding-eval binding-eval-live steer-eval steer-eval-live
 .PHONY: install test eval eval-live eval-fake voice-eval voice-eval-live voice-fixtures proof-eval proof-eval-live proof-fixtures stock-backtest stock-eval stock-eval-live stock-eval-fake sim-stock trace-stock sim sim-live sim-voice sim-voice-v2 sim-screens trace-smoke langfuse-setup langfuse-monitor langfuse-datasets proof-experiment voice-experiment receipts-experiment judge-calibration world-check lint typecheck secrets provenance migrate check harness-eval harness-eval-live trace-harness router-eval router-eval-live context-eval context-eval-live router-train trace-router api api-worker api-seed api-openapi api-openapi-check
 
 install:            ## editable install with dev tools
@@ -78,7 +78,7 @@ provenance:         ## every commit was made in the hackathon window
 migrate:            ## create Mimi's tables; set MIMI_DB_URL first
 	alembic upgrade head
 
-check: lint typecheck test api-openapi-check eval voice-eval proof-eval stock-backtest stock-eval harness-eval router-eval context-eval credit-eval e2e binding-eval world-check secrets provenance
+check: lint typecheck test api-openapi-check eval voice-eval proof-eval stock-backtest stock-eval harness-eval router-eval context-eval credit-eval e2e binding-eval steer-eval world-check secrets provenance
 
 sim-voice-v2:       ## offline sim: voice notes, payment promises, voice replies
 	META_API_KEY= SPITCH_API_KEY= $(PY) -m mimi.sim --shops 3 --transcript --voice 1 --promises 1 --voice-replies
@@ -194,3 +194,11 @@ binding-eval-live:  ## record the binding eval's Muse Spark calls (needs META_AP
 
 e2e-live:           ## record what is missing (needs META_API_KEY; about N600 from empty) and write eval/e2e/e2e.report.*
 	$(PY) -m mimi.api.e2e --live
+
+# --- Steering: every part of every message, even mid-task (RAI-301) ---
+
+steer-eval:         ## 53 held-out cases (multi-part, mid-task, corrections, voice, screenshots, photos, documents), replaying recorded Muse Spark answers; 90% and zero lost, duplicate, money or decided edits
+	META_API_KEY= $(PY) -m mimi.api.steer_eval --no-write
+
+steer-eval-live:    ## record the steer eval's Muse Spark calls (needs META_API_KEY; about N390 from empty)
+	$(PY) -m mimi.api.steer_eval --live

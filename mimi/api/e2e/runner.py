@@ -27,6 +27,7 @@ The run, in order:
 
 from __future__ import annotations
 
+import hashlib
 import json
 import os
 import signal
@@ -213,7 +214,10 @@ def collect(*, live: bool, cache_dir: Path, workdir: Path | None = None) -> Run:
     world = load_world()
     engine = make_engine(db_url)
     ensure_schema(engine)
-    seed_world(engine, world)
+    # The run's model spend passed the default N500 daily cap once the steering
+    # scenes were added (RAI-301): the synthetic tenant gets N1,000 so the run
+    # measures the scenes, not the cap (the cap has its own harness checks).
+    seed_world(engine, world, daily_cap_kobo=100_000)
     seed_world(engine, world, tenant_id=OTHER_TENANT, name="Palm Way Foods")
     run.book_before = book_digest(engine, sc.TENANT)
     keys = parse_keys(f"{sc.TENANT}:owner:{KEYS['owner']},{sc.TENANT}:channel:{KEYS['channel']},"
@@ -265,6 +269,27 @@ def collect(*, live: bool, cache_dir: Path, workdir: Path | None = None) -> Run:
                 asked_again = any(x["kind"] == "ask_receipt_again" for x in
                                   shop_replies(r.view))
                 mimi_said = last_shop_text(r.view) if asked_again else ""
+
+        # ------------------------------------- steer: a two-part receipt reply
+        sid = sc.MULTIPART_SHOP
+        d = next(x for x in world.live_deliveries if x.shop_id == sid)
+        t0 = at(d.minute // 60, d.minute % 60)
+        route = ("order/drop-confirmation",)
+        send(TurnRec("steer_multipart", sid, "delivery_completed", "", route),
+             api.event(f"e2e.dlv.{d.delivery_id}", "webhook", "delivery_completed", sid, t0))
+        mid = f"e2e.{sid}.receipt.multi"
+        send(TurnRec("steer_multipart", sid, "reply", "", route),
+             api.turn(mid, phone=shops[sid].phone, text=sc.MULTIPART_TEXT,
+                      when=t0 + timedelta(minutes=15)))
+        # The balance question is its own turn, queued right after (RAI-301).
+        fu = turn_id_for(sc.TENANT, f"{mid}#p2")
+        with engine.connect() as conn:
+            exists = conn.execute(sa.select(s.turns.c.turn_id).where(
+                s.turns.c.turn_id == fu)).first() is not None
+        if exists:
+            send(TurnRec("steer_multipart", sid, "followup", "",
+                         ("collector/collections", "collector/payment-check")), fu)
+        run.checks["multipart_followup"] = fu if exists else ""
 
         # ---------------------------------------------------- proof
         for sid, screens in sc.PROOF_SHOPS.items():
@@ -328,6 +353,35 @@ def collect(*, live: bool, cache_dir: Path, workdir: Path | None = None) -> Run:
         run.checks["burst_ids"] = [b.turn_id for b in burst]
         run.checks["killed_turn"] = stock_turn
 
+        def midtask(sid: str, text: str, button: str) -> TurnRec:
+            """RAI-301: the stock answer turn is held after its first saved state;
+            the shop's voice note arrives while it runs and goes to the inbox."""
+            ext = f"e2e.{sid}.stock.1"
+            tid = turn_id_for(sc.TENANT, ext)
+            hold, held = wd / f"hold-{tid}", wd / f"held-{tid}"
+            hold.write_text("hold\n")
+            rec = send(TurnRec("stock", sid, "answer1", "", ("stock/stock-count",)),
+                       api.turn(ext, phone=shops[sid].phone, text=text, button_id=button,
+                                when=at(8, 10)), wait=False)
+            end = time.monotonic() + TURN_TIMEOUT_S
+            while not held.exists() and time.monotonic() < end:
+                time.sleep(0.05)
+            run.checks["midtask_held"] = held.exists()
+            voice = {"kind": "voice", "mime": "audio/ogg", "transcript": sc.MIDTASK_VOICE,
+                     "sha256": hashlib.sha256(sc.MIDTASK_VOICE.encode()).hexdigest()}
+            vrec = send(TurnRec("steer_midtask", sid, "voice_correction", "",
+                                ("stock/stock-count",)),
+                        api.turn(f"e2e.{sid}.stock.voice", phone=shops[sid].phone,
+                                 media=voice, when=at(8, 12)), wait=False)
+            # Let the inbox row land before the turn takes its next step.
+            time.sleep(0.3)
+            hold.unlink()
+            finish(rec)
+            finish(vrec)
+            run.checks["midtask_voice_turn"] = vrec.turn_id
+            run.checks["midtask_stock_turn"] = rec.turn_id
+            return rec
+
         # ---------------------------------------------------- stock answers
         from mimi.stock.truth import generate_truth
 
@@ -344,10 +398,13 @@ def collect(*, live: bool, cache_dir: Path, workdir: Path | None = None) -> Run:
                 text = sc.stock_answer(persona, world, shops[sid], d_name, unit, left, asked, n)
                 text = text.strip() or "0-2"
                 button = "btn:stock/stock-count" if text in ("0-2", "3-5", "6+") else ""
-                r = send(TurnRec("stock", sid, f"answer{n + 1}", "", ("stock/stock-count",)),
-                         api.turn(f"e2e.{sid}.stock.{n + 1}", phone=shops[sid].phone,
-                                  text=text, button_id=button,
-                                  when=at(8, 10 + 40 * n)))
+                if sid == sc.MIDTASK_SHOP and n == 0:
+                    r = midtask(sid, text, button)
+                else:
+                    r = send(TurnRec("stock", sid, f"answer{n + 1}", "", ("stock/stock-count",)),
+                             api.turn(f"e2e.{sid}.stock.{n + 1}", phone=shops[sid].phone,
+                                      text=text, button_id=button,
+                                      when=at(8, 10 + 40 * n)))
                 again = next((x for x in shop_replies(r.view)
                               if x["kind"] == "ask_stock_count"), None)
                 asked, n = (str(again["text"]) if again else ""), n + 1
@@ -369,6 +426,22 @@ def collect(*, live: bool, cache_dir: Path, workdir: Path | None = None) -> Run:
                                  "height": img.height, "camera_exif": True, "caption": cap},
                           when=at(10, 25)))
 
+        # ------------------------- steer: a screenshot while credit is parked
+        sid = sc.PARKED_SHOP
+        img = sc.screenshot(sc.PARKED_SCREEN)
+        run.checks["parked_before"] = [
+            a for a in api.get("/v1/approvals?status=pending").json()["approvals"]
+            if a["shop_id"] == sid and a["tool"] == "submit_credit_review"]
+        send(TurnRec("steer_parked", sid, "screenshot", "", ("proof/fake-alert-check",)),
+             api.turn(f"e2e.{sid}.parked.1", phone=shops[sid].phone,
+                      media={"kind": "image", "ref": img.ref, "mime": "image/jpeg",
+                             "sha256": img.sha256, "width": img.width, "height": img.height,
+                             "camera_exif": False, "caption": sc.PARKED_CAPTION},
+                      when=at(10, 40)))
+        run.checks["parked_after"] = [
+            a for a in api.get("/v1/approvals?status=all").json()["approvals"]
+            if a["shop_id"] == sid and a["tool"] == "submit_credit_review"]
+
         # ---------------------------------------------------- the owner decides
         pending = api.get("/v1/approvals?status=pending").json()["approvals"]
         run.checks["approvals_before"] = pending
@@ -376,15 +449,16 @@ def collect(*, live: bool, cache_dir: Path, workdir: Path | None = None) -> Run:
         plan = {("submit_credit_review", "shop-011"): "approve",
                 ("submit_credit_review", "shop-020"): "reject",
                 ("draft_restock", "shop-012"): "approve",
-                ("draft_restock", "shop-014"): "reject"}
+                ("draft_restock", "shop-014"): "reject",
+                ("revise_restock", "shop-014"): "reject"}
         for a in pending:
             what = plan.get((a["tool"], a["shop_id"]))
             if what is None:
                 continue
-            r = client.post(f"/v1/approvals/{a['approval_id']}/{what}?wait=false",
-                            json={"note": "e2e owner decision"}, headers=api.h["owner"])
-            decisions[a["approval_id"]] = f"{what}:{r.status_code}"
-            body = r.json()
+            resp = client.post(f"/v1/approvals/{a['approval_id']}/{what}?wait=false",
+                               json={"note": "e2e owner decision"}, headers=api.h["owner"])
+            decisions[a["approval_id"]] = f"{what}:{resp.status_code}"
+            body = resp.json()
             follow = (body.get("follow_up") or {}).get("turn_id") if isinstance(body, dict) \
                 else None
             if follow:
@@ -394,9 +468,9 @@ def collect(*, live: bool, cache_dir: Path, workdir: Path | None = None) -> Run:
         run.checks["decisions"] = decisions
         if decisions:
             first = next(iter(decisions))
-            again = client.post(f"/v1/approvals/{first}/approve?wait=false", json={},
+            twice = client.post(f"/v1/approvals/{first}/approve?wait=false", json={},
                                 headers=api.h["owner"])
-            run.checks["second_decision_status"] = again.status_code
+            run.checks["second_decision_status"] = twice.status_code
         # ---------------------------------------------------- console reads
         run.checks["threads"] = api.get("/v1/threads?limit=200").json()
         run.checks["shops"] = api.get("/v1/shops").json()
@@ -469,4 +543,5 @@ def db_facts(engine: Any) -> dict[str, Any]:
                 s.thread_events.c.tool, s.thread_events.c.cost_kobo, s.thread_events.c.model,
                 s.thread_events.c.data, s.thread_events.c.event_id))],
             "inbound": rows(s.inbound_messages),
+            "inbox": rows(s.thread_inbox),
         }

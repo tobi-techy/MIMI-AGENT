@@ -12,6 +12,9 @@ Pidgin, Yoruba, Igbo or Hausa mixed with English), recorded and replayed.
 | proof | shop-035 (fake then genuine), shop-038 (genuine then fake), shop-025 (fake then genuine) | the shop sends payment screenshots with a caption |
 | stock | shop-012, shop-014 | the weekly stock check -> one-tap count -> the shop answers -> count, restock draft |
 | credit | shop-020 (x01, a cash payer), shop-011 (s11, pays on time) | the shop asks for more credit -> photo ask -> shelf photo -> SAM 3.1 count -> approvals |
+| steer (RAI-301) | shop-033 | receipt -> "Yes all complete. How much I owe now?" -> Order takes the YES, a follow-up turn gives the balance |
+| steer (RAI-301) | shop-014 | while its stock answer runs, a voice note "abeg make am 6 tubs, no be 4" -> absorbed at the next step -> one draft of 6 |
+| steer (RAI-301) | shop-020 | while its credit request waits for the owner, a payment screenshot -> Proof, the credit approval untouched |
 """
 
 from __future__ import annotations
@@ -40,7 +43,21 @@ STOCK_SHOPS: tuple[str, ...] = ("shop-012", "shop-014")
 # shop -> its shelf photo (eval/credit/shelves.jsonl ids)
 CREDIT_SHOPS: dict[str, str] = {"shop-020": "x01", "shop-011": "s11"}
 
-ALL_SHOPS: tuple[str, ...] = (*RECEIPT_SHOPS, *PROOF_SHOPS, *STOCK_SHOPS, *CREDIT_SHOPS)
+# Steering scenes (RAI-301). Fixed words (not personas), so the scene tests one thing.
+# shop-033: the receipt reply carries a second ask. shop-014: a voice note corrects
+# the restock quantity while its stock turn runs. shop-020: a payment screenshot
+# arrives while its credit request waits for the owner.
+MULTIPART_SHOP = "shop-033"
+MULTIPART_TEXT = "Yes all complete. How much I owe now?"
+MIDTASK_SHOP = "shop-014"
+MIDTASK_VOICE = "abeg make am 6 tubs, no be 4"
+MIDTASK_QUANTITY = 6
+PARKED_SHOP = "shop-020"
+PARKED_SCREEN = "g05"
+PARKED_CAPTION = "I don pay part of my balance"
+
+ALL_SHOPS: tuple[str, ...] = (*RECEIPT_SHOPS, *PROOF_SHOPS, *STOCK_SHOPS, *CREDIT_SHOPS,
+                              MULTIPART_SHOP)
 
 
 @dataclass(frozen=True)

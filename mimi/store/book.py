@@ -363,6 +363,11 @@ class SqlGo:
             q = q.where(s.inbound_messages.c.external_id.in_(ids)) if ids else \
                 q.where(s.inbound_messages.c.turn_id == turn_id)
             rows = conn.execute(q).all()
+            # Messages a running turn took in mid-task (RAI-301): a later
+            # correction, never the answer the turn was woken for.
+            mid = set(conn.execute(sa.select(s.thread_inbox.c.external_id).where(
+                s.thread_inbox.c.tenant_id == tenant_id, s.thread_inbox.c.taken_by == turn_id,
+                s.thread_inbox.c.status == "absorbed")).scalars())
         out = []
         for r in rows:
             env = loads(r.envelope, {})
@@ -373,7 +378,8 @@ class SqlGo:
                         "button_id": p.get("button_id", ""),
                         "caption": m.get("caption", ""), "transcript": m.get("transcript", ""),
                         "media_kind": m.get("kind", "none"), "mime": m.get("mime", ""),
-                        "sha256": m.get("sha256", ""), "media_ref": r.media_ref})
+                        "sha256": m.get("sha256", ""), "media_ref": r.media_ref,
+                        "mid_task": r.external_id in mid})
         out.sort(key=lambda x: (x["received_at"], x["message_id"]))
         return out
 

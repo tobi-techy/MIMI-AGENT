@@ -92,6 +92,28 @@
             "title": "Status",
             "type": "string"
           },
+          "superseded_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Superseded By"
+          },
+          "supersedes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Supersedes"
+          },
           "thread_id": {
             "title": "Thread Id",
             "type": "string"
@@ -1375,7 +1397,7 @@
             "required": false,
             "schema": {
               "default": "pending",
-              "pattern": "^(pending|approved|rejected|all)$",
+              "pattern": "^(pending|approved|rejected|superseded|withdrawn|all)$",
               "title": "Status",
               "type": "string"
             }
