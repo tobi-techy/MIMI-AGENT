@@ -17,10 +17,10 @@
   "model_unclear": 6
  },
  "model_calls": 26,
- "prompt_tokens": 24568,
- "completion_tokens": 11989,
- "latency_p50_s": 2.26,
- "latency_p95_s": 3.38,
+ "prompt_tokens": 24784,
+ "completion_tokens": 13273,
+ "latency_p50_s": 3.19,
+ "latency_p95_s": 5.59,
  "by_language": {
   "english": 1.0,
   "hausa": 1.0,
@@ -42,7 +42,7 @@
   "injection_drafts": true
  },
  "model": "muse-spark-1.3",
- "wall_seconds": 0.54,
- "live_calls_this_pass": 0,
- "replayed_calls": 26
+ "wall_seconds": 15.28,
+ "live_calls_this_pass": 26,
+ "replayed_calls": 0
 }

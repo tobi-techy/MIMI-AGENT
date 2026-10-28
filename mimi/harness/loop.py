@@ -62,6 +62,7 @@ from mimi.harness.gateway import AllModelsFailed, Gateway, worst_case_kobo
 from mimi.harness.go import BookAPI, ControlPlane, CrossTenant, EventLog, NoConsent
 from mimi.harness.policy import RiskPolicy
 from mimi.harness.registry import RESERVED_ARGS, ToolContext, Toolset, ToolSpec
+from mimi.harness.style import clean_reply
 from mimi.harness.types import (
     Channel,
     Denial,
@@ -530,6 +531,7 @@ class Harness:
                 "nothing was dropped.")
 
     def _owner_draft(self, state: LoopState, text: str) -> None:
+        text = clean_reply(text, where="owner_question")
         key = "od_" + _h(state.run_id, state.step, "owner_question", text)[:32]
         state.drafts.append(OutboundDraft(
             channel="owner_console", body=text, kind="question", tier="auto",
