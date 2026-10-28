@@ -73,6 +73,18 @@ class EventIn(BaseModel):
     simulated: bool = False
 
 
+class VoiceReply(_Out):
+    """The reply's own text, read aloud (RAI-290): fetch the audio from
+    ``GET /v1/messages/{message_id}/voice`` and send it after the text."""
+
+    script: str
+    voice: str
+    language: str
+    # What the script says, read back from it by code: the same as the text.
+    amounts_kobo: list[int]
+    days: list[str]
+
+
 class Reply(_Out):
     message_id: str
     channel: str
@@ -82,6 +94,7 @@ class Reply(_Out):
     # ready: hand to the channel now. pending_approval: waits for the owner.
     status: str
     at: str
+    voice: VoiceReply | None = None
 
 
 class TurnOut(_Out):

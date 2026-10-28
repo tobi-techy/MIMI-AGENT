@@ -489,6 +489,13 @@
   "latency_s": 1.32,
   "text": "duk kayan sun iso zan biya naira dubu ashirin gobe"
  },
+ "aac01a97cadfa324741c5bd63f702061": {
+  "audio_s": 4.114,
+  "confidence": null,
+  "language": "yo",
+  "latency_s": 1.671,
+  "text": "gbogbo ẹrù ti dé má san ẹgbẹ̀rún mẹ́wàá ní ọlá"
+ },
  "aba7d418290381fe67e2523b78126350": {
   "audio_s": 4.101,
   "confidence": null,
@@ -537,6 +544,13 @@
   "language": "lat",
   "latency_s": 3.274,
   "text": "yeso everything don lan komplete thank you"
+ },
+ "be4243aabd59f5d563822020e06fdb4f": {
+  "audio_s": 4.114,
+  "confidence": null,
+  "language": "yo",
+  "latency_s": 1.616,
+  "text": "gbogbo ẹrù ti dé má san ẹgbẹ̀rún mẹ́wàá ní ọlá"
  },
  "c3e3078bcc111f32e6298ccfcaf040ee": {
   "audio_s": 15.296,

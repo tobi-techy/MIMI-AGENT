@@ -153,6 +153,29 @@ two of either, a bare number under 1,000 could be naira or thousands ("I go
 pay 20 tomorrow"), the weekday is today's (this week or next?), the day has
 passed, or the transcript is `low`.
 
+Words that fit two values are asked about, with both values, never picked
+(28 Oct 2026). `amount_options` and `date_options` carry them, and Mimi's
+one question names both ("Did you mean N2,500 or N2,005 for delivery ...?",
+"Which day will you pay N15,000 for delivery ...: Friday 30 October 2026 or
+Friday 6 November 2026?"):
+
+* "two thousand five", "ten thousand five" (N2,500 or N2,005; N10,500 or
+  N10,005), and "2005" with no naira mark or comma, which is how a
+  transcriber writes "two thousand five";
+* "20" with no mark (N20 or N20,000);
+* "next Friday" when the coming Friday is still in this week (said on a
+  Wednesday: 30 October or 6 November). Said on a Saturday, the coming
+  Friday is already next week, so it is read as that day;
+* "this weekend" (Saturday or Sunday), and the weekday that is today.
+
+Also read since 28 Oct: ordinal days in words ("on the thirtieth", "the
+fifth of November"), Yoruba numbers 11 to 100 (`mẹ́ẹ̀ẹ́dógún`, `méjìlá`,
+`ogún`, ...), Hausa `dubu biyu da ɗari biyar` (2,500) and Igbo `puku abụọ na
+narị ise`, Yoruba `lọ́la` and `lánàá`, Pidgin as people write and
+transcribers hear it ("ago pe", "nex wik", "dis wiikend", "nasaturday").
+Two amounts are never added up: "ten thousand today and ten thousand on
+Friday" is two amounts and two days, so Mimi asks.
+
 What Mimi does (`mimi/receipts/promises.py`, `flow.py`):
 
 1. The delivery is settled first, exactly as before (consent, or an owner
@@ -184,15 +207,29 @@ registered like the others; it is a note for the books and the owner.
 * Spoken: the clarifying question, the request to type, a promise
   read-back and a promise question. The receipt itself (a list of lines and
   figures) is text only.
-* Scripts are fixed templates (`mimi/receipts/voice_replies.py`), never
-  model-written. English and Pidgin say the amount and the day in words
-  ("fifty thousand naira on Saturday the thirty-first of October"), built
-  from the same kobo and date as the text. Yoruba, Igbo and Hausa ask in
-  that language and point to the text for the figures. A check in code
-  drops the voice (text only) if the script says any amount or day the
-  text does not.
+* **The voice note is the text, read aloud** (`mimi/voice/render.py`, 28
+  Oct 2026). Never a second message, never model-written, never
+  translated: the same words, with each naira amount said in words from the
+  same kobo ("N20,000" -> "twenty thousand naira"), each written date said
+  with an ordinal ("Thursday 29 October 2026" -> "Thursday the twenty-ninth
+  of October"), and references such as `dlv-56-9039` read as "this
+  delivery". Then code reads the amounts and days back out of the script:
+  they must be exactly the text's, and for a read-back exactly the flow's
+  code-checked promise. Otherwise the reply is text only. Text only too for
+  kobo amounts, a number code cannot read for certain, a weekday that is not
+  the date's weekday, or a script over 400 characters.
+* The voice is the shop's: a Yoruba, Igbo or Hausa shop hears the (English)
+  text in its own language's voice reading English (`yoruba:en`: `funmi`
+  with `en`). A probe on 26 Oct heard the Yoruba voice reading an English
+  read-back back word for word. A text written in Yoruba, Igbo or Hausa is
+  spoken in that language only when it has no figure in it.
+* Heard back (28 Oct, `eval/voice_values`): one read-back per voice
+  (English, Pidgin, Yoruba, Igbo and Hausa voices) spoken by Spitch and
+  transcribed again by the router; code read the same amount and day from
+  what it heard in 5 of 5.
 * Voices: English `lucy`, Pidgin `tega` (with `en`), Yoruba `funmi`, Igbo
-  `ngozi`, Hausa `amina`; Ogg/Opus at 16 kbps like a WhatsApp voice note.
+  `ngozi`, Hausa `amina` (each also with `en` for an English text); Ogg/Opus
+  at 16 kbps like a WhatsApp voice note.
   A failed speech call sends the text alone.
 * No audio is kept. The audio goes to the channel and is dropped;
   `CachedSpeaker` writes audio to disk only when a caller gives it a
@@ -201,8 +238,63 @@ registered like the others; it is a note for the books and the owner.
   Spitch heard it back as "thirty fourth october", so dates are now spoken
   as ordinal words; the new script was heard back as "fifty thousand naira
   on saturday the thirty first of october".
-* The Yoruba, Igbo and Hausa scripts were written for this repo and have not
-  yet been reviewed by a native speaker.
+* On the API path (`mimi/api/voice.py`): behind `MIMI_VOICE_REPLIES`
+  (off by default; `all`, or a comma list of distributor ids). With the
+  flag on, `VOICE ON [LANGUAGE]` / `VOICE OFF` typed by the shop is
+  recorded by code in the same consent table and answered with a fixed
+  line, without a model call. A reply carries a `voice` block only when the
+  shop opted in, its own message in that turn was a voice note, and the
+  reply is on its WhatsApp and `ready` (never a draft waiting for the
+  owner). The channel fetches the audio from `GET
+  /v1/messages/{message_id}/voice` after sending the text; it is made then
+  and not stored. Only text that went through `send_to_user` (and the
+  loop's figure check) or a code-written message is ever spoken.
+
+## Amounts and dates eval (50 clips, 28 Oct 2026)
+
+`python -m mimi.receipts.values_eval` (replay; CI) and `--live`. 50
+synthetic clips in `eval/voice_values/` (Spitch system voices plus ffmpeg
+market noise, no real voices): English 11, Pidgin 12, Yoruba-flavoured
+English 8, Yoruba 7, Igbo 6, Hausa 6, about paying in the ways above. The
+labels were written and committed before the reader was changed; 20 clips
+are `dev` (looked at while tuning) and 30 are `heldout` (only scored). Each
+clip goes through the speech router (with the shop's language as a hint,
+and again without), the reader, the promise steps (a non-YES answer, then
+an honest shop that says YES only to a right read-back) and the voice
+reply. A third pass reads the label text itself, without speech.
+
+| Pass | Amount and day right | dev | held-out | Wrong read-backs | Recorded without YES | Recorded wrong | Voice figures not in text |
+|---|---|---|---|---|---|---|---|
+| Router, language hint | 37/50 (74%) | 17/20 | 20/30 | 0 | 0 | 0 | 0 |
+| Router, no hint | 35/50 (70%) | 15/20 | 20/30 | 0 | 0 | 0 | 0 |
+| Label text, no speech | 48/50 (96%) | 20/20 | 28/30 | 0 | 0 | 0 | 0 |
+
+* The issue's mark (>= 95% through speech) is **not met**. The reader gets
+  96% of what was said; the misses through speech are the transcribers
+  losing the pay word or the number (for example "I will pay" heard as
+  "there will be", `mẹ́ẹ̀ẹ́dógún` heard as "merun run"). In every miss Mimi
+  either asks or reads nothing; no clip produced a wrong read-back, and
+  nothing was ever recorded without a YES or recorded wrong.
+* The two reader misses on the label text (both held-out, not tuned on):
+  "I go send the money, fifteen thousand, end of the month" (the amount is
+  in its own clause after a comma, so Mimi asks for it) and the instalment
+  clip, which is asked about but keeps one of the two N10,000s as the amount
+  heard so far.
+* CI blocks on the safety marks in every pass and on accuracy falling
+  below the recorded run (74%); the 95% mark is a warning unless
+  `--strict`, the same call as the first voice eval (26 Oct).
+* Cost to record (from `eval/voice_values/values.report.json`): $0.55
+  (fixtures $0.19, Spitch STT $0.14, Muse STT $0.01, voice replies heard
+  back $0.11, plus about $0.10 of probes and the `vn-31` re-record outside
+  the report).
+
+`vn-31` in the receipt eval was rewritten ("... ẹgbẹ̀rún mẹ́wàá ní ọ̀la",
+without "náírà") and re-recorded with the `funmi` voice, because Spitch's
+Yoruba TTS ran on for 15 to 22 s on the old sentence. The router now reads
+its promise right: amount and day 14/14 on clear promises.
+
+* The Yoruba, Igbo and Hausa promise words were written for this repo and
+  have not yet been reviewed by a native speaker.
 
 ## Eval (50 clips)
 
@@ -286,8 +378,10 @@ format), one MP3 and one M4A.
 
 * Real voice notes: only later, only with the speaker's consent, and kept
   out of this public repo (`COMPLIANCE.md`).
-* Native-speaker review of the Yoruba, Igbo and Hausa voice-reply scripts
-  and of the promise words.
+* The 95% amounts-and-dates mark through speech (74% now; the reader alone
+  is at 96%). The next step is the transcriber side: shop keywords and a
+  promise-shaped prompt, or a third STT provider, measured on this set.
+* Native-speaker review of the Yoruba, Igbo and Hausa promise words.
 * One promise per message: "10k today and 10k Friday" (instalments) is
   asked about, not split into two promises.
 * Igbo market days (Eke, Orie, Afọ, Nkwọ) are not read as days; Mimi asks.

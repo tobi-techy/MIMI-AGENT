@@ -728,6 +728,16 @@
           "text": {
             "title": "Text",
             "type": "string"
+          },
+          "voice": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/VoiceReply"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "required": [
@@ -1371,6 +1381,47 @@
         ],
         "title": "ValidationError",
         "type": "object"
+      },
+      "VoiceReply": {
+        "additionalProperties": false,
+        "description": "The reply's own text, read aloud (RAI-290): fetch the audio from\n``GET /v1/messages/{message_id}/voice`` and send it after the text.",
+        "properties": {
+          "amounts_kobo": {
+            "items": {
+              "type": "integer"
+            },
+            "title": "Amounts Kobo",
+            "type": "array"
+          },
+          "days": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Days",
+            "type": "array"
+          },
+          "language": {
+            "title": "Language",
+            "type": "string"
+          },
+          "script": {
+            "title": "Script",
+            "type": "string"
+          },
+          "voice": {
+            "title": "Voice",
+            "type": "string"
+          }
+        },
+        "required": [
+          "script",
+          "voice",
+          "language",
+          "amounts_kobo",
+          "days"
+        ],
+        "title": "VoiceReply",
+        "type": "object"
       }
     },
     "securitySchemes": {
@@ -1858,6 +1909,88 @@
           }
         },
         "summary": "Health"
+      }
+    },
+    "/v1/messages/{message_id}/voice": {
+      "get": {
+        "description": "The reply's text, read aloud: made now, never stored. 404 when the\nreply has no voice note (flag off, the shop did not opt in or did not\nsend a voice note, or the code check on the figures failed). The text\nreply always goes too.",
+        "operationId": "get_voice_v1_messages__message_id__voice_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "message_id",
+            "required": true,
+            "schema": {
+              "title": "Message Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "audio/ogg": {},
+              "audio/wav": {}
+            },
+            "description": "The voice note for this reply"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "A reply's voice note (RAI-290)"
       }
     },
     "/v1/shops": {

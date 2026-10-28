@@ -1,0 +1,37 @@
+{
+ "0e238efdf107327c6bd950324625ffb8": {
+  "format": "ogg",
+  "language": "english",
+  "script": "You said you will pay twenty five thousand naira on Thursday the twenty-ninth of October for this delivery. Reply YES if that is right, or tell me the right amount and day. I only note your promise; I do not take or move money.",
+  "seconds": 13.663,
+  "voice": "lucy"
+ },
+ "1e7ad8ec6b6926965c534f40a829cb35": {
+  "format": "ogg",
+  "language": "igbo:en",
+  "script": "You said you will pay fifteen thousand naira on Thursday the twenty-ninth of October for this delivery. Reply YES if that is right, or tell me the right amount and day. I only note your promise; I do not take or move money.",
+  "seconds": 18.47,
+  "voice": "ngozi"
+ },
+ "21fb22ba3c4b5a98639a1c253775dc3c": {
+  "format": "ogg",
+  "language": "pidgin",
+  "script": "You said you will pay twenty thousand naira on Friday the thirtieth of October for this delivery. Reply YES if that is right, or tell me the right amount and day. I only note your promise; I do not take or move money.",
+  "seconds": 16.276,
+  "voice": "tega"
+ },
+ "255299b9a09fa85065b9519cc6034acd": {
+  "format": "ogg",
+  "language": "yoruba:en",
+  "script": "You said you will pay twenty thousand naira on Thursday the twenty-ninth of October for this delivery. Reply YES if that is right, or tell me the right amount and day. I only note your promise; I do not take or move money.",
+  "seconds": 15.684,
+  "voice": "funmi"
+ },
+ "8e648e935612adcb7c64ebc54f04c644": {
+  "format": "ogg",
+  "language": "hausa:en",
+  "script": "You said you will pay fifteen thousand naira on Thursday the twenty-ninth of October for this delivery. Reply YES if that is right, or tell me the right amount and day. I only note your promise; I do not take or move money.",
+  "seconds": 12.389,
+  "voice": "amina"
+ }
+}

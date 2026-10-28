@@ -2,8 +2,8 @@
  "transcribers": {
   "spitch": {
    "clips": 50,
-   "wer": 0.3126,
-   "wer_folded": 0.281,
+   "wer": 0.294,
+   "wer_folded": 0.2707,
    "verdict_accuracy": 0.9,
    "false_confirms": 0,
    "false_confirm_ids": [],
@@ -19,31 +19,29 @@
    "confirms_n": 24,
    "transcripts_failed": 0,
    "transcripts_low": 1,
-   "latency_mean_s": 1.896,
+   "latency_mean_s": 1.883,
    "latency_max_s": 5.73,
-   "audio_seconds": 206.2,
-   "judge_prompt_tokens": 65595,
-   "judge_completion_tokens": 31365,
+   "audio_seconds": 195.01,
+   "judge_prompt_tokens": 65604,
+   "judge_completion_tokens": 30011,
    "promise_clips_n": 20,
-   "promise_reading_accuracy": 0.95,
+   "promise_reading_accuracy": 1.0,
    "promise_amount_date_n": 14,
-   "promise_amount_date_accuracy": 0.9286,
-   "promise_wrong_ids": [
-    "vn-31"
-   ],
+   "promise_amount_date_accuracy": 1.0,
+   "promise_wrong_ids": [],
    "promises_heard_where_none": 0,
-   "promise_readbacks": 10,
-   "promise_questions": 5,
+   "promise_readbacks": 11,
+   "promise_questions": 4,
    "promise_held_for_delivery": 4,
-   "promise_readbacks_answered": 10,
-   "promise_recorded_right_after_answer": 10,
+   "promise_readbacks_answered": 11,
+   "promise_recorded_right_after_answer": 11,
    "promise_recorded_without_yes": 0,
    "promise_wrong_recorded": 0
   },
   "muse": {
    "clips": 50,
-   "wer": 0.4133,
-   "wer_folded": 0.3638,
+   "wer": 0.4077,
+   "wer_folded": 0.3537,
    "verdict_accuracy": 0.76,
    "false_confirms": 0,
    "false_confirm_ids": [],
@@ -61,36 +59,35 @@
    "confirms_n": 24,
    "transcripts_failed": 0,
    "transcripts_low": 0,
-   "latency_mean_s": 2.436,
-   "latency_max_s": 3.701,
-   "audio_seconds": 206.2,
-   "judge_prompt_tokens": 65489,
-   "judge_completion_tokens": 32903,
+   "latency_mean_s": 2.429,
+   "latency_max_s": 3.669,
+   "audio_seconds": 195.01,
+   "judge_prompt_tokens": 65488,
+   "judge_completion_tokens": 32767,
    "promise_clips_n": 20,
-   "promise_reading_accuracy": 0.7,
+   "promise_reading_accuracy": 0.75,
    "promise_amount_date_n": 14,
-   "promise_amount_date_accuracy": 0.7143,
+   "promise_amount_date_accuracy": 0.7857,
    "promise_wrong_ids": [
     "vn-30",
-    "vn-31",
     "vn-32",
     "vn-35",
     "vn-36",
     "vn-41"
    ],
    "promises_heard_where_none": 0,
-   "promise_readbacks": 6,
+   "promise_readbacks": 7,
    "promise_questions": 4,
    "promise_held_for_delivery": 5,
-   "promise_readbacks_answered": 6,
-   "promise_recorded_right_after_answer": 6,
+   "promise_readbacks_answered": 7,
+   "promise_recorded_right_after_answer": 7,
    "promise_recorded_without_yes": 0,
    "promise_wrong_recorded": 0
   },
   "router": {
    "clips": 50,
-   "wer": 0.2163,
-   "wer_folded": 0.183,
+   "wer": 0.1974,
+   "wer_folded": 0.1725,
    "verdict_accuracy": 0.92,
    "false_confirms": 0,
    "false_confirm_ids": [],
@@ -105,31 +102,29 @@
    "confirms_n": 24,
    "transcripts_failed": 0,
    "transcripts_low": 0,
-   "latency_mean_s": 2.022,
+   "latency_mean_s": 2.009,
    "latency_max_s": 3.669,
-   "audio_seconds": 206.2,
-   "judge_prompt_tokens": 65584,
-   "judge_completion_tokens": 32219,
+   "audio_seconds": 195.01,
+   "judge_prompt_tokens": 65593,
+   "judge_completion_tokens": 30865,
    "promise_clips_n": 20,
-   "promise_reading_accuracy": 0.95,
+   "promise_reading_accuracy": 1.0,
    "promise_amount_date_n": 14,
-   "promise_amount_date_accuracy": 0.9286,
-   "promise_wrong_ids": [
-    "vn-31"
-   ],
+   "promise_amount_date_accuracy": 1.0,
+   "promise_wrong_ids": [],
    "promises_heard_where_none": 0,
-   "promise_readbacks": 10,
-   "promise_questions": 5,
+   "promise_readbacks": 11,
+   "promise_questions": 4,
    "promise_held_for_delivery": 4,
-   "promise_readbacks_answered": 10,
-   "promise_recorded_right_after_answer": 10,
+   "promise_readbacks_answered": 11,
+   "promise_recorded_right_after_answer": 11,
    "promise_recorded_without_yes": 0,
    "promise_wrong_recorded": 0
   },
   "spitch/no-hint": {
    "clips": 50,
-   "wer": 0.349,
-   "wer_folded": 0.3159,
+   "wer": 0.3305,
+   "wer_folded": 0.3057,
    "verdict_accuracy": 0.86,
    "false_confirms": 0,
    "false_confirm_ids": [],
@@ -146,33 +141,30 @@
    "confirms_n": 24,
    "transcripts_failed": 0,
    "transcripts_low": 1,
-   "latency_mean_s": 2.334,
+   "latency_mean_s": 2.332,
    "latency_max_s": 7.585,
-   "audio_seconds": 206.2,
-   "judge_prompt_tokens": 65602,
-   "judge_completion_tokens": 30211,
+   "audio_seconds": 195.01,
+   "judge_prompt_tokens": 65611,
+   "judge_completion_tokens": 28857,
    "promise_clips_n": 20,
-   "promise_reading_accuracy": 0.9,
+   "promise_reading_accuracy": 1.0,
    "promise_amount_date_n": 14,
-   "promise_amount_date_accuracy": 0.8571,
-   "promise_wrong_ids": [
-    "vn-31",
-    "vn-49"
-   ],
+   "promise_amount_date_accuracy": 1.0,
+   "promise_wrong_ids": [],
    "promises_heard_where_none": 0,
-   "promise_readbacks": 9,
-   "promise_questions": 5,
+   "promise_readbacks": 11,
+   "promise_questions": 4,
    "promise_held_for_delivery": 4,
-   "promise_readbacks_answered": 9,
-   "promise_recorded_right_after_answer": 9,
+   "promise_readbacks_answered": 11,
+   "promise_recorded_right_after_answer": 11,
    "promise_recorded_without_yes": 0,
    "promise_wrong_recorded": 0
   },
   "muse/no-hint": {
    "clips": 50,
-   "wer": 0.4154,
-   "wer_folded": 0.3791,
-   "verdict_accuracy": 0.66,
+   "wer": 0.4142,
+   "wer_folded": 0.3755,
+   "verdict_accuracy": 0.68,
    "false_confirms": 0,
    "false_confirm_ids": [],
    "disputes_caught": 0.4667,
@@ -188,15 +180,15 @@
     "vn-42",
     "vn-45"
    ],
-   "confirms_recorded": 0.625,
+   "confirms_recorded": 0.6667,
    "confirms_n": 24,
    "transcripts_failed": 0,
    "transcripts_low": 0,
-   "latency_mean_s": 2.175,
-   "latency_max_s": 3.768,
-   "audio_seconds": 206.2,
-   "judge_prompt_tokens": 65505,
-   "judge_completion_tokens": 31080,
+   "latency_mean_s": 2.161,
+   "latency_max_s": 3.097,
+   "audio_seconds": 195.01,
+   "judge_prompt_tokens": 65504,
+   "judge_completion_tokens": 30824,
    "promise_clips_n": 20,
    "promise_reading_accuracy": 0.65,
    "promise_amount_date_n": 14,
@@ -221,8 +213,8 @@
   },
   "router/no-hint": {
    "clips": 50,
-   "wer": 0.2762,
-   "wer_folded": 0.2418,
+   "wer": 0.2575,
+   "wer_folded": 0.2314,
    "verdict_accuracy": 0.86,
    "false_confirms": 0,
    "false_confirm_ids": [],
@@ -239,25 +231,22 @@
    "confirms_n": 24,
    "transcripts_failed": 0,
    "transcripts_low": 0,
-   "latency_mean_s": 2.223,
+   "latency_mean_s": 2.221,
    "latency_max_s": 6.679,
-   "audio_seconds": 206.2,
-   "judge_prompt_tokens": 65572,
-   "judge_completion_tokens": 30576,
+   "audio_seconds": 195.01,
+   "judge_prompt_tokens": 65581,
+   "judge_completion_tokens": 29222,
    "promise_clips_n": 20,
-   "promise_reading_accuracy": 0.9,
+   "promise_reading_accuracy": 1.0,
    "promise_amount_date_n": 14,
-   "promise_amount_date_accuracy": 0.8571,
-   "promise_wrong_ids": [
-    "vn-31",
-    "vn-49"
-   ],
+   "promise_amount_date_accuracy": 1.0,
+   "promise_wrong_ids": [],
    "promises_heard_where_none": 0,
-   "promise_readbacks": 9,
-   "promise_questions": 5,
+   "promise_readbacks": 11,
+   "promise_questions": 4,
    "promise_held_for_delivery": 4,
-   "promise_readbacks_answered": 9,
-   "promise_recorded_right_after_answer": 9,
+   "promise_readbacks_answered": 11,
+   "promise_recorded_right_after_answer": 11,
    "promise_recorded_without_yes": 0,
    "promise_wrong_recorded": 0
   }
@@ -321,14 +310,14 @@
    },
    "yoruba": {
     "clips": 7,
-    "wer": 0.4844,
-    "wer_folded": 0.339,
+    "wer": 0.3492,
+    "wer_folded": 0.2586,
     "verdict_accuracy": 0.8571,
     "false_confirms": 0,
     "disputes_caught": 1.0,
     "disputes_n": 1,
     "promise_amount_date_n": 1,
-    "promise_amount_date_accuracy": 0.0
+    "promise_amount_date_accuracy": 1.0
    }
   },
   "muse": {
@@ -389,14 +378,14 @@
    },
    "yoruba": {
     "clips": 7,
-    "wer": 0.8125,
-    "wer_folded": 0.6102,
+    "wer": 0.7778,
+    "wer_folded": 0.5345,
     "verdict_accuracy": 0.7143,
     "false_confirms": 0,
     "disputes_caught": 0.0,
     "disputes_n": 1,
     "promise_amount_date_n": 1,
-    "promise_amount_date_accuracy": 0.0
+    "promise_amount_date_accuracy": 1.0
    }
   },
   "router": {
@@ -457,14 +446,14 @@
    },
    "yoruba": {
     "clips": 7,
-    "wer": 0.4844,
-    "wer_folded": 0.339,
+    "wer": 0.3492,
+    "wer_folded": 0.2586,
     "verdict_accuracy": 0.8571,
     "false_confirms": 0,
     "disputes_caught": 1.0,
     "disputes_n": 1,
     "promise_amount_date_n": 1,
-    "promise_amount_date_accuracy": 0.0
+    "promise_amount_date_accuracy": 1.0
    }
   },
   "spitch/no-hint": {
@@ -521,18 +510,18 @@
     "disputes_caught": 0.6,
     "disputes_n": 5,
     "promise_amount_date_n": 5,
-    "promise_amount_date_accuracy": 0.8
+    "promise_amount_date_accuracy": 1.0
    },
    "yoruba": {
     "clips": 7,
-    "wer": 0.4844,
-    "wer_folded": 0.339,
+    "wer": 0.3492,
+    "wer_folded": 0.2586,
     "verdict_accuracy": 0.8571,
     "false_confirms": 0,
     "disputes_caught": 1.0,
     "disputes_n": 1,
     "promise_amount_date_n": 1,
-    "promise_amount_date_accuracy": 0.0
+    "promise_amount_date_accuracy": 1.0
    }
   },
   "muse/no-hint": {
@@ -593,9 +582,9 @@
    },
    "yoruba": {
     "clips": 7,
-    "wer": 0.8281,
-    "wer_folded": 0.6949,
-    "verdict_accuracy": 0.5714,
+    "wer": 0.8254,
+    "wer_folded": 0.6724,
+    "verdict_accuracy": 0.7143,
     "false_confirms": 0,
     "disputes_caught": 0.0,
     "disputes_n": 1,
@@ -657,18 +646,18 @@
     "disputes_caught": 0.6,
     "disputes_n": 5,
     "promise_amount_date_n": 5,
-    "promise_amount_date_accuracy": 0.8
+    "promise_amount_date_accuracy": 1.0
    },
    "yoruba": {
     "clips": 7,
-    "wer": 0.4844,
-    "wer_folded": 0.339,
+    "wer": 0.3492,
+    "wer_folded": 0.2586,
     "verdict_accuracy": 0.8571,
     "false_confirms": 0,
     "disputes_caught": 1.0,
     "disputes_n": 1,
     "promise_amount_date_n": 1,
-    "promise_amount_date_accuracy": 0.0
+    "promise_amount_date_accuracy": 1.0
    }
   }
  },
@@ -4412,7 +4401,7 @@
    "id": "vn-31",
    "lang": "yoruba",
    "noise": "light",
-   "reference": "Gbogbo ẹrù ti dé. Màá san ẹgbẹ̀rún mẹ́wàá náírà ní ọ̀la.",
+   "reference": "Gbogbo ẹrù ti dé. Màá san ẹgbẹ̀rún mẹ́wàá ní ọ̀la.",
    "expected": "confirmed",
    "expected_promise": {
     "status": "promise",
@@ -4420,90 +4409,90 @@
     "due_on": "2026-10-27"
    },
    "spitch": {
-    "transcript": "gbogbo eru ti de masan egberun mewarun mewarun",
+    "transcript": "gbogbo ẹrù ti dé má san ẹgbẹ̀rún mẹ́wàá ní ọlá",
     "status": "ok",
     "tried": [
      "spitch"
     ],
-    "wer": 0.857,
+    "wer": 0.231,
     "outcome": "confirmed",
     "action": "consent",
     "held_back": "",
     "promise": {
-     "status": "unclear",
-     "issue": "ambiguous_amount",
-     "amount_kobo": null,
-     "due_on": "",
-     "sent": "question",
-     "recorded_after_answer": null
+     "status": "promise",
+     "issue": "",
+     "amount_kobo": 1000000,
+     "due_on": "2026-10-27",
+     "sent": "readback",
+     "recorded_after_answer": true
     }
    },
    "muse": {
-    "transcript": "Bogbo eru ti de, mason egberun, méwaanu méwaanu",
+    "transcript": "gbogbo eru ti de, ma san egberun mewa ni ola.",
     "status": "ok",
     "tried": [
      "muse"
     ],
-    "wer": 0.929,
+    "wer": 0.769,
     "outcome": "confirmed",
     "action": "consent",
     "held_back": "",
     "promise": {
-     "status": "none",
+     "status": "promise",
      "issue": "",
-     "amount_kobo": null,
-     "due_on": "",
-     "sent": "",
-     "recorded_after_answer": null
+     "amount_kobo": 1000000,
+     "due_on": "2026-10-27",
+     "sent": "readback",
+     "recorded_after_answer": true
     }
    },
    "router": {
-    "transcript": "gbogbo eru ti de masan egberun mewarun mewarun",
+    "transcript": "gbogbo ẹrù ti dé má san ẹgbẹ̀rún mẹ́wàá ní ọlá",
     "status": "ok",
     "tried": [
      "spitch:ok"
     ],
-    "wer": 0.857,
+    "wer": 0.231,
     "outcome": "confirmed",
     "action": "consent",
     "held_back": "",
     "promise": {
-     "status": "unclear",
-     "issue": "ambiguous_amount",
-     "amount_kobo": null,
-     "due_on": "",
-     "sent": "question",
-     "recorded_after_answer": null
+     "status": "promise",
+     "issue": "",
+     "amount_kobo": 1000000,
+     "due_on": "2026-10-27",
+     "sent": "readback",
+     "recorded_after_answer": true
     }
    },
    "spitch/no-hint": {
-    "transcript": "gbogbo eru ti de masan egberun mewarun mewarun",
+    "transcript": "gbogbo ẹrù ti dé má san ẹgbẹ̀rún mẹ́wàá ní ọlá",
     "status": "ok",
     "tried": [
      "spitch"
     ],
-    "wer": 0.857,
+    "wer": 0.231,
     "outcome": "confirmed",
     "action": "consent",
     "held_back": "",
     "promise": {
-     "status": "unclear",
-     "issue": "ambiguous_amount",
-     "amount_kobo": null,
-     "due_on": "",
-     "sent": "question",
-     "recorded_after_answer": null
+     "status": "promise",
+     "issue": "",
+     "amount_kobo": 1000000,
+     "due_on": "2026-10-27",
+     "sent": "readback",
+     "recorded_after_answer": true
     }
    },
    "muse/no-hint": {
-    "transcript": "Bobo eru ti de, de mason egberun mẹwaanu mẹwaanu",
+    "transcript": "Bogbo eru ti de de, ma sun egberun mewa ni ola.",
     "status": "ok",
     "tried": [
      "muse"
     ],
-    "wer": 0.929,
-    "outcome": "unclear",
-    "action": "clarify",
+    "wer": 0.923,
+    "outcome": "confirmed",
+    "action": "consent",
     "held_back": "",
     "promise": {
      "status": "none",
@@ -4515,22 +4504,22 @@
     }
    },
    "router/no-hint": {
-    "transcript": "gbogbo eru ti de masan egberun mewarun mewarun",
+    "transcript": "gbogbo ẹrù ti dé má san ẹgbẹ̀rún mẹ́wàá ní ọlá",
     "status": "ok",
     "tried": [
      "spitch:ok"
     ],
-    "wer": 0.857,
+    "wer": 0.231,
     "outcome": "confirmed",
     "action": "consent",
     "held_back": "",
     "promise": {
-     "status": "unclear",
-     "issue": "ambiguous_amount",
-     "amount_kobo": null,
-     "due_on": "",
-     "sent": "question",
-     "recorded_after_answer": null
+     "status": "promise",
+     "issue": "",
+     "amount_kobo": 1000000,
+     "due_on": "2026-10-27",
+     "sent": "readback",
+     "recorded_after_answer": true
     }
    }
   },
@@ -6737,12 +6726,12 @@
     "action": "consent",
     "held_back": "",
     "promise": {
-     "status": "none",
+     "status": "promise",
      "issue": "",
-     "amount_kobo": null,
-     "due_on": "",
-     "sent": "",
-     "recorded_after_answer": null
+     "amount_kobo": 3000000,
+     "due_on": "2026-11-02",
+     "sent": "readback",
+     "recorded_after_answer": true
     }
    },
    "muse/no-hint": {
@@ -6775,12 +6764,12 @@
     "action": "consent",
     "held_back": "",
     "promise": {
-     "status": "none",
+     "status": "promise",
      "issue": "",
-     "amount_kobo": null,
-     "due_on": "",
-     "sent": "",
-     "recorded_after_answer": null
+     "amount_kobo": 3000000,
+     "due_on": "2026-11-02",
+     "sent": "readback",
+     "recorded_after_answer": true
     }
    }
   },
@@ -6918,24 +6907,24 @@
  "pass_safety": true,
  "pass": false,
  "cost": {
-  "spitch_stt_calls": 100,
-  "spitch_stt_audio_s": 412.4,
-  "spitch_stt_usd": 0.1732,
-  "muse_stt_calls": 100,
-  "muse_stt_audio_s": 412.4,
-  "muse_stt_usd": 0.0206,
-  "fixtures_tts_audio_s": 161.2,
-  "fixtures_tts_usd": 0.2257,
-  "spitch_usd_total": 0.3989
+  "spitch_stt_calls": 102,
+  "spitch_stt_audio_s": 420.6,
+  "spitch_stt_usd": 0.1767,
+  "muse_stt_calls": 102,
+  "muse_stt_audio_s": 420.6,
+  "muse_stt_usd": 0.021,
+  "fixtures_tts_audio_s": 150.0,
+  "fixtures_tts_usd": 0.21,
+  "spitch_usd_total": 0.3867
  },
  "mode": "live, judge muse-spark-1.3",
- "wall_seconds": 0.8,
+ "wall_seconds": 1.0,
  "judge_live_calls_this_pass": 0,
  "judge_replayed_calls": 300,
  "transcriber_live_calls_this_pass": {
   "spitch": 0,
   "muse": 0
  },
- "recorded_at": "2026-10-26T23:52+01:00",
- "table_markdown": "| Language | spitch WER | spitch verdicts | muse WER | muse verdicts | router WER | router verdicts | spitch/no-hint WER | spitch/no-hint verdicts | muse/no-hint WER | muse/no-hint verdicts | router/no-hint WER | router/no-hint verdicts |\n|---|---|---|---|---|---|---|---|---|---|---|---|---|\n| english (n=13) | 11% | 13/13 | 3% | 13/13 | 3% | 13/13 | 11% | 13/13 | 2% | 13/13 | 11% | 13/13 |\n| hausa (n=7) | 14% | 6/7 | 80% | 3/7 | 14% | 6/7 | 14% | 6/7 | 73% | 2/7 | 14% | 6/7 |\n| igbo (n=6) | 111% | 5/6 | 80% | 4/6 | 34% | 6/6 | 120% | 4/6 | 80% | 2/6 | 43% | 4/6 |\n| mixed (n=4) | 33% | 4/4 | 57% | 3/4 | 33% | 4/4 | 33% | 4/4 | 59% | 3/4 | 33% | 4/4 |\n| pidgin (n=13) | 24% | 11/13 | 26% | 10/13 | 24% | 11/13 | 34% | 10/13 | 29% | 9/13 | 34% | 10/13 |\n| yoruba (n=7) | 48% | 6/7 | 81% | 5/7 | 48% | 6/7 | 48% | 6/7 | 83% | 4/7 | 48% | 6/7 |\n| **all** | 31% | 45/50 | 41% | 38/50 | 22% | 46/50 | 35% | 43/50 | 42% | 33/50 | 28% | 43/50 |"
+ "recorded_at": "2026-10-28T16:47+01:00",
+ "table_markdown": "| Language | spitch WER | spitch verdicts | muse WER | muse verdicts | router WER | router verdicts | spitch/no-hint WER | spitch/no-hint verdicts | muse/no-hint WER | muse/no-hint verdicts | router/no-hint WER | router/no-hint verdicts |\n|---|---|---|---|---|---|---|---|---|---|---|---|---|\n| english (n=13) | 11% | 13/13 | 3% | 13/13 | 3% | 13/13 | 11% | 13/13 | 2% | 13/13 | 11% | 13/13 |\n| hausa (n=7) | 14% | 6/7 | 80% | 3/7 | 14% | 6/7 | 14% | 6/7 | 73% | 2/7 | 14% | 6/7 |\n| igbo (n=6) | 111% | 5/6 | 80% | 4/6 | 34% | 6/6 | 120% | 4/6 | 80% | 2/6 | 43% | 4/6 |\n| mixed (n=4) | 33% | 4/4 | 57% | 3/4 | 33% | 4/4 | 33% | 4/4 | 59% | 3/4 | 33% | 4/4 |\n| pidgin (n=13) | 24% | 11/13 | 26% | 10/13 | 24% | 11/13 | 34% | 10/13 | 29% | 9/13 | 34% | 10/13 |\n| yoruba (n=7) | 35% | 6/7 | 78% | 5/7 | 35% | 6/7 | 35% | 6/7 | 83% | 5/7 | 35% | 6/7 |\n| **all** | 29% | 45/50 | 41% | 38/50 | 20% | 46/50 | 33% | 43/50 | 41% | 34/50 | 26% | 43/50 |"
 }

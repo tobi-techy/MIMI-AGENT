@@ -88,6 +88,11 @@ class PromiseReading:
     due_on: date | None = None
     amount_said: str = ""
     date_said: str = ""
+    # When the shop's words fit two values ("two thousand five": N2,500 or
+    # N2,005; "next Friday" on a Wednesday: this week's or next week's), the
+    # values to ask about. Code never picks one.
+    amount_options: tuple[int, ...] = ()
+    date_options: tuple[date, ...] = ()
 
     @property
     def found(self) -> bool:
@@ -105,7 +110,12 @@ def fold(text: str) -> str:
     t = unicodedata.normalize("NFD", text.casefold())
     t = "".join(ch for ch in t if not unicodedata.combining(ch))
     t = t.replace("\u2019", "'").replace("\u2018", "'").replace("\u02bc", "'")
+    # Hausa hooked letters (ɗ, ƙ, ɓ, ƴ) have no decomposition: map them.
+    t = t.translate(_HOOKED)
     return unicodedata.normalize("NFC", t)
+
+
+_HOOKED = str.maketrans({"\u0257": "d", "\u0199": "k", "\u0253": "b", "\u01b4": "y"})
 
 
 def lagos_day(at: datetime | str) -> date:
@@ -120,7 +130,10 @@ _PAY = re.compile(
     r"\b(pay|paying|payment|settle|balance|transfer|send (?:you )?(?:the )?money|"
     r"san|sanwo|masan|maasan|biya|tura|akwu|akwuo|kwuo|kwu|ugwo|"
     # Heard in the live eval: "zan biya" transcribed as "Zambia".
-    r"zambia|zambiya)\b"
+    r"zambia|zambiya|"
+    # Pidgin as it is written and transcribed: "I go pe", "ago pe", "mek ai pe".
+    # Bare "pe" is Yoruba "complete", so it needs the Pidgin verb before it.
+    r"(?:a?go|mek (?:ai|i)|make i) pe|balans)\b"
 )
 _PAID = re.compile(
     r"\b(paid|don pay|done pay|don send|don transfer|have paid|i've paid|already pay|"
@@ -160,8 +173,14 @@ _IG_UNITS = {
 _YO_NUM = {
     "kan": 1, "okan": 1, "meji": 2, "meta": 3, "merin": 4, "marun": 5,
     "marun-un": 5, "mefa": 6, "meje": 7, "mejo": 8, "mesan": 9, "mesan-an": 9,
-    "mewa": 10, "mewaa": 10, "mokanla": 11, "mejila": 12, "meedogun": 15,
-    "ogun": 20, "ogbon": 30, "ogoji": 40, "aadota": 50, "lona ogun": 20,
+    "mewa": 10, "mewaa": 10, "mokanla": 11, "mejila": 12, "metala": 13,
+    "merinla": 14, "meedogun": 15, "meeedogun": 15, "medogun": 15,
+    "marundinlogun": 15, "merindinlogun": 16, "metadinlogun": 17,
+    "mejidinlogun": 18, "mokandinlogun": 19, "ogun": 20, "mokanlelogun": 21,
+    "mejilelogun": 22, "metalelogun": 23, "merinlelogun": 24, "meedogbon": 25,
+    "meeedogbon": 25, "ogbon": 30, "ogoji": 40, "aadota": 50, "adota": 50,
+    "ogota": 60, "aadorin": 70, "ogorin": 80, "aadorun": 90, "ogorun": 100,
+    "lona ogun": 20,
 }
 
 
@@ -170,7 +189,9 @@ class AmountSpan:
     start: int
     end: int
     said: str
-    kobo: int | None  # None: a bare small number, could be naira or thousands
+    kobo: int | None  # None: could be more than one amount (see ``options``)
+    # What an amount with kobo None could mean, in kobo, when code can tell.
+    options: tuple[int, ...] = ()
 
 
 def _take_words(words: list[tuple[int, int, str]], i: int, table: dict[str, int]) -> int:
@@ -183,12 +204,18 @@ Words = list[tuple[int, int, str]]
 def _english_number(words: Words, i: int) -> tuple[int, int] | None:
     """(value, words used) for an English number phrase starting at ``i``:
     "twenty", "twenty five", "fifteen thousand five hundred", "a hundred
-    thousand", "two hundred and fifty thousand"."""
+    thousand", "two hundred and fifty thousand". A phrase stops at a gap
+    (a blanked date or a pause mark) and never adds a second, equal or
+    larger scale ("ten thousand and ten thousand" is two amounts)."""
     total = cur = 0
     last = ""
+    last_scale = 0
+    before_and: tuple[int, int, int, str] | None = None
     j = i
     while j < len(words):
         w = words[j][2]
+        if j > i and words[j][0] - words[j - 1][1] > 2:
+            break
         if w in _EN_UNITS:
             v = _EN_UNITS[w]
             if w == "a" and not _next_is(words, j, ("hundred", "thousand", "million")):
@@ -208,14 +235,21 @@ def _english_number(words: Words, i: int) -> tuple[int, int] | None:
             cur *= 100
             last = "hundred"
         elif w in ("thousand", "million"):
+            scale = 1000 if w == "thousand" else 1_000_000
             if last in ("", "scale"):
                 break
-            total += max(cur, 1) * (1000 if w == "thousand" else 1_000_000)
+            if last_scale and scale >= last_scale:
+                if before_and is not None:
+                    total, cur, j, last = before_and
+                break
+            total += max(cur, 1) * scale
             cur = 0
             last = "scale"
+            last_scale = scale
         elif w == "and" and last in ("hundred", "scale") and _next_is(
             words, j, (*_EN_UNITS, *_EN_TENS)
         ):
+            before_and = (total, cur, j, last)
             j += 1
             continue
         else:
@@ -313,7 +347,20 @@ def find_amounts(folded: str) -> list[AmountSpan]:
             start -= len(thousand.group(0))
         taken.append((start, end))
         if not marked and value < BARE_MIN_NAIRA * 100:
-            out.append(AmountSpan(start, end, folded[start:end].strip(), None))
+            opts: tuple[int, ...] = (value, value * 1000) if not dec else ()
+            out.append(AmountSpan(start, end, folded[start:end].strip(), None, opts))
+        elif (
+            not marked
+            and not dec
+            and "," not in m.group("num")
+            and num >= 1000
+            and 0 < num % 1000 < 10
+        ):
+            # "2005" is how a transcriber writes "two thousand five", which a
+            # shop usually means as N2,500 but may mean as N2,005: ask.
+            unit = num % 1000
+            out.append(AmountSpan(start, end, folded[start:end].strip(), value,
+                                  ((num - unit + unit * 100) * 100, value)))
         elif 0 < value <= MAX_KOBO:
             out.append(AmountSpan(start, end, folded[start:end].strip(), value))
     words: Words = [(m.start(), m.end(), m.group(0)) for m in re.finditer(r"[a-z][a-z']*", folded)]
@@ -326,16 +373,61 @@ def find_amounts(folded: str) -> list[AmountSpan]:
         if got is None:
             i += 1
             continue
-        kobo, n = got
+        kobo, n, opts = got
         start, end = words[i][0], words[i + n - 1][1]
-        out.append(AmountSpan(start, end, folded[start:end], kobo))
+        out.append(AmountSpan(start, end, folded[start:end], kobo, opts))
         taken.append((start, end))
         i += n
     out.sort(key=lambda a: a.start)
     return out
 
 
-def _word_amount(words: Words, i: int, folded: str) -> tuple[int | None, int] | None:
+def _word_amount(
+    words: Words, i: int, folded: str
+) -> tuple[int | None, int, tuple[int, ...]] | None:
+    """(kobo, or None when it could be more than one amount; words used;
+    the amounts it could be, in kobo), or None."""
+    got = _word_amount_one(words, i, folded)
+    if got is None:
+        return None
+    kobo, n = got
+    if kobo is None:
+        en = _english_number(words, i)
+        if en is not None and en[1] == n and 0 < en[0] < BARE_MIN_NAIRA:
+            return None, n, (en[0] * 100, en[0] * 1000 * 100)
+        return None, n, ()
+    # Hausa "dubu biyu da dari biyar" (2,500), Igbo "puku abuo na nari ise".
+    j = i + n
+    if (
+        j + 2 < len(words)
+        and words[j][2] in ("da", "na")
+        and words[j + 1][2] in ("dari", "nari")
+        and kobo % 100_000 == 0
+    ):
+        reader = _hausa_number if words[j + 1][2] == "dari" else _igbo_number
+        h = reader(words, j + 2) or _english_number(words, j + 2)
+        if h is not None and 0 < h[0] < 10:
+            return kobo + h[0] * 100 * 100, n + 2 + h[1], ()
+    return kobo, n, _thousand_and_unit(words, i, n, kobo)
+
+
+def _thousand_and_unit(words: Words, i: int, n: int, kobo: int) -> tuple[int, ...]:
+    """Nigerian speech: "two thousand five" usually means N2,500, but it can be
+    N2,005. When an English number ends "<n> thousand <one to nine>" with no
+    "hundred", return both readings so Mimi asks; else ()."""
+    used = [w[2] for w in words[i : i + n]]
+    if len(used) < 3 or used[-2] != "thousand" or used[-1] not in _EN_UNITS:
+        return ()
+    if "hundred" in used or used[-1] == "a":
+        return ()
+    unit = _EN_UNITS[used[-1]]
+    if not 0 < unit < 10:
+        return ()
+    base = kobo - unit * 100
+    return (base + unit * 100 * 100, kobo)
+
+
+def _word_amount_one(words: Words, i: int, folded: str) -> tuple[int | None, int] | None:
     """(kobo, or None for a bare small number; words used), or None."""
     w = words[i][2]
     # Hausa: [naira] dubu <n>; Igbo: puku [naira] <n>; Yoruba: egberun <n>, egbaa <n>
@@ -423,9 +515,13 @@ _WEEKDAYS: dict[str, int] = {
 }
 _WEEKDAY_RE = "|".join(sorted((re.escape(w) for w in _WEEKDAYS), key=len, reverse=True))
 _DAY_AFTER = r"next tomorrow|nex tomorrow|nest tomorrow|day after tomorrow|otunla|jibi|nwanne echi"
-_TOMORROW = r"tomorrow|tomoro|tomorow|tmrw|tmr|2moro|2morow|ola|gobe|echi"
+_TOMORROW = r"tomorrow|tomoro|tomorow|tmrw|tmr|2moro|2morow|ola|lola|gobe|echi"
 _TODAY = r"today|2day|tday|lonii|loni|oni|yau|taa|this evening|tonight"
-_PAST = r"yesterday|yestaday|jiya|unyaahu"
+_PAST = r"yesterday|yestaday|jiya|unyaahu|lanaa|lana"
+_WEEKEND = (
+    r"(?:this |dis |next |by |for |on )?(?:the )?(?:weekend|wi+kendi?|week end)|ipari ose|karshen mako"
+)
+_NEXT_WEEK = r"(?:next|nex|nest) (?:week|wik|wiik)"
 _MONTH_END = r"end of (?:the )?month|month end|month-end|ending of (?:the )?month|ipari osu|karshen wata"
 
 _DATE_RE = re.compile(
@@ -435,14 +531,16 @@ _DATE_RE = re.compile(
     rf"|(?P<slash>(?<![\w/])(?P<d3>\d{{1,2}})/(?P<m3>\d{{1,2}})(?:/(?P<y3>\d{{2,4}}))?(?![\w/]))"
     rf"|(?P<the>\bthe\s+(?P<d4>\d{{1,2}})(?:st|nd|rd|th)\b(?!\s+(?:of\s+)?(?:{_MONTH_RE})\b))"
     rf"|(?P<ord>\b(?:on|by)\s+(?P<d5>\d{{1,2}})(?:st|nd|rd|th)\b(?!\s+(?:of\s+)?(?:{_MONTH_RE})\b))"
+    rf"|(?P<ordw>\b(?:on|by)\s+the\s+(?P<o2>{_ORDINAL_RE})\b(?!\s+(?:of\s+)?(?:{_MONTH_RE}|week|day|time|one|ones|carton|cartons|bag|bags|month)\b))"
+    rf"|(?P<weekend>\b(?:{_WEEKEND})\b)"
     rf"|(?P<after>\b(?:{_DAY_AFTER})\b)"
     rf"|(?P<tomorrow>\b(?:{_TOMORROW})\b)"
     rf"|(?P<today>\b(?:{_TODAY})\b)"
     rf"|(?P<past>\b(?:{_PAST})\b)"
     rf"|(?P<monthend>\b(?:{_MONTH_END})\b)"
-    rf"|(?P<wdnext>\b(?P<wd3>{_WEEKDAY_RE})\s+next week\b)"
-    rf"|(?P<nextweek>\bnext week\b(?:\s+(?:on\s+)?(?P<wd1>{_WEEKDAY_RE})\b)?)"
-    rf"|(?P<wd>\b(?:(?P<mod>next|this|coming|on|ranar|ni|na|ojo)\s+)?(?P<wd2>{_WEEKDAY_RE})\b)"
+    rf"|(?P<wdnext>\b(?P<wd3>{_WEEKDAY_RE})\s+{_NEXT_WEEK}\b)"
+    rf"|(?P<nextweek>\b{_NEXT_WEEK}\b(?:\s+(?:on\s+)?(?P<wd1>{_WEEKDAY_RE})\b)?)"
+    rf"|(?P<wd>\b(?:(?P<mod>next|this|coming|on|ranar|ni|na|ojo)\s+|na(?=(?:monday|tuesday|wednesday|thursday|friday|saturday|sunday)\b))?(?P<wd2>{_WEEKDAY_RE})\b)"
 )
 
 
@@ -453,6 +551,8 @@ class DateSpan:
     said: str
     on: date | None  # None: ambiguous ("next week", the same weekday as today)
     past: bool = False
+    # When ``on`` is None but the words fit exactly these days.
+    options: tuple[date, ...] = ()
 
 
 def _resolve_dm(today: date, day: int, month: int, year: int | None) -> date | None:
@@ -474,6 +574,7 @@ def find_dates(folded: str, today: date) -> list[DateSpan]:
         g = m.groupdict()
         on: date | None = None
         past = False
+        options: tuple[date, ...] = ()
         if g["ow"]:
             on = _resolve_dm(today, _ORDINALS[g["o1"]], _MONTHS[g["m4"]], None)
         elif g["dm"] or g["md"]:
@@ -486,8 +587,8 @@ def find_dates(folded: str, today: date) -> list[DateSpan]:
             y = g["y3"]
             year_v = (2000 + int(y) if y and len(y) == 2 else int(y)) if y else None
             on = _resolve_dm(today, day, month, year_v) if 1 <= month <= 12 else None
-        elif g["the"] or g["ord"]:
-            day = int(g["d4"] or g["d5"])
+        elif g["the"] or g["ord"] or g["ordw"]:
+            day = int(g["d4"] or g["d5"]) if not g["ordw"] else _ORDINALS[g["o2"]]
             if day >= today.day:
                 on = _resolve_dm(today, day, today.month, today.year)
             else:
@@ -502,6 +603,15 @@ def find_dates(folded: str, today: date) -> list[DateSpan]:
             on = today
         elif g["past"]:
             on, past = today - timedelta(days=1), True
+        elif g["weekend"]:
+            sat = today + timedelta(days=(5 - today.weekday()) % 7)
+            if "next" in g["weekend"]:
+                sat += timedelta(days=7)
+            options = tuple(d for d in (sat, sat + timedelta(days=1)) if d >= today)
+            if today.weekday() == 6 and "next" not in g["weekend"]:
+                options = (today,)
+            if len(options) == 1:
+                on, options = options[0], ()
         elif g["monthend"]:
             on = date(today.year, today.month, monthrange(today.year, today.month)[1])
         elif g["nextweek"] or g["wdnext"]:
@@ -512,13 +622,21 @@ def find_dates(folded: str, today: date) -> list[DateSpan]:
         elif g["wd"]:
             wd = _WEEKDAYS[g["wd2"]]
             ahead = (wd - today.weekday()) % 7
-            if ahead == 0:
-                on = today + timedelta(days=7) if g["mod"] == "next" else None
+            coming = today + timedelta(days=ahead or 7)
+            if g["mod"] == "next" and coming.isocalendar()[:2] == today.isocalendar()[:2]:
+                # "next Friday" said on a Wednesday: this Friday or the one
+                # after? People mean both; Mimi asks.
+                options = (coming, coming + timedelta(days=7))
+            elif ahead == 0:
+                if g["mod"] == "next":
+                    on = coming
+                else:
+                    options = (today, coming)
             else:
-                on = today + timedelta(days=ahead)
+                on = coming
         if on is not None and on < today:
             past = True
-        out.append(DateSpan(s, e, said, on, past))
+        out.append(DateSpan(s, e, said, on, past, options))
     # A weekday written next to an explicit date ("Tuesday 27 October") is the
     # same day: keep the explicit date only.
     explicit = [d for d in out if _is_explicit(d.said)]
@@ -601,15 +719,18 @@ def read_promise(
     if not in_scope and not answering:
         past = [(s, e) for s, e in ranges if _PAID.search(no_dates[s:e])]
         in_scope = [d for d in dates if not any(s <= d.start < e for s, e in past)]
-    money = {a.kobo for a in amounts if a.kobo is not None}
-    bare = [a for a in amounts if a.kobo is None]
+    unsure = [a for a in amounts if a.kobo is None or a.options]
+    money = {a.kobo for a in amounts if a.kobo is not None and not a.options}
     amount: int | None = None
     amount_said = ""
+    amount_options: tuple[int, ...] = ()
     issue: PromiseIssue = ""
-    if len(money) > 1 or (money and bare):
+    if len(money) + len(unsure) > 1:
         issue = "several_amounts"
-    elif bare:
+    elif unsure:
         issue = "ambiguous_amount"
+        amount_options = unsure[0].options
+        amount_said = unsure[0].said
     elif money:
         amount = money.pop()
         amount_said = next(a.said for a in amounts if a.kobo == amount)
@@ -620,9 +741,15 @@ def read_promise(
     days = {d.on for d in in_scope if d.on is not None}
     due: date | None = None
     date_said = ""
+    date_options: tuple[date, ...] = ()
     date_issue: PromiseIssue = ""
-    if any(d.on is None for d in in_scope):
+    vague = [d for d in in_scope if d.on is None]
+    if vague and len(in_scope) == 1:
         date_issue = "ambiguous_date"
+        date_options = tuple(o for o in vague[0].options if o >= today)
+        date_said = vague[0].said
+    elif vague:
+        date_issue = "several_dates" if days or len(vague) > 1 else "ambiguous_date"
     elif len(days) > 1:
         date_issue = "several_dates"
     elif days:
@@ -643,6 +770,8 @@ def read_promise(
             due_on=None if date_issue else due,
             amount_said=amount_said,
             date_said=date_said,
+            amount_options=amount_options if len(amount_options) > 1 else (),
+            date_options=date_options if len(date_options) > 1 else (),
         )
     return PromiseReading(
         "promise",
