@@ -543,6 +543,28 @@ def collect(*, live: bool, cache_dir: Path, workdir: Path | None = None,
              api.turn("e2e.owner.brand.1", source="owner_message", text=sc.BRAND_OWNER_TEXT,
                       when=at(19, 5)))
 
+        # ------------------------------------------- Order intake (RAI-302)
+        sid = sc.ORDER_PHOTO_SHOP
+        img = sc.order_photo(sc.ORDER_PHOTO)
+        send(TurnRec("order", sid, "list_photo", "", ("order/order-intake",)),
+             api.turn(f"e2e.{sid}.order.1", phone=shops[sid].phone,
+                      media={"kind": "image", "ref": img.ref, "mime": "image/jpeg",
+                             "sha256": img.sha256, "width": img.width, "height": img.height,
+                             "camera_exif": True, "caption": sc.ORDER_PHOTO_CAPTION},
+                      when=at(11, 10)))
+        sid = sc.ORDER_EDIT_SHOP
+        send(TurnRec("order_edit", sid, "typed", "", ("order/order-intake",)),
+             api.turn(f"e2e.{sid}.order.1", phone=shops[sid].phone, text=sc.ORDER_EDIT_TEXT,
+                      when=at(11, 15)))
+        voice = {"kind": "voice", "mime": "audio/ogg", "transcript": sc.ORDER_EDIT_VOICE,
+                 "sha256": hashlib.sha256(sc.ORDER_EDIT_VOICE.encode()).hexdigest()}
+        send(TurnRec("order_edit", sid, "voice_change", "", ("order/order-intake",)),
+             api.turn(f"e2e.{sid}.order.2", phone=shops[sid].phone, media=voice,
+                      when=at(11, 18)))
+        run.checks["order_v1"] = [
+            a for a in api.get("/v1/approvals?status=all").json()["approvals"]
+            if a["shop_id"] == sid and a["tool"] == "submit_order"]
+
         # ---------------------------------------------------- the owner decides
         pending = api.get("/v1/approvals?status=pending").json()["approvals"]
         run.checks["approvals_before"] = pending
@@ -551,7 +573,9 @@ def collect(*, live: bool, cache_dir: Path, workdir: Path | None = None,
                 ("submit_credit_review", "shop-020"): "reject",
                 ("draft_restock", "shop-012"): "approve",
                 ("draft_restock", "shop-014"): "reject",
-                ("revise_restock", "shop-014"): "reject"}
+                ("revise_restock", "shop-014"): "reject",
+                ("submit_order", sc.ORDER_PHOTO_SHOP): "approve",
+                ("revise_order", sc.ORDER_EDIT_SHOP): "approve"}
         for a in pending:
             what = plan.get((a["tool"], a["shop_id"]))
             if what is None:
@@ -572,6 +596,11 @@ def collect(*, live: bool, cache_dir: Path, workdir: Path | None = None,
             twice = client.post(f"/v1/approvals/{first}/approve?wait=false", json={},
                                 headers=api.h["owner"])
             run.checks["second_decision_status"] = twice.status_code
+        # A superseded order version can never be approved (RAI-302).
+        v1 = run.checks.get("order_v1") or []
+        run.checks["order_v1_approve_status"] = client.post(
+            f"/v1/approvals/{v1[0]['approval_id']}/approve?wait=false", json={},
+            headers=api.h["owner"]).status_code if v1 else 0
         # --------------- the daily naira cap: helpers pause, the owner resumes them
         with engine.begin() as conn:
             # The day's model allowance runs out here: the cap is set to what the

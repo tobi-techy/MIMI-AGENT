@@ -530,7 +530,11 @@ def register_order_tools(registry: ToolRegistry, ports: OrderPorts) -> None:
                     raise ToolError("That quantity is too large to change without a question.",
                                     "ask_question: confirm the number with the shop.")
             on_order = {k: units_all[k] for k in lines}
-            text = f"{ch.item} {ch.as_written}" if family_of(ch.as_written)[0] else ch.item
+            # The quote helps pick the line only when it names this product
+            # alone ("remove the sardine, only the indomie" names two).
+            fam_q, fam_i = set(family_of(ch.as_written)[0]), set(family_of(ch.item)[0])
+            text = f"{ch.item} {ch.as_written}" if fam_q and (not fam_i or fam_q <= fam_i) \
+                else ch.item
             m = match(text, ch.unit, on_order, lines) if on_order else None
             if ch.action in ("remove", "set") and (m is None or m.kind != "one"):
                 if ch.action == "remove":

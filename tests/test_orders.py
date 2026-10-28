@@ -360,3 +360,18 @@ def test_list_photo_lines_are_the_shops_words(engine: Any, tmp_path: Any) -> Non
     (o,) = r.orders("shop-013")
     assert {(x["sku"], x["quantity"]) for x in o["payload"]["lines"]} == {
         ("NDL-120-CTN", 5), ("MLK-TIN-CTN", 3)}
+
+
+def test_remove_a_line_when_the_quote_names_two_products(engine: Any) -> None:
+    r = Run(engine, [
+        say("", ("submit_order", {"shop_id": "shop-037", "lines": [
+            line("3 carton indomie", "indomie", 3, "carton"),
+            line("5 tin sardine", "sardine", 5, "tin")]})),
+        say("", ("revise_order", {"shop_id": "shop-037", "changes": [
+            {"action": "remove", "as_written": "abeg remove the sardine, only the indomie",
+             "item": "tin sardine", "quantity": None, "unit": "tin"}]}))])
+    r.shop_says("shop-037", "bring 3 carton indomie and 5 tin sardine")
+    r.shop_says("shop-037", "abeg remove the sardine, only the indomie")
+    v1, v2 = r.orders("shop-037")
+    assert v1["status"] == "superseded"
+    assert [(x["sku"], x["quantity"]) for x in v2["payload"]["lines"]] == [("NDL-120-CTN", 3)]

@@ -34,6 +34,13 @@
   "prompt_tokens": 1396,
   "text": "{\"confidence\": 0.3, \"disputed_items\": [], \"evidence_quote\": \"the delivery\", \"language\": \"english\", \"outcome\": \"unclear\", \"reason\": \"Message mentions the delivery but does not confirm it is complete.\"}"
  },
+ "36b0abbe4ea9bc4e4d8a67d0d64cf8e5": {
+  "completion_tokens": 342,
+  "latency_s": 2.995,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 2023,
+  "text": "{\"heading\": \"Order - Coral Lane\", \"is_order_list\": true, \"legibility\": 1, \"lines\": [\"5 ctn Indomie (big)\", \"3 ctn Tin milk\", \"10 pk spaghetti\"]}"
+ },
  "51fcecc3cd933e99afa92e699ae3adb0": {
   "completion_tokens": 847,
   "latency_s": 4.314,

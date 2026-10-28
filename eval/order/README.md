@@ -7,6 +7,12 @@ Spark, the completing transaction) on a fresh in-memory store for each case.
 * `heldout.jsonl`: 47 cases, written and committed before the Order intake
   helper existed. Never used for tuning; the report is from one recorded run.
 * `dev.jsonl`: 16 cases on other shops and other wording, for tuning only.
+  `dev.report.json` and the dev caches are the tuning record from before the
+  rebase on main (PRs #16 and #17 changed the core prompt), so the dev set no
+  longer replays; it is not run in CI.
+* Two held-out labels were fixed from the book before the first held-out run
+  (commit "two held-out label fixes"): h33's repeat order is over available
+  credit, and h28 moved to a shop with no noodles history.
 * `photos/`: synthetic handwritten order lists drawn by
   `python -m mimi.orders.fixtures` (script typefaces on ruled paper, no real
   handwriting, shop or person). `photos.jsonl` says what each page says.
@@ -44,3 +50,11 @@ How a case is scored (in code, from the store after the case ran):
 
 Pass mark 90% of held-out cases fully right. Held at zero: invented prices or
 items, credit extended, edits to decided orders.
+
+## Results (one recorded live run, 28 Oct 2026)
+
+Held-out: 44/47 fully right (93.6%), invented prices or items 0, credit
+extended 0, edits to decided orders 0 (`heldout.report.json`). The three
+misses are list photos the router did not send to Order (captions "abeg bring
+this list", "my list", "order for this week"): no wrong order was made, the
+shop got a question or a holding line instead. Live cost of that run N639.46.

@@ -47,6 +47,22 @@
    }
   ]
  },
+ "05ad456c1092d0fe333de2e62328b0a15b4f41f22d1393b2bd7040d7992e6963": {
+  "cached_tokens": 0,
+  "completion_tokens": 170,
+  "content": "",
+  "finish_reason": "tool_calls",
+  "latency_s": 2.46,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 2941,
+  "tool_calls": [
+   {
+    "arguments": "{\"lines\":[{\"as_written\":\"send 2 carton noodles\",\"item\":\"noodles\",\"quantity\":2,\"unit\":\"carton\"}],\"shop_id\":\"shop-017\"}",
+    "id": "call_1bebbf3c-49cb-4bf8-864b-af87c33dcd53",
+    "name": "submit_order"
+   }
+  ]
+ },
  "083d702ea7e7e7f94f092e49f2ed8ef25f52687efb9900aa9e3536916dd2b021": {
   "cached_tokens": 241,
   "completion_tokens": 262,
@@ -599,6 +615,22 @@
    }
   ]
  },
+ "76177bdcd2135557e83061d731745be596a1a6a0a8c637198d6942b1efd3d25a": {
+  "cached_tokens": 0,
+  "completion_tokens": 61,
+  "content": "",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.387,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 3093,
+  "tool_calls": [
+   {
+    "arguments": "{\"shop_id\":\"shop-017\"}",
+    "id": "call_a113f52c-f89b-472b-87a0-b2a81151b377",
+    "name": "ask_order_question"
+   }
+  ]
+ },
  "7836e0720760354792fcc6bef937ab4f36cd8bec4fe284c158259f3536347a65": {
   "cached_tokens": 0,
   "completion_tokens": 24,
@@ -608,6 +640,22 @@
   "model": "muse-spark-1.3",
   "prompt_tokens": 3910,
   "tool_calls": []
+ },
+ "79c1ebb157a536eae3c41aee25872f21b134e0fed520e06a2c5aed26f78ff418": {
+  "cached_tokens": 2929,
+  "completion_tokens": 231,
+  "content": "",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.59,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 3436,
+  "tool_calls": [
+   {
+    "arguments": "{\"changes\":[{\"action\":\"set\",\"as_written\":\"make am 5 keg\",\"item\":\"keg oil\",\"quantity\":5,\"unit\":\"keg\"}],\"shop_id\":\"shop-011\"}",
+    "id": "call_7352850a-f197-4512-8d6a-bc9c807fa55b",
+    "name": "revise_order"
+   }
+  ]
  },
  "7f6a962db90ec56b7161e192ce451b3ca7051928315ec0b01439c2f5a8aa5589": {
   "cached_tokens": 0,
@@ -621,6 +669,22 @@
    {
     "arguments": "{\"lines\":[{\"as_written\":\"send 3 keg oil\",\"item\":\"oil\",\"quantity\":3,\"unit\":\"keg\"}],\"shop_id\":\"shop-011\"}",
     "id": "call_83ac6c2e-dc87-4d2f-b8bd-a94ead3a5ec1",
+    "name": "submit_order"
+   }
+  ]
+ },
+ "85434653b6f5440aa0900cf4df645469988f1cdb2429acb65a87f2fcf21259c7": {
+  "cached_tokens": 2929,
+  "completion_tokens": 247,
+  "content": "Big size noted \u2014 I'll resend the priced order.",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.673,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 3407,
+  "tool_calls": [
+   {
+    "arguments": "{\"lines\":[{\"as_written\":\"send 2 carton noodles\",\"item\":\"noodles big one\",\"quantity\":2,\"unit\":\"carton\"}],\"shop_id\":\"shop-017\"}",
+    "id": "call_cc7144fb-29ce-497a-8f9f-42a5c827921b",
     "name": "submit_order"
    }
   ]
@@ -782,6 +846,22 @@
     "arguments": "{\"lines\":[{\"as_written\":\"send 2 carton noodles\",\"item\":\"noodles\",\"quantity\":2,\"unit\":\"carton\"}],\"shop_id\":\"shop-017\"}",
     "id": "call_42369db3-02ee-493d-9002-07211d43d7ef",
     "name": "price_order"
+   }
+  ]
+ },
+ "9f43dcd667222331a1d3b94c5e2cecbdddb664973feca2941270867d86ffc89d": {
+  "cached_tokens": 0,
+  "completion_tokens": 225,
+  "content": "",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.361,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 2944,
+  "tool_calls": [
+   {
+    "arguments": "{\"lines\":[{\"as_written\":\"send 3 keg oil\",\"item\":\"keg oil\",\"quantity\":3,\"unit\":\"keg\"}],\"shop_id\":\"shop-011\"}",
+    "id": "call_c10c061e-9089-4071-a716-6a7a84ccd34a",
+    "name": "submit_order"
    }
   ]
  },

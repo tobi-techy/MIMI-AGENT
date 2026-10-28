@@ -211,6 +211,22 @@
   "prompt_tokens": 7114,
   "tool_calls": []
  },
+ "2f01d7289ec3d9fcb24b4b161501729edb1b9625c182fffefcb631e3081d26a6": {
+  "cached_tokens": 2673,
+  "completion_tokens": 221,
+  "content": "",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.257,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 2947,
+  "tool_calls": [
+   {
+    "arguments": "{\"lines\":[{\"as_written\":\"3 carton indomie\",\"item\":\"carton indomie\",\"quantity\":3,\"unit\":\"carton\"},{\"as_written\":\"5 tin sardine\",\"item\":\"tin sardine\",\"quantity\":5,\"unit\":\"tin\"}],\"shop_id\":\"shop-037\"}",
+    "id": "call_6a248b9f-3c5b-4a71-90f0-8e0b9b443a24",
+    "name": "submit_order"
+   }
+  ]
+ },
  "318a1da517a8f971da5b9dc67dd927891871d69667eea7bb373068bc0ebe3b69": {
   "cached_tokens": 0,
   "completion_tokens": 131,
@@ -268,6 +284,22 @@
   "model": "muse-spark-1.3",
   "prompt_tokens": 3832,
   "tool_calls": []
+ },
+ "3844bdf5a721dcbed33248717bbbb9b423c42539760ad73451e113a630b15561": {
+  "cached_tokens": 3441,
+  "completion_tokens": 404,
+  "content": "I'll clarify which item you'd like removed.",
+  "finish_reason": "tool_calls",
+  "latency_s": 2.295,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 3641,
+  "tool_calls": [
+   {
+    "arguments": "{\"question\":\"Just to confirm \u2014 you want me to remove the 5 tins of sardine and leave only the 3 cartons of indomie on this order?\",\"shop_id\":\"shop-037\",\"to\":\"shop\"}",
+    "id": "call_89375934-9db2-4e22-917c-78ab7221654b",
+    "name": "ask_question"
+   }
+  ]
  },
  "3929b5e1c524d1ea96c64279960197d841c3d4486fa3f9a432dbcb922feaa455": {
   "cached_tokens": 241,
@@ -477,6 +509,22 @@
     "arguments": "{\"shop_id\":\"shop-012\",\"sku\":\"SEMO-1KG\"}",
     "id": "call_dd8dab0f-83e7-4886-bc0c-d722f13cb9bc",
     "name": "ask_stock_count"
+   }
+  ]
+ },
+ "4e59c5c037da4968e1dc5d20f909fb427e7acc1598e12f5840f082776ab46456": {
+  "cached_tokens": 2673,
+  "completion_tokens": 131,
+  "content": "I'll read your order photo to get your list ready.",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.637,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 2960,
+  "tool_calls": [
+   {
+    "arguments": "{\"photo_id\":\"ph_85ac0cf910a7\",\"shop_id\":\"shop-013\"}",
+    "id": "call_ebba435b-64a8-4356-9d2b-e4e43f2430da",
+    "name": "read_order_photo"
    }
   ]
  },
@@ -1200,6 +1248,22 @@
   "prompt_tokens": 3060,
   "tool_calls": []
  },
+ "b3ac89891128d177fc3549854b158f688e18d95a420567f882562f5c6f3cd38f": {
+  "cached_tokens": 241,
+  "completion_tokens": 114,
+  "content": "",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.395,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 3498,
+  "tool_calls": [
+   {
+    "arguments": "{\"changes\":[{\"action\":\"remove\",\"as_written\":\"remove the sardine, only the indomie\",\"item\":\"tin sardine\"}],\"shop_id\":\"shop-037\"}",
+    "id": "call_043b6c8f-623c-4af3-bed0-025247f10307",
+    "name": "revise_order"
+   }
+  ]
+ },
  "b42e8bd12d76c6fe35f966bb593be728cd73af6201bb96191d5ae59bdee565fe": {
   "cached_tokens": 0,
   "completion_tokens": 134,
@@ -1578,6 +1642,22 @@
     "arguments": "{\"photo_id\":\"ph_fef0fca0493e\",\"shop_id\":\"shop-025\"}",
     "id": "call_520147f6-b175-4132-8042-c3ba4c3aff78",
     "name": "check_payment_screenshot"
+   }
+  ]
+ },
+ "e40a71e657d6e196ebedbfae377fe253689384f0678eb3790e7a13d72cfd6598": {
+  "cached_tokens": 2929,
+  "completion_tokens": 365,
+  "content": "",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.992,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 3162,
+  "tool_calls": [
+   {
+    "arguments": "{\"lines\":[{\"as_written\":\"5 ctn Indomie (big)\",\"item\":\"Indomie (big)\",\"quantity\":5,\"unit\":\"ctn\"},{\"as_written\":\"3 ctn Tin milk\",\"item\":\"Tin milk\",\"quantity\":3,\"unit\":\"ctn\"},{\"as_written\":\"10 pk spaghetti\",\"item\":\"spaghetti\",\"quantity\":10,\"unit\":\"pk\"}],\"shop_id\":\"shop-013\"}",
+    "id": "call_6b63f795-f0c6-43c5-a94b-893bbd63ae29",
+    "name": "submit_order"
    }
   ]
  },
