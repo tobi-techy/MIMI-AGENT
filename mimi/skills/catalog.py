@@ -111,10 +111,6 @@ class Catalog:
         tags = ",".join(s.tag for s in self.active())
         return "skills-" + hashlib.sha256(tags.encode()).hexdigest()[:12]
 
-    def versions(self) -> dict[str, str]:
-        """Every active skill's version and digest (for cache keys, RAI-309)."""
-        return {s.key: f"{s.version}+{s.digest[:8]}" for s in self.active()}
-
     # ---------------------------------------------------------- level 1
 
     def metadata(self, helper: str) -> str:

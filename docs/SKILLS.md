@@ -139,8 +139,11 @@ change a body, add a tool or raise a tier.
 Each skill has a semantic `version` and a content digest. `Helper.skill_version` is
 `skill:<helper>/<name>@<version>+<digest8>`: it is on every trace, in the context
 manifest, and the body (with its version line) is in the request, so any change to a
-skill changes the recorded-answer key and shows as a cache miss. `Catalog.versions()`
-gives every skill's version for the cache-key work in RAI-309.
+skill changes the recorded-answer key and shows as a cache miss. Every bound helper is
+also registered with `mimi.harness.versions` (RAI-309), so its loop answers are stamped
+with that tag and Go policy's version: a recorded answer replays only under the skill
+version it was recorded with, and a stale one is counted as a miss. Skills-mode caches
+(`*.skills.cache.json`) carry the same stamps as the flag-off ones.
 
 ## The learning loop
 

@@ -439,7 +439,14 @@ def test_flag_on_binds_every_routed_skill_and_traces_its_version(
     cat = catalog()
     for key in BY_KEY:
         assert on[key].skill_version == cat.skills[key].tag
-    assert cat.versions()["order/order-intake"].startswith("1.0.0+")
+    # RAI-309: a bound skill's tag is the version its recorded loop answers
+    # replay under, so a skill bump (or any edit to its folder) is a cache miss.
+    from mimi.harness.versions import skill_stamp, tool_call_versions
+
+    oi = on["order/order-intake"]
+    assert skill_stamp(oi.system_prompt()) == f"order:{cat.skills['order/order-intake'].tag}"
+    assert tool_call_versions([{"role": "system", "content": oi.system_prompt()}])["skill"] \
+        .endswith("@1.0.0+" + cat.skills["order/order-intake"].digest[:8])
 
 
 def test_a_thread_routed_to_another_skill_re_pins_its_prefix(
