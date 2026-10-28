@@ -53,10 +53,16 @@ INK = {"blue": (28, 52, 140), "black": (30, 30, 34)}
 
 
 def draw(pid: str) -> bytes:
+    heading, lines, ink, font_i = LISTS[pid]
+    return draw_page(f"order-list:{pid}", heading, lines, ink, font_i)
+
+
+def draw_page(seed: str, heading: str, lines: tuple[str, ...], ink: str = "blue",
+              font_i: int = 0) -> bytes:
+    """One handwritten notebook page, photographed (the same drawing for a seed)."""
     from PIL import Image, ImageDraw, ImageFilter, ImageFont
 
-    heading, lines, ink, font_i = LISTS[pid]
-    rnd = random.Random(f"order-list:{pid}")
+    rnd = random.Random(seed)
     w, h = 900, 1200
     page = Image.new("RGB", (w, h), (247, 244, 232))
     d = ImageDraw.Draw(page)

@@ -1,0 +1,9 @@
+{"id": "d01", "shop_id": "shop-032", "photo": "order/photos/od-01.jpg", "caption": "here", "camera": true, "want": "order"}
+{"id": "d02", "shop_id": "shop-033", "photo": "order/photos/od-02.jpg", "caption": "", "camera": true, "want": "order"}
+{"id": "d03", "shop_id": "shop-034", "photo": "photo_route/photos/dl-01.jpg", "caption": "abeg", "camera": true, "want": "order"}
+{"id": "d04", "shop_id": "shop-035", "photo": "photo_route/photos/dl-02.jpg", "caption": "e se", "camera": true, "want": "order"}
+{"id": "d05", "shop_id": "shop-037", "photo": "credit/shelves/s03.jpg", "caption": "look", "camera": true, "want": "not_order", "ok": ["clarify", "stock/stock-count", "credit/credit-request"]}
+{"id": "d06", "shop_id": "shop-038", "photo": "photo_route/photos/dx-pos.jpg", "caption": "", "camera": true, "want": "not_order", "ok": ["clarify", "proof/fake-alert-check"]}
+{"id": "d07", "shop_id": "shop-039", "photo": "photo_route/photos/dx-paid.jpg", "caption": "list", "camera": true, "want": "not_order", "ok": ["clarify", "collector/payment-check", "proof/fake-alert-check", "collector/collections"]}
+{"id": "d08", "shop_id": "shop-040", "photo": "photo_route/photos/dl-01.jpg", "caption": "e no complete o", "camera": true, "want": "not_order", "ok": ["clarify", "order/drop-confirmation", "order/delivery-status", "mimi/escalate-owner"]}
+{"id": "d09", "shop_id": "shop-024", "photo": "photo_route/photos/dx-doc.jpg", "caption": "see", "camera": true, "want": "not_order", "ok": ["clarify", "mimi/shop-onboarding", "mimi/chat", "mimi/escalate-owner"]}
