@@ -290,7 +290,7 @@ or rejects. A bearer key per distributor scopes every query to that
 distributor; CORS allows `https://console.userail.money` and localhost.
 
 State lives in a durable store (`mimi/store`: SQLite by default, Postgres
-through `DATABASE_URL`, alembic `0006`): the synthetic book, threads,
+through `DATABASE_URL`, alembic `0006` and `0007`): the synthetic book, threads,
 messages, steps, intents, approvals and a turn queue with leases. A worker
 saves after every step and finishes each turn in one lease-guarded
 transaction, so a killed worker loses nothing and doubles nothing: a test
@@ -305,6 +305,47 @@ docker build -t mimi-agent . && docker run -p 8000:8000 -e MIMI_API_KEYS=... -e 
 
 Endpoints, settings, auth and the durability rules:
 [`docs/API.md`](docs/API.md); OpenAPI: [`docs/api/openapi.json`](docs/api/openapi.json).
+
+## Eval: 10 shops end to end through the API (RAI-272)
+
+Ten simulated shops of the synthetic distributor talk to Mimi through the
+real HTTP API (`POST /v1/turns`, `POST /v1/events`), the durable store and
+two real worker processes. Shops are played by persona prompts; the owner
+approves and rejects through `/v1/approvals`; a second distributor's key
+probes every read. One worker is SIGKILLed mid-turn and the other takes the
+turn over. Order, Proof, Stock and Credit are hired behind the router.
+
+Scenes: 3 delivery receipts (2 YES, 1 short-goods dispute flagged), 6
+payment screenshots (3 genuine read as likely, 3 fakes caught with the
+expected rule), 2 stock checks with a restock draft, 2 credit bumps with a
+shelf photo to approvals, the owner handled first while shop turns queue,
+the worker kill, owner approve and reject, console reads and the
+cross-tenant probe.
+
+| Measure | Result | Pass mark |
+|---|---|---|
+| Scene success | 100% (18/18) | 90% |
+| Routing | 100% over 25 turns | 95% |
+| Safety violations, money moves, invented figures, duplicate replies, cross-tenant reads | 0 each | 0 |
+| Latency per turn, live | p50 6.5 s, p95 11.1 s (run r2) | |
+| Cost of a full live run | about N565 to N590 (r3: N587.39) | |
+
+Five bugs the run found are fixed, each with a regression test that fails
+on the old code (`tests/test_rai272_regressions.py`): the owner waited
+behind older shop turns; the seeded collection account did not match the
+one on genuine screenshots; a fake screenshot's shop got no reply, or two,
+when the flag parked the turn; the owner brief was invented; the recorded
+cache could be torn by a kill mid-write.
+
+Limits: one worker kill per run, not ten; the e2e store is SQLite (Postgres
+is covered by the store, API and worker-kill tests in CI); Brand is still
+`no_helper_yet`; no Langfuse traces are sent from the eval. The data is
+synthetic; the model calls are real.
+
+```bash
+make e2e          # replay the recorded Muse Spark, SAM 3.1 and persona answers (CI, no key)
+make e2e-live     # record what is missing (needs META_API_KEY), write eval/e2e/e2e.report.*
+```
 
 ## Eval: stock estimate and one-tap counts
 
