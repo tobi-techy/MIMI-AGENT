@@ -61,6 +61,7 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
 
+from mimi.evalmarks import exit_code
 from mimi.models import FakeModel, from_env, has_key
 from mimi.models.base import ChatModel
 from mimi.models.cache import CachedModel
@@ -569,6 +570,8 @@ def main(argv: list[str] | None = None) -> int:
     clips = list(load_clips())
     if args.only:
         clips = [c for c in clips if c["id"] in args.only]
+        if not clips:
+            return exit_code({}, picked=0)  # nothing picked, nothing checked (RAI-311)
     hints = {"both": (True, False), "on": (True,), "off": (False,)}[args.hints]
     providers: dict[str, Transcriber]
     model: Any

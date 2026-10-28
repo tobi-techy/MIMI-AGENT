@@ -49,6 +49,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
+from mimi.evalmarks import exit_code
 from mimi.models import FakeModel, from_env, has_key
 from mimi.models.base import ChatModel
 from mimi.models.cache import CachedModel
@@ -378,6 +379,8 @@ def main(argv: list[str] | None = None) -> int:
     cases = load_cases()
     if args.only:
         cases = [c for c in cases if c["id"] in args.only.split(",")]
+        if not cases:
+            return exit_code({}, picked=0)  # nothing picked, nothing checked (RAI-311)
     if args.baseline:
         print(json.dumps(baseline(cases), indent=1))
         return 0

@@ -39,6 +39,23 @@ from mimi.harness.types import COST_ORDER, CostTier, Tier, ToolKind
 from mimi.runtime.outbox import MONEY_VERBS
 
 MAX_TOOL_CHARS = 4_000
+# A whole toolset (every tool's description plus schema, as sent): no helper
+# may grow past this, whatever its own budget (RAI-307).
+MAX_TOOLSET_CHARS = 12_000
+# Each helper's toolset budget, set at about 30% over its size on 28 Oct 2026
+# (``tests/test_eval_honesty.py`` prints today's sizes). A new tool that
+# pushes a helper over its budget fails CI: shrink a description or raise the
+# budget in the same PR, on purpose.
+TOOLSET_BUDGETS: dict[str, int] = {
+    "collector": 10_000,   # 7,889 today
+    "mimi": 2_500,         # 1,821
+    "proof": 7_200,        # 5,462 (with the screenshot tools)
+    "order": 6_500,        # 4,799 (delivery receipts)
+    "order/order-intake": 7_000,  # 5,284
+    "stock": 7_200,        # 5,496
+    "brand": 3_700,        # 2,795
+    "credit": 7_700,       # 5,884
+}
 # Argument names the model may not use to steer the harness. They are
 # dropped before validation and logged (``field_ignored``).
 RESERVED_ARGS: frozenset[str] = frozenset(
@@ -311,4 +328,10 @@ def build_toolset(
                 f"(max {MAX_TOOL_CHARS})"
             )
         specs.append(spec)
+    total = len(json.dumps([s.schema(full=full_schemas) for s in specs], separators=(",", ":")))
+    if total > MAX_TOOLSET_CHARS:
+        raise RegistryError(
+            f"{helper}: toolset is {total} chars (max {MAX_TOOLSET_CHARS}); every tool is "
+            "sent on every call, so trim descriptions or split the helper"
+        )
     return Toolset(helper, registry.version, tuple(specs), full_schemas)

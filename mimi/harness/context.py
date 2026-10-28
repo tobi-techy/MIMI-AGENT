@@ -335,6 +335,19 @@ SLICES: dict[str, SliceSpec] = {
 SCOPES = {"balance": "shop:balance", "open_invoices": "shop:invoices",
           "payments": "shop:payments", "promises": "shop:promises"}
 SLICE_ROWS = {"open_invoices": 5, "payments": 3, "promises": 2}
+# Worst-case JSON size of each skill's slice over every shop in the world
+# (chars), about 30% over the largest on 28 Oct 2026 (RAI-307). The slice
+# rides on the newest message of every run, so a slice that grows past its
+# budget fails CI (``tests/test_eval_honesty.py``).
+SLICE_BUDGETS: dict[str, int] = {
+    "collector/collections": 2_200,    # 1,695 today
+    "collector/payment-check": 1_950,  # 1,488
+    "collector/promise-to-pay": 1_700,  # 1,303
+    "proof/fake-alert-check": 1_650,   # 1,265
+    "credit/credit-request": 1_200,    # 904
+    "order/order-intake": 400,         # 287
+    "order/drop-confirmation": 1_150,  # 863
+}
 
 # One line per routed skill, on the newest message: what this run is for and
 # how it ends (the helper's skill text in the prefix holds the full rules).
