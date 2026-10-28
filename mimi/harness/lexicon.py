@@ -75,6 +75,7 @@ _R: list[tuple[str, float, str]] = [
     ("collector/collections", 3, r"\bi (?:no|don't|do not|dont) owe\b"),
     ("collector/collections", 2, r"\b(?:statement|balance)\b"),
     ("collector/collections", 3, r"\b(?:elo|melo) (?:ni|lo) (?:mo|a) (?:je|jẹ|ku)\b|\bowo (?:ti )?mo je\b|\bgbese mi\b|\belo lo ku\b"),
+    ("collector/collections", 4, r"\b(?:owo )?(?:elo|melo) lo ku\b"),
     ("collector/collections", 3, r"\bnawa (?:nake|ake|muke) (?:bi|ci)\b|\bbashi na nawa\b|\bnawa ya rage\b|\blambar (?:asusu|account)\b"),
     ("collector/collections", 3, r"\bego ole ka (?:m|anyi) (?:ji|ruru)\b|\bole ka m ji\b|\bugwo m\b"),
     ("collector/collections", 3, r"\bhow much (?:does|do) .{2,40} owe\b|\bwhat does .{2,40} owe\b|\bhow much is .{2,40} owing\b"),
@@ -181,7 +182,8 @@ _R: list[tuple[str, float, str]] = [
     # ---------------- brand/brand-email (owner)
     ("brand/brand-email", 3, r"\b(?:draft|write|prepare|send) (?:an? |the )?(?:email|e-mail|mail|letter) (?:to|for)\b"),
     ("brand/brand-email", 3, r"\bemail (?:the )?(?:brand|manufacturer|supplier|bank|nestle|unilever|dangote|cadbury|promasidor|nigerian breweries)\b"),
-    ("brand/brand-email", 3, r"@brand\b.{0,12}\b(?:draft|write|email|e-mail|complain|request|follow up|thank|letter)\b"),
+    # Owner @Brand mentions are scored on the text with the tag kept, only among brand skills.
+    ("brand/brand-email", 4, r"@brand\b.{0,12}\b(?:draft|write|email|e-mail|complain|request|follow up|thank|letter|ask|send)\b"),
     # ---------------- mimi/shop-onboarding
     ("mimi/shop-onboarding", 3, r"\bwho (?:are you|is this|be this|dey message|is mimi)\b|\bwhat is mimi\b|\bwho be mimi\b|\bwhat (?:do you|does mimi) (?:do|share)\b"),
     ("mimi/shop-onboarding", 3, r"\bhow (?:did|una) (?:you )?(?:take )?(?:get|take|see) my (?:number|contact)\b|\bprivacy\b|\bmy data\b"),

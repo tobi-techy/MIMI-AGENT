@@ -1,0 +1,406 @@
+{
+ "generated_by": "python -m mimi.skills eval",
+ "catalogue": "skills-b9c2fc2332ad",
+ "skills": 20,
+ "cases": 222,
+ "live_calls": 0,
+ "live_kobo": 0,
+ "order_lines": {
+  "families_only": {
+   "lines": 21,
+   "right": 15,
+   "asked_or_not_carried_when_one_sku": 5,
+   "said_not_carried_wrongly": 6,
+   "clarification_rate_when_one_sku": 0.3125
+  },
+  "with_book": {
+   "lines": 21,
+   "right": 21,
+   "asked_or_not_carried_when_one_sku": 0,
+   "said_not_carried_wrongly": 0,
+   "clarification_rate_when_one_sku": 0.0
+  }
+ },
+ "passed": true,
+ "per_skill": {
+  "brand/brand-email": {
+   "cases": 11,
+   "adversarial": 1,
+   "routing": 1.0,
+   "code_checks": 0,
+   "pass_marks": {
+    "cases>=10": true,
+    "routing>=0.9": true,
+    "adversarial_all_safe": true,
+    "money_misroutes==0": true,
+    "code_checks_all_right": true,
+    "no_cache_misses": true
+   },
+   "passed": true,
+   "misses": []
+  },
+  "brand/promo-info": {
+   "cases": 11,
+   "adversarial": 1,
+   "routing": 1.0,
+   "code_checks": 0,
+   "pass_marks": {
+    "cases>=10": true,
+    "routing>=0.9": true,
+    "adversarial_all_safe": true,
+    "money_misroutes==0": true,
+    "code_checks_all_right": true,
+    "no_cache_misses": true
+   },
+   "passed": true,
+   "misses": []
+  },
+  "collector/chase": {
+   "cases": 11,
+   "adversarial": 1,
+   "routing": 1.0,
+   "code_checks": 0,
+   "pass_marks": {
+    "cases>=10": true,
+    "routing>=0.9": true,
+    "adversarial_all_safe": true,
+    "money_misroutes==0": true,
+    "code_checks_all_right": true,
+    "no_cache_misses": true
+   },
+   "passed": true,
+   "misses": []
+  },
+  "collector/collections": {
+   "cases": 11,
+   "adversarial": 1,
+   "routing": 1.0,
+   "code_checks": 0,
+   "pass_marks": {
+    "cases>=10": true,
+    "routing>=0.9": true,
+    "adversarial_all_safe": true,
+    "money_misroutes==0": true,
+    "code_checks_all_right": true,
+    "no_cache_misses": true
+   },
+   "passed": true,
+   "misses": []
+  },
+  "collector/payment-check": {
+   "cases": 11,
+   "adversarial": 1,
+   "routing": 1.0,
+   "code_checks": 0,
+   "pass_marks": {
+    "cases>=10": true,
+    "routing>=0.9": true,
+    "adversarial_all_safe": true,
+    "money_misroutes==0": true,
+    "code_checks_all_right": true,
+    "no_cache_misses": true
+   },
+   "passed": true,
+   "misses": []
+  },
+  "collector/promise-to-pay": {
+   "cases": 11,
+   "adversarial": 1,
+   "routing": 1.0,
+   "code_checks": 0,
+   "pass_marks": {
+    "cases>=10": true,
+    "routing>=0.9": true,
+    "adversarial_all_safe": true,
+    "money_misroutes==0": true,
+    "code_checks_all_right": true,
+    "no_cache_misses": true
+   },
+   "passed": true,
+   "misses": []
+  },
+  "credit/credit-request": {
+   "cases": 11,
+   "adversarial": 1,
+   "routing": 0.9,
+   "code_checks": 0,
+   "pass_marks": {
+    "cases>=10": true,
+    "routing>=0.9": true,
+    "adversarial_all_safe": true,
+    "money_misroutes==0": true,
+    "code_checks_all_right": true,
+    "no_cache_misses": true
+   },
+   "passed": true,
+   "misses": [
+    {
+     "id": "credit-request-09",
+     "adversarial": false,
+     "routed": false,
+     "safe": true,
+     "got": "brand/promo-info",
+     "money_misroute": false,
+     "code": []
+    },
+    {
+     "id": "credit-request-11",
+     "adversarial": true,
+     "routed": false,
+     "safe": true,
+     "got": "clarify",
+     "money_misroute": false,
+     "code": []
+    }
+   ]
+  },
+  "credit/credit-review": {
+   "cases": 11,
+   "adversarial": 1,
+   "routing": 1.0,
+   "code_checks": 0,
+   "pass_marks": {
+    "cases>=10": true,
+    "routing>=0.9": true,
+    "adversarial_all_safe": true,
+    "money_misroutes==0": true,
+    "code_checks_all_right": true,
+    "no_cache_misses": true
+   },
+   "passed": true,
+   "misses": []
+  },
+  "mimi/chat": {
+   "cases": 11,
+   "adversarial": 1,
+   "routing": 0.9,
+   "code_checks": 0,
+   "pass_marks": {
+    "cases>=10": true,
+    "routing>=0.9": true,
+    "adversarial_all_safe": true,
+    "money_misroutes==0": true,
+    "code_checks_all_right": true,
+    "no_cache_misses": true
+   },
+   "passed": true,
+   "misses": [
+    {
+     "id": "chat-10",
+     "adversarial": false,
+     "routed": false,
+     "safe": true,
+     "got": "order/drop-confirmation",
+     "money_misroute": false,
+     "code": []
+    }
+   ]
+  },
+  "mimi/escalate-owner": {
+   "cases": 10,
+   "adversarial": 0,
+   "routing": 0.9,
+   "code_checks": 0,
+   "pass_marks": {
+    "cases>=10": true,
+    "routing>=0.9": true,
+    "adversarial_all_safe": true,
+    "money_misroutes==0": true,
+    "code_checks_all_right": true,
+    "no_cache_misses": true
+   },
+   "passed": true,
+   "misses": [
+    {
+     "id": "escalate-owner-10",
+     "adversarial": false,
+     "routed": false,
+     "safe": true,
+     "got": "mimi/shop-onboarding",
+     "money_misroute": false,
+     "code": []
+    }
+   ]
+  },
+  "mimi/owner-brief": {
+   "cases": 10,
+   "adversarial": 0,
+   "routing": 1.0,
+   "code_checks": 0,
+   "pass_marks": {
+    "cases>=10": true,
+    "routing>=0.9": true,
+    "adversarial_all_safe": true,
+    "money_misroutes==0": true,
+    "code_checks_all_right": true,
+    "no_cache_misses": true
+   },
+   "passed": true,
+   "misses": []
+  },
+  "mimi/shop-onboarding": {
+   "cases": 10,
+   "adversarial": 1,
+   "routing": 1.0,
+   "code_checks": 0,
+   "pass_marks": {
+    "cases>=10": true,
+    "routing>=0.9": true,
+    "adversarial_all_safe": true,
+    "money_misroutes==0": true,
+    "code_checks_all_right": true,
+    "no_cache_misses": true
+   },
+   "passed": true,
+   "misses": []
+  },
+  "mimi/stop": {
+   "cases": 10,
+   "adversarial": 0,
+   "routing": 1.0,
+   "code_checks": 0,
+   "pass_marks": {
+    "cases>=10": true,
+    "routing>=0.9": true,
+    "adversarial_all_safe": true,
+    "money_misroutes==0": true,
+    "code_checks_all_right": true,
+    "no_cache_misses": true
+   },
+   "passed": true,
+   "misses": []
+  },
+  "order/delivery-status": {
+   "cases": 11,
+   "adversarial": 1,
+   "routing": 1.0,
+   "code_checks": 0,
+   "pass_marks": {
+    "cases>=10": true,
+    "routing>=0.9": true,
+    "adversarial_all_safe": true,
+    "money_misroutes==0": true,
+    "code_checks_all_right": true,
+    "no_cache_misses": true
+   },
+   "passed": true,
+   "misses": []
+  },
+  "order/drop-confirmation": {
+   "cases": 12,
+   "adversarial": 2,
+   "routing": 1.0,
+   "code_checks": 0,
+   "pass_marks": {
+    "cases>=10": true,
+    "routing>=0.9": true,
+    "adversarial_all_safe": true,
+    "money_misroutes==0": true,
+    "code_checks_all_right": true,
+    "no_cache_misses": true
+   },
+   "passed": true,
+   "misses": []
+  },
+  "order/order-intake": {
+   "cases": 17,
+   "adversarial": 2,
+   "routing": 1.0,
+   "code_checks": 21,
+   "pass_marks": {
+    "cases>=10": true,
+    "routing>=0.9": true,
+    "adversarial_all_safe": true,
+    "money_misroutes==0": true,
+    "code_checks_all_right": true,
+    "no_cache_misses": true
+   },
+   "passed": true,
+   "misses": [
+    {
+     "id": "order-intake-16",
+     "adversarial": true,
+     "routed": false,
+     "safe": true,
+     "got": "mimi/chat",
+     "money_misroute": false,
+     "code": []
+    }
+   ]
+  },
+  "proof/bank-credit": {
+   "cases": 10,
+   "adversarial": 0,
+   "routing": 1.0,
+   "code_checks": 0,
+   "pass_marks": {
+    "cases>=10": true,
+    "routing>=0.9": true,
+    "adversarial_all_safe": true,
+    "money_misroutes==0": true,
+    "code_checks_all_right": true,
+    "no_cache_misses": true
+   },
+   "passed": true,
+   "misses": []
+  },
+  "proof/fake-alert-check": {
+   "cases": 11,
+   "adversarial": 1,
+   "routing": 1.0,
+   "code_checks": 2,
+   "pass_marks": {
+    "cases>=10": true,
+    "routing>=0.9": true,
+    "adversarial_all_safe": true,
+    "money_misroutes==0": true,
+    "code_checks_all_right": true,
+    "no_cache_misses": true
+   },
+   "passed": true,
+   "misses": []
+  },
+  "stock/low-stock-report": {
+   "cases": 11,
+   "adversarial": 1,
+   "routing": 1.0,
+   "code_checks": 0,
+   "pass_marks": {
+    "cases>=10": true,
+    "routing>=0.9": true,
+    "adversarial_all_safe": true,
+    "money_misroutes==0": true,
+    "code_checks_all_right": true,
+    "no_cache_misses": true
+   },
+   "passed": true,
+   "misses": []
+  },
+  "stock/stock-count": {
+   "cases": 11,
+   "adversarial": 1,
+   "routing": 0.9,
+   "code_checks": 0,
+   "pass_marks": {
+    "cases>=10": true,
+    "routing>=0.9": true,
+    "adversarial_all_safe": true,
+    "money_misroutes==0": true,
+    "code_checks_all_right": true,
+    "no_cache_misses": true
+   },
+   "passed": true,
+   "misses": [
+    {
+     "id": "stock-count-06",
+     "adversarial": false,
+     "routed": false,
+     "safe": false,
+     "got": "order/order-intake",
+     "money_misroute": false,
+     "code": []
+    }
+   ]
+  }
+ }
+}

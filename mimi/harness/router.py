@@ -381,6 +381,9 @@ class Router:
                 rest = lexicon.MENTION.sub("", text)
                 own = frozenset(s.key for s in allowed_for("owner") if s.helper == helper)
                 lx = lexicon.score(rest, own)
+                tagged = lexicon.score(text, own)  # rules that read the @tag itself
+                if tagged.top_score > lx.top_score:
+                    lx = tagged
                 key = lx.top if lx.top_score > 0 else default_skill(helper, "owner")
                 if key not in BY_KEY:
                     key = default_skill(helper, "owner")
