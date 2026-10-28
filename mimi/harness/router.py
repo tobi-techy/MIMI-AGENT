@@ -8,8 +8,10 @@ settle it:
 1. **Rules** (plain code, never a model): unknown number -> onboarding (never
    a money skill); routine, scheduled check-in, webhook, helper report and
    approval tap -> their owner helper; the owner's "stop" -> the fast lane;
-   an owner @mention -> that helper; a short answer to a question a helper is
-   waiting on (a 0-2 | 3-5 | 6+ tap, YES, a number) -> that helper; a
+   an owner @mention -> that helper; a reply while a helper's ask is open
+   (``mimi.harness.binding``): a fixed short answer (a 0-2 | 3-5 | 6+ tap,
+   YES, a number) binds by rule, anything else is classified against the ask
+   and binds to the asking helper unless it is about something else; a
    quick-reply button -> its skill; a screenshot -> Proof.
 2. **Phrases** (``mimi.harness.lexicon``): multilingual phrase rules for the
    messages shops send most. Trusted only when one skill clearly leads.
@@ -40,13 +42,14 @@ import os
 import re
 import time
 from collections.abc import Callable, Sequence
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from datetime import datetime
 from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict
 
 from mimi.harness import lexicon
+from mimi.harness.binding import AnswerBinder, ask_is_live
 from mimi.harness.inbound import Directory, Inbound, Media
 from mimi.harness.skills import (
     BY_KEY,
@@ -157,6 +160,8 @@ class RouteDecision(BaseModel):
     thread_note: str = ""
     injection: tuple[str, ...] = ()
     downgraded_from: str = ""
+    # A reply bound to an open ask: the binder's label ("short", "yes", ...).
+    bound: str = ""
     model_called: bool = False
     model: str = ""
     model_ms: float = 0.0
@@ -185,6 +190,10 @@ class ThreadState:
     # A helper is waiting on an answer in this thread.
     pending_skill: str = ""
     expects: Literal["", "taps", "yes_no", "number", "photo", "any"] = ""
+    # When the ask was sent (ISO, with its zone) and what it was about (a
+    # delivery id, a sku). The ask expires (``binding.ASK_TTL``).
+    asked_at: str = ""
+    ask_ref: str = ""
     # The router asked to clarify between these skills.
     clarify_options: tuple[str, ...] = ()
     clarify_text: str = ""
@@ -239,6 +248,9 @@ class Router:
     fast: Any = None
     # Priced like the harness gateway (integer kobo, rounded up).
     price: Callable[[str, int, int], int] | None = None
+    # Binds replies to an open ask (``mimi.harness.binding``). None keeps the
+    # old rule only (a fixed short answer binds); the API agent always sets it.
+    binder: AnswerBinder | None = None
 
     def threshold(self, helper: str) -> float:
         return THRESHOLDS.get(self.thresholds, THRESHOLDS[DEFAULT_THRESHOLDS]).get(helper, 0.7)
@@ -353,8 +365,55 @@ class Router:
         if sender == "shop" and re.match(r"^(?:stop|unsubscribe|opt out|stop messages)[.! ]*$",
                                          folded):
             return rule("mimi/shop-onboarding", "shop_stop", language=lang)
-        if thread.pending_skill and self._answers(folded, thread.expects, lead.payload.media):
+        live = ask_is_live(thread.pending_skill, thread.asked_at, lead.received_at)
+        if thread.pending_skill and not live:
+            base = {**base, "thread_note": f"ask for {thread.pending_skill} expired; "
+                                           "routed as a new message"}
+            thread = replace(thread, pending_skill="", expects="", asked_at="", ask_ref="")
+        # "any" (a clarifying question) binds every reply only without a binder.
+        fixed = live and (thread.expects != "any" or self.binder is None) and self._answers(
+            folded, thread.expects, lead.payload.media)
+        if fixed:
             return rule(thread.pending_skill, f"pending_answer:{thread.expects}", language=lang)
+        if live and sender == "shop" and self.binder is not None and text.strip():
+            b = self.binder.classify(thread.pending_skill, text, sender)
+            bind_kobo = (self.price(b.model, b.prompt_tokens, b.completion_tokens)
+                         if self.price and b.model else 0)
+            spend: dict[str, Any] = {"model_called": b.layer == "model" or b.model_ms > 0,
+                                     "model": b.model, "model_ms": b.model_ms,
+                                     "prompt_tokens": b.prompt_tokens,
+                                     "completion_tokens": b.completion_tokens,
+                                     "cost_kobo": bind_kobo}
+            if b.binds:
+                return rule(thread.pending_skill, f"pending_bind:{b.label}", language=lang,
+                            conf=b.confidence or 1.0, bound=b.label,
+                            thread_note=b.why, **spend)
+            # Released: routed as if no ask were open (no "waiting" hint to
+            # pull the model back to the asker); the ask itself stays open.
+            free = replace(thread, pending_skill="", expects="", asked_at="", ask_ref="")
+            dec = self._after_pending(lead, batch, text, directory, free, base, lang, folded)
+            return dec.model_copy(update={
+                "model_called": dec.model_called or spend["model_called"],
+                "model_ms": dec.model_ms + b.model_ms,
+                "prompt_tokens": dec.prompt_tokens + b.prompt_tokens,
+                "completion_tokens": dec.completion_tokens + b.completion_tokens,
+                "cost_kobo": dec.cost_kobo + bind_kobo,
+                "thread_note": (f"open ask for {thread.pending_skill} not answered "
+                                f"({b.label}); it stays open")})
+        return self._after_pending(lead, batch, text, directory, thread, base, lang, folded)
+
+    def _after_pending(self, lead: Inbound, batch: Sequence[Inbound], text: str,
+                       directory: Directory, thread: ThreadState, base: dict[str, Any],
+                       lang: str, folded: str) -> RouteDecision:
+        sender = lead.sender
+        p = lead.payload
+
+        def rule(key: str, name: str, conf: float = 1.0, **kw: Any) -> RouteDecision:
+            fields = {**base, **kw}
+            fields.setdefault("language", "en")
+            return RouteDecision(status="routed", helper=key.split("/")[0], skill=key,
+                                 confidence=conf, layer="rule", rule=name, **fields)
+
         if thread.clarify_options:
             picked = self._resolve_clarify(folded, thread)
             if picked:

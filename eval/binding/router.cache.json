@@ -1,0 +1,289 @@
+{
+ "064fd49b9f6f89b396d3290b83bf7f36": {
+  "completion_tokens": 400,
+  "latency_s": 1.84,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 413,
+  "text": "{\"confidence\": 0.95, \"label\": \"wrong_items\"}"
+ },
+ "18be30199551e8b2a918cf718012b259": {
+  "completion_tokens": 414,
+  "latency_s": 1.94,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 404,
+  "text": "{\"confidence\": 0.9, \"label\": \"yes\"}"
+ },
+ "20bc5b03cd0efa7c12b52b58eeb9eb40": {
+  "completion_tokens": 289,
+  "latency_s": 2.217,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 409,
+  "text": "{\"confidence\": 0.97, \"label\": \"yes\"}"
+ },
+ "2780c16edf70c92cf3e63edc22c606f9": {
+  "completion_tokens": 292,
+  "latency_s": 1.422,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 406,
+  "text": "{\"confidence\": 0.9, \"label\": \"unclear\"}"
+ },
+ "2d350b3b3ef735a306b0bea997103bf6": {
+  "completion_tokens": 573,
+  "latency_s": 2.756,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 403,
+  "text": "{\"confidence\": 0.85, \"label\": \"short\"}"
+ },
+ "2f96bb75731e118ce15c3f059b2d3ec0": {
+  "completion_tokens": 372,
+  "latency_s": 1.553,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 413,
+  "text": "{\"confidence\": 0.95, \"label\": \"short\"}"
+ },
+ "34c38b6860bd03bb236bc7d58866c543": {
+  "completion_tokens": 338,
+  "latency_s": 1.642,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 411,
+  "text": "{\"confidence\": 0.95, \"label\": \"yes\"}"
+ },
+ "3fc61910bc2c959a1d3d7e136257dcae": {
+  "completion_tokens": 307,
+  "latency_s": 1.618,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 409,
+  "text": "{\"confidence\": 0.95, \"label\": \"unrelated\"}"
+ },
+ "4e6c6b53867f711bface9df407aa2fc5": {
+  "completion_tokens": 331,
+  "latency_s": 1.562,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 407,
+  "text": "{\"confidence\": 0.9, \"label\": \"damaged\"}"
+ },
+ "4ffced3e98c7fc446a832fa3ca301cef": {
+  "completion_tokens": 361,
+  "latency_s": 1.765,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 760,
+  "text": "{\"route\": \"order/order-intake\", \"confidence\": 0.95, \"second\": \"\", \"language\": \"pcm\"}"
+ },
+ "5ab60c7f60b83e4acdb18c1c98f1b669": {
+  "completion_tokens": 280,
+  "latency_s": 2.501,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 414,
+  "text": "{\"confidence\": 0.92, \"label\": \"short\"}"
+ },
+ "6398cb9e514baa3c22dfaab6921f212c": {
+  "completion_tokens": 321,
+  "latency_s": 1.526,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 407,
+  "text": "{\"confidence\": 0.96, \"label\": \"yes\"}"
+ },
+ "65e685333a1da9d400a35920ad5f6847": {
+  "completion_tokens": 344,
+  "latency_s": 2.247,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 410,
+  "text": "{\"confidence\": 0.95, \"label\": \"yes\"}"
+ },
+ "680da99cb4a8bd0e25076461a0e462da": {
+  "completion_tokens": 283,
+  "latency_s": 1.354,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 407,
+  "text": "{\"confidence\": 0.98, \"label\": \"unrelated\"}"
+ },
+ "6ea6dcc8b0b987cf4707a63b5ceda439": {
+  "completion_tokens": 355,
+  "latency_s": 1.822,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 414,
+  "text": "{\"confidence\": 0.95, \"label\": \"short\"}"
+ },
+ "7ee216b97087e33868324bd80d07dc98": {
+  "completion_tokens": 322,
+  "latency_s": 1.497,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 411,
+  "text": "{\"confidence\": 0.97, \"label\": \"yes\"}"
+ },
+ "8478aad05a860628cb5befa41c7b22bd": {
+  "completion_tokens": 392,
+  "latency_s": 2.15,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 421,
+  "text": "{\"confidence\": 0.92, \"label\": \"short\"}"
+ },
+ "8e14721a8e2e26503eb9e2754758ab59": {
+  "completion_tokens": 323,
+  "latency_s": 1.684,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 405,
+  "text": "{\"confidence\":1,\"label\":\"unrelated\"}"
+ },
+ "94efab5e7ef12d5163af141c8d50b93b": {
+  "completion_tokens": 352,
+  "latency_s": 1.69,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 409,
+  "text": "{\"confidence\": 0.95, \"label\": \"short\"}"
+ },
+ "978b91c978d9ab01867eac38f24fb48f": {
+  "completion_tokens": 343,
+  "latency_s": 1.211,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 413,
+  "text": "{\"confidence\": 0.97, \"label\": \"damaged\"}"
+ },
+ "98da28fa6863bfcd85928f23b92cbc96": {
+  "completion_tokens": 329,
+  "latency_s": 1.644,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 403,
+  "text": "{\"confidence\": 0.9, \"label\": \"unclear\"}"
+ },
+ "99f1ba3763acb857ea5a3e4ec010894d": {
+  "completion_tokens": 425,
+  "latency_s": 1.884,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 402,
+  "text": "{\"confidence\": 0.9, \"label\": \"short\"}"
+ },
+ "9c59826614fc7e872de15407831cf8c1": {
+  "completion_tokens": 365,
+  "latency_s": 2.036,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 404,
+  "text": "{\"confidence\": 0.92, \"label\": \"short\"}"
+ },
+ "a79d13f9de921c8bd54e2a1366336278": {
+  "completion_tokens": 376,
+  "latency_s": 1.651,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 413,
+  "text": "{\"confidence\": 0.99, \"label\": \"unrelated\"}"
+ },
+ "a8dcbb3cff4305853edbf081fccd60a2": {
+  "completion_tokens": 263,
+  "latency_s": 1.581,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 409,
+  "text": "{\"confidence\": 0.95, \"label\": \"damaged\"}"
+ },
+ "a90afc5de7be87ced7c1507b14ab4b8b": {
+  "completion_tokens": 320,
+  "latency_s": 1.411,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 404,
+  "text": "{\"confidence\": 0.99, \"label\": \"unrelated\"}"
+ },
+ "a92f911b531d40e7444033dd538edb27": {
+  "completion_tokens": 279,
+  "latency_s": 1.087,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 406,
+  "text": "{\"confidence\":0.95,\"label\":\"unclear\"}"
+ },
+ "b0988f16e1271918dcc766287c8fd52f": {
+  "completion_tokens": 289,
+  "latency_s": 1.518,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 408,
+  "text": "{\"confidence\": 0.97, \"label\": \"short\"}"
+ },
+ "b33caa1e02ec99eefa18af36f0261359": {
+  "completion_tokens": 335,
+  "latency_s": 2.558,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 405,
+  "text": "{\"confidence\": 0.98, \"label\": \"short\"}"
+ },
+ "be73bc1b6cc815d2bf993c3dba599cd4": {
+  "completion_tokens": 349,
+  "latency_s": 1.533,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 410,
+  "text": "{\"confidence\": 0.98, \"label\": \"damaged\"}"
+ },
+ "c8709952bbd670e05ddc02c2f2810312": {
+  "completion_tokens": 362,
+  "latency_s": 1.785,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 407,
+  "text": "{\"confidence\": 0.98, \"label\": \"unrelated\"}"
+ },
+ "ca624b6fa766db1176bfbc7e9d4eac15": {
+  "completion_tokens": 700,
+  "latency_s": 3.022,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 408,
+  "text": ""
+ },
+ "d63fbd826acafb947ab922176e7b773d": {
+  "completion_tokens": 255,
+  "latency_s": 1.857,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 411,
+  "text": "{\"confidence\": 0.98, \"label\": \"yes\"}"
+ },
+ "d6750823f14ac6dcc76788d14a99afae": {
+  "completion_tokens": 212,
+  "latency_s": 2.416,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 407,
+  "text": "{\"confidence\": 0.97, \"label\": \"yes\"}"
+ },
+ "e0298a8e2d933422516242b3bc006a97": {
+  "completion_tokens": 270,
+  "latency_s": 1.812,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 411,
+  "text": "{\"confidence\": 0.95, \"label\": \"unrelated\"}"
+ },
+ "e383580aa19a3e036592f558d48356fa": {
+  "completion_tokens": 351,
+  "latency_s": 1.804,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 411,
+  "text": "{\"confidence\": 0.95, \"label\": \"wrong_items\"}"
+ },
+ "e942603289aa2bc9e24cf030526835c6": {
+  "completion_tokens": 266,
+  "latency_s": 1.882,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 413,
+  "text": "{\"confidence\": 0.97, \"label\": \"short\"}"
+ },
+ "eae66e8c7370fadf38cd7e18ae8c6a1c": {
+  "completion_tokens": 518,
+  "latency_s": 2.314,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 403,
+  "text": "{\"confidence\": 0.85, \"label\": \"unclear\"}"
+ },
+ "f054fdf641f3fe039f87f3f3039afcb4": {
+  "completion_tokens": 314,
+  "latency_s": 1.664,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 407,
+  "text": "{\"confidence\": 0.99, \"label\": \"unrelated\"}"
+ },
+ "fe0f22914bd1c2dfb971edd545571b2b": {
+  "completion_tokens": 276,
+  "latency_s": 1.553,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 405,
+  "text": "{\"confidence\": 0.95, \"label\": \"yes\"}"
+ },
+ "fe2584c9370a30efe470bd23f245662a": {
+  "completion_tokens": 360,
+  "latency_s": 1.492,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 412,
+  "text": "{\"confidence\": 0.95, \"label\": \"wrong_items\"}"
+ }
+}

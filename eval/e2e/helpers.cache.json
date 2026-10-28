@@ -6,6 +6,13 @@
   "prompt_tokens": 1326,
   "text": "{\"confidence\": 0.98, \"disputed_items\": [], \"evidence_quote\": \"YES\", \"language\": \"mixed\", \"outcome\": \"confirmed\", \"reason\": \"Shop says all goods landed complete and replies YES.\"}"
  },
+ "11ecb588599b8ca9f98618bd5ae9b0b2": {
+  "completion_tokens": 841,
+  "latency_s": 3.901,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 1325,
+  "text": "{\"confidence\": 0.85, \"disputed_items\": [{\"claimed_qty_if_stated\": 4, \"receipt_line\": 2, \"sku_or_name_as_written\": \"that small sunrise\"}], \"evidence_quote\": \"only 4 ctn of that small sunrise reach\\n2 ctn no come at all\", \"language\": \"pidgin\", \"outcome\": \"disputed\", \"reason\": \"Shop says only 4 of 6 small noodles cartons arrived.\"}"
+ },
  "30a2c1a8648df9b1e5063fbd21f7cdde": {
   "completion_tokens": 796,
   "latency_s": 4.33,

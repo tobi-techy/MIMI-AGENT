@@ -457,6 +457,22 @@
    }
   ]
  },
+ "7e110cb82144088554ab27a69580cdce03c6cc420f2a4f83f1266fb4f6313cd2": {
+  "cached_tokens": 0,
+  "completion_tokens": 225,
+  "content": "Your note on the Sunrise cartons is in \u2014 I'll pull up the delivery now.",
+  "finish_reason": "tool_calls",
+  "latency_s": 2.189,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 3643,
+  "tool_calls": [
+   {
+    "arguments": "{\"delivery_id\":\"dlv-56-9007\",\"shop_id\":\"shop-008\"}",
+    "id": "call_aa23f72d-cb65-43d4-8675-4d0a79c302b0",
+    "name": "read_receipt_reply"
+   }
+  ]
+ },
  "84b75fed871026f7a50c14eed10102e2de238fb6cc95a19c84edd160f0de03ec": {
   "cached_tokens": 3057,
   "completion_tokens": 177,
@@ -470,6 +486,22 @@
     "arguments": "{\"shop_id\":\"shop-012\",\"sku\":\"SEMO-1KG\"}",
     "id": "call_3cc1751c-bd97-4ebf-a65c-67c03877bf99",
     "name": "read_stock_answer"
+   }
+  ]
+ },
+ "88e2e2dbd2c695676d799d1a08a19b795e070d4a25a2c7e11fb394e1cb1065e4": {
+  "cached_tokens": 3825,
+  "completion_tokens": 196,
+  "content": "",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.436,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 4046,
+  "tool_calls": [
+   {
+    "arguments": "{\"body\":\"Thanks, I've told Coral Lane Trading about this delivery. Nothing has changed on your account.\",\"channel\":\"shop_whatsapp\",\"ends_turn\":true,\"kind\":\"reply\",\"shop_id\":\"shop-008\"}",
+    "id": "call_df3a40ad-f055-4645-bd9b-de5c48738bea",
+    "name": "send_to_user"
    }
   ]
  },
@@ -781,6 +813,22 @@
     "arguments": "{\"photo_id\":\"ph_4919f457ff38\",\"shop_id\":\"shop-038\"}",
     "id": "call_72b2b0e6-69ee-4175-93f7-5aecbf8358e0",
     "name": "check_payment_screenshot"
+   }
+  ]
+ },
+ "cb0e2981a60ca3a19de28fbefc7b5cb7f3d7e4861274540e70268db2f2016690": {
+  "cached_tokens": 0,
+  "completion_tokens": 103,
+  "content": "",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.252,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 3892,
+  "tool_calls": [
+   {
+    "arguments": "{\"delivery_id\":\"dlv-56-9007\",\"shop_id\":\"shop-008\"}",
+    "id": "call_f99c4511-e671-469f-8df0-e31d25d7b50d",
+    "name": "flag_delivery_to_owner"
    }
   ]
  },

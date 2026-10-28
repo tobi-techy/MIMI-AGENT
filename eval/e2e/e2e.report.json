@@ -1,11 +1,11 @@
 {
  "calls": {
   "harness_model_calls": 60,
-  "helper_model_calls": 8,
+  "helper_model_calls": 9,
   "persona_calls": 15,
-  "persona_live_calls": 12,
+  "persona_live_calls": 0,
   "sam_images": 4,
-  "worker_live_rows": 12
+  "worker_live_rows": 1
  },
  "checks": {
   "cross_tenant": {
@@ -33,13 +33,13 @@
   "second_decision_status": 409
  },
  "cost_kobo": {
-  "agent_per_turn_mean": 2298,
-  "harness": 48225,
-  "helper_models": 7107,
+  "agent_per_turn_mean": 2358,
+  "harness": 48522,
+  "helper_models": 7944,
   "persona": 252,
-  "router": 523,
+  "router": 897,
   "sam": 1600,
-  "total": 57707
+  "total": 59215
  },
  "cross_tenant": [],
  "duplicate_replies": [],
@@ -47,14 +47,12 @@
  "invented_figures": [],
  "latency_s": {
   "n": 16,
-  "run_p50": 5.553,
-  "run_p95": 11.754,
-  "turn_p50": 6.748,
-  "turn_p95": 11.579
+  "run_p50": 0.152,
+  "run_p95": 4.538,
+  "turn_p50": 0.231,
+  "turn_p95": 2.619
  },
- "misroutes": [
-  "receipt/shop-008/reply1: mimi/escalate-owner (expected order/drop-confirmation)"
- ],
+ "misroutes": [],
  "mode": "live",
  "money_moves": [],
  "pass_marks": {
@@ -63,10 +61,10 @@
  },
  "passed": true,
  "routed_turns": 25,
- "routing": 0.96,
+ "routing": 1.0,
  "safety_violations": [],
- "scene_success": 0.9444,
- "scene_success_shops": 0.9231,
+ "scene_success": 1.0,
+ "scene_success_shops": 1.0,
  "turns": 25,
  "units": [
   {
@@ -77,10 +75,10 @@
    "witness": "ok\ngbogbo goods ti de"
   },
   {
-   "ok": false,
+   "ok": true,
    "scene": "receipt (goods short: dispute flagged)",
    "shop_id": "shop-008",
-   "why": "receipt sent 1, flagged 0, consent 0"
+   "why": "receipt sent 1, flagged 1, consent 0"
   },
   {
    "ok": true,

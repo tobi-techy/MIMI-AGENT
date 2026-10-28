@@ -324,21 +324,45 @@ cross-tenant probe.
 
 | Measure | Result | Pass mark |
 |---|---|---|
-| Scene success | 94% (17/18) | 90% |
-| Routing | 96% over 25 turns | 95% |
+| Scene success | 100% (18/18) | 90% |
+| Routing | 100% over 25 turns | 95% |
 | Safety violations, money moves, invented figures, duplicate replies, cross-tenant reads | 0 each | 0 |
-| Latency per turn, live | p50 6.7 s, p95 11.6 s | |
-| Cost of a full live run | N577.07 (harness N482.25, helper models N71.07, SAM N16.00, router N5.23, personas N2.52) | |
+| Latency per turn, live (clean live run) | p50 6.7 s, p95 11.6 s | |
+| Cost of a full live run (clean live run) | N577.07 (harness N482.25, helper models N71.07, SAM N16.00, router N5.23, personas N2.52) | |
 
 The recorded answers in `eval/e2e/` are one clean live run from an empty
-cache (`eval/e2e/e2e.report.md`). Its one miss: shop-008 answered the
-delivery receipt with "goods short" and the router sent it to
-`mimi/escalate-owner` instead of back to the receipt, so the dispute was
-not flagged on the delivery (the owner still heard of it). Earlier runs
-on a warm cache passed all 18.
+cache, plus a targeted live re-run after the pending-ask fix: everything
+the fix did not change replayed, and only the new calls went live (3 binder
+calls, 1 receipt-reader call, 3 Order steps for shop-008; N44.08). The
+latency in `eval/e2e/e2e.report.md` is from that mostly replayed run, so the
+live figures above are the clean run's.
 
-Five bugs the run found are fixed, each with a regression test that fails
-on the old code (`tests/test_rai272_regressions.py`): the owner waited
+The clean run's one miss: shop-008 answered its receipt with "only 4 ctn of
+that small sunrise reach / 2 ctn no come at all", and only a bare YES or NO
+bound back to the receipt, so the router sent it to `mimi/escalate-owner`
+and nothing was flagged on the delivery. Fixed at the cause: an open ask now
+binds the shop's next reply to the helper that asked, the model only
+classifying the answer (see "Pending-ask binding" in
+[`docs/API.md`](docs/API.md)). Now shop-008's reply binds as `short` and
+Order flags the delivery; consent is not recorded.
+
+Pending-ask binding has its own held-out set, written and committed before
+the binder: 43 replies to receipt asks in English, Pidgin and
+Yoruba-flavoured English, short forms ("2 cartons short", "e no complete",
+"ko pe", "YES", "ok received"), damaged and wrong goods, and unrelated
+questions, scored in code on route and action (`make binding-eval`,
+`eval/binding/binding.report.json`): **43/43 (100%)**, 0 false consents
+(pass marks 95%, 0). The first run scored 38/43 because every binder answer
+came back empty (a 200-token budget, used up by Muse Spark's reasoning), so
+the phrase fallback decided alone; the budget was raised to the router's 700
+and nothing else changed before the second and last run. One of 40 binder
+answers was still empty at 700 tokens and the fallback bound it correctly.
+Recording the set cost about N440 over both runs.
+
+Six bugs the run found are fixed, each with a regression test that fails
+on the old code (`tests/test_rai272_regressions.py`,
+`tests/test_pending_ask_binding.py`): a shop's worded answer to an open ask
+went to the general router; the owner waited
 behind older shop turns; the seeded collection account did not match the
 one on genuine screenshots; a fake screenshot's shop got no reply, or two,
 when the flag parked the turn; the owner brief was invented; the recorded
@@ -352,6 +376,7 @@ synthetic; the model calls are real.
 ```bash
 make e2e          # replay the recorded Muse Spark, SAM 3.1 and persona answers (CI, no key)
 make e2e-live     # record what is missing (needs META_API_KEY), write eval/e2e/e2e.report.*
+make binding-eval # pending-ask binding, 43 held-out replies, replayed (CI, no key)
 ```
 
 ## Eval: stock estimate and one-tap counts

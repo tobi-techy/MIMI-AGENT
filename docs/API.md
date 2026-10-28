@@ -158,6 +158,38 @@ Two rules came from the e2e run:
 * A write that asks the shop something (a photo, a stock tap, a YES) leaves
   the thread waiting on that skill, so the answer routes back by rule.
 
+### Pending-ask binding
+
+An open ask binds the shop's next reply to the helper that asked
+(`mimi/harness/binding.py`, wired in `Agent`):
+
+* The ask is stored on the thread with the skill, what answer it expects,
+  when it was sent (`asked_at`, with its zone) and what it is about
+  (`ask_ref`: the delivery id or the sku). It expires: 48 h for a delivery
+  receipt, 24 h for a stock tap or a shelf photo (`binding.ASK_TTL`). An
+  expired ask captures nothing; the message routes as a new one and the
+  route's `thread_note` says so.
+* A fixed short answer (a tap, YES, NO, a number, a photo when a photo was
+  asked for) binds by rule, with no model call.
+* Any other reply: the router model only classifies it against the ask,
+  into a fixed label set (receipt: `yes`, `short`, `damaged`, `wrong_items`,
+  `unclear`, `unrelated`). Every label except `unrelated` binds to the
+  asking helper in code (route rule `pending_bind:<label>`, layer `rule`).
+  `unrelated` releases the message to the normal router only at confidence
+  0.6 or more, and the ask stays open for the real answer. A binder model
+  error or an empty answer falls back to the phrase rules: release only when
+  they clearly point at another helper's skill, otherwise bind.
+* The binder never decides what the answer means: Order's reply reader and
+  its code guards still decide consent or dispute.
+* A turn of the asking helper that answers nothing (no consent, flag,
+  count or credit submission, and no new ask) leaves the ask open.
+* Belt and braces: when `mimi/escalate-owner` fires on a shop message tied
+  to a delivery (its receipt ask was open, or the shop named the delivery
+  id), code also records `flag_delivery_to_owner` on that delivery (notify
+  tier, reason `escalated`, the shop's words quoted, the same business key
+  as Order's own flag, so it is never recorded twice). Never consent, never
+  a money move. The route result carries `delivery_flagged`.
+
 The queue takes a lapsed lease first, then the owner, then shops and reps,
 then webhooks and routines; oldest first within each.
 

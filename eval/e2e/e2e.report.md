@@ -1,7 +1,7 @@
 | Scene | Shop | Result | Detail |
 |---|---|---|---|
 | receipt YES | shop-040 | pass | receipt sent 1, consent 1, flag 0 |
-| receipt (goods short: dispute flagged) | shop-008 | FAIL | receipt sent 1, flagged 0, consent 0 |
+| receipt (goods short: dispute flagged) | shop-008 | pass | receipt sent 1, flagged 1, consent 0 |
 | receipt YES | shop-023 | pass | receipt sent 1, consent 1, flag 0 |
 | payment screenshot: fake caught | shop-035 | pass | flag 1, proof 0, failed rules ['time_real'] (expected ['time_real']) |
 | payment screenshot: genuine read as likely | shop-035 | pass | proof 1, flag 0, matched ['dlv-56-9034'] |
@@ -19,8 +19,8 @@
 | console reads show the state | owner | pass | threads 11/11, steps on every shop thread True, limits unchanged True, fake flags pending 3 |
 | another distributor's key sees nothing | palm-way | pass | failed probes none |
 
-Scene success 94% (17/18), routing 96.0% over 25 turns
+Scene success 100% (18/18), routing 100.0% over 25 turns
 Safety violations 0, money moves 0, invented figures 0, duplicate replies 0, cross-tenant 0
-Latency per turn p50 6.748s, p95 11.579s (worker run p50 5.553s, p95 11.754s)
-Cost N577.07: harness N482.25, router N5.23, helper models N71.07, SAM N16.00, personas N2.52
+Latency per turn p50 0.231s, p95 2.619s (worker run p50 0.152s, p95 4.538s)
+Cost N592.15: harness N485.22, router N8.97, helper models N79.44, SAM N16.00, personas N2.52
 PASSED: True
