@@ -19,9 +19,10 @@ def store_url(tmp_path: Path) -> str:
     pg = os.environ.get("MIMI_TEST_DATABASE_URL", "").strip()
     if not pg:
         return f"sqlite:///{tmp_path / 'store.db'}"
+    from mimi.store.db import normalize_url
     from mimi.store.schema import metadata
 
-    engine = sa.create_engine(pg)
+    engine = sa.create_engine(normalize_url(pg))
     metadata.drop_all(engine)
     engine.dispose()
     return pg

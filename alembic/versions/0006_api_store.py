@@ -323,7 +323,7 @@ def upgrade() -> None:
         sa.Column("seq", sa.Integer(), nullable=False),
         sa.Column("step", sa.Integer(), nullable=False),
         sa.Column("type", sa.String(32), nullable=False),
-        sa.Column("tool", sa.String(200), nullable=False),
+        sa.Column("tool", sa.Text(), nullable=False),
         sa.Column("tier", sa.String(16), nullable=False),
         sa.Column("short", sa.Text(), nullable=False),
         sa.Column("cost_kobo", sa.BigInteger(), nullable=False),

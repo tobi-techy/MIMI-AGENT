@@ -308,7 +308,8 @@ thread_events = sa.Table(
     sa.Column("seq", sa.Integer(), nullable=False, default=0),
     sa.Column("step", sa.Integer(), nullable=False, default=0),
     sa.Column("type", sa.String(32), nullable=False),
-    sa.Column("tool", sa.String(200), nullable=False, default=""),
+    # Every tool a step called, comma separated: unbounded.
+    sa.Column("tool", sa.Text(), nullable=False, default=""),
     sa.Column("tier", sa.String(16), nullable=False, default=""),
     sa.Column("short", sa.Text(), nullable=False, default=""),
     sa.Column("cost_kobo", sa.BigInteger(), nullable=False, default=0),

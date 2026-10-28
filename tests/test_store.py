@@ -205,6 +205,10 @@ def test_a_turn_that_keeps_failing_stops_after_three_tries(engine: Any) -> None:
 
 
 def test_database_url_prefers_database_url() -> None:
-    assert database_url({"DATABASE_URL": "postgres://u@h/db"}) == "postgresql://u@h/db"
+    assert database_url({"DATABASE_URL": "postgres://u@h/db"}) == "postgresql+psycopg2://u@h/db"
+    assert database_url({"DATABASE_URL": "postgresql://u@h/db"}) == \
+        "postgresql+psycopg2://u@h/db"
+    assert database_url({"DATABASE_URL": "postgresql+psycopg://u@h/db"}) == \
+        "postgresql+psycopg://u@h/db"
     assert database_url({"MIMI_DB_URL": "sqlite:///x.db"}) == "sqlite:///x.db"
     assert database_url({}) == "sqlite:///./mimi.db"

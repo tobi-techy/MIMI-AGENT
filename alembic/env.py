@@ -31,8 +31,11 @@ def _url() -> str:
             "Set DATABASE_URL (or MIMI_DB_URL) to a SQLAlchemy URL, for example "
             "sqlite:////tmp/mimi.db"
         )
-    if url.startswith("postgres://"):  # hosted Postgres often hands this form out
-        url = "postgresql://" + url[len("postgres://"):]
+    # Pin Postgres to psycopg2 (the ``postgres`` extra): hosted Postgres often
+    # hands out postgres://, and SQLAlchemy 2.1 maps postgresql:// to psycopg 3.
+    for bare in ("postgres://", "postgresql://"):
+        if url.startswith(bare):
+            return "postgresql+psycopg2://" + url[len(bare):]
     return url
 
 

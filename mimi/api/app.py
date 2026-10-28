@@ -149,9 +149,12 @@ def create_app(settings: Settings | None = None, agent: Agent | None = None, *,
                           transcript=m.transcript, transcript_lang=m.transcript_lang)
         if not (body.text.strip() or body.button_id or media.kind != "none"):
             raise HTTPException(422, "a turn needs text, a button or media")
+        at = body.received_at or datetime.now(UTC)
+        if at.tzinfo is None:
+            at = at.replace(tzinfo=UTC)  # a time without a zone is read as UTC
         inbound = Inbound(
             source=body.source, org_id=key.tenant_id, external_id=body.message_id,
-            received_at=body.received_at or datetime.now(UTC),
+            received_at=at,
             payload=Payload(text=body.text, from_phone=body.phone, media=media,
                             button_id=body.button_id))
         view = agent.submit(key.tenant_id, inbound, media_ref=ref, simulated=body.simulated)

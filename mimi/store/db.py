@@ -21,20 +21,29 @@ from sqlalchemy.engine import Engine
 DEFAULT_URL = "sqlite:///./mimi.db"
 
 
+def normalize_url(url: str) -> str:
+    """Pin Postgres to psycopg2 (the ``postgres`` extra).
+
+    Hosted Postgres often hands out ``postgres://``, and SQLAlchemy 2.1 maps a
+    bare ``postgresql://`` to psycopg 3, which this package does not install.
+    """
+    for bare in ("postgres://", "postgresql://"):
+        if url.startswith(bare):
+            return "postgresql+psycopg2://" + url[len(bare):]
+    return url
+
+
 def database_url(env: Mapping[str, str] | None = None) -> str:
     e = env if env is not None else os.environ
     for name in ("DATABASE_URL", "MIMI_DB_URL"):
         url = e.get(name, "").strip()
         if url:
-            # Hosted Postgres often hands out postgres://; SQLAlchemy wants postgresql://.
-            if url.startswith("postgres://"):
-                url = "postgresql://" + url[len("postgres://"):]
-            return url
+            return normalize_url(url)
     return DEFAULT_URL
 
 
 def make_engine(url: str | None = None) -> Engine:
-    url = url or database_url()
+    url = normalize_url(url or database_url())
     if url.startswith("sqlite"):
         memory = url in ("sqlite://", "sqlite:///:memory:") or "mode=memory" in url
         kw: dict[str, Any] = {"poolclass": sa.pool.StaticPool} if memory else {}
