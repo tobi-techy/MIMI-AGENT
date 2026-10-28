@@ -149,12 +149,10 @@ def safe_route(cat: Catalog, case: dict[str, Any], dec: Any) -> bool:
 
 
 def score(cat: Catalog, live: bool = False) -> dict[str, Any]:
-    from mimi.harness.router_eval import correct, money_misroute
-    from mimi.harness.router_eval import directory, inbound, thread_state
+    from mimi.harness.router_eval import correct, directory, inbound, money_misroute, thread_state
     from mimi.models.cache import CacheMiss
-    from mimi.world.loader import load_world
-
     from mimi.orders.catalogue import BookNames
+    from mimi.world.loader import load_world
 
     world = load_world()
     units = {s.sku: s.unit for s in world.skus}

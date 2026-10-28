@@ -24,9 +24,9 @@ import json
 import math
 import os
 import re
-from typing import Any
 from dataclasses import dataclass, field
 from pathlib import Path
+from typing import Any
 
 from mimi.skills.spec import SkillDoc, SkillError, parse
 
