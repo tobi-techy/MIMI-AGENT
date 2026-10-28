@@ -188,5 +188,5 @@ def test_make_api_keeps_local_defaults_in_dev_and_passes_prod_settings() -> None
     dev = _run_api_env()
     assert dev.returncode == 0 and "db=sqlite" in dev.stdout and "local-owner-key" in dev.stdout
     prod = _run_api_env(MIMI_ENV="production", DATABASE_URL="postgresql://poc/db",
-                        MIMI_API_KEYS="coral-lane:owner:" + "k" * 32)
+                        MIMI_API_KEYS="coral-lane:owner:" + "k" * 32)  # pragma: allowlist secret
     assert prod.returncode == 0 and "db=postgresql://poc/db" in prod.stdout
