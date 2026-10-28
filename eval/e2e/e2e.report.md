@@ -13,7 +13,7 @@
 | stock: one-tap count + restock draft | shop-014 | pass | asks 1, count 1 (3-5), drafts 1, reply "Okay. I've changed it to 6 tubs. Coral Lane Trading will confirm before delivery." |
 | credit bump: shelf photo to approvals | shop-020 | pass | photo asks 1, submitted 1, shelf counted True, recommendation hold |
 | credit bump: shelf photo to approvals | shop-011 | pass | photo asks 1, submitted 1, shelf counted True, recommendation support |
-| steer: receipt YES + balance question in one message | shop-033 | pass | consent 1, flag 0, follow-up collector/collections (done), replies 2, balance 'Hello Mama Lanre Provisions, you owe N69,700 in total, all overdue acr' |
+| steer: receipt YES + balance question in one message | shop-033 | pass | consent 1, flag 0, follow-up collector/collections (done), replies 2, balance 'Hello Mama Lanre Provisions, you owe N69,700 in total, all of which is' |
 | steer: voice note corrects a restock draft mid-task | shop-014 | pass | held True, inbox ['absorbed'], drafts 1 (revised to 6), replies ["Okay. I've changed it to 6 tubs. Coral Lane Tradin"] |
 | steer: payment screenshot while a credit approval is parked | shop-020 | pass | route proof/fake-alert-check, credit approval pending (was pending: True), replies 1, credit intents 0 |
 | owner message handled first while shop turns queue | owner | pass | claim order ['owner', 'shop-020', 'shop-011', 'shop-014'] |
@@ -23,7 +23,7 @@
 | brand: promo answered from code, brand email kept as a draft | brand | pass | promo route brand/promo-info, reply 'Promos running today:\n- Sunrise noodles: buy 10 cartons, get', email route brand/brand-email, drafts ['queued_for_approval'], sent elsewhere 0 |
 | order: handwritten list photo priced by code, approved, shop told | shop-013 | pass | route order/order-intake, orders ['approved'], lines [('NDL-120-CTN', 5), ('MLK-TIN-CTN', 3), ('SPAG-500', 10)], notices [('submit_order', 'ready'), ('submit_order_notice', 'ready')] |
 | order: a voice note edits it before approval, v2 replaces v1 | shop-037 | pass | v1 ['superseded'], v2 ['approved'], v2 lines [('NDL-120-CTN', 3)], approve v1 -> 409 |
-| daily naira cap: helpers pause, holding reply, one owner note, resume on approve | owner | pass | parked ['parked', 'parked'], raise items 1, owner notes 1, decision 200, cap 72062 -> 144124 kobo, resumed and answered 2/2 |
+| daily naira cap: helpers pause, holding reply, one owner note, resume on approve | owner | pass | parked ['parked', 'parked'], raise items 1, owner notes 1, decision 200, cap 69360 -> 138720 kobo, resumed and answered 2/2 |
 | owner approve / reject through /v1/approvals | owner | pass | decisions ['approve:200', 'approve:200', 'approve:200', 'approve:200', 'reject:200', 'reject:200'], second decision 409, woken helpers quiet True (6), credit requests {'shop-011': 'approved', 'shop-020': 'rejected'} |
 | console reads show the state | owner | pass | threads 17/17, steps on every shop thread True, limits unchanged True, fake flags pending 3 |
 | another distributor's key sees nothing | palm-way | pass | failed probes none |
@@ -46,6 +46,6 @@ Store sqlite, lost jobs 0
 
 Scene success 100% (27/27), routing 100.0% over 43 turns
 Safety violations 0, money moves 0, invented figures 0, duplicate replies 0, cross-tenant 0
-Latency per turn p50 0.11s, p95 4.83s (worker run p50 0.056s, p95 4.756s)
-Cost N922.53: harness N740.50, router N28.64, helper models N126.87, SAM N24.00, personas N2.52
+Latency per turn p50 0.121s, p95 5.174s (worker run p50 0.076s, p95 5.0s)
+Cost N895.60: harness N713.48, router N28.64, helper models N126.87, SAM N24.00, personas N2.61
 PASSED: True

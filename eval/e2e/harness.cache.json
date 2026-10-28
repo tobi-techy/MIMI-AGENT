@@ -56,6 +56,74 @@
    }
   ]
  },
+ "1094d6da8dffe5529a3147403fc801cf591baefd79593120f177c9aa89a6a297": {
+  "cached_tokens": 0,
+  "completion_tokens": 264,
+  "content": "",
+  "finish_reason": "tool_calls",
+  "latency_s": 2.078,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 5591,
+  "request": "902af08eeab12161ce6e21455c40e9b9fe7743fec76a85f548fcf50b58c1ee23",
+  "tool_calls": [
+   {
+    "arguments": "{\"body\":\"Hello Mama Lanre Provisions, you owe N69,700 in total, all of which is overdue (N69,700) across 4 open invoices. Please pay as soon as you can. Thank you.\",\"channel\":\"shop_whatsapp\",\"ends_turn\":true,\"kind\":\"reply\",\"shop_id\":\"shop-033\"}",
+    "id": "call_5f992b5e-927d-40e1-b174-ff05be1551e2",
+    "name": "send_to_user"
+   }
+  ],
+  "versions": {
+   "policy": "policy-2026-10-27",
+   "skill": "collector:collector-v1"
+  }
+ },
+ "10c07d3209a001f53717820d4644ad6315a69f0a69969268a9684bba731e9f32": {
+  "cached_tokens": 0,
+  "completion_tokens": 104,
+  "content": "",
+  "finish_reason": "tool_calls",
+  "latency_s": 2.035,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 2630,
+  "request": "8a7537eaf4915d95c64fe4e80f900ece58c2cd7a5033f399ff7e7b37b2ab4e90",
+  "tool_calls": [
+   {
+    "arguments": "{\"shop_id\":\"shop-033\"}",
+    "id": "call_bff6f947-d0b8-4c5a-93af-d9ea03bde763",
+    "name": "get_open_deliveries"
+   }
+  ],
+  "versions": {
+   "policy": "policy-2026-10-27",
+   "skill": "order:order-v0.1"
+  }
+ },
+ "114882f0fe693d40826fe425b59d8713d5cc4b9fe0f12d735b4d68ae331fbad7": {
+  "cached_tokens": 0,
+  "completion_tokens": 292,
+  "content": "",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.413,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 3510,
+  "request": "d1e7f7016196663b59bfaf3022d647ce3b6e41bd63afb867881f4efff175f2f3",
+  "tool_calls": [
+   {
+    "arguments": "{\"delivery_id\":\"dlv-56-9039\",\"shop_id\":\"shop-040\"}",
+    "id": "call_000d681a-7bdd-493a-977e-745c1ba40ce6",
+    "name": "record_delivery_consent"
+   },
+   {
+    "arguments": "{\"body\":\"Thank you. Delivery dlv-56-9039 is confirmed.\",\"channel\":\"shop_whatsapp\",\"ends_turn\":true,\"shop_id\":\"shop-040\"}",
+    "id": "call_151faa39-39ce-4f83-ba41-0a30abe7f113",
+    "name": "send_to_user"
+   }
+  ],
+  "versions": {
+   "policy": "policy-2026-10-27",
+   "skill": "order:order-v0.1"
+  }
+ },
  "12b3bffc90aed4053e606150e68f8cbb65c0e9acc124a630156c1cf0d1cb2f7c": {
   "cached_tokens": 2673,
   "completion_tokens": 37,
@@ -132,6 +200,27 @@
   "versions": {
    "policy": "policy-2026-10-27",
    "skill": "stock:stock-v0.1"
+  }
+ },
+ "1a8fbb5118fa50f8c6d0cc6ef2eab9d5db7d8d5049ff1007b1abd6f198ab69ba": {
+  "cached_tokens": 241,
+  "completion_tokens": 129,
+  "content": "Confirming the completed delivery for your shop.",
+  "finish_reason": "tool_calls",
+  "latency_s": 0.884,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 2653,
+  "request": "aac7dfc03e3ce3f3166ecb33bd75cadb076b3c157744dcfd82ce734423c86eb2",
+  "tool_calls": [
+   {
+    "arguments": "{\"shop_id\":\"shop-008\"}",
+    "id": "call_e83af3cb-63d2-4a0b-8058-3cc81177f062",
+    "name": "get_open_deliveries"
+   }
+  ],
+  "versions": {
+   "policy": "policy-2026-10-27",
+   "skill": "order:order-v0.1"
   }
  },
  "1b14edec3e4a49204b1da4597f7a36df66d5cdf0e281d9bcdbb0ca4fa154fca7": {
@@ -318,6 +407,21 @@
    "skill": "brand:brand-v0.1"
   }
  },
+ "365095b672042c3de472efef7dfec57063e352fb722db27d8f18478f0cef7ac3": {
+  "cached_tokens": 2801,
+  "completion_tokens": 39,
+  "content": "",
+  "finish_reason": "stop",
+  "latency_s": 0.982,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 3024,
+  "request": "cf09bf8a93544d55e5c6833103425003bdaece4c9a8e2069b91b417e16ae6fdc",
+  "tool_calls": [],
+  "versions": {
+   "policy": "policy-2026-10-27",
+   "skill": "order:order-v0.1"
+  }
+ },
  "36fb2c7f539f42abd21a0c67cd28717aac0996b4c5f854d25445e83c9727a74e": {
   "cached_tokens": 3057,
   "completion_tokens": 25,
@@ -394,6 +498,27 @@
   "versions": {
    "policy": "policy-2026-10-27",
    "skill": "proof:proof-v0.2"
+  }
+ },
+ "3cc923467ff76df7f3def4ddab770e2a08213a1f0c107fccf7fd76237d06ad3f": {
+  "cached_tokens": 0,
+  "completion_tokens": 127,
+  "content": "Confirming the delivery \u2014 pulling it up to send the receipt.",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.981,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 2653,
+  "request": "f32d3d5a335e1d572b3f9e9ac061aa16d75405f34322589c921c206d389b703b",
+  "tool_calls": [
+   {
+    "arguments": "{\"shop_id\":\"shop-040\"}",
+    "id": "call_71bcfb29-ffab-485d-ace7-531d70669b61",
+    "name": "get_open_deliveries"
+   }
+  ],
+  "versions": {
+   "policy": "policy-2026-10-27",
+   "skill": "order:order-v0.1"
   }
  },
  "3f94e1e635629f07b6eeb18009d8d572afa68ed62f74a8ff588e54945df2991d": {
@@ -537,6 +662,27 @@
   "prompt_tokens": 6059,
   "tool_calls": []
  },
+ "47cbc491d487afdce0444657e8a9f8c2999cfc87ad2da6fdbc27f02a875218c2": {
+  "cached_tokens": 0,
+  "completion_tokens": 224,
+  "content": "A shortage was flagged \u2014 I'll log what was reported.",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.73,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 3284,
+  "request": "112bc5d95bc5c3d55c5f1908bc40b064acfec6c66219bd6264e0809281aa6a48",
+  "tool_calls": [
+   {
+    "arguments": "{\"delivery_id\":\"dlv-56-9007\",\"shop_id\":\"shop-008\"}",
+    "id": "call_8ab42fd2-20f3-43d9-83a6-cf0984a2d9ac",
+    "name": "read_receipt_reply"
+   }
+  ],
+  "versions": {
+   "policy": "policy-2026-10-27",
+   "skill": "order:order-v0.1"
+  }
+ },
  "4870cd3a5d54d063c52ca758cf7fb5eb5d2da93d4ee0461ad6c9fb95488c6bb2": {
   "cached_tokens": 2929,
   "completion_tokens": 210,
@@ -550,6 +696,53 @@
    {
     "arguments": "{\"body\":\"Thank you. Delivery dlv-56-9032 is confirmed.\",\"channel\":\"shop_whatsapp\",\"ends_turn\":true,\"shop_id\":\"shop-033\"}",
     "id": "call_f2a756d4-8f48-4e66-990f-8d19c8bb0257",
+    "name": "send_to_user"
+   }
+  ],
+  "versions": {
+   "policy": "policy-2026-10-27",
+   "skill": "order:order-v0.1"
+  }
+ },
+ "48f95c17e6aeea8c38dab05c337be7f8d6c6e717e4c5efda5416e6d001b8191c": {
+  "cached_tokens": 0,
+  "completion_tokens": 103,
+  "content": "",
+  "finish_reason": "tool_calls",
+  "latency_s": 0.91,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 2867,
+  "request": "9514e26a78b07d0b4c1236ee3d704cedd29af2e430aff59872c29549fba07e70",
+  "tool_calls": [
+   {
+    "arguments": "{\"delivery_id\":\"dlv-56-9007\",\"shop_id\":\"shop-008\"}",
+    "id": "call_84510376-7d9a-4dda-b193-6d6bc353a80e",
+    "name": "send_delivery_receipt"
+   }
+  ],
+  "versions": {
+   "policy": "policy-2026-10-27",
+   "skill": "order:order-v0.1"
+  }
+ },
+ "4ec34b93e2c85ff3ff13328aa5bd6f8fa582dd079c831f7d738d3ef137bc036e": {
+  "cached_tokens": 3185,
+  "completion_tokens": 251,
+  "content": "Confirming your delivery receipt and passing along your confirmation.",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.743,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 3457,
+  "request": "e135a604926a93ab61dd8cf242b9910f8b5e0eaf67ca270c6d8570166d65322f",
+  "tool_calls": [
+   {
+    "arguments": "{\"delivery_id\":\"dlv-56-9032\",\"shop_id\":\"shop-033\"}",
+    "id": "call_a2f0f1a4-5a18-495a-a813-e5fe514e2c05",
+    "name": "record_delivery_consent"
+   },
+   {
+    "arguments": "{\"body\":\"Thank you. Delivery dlv-56-9032 is confirmed.\",\"channel\":\"shop_whatsapp\",\"ends_turn\":true,\"kind\":\"reply\",\"shop_id\":\"shop-033\"}",
+    "id": "call_ecf94890-a9c4-4950-831b-c2f7a0f051cb",
     "name": "send_to_user"
    }
   ],
@@ -740,6 +933,21 @@
    }
   ]
  },
+ "660bc4211f0a80acc16df23249da80c358ddf7cf7121499dbab89d651790c869": {
+  "cached_tokens": 2545,
+  "completion_tokens": 27,
+  "content": "",
+  "finish_reason": "stop",
+  "latency_s": 1.435,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 3020,
+  "request": "3b83e7e62e8ebccaa30390610f1a8242eccd730052b6443bc9d9e2b6aae3cc0c",
+  "tool_calls": [],
+  "versions": {
+   "policy": "policy-2026-10-27",
+   "skill": "order:order-v0.1"
+  }
+ },
  "67bdad54b926e998498c2688b1b380dc9ae01c90023c745696a7af4dd850db77": {
   "cached_tokens": 3185,
   "completion_tokens": 31,
@@ -749,6 +957,27 @@
   "model": "muse-spark-1.3",
   "prompt_tokens": 6038,
   "tool_calls": []
+ },
+ "69ba2c687cc03436c4f590e15925427597f63c1277e97dbdc7a9ec5b079d681e": {
+  "cached_tokens": 2673,
+  "completion_tokens": 123,
+  "content": "Your shelf list is in \u2014 I'll get it ready for the next van.",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.582,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 2895,
+  "request": "c6e9f0733ef1cbaaf2cf35425c64dca82f6baaa92019fbf66262c78436fdbb99",
+  "tool_calls": [
+   {
+    "arguments": "{\"photo_id\":\"ph_85ac0cf910a7\",\"shop_id\":\"shop-013\"}",
+    "id": "call_d38d1b1b-1e9c-4bad-ac6f-091a879cb2ca",
+    "name": "read_order_photo"
+   }
+  ],
+  "versions": {
+   "policy": "policy-2026-10-27",
+   "skill": "order:order-intake-v0.1"
+  }
  },
  "6adc4c4f5c98141cba05a8ee7c9728ea0747e79754ff4b56865540a82c1c4805": {
   "cached_tokens": 2673,
@@ -875,6 +1104,27 @@
    "skill": "credit:credit-v0.1"
   }
  },
+ "715cf905491151ee9001861756ce4907c6c566d1e22fdd6f5726674f5f28037a": {
+  "cached_tokens": 2801,
+  "completion_tokens": 257,
+  "content": "",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.204,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 3101,
+  "request": "bb55caf02702eacf064f743ae49ca88036e99849ca7a3f856ca8c113769ee401",
+  "tool_calls": [
+   {
+    "arguments": "{\"lines\":[{\"as_written\":\"5 ctn Indomie (big)\",\"item\":\"Indomie (big)\",\"quantity\":5,\"unit\":\"ctn\"},{\"as_written\":\"3 ctn Tin milk\",\"item\":\"Tin milk\",\"quantity\":3,\"unit\":\"ctn\"},{\"as_written\":\"10 pk spaghetti\",\"item\":\"spaghetti\",\"quantity\":10,\"unit\":\"pk\"}],\"shop_id\":\"shop-013\"}",
+    "id": "call_8d40a113-fd86-4eb0-a3df-9a479a7636bf",
+    "name": "submit_order"
+   }
+  ],
+  "versions": {
+   "policy": "policy-2026-10-27",
+   "skill": "order:order-intake-v0.1"
+  }
+ },
  "726f7d06ad529cf680aad45dbd1642f2bb102ecd160dbf551e3139bac1cf401d": {
   "cached_tokens": 2801,
   "completion_tokens": 252,
@@ -989,6 +1239,53 @@
   "versions": {
    "policy": "policy-2026-10-27",
    "skill": "proof:proof-v0.2"
+  }
+ },
+ "75d253b893da8d32a35796ad1ff06beb8840d9cbe3f1c34b977602eccd7c3cac": {
+  "cached_tokens": 2929,
+  "completion_tokens": 232,
+  "content": "",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.099,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 3527,
+  "request": "e4a1a5de23b31b8edce05ca6cd0cd44573e1cc1500a129d8876313e0e17717c2",
+  "tool_calls": [
+   {
+    "arguments": "{\"delivery_id\":\"dlv-56-9007\",\"shop_id\":\"shop-008\"}",
+    "id": "call_3206be54-79bb-48d0-8b9c-f8b2c05ddf5d",
+    "name": "flag_delivery_to_owner"
+   },
+   {
+    "arguments": "{\"body\":\"Thanks, I've told Coral Lane Trading about this delivery. Nothing has changed on your account.\",\"channel\":\"shop_whatsapp\",\"ends_turn\":true,\"kind\":\"reply\",\"shop_id\":\"shop-008\"}",
+    "id": "call_d9bb4269-7dab-445e-b5fe-640394ffa585",
+    "name": "send_to_user"
+   }
+  ],
+  "versions": {
+   "policy": "policy-2026-10-27",
+   "skill": "order:order-v0.1"
+  }
+ },
+ "77ea70c59f4b59243776ce39ad9bee358c14b1633b2c5c3f13c5912a7cc7050c": {
+  "cached_tokens": 2545,
+  "completion_tokens": 99,
+  "content": "",
+  "finish_reason": "tool_calls",
+  "latency_s": 0.864,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 2827,
+  "request": "5dcf26397258fe3ca16a67bb2388c1541b227563197a2d0978622517b674d136",
+  "tool_calls": [
+   {
+    "arguments": "{\"delivery_id\":\"dlv-56-9032\",\"shop_id\":\"shop-033\"}",
+    "id": "call_c8d168f7-2267-4afc-9392-ef23da71a1c2",
+    "name": "send_delivery_receipt"
+   }
+  ],
+  "versions": {
+   "policy": "policy-2026-10-27",
+   "skill": "order:order-v0.1"
   }
  },
  "7ca24b9b74fa5481eae33ec59b0e1423b290a8c6e0244c4f6c3d4b6211a4f34b": {
@@ -1232,6 +1529,27 @@
    "skill": "proof:proof-v0.2"
   }
  },
+ "953e19b0216691fb3d2c5a6f1b0a6730dee2225dc6bd06e43ef3e4a37cb17375": {
+  "cached_tokens": 0,
+  "completion_tokens": 174,
+  "content": "Got your reply \u2014 checking it against the delivery.",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.164,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 3275,
+  "request": "0d60d54cb3838fce1d6422c83efe8819ee57bb4c2aac3e4ffba3b5b1bca84840",
+  "tool_calls": [
+   {
+    "arguments": "{\"delivery_id\":\"dlv-56-9039\",\"shop_id\":\"shop-040\"}",
+    "id": "call_339e3324-d13e-40fa-844f-288af4e28882",
+    "name": "read_receipt_reply"
+   }
+  ],
+  "versions": {
+   "policy": "policy-2026-10-27",
+   "skill": "order:order-v0.1"
+  }
+ },
  "96f5eab1a1357f6c04c9f2f6dc0b3e4fa7b07bf2b1ac2fed177d963084608f2c": {
   "cached_tokens": 2673,
   "completion_tokens": 84,
@@ -1251,6 +1569,21 @@
   "versions": {
    "policy": "policy-2026-10-27",
    "skill": "stock:stock-v0.1"
+  }
+ },
+ "9920f9ae08de9fa59a8f9e9f5a55309748aa5e70982980289322118297ea225b": {
+  "cached_tokens": 2801,
+  "completion_tokens": 48,
+  "content": "",
+  "finish_reason": "stop",
+  "latency_s": 1.21,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 2980,
+  "request": "0f25a92fe4234251122656490ebda184cb29eba09aad27272f64304beb8ec280",
+  "tool_calls": [],
+  "versions": {
+   "policy": "policy-2026-10-27",
+   "skill": "order:order-v0.1"
   }
  },
  "9933db496ff7dfe9d6d769daeb65a88477fbfea086342d6b730c5610330fd2ab": {
@@ -1796,6 +2129,27 @@
    }
   ]
  },
+ "d431d02ffca4c4c5dd30bc32eab6fc0715c0e82aa0090f6ca55aa8a1e482952e": {
+  "cached_tokens": 2673,
+  "completion_tokens": 181,
+  "content": "",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.481,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 3350,
+  "request": "919ffcbbbe99d8c7ac25c5a547046d21b6c680a293f8fdc5afc00baa3298ed88",
+  "tool_calls": [
+   {
+    "arguments": "{\"changes\":[{\"action\":\"remove\",\"as_written\":\"remove the sardine\",\"item\":\"sardine\"}],\"shop_id\":\"shop-037\"}",
+    "id": "call_32b8ea92-cd4c-4d8f-b498-9f70a8a00063",
+    "name": "revise_order"
+   }
+  ],
+  "versions": {
+   "policy": "policy-2026-10-27",
+   "skill": "order:order-intake-v0.1"
+  }
+ },
  "d6c52f988102f8d3342b4ba223e8ff47cfa1513a63a56e6d128979b392c31083": {
   "cached_tokens": 0,
   "completion_tokens": 225,
@@ -1972,6 +2326,27 @@
   "versions": {
    "policy": "policy-2026-10-27",
    "skill": "credit:credit-v0.1"
+  }
+ },
+ "e99ba1a53d668aef581f09eb75fd9b8995cee724d52ef4011c7e8e40a50269cb": {
+  "cached_tokens": 2545,
+  "completion_tokens": 91,
+  "content": "",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.448,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 2871,
+  "request": "d398ddd831f97d5b173a0a763b6eeac82bdf8b892949e28c61604189c2fd8c3d",
+  "tool_calls": [
+   {
+    "arguments": "{\"delivery_id\":\"dlv-56-9039\",\"shop_id\":\"shop-040\"}",
+    "id": "call_93768d94-a20f-435a-9198-77da558146f4",
+    "name": "send_delivery_receipt"
+   }
+  ],
+  "versions": {
+   "policy": "policy-2026-10-27",
+   "skill": "order:order-v0.1"
   }
  },
  "ec37c0f9929cfe8a8428ea5f82ce018f4a117f6f62d4c8c6fa9abb5d2d93abc5": {
@@ -2212,6 +2587,48 @@
   "versions": {
    "policy": "policy-2026-10-27",
    "skill": "proof:proof-v0.2"
+  }
+ },
+ "fc6a1f2a594c61b9d0c32446070d18e6cc630d2d597bd7c6045e44f14cbdde33": {
+  "cached_tokens": 2673,
+  "completion_tokens": 253,
+  "content": "",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.531,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 2874,
+  "request": "4f89b7f3c3bca396b60fde4d07272c0f6aefc0412210f5d5d9b400769f3abeb5",
+  "tool_calls": [
+   {
+    "arguments": "{\"lines\":[{\"as_written\":\"3 carton indomie\",\"item\":\"indomie\",\"quantity\":3,\"unit\":\"carton\"},{\"as_written\":\"5 tin sardine\",\"item\":\"sardine\",\"quantity\":5,\"unit\":\"tin\"}],\"shop_id\":\"shop-037\"}",
+    "id": "call_a4041efa-14f4-45b4-9f81-a5bdc9ea6f11",
+    "name": "submit_order"
+   }
+  ],
+  "versions": {
+   "policy": "policy-2026-10-27",
+   "skill": "order:order-intake-v0.1"
+  }
+ },
+ "ff596b3ad222f35adcc9d4217b40a01810b840cc63f61e7bd81d82024b91a72f": {
+  "cached_tokens": 2929,
+  "completion_tokens": 142,
+  "content": "",
+  "finish_reason": "tool_calls",
+  "latency_s": 0.959,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 3240,
+  "request": "98a125e441a0994451f49c47a80702e396b1783412a2775183cf667c37324880",
+  "tool_calls": [
+   {
+    "arguments": "{\"delivery_id\":\"dlv-56-9032\",\"shop_id\":\"shop-033\"}",
+    "id": "call_7fe4c4e8-999f-4463-b7ae-136a8b7f1df8",
+    "name": "read_receipt_reply"
+   }
+  ],
+  "versions": {
+   "policy": "policy-2026-10-27",
+   "skill": "order:order-v0.1"
   }
  },
  "ffa6e09fff25fdd9fc96a973947721a75dd51a27c94842ba1a3fdacc868c36dc": {

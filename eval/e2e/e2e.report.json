@@ -1,6 +1,6 @@
 {
  "calls": {
-  "harness_model_calls": 85,
+  "harness_model_calls": 83,
   "helper_model_calls": 15,
   "persona_calls": 15,
   "persona_live_calls": 0,
@@ -35,13 +35,13 @@
   "second_decision_status": 409
  },
  "cost_kobo": {
-  "agent_per_turn_mean": 2139,
-  "harness": 74050,
+  "agent_per_turn_mean": 2076,
+  "harness": 71348,
   "helper_models": 12687,
-  "persona": 252,
+  "persona": 261,
   "router": 2864,
   "sam": 2400,
-  "total": 92253
+  "total": 89560
  },
  "cross_tenant": [],
  "duplicate_replies": [],
@@ -216,10 +216,10 @@
  ],
  "latency_s": {
   "n": 32,
-  "run_p50": 0.056,
-  "run_p95": 4.756,
-  "turn_p50": 0.11,
-  "turn_p95": 4.83
+  "run_p50": 0.076,
+  "run_p95": 5.0,
+  "turn_p50": 0.121,
+  "turn_p95": 5.174
  },
  "lost_jobs": [],
  "misroutes": [],
@@ -332,7 +332,7 @@
    "ok": true,
    "scene": "steer: receipt YES + balance question in one message",
    "shop_id": "shop-033",
-   "why": "consent 1, flag 0, follow-up collector/collections (done), replies 2, balance 'Hello Mama Lanre Provisions, you owe N69,700 in total, all overdue acr'"
+   "why": "consent 1, flag 0, follow-up collector/collections (done), replies 2, balance 'Hello Mama Lanre Provisions, you owe N69,700 in total, all of which is'"
   },
   {
    "ok": true,
@@ -392,7 +392,7 @@
    "ok": true,
    "scene": "daily naira cap: helpers pause, holding reply, one owner note, resume on approve",
    "shop_id": "owner",
-   "why": "parked ['parked', 'parked'], raise items 1, owner notes 1, decision 200, cap 72062 -> 144124 kobo, resumed and answered 2/2"
+   "why": "parked ['parked', 'parked'], raise items 1, owner notes 1, decision 200, cap 69360 -> 138720 kobo, resumed and answered 2/2"
   },
   {
    "ok": true,
