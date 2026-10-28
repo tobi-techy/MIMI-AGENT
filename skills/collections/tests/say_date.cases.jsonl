@@ -1,0 +1,5 @@
+{"id": "en", "now": "2026-10-28T10:00:00+01:00", "in": {"iso_date": "2026-10-30", "language": "en"}, "expect": {"text": "Friday 30 October", "relative": "in 2 days"}}
+{"id": "yo", "now": "2026-10-28T10:00:00+01:00", "in": {"iso_date": "2026-10-30", "language": "yo"}, "expect": {"text": "Ọjọ́ Ẹtì, 30 October"}}
+{"id": "pcm-today", "now": "2026-10-28T10:00:00+01:00", "in": {"iso_date": "2026-10-28", "language": "pcm"}, "expect": {"text": "Wednesday, 28 October", "relative": "today"}}
+{"id": "next-year", "now": "2026-10-28T10:00:00+01:00", "in": {"iso_date": "2027-01-04"}, "expect": {"text": "Monday 4 January 2027"}}
+{"id": "overdue", "now": "2026-10-28T10:00:00+01:00", "in": {"iso_date": "2026-10-21"}, "expect": {"relative": "7 days ago"}}

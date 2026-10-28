@@ -43,7 +43,10 @@ class CachePaths:
 
     @property
     def harness(self) -> Path:
-        return self.root / "harness.cache.json"
+        # Skills mode (MIMI_SKILLS) records into harness.skills.cache.json (RAI-314).
+        from mimi.skills.flag import cache_path
+
+        return cache_path(self.root / "harness.cache.json")
 
     @property
     def router(self) -> Path:

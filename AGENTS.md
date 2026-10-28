@@ -57,6 +57,12 @@ re-recorded. A new helper factory calls `versions.register(helper)`.
   `context.SLICES` if it needs the book. Re-record with
   `python -m mimi.harness.router_eval --live` (a few naira) and commit the
   cache.
+* Skills (RAI-314, `MIMI_SKILLS`, default off): each skill is a folder in `skills/`
+  (SKILL.md, scripts/, references/, assets/, tests/), locked by hash in
+  `skills/skills.lock.json`. Its description must match its `skills.py` row word for
+  word. Scripts are pure, typed, audited read tools; the model never writes or runs
+  code. Change a skill, then `python -m mimi.skills refs && python -m mimi.skills lock`.
+  See `docs/SKILLS.md` and `docs/SKILL-CREATOR.md`.
 * Tune thresholds on the `dev` split only; ship a new set behind
   `MIMI_ROUTER_THRESHOLDS`.
 * Never put anything that changes per turn in sections 1 to 5 of the

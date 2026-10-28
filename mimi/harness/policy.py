@@ -103,6 +103,12 @@ BASE_TIERS: dict[str, Tier] = {
     "ask_order_question": "notify",
     "submit_order": "approve",
     "revise_order": "approve",
+    # Skills (RAI-314, MIMI_SKILLS only): read-only, they compute or hand back
+    # vetted text from the repo; nothing they return is an intent.
+    "read_skill": "auto",
+    "followup_hours": "auto",
+    "say_date": "auto",
+    "parse_bank_alert": "auto",
 }
 
 # Tools whose intent only the owner may accept: no table edit or amount rule

@@ -1,0 +1,10 @@
+{"id": "friday", "now": "2026-10-28T10:00:00+01:00", "in": {"promised": "I will pay Friday"}, "expect": {"unclear": false, "promised_on": "2026-10-30", "wake_on": "2026-10-31", "in_hours": 71, "said_as": "Friday 30 October"}}
+{"id": "month-end", "now": "2026-10-28T10:00:00+01:00", "in": {"promised": "give me till month end"}, "expect": {"promised_on": "2026-10-31", "in_hours": 95}}
+{"id": "yoruba-friday", "now": "2026-10-28T10:00:00+01:00", "in": {"promised": "ma san ni ojo eti"}, "expect": {"promised_on": "2026-10-30", "in_hours": 71}}
+{"id": "hausa-friday", "now": "2026-10-28T10:00:00+01:00", "in": {"promised": "zan biya ranar juma'a"}, "expect": {"promised_on": "2026-10-30", "in_hours": 71}}
+{"id": "pidgin-tomorrow", "now": "2026-10-28T10:00:00+01:00", "in": {"promised": "I go pay tomorrow"}, "expect": {"promised_on": "2026-10-29", "in_hours": 47}}
+{"id": "next-week", "now": "2026-10-28T10:00:00+01:00", "in": {"promised": "money will come next week"}, "expect": {"promised_on": "2026-11-08", "in_hours": 287, "approximate": true, "said_as": "by Sunday 8 November"}}
+{"id": "weekend", "now": "2026-10-28T10:00:00+01:00", "in": {"promised": "this weekend"}, "expect": {"promised_on": "2026-11-01", "in_hours": 119, "approximate": true}}
+{"id": "no-day", "now": "2026-10-28T10:00:00+01:00", "in": {"promised": "soon"}, "expect": {"unclear": true, "in_hours": 0}}
+{"id": "past", "now": "2026-10-28T10:00:00+01:00", "in": {"promised": "I paid yesterday"}, "expect": {"unclear": true}}
+{"id": "date", "now": "2026-10-28T10:00:00+01:00", "in": {"promised": "by 5th November"}, "expect": {"promised_on": "2026-11-05", "wake_on": "2026-11-06"}}

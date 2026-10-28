@@ -62,10 +62,12 @@ def main(argv: list[str] | None = None) -> int:
         if report[k]:
             print(f"{k}: {json.dumps(report[k], indent=1)}")
     if not args.no_write:
+        from mimi.skills.flag import cache_path
+
         out = Path(args.cache_dir)
-        (out / "e2e.report.json").write_text(json.dumps(report, indent=1, sort_keys=True,
-                                                        default=str) + "\n")
-        (out / "e2e.report.md").write_text(text + "\n")
+        cache_path(out / "e2e.report.json").write_text(json.dumps(
+            report, indent=1, sort_keys=True, default=str) + "\n")
+        cache_path(out / "e2e.report.md").write_text(text + "\n")
     print(f"workdir: {wd}")
     return 0 if report["passed"] else 1
 

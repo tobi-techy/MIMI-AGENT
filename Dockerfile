@@ -8,11 +8,15 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     DATABASE_URL=sqlite:////data/mimi.db \
     MIMI_WORKERS=1 \
     MIMI_SEED_DEMO=1 \
-    PORT=8000
+    PORT=8000 \
+    MIMI_SKILLS_DIR=/app/skills \
+    MIMI_SKILL_DRAFTS_DIR=/data/skill-drafts
 
 WORKDIR /app
 COPY pyproject.toml README.md LICENSE alembic.ini ./
 COPY mimi ./mimi
+# Skills (RAI-314, used when MIMI_SKILLS=1): vetted folders, locked by hash.
+COPY skills ./skills
 COPY alembic ./alembic
 RUN pip install '.[postgres]' \
     && useradd --system --uid 10001 mimi \

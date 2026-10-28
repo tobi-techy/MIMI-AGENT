@@ -103,6 +103,10 @@ jobs:
         run: python -m mimi.api.photo_route_eval --no-write
       - name: Steer eval, 53 held-out cases with voice notes, screenshots, photos and documents (multi-part messages, messages mid-task, corrections; recorded Muse Spark answers; fails under 90% or on any lost message, duplicate reply, money move or edit to a decided approval)
         run: python -m mimi.api.steer_eval --no-write
+      - name: Skills catalogue (RAI-314; folders match their lock, references match the code, every script passes the purity audit)
+        run: python -m mimi.skills check
+      - name: Skills eval (selection on the 300 router messages, one body loaded per run and no unused ones, script golden cases, skill-tool and bind attacks refused, tampered files refused, metadata under its cap, token use flag on vs off; fails on any pass mark)
+        run: python -m mimi.api.skills_eval --no-write
       - name: OpenAPI document matches the API (docs/api/openapi.json)
         run: python -m mimi.api openapi --check
       - name: Migrations run on a clean SQLite database

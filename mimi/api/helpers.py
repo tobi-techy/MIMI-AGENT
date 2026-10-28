@@ -142,9 +142,7 @@ def build_helpers(policy: RiskPolicy | None = None, *, go: SqlGo | None = None,
         from mimi.harness.collector import proof_helper
 
         helpers["proof"] = proof_helper(reg, policy)
-        for h in helpers.values():
-            register(h)
-        return helpers
+        return _with_skills(helpers, reg, policy, deps.distributor)
     dist = deps.distributor
     register_proof_tools(reg, ProofPorts(images=StoreScreens(go, deps.media),
                                          reader=ScreenshotReader(deps.vision),
@@ -180,6 +178,30 @@ def build_helpers(policy: RiskPolicy | None = None, *, go: SqlGo | None = None,
     credit = credit_helper(reg, policy, distributor=dist)
     helpers["credit"] = Helper(credit.name, credit.skill + APPROVAL_LINE, credit.toolset,
                                credit.budget, skill_version=credit.skill_version)
+    return _with_skills(helpers, reg, policy, dist)
+
+
+def _with_skills(helpers: dict[str, Helper], reg: ToolRegistry, policy: RiskPolicy,
+                 distributor: str) -> dict[str, Helper]:
+    """Skills mode (``MIMI_SKILLS``, RAI-314): one helper config per routed skill,
+    keyed by the skill, from the vetted ``skills/`` folder. Off: unchanged.
+
+    Every helper is registered with ``mimi.harness.versions`` (RAI-309), so a
+    recorded loop answer replays only under the skill version it was recorded
+    with: a bound skill's version is its ``skill:<helper>/<name>@<version>+<digest>``
+    tag, and a skill bump is a cache miss."""
+    from mimi.skills import flag
+
+    if flag.enabled():
+        from mimi.credit import copy as credit_copy
+        from mimi.skills.bind import bind_all
+        from mimi.skills.catalog import catalog
+        from mimi.skills.tools import register_skill_tools
+
+        cat = catalog()
+        values = {"needs_consent": credit_copy.needs_consent(distributor)}
+        register_skill_tools(reg, cat, values)
+        helpers = bind_all(helpers, reg, policy, cat, values=values)
     for h in helpers.values():
         register(h)  # recorded loop answers are keyed by skill version (RAI-309)
     return helpers

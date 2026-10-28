@@ -46,6 +46,7 @@ from mimi.harness.versions import ROUTER_VERSIONS
 from mimi.models.cache import CachedModel
 from mimi.models.env import from_env
 from mimi.orders.words import quantities_in
+from mimi.skills import flag as skills_flag
 from mimi.store import schema as s
 from mimi.store.util import dumps, insert_ignore, loads, now_iso
 from mimi.tz import LAGOS
@@ -100,8 +101,9 @@ def models(split: str, live: bool) -> tuple[CountingToolModel, CachedModel, Cach
     tool_live = OpenAIToolModel(api_key=key, model=MODEL, base_url=os.environ.get(
         "META_API_BASE", "").strip() or "https://api.meta.ai/v1",
         timeout_s=float(os.environ.get("META_TIMEOUT_S", "60") or 60)) if live else None
-    tool = CountingToolModel(RecordedToolModel(EVAL_DIR / f"{split}.harness.cache.json",
-                                               tool_live, name=MODEL))
+    # Skills mode (MIMI_SKILLS) records into its own *.skills.cache.json (RAI-314).
+    tool = CountingToolModel(RecordedToolModel(
+        skills_flag.cache_path(EVAL_DIR / f"{split}.harness.cache.json"), tool_live, name=MODEL))
     inner = from_env("mimi") if live else None
     mode: Literal["through", "replay"] = "through" if live else "replay"
     router = CachedModel(inner, EVAL_DIR / f"{split}.router.cache.json", mode=mode, name=MODEL,
@@ -568,11 +570,12 @@ def run(split: str = "heldout", live: bool = False, only: list[str] | None = Non
                         and report["invented"] == 0 and report["credit_extended"] == 0
                         and report["decided_edits"] == 0)
     if write and not only:
-        (EVAL_DIR / f"{split}.report.json").write_text(
+        skills_flag.cache_path(EVAL_DIR / f"{split}.report.json").write_text(
             json.dumps(report, indent=1, sort_keys=True, ensure_ascii=False) + "\n")
     if live and live_kobo:
         with open(EVAL_DIR / "spend.log.jsonl", "a", encoding="utf-8") as f:
-            f.write(json.dumps({"split": split, "cases": [c["id"] for c in cases],
+            f.write(json.dumps({"split": split, "skills": skills_flag.enabled(),
+                                "cases": [c["id"] for c in cases],
                                 "live_cost_kobo": int(live_kobo),
                                 "live_calls": report["live_calls"]}, sort_keys=True) + "\n")
     return report

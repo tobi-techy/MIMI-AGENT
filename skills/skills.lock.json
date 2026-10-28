@@ -1,0 +1,97 @@
+{
+ "comment": "Reviewed skill contents. Regenerate with python -m mimi.skills lock in the PR that changes a skill; CI refuses a skill that does not match.",
+ "skills": {
+  "bank-credit": {
+   "sha256": "5d5560fb6b04507e64427dac62c0e1f2444acff0d531101dbdce326d9b6791c6",
+   "version": "1.0.0"
+  },
+  "brand-email": {
+   "sha256": "dc89db399c7ee652cf2397dd90bfcc80ca32ef4e790330f1b977c413ab94cbc2",
+   "version": "1.0.0"
+  },
+  "chase": {
+   "sha256": "93e9ce217f37576e70599c7697fa0149cfbcf868c172e32b55030a78d0aff407",
+   "version": "1.0.0"
+  },
+  "chat": {
+   "sha256": "faa7808516ab135f3286e8d1bac51ed15e95d8cc4846829bc682e00d75deb949",
+   "version": "1.0.0"
+  },
+  "collections": {
+   "sha256": "73706cc5950a2489ef206626eb8c855410676008a929414b18479d67fb68ecb2",
+   "version": "1.0.0"
+  },
+  "credit-request": {
+   "sha256": "e183e698c5805fd696d3ac6c6a8a682d834323896647f3142f61a62531878fa8",
+   "version": "1.0.0"
+  },
+  "credit-review": {
+   "sha256": "72afa86dcdf9259202641096cbbdc16c49eb9681376f4ef8567a3499e2884389",
+   "version": "1.0.0"
+  },
+  "day-end-reconciliation": {
+   "sha256": "642a810e1b353bba7b21bf309f8714ac5544be5e350e0cdcce25a83df93b19f2",
+   "version": "1.0.0"
+  },
+  "delivery-status": {
+   "sha256": "496b7e4f7f1f459c283c421bc643117ed14137405ea9ddfefcac25722b3cd755",
+   "version": "1.0.0"
+  },
+  "drop-confirmation": {
+   "sha256": "280d2705ec574667638d0e4136180ecec94b8b93440b20f10639e3af5eca4974",
+   "version": "1.0.0"
+  },
+  "escalate-owner": {
+   "sha256": "909bd81626657a6f8df85bbbf85b1bf938e9c23a4a4f038a47ca457b91eab02e",
+   "version": "1.0.0"
+  },
+  "fake-alert-check": {
+   "sha256": "d56fd89f8e44f42ca45fbeb73a5fb746146f3da6b908be2ffa22e45f127fd3aa",
+   "version": "1.0.0"
+  },
+  "low-stock-report": {
+   "sha256": "403ccd960a29fbd161c71fc94f8f02366c8e31ab606752d9f7c12f78b6e67d58",
+   "version": "1.0.0"
+  },
+  "order-intake": {
+   "sha256": "b903882c8ee24affcf7e18296a1dd71509579fbd93e153adf5d7535f3783c865",
+   "version": "1.0.0"
+  },
+  "owner-brief": {
+   "sha256": "0e8bcff6e7c41fb669189b3d266c5a621b7f0013bdea4f64311b0e3de70b5e31",
+   "version": "1.0.0"
+  },
+  "payment-check": {
+   "sha256": "85fe9e7e4ea3ca6891f91187dbe98dd613f3896b67d42c5f9217113f220dcbdb",
+   "version": "1.0.0"
+  },
+  "promise-to-pay": {
+   "sha256": "e809e6e01f921566d82c37ca6461e9475ceb5aef9bf3c23b2d4a4fccfbd763b5",
+   "version": "1.0.0"
+  },
+  "promo-info": {
+   "sha256": "6fbaeed884a84bceb91074343f353e37f71d56b41c7662e30edde0c162eb6198",
+   "version": "1.0.0"
+  },
+  "route-load-out": {
+   "sha256": "d35d3b4cd3489f6fca74f07fd573d1fb261ca98fe54bc3c041bb4bd5fff8ab01",
+   "version": "1.0.0"
+  },
+  "shop-onboarding": {
+   "sha256": "d6cea75be6b58dbd32bd74ccdab56aa2449904d6ead0f42290fc3c7bc66f66ef",
+   "version": "1.0.0"
+  },
+  "stock-book-reading": {
+   "sha256": "05d404053dc36554debf85ea626548bc7840de1a1576dfe8309adc38c6f84830",
+   "version": "1.0.0"
+  },
+  "stock-count": {
+   "sha256": "1fbbfde3607f0a3a7f7ecb8d446ce4d26b03e9f7ae8de817251e2f272ca579ba",
+   "version": "1.0.0"
+  },
+  "stop": {
+   "sha256": "00142dc2158fd44476fe05fc30e9074f394885013c407ad4ca86499e033dec10",
+   "version": "1.0.0"
+  }
+ }
+}
