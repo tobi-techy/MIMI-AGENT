@@ -1,0 +1,1362 @@
+{
+ "01ae4845b793b473f726dcb583c85f21553a80c9b4f14997d4f8983a6418720b": {
+  "cached_tokens": 0,
+  "completion_tokens": 273,
+  "content": "I'll price your order for rice and cola.",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.835,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 3238,
+  "tool_calls": [
+   {
+    "arguments": "{\"lines\":[{\"as_written\":\"2 bag 50kg rice\",\"item\":\"50kg rice\",\"quantity\":2,\"unit\":\"bag\"},{\"as_written\":\"6 pack cola\",\"item\":\"cola\",\"quantity\":6,\"unit\":\"pack\"}],\"shop_id\":\"shop-004\"}",
+    "id": "call_1d363ff5-7900-4517-87f9-98292042d357",
+    "name": "price_order"
+   }
+  ]
+ },
+ "01b04497e09b25c371e29789af7177f7ce79f9c61f4f6aff7c946909090a24ff": {
+  "cached_tokens": 0,
+  "completion_tokens": 87,
+  "content": "",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.329,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 3576,
+  "tool_calls": [
+   {
+    "arguments": "{\"quote_id\":\"q-297b6acac0\",\"shop_id\":\"shop-024\"}",
+    "id": "call_2ce7a071-8414-40a0-a457-bd2293a9180a",
+    "name": "submit_order"
+   }
+  ]
+ },
+ "03486703059b94b07baec9c895d9cebbc3eaf20e1abb9f7d3e26dd9a69f5916e": {
+  "cached_tokens": 0,
+  "completion_tokens": 167,
+  "content": "I'll read that photo to capture your order.",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.036,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 3524,
+  "tool_calls": [
+   {
+    "arguments": "{\"photo_id\":\"ph_6c5d2f9426cf\",\"shop_id\":\"shop-005\"}",
+    "id": "call_8f6aa9e2-1a2a-4cf6-aa10-560df0e66b14",
+    "name": "read_order_photo"
+   }
+  ]
+ },
+ "083d702ea7e7e7f94f092e49f2ed8ef25f52687efb9900aa9e3536916dd2b021": {
+  "cached_tokens": 241,
+  "completion_tokens": 262,
+  "content": "Your order is on its way \u2014 I'm pricing it now.",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.884,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 3512,
+  "tool_calls": [
+   {
+    "arguments": "{\"lines\":[{\"as_written\":\"4 pack spaghetti\",\"item\":\"spaghetti\",\"quantity\":4,\"unit\":\"pack\"},{\"as_written\":\"2 bottle oil\",\"item\":\"oil\",\"quantity\":2,\"unit\":\"bottle\"}],\"shop_id\":\"shop-007\"}",
+    "id": "call_7a38dd05-ed1a-4b0f-97c5-cf7d76eda2ef",
+    "name": "submit_order"
+   }
+  ]
+ },
+ "08c21fd3632ac94b131fbb3d37dbfe1899a3f05cfed77008f36a2c3411b45674": {
+  "cached_tokens": 0,
+  "completion_tokens": 352,
+  "content": "Your sugar order is on its way to pricing \u2014 I'll confirm the total in a moment.",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.531,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 2967,
+  "tool_calls": [
+   {
+    "arguments": "{\"lines\":[{\"as_written\":\"2 pack sugar\",\"item\":\"sugar\",\"quantity\":2,\"unit\":\"pack\"}],\"payment\":\"pays_now\",\"shop_id\":\"shop-017\"}",
+    "id": "call_c6ffdaeb-b2a4-46e9-8a90-c7b269a848ac",
+    "name": "price_order"
+   }
+  ]
+ },
+ "103f77e8320a0891f0ccf97cf2ff5c2543df3df5d5c6f02547bc2a02d2cb5f76": {
+  "cached_tokens": 0,
+  "completion_tokens": 221,
+  "content": "I'll put together your order for Omo and spaghetti with today's prices.",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.515,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 3064,
+  "tool_calls": [
+   {
+    "arguments": "{\"lines\":[{\"as_written\":\"send 2 pack omo big\",\"item\":\"omo big\",\"quantity\":2,\"unit\":\"pack\"},{\"as_written\":\"plus 1 carton spaghetti\",\"item\":\"spaghetti\",\"quantity\":1,\"unit\":\"carton\"}],\"shop_id\":\"shop-039\"}",
+    "id": "call_22781d40-d5dc-4b9c-8372-f065f968a04c",
+    "name": "price_order"
+   }
+  ]
+ },
+ "14fdae2ad8aefee820f2d1de52fedfed507e822fe814554845078b6c3c75ebbb": {
+  "cached_tokens": 3185,
+  "completion_tokens": 79,
+  "content": "",
+  "finish_reason": "tool_calls",
+  "latency_s": 2.05,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 4418,
+  "tool_calls": [
+   {
+    "arguments": "{\"quote_id\":\"q-909c38bb82\",\"shop_id\":\"shop-017\"}",
+    "id": "call_03a4c149-d214-4734-82ae-430d742f9ca9",
+    "name": "submit_order"
+   }
+  ]
+ },
+ "18e36a103b8acc95c300ca842732fdd979f85a67f6995297c26e386d53e6f57d": {
+  "cached_tokens": 0,
+  "completion_tokens": 143,
+  "content": "",
+  "finish_reason": "stop",
+  "latency_s": 1.696,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 3946,
+  "tool_calls": []
+ },
+ "1ce1eebe2a80216502dac73871437dbe1a0356abc6243816de33438339da512e": {
+  "cached_tokens": 0,
+  "completion_tokens": 186,
+  "content": "Same as last time \u2014 pulling your repeat order.",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.42,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 3510,
+  "tool_calls": [
+   {
+    "arguments": "{\"repeat_last\":true,\"shop_id\":\"shop-024\"}",
+    "id": "call_ce1caa62-b8da-40d8-a4d0-2add1d63a116",
+    "name": "submit_order"
+   }
+  ]
+ },
+ "1cfbb76a87b51921eb74633778c92a6d0574541c47978391598675cd9722d6cb": {
+  "cached_tokens": 3569,
+  "completion_tokens": 334,
+  "content": "Got it \u2014 the big pack. Let me get that priced.",
+  "finish_reason": "tool_calls",
+  "latency_s": 2.261,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 3957,
+  "tool_calls": [
+   {
+    "arguments": "{\"lines\":[{\"as_written\":\"send 2 carton noodles\",\"item\":\"noodles big one\",\"quantity\":2,\"unit\":\"carton\"}],\"shop_id\":\"shop-017\"}",
+    "id": "call_2b4bf16c-db74-4c5e-868b-09bba0274498",
+    "name": "price_order"
+   }
+  ]
+ },
+ "1eef514f1880ab76eba5a75738a7bce7650f26359ba463352b65ba7fcae0c064": {
+  "cached_tokens": 0,
+  "completion_tokens": 103,
+  "content": "I'll read that shelf photo to pull your order list.",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.525,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 3513,
+  "tool_calls": [
+   {
+    "arguments": "{\"photo_id\":\"ph_80f1503da55b\",\"shop_id\":\"shop-030\"}",
+    "id": "call_ed261475-af16-460d-a25c-a77e38bc22b2",
+    "name": "read_order_photo"
+   }
+  ]
+ },
+ "2084f7ae43600e8808c130241e64c58db29565e9edfacf77d42148514b13f82c": {
+  "cached_tokens": 0,
+  "completion_tokens": 202,
+  "content": "Pure water price check \u2014 confirming today's price.",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.309,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 3234,
+  "tool_calls": [
+   {
+    "arguments": "{\"lines\":[{\"as_written\":\"how much is pure water now\",\"item\":\"pure water\"}],\"price_only\":true,\"shop_id\":\"shop-038\"}",
+    "id": "call_a41027f2-f2e2-4a39-805b-7e179fd801f1",
+    "name": "price_order"
+   }
+  ]
+ },
+ "262adf89ffe6a8636804dddc5f7dee26f4f166e56beda6709b47fcad81ea2ef4": {
+  "cached_tokens": 3185,
+  "completion_tokens": 421,
+  "content": "done",
+  "finish_reason": "stop",
+  "latency_s": 2.346,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 3394,
+  "tool_calls": []
+ },
+ "2f08e799dbd75718f38893329587fc5dddd7b8553b18092ff11aea9aa61c99ba": {
+  "cached_tokens": 3185,
+  "completion_tokens": 148,
+  "content": "",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.123,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 3511,
+  "tool_calls": [
+   {
+    "arguments": "{\"body\":\"Today's price:\\nEkiti Spring Sachet Water: N400 a bag\\nTell me how many you want and I'll send the order.\",\"channel\":\"shop_whatsapp\",\"ends_turn\":true,\"kind\":\"reply\",\"shop_id\":\"shop-038\"}",
+    "id": "call_2b4263a4-d09a-4536-9d5c-0eb49d42b433",
+    "name": "send_to_user"
+   }
+  ]
+ },
+ "36297a6943c83b1aa80217c852998e856fcfb8e102567b314799544f67b63ba0": {
+  "cached_tokens": 2929,
+  "completion_tokens": 134,
+  "content": "",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.396,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 3337,
+  "tool_calls": [
+   {
+    "arguments": "{\"body\":\"Today's price:\\nEkiti Spring Sachet Water: N400 a bag\\nTell me how many you want and I'll send the order.\",\"channel\":\"shop_whatsapp\",\"ends_turn\":true,\"shop_id\":\"shop-038\"}",
+    "id": "call_2a060c80-894c-45af-8884-caecd47fa67d",
+    "name": "send_to_user"
+   }
+  ]
+ },
+ "375934a7bd0aea9a2d9e4e500b4c6df96d1db5b332475c0653cf42b5a34c2ca0": {
+  "cached_tokens": 0,
+  "completion_tokens": 110,
+  "content": "",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.568,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 3683,
+  "tool_calls": [
+   {
+    "arguments": "{\"lines\":[{\"as_written\":\"send 2 carton noodles\",\"item\":\"noodles\",\"quantity\":2,\"unit\":\"carton\"}],\"shop_id\":\"shop-017\"}",
+    "id": "call_9d79f409-da46-4a6d-8f4b-636d50cadb87",
+    "name": "ask_order_question"
+   }
+  ]
+ },
+ "3b3f98000f3cada072cd24ee6b3c261cf20b58eae529603e841b2aa5a6defe06": {
+  "cached_tokens": 241,
+  "completion_tokens": 203,
+  "content": "I'll check your stock estimates to see what this shop needs.",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.418,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 2731,
+  "tool_calls": [
+   {
+    "arguments": "{\"shop_id\":\"shop-029\"}",
+    "id": "call_87fd3b6e-668f-4ad0-9cd6-7c5c03b3c650",
+    "name": "get_stock_estimates"
+   }
+  ]
+ },
+ "3eb125ae85d17e349e99c7001751da4f01c839940506b6f4be50734075300e3d": {
+  "cached_tokens": 241,
+  "completion_tokens": 200,
+  "content": "",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.587,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 3259,
+  "tool_calls": [
+   {
+    "arguments": "{\"lines\":[{\"as_written\":\"send 2 carton noodles\",\"item\":\"noodles\",\"quantity\":2,\"unit\":\"carton\"}],\"shop_id\":\"shop-017\"}",
+    "id": "call_19292096-2450-4b45-98cd-324a3a7222ae",
+    "name": "submit_order"
+   }
+  ]
+ },
+ "41e02e5e577cff9439fcadf6366e5da1ee95be7a8cdb4fbd18ef4b5042bab3f5": {
+  "cached_tokens": 0,
+  "completion_tokens": 816,
+  "content": "",
+  "finish_reason": "tool_calls",
+  "latency_s": 4.737,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 3614,
+  "tool_calls": [
+   {
+    "arguments": "{\"changes\":[{\"action\":\"set\",\"as_written\":\"make it 6\",\"item\":\"make it 6\",\"quantity\":6}],\"shop_id\":\"shop-027\"}",
+    "id": "call_51273c49-14da-4378-8eb0-8ce57a3f8977",
+    "name": "revise_order"
+   }
+  ]
+ },
+ "44a277c9f9f44c3a7c78991481a8fe41076db2a02cecd052de073e206dde1b43": {
+  "cached_tokens": 3185,
+  "completion_tokens": 86,
+  "content": "",
+  "finish_reason": "tool_calls",
+  "latency_s": 0.76,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 3672,
+  "tool_calls": [
+   {
+    "arguments": "{\"quote_id\":\"q-937e0732b3\",\"shop_id\":\"shop-011\"}",
+    "id": "call_d55c4b92-2107-40f9-a1c8-da49b57ac16a",
+    "name": "submit_order"
+   }
+  ]
+ },
+ "44cc42f1513b56d709ff1b57ee0c17ce3b78152ca858a2472539360ee6e41fcc": {
+  "cached_tokens": 2929,
+  "completion_tokens": 24,
+  "content": "no-op",
+  "finish_reason": "stop",
+  "latency_s": 1.163,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 3770,
+  "tool_calls": []
+ },
+ "4540db92c577c6c9402528641826703fa566d8d79fb35f996593cf79a27a334e": {
+  "cached_tokens": 0,
+  "completion_tokens": 62,
+  "content": "",
+  "finish_reason": "tool_calls",
+  "latency_s": 0.934,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 3093,
+  "tool_calls": [
+   {
+    "arguments": "{\"shop_id\":\"shop-017\"}",
+    "id": "call_7d28411f-8dd2-4ad2-9ecd-533c4836c484",
+    "name": "ask_order_question"
+   }
+  ]
+ },
+ "495fa493bdba092020f78d9c9866b011e82bae2a67c9fe02a4a9208b6f95929b": {
+  "cached_tokens": 0,
+  "completion_tokens": 84,
+  "content": "",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.539,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 3429,
+  "tool_calls": [
+   {
+    "arguments": "{\"quote_id\":\"q-ea6fe5bae2\",\"shop_id\":\"shop-017\"}",
+    "id": "call_d38e94fc-21fd-43b0-a55a-83c93cc0b9f4",
+    "name": "submit_order"
+   }
+  ]
+ },
+ "49d0e84855503fe564129172e8f43c5869bab38579502081710ac63ab4ec8211": {
+  "cached_tokens": 241,
+  "completion_tokens": 158,
+  "content": "",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.05,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 3515,
+  "tool_calls": [
+   {
+    "arguments": "{\"lines\":[{\"as_written\":\"2 pack malt can\",\"item\":\"malt can\",\"quantity\":2,\"unit\":\"pack\"}],\"shop_id\":\"shop-014\"}",
+    "id": "call_661bed3e-912c-4d75-9c8c-9779ab6ec4cb",
+    "name": "submit_order"
+   }
+  ]
+ },
+ "4ce54b005f93f59da36b6a10836723f9351c00cab9f74257ab9086f0e815a0c1": {
+  "cached_tokens": 0,
+  "completion_tokens": 243,
+  "content": "I'll put together your rice and cola order and check the pricing.",
+  "finish_reason": "tool_calls",
+  "latency_s": 2.118,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 4158,
+  "tool_calls": [
+   {
+    "arguments": "{\"lines\":[{\"as_written\":\"2 bag 50kg rice\",\"item\":\"50kg rice\",\"quantity\":2,\"unit\":\"bag\"},{\"as_written\":\"6 pack cola\",\"item\":\"cola\",\"quantity\":6,\"unit\":\"pack\"}],\"shop_id\":\"shop-004\"}",
+    "id": "call_a96d6a5d-3124-40a1-9811-72f0cd8f16b9",
+    "name": "price_order"
+   }
+  ]
+ },
+ "4f1fa3563e4951b75e65d9584b3f59f5a96a440876f9acce140e73713e7aa556": {
+  "cached_tokens": 0,
+  "completion_tokens": 209,
+  "content": "Got it \u2014 updating to 5 kegs.",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.166,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 4020,
+  "tool_calls": [
+   {
+    "arguments": "{\"changes\":[{\"action\":\"set\",\"as_written\":\"make am 5 keg\",\"item\":\"oil\",\"quantity\":5,\"unit\":\"keg\"}],\"shop_id\":\"shop-011\"}",
+    "id": "call_5c6ee228-de4a-41be-aea1-24b70e6267c2",
+    "name": "revise_order"
+   }
+  ]
+ },
+ "5184100e030ae5524fca254f0a3c670c667bae24d9c0ef145dbd893f8142a0ab": {
+  "cached_tokens": 3441,
+  "completion_tokens": 134,
+  "content": "",
+  "finish_reason": "tool_calls",
+  "latency_s": 0.903,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 3870,
+  "tool_calls": [
+   {
+    "arguments": "{\"body\":\"Today's price:\\nEkiti Spring Sachet Water: N400 a bag\\nTell me how many you want and I'll send the order.\",\"channel\":\"shop_whatsapp\",\"ends_turn\":true,\"shop_id\":\"shop-038\"}",
+    "id": "call_cfd7729f-e7e8-4789-a60d-81959966a425",
+    "name": "send_to_user"
+   }
+  ]
+ },
+ "56fe06d79fa53791490753c87faab25bbf29f4844709d7191b439bb5a79e519d": {
+  "cached_tokens": 0,
+  "completion_tokens": 234,
+  "content": "I'll put together your priced order for gala and sugar.",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.325,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 2968,
+  "tool_calls": [
+   {
+    "arguments": "{\"lines\":[{\"as_written\":\"2 carton gala\",\"item\":\"gala\",\"quantity\":2,\"unit\":\"carton\"},{\"as_written\":\"3 pack sugar\",\"item\":\"sugar\",\"quantity\":3,\"unit\":\"pack\"}],\"shop_id\":\"shop-031\"}",
+    "id": "call_d92840f1-69d9-4deb-85d8-fedcb20e95ad",
+    "name": "price_order"
+   }
+  ]
+ },
+ "578f2aefd987fa99a56deee9d7042abaa6290b20bedb325414b56e26365a81c4": {
+  "cached_tokens": 0,
+  "completion_tokens": 139,
+  "content": "",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.253,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 4713,
+  "tool_calls": [
+   {
+    "arguments": "{\"lines\":[{\"as_written\":\"2 bag 50kg rice\",\"item\":\"50kg rice\",\"quantity\":2,\"unit\":\"bag\"},{\"as_written\":\"6 pack cola\",\"item\":\"cola\",\"quantity\":6,\"unit\":\"pack\"}],\"shop_id\":\"shop-004\"}",
+    "id": "call_3f85f121-baef-48d1-b51d-ae6ac06ceaf9",
+    "name": "submit_order"
+   }
+  ]
+ },
+ "5a255dbfff62d10a13dde4f5f6fde1c76d29125d90cc16a3a675112697c351fb": {
+  "cached_tokens": 0,
+  "completion_tokens": 185,
+  "content": "Your oil order is on deck \u2014 I'll get it priced now.",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.707,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 3230,
+  "tool_calls": [
+   {
+    "arguments": "{\"lines\":[{\"as_written\":\"send 3 keg oil\",\"item\":\"oil\",\"quantity\":3,\"unit\":\"keg\"}],\"shop_id\":\"shop-011\"}",
+    "id": "call_75dc818b-3631-48a7-affe-b217ebb0fd6c",
+    "name": "price_order"
+   }
+  ]
+ },
+ "5a8e065989e49e2f4a07e2a38af34b4619b92ad9ed41125ddd2e882a95127fce": {
+  "cached_tokens": 241,
+  "completion_tokens": 84,
+  "content": "",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.611,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 3390,
+  "tool_calls": [
+   {
+    "arguments": "{\"quote_id\":\"q-13ee560af3\",\"shop_id\":\"shop-027\"}",
+    "id": "call_00c6f4cc-5676-4e2e-a7d6-4553b01e3d57",
+    "name": "submit_order"
+   }
+  ]
+ },
+ "5b922f9163ee8dfe3fb954a1ed2f45d75b5f2c9dbd9fdf4aa1d59cf8367d3893": {
+  "cached_tokens": 2929,
+  "completion_tokens": 187,
+  "content": "I'll clarify that noodle size and resubmit your order.",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.838,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 3407,
+  "tool_calls": [
+   {
+    "arguments": "{\"lines\":[{\"as_written\":\"send 2 carton noodles\",\"item\":\"noodles big one\",\"quantity\":2,\"unit\":\"carton\"}],\"shop_id\":\"shop-017\"}",
+    "id": "call_1fd48794-2dfc-440a-ab81-b27581e8f690",
+    "name": "submit_order"
+   }
+  ]
+ },
+ "5c74ceacd79acff2926b86461d61848fa50e1e9406b4d092c9d7f1f3f95bc69c": {
+  "cached_tokens": 0,
+  "completion_tokens": 233,
+  "content": "Your order is noted \u2014 I'll get it priced and confirmed.",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.789,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 3517,
+  "tool_calls": [
+   {
+    "arguments": "{\"lines\":[{\"as_written\":\"2 carton gala\",\"item\":\"gala\",\"quantity\":2,\"unit\":\"carton\"},{\"as_written\":\"3 pack sugar\",\"item\":\"sugar\",\"quantity\":3,\"unit\":\"pack\"}],\"shop_id\":\"shop-031\"}",
+    "id": "call_a5f05ba2-a10f-418d-8343-69953c844d3e",
+    "name": "submit_order"
+   }
+  ]
+ },
+ "6052ce67d294aea6e9e3b16f79462fb925120611a3a299d64c3824a1ab3f17aa": {
+  "cached_tokens": 0,
+  "completion_tokens": 191,
+  "content": "I'll check the current price for pure water.",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.201,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 2965,
+  "tool_calls": [
+   {
+    "arguments": "{\"lines\":[{\"as_written\":\"how much is pure water now\",\"item\":\"pure water\",\"quantity\":null,\"unit\":\"\"}],\"price_only\":true,\"shop_id\":\"shop-038\"}",
+    "id": "call_9f15c71f-650a-45be-923b-8668dd157499",
+    "name": "price_order"
+   }
+  ]
+ },
+ "6352c04fe5e7c8c597efe48c219b85ce4ac0009e72425222478136c9379e978f": {
+  "cached_tokens": 3441,
+  "completion_tokens": 312,
+  "content": "",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.494,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 3509,
+  "tool_calls": [
+   {
+    "arguments": "{\"lines\":[{\"as_written\":\"1 carton super pack indomie\",\"item\":\"super pack indomie\",\"quantity\":1,\"unit\":\"carton\"}],\"shop_id\":\"shop-036\"}",
+    "id": "call_efbaac3c-8ce8-4ec2-8375-e3e508c50aae",
+    "name": "submit_order"
+   }
+  ]
+ },
+ "685679cb15f0cc38c347a9fbd15c3061ea70b4cacdb6fdc15386d4103b36f010": {
+  "cached_tokens": 0,
+  "completion_tokens": 1200,
+  "content": "",
+  "finish_reason": "length",
+  "latency_s": 5.654,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 4146,
+  "tool_calls": []
+ },
+ "6f87eaa7e7114c1978de9aaa13891f27ad209d8ac69f96917ae04b58f3831cc9": {
+  "cached_tokens": 0,
+  "completion_tokens": 84,
+  "content": "",
+  "finish_reason": "tool_calls",
+  "latency_s": 0.755,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 3640,
+  "tool_calls": [
+   {
+    "arguments": "{\"quote_id\":\"q-b3b14bad2f\",\"shop_id\":\"shop-039\"}",
+    "id": "call_3e699161-ac46-41a6-a644-cba0ac294249",
+    "name": "submit_order"
+   }
+  ]
+ },
+ "716d16ed98c8752c3a1209a1f0a84db0f5d5499d3c128da28e736941573d71b7": {
+  "cached_tokens": 3313,
+  "completion_tokens": 255,
+  "content": "Got it \u2014 I'll place that noodles order with the size you confirmed.",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.971,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 3771,
+  "tool_calls": [
+   {
+    "arguments": "{\"lines\":[{\"as_written\":\"send 2 carton noodles\",\"item\":\"noodles big one\",\"quantity\":2,\"unit\":\"carton\"}],\"shop_id\":\"shop-017\"}",
+    "id": "call_b6e4e113-c1a5-464a-8095-6966cafefc6f",
+    "name": "submit_order"
+   }
+  ]
+ },
+ "71efb9837bb63920fc2da0d109ef1de9fddd85d9b40677f43951c197e9d4073d": {
+  "cached_tokens": 3441,
+  "completion_tokens": 566,
+  "content": "Trying to update that approved order \u2014 I'll check if it can still be changed.",
+  "finish_reason": "tool_calls",
+  "latency_s": 5.825,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 4181,
+  "tool_calls": [
+   {
+    "arguments": "{\"changes\":[{\"action\":\"set\",\"as_written\":\"make it 6\",\"item\":\"omo big\",\"quantity\":6,\"unit\":\"pack\"}],\"shop_id\":\"shop-027\"}",
+    "id": "call_cc7df79e-5188-41c4-b995-e197c58327ff",
+    "name": "revise_order"
+   }
+  ]
+ },
+ "7836e0720760354792fcc6bef937ab4f36cd8bec4fe284c158259f3536347a65": {
+  "cached_tokens": 0,
+  "completion_tokens": 24,
+  "content": "skip",
+  "finish_reason": "stop",
+  "latency_s": 0.627,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 3910,
+  "tool_calls": []
+ },
+ "7f6a962db90ec56b7161e192ce451b3ca7051928315ec0b01439c2f5a8aa5589": {
+  "cached_tokens": 0,
+  "completion_tokens": 451,
+  "content": "I'll place your order for 3 kegs of oil.",
+  "finish_reason": "tool_calls",
+  "latency_s": 2.16,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 3510,
+  "tool_calls": [
+   {
+    "arguments": "{\"lines\":[{\"as_written\":\"send 3 keg oil\",\"item\":\"oil\",\"quantity\":3,\"unit\":\"keg\"}],\"shop_id\":\"shop-011\"}",
+    "id": "call_83ac6c2e-dc87-4d2f-b8bd-a94ead3a5ec1",
+    "name": "submit_order"
+   }
+  ]
+ },
+ "88729812ef53f4b37d352fab311040ccc8f7f3fdd55e8a0d24a98ff4d3226a1b": {
+  "cached_tokens": 3441,
+  "completion_tokens": 278,
+  "content": "",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.662,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 4042,
+  "tool_calls": [
+   {
+    "arguments": "{\"lines\":[{\"as_written\":\"send 2 carton noodles\",\"item\":\"noodles big one\",\"quantity\":2,\"unit\":\"carton\"}],\"shop_id\":\"shop-017\"}",
+    "id": "call_a5e23912-8819-46b7-8d13-52f8034eb8c2",
+    "name": "submit_order"
+   }
+  ]
+ },
+ "894d219181d8a3914ac5c0891f58ba6d6d00f2ac96e26aaedc5cb49b267342c0": {
+  "cached_tokens": 0,
+  "completion_tokens": 255,
+  "content": "Got the two items \u2014 I'll price them now.",
+  "finish_reason": "tool_calls",
+  "latency_s": 2.252,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 3162,
+  "tool_calls": [
+   {
+    "arguments": "{\"lines\":[{\"as_written\":\"Spaghetti ctn 1\",\"item\":\"Spaghetti\",\"quantity\":1,\"unit\":\"ctn\"},{\"as_written\":\"Sachet milk 2 bags\",\"item\":\"Sachet milk\",\"quantity\":2,\"unit\":\"bags\"}],\"shop_id\":\"shop-030\"}",
+    "id": "call_042a76ea-4dbc-4988-8352-13c8785a4dec",
+    "name": "price_order"
+   }
+  ]
+ },
+ "8a268f51aa4b243041796575808c15e043261a352d92858b97d737a58204fdb2": {
+  "cached_tokens": 0,
+  "completion_tokens": 123,
+  "content": "I'll check today's pure water price for you.",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.508,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 3266,
+  "tool_calls": [
+   {
+    "arguments": "{\"items\":[\"pure water\"],\"shop_id\":\"shop-038\"}",
+    "id": "call_9473234d-4c9f-4ddc-a27f-3faecab7042d",
+    "name": "price_order"
+   }
+  ]
+ },
+ "8c2900f1b47f5df232e8acdf51029e1dbf7a87281b74d121ed89a62104dea1e2": {
+  "cached_tokens": 0,
+  "completion_tokens": 248,
+  "content": "Your order noted \u2014 I'll get it priced and confirmed.",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.255,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 3512,
+  "tool_calls": [
+   {
+    "arguments": "{\"lines\":[{\"as_written\":\"two carton indomie\",\"item\":\"indomie\",\"quantity\":2,\"unit\":\"carton\"},{\"as_written\":\"three tin sardine\",\"item\":\"sardine\",\"quantity\":3,\"unit\":\"tin\"}],\"shop_id\":\"shop-037\"}",
+    "id": "call_046bf5af-8505-43c8-89ee-62b869817c65",
+    "name": "submit_order"
+   }
+  ]
+ },
+ "8c5547fbe17aa7864b09e66444d09bdc1067f8dbf2474a6a13dfdfc77aadf50a": {
+  "cached_tokens": 241,
+  "completion_tokens": 672,
+  "content": "You want 6 packs instead of 3 \u2014 I'll add the extra now.",
+  "finish_reason": "tool_calls",
+  "latency_s": 5.208,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 3428,
+  "tool_calls": [
+   {
+    "arguments": "{\"lines\":[{\"as_written\":\"make it 6\",\"item\":\"omo big\",\"quantity\":3,\"unit\":\"pack\"}],\"shop_id\":\"shop-027\"}",
+    "id": "call_a1f0138f-a6d4-4da1-9a05-95260dc7d08d",
+    "name": "submit_order"
+   }
+  ]
+ },
+ "8fee6a57c5507e47c84e83fb6e6f15780ecfe1f96c8232c6c783114d2ad9d481": {
+  "cached_tokens": 0,
+  "completion_tokens": 95,
+  "content": "",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.704,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 3622,
+  "tool_calls": [
+   {
+    "arguments": "{\"quote_id\":\"q-6ff0136058\",\"shop_id\":\"shop-017\"}",
+    "id": "call_3fa09dbf-e291-4e3a-8e93-97c99831f658",
+    "name": "ask_order_question"
+   }
+  ]
+ },
+ "9435077891a97a7ecd48b2f512aa126a86a1819f93f42b805a4db37d90843701": {
+  "cached_tokens": 0,
+  "completion_tokens": 138,
+  "content": "",
+  "finish_reason": "tool_calls",
+  "latency_s": 0.928,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 3539,
+  "tool_calls": [
+   {
+    "arguments": "{\"body\":\"Today's price:\\nEkiti Spring Sachet Water: N400 a bag\\nTell me how many you want and I'll send the order.\",\"channel\":\"shop_whatsapp\",\"ends_turn\":true,\"shop_id\":\"shop-038\"}",
+    "id": "call_4fdfe25e-e616-4d5a-9463-0b183223bc49",
+    "name": "send_to_user"
+   }
+  ]
+ },
+ "98cfab239c57fc1b8d6d5d13d7344a66aa7723f6be731ebade9d5117c51b8c84": {
+  "cached_tokens": 0,
+  "completion_tokens": 161,
+  "content": "I'll price your three packs of Omo.",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.845,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 2958,
+  "tool_calls": [
+   {
+    "arguments": "{\"lines\":[{\"as_written\":\"3 pack omo big\",\"item\":\"omo big\",\"quantity\":3,\"unit\":\"pack\"}],\"shop_id\":\"shop-027\"}",
+    "id": "call_544c4092-4f38-4e79-9d54-bafc29905aea",
+    "name": "price_order"
+   }
+  ]
+ },
+ "9c24642561053848df82f13a0ecba6e97a4d252b45de892622cb51e00d36a79a": {
+  "cached_tokens": 0,
+  "completion_tokens": 294,
+  "content": "I'll read that shelf photo to pull out your order list.",
+  "finish_reason": "tool_calls",
+  "latency_s": 2.463,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 2964,
+  "tool_calls": [
+   {
+    "arguments": "{\"photo_id\":\"ph_80f1503da55b\",\"shop_id\":\"shop-030\"}",
+    "id": "call_12b97723-c3ec-45a5-9ab2-1d520817dfe1",
+    "name": "read_order_photo"
+   }
+  ]
+ },
+ "9e9ca0ea216b6ea3d7a0699a004ee642fa4cf4eaf22882475db841c9fe4faae4": {
+  "cached_tokens": 0,
+  "completion_tokens": 154,
+  "content": "I'll price up your 2 cartons of noodles.",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.62,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 3227,
+  "tool_calls": [
+   {
+    "arguments": "{\"lines\":[{\"as_written\":\"send 2 carton noodles\",\"item\":\"noodles\",\"quantity\":2,\"unit\":\"carton\"}],\"shop_id\":\"shop-017\"}",
+    "id": "call_42369db3-02ee-493d-9002-07211d43d7ef",
+    "name": "price_order"
+   }
+  ]
+ },
+ "a3682facec0f97679356a505b8eaac9a1ca7f649ae82c81128231a9cfe56ce53": {
+  "cached_tokens": 241,
+  "completion_tokens": 192,
+  "content": "",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.217,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 3507,
+  "tool_calls": [
+   {
+    "arguments": "{\"lines\":[{\"as_written\":\"1 carton indomie\",\"item\":\"indomie\",\"quantity\":1,\"unit\":\"carton\"}],\"shop_id\":\"shop-036\"}",
+    "id": "call_3b9ba919-5715-40cb-9c9b-15425722b03b",
+    "name": "submit_order"
+   }
+  ]
+ },
+ "a49328273ede889d16aea48b3d4443a4a6612c45bfc9094cb6674f8371600a76": {
+  "cached_tokens": 0,
+  "completion_tokens": 228,
+  "content": "I'll check today's price for pure water.",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.3,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 3514,
+  "tool_calls": [
+   {
+    "arguments": "{\"lines\":[{\"as_written\":\"how much is pure water now\",\"item\":\"pure water\"}],\"price_only\":true,\"shop_id\":\"shop-038\"}",
+    "id": "call_933e9ff8-21fb-40be-9e84-2315ebe27ae4",
+    "name": "price_order"
+   }
+  ]
+ },
+ "a51dffde9fb988e6466fed1a5fe1c289e55f24020f994442273e6c12596e34d6": {
+  "cached_tokens": 0,
+  "completion_tokens": 295,
+  "content": "",
+  "finish_reason": "tool_calls",
+  "latency_s": 2.632,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 2941,
+  "tool_calls": [
+   {
+    "arguments": "{\"lines\":[{\"as_written\":\"send 2 carton noodles\",\"item\":\"noodles\",\"quantity\":2,\"unit\":\"carton\"}],\"shop_id\":\"shop-017\"}",
+    "id": "call_1954cb1f-6fe9-4224-8f70-1e3defdc09c6",
+    "name": "submit_order"
+   }
+  ]
+ },
+ "ab82ee3e745fac1c198eea580830506539e5b9f974e51c03624c9868fe9f9af0": {
+  "cached_tokens": 0,
+  "completion_tokens": 987,
+  "content": "Your order is already approved, so I'll confirm the extra quantity.",
+  "finish_reason": "tool_calls",
+  "latency_s": 4.478,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 4007,
+  "tool_calls": [
+   {
+    "arguments": "{\"question\":\"Your order for 3 packs Brightwash Detergent 900g is already approved and can't be changed. Do you want me to add a new order for 3 more packs to make 6 total?\",\"shop_id\":\"shop-027\",\"to\":\"shop\"}",
+    "id": "call_0956e30d-364f-49b1-8460-8033bf4ed223",
+    "name": "ask_question"
+   }
+  ]
+ },
+ "b10eceb5462c3ab61364d064292ff6b8ea626f0b7a5777feb901de1150465d4f": {
+  "cached_tokens": 241,
+  "completion_tokens": 137,
+  "content": "",
+  "finish_reason": "tool_calls",
+  "latency_s": 0.947,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 3507,
+  "tool_calls": [
+   {
+    "arguments": "{\"lines\":[{\"as_written\":\"3 pack omo big\",\"item\":\"omo big\",\"quantity\":3,\"unit\":\"pack\"}],\"shop_id\":\"shop-027\"}",
+    "id": "call_27321e41-8d11-4f1d-ac2e-a3db14b52d2c",
+    "name": "submit_order"
+   }
+  ]
+ },
+ "b129002bb6d0fee9dfc624e0d8015583a7a7c5cec19aa97be1245fe92f63fb69": {
+  "cached_tokens": 0,
+  "completion_tokens": 110,
+  "content": "",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.102,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 3412,
+  "tool_calls": [
+   {
+    "arguments": "{\"lines\":[{\"as_written\":\"send 2 carton noodles\",\"item\":\"noodles\",\"quantity\":2,\"unit\":\"carton\"}],\"shop_id\":\"shop-017\"}",
+    "id": "call_f5ee7d96-af84-4a88-b5d7-303a0858af90",
+    "name": "ask_order_question"
+   }
+  ]
+ },
+ "b5ecf05af8e82ba67046dff2eaf0be194d1e1f598a619bbbf1e335719de00f47": {
+  "cached_tokens": 0,
+  "completion_tokens": 232,
+  "content": "",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.951,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 3518,
+  "tool_calls": [
+   {
+    "arguments": "{\"lines\":[{\"as_written\":\"2 bag 50kg rice\",\"item\":\"50kg rice\",\"quantity\":2,\"unit\":\"bag\"},{\"as_written\":\"6 pack cola\",\"item\":\"cola\",\"quantity\":6,\"unit\":\"pack\"}],\"shop_id\":\"shop-004\"}",
+    "id": "call_ccd06400-10b3-46b9-98bd-96464686a31d",
+    "name": "submit_order"
+   }
+  ]
+ },
+ "b89ae3d3e0e4435bf3bfe3f08a1a6aba73a0123edb4ddb10a8018b96077c663d": {
+  "cached_tokens": 0,
+  "completion_tokens": 1200,
+  "content": "",
+  "finish_reason": "length",
+  "latency_s": 5.509,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 3992,
+  "tool_calls": []
+ },
+ "be5e56538d8f5ba5fdc16b19854a52b83f73f638f2e16ab5a6f5dbcf652395b3": {
+  "cached_tokens": 0,
+  "completion_tokens": 468,
+  "content": "",
+  "finish_reason": "tool_calls",
+  "latency_s": 2.491,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 3710,
+  "tool_calls": [
+   {
+    "arguments": "{\"lines\":[{\"as_written\":\"Spaghetti ctn 1\",\"item\":\"Spaghetti\",\"quantity\":1,\"unit\":\"ctn\"},{\"as_written\":\"Sachet milk 2 bags\",\"item\":\"Sachet milk\",\"quantity\":2,\"unit\":\"bags\"}],\"shop_id\":\"shop-030\"}",
+    "id": "call_3e16db5a-6ed2-461d-87c5-4a6d731c69ab",
+    "name": "submit_order"
+   }
+  ]
+ },
+ "c02aa6f5db7fa68bca9311ed2dcdf71b2e6a0263cbe541c9680ab6e3a39dd9f9": {
+  "cached_tokens": 0,
+  "completion_tokens": 175,
+  "content": "I'll repeat your last order and get it priced.",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.982,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 2961,
+  "tool_calls": [
+   {
+    "arguments": "{\"repeat_last\":true,\"shop_id\":\"shop-024\"}",
+    "id": "call_562edc97-7a1d-4ed5-aea9-c820b2879922",
+    "name": "price_order"
+   }
+  ]
+ },
+ "c0a25e07fc9dbffbfc992aecc10dc2fe482d65fd8da076a5635e212363c612f6": {
+  "cached_tokens": 3825,
+  "completion_tokens": 823,
+  "content": "I'll add a new order for the extra packs since the original is already approved.",
+  "finish_reason": "tool_calls",
+  "latency_s": 3.707,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 4184,
+  "tool_calls": [
+   {
+    "arguments": "{\"lines\":[{\"as_written\":\"make it 6\",\"item\":\"omo big\",\"quantity\":3,\"unit\":\"pack\"}],\"shop_id\":\"shop-027\"}",
+    "id": "call_03780e59-17fa-4573-9534-121d68060001",
+    "name": "submit_order"
+   }
+  ]
+ },
+ "c0dbc3ee89b3efbcf9d06bc6f04080a0027a7a1bd49241a7c46d0182feed5159": {
+  "cached_tokens": 0,
+  "completion_tokens": 494,
+  "content": "",
+  "finish_reason": "tool_calls",
+  "latency_s": 2.7,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 3245,
+  "tool_calls": [
+   {
+    "arguments": "{\"shop_id\":\"shop-029\",\"sku\":\"MALTED-400\"}",
+    "id": "call_96d00692-f557-4fbb-8e42-2823b40b3e1c",
+    "name": "ask_stock_count"
+   }
+  ]
+ },
+ "c708b38d950a41e039be236a834968793e81b3060c4c6ed93eff0bf927a91b14": {
+  "cached_tokens": 3441,
+  "completion_tokens": 150,
+  "content": "",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.666,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 4032,
+  "tool_calls": [
+   {
+    "arguments": "{\"changes\":[{\"action\":\"set\",\"as_written\":\"make am 5 keg\",\"item\":\"oil\",\"quantity\":5,\"unit\":\"keg\"}],\"shop_id\":\"shop-011\"}",
+    "id": "call_9303abf3-f892-4f70-8da0-470a78941758",
+    "name": "revise_order"
+   }
+  ]
+ },
+ "c88c7bb4955f6701cd2f73367521a9736b593b561e7a791ff57202bb98163c50": {
+  "cached_tokens": 241,
+  "completion_tokens": 1200,
+  "content": "",
+  "finish_reason": "length",
+  "latency_s": 7.741,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 3390,
+  "tool_calls": []
+ },
+ "ccb1b757c044e81c1883f43c0b98d03883b056d860bd5b1259df303ee1241f8e": {
+  "cached_tokens": 0,
+  "completion_tokens": 166,
+  "content": "",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.107,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 3516,
+  "tool_calls": [
+   {
+    "arguments": "{\"lines\":[{\"as_written\":\"send 2 pack sugar\",\"item\":\"sugar\",\"quantity\":2,\"unit\":\"pack\"}],\"payment\":\"pays_now\",\"shop_id\":\"shop-017\"}",
+    "id": "call_8b93d6e8-44a1-424b-88f6-62ca0521e266",
+    "name": "submit_order"
+   }
+  ]
+ },
+ "d05c9b465e4c149ca666f320fa95f8e43d75b5e985e1ad3d907215993f4ed5fa": {
+  "cached_tokens": 0,
+  "completion_tokens": 628,
+  "content": "",
+  "finish_reason": "tool_calls",
+  "latency_s": 2.853,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 3722,
+  "tool_calls": [
+   {
+    "arguments": "{\"question\":\"Shop shop-038 (Bukola POS & Provisions) asks: how much is pure water now. price_order returned no priced figure (total N0) so I have no book figure to quote. What price should I tell them for Ekiti Spring Sachet Water?\",\"to\":\"owner\"}",
+    "id": "call_e97d0f1f-1f02-4b83-8c93-9422864be6db",
+    "name": "ask_question"
+   }
+  ]
+ },
+ "d10f1c70ca7df29230c1e2efaaffdcb146475e785b1871ae27ec455237b08ae1": {
+  "cached_tokens": 0,
+  "completion_tokens": 238,
+  "content": "",
+  "finish_reason": "tool_calls",
+  "latency_s": 2.193,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 1909,
+  "tool_calls": [
+   {
+    "arguments": "{\"question\":\"Thanks for your order! Can you please confirm the items and quantities from last time so I can get it ready for you?\",\"shop_id\":\"shop-024\",\"to\":\"shop\"}",
+    "id": "call_85a07e1c-ad03-470d-af27-c5eb88ee1b12",
+    "name": "ask_question"
+   }
+  ]
+ },
+ "d1da0814ecaeebb27b5baee385424b68b923ec4a22c98c2a464aab834930a3b8": {
+  "cached_tokens": 0,
+  "completion_tokens": 235,
+  "content": "Your noodles order is on its way to pricing \u2014 I'll confirm it now.",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.629,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 3507,
+  "tool_calls": [
+   {
+    "arguments": "{\"lines\":[{\"as_written\":\"send 2 carton noodles\",\"item\":\"noodles\",\"quantity\":2,\"unit\":\"carton\"}],\"shop_id\":\"shop-017\"}",
+    "id": "call_2ad123ab-12d9-4c2e-8402-d42843e245db",
+    "name": "submit_order"
+   }
+  ]
+ },
+ "d26173e4f69958691c900e5f67c5ac2710f4539501073723b9c4ed3cc7087277": {
+  "cached_tokens": 0,
+  "completion_tokens": 86,
+  "content": "",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.205,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 3736,
+  "tool_calls": [
+   {
+    "arguments": "{\"quote_id\":\"q-a88cc3f621\",\"shop_id\":\"shop-030\"}",
+    "id": "call_4ebde55d-d054-4b24-a3f4-5c154b771bf0",
+    "name": "submit_order"
+   }
+  ]
+ },
+ "d667dea3d21eb6cc2e0d35660ddde1a35a1440ed361b4b4983c4c30d2ab040c1": {
+  "cached_tokens": 241,
+  "completion_tokens": 135,
+  "content": "",
+  "finish_reason": "tool_calls",
+  "latency_s": 0.963,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 4401,
+  "tool_calls": [
+   {
+    "arguments": "{\"body\":\"That order was already approved by Coral Lane Trading, so I can't change it. Send me anything extra as a new order.\",\"channel\":\"shop_whatsapp\",\"ends_turn\":true,\"shop_id\":\"shop-027\"}",
+    "id": "call_21f35783-7969-4a4f-bd24-287966877eac",
+    "name": "send_to_user"
+   }
+  ]
+ },
+ "d7409e829054d6f1769a31fe88077441a1fbaec51f630d371758e47871a2df1d": {
+  "cached_tokens": 0,
+  "completion_tokens": 143,
+  "content": "",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.285,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 3541,
+  "tool_calls": [
+   {
+    "arguments": "{\"lines\":[{\"as_written\":\"send 3 pack omo big\",\"item\":\"omo big\",\"quantity\":3,\"unit\":\"pack\"}],\"shop_id\":\"shop-027\"}",
+    "id": "call_513cfce0-25d3-424b-8a14-0e65f82a10d6",
+    "name": "submit_order"
+   }
+  ]
+ },
+ "dd1188d4d58c495d4c368a26b02094bba7ed81092508b4af08a6ab034d36e3bd": {
+  "cached_tokens": 0,
+  "completion_tokens": 209,
+  "content": "Your 3 packs of Omo are on the way \u2014 I'll confirm your order now.",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.651,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 2941,
+  "tool_calls": [
+   {
+    "arguments": "{\"lines\":[{\"as_written\":\"send 3 pack omo big\",\"item\":\"omo big\",\"quantity\":3,\"unit\":\"pack\"}],\"shop_id\":\"shop-027\"}",
+    "id": "call_4e299f33-5e54-4d49-b288-f1725b7fc7e2",
+    "name": "submit_order"
+   }
+  ]
+ },
+ "ddae3a2d1580beb2d9c00f99490f564ec276211cf660df57a5330a0fe7bcd484": {
+  "cached_tokens": 0,
+  "completion_tokens": 725,
+  "content": "Got your repeat-order note \u2014 I'll confirm what was in it.",
+  "finish_reason": "tool_calls",
+  "latency_s": 4.426,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 1677,
+  "tool_calls": [
+   {
+    "arguments": "{\"note\":\"Shop-024 requested same order as last time on 26 Oct 17:33 WAT. No order history tools available in this build, need to ask shop for items/qty.\",\"plan\":[\"Ask shop-024 to confirm last order details\",\"Pass confirmed order to owner for approval\"],\"todo\":[\"Ask shop for item list and quantities\",\"Forward to owner once received\"]}",
+    "id": "call_232f7a77-5aec-4d03-ab38-482206bd5beb",
+    "name": "update_plan"
+   }
+  ]
+ },
+ "de22b53d77e9c361cd550762cbf59d396bb328366a85de63bb2310d310274a22": {
+  "cached_tokens": 0,
+  "completion_tokens": 206,
+  "content": "",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.616,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 3544,
+  "tool_calls": [
+   {
+    "arguments": "{\"lines\":[{\"as_written\":\"3 keg oil\",\"item\":\"oil\",\"quantity\":3,\"unit\":\"keg\"}],\"shop_id\":\"shop-011\"}",
+    "id": "call_23793c1c-51c6-4b6b-8c9d-b0f3a19ac9aa",
+    "name": "submit_order"
+   }
+  ]
+ },
+ "deabaa69f992c67a64b4b4831f8fa3c17aaec711a1e2606c00dd02ff972b1c33": {
+  "cached_tokens": 0,
+  "completion_tokens": 167,
+  "content": "Bumping it up to 5 kegs \u2014 updating your pending order.",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.534,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 4140,
+  "tool_calls": [
+   {
+    "arguments": "{\"changes\":[{\"action\":\"set\",\"as_written\":\"make am 5 keg\",\"item\":\"oil\",\"quantity\":5,\"unit\":\"keg\"}],\"shop_id\":\"shop-011\"}",
+    "id": "call_a2405b8a-dd45-4f16-8b3c-a3b3784e601c",
+    "name": "revise_order"
+   }
+  ]
+ },
+ "df6fe1707c3f55e046ff78cadf1737a8a041255b1e8736f67d238795e326d1d4": {
+  "cached_tokens": 3185,
+  "completion_tokens": 462,
+  "content": "",
+  "finish_reason": "tool_calls",
+  "latency_s": 3.005,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 3723,
+  "tool_calls": [
+   {
+    "arguments": "{\"lines\":[{\"as_written\":\"Rice 50kg x 1\",\"item\":\"Rice 50kg\",\"quantity\":1,\"unit\":\"\"},{\"as_written\":\"Cubes 2 pk\",\"item\":\"Cubes\",\"quantity\":2,\"unit\":\"pk\"}],\"shop_id\":\"shop-005\"}",
+    "id": "call_b3b85a61-b3cc-4a0b-8820-984b46494b32",
+    "name": "submit_order"
+   }
+  ]
+ },
+ "dfe50a9d8c65b997beaa5ea5341c69d8c280fdf92a6d9b964266d620ec3bc0ad": {
+  "cached_tokens": 4081,
+  "completion_tokens": 992,
+  "content": "The extra packs need clarification, so I'll ask the shop to confirm.",
+  "finish_reason": "tool_calls",
+  "latency_s": 4.326,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 4370,
+  "tool_calls": [
+   {
+    "arguments": "{\"lines\":[{\"as_written\":\"make it 6\",\"item\":\"make it 6\",\"quantity\":3,\"unit\":\"\"}],\"shop_id\":\"shop-027\"}",
+    "id": "call_ea415717-edd9-44e3-8cb6-2d5309341aa3",
+    "name": "ask_order_question"
+   }
+  ]
+ },
+ "dff8982f6ead855404eb4014c6669fd014a840e4143b24c4cc4d990d640fd89c": {
+  "cached_tokens": 0,
+  "completion_tokens": 83,
+  "content": "",
+  "finish_reason": "tool_calls",
+  "latency_s": 0.758,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 3441,
+  "tool_calls": [
+   {
+    "arguments": "{\"quote_id\":\"q-fd2238596f\",\"shop_id\":\"shop-031\"}",
+    "id": "call_39c2daf8-f3eb-45d7-ba83-9c6284901616",
+    "name": "submit_order"
+   }
+  ]
+ },
+ "ecc72fa87a6816a61e1a7463b12e4f118594712a7bc7b846c195310a98883085": {
+  "cached_tokens": 0,
+  "completion_tokens": 109,
+  "content": "",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.092,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 3659,
+  "tool_calls": [
+   {
+    "arguments": "{\"lines\":[{\"as_written\":\"1 carton indomie\",\"item\":\"indomie\",\"quantity\":1,\"unit\":\"carton\"}],\"shop_id\":\"shop-036\"}",
+    "id": "call_b0308626-849b-458b-b6b3-b1096b74ef83",
+    "name": "ask_order_question"
+   }
+  ]
+ },
+ "ed0f541b116422f7ef69fc71537b15254b16a59bedcad55baaa855e02dfea4cb": {
+  "cached_tokens": 3185,
+  "completion_tokens": 91,
+  "content": "",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.446,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 3808,
+  "tool_calls": [
+   {
+    "arguments": "{\"quote_id\":\"q-5e69866ffa\",\"shop_id\":\"shop-004\"}",
+    "id": "call_5efedf1a-8b77-43fe-b7b6-baa42306a032",
+    "name": "submit_order"
+   }
+  ]
+ },
+ "f0d22848dabc71920810ba91d1565a2ab256a436478ddb521d0d297bb29f3d23": {
+  "cached_tokens": 0,
+  "completion_tokens": 246,
+  "content": "Your two items together \u2014 sending that priced order through.",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.266,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 3613,
+  "tool_calls": [
+   {
+    "arguments": "{\"lines\":[{\"as_written\":\"send 2 pack omo big\",\"item\":\"omo big\",\"quantity\":2,\"unit\":\"pack\"},{\"as_written\":\"plus 1 carton spaghetti\",\"item\":\"spaghetti\",\"quantity\":1,\"unit\":\"carton\"}],\"shop_id\":\"shop-039\"}",
+    "id": "call_b8a8fc1d-11a0-40c6-a67c-9b195d343d40",
+    "name": "submit_order"
+   }
+  ]
+ },
+ "f18a5a42e33f519990471a6b342c351b49a8a8949e4173a2e5dc23021d8a7188": {
+  "cached_tokens": 0,
+  "completion_tokens": 197,
+  "content": "I'll put together your priced order now.",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.251,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 2966,
+  "tool_calls": [
+   {
+    "arguments": "{\"lines\":[{\"as_written\":\"bring 2 pack malt can\",\"item\":\"malt can\",\"quantity\":2,\"unit\":\"pack\"}],\"shop_id\":\"shop-014\"}",
+    "id": "call_632fa4d8-57c2-4bd4-ad1b-7e8aa548fbb6",
+    "name": "price_order"
+   }
+  ]
+ },
+ "f244d4ab8e01305305419333c1bd40ef5a94d0757aba1ddfb804edf5a93c24a0": {
+  "cached_tokens": 0,
+  "completion_tokens": 985,
+  "content": "Noted \u2014 I'll log the van payment promise and acknowledge it.",
+  "finish_reason": "tool_calls",
+  "latency_s": 4.452,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 4030,
+  "tool_calls": [
+   {
+    "arguments": "{\"helper\":\"order\",\"shop_id\":\"shop-017\",\"task\":\"Shop requests 2 pack sugar, says will pay cash when the van comes. Please confirm if delivery can be arranged; collector logged payment promise.\"}",
+    "id": "call_93cee2c2-59e6-4542-870c-cf699308a2af",
+    "name": "ask_helper"
+   },
+   {
+    "arguments": "{\"in_hours\":48,\"reason\":\"Shop-017 promised cash payment when van comes for 2 pack sugar\",\"shop_id\":\"shop-017\"}",
+    "id": "call_fe91b7b0-125d-4c01-bb43-dea961bdc3be",
+    "name": "set_followup"
+   },
+   {
+    "arguments": "{\"body\":\"Noted, thank you. We have recorded that you will pay cash when the van comes. Your order for 2 pack sugar has been passed to the order team.\",\"channel\":\"shop_whatsapp\",\"ends_turn\":true,\"shop_id\":\"shop-017\"}",
+    "id": "call_706a5ef3-196a-4fc4-b0cf-b960bdf65be5",
+    "name": "send_to_user"
+   }
+  ]
+ },
+ "f3d3a53bcd7d6e30dc685f56e32027af233fa14c9615cbc676ad4a909c12d3d4": {
+  "cached_tokens": 241,
+  "completion_tokens": 190,
+  "content": "",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.782,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 3270,
+  "tool_calls": [
+   {
+    "arguments": "{\"lines\":[{\"as_written\":\"2 bag 50kg rice\",\"item\":\"50kg rice\",\"quantity\":2,\"unit\":\"bag\"},{\"as_written\":\"6 pack cola\",\"item\":\"cola\",\"quantity\":6,\"unit\":\"pack\"}],\"shop_id\":\"shop-004\"}",
+    "id": "call_7ef2c1b0-4182-424c-8c96-d8ac4943ed7f",
+    "name": "submit_order"
+   }
+  ]
+ },
+ "fa32eb932631083672e2b3e67e10ba45078c6c75b89316209ce58c74c166aa9f": {
+  "cached_tokens": 0,
+  "completion_tokens": 352,
+  "content": "Your Yoruba order is on its way \u2014 I'll sort the spaghetti packs.",
+  "finish_reason": "tool_calls",
+  "latency_s": 2.404,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 3516,
+  "tool_calls": [
+   {
+    "arguments": "{\"lines\":[{\"as_written\":\"e ba mi mu paali spaghetti meji\",\"item\":\"spaghetti\",\"quantity\":2,\"unit\":\"paali\"}],\"shop_id\":\"shop-029\"}",
+    "id": "call_8d77a25c-7947-41ec-bc9d-1138877d6b23",
+    "name": "submit_order"
+   }
+  ]
+ },
+ "fbe919cf081aefa138ff8114f25f1c395e55c5babb3f09056dec12c5d7ff2a3c": {
+  "cached_tokens": 0,
+  "completion_tokens": 84,
+  "content": "",
+  "finish_reason": "tool_calls",
+  "latency_s": 1.188,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 3401,
+  "tool_calls": [
+   {
+    "arguments": "{\"quote_id\":\"q-fe5db840f3\",\"shop_id\":\"shop-014\"}",
+    "id": "call_4878135d-f311-4975-afb9-8b562a527b3a",
+    "name": "submit_order"
+   }
+  ]
+ }
+}

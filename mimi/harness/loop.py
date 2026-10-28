@@ -846,6 +846,8 @@ class Harness:
             return f"{spec.name}: already proposed", ms
         state.intents.append(rec)
         self._effects(state, spec.name, payload, tier, shop_id, bkey)
+        if spec.ends_turn:
+            state.ends_turn = True
         if tier == "approve":
             state.approval_pending = True
         ms = (self.perf() - t) * 1000

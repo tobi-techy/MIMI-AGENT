@@ -16,10 +16,12 @@ harness loop (RAI-272):
 * Brand: the Promo Check (``mimi.brand.tools``): promos read from a fixed
   synthetic list, a shop reply written by code, brand emails kept as drafts
   in the owner's approvals. It reads and drafts; it never sends.
+* Order intake (``order/order-intake``, RAI-302): its own helper config on the
+  same ``order`` helper name: a shop orders by text, voice or list photo,
+  code matches and prices it, and the order waits in the owner's approvals
+  (``mimi.orders.tools``).
 
-Order only
-does delivery receipts; order intake and delivery status get a one-line
-answer pointing to the rep.
+Delivery status gets a one-line answer pointing to the rep.
 
 ``HelperDeps`` carries what the tools reach outside the book: the models
 (Muse Spark for screenshots, receipt replies and worded stock answers, SAM
@@ -50,6 +52,8 @@ from mimi.harness.loop import Helper
 from mimi.harness.policy import GoPolicy, RiskPolicy
 from mimi.harness.registry import ToolRegistry, build_toolset
 from mimi.models.base import ChatMessage, ChatModel, ChatResult, ModelError
+from mimi.orders.reading import ListReader
+from mimi.orders.tools import ORDER_INTAKE_SKILL, ORDER_TOOLS, OrderPorts, register_order_tools
 from mimi.proof.reading import ScreenshotReader
 from mimi.proof.tools import SCREENSHOT_SKILL, SCREENSHOT_TOOLS, ProofPorts, register_proof_tools
 from mimi.receipts.tools import ORDER_SKILL, RECEIPT_TOOLS, ReceiptPorts, register_receipt_tools
@@ -140,6 +144,8 @@ def build_helpers(policy: RiskPolicy | None = None, *, go: SqlGo | None = None,
     register_stock_tools(reg, StockPorts(reader=StockAnswerReader(deps.stock), distributor=dist))
     register_credit(reg, CreditPorts(photos=StorePhotos(go, deps.media),  # type: ignore[arg-type]
                                      segmenter=deps.segmenter, distributor=dist))
+    register_order_tools(reg, OrderPorts(reader=ListReader(deps.vision),
+                                         images=StorePhotos(go, deps.media), distributor=dist))
     helpers["proof"] = Helper(
         "proof", PROOF_SKILL + SCREENSHOT_SKILL,
         build_toolset(reg, "proof", PROOF_TOOLS + SCREENSHOT_TOOLS + BUILTIN_TOOLS, policy),
@@ -148,6 +154,12 @@ def build_helpers(policy: RiskPolicy | None = None, *, go: SqlGo | None = None,
         "order", ORDER_SKILL + APPROVAL_LINE,
         build_toolset(reg, "order", RECEIPT_TOOLS + BUILTIN_TOOLS, policy),
         skill_version="order-v0.1")
+    # Keyed by skill: the agent looks a skill up before its helper, so the
+    # delivery-receipt Order helper (and its recorded evals) stays as it was.
+    helpers["order/order-intake"] = Helper(
+        "order", ORDER_INTAKE_SKILL,
+        build_toolset(reg, "order", ORDER_TOOLS + ("send_to_user", "ask_question"), policy),
+        skill_version="order-intake-v0.1")
     helpers["stock"] = Helper(
         "stock", STOCK_SKILL, build_toolset(reg, "stock", STOCK_TOOLS + BUILTIN_TOOLS, policy),
         skill_version="stock-v0.1")

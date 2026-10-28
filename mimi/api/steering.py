@@ -39,11 +39,18 @@ FAMILY: dict[str, tuple[str, ...]] = {
     "draft_restock": ("draft_restock", "revise_restock"),
     "revise_restock": ("draft_restock", "revise_restock"),
     "submit_credit_review": ("submit_credit_review",),
+    # Order intake (RAI-302): one pending order per shop, versioned.
+    "submit_order": ("submit_order", "revise_order"),
+    "revise_order": ("submit_order", "revise_order"),
 }
+# Tools whose intent is always a new version of a pending one.
+REVISIONS: frozenset[str] = frozenset({"revise_restock", "revise_order"})
 TOOL_SKILL: dict[str, tuple[str, str]] = {
     "draft_restock": ("stock", "stock/stock-count"),
     "revise_restock": ("stock", "stock/stock-count"),
     "submit_credit_review": ("credit", "credit/credit-request"),
+    "submit_order": ("order", "order/order-intake"),
+    "revise_order": ("order", "order/order-intake"),
     "set_followup": ("collector", "collector/promise-to-pay"),
     "record_delivery_consent": ("order", "order/drop-confirmation"),
     "flag_delivery_to_owner": ("order", "order/drop-confirmation"),

@@ -1,0 +1,16 @@
+{
+ "750977000f84ddc0e717425bbe543bb5": {
+  "completion_tokens": 336,
+  "latency_s": 2.587,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 2023,
+  "text": "{\"heading\": \"order\", \"is_order_list\": true, \"legibility\": 1, \"lines\": [\"Spaghetti ctn 1\", \"Sachet milk 2 bags\"]}"
+ },
+ "d146c36a7f6e562ce9767a920c17ca38": {
+  "completion_tokens": 484,
+  "latency_s": 2.81,
+  "model": "muse-spark-1.3",
+  "prompt_tokens": 2023,
+  "text": "{\"heading\": \"Coral Lane\", \"is_order_list\": true, \"legibility\": 1, \"lines\": [\"Rice 50kg x 1\", \"Cubes 2 pk\"]}"
+ }
+}
