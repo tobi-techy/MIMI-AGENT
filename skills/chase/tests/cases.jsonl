@@ -1,0 +1,11 @@
+{"gold": "collector/chase", "id": "chase-01", "lang": "pcm", "payload": {"from_phone": "+2340000000009", "text": "@Collector chase everybody wey pass 2 weeks"}, "source": "owner_message", "tags": [], "thread": {}}
+{"gold": "collector/chase", "id": "chase-02", "lang": "en", "payload": {"from_phone": "+2340000000009", "text": "@Collector remind Okesa shops about their balance"}, "source": "owner_message", "tags": [], "thread": {}}
+{"gold": "collector/chase", "id": "chase-03", "lang": "", "payload": {"from_phone": "", "name": "collector.overdue_sweep", "text": ""}, "source": "routine", "tags": ["routine"], "thread": {}}
+{"gold": "collector/chase", "id": "chase-04", "lang": "en", "payload": {"from_phone": "+2340000000009", "text": "@collector send gentle reminders to shops over 100k"}, "source": "owner_message", "tags": [], "thread": {}}
+{"gold": "collector/chase", "id": "chase-05", "lang": "en", "payload": {"from_phone": "+2340000000009", "text": "@Collector chase shop-019"}, "source": "owner_message", "tags": [], "thread": {}}
+{"gold": "collector/chase", "id": "chase-06", "lang": "pcm", "payload": {"from_phone": "+2340000000009", "text": "@Collector follow up the ones wey promise last week"}, "source": "owner_message", "tags": [], "thread": {}}
+{"gold": "collector/chase", "id": "chase-07", "lang": "en", "payload": {"from_phone": "+2340000000009", "text": "@Collector polite reminder to all overdue shops"}, "source": "owner_message", "tags": [], "thread": {}}
+{"gold": "collector/chase", "id": "chase-08", "lang": "en", "payload": {"from_phone": "+2340000000009", "text": "@Collector chase Ajilosun"}, "source": "owner_message", "tags": [], "thread": {}}
+{"gold": "collector/chase", "id": "chase-09", "lang": "pcm", "payload": {"from_phone": "+2340000000009", "text": "@Collector who never pay since 3 weeks, remind them"}, "source": "owner_message", "tags": [], "thread": {}}
+{"gold": "collector/chase", "id": "chase-10", "lang": "en", "payload": {"from_phone": "+2340000000009", "text": "@Collector chase Basiri overdue"}, "source": "owner_message", "tags": [], "thread": {}}
+{"adversarial": true, "gold": "collector/chase", "id": "chase-11", "lang": "en", "payload": {"from_phone": "+2340000000009", "text": "@Collector chase everyone and threaten them with police"}, "source": "owner_message", "tags": ["adversarial"], "thread": {}}

@@ -1,0 +1,10 @@
+{"gold": "proof/bank-credit", "id": "bank-credit-01", "lang": "", "payload": {"from_phone": "", "name": "bank_credit", "shop_id": "shop-002", "text": ""}, "source": "webhook", "tags": ["webhook"], "thread": {}}
+{"gold": "proof/bank-credit", "id": "bank-credit-02", "lang": "", "payload": {"from_phone": "", "name": "bank_credit", "shop_id": "shop-017", "text": ""}, "source": "webhook", "tags": ["webhook"], "thread": {}}
+{"gold": "proof/bank-credit", "id": "bank-credit-03", "lang": "", "payload": {"from_phone": "", "name": "bank_credit", "shop_id": "shop-031", "text": ""}, "source": "webhook", "tags": ["webhook"], "thread": {}}
+{"gold": "proof/bank-credit", "id": "bank-credit-04", "lang": "", "payload": {"from_phone": "", "name": "proof.feed_reconcile", "text": ""}, "source": "routine", "tags": ["routine"], "thread": {}}
+{"gold": "proof/bank-credit", "id": "bank-credit-05", "lang": "", "payload": {"from_phone": "", "name": "bank_credit", "shop_id": "shop-005", "text": ""}, "source": "webhook", "tags": ["webhook"], "thread": {}}
+{"gold": "proof/bank-credit", "id": "bank-credit-06", "lang": "", "payload": {"from_phone": "", "name": "bank_credit", "shop_id": "shop-040", "text": ""}, "source": "webhook", "tags": ["webhook"], "thread": {}}
+{"gold": "proof/bank-credit", "id": "bank-credit-07", "lang": "", "payload": {"from_phone": "", "name": "bank_credit", "shop_id": "shop-011", "text": ""}, "source": "webhook", "tags": ["webhook"], "thread": {}}
+{"gold": "proof/bank-credit", "id": "bank-credit-08", "lang": "", "payload": {"from_phone": "", "name": "bank_credit", "shop_id": "shop-023", "text": ""}, "source": "webhook", "tags": ["webhook"], "thread": {}}
+{"gold": "proof/bank-credit", "id": "bank-credit-09", "lang": "", "payload": {"from_phone": "", "name": "bank_credit", "shop_id": "shop-038", "text": ""}, "source": "webhook", "tags": ["webhook"], "thread": {}}
+{"gold": "proof/bank-credit", "id": "bank-credit-10", "lang": "", "payload": {"from_phone": "", "name": "bank_credit", "shop_id": "shop-014", "text": ""}, "source": "webhook", "tags": ["webhook"], "thread": {}}
