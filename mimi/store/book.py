@@ -450,6 +450,17 @@ class SqlGo:
                     s.spend.c.tenant_id == tenant_id, s.spend.c.day == day.isoformat())
                     .values(kobo=s.spend.c.kobo + int(kobo)))
 
+    def known_names(self, tenant_id: str) -> list[str]:
+        """This distributor's shop and product names (the verification gate's
+        names check, ``mimi.harness.claims``)."""
+        with self.engine.connect() as conn:
+            self._tenant_row(conn, tenant_id)
+            shops = conn.execute(sa.select(s.shops.c.name).where(
+                s.shops.c.tenant_id == tenant_id)).scalars().all()
+            skus = conn.execute(sa.select(s.skus.c.name).where(
+                s.skus.c.tenant_id == tenant_id)).scalars().all()
+        return [str(n) for n in (*shops, *skus) if n]
+
     def recent_count(self, tenant_id: str, kind: str, shop_id: str, window_s: float) -> int:
         """Loop guards (``mimi.harness.guards``): messages Mimi wrote to this
         shop, or follow-ups set for it, in the last ``window_s`` seconds."""

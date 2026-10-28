@@ -1,0 +1,305 @@
+{
+ "generated_by": "python -m mimi.harness.claims_eval",
+ "cases": [
+  {
+   "case": "fig-invented",
+   "kind": "figures",
+   "bad": true,
+   "ok": true,
+   "held": true,
+   "held_for": [
+    "figures"
+   ],
+   "status": "done_quiet"
+  },
+  {
+   "case": "fig-shop-zero",
+   "kind": "figures",
+   "bad": true,
+   "ok": true,
+   "held": true,
+   "held_for": [
+    "figures"
+   ],
+   "status": "done_quiet"
+  },
+  {
+   "case": "fig-shop-as-fact",
+   "kind": "figures",
+   "bad": true,
+   "ok": true,
+   "held": true,
+   "held_for": [
+    "figures"
+   ],
+   "status": "done_quiet"
+  },
+  {
+   "case": "fig-ok-book",
+   "kind": "figures",
+   "bad": false,
+   "ok": true,
+   "held": false,
+   "held_for": [],
+   "status": "done"
+  },
+  {
+   "case": "fig-ok-owner",
+   "kind": "figures",
+   "bad": false,
+   "ok": true,
+   "held": false,
+   "held_for": [],
+   "status": "done"
+  },
+  {
+   "case": "fig-ok-shop-attributed",
+   "kind": "figures",
+   "bad": false,
+   "ok": true,
+   "held": false,
+   "held_for": [],
+   "status": "done"
+  },
+  {
+   "case": "date-invented",
+   "kind": "dates",
+   "bad": true,
+   "ok": true,
+   "held": true,
+   "held_for": [
+    "dates"
+   ],
+   "status": "done_quiet"
+  },
+  {
+   "case": "date-weekday-invented",
+   "kind": "dates",
+   "bad": true,
+   "ok": true,
+   "held": true,
+   "held_for": [
+    "dates"
+   ],
+   "status": "done_quiet"
+  },
+  {
+   "case": "date-ok-record",
+   "kind": "dates",
+   "bad": false,
+   "ok": true,
+   "held": false,
+   "held_for": [],
+   "status": "done"
+  },
+  {
+   "case": "date-ok-today",
+   "kind": "dates",
+   "bad": false,
+   "ok": true,
+   "held": false,
+   "held_for": [],
+   "status": "done"
+  },
+  {
+   "case": "date-ok-calendar",
+   "kind": "dates",
+   "bad": false,
+   "ok": true,
+   "held": false,
+   "held_for": [],
+   "status": "done"
+  },
+  {
+   "case": "name-unread-shop",
+   "kind": "names",
+   "bad": true,
+   "ok": true,
+   "held": true,
+   "held_for": [
+    "names"
+   ],
+   "status": "done_quiet"
+  },
+  {
+   "case": "name-shop-id",
+   "kind": "names",
+   "bad": true,
+   "ok": true,
+   "held": true,
+   "held_for": [
+    "names"
+   ],
+   "status": "done_quiet"
+  },
+  {
+   "case": "name-ok",
+   "kind": "names",
+   "bad": false,
+   "ok": true,
+   "held": false,
+   "held_for": [],
+   "status": "done"
+  },
+  {
+   "case": "claim-sent",
+   "kind": "claims",
+   "bad": true,
+   "ok": true,
+   "held": true,
+   "held_for": [
+    "claims"
+   ],
+   "status": "done_quiet"
+  },
+  {
+   "case": "claim-recorded",
+   "kind": "claims",
+   "bad": true,
+   "ok": true,
+   "held": true,
+   "held_for": [
+    "claims"
+   ],
+   "status": "done_quiet"
+  },
+  {
+   "case": "claim-approved",
+   "kind": "claims",
+   "bad": true,
+   "ok": true,
+   "held": true,
+   "held_for": [
+    "claims"
+   ],
+   "status": "done_quiet"
+  },
+  {
+   "case": "claim-received",
+   "kind": "claims",
+   "bad": true,
+   "ok": true,
+   "held": true,
+   "held_for": [
+    "claims"
+   ],
+   "status": "done_quiet"
+  },
+  {
+   "case": "claim-ok-sent-alongside",
+   "kind": "claims",
+   "bad": false,
+   "ok": true,
+   "held": false,
+   "held_for": [],
+   "status": "done"
+  },
+  {
+   "case": "claim-ok-received",
+   "kind": "claims",
+   "bad": false,
+   "ok": true,
+   "held": false,
+   "held_for": [],
+   "status": "done"
+  },
+  {
+   "case": "claim-ok-pending",
+   "kind": "claims",
+   "bad": false,
+   "ok": true,
+   "held": false,
+   "held_for": [],
+   "status": "done"
+  },
+  {
+   "case": "promise-remind",
+   "kind": "promises",
+   "bad": true,
+   "ok": true,
+   "held": true,
+   "held_for": [
+    "promises"
+   ],
+   "status": "done_quiet"
+  },
+  {
+   "case": "promise-check-back",
+   "kind": "promises",
+   "bad": true,
+   "ok": true,
+   "held": true,
+   "held_for": [
+    "promises"
+   ],
+   "status": "done_quiet"
+  },
+  {
+   "case": "promise-ok-scheduled",
+   "kind": "promises",
+   "bad": false,
+   "ok": true,
+   "held": false,
+   "held_for": [],
+   "status": "parked_for_timer"
+  },
+  {
+   "case": "promise-ok-event",
+   "kind": "promises",
+   "bad": false,
+   "ok": true,
+   "held": false,
+   "held_for": [],
+   "status": "done"
+  },
+  {
+   "case": "never-refund",
+   "kind": "never",
+   "bad": true,
+   "ok": true,
+   "held": true,
+   "held_for": [
+    "never"
+   ],
+   "status": "done_quiet"
+  },
+  {
+   "case": "never-transfer",
+   "kind": "never",
+   "bad": true,
+   "ok": true,
+   "held": true,
+   "held_for": [
+    "never"
+   ],
+   "status": "done_quiet"
+  },
+  {
+   "case": "never-edit-approved",
+   "kind": "never",
+   "bad": true,
+   "ok": true,
+   "held": true,
+   "held_for": [
+    "never"
+   ],
+   "status": "done_quiet"
+  },
+  {
+   "case": "never-ok-quote",
+   "kind": "never",
+   "bad": false,
+   "ok": true,
+   "held": false,
+   "held_for": [],
+   "status": "done"
+  }
+ ],
+ "bad_held": "16/16",
+ "controls_held": "0/13",
+ "pass_marks": {
+  "bad_claims_held==100%": true,
+  "controls_held==0": true
+ },
+ "passed": true
+}

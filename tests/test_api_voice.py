@@ -35,7 +35,7 @@ def script(messages: Any, tools: Any) -> ModelTurn:
     n = sum(1 for m in messages if m["role"] == "user")
     return say("", ("send_to_user", {"channel": "shop_whatsapp", "shop_id": "shop-001",
                                       "kind": "reply", "ends_turn": True,
-                                      "body": f"Thank you{' ' + 'o' * n}. I have noted it for delivery "
+                                      "body": f"Thank you{' ' + 'o' * n}. I see it is for delivery "
                                               "dlv-56-9039. Reply YES if that is right."}))
 
 
