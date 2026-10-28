@@ -83,10 +83,66 @@ jobs:
         run: python -m mimi.sim --shops 3 --transcript --voice 1 --promises 1 --voice-replies
       - name: Offline 3-shop sim with payment screenshots (genuine, fake and a resend)
         run: python -m mimi.sim --shop-ids shop-019,shop-037,shop-025 --transcript --screenshots 1 --fakes 0.4
+      - name: OpenAPI document matches the API (docs/api/openapi.json)
+        run: python -m mimi.api openapi --check
       - name: Migrations run on a clean SQLite database
         env:
           MIMI_DB_URL: sqlite:///${{ runner.temp }}/mimi-ci.db
         run: alembic upgrade head && alembic downgrade base
+
+  postgres:
+    name: store, API and worker-kill tests on Postgres
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          # A throwaway database inside this job only; not a secret.
+          POSTGRES_PASSWORD: mimi-ci  # pragma: allowlist secret
+          POSTGRES_DB: mimi
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd pg_isready --health-interval 5s --health-timeout 5s --health-retries 12
+    env:
+      META_API_KEY: ""
+      MIMI_TEST_DATABASE_URL: postgresql://postgres:mimi-ci@localhost:5432/mimi  # pragma: allowlist secret
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: python -m pip install -e '.[dev,postgres]'
+      - name: Migrations up and down on Postgres
+        env:
+          MIMI_DB_URL: postgresql://postgres:mimi-ci@localhost:5432/mimi  # pragma: allowlist secret
+        run: alembic upgrade head && alembic downgrade base
+      - name: Store, API and worker-kill tests on Postgres
+        run: python -m pytest tests/test_store.py tests/test_api.py tests/test_worker_kill.py
+
+  docker:
+    name: docker image starts and answers
+    runs-on: ubuntu-latest
+    env:
+      # Throwaway keys for a container that lives for this job only.
+      CI_API_KEYS: coral-lane:owner:ci-owner-key-000001,coral-lane:channel:ci-channel-key-0001  # pragma: allowlist secret
+      CI_CHANNEL_KEY: ci-channel-key-0001  # pragma: allowlist secret
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker build -t mimi-agent:ci .
+      - name: Container migrates, seeds the synthetic world and answers a turn (offline model)
+        run: |
+          docker run -d --name mimi -p 8000:8000 \
+            -e MIMI_API_KEYS="$CI_API_KEYS" \
+            mimi-agent:ci
+          for i in $(seq 1 60); do curl -sf localhost:8000/v1/health && break; sleep 1; done
+          curl -sf -X POST localhost:8000/v1/turns \
+            -H "Authorization: Bearer $CI_CHANNEL_KEY" -H 'Content-Type: application/json' \
+            -d '{"message_id":"ci.1","phone":"+2340000000100","text":"hi"}' | tee /tmp/turn.json
+          grep -q '"state":"done"' /tmp/turn.json
+          test "$(curl -s -o /dev/null -w '%{http_code}' localhost:8000/v1/shops)" = 401
+      - if: always()
+        run: docker logs mimi 2>&1 | tail -40 || true
 
   secrets:
     name: secret scans

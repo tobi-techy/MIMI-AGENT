@@ -279,6 +279,33 @@ python -m mimi.harness.router_eval      # router eval, recorded Muse Spark answe
 python -m mimi.harness.context_eval     # context eval, both arms recorded (CI)
 ```
 
+## The agent API: console and WhatsApp (RAI-266)
+
+The live agent behind HTTP, so the distributor console and a WhatsApp
+webhook talk to the same front door, router and harness as everything above.
+`POST /v1/turns` takes one inbound message (idempotent on its message id)
+and returns the turn id and Mimi's replies; the console reads threads (with
+every reasoning step), shops, approvals and credit, and the owner approves
+or rejects. A bearer key per distributor scopes every query to that
+distributor; CORS allows `https://console.userail.money` and localhost.
+
+State lives in a durable store (`mimi/store`: SQLite by default, Postgres
+through `DATABASE_URL`, alembic `0006`): the synthetic book, threads,
+messages, steps, intents, approvals and a turn queue with leases. A worker
+saves after every step and finishes each turn in one lease-guarded
+transaction, so a killed worker loses nothing and doubles nothing: a test
+SIGKILLs a real worker process mid-run and checks that every turn completes
+exactly once. The book is still all synthetic; the model calls are real.
+
+```bash
+make api          # migrate, seed the synthetic world once, serve on :8000 (local demo keys)
+make api-worker   # an extra worker process (optional)
+docker build -t mimi-agent . && docker run -p 8000:8000 -e MIMI_API_KEYS=... -e META_API_KEY=... mimi-agent
+```
+
+Endpoints, settings, auth and the durability rules:
+[`docs/API.md`](docs/API.md); OpenAPI: [`docs/api/openapi.json`](docs/api/openapi.json).
+
 ## Eval: stock estimate and one-tap counts
 
 **Backtest** (no model calls): every morning for six weeks, the production
@@ -370,9 +397,12 @@ Hobby plan has no alerts API). Details: [`docs/RUN.md`](docs/RUN.md#3e-langfuse-
 | `mimi/stock` | Stock: estimator v0.2 (stock in minus estimated sales, with confidence), trigger and weekly caps, one-tap question and answer reading (code for taps, Muse Spark for words), restock draft and verifier, the backtest and the answer eval |
 | `mimi/observe` | Optional Langfuse tracing: turn traces, redaction, the evals as datasets and experiments (off without keys) |
 | `mimi/sim` | Shop personas and a one-day simulator (shops can pay by screenshot), and the low-stock scene |
+| `mimi/api` | The HTTP API (FastAPI) for the console and the WhatsApp webhook: turns, threads, shops, approvals, credit, health; bearer keys per distributor; the durable agent (front door, router, harness over the store) and its workers |
+| `mimi/store` | The durable store: tables and migration, `SqlGo` (the system-of-record ports over the database), the turn queue with leases and checkpoints, the context builder's stores, the synthetic seed |
 | `mimi/types.py` | `ShopScope` and the kobo money unit |
 
 Docs: [`docs/HACKATHON.md`](docs/HACKATHON.md) (what was built when),
+[`docs/API.md`](docs/API.md),
 [`docs/RUNTIME.md`](docs/RUNTIME.md), [`docs/HARNESS.md`](docs/HARNESS.md),
 [`docs/WORLD.md`](docs/WORLD.md),
 [`docs/RUN.md`](docs/RUN.md), [`docs/VOICE.md`](docs/VOICE.md),
@@ -383,7 +413,8 @@ Docs: [`docs/HACKATHON.md`](docs/HACKATHON.md) (what was built when),
 ## Built before the event (not in this repo)
 
 * The marketing website, userail.money.
-* A console UI prototype.
+* A console UI prototype (it calls this repo's HTTP API; it is not in this
+  repo).
 * An earlier Mimi backend, in a separate repository.
 
 None of these is in this repository, and nothing here imports or calls them.

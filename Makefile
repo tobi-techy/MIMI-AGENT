@@ -1,7 +1,7 @@
 PY ?= python
 
 .PHONY: credit-eval credit-eval-live credit-fixtures sim-credit
-.PHONY: install test eval eval-live eval-fake voice-eval voice-eval-live voice-fixtures proof-eval proof-eval-live proof-fixtures stock-backtest stock-eval stock-eval-live stock-eval-fake sim-stock trace-stock sim sim-live sim-voice sim-voice-v2 sim-screens trace-smoke langfuse-setup langfuse-monitor langfuse-datasets proof-experiment voice-experiment receipts-experiment judge-calibration world-check lint typecheck secrets provenance migrate check harness-eval harness-eval-live trace-harness router-eval router-eval-live context-eval context-eval-live router-train trace-router
+.PHONY: install test eval eval-live eval-fake voice-eval voice-eval-live voice-fixtures proof-eval proof-eval-live proof-fixtures stock-backtest stock-eval stock-eval-live stock-eval-fake sim-stock trace-stock sim sim-live sim-voice sim-voice-v2 sim-screens trace-smoke langfuse-setup langfuse-monitor langfuse-datasets proof-experiment voice-experiment receipts-experiment judge-calibration world-check lint typecheck secrets provenance migrate check harness-eval harness-eval-live trace-harness router-eval router-eval-live context-eval context-eval-live router-train trace-router api api-worker api-seed api-openapi api-openapi-check
 
 install:            ## editable install with dev tools
 	$(PY) -m pip install -e '.[dev,otel,langfuse]'
@@ -78,7 +78,7 @@ provenance:         ## every commit was made in the hackathon window
 migrate:            ## create Mimi's tables; set MIMI_DB_URL first
 	alembic upgrade head
 
-check: lint typecheck test eval voice-eval proof-eval stock-backtest stock-eval harness-eval router-eval context-eval credit-eval world-check secrets provenance
+check: lint typecheck test api-openapi-check eval voice-eval proof-eval stock-backtest stock-eval harness-eval router-eval context-eval credit-eval world-check secrets provenance
 
 sim-voice-v2:       ## offline sim: voice notes, payment promises, voice replies
 	META_API_KEY= SPITCH_API_KEY= $(PY) -m mimi.sim --shops 3 --transcript --voice 1 --promises 1 --voice-replies
@@ -159,3 +159,24 @@ credit-fixtures:    ## redraw the synthetic shelf photos and labels (new bytes: 
 
 sim-credit:         ## offline credit-bump scene: ask, shelf photo, SAM 3.1 count, approvals draft
 	META_API_KEY= $(PY) -m mimi.sim --credit --transcript
+
+# --- Agent HTTP API and durable store (RAI-266) ---
+# Local demo keys only; set MIMI_API_KEYS (and META_API_KEY for real Muse Spark) yourself.
+API_ENV = DATABASE_URL=$${DATABASE_URL:-sqlite:///./mimi.db}; export DATABASE_URL; \
+	MIMI_API_KEYS=$${MIMI_API_KEYS:-coral-lane:owner:local-owner-key-0001,coral-lane:channel:local-channel-key-001}; \
+	export MIMI_API_KEYS;
+
+api-seed:           ## migrate and load the synthetic Coral Lane world once (DATABASE_URL, default sqlite:///./mimi.db)
+	@$(API_ENV) alembic upgrade head && $(PY) -m mimi.store seed --if-empty
+
+api: api-seed       ## the HTTP API on :8000 with one worker thread (offline model without META_API_KEY)
+	@$(API_ENV) $(PY) -m mimi.api serve --host 127.0.0.1 --port $${PORT:-8000}
+
+api-worker:         ## an extra worker process for the API's turn queue (safe to kill)
+	@$(API_ENV) $(PY) -m mimi.api worker
+
+api-openapi:        ## regenerate docs/api/openapi.json
+	$(PY) -m mimi.api openapi
+
+api-openapi-check:  ## fail when docs/api/openapi.json is stale
+	$(PY) -m mimi.api openapi --check

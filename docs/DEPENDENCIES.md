@@ -11,10 +11,12 @@ starts with no intent types of its own. The module rules test
 
 | Package | Licence | Used by |
 |---|---|---|
-| `sqlalchemy` | MIT | `mimi/runtime/sql_store.py`, `mimi/receipts/inbox.py`, `mimi/voice/prefs.py`, sim `--db` |
-| `alembic` | MIT | migrations `0001_runtime_jobs` to `0005_payment_proofs` |
+| `sqlalchemy` | MIT | `mimi/runtime/sql_store.py`, `mimi/receipts/inbox.py`, `mimi/voice/prefs.py`, sim `--db`, `mimi/store/` (the API's durable store) |
+| `alembic` | MIT | migrations `0001_runtime_jobs` to `0006_api_store` |
 | `httpx` | BSD-3-Clause | `mimi/models/meta.py` (Meta Model API client), `mimi/credit/sam.py` (SAM 3.1 on the Responses API), `mimi/harness/gateway.py` (tool-calling client), `mimi/voice/` (Spitch and Muse Voice Transcribe clients) |
 | `pillow` >= 10.1 | MIT-CMU (HPND) | `mimi/credit/photo.py` and `mimi/credit/shelf.py` (Credit, RAI-271: shelf-photo checks for blur, light and size, and the colour of each pack SAM 3.1 found, before anything is counted; the photo is read, never kept in a prompt or trace). Also the synthetic shelf photos (`mimi/credit/render.py`, `scripts/make_shelf_fixtures.py`). Was dev-only before RAI-271 |
+| `fastapi` | MIT | `mimi/api/app.py` only (the HTTP API); a test keeps every other module free of web frameworks |
+| `uvicorn` | BSD-3-Clause | `python -m mimi.api serve` (the ASGI server) |
 | `pydantic` | MIT | `mimi/receipts/verdict.py` (typed verdict), `mimi/proof/reading.py`, `mimi/stock/answers.py` (typed stock answer), `mimi/harness/` (tool inputs and outputs, events, intents, run results, the front-door envelope, route decisions, context manifests) |
 
 Optional extras:
@@ -23,13 +25,17 @@ Optional extras:
 |---|---|---|---|
 | `opentelemetry-api` | `otel` | Apache-2.0 | `mimi/runtime/tracing.py` `OtelStepTracer`, imported only when that tracer is built; the sim and tests use `RecordingStepTracer` |
 | `langfuse` 5.0.4 (pinned) | `langfuse` | MIT | `mimi/observe/` (traces, datasets, experiments), `scripts/trace_smoke.py`, `scripts/trace_stock.py`, `experiments/proof_experiment.py`; imported only when the `LANGFUSE_*` keys are set (the tests use a mock client) |
-| `psycopg2-binary` | `postgres` | LGPL with exceptions (dynamic use only, unmodified) | only when the sim or alembic points at Postgres |
+| `psycopg2-binary` | `postgres` | LGPL with exceptions (dynamic use only, unmodified) | only when the sim, alembic or the API store points at Postgres (the Docker image installs it) |
 
 Their transitive packages: `httpcore` (BSD-3-Clause), `h11` (MIT), `anyio`
 (MIT), `idna` (BSD-3-Clause), `certifi` (MPL-2.0), `pydantic-core` (MIT),
 `annotated-types` (MIT), `typing-extensions` (PSF-2.0), `typing-inspection`
 (MIT), `greenlet` (MIT AND PSF-2.0), `mako` (MIT), `markupsafe`
-(BSD-3-Clause).
+(BSD-3-Clause). The API adds `starlette` (BSD-3-Clause, under FastAPI),
+`annotated-doc` (MIT), `click` (BSD-3-Clause, under uvicorn) and
+`opentelemetry-api` (Apache-2.0, which recent FastAPI requires), besides
+`h11`, `anyio`, `pydantic` and `typing-extensions` above. Tests use
+FastAPI's `TestClient` over `httpx`.
 
 The `langfuse` extra brings: `opentelemetry-api`, `opentelemetry-sdk`,
 `opentelemetry-exporter-otlp-proto-http`, `opentelemetry-exporter-otlp-proto-common`,
@@ -65,6 +71,10 @@ text to speech.
 | `pillow` >= 10.1 | MIT-CMU (HPND) | draws the synthetic payment screenshots (`mimi/proof/render.py`, `scripts/make_proof_fixtures.py`, sim `--screenshots`); Mimi itself never draws or stores an image |
 | DejaVu fonts (system package, e.g. `fonts-dejavu-core`) | Bitstream Vera / DejaVu free licence | text in the drawn screenshots; not copied into the repo (Pillow's default font is the fallback) |
 | `gitleaks` | MIT | CI history scan (binary downloaded in the workflow) |
+
+Container: the `Dockerfile` starts from the official `python:3.12-slim` image
+(Debian packages under their own free licences; Python under the PSF
+licence). Nothing is added to it beyond this package and its dependencies.
 
 ## Services
 
