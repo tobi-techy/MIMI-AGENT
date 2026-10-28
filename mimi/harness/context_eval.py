@@ -44,6 +44,7 @@ from datetime import timedelta
 from pathlib import Path
 from typing import Any
 
+from mimi.evalmarks import exit_code, slice_rate
 from mimi.harness import fastclass
 from mimi.harness.collector import collector_helper, default_registry
 from mimi.harness.context import (
@@ -424,10 +425,11 @@ def arm_summary(runs: list[ArmRun]) -> dict[str, Any]:
     n = len(runs)
     tok = [r.prompt_tokens for r in runs if r.status != "cache_miss"]
     first = [r.first_call_tokens for r in runs if r.status != "cache_miss"]
-    by_kind: dict[str, list[int]] = defaultdict(lambda: [0, 0])
+    by_kind: dict[str, list[int]] = defaultdict(lambda: [0, 0, 0])
     for r in runs:
         by_kind[r.kind][0] += r.ok
         by_kind[r.kind][1] += 1
+        by_kind[r.kind][2] += r.status == "cache_miss"
     return {
         "runs": n, "task_success": round(sum(r.ok for r in runs) / n, 4) if n else 0.0,
         "completed": sum(r.ok for r in runs),
@@ -443,7 +445,7 @@ def arm_summary(runs: list[ArmRun]) -> dict[str, Any]:
         "manifest_on_runs": sum(r.manifest for r in runs),
         "routed_to_collector": sum(1 for r in runs if r.route.startswith("collector/")),
         "cache_misses": sum(1 for r in runs if r.status == "cache_miss"),
-        "by_kind": {k: f"{v[0]}/{v[1]}" for k, v in sorted(by_kind.items())},
+        "by_kind": {k: slice_rate(*v) for k, v in sorted(by_kind.items())},
         "failures": [{"sid": r.sid, "status": r.status, "why": r.why, "route": r.route}
                      for r in runs if not r.ok],
         "routes_not_collector": [{"sid": r.sid, "route": r.route} for r in runs
@@ -789,7 +791,16 @@ def main(argv: list[str] | None = None) -> int:
         for k, v in arms.items():
             for f in v["failures"][:20]:
                 print(k, "miss", f)
-        return 0
+        # A partial run checks what applies to the cases it ran: every picked
+        # case succeeds, nothing missed the cache, no context over budget
+        # (RAI-311). No case or no arm checks nothing, so it fails.
+        part: dict[str, bool] = {}
+        for k, v in arms.items():
+            part[f"{k}_task_success==1"] = v["runs"] > 0 and v["task_success"] == 1.0
+            part[f"{k}_no_cache_misses"] = v["cache_misses"] == 0
+            part[f"{k}_never_over_budget"] = v["over_budget"] == 0
+        print(json.dumps({"partial_pass_marks": part}, indent=1))
+        return exit_code(part, picked=len(scenarios))
     cache = cache_suite(world, build(world), router)
     leak = leakage_suite(world)
     stab = stability_suite(world)
@@ -838,7 +849,7 @@ def main(argv: list[str] | None = None) -> int:
         for f in v["failures"][:12]:
             print("  miss", f)
     print("cut", round(cut, 4), "cache", cache)
-    return 0 if report["passed"] else 1
+    return exit_code(marks)
 
 
 if __name__ == "__main__":

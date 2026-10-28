@@ -30,6 +30,7 @@ import os
 import re
 import sys
 import time
+from collections.abc import Sequence
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any, Literal
@@ -37,6 +38,7 @@ from zoneinfo import ZoneInfo
 
 import sqlalchemy as sa
 
+from mimi.evalmarks import exit_code, slice_rate
 from mimi.harness.gateway import ModelTurn, RecordedToolModel, kobo_cost
 from mimi.harness.inbound import Inbound, Media, Payload
 from mimi.harness.loop import naira_text
@@ -557,7 +559,8 @@ def run(split: str = "heldout", live: bool = False, only: list[str] | None = Non
         "live_calls": {"loop": tool.live_calls, "router": router.live_calls,
                        "vision": vision.live_calls},
         "live_cost_kobo_this_run": int(live_kobo),
-        "by_kind": _by_kind(rows), "rows": rows, "not_run_spend_cap": stopped,
+        "by_kind": _by_kind(rows, [c for c in cases if c["id"] in stopped]), "rows": rows,
+        "not_run_spend_cap": stopped,
     }
     report["passed"] = (n > 0 and report["correct_rate"] >= PASS_MARKS["correct"]
                         and report["invented"] == 0 and report["credit_extended"] == 0
@@ -573,14 +576,25 @@ def run(split: str = "heldout", live: bool = False, only: list[str] | None = Non
     return report
 
 
-def _by_kind(rows: list[dict[str, Any]]) -> dict[str, list[int]]:
+def _by_kind(rows: list[dict[str, Any]],
+             cut: Sequence[dict[str, Any]] = ()) -> dict[str, str]:
+    """Pass rate per kind over every case of that kind: a case cut by the
+    spend cap or one that missed the cache counts, and shows as a miss
+    (RAI-310)."""
     out: dict[str, list[int]] = {}
     for r in rows:
+        missed = any("CacheMiss" in str(e) for e in r.get("misses") or ())
         for k in r["kind"]:
-            out.setdefault(k, [0, 0])
-            out[k][1] += 1
-            out[k][0] += int(r["correct"])
-    return out
+            v = out.setdefault(k, [0, 0, 0])
+            v[0] += int(r["correct"])
+            v[1] += 1
+            v[2] += missed
+    for c in cut:
+        for k in c["kind"]:
+            v = out.setdefault(k, [0, 0, 0])
+            v[1] += 1
+            v[2] += 1
+    return {k: slice_rate(*v) for k, v in out.items()}
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -597,7 +611,9 @@ def main(argv: list[str] | None = None) -> int:
           f"invented {rep['invented']}, credit extended {rep['credit_extended']}, decided "
           f"edits {rep['decided_edits']}; live cost N{rep['live_cost_kobo_this_run'] / 100:,.2f}"
           f" this run; {'PASS' if rep['passed'] else 'FAIL'}")
-    return 0 if rep["passed"] or a.only else 1
+    # ``--only`` checks the same marks on the picked cases; picking none
+    # checks nothing and fails (RAI-311).
+    return exit_code({"passed": rep["passed"]}, picked=rep["cases"])
 
 
 if __name__ == "__main__":

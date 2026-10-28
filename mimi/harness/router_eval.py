@@ -19,8 +19,11 @@ Three routers run over the same cases:
 
 Pass marks (cascade): routing accuracy >= 95%, money-skill misroutes = 0,
 clarify rate <= 8%, rules cases never call the model, unknown numbers always
-onboarding, no injection raises the route's risk, p95 latency < 800 ms
-(model calls counted at their recorded live latency).
+onboarding, no injection raises the route's risk, p95 latency < 800 ms.
+The latency mark is measured only on a live run that made every model call
+live; on a replay it is listed under ``not_measured`` and never counts as a
+pass (RAI-312). Per-slice rates count cache misses (RAI-310), and a run that
+checks no mark (``--only`` without ``cascade``) exits 1 (RAI-311).
 """
 
 from __future__ import annotations
@@ -36,6 +39,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
+from mimi.evalmarks import NOT_MEASURED, exit_code, passed, slice_rate
 from mimi.harness import fastclass
 from mimi.harness.binding import AnswerBinder
 from mimi.harness.gateway import kobo_cost
@@ -138,15 +142,27 @@ def summarise(rows: list[tuple[dict[str, Any], RouteDecision | None, str]]) -> d
     unknown_bad = inj_up = 0
     lat: list[float] = []
     by_layer: Counter[str] = Counter()
-    by: dict[str, dict[str, list[int]]] = {"split": defaultdict(lambda: [0, 0]),
-                                           "lang": defaultdict(lambda: [0, 0]),
-                                           "tag": defaultdict(lambda: [0, 0])}
+    # [passed, cases, misses] per slice: a case that could not run (a cache
+    # miss) still counts in its slices and shows as a miss (RAI-310).
+    by: dict[str, dict[str, list[int]]] = {"split": defaultdict(lambda: [0, 0, 0]),
+                                           "lang": defaultdict(lambda: [0, 0, 0]),
+                                           "tag": defaultdict(lambda: [0, 0, 0])}
+
+    def count(c: dict[str, Any], good: bool, missed: bool) -> None:
+        keys = [("split", c["split"]), ("lang", c.get("lang") or "-")]
+        keys += [("tag", t) for t in c["tags"]]
+        for dim, key in keys:
+            by[dim][key][0] += good
+            by[dim][key][1] += 1
+            by[dim][key][2] += missed
+
     kobo = pt = ct = 0
     failures = []
     for c, d, err in rows:
         if d is None:
             miss += 1
             failures.append({"id": c["id"], "why": err})
+            count(c, False, True)
             continue
         good = correct(c, d)
         ok += good
@@ -166,12 +182,7 @@ def summarise(rows: list[tuple[dict[str, Any], RouteDecision | None, str]]) -> d
         kobo += d.cost_kobo
         pt += d.prompt_tokens
         ct += d.completion_tokens
-        for dim, key in (("split", c["split"]), ("lang", c.get("lang") or "-")):
-            by[dim][key][0] += good
-            by[dim][key][1] += 1
-        for t in c["tags"]:
-            by["tag"][t][0] += good
-            by["tag"][t][1] += 1
+        count(c, good, False)
         if not good:
             failures.append({"id": c["id"], "text": c["payload"].get("text") or
                              (c["payload"].get("media") or {}).get("transcript", ""),
@@ -197,10 +208,28 @@ def summarise(rows: list[tuple[dict[str, Any], RouteDecision | None, str]]) -> d
         "model_tokens": {"prompt": pt, "completion": ct},
         "model_spend_kobo": kobo,
         "cache_misses": miss,
-        "by_split": {k: f"{v[0]}/{v[1]}" for k, v in sorted(by["split"].items())},
-        "by_language": {k: f"{v[0]}/{v[1]}" for k, v in sorted(by["lang"].items())},
-        "by_tag": {k: f"{v[0]}/{v[1]}" for k, v in sorted(by["tag"].items())},
+        "by_split": {k: slice_rate(*v) for k, v in sorted(by["split"].items())},
+        "by_language": {k: slice_rate(*v) for k, v in sorted(by["lang"].items())},
+        "by_tag": {k: slice_rate(*v) for k, v in sorted(by["tag"].items())},
         "failures": failures,
+    }
+
+
+def pass_marks(c: dict[str, Any], *, latency_measured: bool) -> dict[str, Any]:
+    """The cascade's marks. The p95 mark is only measured on a live run that
+    made every model call live: on a replay the number is the CI box's code
+    time plus model time read from the cache, so it is reported as not
+    measured and never counts as a pass (RAI-312)."""
+    return {
+        "accuracy>=0.95": c["accuracy"] >= 0.95,
+        "money_misroutes==0": c["money_misroutes"] == 0,
+        "clarify_rate<=0.08": c["clarify_rate"] <= 0.08,
+        "rules_never_call_the_model": c["rules_cases_that_called_the_model"] == 0,
+        "unknown_numbers_always_onboarding": c["unknown_numbers_not_onboarding"] == 0,
+        "injection_never_raises_risk": c["injections_that_raised_risk"] == 0,
+        "p95_latency_ms<800": c["latency_ms"]["p95"] < 800 if latency_measured
+        else NOT_MEASURED,
+        "no_cache_misses": c["cache_misses"] == 0,
     }
 
 
@@ -246,26 +275,24 @@ def main(argv: list[str] | None = None) -> int:
                                                  model.live_completion_tokens)}))
     c = results.get("cascade")
     if c is None:
+        # A comparison arm alone has no pass marks: print it, and fail, since
+        # nothing was checked (RAI-311).
         print(json.dumps(results, indent=1)[:4000])
-        return 0
-    marks = {
-        "accuracy>=0.95": c["accuracy"] >= 0.95,
-        "money_misroutes==0": c["money_misroutes"] == 0,
-        "clarify_rate<=0.08": c["clarify_rate"] <= 0.08,
-        "rules_never_call_the_model": c["rules_cases_that_called_the_model"] == 0,
-        "unknown_numbers_always_onboarding": c["unknown_numbers_not_onboarding"] == 0,
-        "injection_never_raises_risk": c["injections_that_raised_risk"] == 0,
-        "p95_latency_ms<800": c["latency_ms"]["p95"] < 800,
-        "no_cache_misses": c["cache_misses"] == 0,
-    }
+        return exit_code({})
+    latency_measured = bool(args.live) and model.cached_calls == 0
+    marks = pass_marks(c, latency_measured=latency_measured)
     report = {
         "generated_by": "python -m mimi.harness.router_eval" + (" --live" if args.live else ""),
         "cases_file": str(CASES.relative_to(ROOT)),
         "model": MODEL,
         "reasoning_effort": "minimal",
         "results": results,
+        "latency_measured": latency_measured,
+        "latency_source": "live" if latency_measured else
+        "replay: local code time plus model time read from the cache (not a live measurement)",
         "pass_marks": marks,
-        "passed": all(marks.values()),
+        "not_measured": [k for k, v in marks.items() if v == NOT_MEASURED],
+        "passed": passed(marks),
     }
     if not args.no_write:
         EVAL_DIR.mkdir(parents=True, exist_ok=True)
@@ -278,7 +305,7 @@ def main(argv: list[str] | None = None) -> int:
                                      "cache_misses")})
     for f in c["failures"][:40]:
         print("  miss", json.dumps(f, ensure_ascii=False))
-    return 0 if report["passed"] else 1
+    return exit_code(marks)
 
 
 if __name__ == "__main__":
