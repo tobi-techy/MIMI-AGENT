@@ -206,7 +206,7 @@ def test_the_e2e_runner_and_worker_both_run_pinned(
 
 
 STAMPING = ("mimi/store", "mimi/api/agent.py", "mimi/api/app.py", "mimi/api/steering.py",
-            "mimi/api/e2e/runner.py")
+            "mimi/api/demo.py", "mimi/api/e2e/runner.py")
 
 
 def test_stamping_code_reads_only_the_clock_seam() -> None:
