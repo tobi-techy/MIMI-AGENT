@@ -112,6 +112,12 @@ re-recorded. A new helper factory calls `versions.register(helper)`.
   wire, settle, remit, debit and the rest).
 * An injected sentence never moves a route to a money skill the shop's own
   words do not name, inside the same helper too (`injection_cap`).
+* One wall clock: the store, the queue and the API agent stamp and compare
+  times with `mimi.clock.wall()` (real `time.time` in production), never
+  `time.time` or `datetime.now` directly (a test checks). An offline eval whose
+  stamps reach a model pins it for its run (`mimi.api.e2e.clock`: the e2e
+  runner and workers read the recording day, 28 Oct 2026); production refuses
+  to start with it pinned.
 * Production refuses SQLite and the Makefile's demo Bearer keys
   (`Settings.check`); `make api` under `MIMI_ENV=production` fills in no
   defaults.

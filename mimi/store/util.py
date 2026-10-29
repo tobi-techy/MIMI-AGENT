@@ -3,17 +3,18 @@
 from __future__ import annotations
 
 import json
-import time
 from datetime import UTC, datetime
 from typing import Any
 
 import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql, sqlite
 
+from mimi.clock import wall
+
 
 def now_iso(ts: float | None = None) -> str:
     """An ISO 8601 time with its zone (UTC)."""
-    return datetime.fromtimestamp(time.time() if ts is None else ts, UTC).isoformat()
+    return datetime.fromtimestamp(wall() if ts is None else ts, UTC).isoformat()
 
 
 def dumps(obj: Any) -> str:

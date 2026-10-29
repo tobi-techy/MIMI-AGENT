@@ -30,13 +30,13 @@ completes exactly once.
 from __future__ import annotations
 
 import hashlib
-import time
 from dataclasses import dataclass
 from typing import Any
 
 import sqlalchemy as sa
 from sqlalchemy.engine import Engine
 
+from mimi.clock import wall
 from mimi.harness.router import PRIORITY
 from mimi.store import schema as s
 from mimi.store.util import dumps, insert_ignore, loads, now_iso
@@ -81,7 +81,7 @@ class Claim:
 
 class TurnQueue:
     def __init__(self, engine: Engine, *, lease_s: float = 30.0,
-                 clock: Any = time.time) -> None:
+                 clock: Any = wall) -> None:
         self.engine = engine
         self.lease_s = lease_s
         self.clock = clock

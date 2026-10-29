@@ -12,13 +12,13 @@ use the builder directly.
 
 from __future__ import annotations
 
-import time
 from collections.abc import Sequence
 from typing import Any
 
 import sqlalchemy as sa
 from sqlalchemy.engine import Engine
 
+from mimi.clock import wall
 from mimi.harness.context import ArtifactStore, HistoryStore, PrefixStore, ThreadPrefix, sha
 from mimi.store import schema as s
 from mimi.store.util import dumps, insert_ignore, loads
@@ -103,7 +103,7 @@ class SqlHistoryStore(HistoryStore):
 def append_history(conn: sa.Connection, tenant: str, thread: str, turn_id: str,
                    messages: Sequence[dict[str, Any]]) -> bool:
     return insert_ignore(conn, s.history, {
-        "tenant_id": tenant, "thread_id": thread, "turn_id": turn_id, "ts": time.time(),
+        "tenant_id": tenant, "thread_id": thread, "turn_id": turn_id, "ts": wall(),
         "body": dumps([dict(m) for m in messages])})
 
 
