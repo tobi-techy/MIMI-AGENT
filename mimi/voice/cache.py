@@ -24,6 +24,7 @@ import threading
 from pathlib import Path
 from typing import Any, Literal
 
+from mimi.models import metering
 from mimi.voice.base import AudioClip, Transcriber, Transcript, VoiceContext
 from mimi.voice.fake import audio_sha256
 from mimi.voice.quality import assess
@@ -78,6 +79,7 @@ class CachedTranscriber:
         return len(self._entries)
 
     def transcribe(self, clip: AudioClip, ctx: VoiceContext) -> Transcript:
+        metering.guard(getattr(self, "name", "stt"))
         key = transcript_key(self.name, clip, ctx)
         with self._lock:
             hit = self._entries.get(key)

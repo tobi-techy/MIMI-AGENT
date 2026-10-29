@@ -36,11 +36,11 @@ from typing import Any, Literal, Protocol
 
 import httpx
 
+from mimi.models import metering
 from mimi.models.meta import DEFAULT_BASE
+from mimi.models.prices import SAM_USD_PER_IMAGE as SAM_USD_PER_IMAGE  # USD per image
 
 SAM_MODEL = "sam-3.1"
-# USD per image segmented (pay as you go).
-SAM_USD_PER_IMAGE = 0.0025
 _RETRY_STATUS = frozenset({429, 500, 502, 503, 504})
 _BOX = re.compile(r"<\|box;([^|]*)\|>")
 
@@ -156,6 +156,7 @@ class MetaSam:
         }
 
     def segment(self, image: bytes, mime: str, prompt: str) -> Segmentation:
+        metering.guard(self.name)
         body = self.body(image, mime, prompt)
         last = ""
         for attempt in range(self._retries + 1):
@@ -216,6 +217,7 @@ class CachedSegmenter:
         return len(self._entries)
 
     def segment(self, image: bytes, mime: str, prompt: str) -> Segmentation:
+        metering.guard(self.name)
         key = sam_key(self.name, image, prompt)
         with self._lock:
             hit = self._entries.get(key)
@@ -258,5 +260,6 @@ def sam_from_env(env: Mapping[str, str] | None = None) -> MetaSam | None:
 
 def sam_cost_kobo(images: int, usd_ngn: int = 1_600) -> int:
     """Integer kobo for ``images`` SAM images, rounded up."""
-    kobo = images * SAM_USD_PER_IMAGE * usd_ngn * 100
-    return int(-(-kobo // 1))
+    from mimi.models.prices import sam_kobo
+
+    return sam_kobo(images, usd_ngn)

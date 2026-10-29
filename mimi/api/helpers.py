@@ -52,6 +52,7 @@ from mimi.harness.loop import Helper
 from mimi.harness.policy import GoPolicy, RiskPolicy
 from mimi.harness.registry import ToolRegistry, build_toolset
 from mimi.harness.versions import register
+from mimi.models import metering
 from mimi.models.base import ChatMessage, ChatModel, ChatResult, ModelError
 from mimi.orders.reading import ListReader
 from mimi.orders.tools import ORDER_INTAKE_SKILL, ORDER_TOOLS, OrderPorts, register_order_tools
@@ -82,6 +83,7 @@ class NoModel:
     def complete(self, messages: Any, *, max_tokens: int = 400,
                  meta: Mapping[str, str] | None = None,
                  response_format: Mapping[str, object] | None = None) -> ChatResult:
+        metering.guard(self.name)
         raise ModelError("no model configured")
 
 
@@ -89,6 +91,7 @@ class NoSegmenter:
     name = "none"
 
     def segment(self, image: bytes, mime: str, prompt: str) -> Segmentation:
+        metering.guard(self.name)
         raise SamError("no SAM 3.1 key configured")
 
 
@@ -106,6 +109,17 @@ class HelperDeps:
 
     def list_reader(self) -> ListReader:
         return ListReader(self.vision, memo=self.list_memo)
+
+
+def metered_deps(deps: HelperDeps) -> HelperDeps:
+    """The same deps with every model behind the metering seam
+    (``mimi.models.metering``): each call is charged to the turn's spend."""
+    from dataclasses import replace
+
+    return replace(deps, vision=metering.Metered(deps.vision, metering.VISION),
+                   judge=metering.Metered(deps.judge, metering.JUDGE),
+                   stock=metering.Metered(deps.stock, metering.STOCK),
+                   segmenter=metering.MeteredSegmenter(deps.segmenter))
 
 
 def deps_from_env(env: Mapping[str, str] | None = None) -> HelperDeps:
@@ -207,4 +221,4 @@ def _with_skills(helpers: dict[str, Helper], reg: ToolRegistry, policy: RiskPoli
     return helpers
 
 
-__all__ = ["HelperDeps", "build_helpers", "deps_from_env", "ChatMessage"]
+__all__ = ["HelperDeps", "build_helpers", "deps_from_env", "metered_deps", "ChatMessage"]
