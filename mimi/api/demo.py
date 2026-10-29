@@ -17,7 +17,8 @@ Caps, all enforced before a turn is queued (``DemoStore.gate``):
 * per visitor address, per Africa/Lagos day, across all of that address's
   sessions (``MIMI_DEMO_IP_DAILY_CAP_NAIRA``);
 * across every demo session, per day (``MIMI_DEMO_GLOBAL_DAILY_CAP_NAIRA``);
-* ``MIMI_DEMO_KILL=1`` refuses every new turn (reads keep working);
+* ``MIMI_DEMO_KILL=1`` refuses every new turn and every new or reset session
+  (503, the same answer as a refused turn); reads keep working;
 * each copy's own daily cap is the per-address cap, so a run that goes over
   mid-turn parks on the loop's existing daily cap (``Agent._park``), and the
   "raise the allowance" approval it posts is refused in demo.
@@ -25,14 +26,14 @@ Caps, all enforced before a turn is queued (``DemoStore.gate``):
 Approvals that would raise a credit limit or the model allowance are refused
 in demo (``refuses_approval``); declining them still works.
 
-Environment (naira figures are whole naira; the defaults are placeholders for
-the operator to set):
+Environment (naira figures are whole naira; the defaults are the approved demo
+caps):
 
 * ``MIMI_DEMO_IP_DAILY_CAP_NAIRA`` (default 100)
 * ``MIMI_DEMO_GLOBAL_DAILY_CAP_NAIRA`` (default 2000)
 * ``MIMI_DEMO_SESSION_TTL_S`` (default 3600)
 * ``MIMI_DEMO_SESSIONS_PER_IP`` (default 20 a day)
-* ``MIMI_DEMO_KILL`` (``1`` refuses new turns)
+* ``MIMI_DEMO_KILL`` (``1`` refuses new turns and new sessions)
 * ``MIMI_DEMO_TRUST_FORWARDED`` (``1``: read the visitor address from the
   right-most ``X-Forwarded-For`` entry, which the platform's proxy appends;
   off by default, because a client can send that header itself)
@@ -63,7 +64,7 @@ from mimi.tz import lagos_day
 from mimi.world.loader import load_world
 from mimi.world.model import World
 
-# PLACEHOLDERS for Tobi to set (whole naira). Conservative on purpose.
+# The hackathon demo's caps (whole naira), approved by the owner on 29 Oct 2026.
 DEFAULT_IP_CAP_NAIRA = 100
 DEFAULT_GLOBAL_CAP_NAIRA = 2_000
 DEFAULT_TTL_S = 3600.0
@@ -191,7 +192,10 @@ class DemoStore:
     # ----------------------------------------------------------- sessions
 
     def start(self, ip_hash: str) -> dict[str, Any]:
-        """A fresh copy of the synthetic world and a token for it."""
+        """A fresh copy of the synthetic world and a token for it.
+
+        Refused (503, like a turn) while the kill switch is on: nothing is seeded."""
+        self.refuse_if_paused()
         self.sweep()
         now = self.clock()
         day = self._day(now)
@@ -302,10 +306,14 @@ class DemoStore:
         return {"ip_spent_kobo": ip_live + int(ip_old or 0),
                 "global_spent_kobo": all_live + int(all_old or 0)}
 
-    def gate(self, ip_hash: str) -> None:
-        """Refuse a new turn when the demo is paused or a daily cap is used up."""
+    def refuse_if_paused(self) -> None:
+        """The kill switch: 503 for anything that would start new work."""
         if self.conf.killed:
             raise DemoRefused(503, PAUSED)
+
+    def gate(self, ip_hash: str) -> None:
+        """Refuse a new turn when the demo is paused or a daily cap is used up."""
+        self.refuse_if_paused()
         u = self.usage(ip_hash)
         if u["global_spent_kobo"] >= self.conf.global_daily_cap_kobo:
             raise DemoRefused(429, GLOBAL_CAPPED)

@@ -97,11 +97,11 @@ queue. Its default database is SQLite in `/data` (mount a volume); set
 | `MIMI_PHONE_PSEUDONYM_KEY` | dev key | required in production (thread ids for unknown numbers) |
 | `MIMI_RELEASE` | | shown by `/v1/health` |
 | `MIMI_MODE` | `live` | `live` (bearer keys only) or `demo` (public demo sessions, below) |
-| `MIMI_DEMO_IP_DAILY_CAP_NAIRA` | 100 (placeholder) | demo: model spend per visitor address per Africa/Lagos day, across its sessions |
-| `MIMI_DEMO_GLOBAL_DAILY_CAP_NAIRA` | 2000 (placeholder) | demo: model spend across every demo session per day |
+| `MIMI_DEMO_IP_DAILY_CAP_NAIRA` | 100 | demo: model spend per visitor address per Africa/Lagos day, across its sessions |
+| `MIMI_DEMO_GLOBAL_DAILY_CAP_NAIRA` | 2000 | demo: model spend across every demo session per day |
 | `MIMI_DEMO_SESSION_TTL_S` | 3600 | demo: how long a session token lasts |
 | `MIMI_DEMO_SESSIONS_PER_IP` | 20 | demo: new sessions per visitor address per day |
-| `MIMI_DEMO_KILL` | off | demo: `1` refuses every new turn (503); reads keep working |
+| `MIMI_DEMO_KILL` | off | demo: `1` refuses every new turn and every new or reset session (503, same body as a refused turn); reads keep working |
 | `MIMI_DEMO_TRUST_FORWARDED` | off | demo: `1` reads the visitor address from the right-most `X-Forwarded-For` entry (only behind a proxy that appends it) |
 | `MIMI_DEMO_IP_SALT` | dev salt | demo: key for the address digests; required in production |
 | `MIMI_MEDIA_DIR` | none | where the helpers read a message's image by its `ref` (`local:<path>`), checked against its `sha256`; the simulator and the e2e eval use it. Without it no image is read |
@@ -128,6 +128,9 @@ A public console on synthetic data (`mimi/api/demo.py`):
   digest of the visitor address, never either in plain. No key is ever
   baked into the console's JavaScript.
 * `POST /v1/demo/reset` ends the caller's session and starts a fresh copy.
+* While `MIMI_DEMO_KILL=1`, both answer 503 `{"detail": "the demo is paused right now; you can
+  still look around"}` (the body a refused turn gets) and seed nothing; a
+  refused reset leaves the caller's session as it was.
 * A token past its TTL is 401 (`demo session expired`). Expired copies are
   deleted when a new session starts (after a 10 minute grace); their spend
   is kept per address and day so the caps still count it.

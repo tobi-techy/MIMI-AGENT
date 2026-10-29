@@ -240,15 +240,47 @@ def test_the_session_tenant_cap_matches_the_ip_cap(env: dict[str, Any]) -> None:
 
 
 def test_the_kill_switch_refuses_new_turns_but_keeps_reads(store_url: str) -> None:
+    # A session started before the switch was thrown keeps reading.
+    before, engine0 = make(store_url, cfg())
+    with before as c0:
+        sess = start(c0)
+    engine0.dispose()
     client, engine = make(store_url, cfg(killed=True))
     with client as c:
-        sess = start(c)
         r = shop_turn(c, sess, "demo.k")
         assert r.status_code == 503 and "paused" in r.json()["detail"]
         ev = c.post("/v1/events", json={"kind": "routine", "event_id": "e1",
                                         "name": "owner_brief"}, headers=bearer(sess))
         assert ev.status_code == 503
         assert n_turns(engine, sess["tenant_id"]) == 0
+        assert c.get("/v1/shops", headers=bearer(sess)).status_code == 200
+        assert c.get("/v1/me", headers=bearer(sess)).json()["demo"]["paused"] is True
+    engine.dispose()
+
+
+def test_the_kill_switch_refuses_new_and_reset_sessions_like_a_turn(store_url: str) -> None:
+    before, engine0 = make(store_url, cfg())
+    with before as c0:
+        sess = start(c0)
+    engine0.dispose()
+    client, engine = make(store_url, cfg(killed=True))
+    with client as c:
+        with engine.connect() as conn:
+            n0 = conn.execute(sa.select(sa.func.count()).select_from(s.demo_sessions)).scalar()
+            t0 = conn.execute(sa.select(sa.func.count()).select_from(s.tenants)).scalar()
+        r = c.post("/v1/demo/sessions", headers=ip("198.51.100.1"))
+        turn = shop_turn(c, sess, "demo.k2")
+        # The same friendly 503 answer, in the same shape as a refused turn.
+        assert r.status_code == 503 == turn.status_code
+        assert r.json() == turn.json() == {"detail": demo.PAUSED}
+        reset = c.post("/v1/demo/reset", headers=bearer(sess))
+        assert reset.status_code == 503 and reset.json() == {"detail": demo.PAUSED}
+        with engine.connect() as conn:
+            assert conn.execute(sa.select(sa.func.count()).select_from(
+                s.demo_sessions)).scalar() == n0
+            assert conn.execute(sa.select(sa.func.count()).select_from(
+                s.tenants)).scalar() == t0
+        # The reset was refused before it ended anything: the session still reads.
         assert c.get("/v1/shops", headers=bearer(sess)).status_code == 200
         assert c.get("/v1/me", headers=bearer(sess)).json()["demo"]["paused"] is True
     engine.dispose()
