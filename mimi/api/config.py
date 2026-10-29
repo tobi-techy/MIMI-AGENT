@@ -146,6 +146,11 @@ class Settings:
         from mimi.harness.inbound import _pseudonym_key
 
         _pseudonym_key()  # raises without MIMI_PHONE_PSEUDONYM_KEY in production
+        from mimi import clock
+
+        if clock.is_pinned():
+            raise ConfigError("the wall clock is pinned (an offline eval's clock): production "
+                              "stamps rows on the real time only")
         if self.demo_mode:
             # Demo visitors sign in with API-issued session tokens; configured
             # keys are optional (an operator's), never required.

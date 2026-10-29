@@ -17,13 +17,13 @@ Nothing here moves money or writes the book.
 from __future__ import annotations
 
 import json
-import time
 from collections.abc import Sequence
 from typing import Any
 
 import sqlalchemy as sa
 from sqlalchemy.engine import Engine
 
+from mimi.clock import wall
 from mimi.harness.inbound import Inbound, Media, Payload
 from mimi.harness.steer import OpenTask, Part, task_summary
 from mimi.store import schema as s
@@ -71,7 +71,7 @@ def _ts(iso: str) -> float:
 def open_tasks(engine: Engine | sa.Connection, tenant_id: str, thread_id: str, shop_id: str,
                *, now: float | None = None, limit: int = 5) -> list[OpenTask]:
     """The thread's open work, oldest first, numbered t1, t2, ... (code only)."""
-    now = time.time() if now is None else now
+    now = wall() if now is None else now
     rows: list[tuple[float, OpenTask]] = []
 
     def read(conn: sa.Connection) -> None:

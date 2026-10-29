@@ -45,7 +45,6 @@ from __future__ import annotations
 import hashlib
 import hmac
 import secrets
-import time
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from datetime import UTC, datetime
@@ -55,6 +54,7 @@ from typing import Any
 import sqlalchemy as sa
 from sqlalchemy.engine import Engine
 
+from mimi.clock import wall
 from mimi.harness.policy import NEVER_TOOLS
 from mimi.store import schema as s
 from mimi.store.seed import delete_tenant, seed_world
@@ -170,7 +170,7 @@ class Session:
 
 class DemoStore:
     def __init__(self, engine: Engine, conf: DemoConfig, *,
-                 clock: Callable[[], float] = time.time) -> None:
+                 clock: Callable[[], float] = wall) -> None:
         self.engine = engine
         self.conf = conf
         self.clock = clock

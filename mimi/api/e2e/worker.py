@@ -5,7 +5,8 @@
 The agent is built exactly as ``Agent.from_env`` builds it, with two e2e
 differences: every model is the recorded one (``models.py``) and the clock
 is the simulated day's (the book's live day, 26 Oct 2026, late evening WAT),
-so a replay sends byte-identical requests.
+and the wall clock the store stamps rows with is pinned to the recording day
+(``clock``), so a replay sends byte-identical requests on any day.
 
 ``--pause-at`` is the crash point for the worker-kill check: after the
 checkpoint of step ``STEP`` of turn ``TURN`` the worker writes a marker file
@@ -41,6 +42,7 @@ from pathlib import Path
 from typing import Any
 
 from mimi.api.agent import Agent
+from mimi.api.e2e.clock import pin_worker
 from mimi.api.e2e.models import CachePaths, agent_models
 from mimi.observe.langfuse_export import exporter_from_env
 from mimi.store.db import make_engine
@@ -131,6 +133,8 @@ def build_agent(db_url: str, *, live: bool, paths: CachePaths, worker_id: str,
 def run(db_url: str, *, live: bool, cache_dir: Path, worker_id: str, pause: str = "",
         marker: str = "", stop_file: str = "", usage: str = "", kill_plan: str = "") -> int:
     logging.basicConfig(level=logging.WARNING)
+    # The runner's pinned wall clock (``clock``): the same day and run start.
+    pin_worker()
     agent = build_agent(db_url, live=live, paths=CachePaths(cache_dir), worker_id=worker_id,
                         pause=pause, marker=Path(marker) if marker else None,
                         usage=Path(usage) if usage else None,

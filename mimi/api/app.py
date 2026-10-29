@@ -30,7 +30,6 @@ import logging
 import threading
 from collections.abc import AsyncIterator, Callable
 from contextlib import asynccontextmanager
-from datetime import UTC, datetime
 from typing import Annotated, Any
 
 import sqlalchemy as sa
@@ -68,6 +67,7 @@ from mimi.api.schemas import (
     TurnIn,
     TurnOut,
 )
+from mimi.clock import wall_utc
 from mimi.harness.go import CrossTenant
 from mimi.harness.inbound import Inbound, Media, Payload
 from mimi.store.db import make_engine
@@ -199,7 +199,7 @@ def create_app(settings: Settings | None = None, agent: Agent | None = None, *,
                           transcript=m.transcript, transcript_lang=m.transcript_lang)
         if not (body.text.strip() or body.button_id or media.kind != "none"):
             raise HTTPException(422, "a turn needs text, a button or media")
-        at = body.received_at or datetime.now(UTC)
+        at = body.received_at or wall_utc()
         if at.tzinfo is None:
             # A channel time without a zone is a Lagos wall-clock time
             # (RAI-308): reading it as UTC put 23:30 on the next day.
@@ -228,7 +228,7 @@ def create_app(settings: Settings | None = None, agent: Agent | None = None, *,
         shop, never taken from the caller: a system event carries no free text.
         """
         demo_gate(request, key)
-        at = body.received_at or datetime.now(UTC)
+        at = body.received_at or wall_utc()
         if at.tzinfo is None:
             at = assume_lagos(at)  # no zone: Africa/Lagos (RAI-308)
         if body.shop_id:

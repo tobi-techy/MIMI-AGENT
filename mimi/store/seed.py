@@ -10,12 +10,12 @@ and accounts are fictional (``mimi/world``). Every row is marked
 
 from __future__ import annotations
 
-import time
 from typing import Any
 
 import sqlalchemy as sa
 from sqlalchemy.engine import Engine
 
+from mimi.clock import wall
 from mimi.store import schema as s
 from mimi.store.util import dumps, now_iso
 from mimi.world.catalogue import COLLECTION_ACCOUNT
@@ -128,7 +128,7 @@ def seed_world(engine: Engine, world: World, *, tenant_id: str | None = None,
             "tenant_id": tid, "dispute_id": f"dsp-{i:04d}", "shop_id": d.shop_id,
             "delivery_id": d.delivery_id, "day": d.day, "sku": d.sku, "missing": d.missing,
             "text": d.text, "status": d.status} for i, d in enumerate(world.disputes)])
-        ts = time.time()
+        ts = wall()
         put(s.threads, [{
             "tenant_id": tid, "thread_id": f"{tid}:owner", "kind": "owner", "shop_id": "",
             "state": "{}", "summary": "", "claim_seq": 0, "last_at": now_iso(ts),

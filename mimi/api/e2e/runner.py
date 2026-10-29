@@ -53,7 +53,9 @@ from typing import Any
 
 import sqlalchemy as sa
 
+from mimi import clock
 from mimi.api.e2e import scenes as sc
+from mimi.api.e2e.clock import run_clock
 from mimi.api.e2e.models import CachePaths, persona_model
 from mimi.api.e2e.worker import LEASE_S, SIM_NOW
 from mimi.store import schema as s
@@ -160,7 +162,7 @@ class Workers:
             with self.engine.connect() as conn:
                 exp = conn.execute(sa.select(s.turns.c.lease_expires_ts).where(
                     s.turns.c.turn_id == turn_id)).scalar()
-            if exp is None or exp < time.time():
+            if exp is None or exp < clock.wall():  # the workers' lease clock
                 return True
             time.sleep(0.2)
         return False
@@ -279,6 +281,15 @@ def fresh_store(db_url: str) -> Any:
 
 def collect(*, live: bool, cache_dir: Path, workdir: Path | None = None,
             db_url: str = "") -> Run:
+    """Run every scene. The wall clock is pinned to the recording day for the
+    run, here and in every worker it starts (``clock``): store stamps reach
+    the model, so a replay on a later day must send the same requests."""
+    with run_clock():
+        return _collect(live=live, cache_dir=cache_dir, workdir=workdir, db_url=db_url)
+
+
+def _collect(*, live: bool, cache_dir: Path, workdir: Path | None = None,
+             db_url: str = "") -> Run:
     from fastapi.testclient import TestClient
 
     from mimi.api.agent import Agent
