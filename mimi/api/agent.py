@@ -39,7 +39,6 @@ import time
 import uuid
 from collections.abc import Mapping, Sequence
 from dataclasses import asdict, dataclass, field, replace
-from datetime import UTC, datetime
 from typing import Any
 
 import sqlalchemy as sa
@@ -50,6 +49,7 @@ from mimi.api import voice as vx
 from mimi.api.helpers import HelperDeps
 from mimi.api.media import checked_media
 from mimi.api.photo_label import media_pointer
+from mimi.clock import wall, wall_utc
 from mimi.harness import fastclass
 from mimi.harness import steer as st
 from mimi.harness.batch import is_mixed, mixed_text, run_sender
@@ -296,7 +296,7 @@ class Agent:
         self.router = Router(model=router_model, fast=fastclass.model(), price=kobo_cost,
                              binder=AnswerBinder(model=router_model),
                              see=self.see_photo if see_on else None)
-        self.clock = clock or (lambda: datetime.now(UTC))
+        self.clock = clock or wall_utc
         # Parts, mid-task messages and corrections (``mimi.harness.steer``);
         # MIMI_STEER=0 turns the stage off (today's behaviour).
         self.steerer = st.Steerer(model=router_model)
@@ -350,7 +350,7 @@ class Agent:
         directory = self.go.directory(tenant_id)  # CrossTenant when unknown
         thread_id, note = directory.thread_for(inbound)
         turn_id = turn_id_for(tenant_id, inbound.external_id)
-        now = time.time()
+        now = wall()
         stop = directory.is_owner(inbound) and FrontDoor._is_stop(inbound, directory)
         kind, shop_from_thread = thread_kind(tenant_id, thread_id)
         shop_id = shop_from_thread or inbound.payload.shop_id
@@ -671,7 +671,7 @@ class Agent:
         day = (hit.at if hit is not None else self.clock()).astimezone(LAGOS).date()
         lead = lead_of(events)
         _, shop_id = thread_kind(tenant, thread)
-        now = time.time()
+        now = wall()
         new_cap = max(cap * 2, cap + 50_000)  # proposed: double it, at least N500 more
         ck = {**ck, "parked": {"reason": "daily_cap", "day": day.isoformat(),
                                "spent_kobo": spent, "cap_kobo": cap, "at": now_iso(now)}}
@@ -764,7 +764,7 @@ class Agent:
         text = "\n".join(e.text for e in events if e.text)
         folded = " ".join(text.lower().split()).strip(" .!")
         fix = json.loads(prior.fix) if prior.fix else {}
-        if fix and time.time() - float(fix.get("asked_ts", 0)) > FIX_TTL_S:
+        if fix and wall() - float(fix.get("asked_ts", 0)) > FIX_TTL_S:
             fix = {}
         two = self._two_asks(fix, prior, lead, text, tasks)
         if two is not None:
@@ -1093,7 +1093,7 @@ class Agent:
 
         def extra(conn: sa.Connection) -> None:
             t = conn.execute(sa.select(s.turns.c.created_ts).where(
-                s.turns.c.turn_id == claim.turn_id)).scalar() or time.time()
+                s.turns.c.turn_id == claim.turn_id)).scalar() or wall()
             for n, (ib, evs, parts, pids) in enumerate(followups):
                 fu = sx.followup_inbound(ib, evs, parts, pids, "new")
                 sx.insert_followup(conn, tenant, thread, fu, after_ts=float(t), order=n,
@@ -1163,7 +1163,7 @@ class Agent:
         tenant, thread, turn_id = claim.tenant_id, claim.thread_id, claim.turn_id
         lead = lead_of(events)
         sender = lead.sender
-        now = time.time()
+        now = wall()
         result: dict[str, Any] = {"route": {"helper": d.helper, "skill": d.skill,
                                             "layer": d.layer, "rule": d.rule,
                                             "confidence": d.confidence,
@@ -1356,7 +1356,7 @@ class Agent:
         claim = holder[0]
         tenant, thread, turn_id = claim.tenant_id, claim.thread_id, claim.turn_id
         shop_id = thread_kind(tenant, thread)[1] or lead.payload.shop_id
-        now = time.time()
+        now = wall()
         with self.engine.begin() as conn:
             pref = vx.record_choice(
                 conn, shop_id=shop_id, on=cmd[0], language=cmd[1],
@@ -1431,7 +1431,7 @@ class Agent:
         parts = sx.parts_from(sv.get("parts") or [])
         lead = lead_of(events)
         t = conn.execute(sa.select(s.turns.c.created_ts).where(
-            s.turns.c.turn_id == claim.turn_id)).scalar() or time.time()
+            s.turns.c.turn_id == claim.turn_id)).scalar() or wall()
         shop_id = thread_kind(claim.tenant_id, claim.thread_id)[1]
         out = []
         for n, f in enumerate(rows):
@@ -1634,7 +1634,7 @@ class Agent:
         carries on with its own tools. Nothing here moves money.
         """
         decision = "approved" if approve else "rejected"
-        now = time.time()
+        now = wall()
         with self.engine.begin() as conn:
             a = conn.execute(sa.select(s.approvals).where(
                 s.approvals.c.tenant_id == tenant_id,

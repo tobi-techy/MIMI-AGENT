@@ -19,13 +19,13 @@ key: the book changes once however many times a key is proposed.
 from __future__ import annotations
 
 import hashlib
-import time
-from datetime import date
+from datetime import date, datetime
 from typing import Any
 
 import sqlalchemy as sa
 from sqlalchemy.engine import Engine
 
+from mimi.clock import wall
 from mimi.credit.looks import item_name, pieces_per_unit
 from mimi.harness.go import ConsentGrants, CrossTenant
 from mimi.harness.inbound import Directory
@@ -118,7 +118,7 @@ class SqlGo:
         """The book's day. One tenant per store today; the newest live date wins."""
         with self.engine.connect() as conn:
             raw = conn.execute(sa.select(sa.func.max(s.tenants.c.live_date))).scalar()
-        return date.fromisoformat(raw) if raw else date.today()
+        return date.fromisoformat(raw) if raw else datetime.fromtimestamp(wall()).date()
 
     def today_for(self, tenant_id: str) -> date:
         with self.engine.connect() as conn:
@@ -472,7 +472,7 @@ class SqlGo:
     def recent_count(self, tenant_id: str, kind: str, shop_id: str, window_s: float) -> int:
         """Loop guards (``mimi.harness.guards``): messages Mimi wrote to this
         shop, or follow-ups set for it, in the last ``window_s`` seconds."""
-        since = time.time() - window_s
+        since = wall() - window_s
         with self.engine.connect() as conn:
             if kind == "shop_messages":
                 q = sa.select(sa.func.count()).select_from(s.messages).where(
@@ -590,7 +590,7 @@ class SqlGo:
                 "turn_id": turn_id, "thread_id": thread_id, "helper": helper, "skill": skill,
                 "shop_id": shop_id, "tool": tool, "intent_kind": kind,
                 "preview": str(record.get("preview", "")), "payload": dumps(payload),
-                "status": "pending", "created_at": now, "created_ts": time.time()})
+                "status": "pending", "created_at": now, "created_ts": wall()})
         if outcome not in ("refused", "shadowed") and is_credit_intent(tool, kind) and shop_id:
             amount = 0
             for f in ("amount_kobo", "new_limit_kobo", "limit_kobo", "bump_kobo"):
