@@ -52,14 +52,14 @@ repo's API, built in the window.
 ## 3. Demo caps and safety
 
 Enforced by the API (`mimi/api/demo.py`, `mimi/api/uploads.py`), before
-anything is queued. The naira figures are placeholders the operator sets.
+anything is queued. The caps below are the ones set for the hackathon demo.
 
 | | |
 |---|---|
 | Model spend per visitor address | ₦100 a day (`MIMI_DEMO_IP_DAILY_CAP_NAIRA`), counted across all of that address's sessions, reset at midnight Lagos time |
 | Model spend for the whole demo | ₦2,000 a day (`MIMI_DEMO_GLOBAL_DAILY_CAP_NAIRA`) |
 | Sessions | one hour each (`MIMI_DEMO_SESSION_TTL_S`), 20 per address a day |
-| Kill switch | `MIMI_DEMO_KILL=1` refuses every new turn; reads keep working |
+| Kill switch | `MIMI_DEMO_KILL=1` refuses every new turn and every new or reset session (503, the same "the demo is paused" answer); reads keep working |
 | Refused in demo | approving a credit-limit raise or a raise of Mimi's own daily allowance (declining works) |
 | Attachments | JPEG, PNG or WebP photos, Ogg, WebM, M4A, MP3 or WAV voice notes, PDFs; 10 MB a file, 30 files and 60 MB a copy; the first bytes must match the type; a turn may only point at the caller's own uploads; deleted with the copy |
 | Keys | no key is in the console's JavaScript; the session token lives in the tab's session storage and is sent only as `Authorization: Bearer` (never in a URL, including audio and image loads) |
