@@ -65,6 +65,7 @@ from mimi.harness.router import label as skill_label
 from mimi.harness.style import clean_reply
 from mimi.harness.tracing import trace_job
 from mimi.harness.types import RunEvent
+from mimi.models import metering
 from mimi.models.base import ChatModel
 from mimi.observe.langfuse_export import exporter_from_env
 from mimi.orders.catalogue import family_of
@@ -278,12 +279,15 @@ class Agent:
         clock: Any = None,
         exporter: Any = None,
     ) -> None:
-        from mimi.api.helpers import build_helpers
+        from mimi.api.helpers import build_helpers, metered_deps
 
         self.engine = engine
         self.go = SqlGo(engine)
         self.policy = policy or GoPolicy()
-        self.deps = deps or HelperDeps()
+        # Every model the agent reaches goes through the metering seam
+        # (``mimi.models.metering``): charged to the turn, the daily cap and
+        # the run budget. The harness gateway meters the loop's own calls.
+        self.deps = metered_deps(deps or HelperDeps())
         self.helpers: dict[str, Helper] = dict(helpers or build_helpers(
             self.policy, go=self.go, deps=self.deps))
         # A shop's camera photo with a vague caption is looked at once
@@ -293,13 +297,16 @@ class Agent:
         see_on = os.environ.get("MIMI_ROUTER_SEE", "1").strip() != "0"
         # A pending ask binds the shop's next reply to the helper that asked
         # (``mimi.harness.binding``); the router model only classifies it.
-        self.router = Router(model=router_model, fast=fastclass.model(), price=kobo_cost,
-                             binder=AnswerBinder(model=router_model),
+        def meter(role: str) -> ChatModel | None:
+            return metering.Metered(router_model, role) if router_model is not None else None
+
+        self.router = Router(model=meter(metering.ROUTER), fast=fastclass.model(),
+                             price=kobo_cost, binder=AnswerBinder(model=meter(metering.BINDING)),
                              see=self.see_photo if see_on else None)
         self.clock = clock or wall_utc
         # Parts, mid-task messages and corrections (``mimi.harness.steer``);
         # MIMI_STEER=0 turns the stage off (today's behaviour).
-        self.steerer = st.Steerer(model=router_model)
+        self.steerer = st.Steerer(model=meter(metering.STEER))
         self.steer_on = os.environ.get("MIMI_STEER", "1").strip() != "0"
         self.artifacts = SqlArtifactStore(engine)
         vx.ensure_schema(engine)  # shop_voice_consent (alembic 0004 in production)
@@ -472,8 +479,14 @@ class Agent:
         lease = _Lease(self.queue, claim, max(0.2, self.lease_s / 3))
         lease.start()
         holder = [claim]
+        # One metering scope per turn: every model call in it is booked to the
+        # distributor's spend (the daily cap) and folded into the run budget.
+        day = self.clock().astimezone(LAGOS).date()
         try:
-            self._run(holder)
+            with metering.scope(control=self.go, tenant_id=claim.tenant_id, day=day,
+                                strict=metering.strict_default(),
+                                book_all=metering.meter_all()):
+                self._run(holder)
         except LeaseLost:
             log.warning("lease lost on %s; another worker carries it on", claim.turn_id)
         except Exception as exc:
@@ -1170,6 +1183,10 @@ class Agent:
                                             "language": d.language, "lane": d.lane,
                                             "model_called": d.model_called,
                                             "cost_kobo": d.cost_kobo}}
+        sc = metering.current()
+        if sc is not None:
+            # Every model call this attempt made, by role (``mimi.models.metering``).
+            result["metered"] = sc.tally()
         run_id = ""
         with self.engine.begin() as conn:
             for i, ev in enumerate(d.events):

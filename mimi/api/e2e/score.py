@@ -20,6 +20,7 @@ from mimi.api.e2e.runner import Run
 from mimi.credit.sam import sam_cost_kobo
 from mimi.harness.gateway import kobo_cost
 from mimi.harness.policy import ALWAYS_APPROVE, NEVER_TOOLS
+from mimi.models import metering
 from mimi.runtime.outbox import MONEY_VERBS
 from mimi.world.loader import load_world
 
@@ -501,18 +502,56 @@ def score(run: Run, usage_path: Path | None = None) -> dict[str, Any]:
     helper_kobo = sam_images = 0
     helper_calls = 0
     live_rows = 0
-    if usage_path and usage_path.exists():
-        for line in usage_path.read_text().splitlines():
-            u = json.loads(line)
-            live_rows += int(bool(u.get("live")))
-            if u["kind"] == "chat":
-                helper_calls += 1
-                helper_kobo += kobo_cost(u["model"], u["prompt_tokens"], u["completion_tokens"])
+    usage_rows: list[dict[str, Any]] = (
+        [json.loads(x) for x in usage_path.read_text().splitlines() if x.strip()]
+        if usage_path and usage_path.exists() else [])
+    metered = [ux for ux in usage_rows if ux.get("kind") == "metered"]
+    steer_kobo = 0
+    by_role: dict[str, dict[str, int]] = {}
+    full_rate_kobo = 0
+    for ux in usage_rows:
+        live_rows += int(bool(ux.get("live")))
+    if metered:
+        # Every model call the agent made, from the metering seam
+        # (``mimi.models.metering``): the loop, the router, binding and steer
+        # classifiers, the readers and SAM, kill-and-resume repeats included.
+        harness_kobo = router_kobo = 0
+        model_calls = 0
+        for mu in metered:
+            role, kob = str(mu["role"]), int(mu["kobo"])
+            tal = by_role.setdefault(role, {"calls": 0, "kobo": 0, "prompt_tokens": 0,
+                                            "completion_tokens": 0, "cached_tokens": 0})
+            tal["calls"] += 1
+            tal["kobo"] += kob
+            for fld in ("prompt_tokens", "completion_tokens", "cached_tokens"):
+                tal[fld] += int(mu.get(fld) or 0)
+            full_rate_kobo += (kob if role == metering.SAM else kobo_cost(
+                mu["model"], int(mu.get("prompt_tokens") or 0),
+                int(mu.get("completion_tokens") or 0), cached_rate=False))
+            if role == metering.HARNESS:
+                harness_kobo += kob
+                model_calls += 1
+            elif role in (metering.ROUTER, metering.BINDING):
+                router_kobo += kob
+            elif role == metering.STEER:
+                steer_kobo += kob
+            elif role == metering.SAM:
+                sam_images += int(mu.get("units") or 1)
             else:
+                helper_calls += 1
+                helper_kobo += kob
+        sam_kobo = by_role.get(metering.SAM, {}).get("kobo", 0)
+    else:
+        for ux in usage_rows:
+            if ux["kind"] == "chat":
+                helper_calls += 1
+                helper_kobo += kobo_cost(ux["model"], ux["prompt_tokens"],
+                                         ux["completion_tokens"])
+            elif ux["kind"] == "sam":
                 sam_images += 1
+        sam_kobo = sam_cost_kobo(sam_images)
     persona_kobo = kobo_cost(SIM_MODEL, *run.persona_tokens)
-    sam_kobo = sam_cost_kobo(sam_images)
-    total = harness_kobo + router_kobo + helper_kobo + sam_kobo + persona_kobo
+    total = harness_kobo + router_kobo + steer_kobo + helper_kobo + sam_kobo + persona_kobo
     agent_kobo = total - persona_kobo
     agent_turns = [t for t in run.turns]
 
@@ -539,10 +578,17 @@ def score(run: Run, usage_path: Path | None = None) -> dict[str, Any]:
         "latency_s": {"turn_p50": quantile(lat, 0.5), "turn_p95": quantile(lat, 0.95),
                       "run_p50": quantile(runs, 0.5), "run_p95": quantile(runs, 0.95),
                       "n": len(lat)},
-        "cost_kobo": {"harness": harness_kobo, "router": router_kobo, "helper_models":
-                      helper_kobo, "sam": sam_kobo, "persona": persona_kobo, "total": total,
-                      "agent_per_turn_mean": agent_kobo // max(1, len(agent_turns))},
+        "cost_kobo": {"harness": harness_kobo, "router": router_kobo, "steer": steer_kobo,
+                      "helper_models": helper_kobo, "sam": sam_kobo, "persona": persona_kobo,
+                      "total": total, "agent": agent_kobo,
+                      "agent_per_turn_mean": agent_kobo // max(1, len(agent_turns)),
+                      # The same calls with cached input at the full input rate
+                      # (the accounting before 29 Oct 2026), for comparison.
+                      "agent_full_input_rate": full_rate_kobo,
+                      "by_role": by_role},
         "calls": {"harness_model_calls": model_calls, "helper_model_calls": helper_calls,
+                  "agent_model_calls": sum(v["calls"] for kr, v in by_role.items()
+                                           if kr != metering.SAM),
                   "sam_images": sam_images, "persona_calls": run.persona_calls,
                   "persona_live_calls": run.persona_live_calls,
                   "worker_live_rows": live_rows},
@@ -586,9 +632,12 @@ def table(report: dict[str, Any]) -> str:
         f"{len(report['cross_tenant'])}",
         f"Latency per turn p50 {lt['turn_p50']}s, p95 {lt['turn_p95']}s (worker run p50 "
         f"{lt['run_p50']}s, p95 {lt['run_p95']}s)",
-        f"Cost {naira(c['total'])}: harness {naira(c['harness'])}, router {naira(c['router'])}, "
-        f"helper models {naira(c['helper_models'])}, SAM {naira(c['sam'])}, personas "
-        f"{naira(c['persona'])}",
+        f"Cost {naira(c['total'])}: harness {naira(c['harness'])}, router and binding "
+        f"{naira(c['router'])}, steer {naira(c.get('steer', 0))}, helper models "
+        f"{naira(c['helper_models'])}, SAM {naira(c['sam'])}, personas {naira(c['persona'])}",
+        f"Agent {naira(c.get('agent', 0))} over {report['turns']} turns "
+        f"({naira(c.get('agent_full_input_rate', 0))} with cached input at the full rate), "
+        f"{report['calls'].get('agent_model_calls', 0)} model calls",
         f"PASSED: {report['passed']}",
     ]
     return "\n".join(rows)

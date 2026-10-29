@@ -9,6 +9,7 @@ from __future__ import annotations
 
 from collections.abc import Callable, Mapping, Sequence
 
+from mimi.models import metering
 from mimi.models.base import ChatMessage, ChatResult
 
 Responder = Callable[[Sequence[ChatMessage], Mapping[str, str]], str]
@@ -34,6 +35,7 @@ class FakeModel:
         meta: Mapping[str, str] | None = None,
         response_format: Mapping[str, object] | None = None,
     ) -> ChatResult:
+        metering.guard(self.name)
         self.calls += 1
         text = self._responder(messages, meta or {})
         return ChatResult(text=text, model=self.name, fake=True)

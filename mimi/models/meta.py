@@ -18,6 +18,7 @@ from typing import Any
 
 import httpx
 
+from mimi.models import metering
 from mimi.models.base import ChatMessage, ChatResult, ModelError
 
 DEFAULT_BASE = "https://api.meta.ai/v1"
@@ -68,6 +69,7 @@ class MetaChatModel:
         meta: Mapping[str, str] | None = None,
         response_format: Mapping[str, object] | None = None,
     ) -> ChatResult:
+        metering.guard(self.name)
         body: dict[str, Any] = {
             "model": self.name,
             "messages": [_message(m) for m in messages],
