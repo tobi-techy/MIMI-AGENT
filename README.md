@@ -1,5 +1,8 @@
 # Mimi Agent
 
+**Judges:** start with [`JUDGES.md`](JUDGES.md): the hosted demo, what is new
+in the hackathon window, the demo's caps and safety, and an offline run for N0.
+
 Mimi is a set of WhatsApp agents for FMCG distributors in Nigeria. A
 distributor's van drops goods at dozens of small shops a day, and most
 arguments about money start with "that is not what you delivered". Mimi sends
