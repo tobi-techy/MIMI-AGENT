@@ -21,6 +21,9 @@
 * ``MIMI_MODE``: ``live`` (default: bearer keys only) or ``demo`` (public demo
   sessions on synthetic copies behind naira caps; ``mimi.api.demo`` lists its
   ``MIMI_DEMO_*`` settings).
+* ``MIMI_MEDIA_DIR``: in demo mode, where console uploads are kept
+  (``mimi.api.uploads``); the helpers read ``local:`` refs from the same
+  directory. Unset: a temporary directory per process.
 """
 
 from __future__ import annotations
@@ -99,6 +102,9 @@ class Settings:
     extra: dict[str, str] = field(default_factory=dict)
     mode: str = "live"
     demo: DemoConfig = field(default_factory=DemoConfig)
+    # Demo mode: where console uploads are kept (``mimi.api.uploads``). Empty
+    # means a fresh temporary directory per process.
+    media_dir: str = ""
 
     @property
     def production(self) -> bool:
@@ -120,6 +126,7 @@ class Settings:
             release=e.get("MIMI_RELEASE", "").strip(),
             mode=(e.get("MIMI_MODE", "live").strip().lower() or "live"),
             demo=DemoConfig.from_env(e),
+            media_dir=e.get("MIMI_MEDIA_DIR", "").strip(),
         )
 
     @property

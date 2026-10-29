@@ -17,6 +17,9 @@ Endpoints (all under ``/v1``, all but health need ``Authorization: Bearer``):
 * ``GET /v1/me``: the caller's tenant, role and mode.
 * ``POST /v1/demo/sessions``, ``POST /v1/demo/reset``: demo mode only
   (``MIMI_MODE=demo``, ``mimi.api.demo``); 404 in live mode.
+* ``POST /v1/media``, ``GET /v1/messages/{message_id}/media``: demo mode only:
+  the console's attachments (``mimi.api.uploads``); 404 in live mode, where
+  the channel keeps media.
 
 Each key belongs to one distributor; every query is filtered by it, so a
 key can never read or change another distributor's rows. This module is the
@@ -27,9 +30,11 @@ only place in ``mimi`` that imports the web framework.
 # aliases defined inside create_app at runtime.
 
 import logging
+import tempfile
 import threading
 from collections.abc import AsyncIterator, Callable
 from contextlib import asynccontextmanager
+from pathlib import Path
 from typing import Annotated, Any
 
 import sqlalchemy as sa
@@ -49,6 +54,7 @@ from mimi.api.demo import (
     client_address,
     refuses_approval,
 )
+from mimi.api.media import MAX_BYTES
 from mimi.api.schemas import (
     ApprovalList,
     CreditOut,
@@ -59,6 +65,7 @@ from mimi.api.schemas import (
     EventIn,
     Health,
     Liveness,
+    MediaOut,
     MeOut,
     ShopDetail,
     ShopList,
@@ -67,9 +74,11 @@ from mimi.api.schemas import (
     TurnIn,
     TurnOut,
 )
+from mimi.api.uploads import ConsoleUploads, UploadRefused
 from mimi.clock import wall_utc
 from mimi.harness.go import CrossTenant
 from mimi.harness.inbound import Inbound, Media, Payload
+from mimi.store import schema as s
 from mimi.store.db import make_engine
 from mimi.tz import assume_lagos
 
@@ -118,8 +127,13 @@ def create_app(settings: Settings | None = None, agent: Agent | None = None, *,
         allow_methods=["GET", "POST", "OPTIONS"],
         allow_headers=["Authorization", "Content-Type"])
     engine = agent.engine
-    demo = DemoStore(engine, settings.demo) if settings.demo_mode else None
+    uploads: ConsoleUploads | None = None
+    if settings.demo_mode:
+        uploads = ConsoleUploads(Path(settings.media_dir or tempfile.mkdtemp(prefix="mimi-media-")))
+    demo = (DemoStore(engine, settings.demo, on_drop=uploads.drop if uploads else None)
+            if settings.demo_mode else None)
     app.state.demo = demo
+    app.state.uploads = uploads
 
     def auth(creds: Annotated[HTTPAuthorizationCredentials | None, Depends(_bearer)]
              ) -> ApiKey:
@@ -174,6 +188,10 @@ def create_app(settings: Settings | None = None, agent: Agent | None = None, *,
     async def _dr(_: Request, exc: DemoRefused) -> JSONResponse:
         return JSONResponse({"detail": str(exc)}, status_code=exc.status)
 
+    @app.exception_handler(UploadRefused)
+    async def _ur(_: Request, exc: UploadRefused) -> JSONResponse:
+        return JSONResponse({"detail": str(exc)}, status_code=exc.status)
+
     @app.exception_handler(Conflict)
     async def _cf(_: Request, exc: Conflict) -> JSONResponse:
         return JSONResponse({"detail": str(exc)}, status_code=409)
@@ -194,6 +212,12 @@ def create_app(settings: Settings | None = None, agent: Agent | None = None, *,
         if body.media is not None:
             m = body.media
             ref = m.ref
+            # Demo: a turn may point at local bytes only through the caller's
+            # own console upload (never another copy's, never the eval fixtures).
+            if (uploads is not None and ref.startswith("local:")
+                    and not uploads.owns(key.tenant_id, ref, m.sha256)):
+                raise HTTPException(422, "attach the file again: it is not one of this "
+                                         "demo copy's uploads")
             media = Media(kind=m.kind, mime=m.mime, sha256=m.sha256, width=m.width,
                           height=m.height, camera_exif=m.camera_exif, caption=m.caption,
                           transcript=m.transcript, transcript_lang=m.transcript_lang)
@@ -268,6 +292,54 @@ def create_app(settings: Settings | None = None, agent: Agent | None = None, *,
             "X-Mimi-Voice": voice["voice"], "X-Mimi-Voice-Seconds": str(audio.duration_s),
             "Cache-Control": "no-store"})
 
+    # ------------------------------------------------------- console uploads
+
+    @app.post("/v1/media", response_model=MediaOut, status_code=201, responses={
+        **_DEMO_ERRORS, 413: {"model": ErrorOut}, 415: {"model": ErrorOut}},
+        openapi_extra={"requestBody": {"required": True, "content": {
+            m: {"schema": {"type": "string", "format": "binary"}} for m in (
+                "image/jpeg", "image/png", "image/webp", "audio/ogg", "audio/webm",
+                "audio/mp4", "audio/mpeg", "audio/wav", "application/pdf")}}},
+        summary="Demo mode: keep one console attachment for a turn")
+    async def post_media(request: Request, key: Owner) -> dict[str, Any]:
+        """The raw bytes of one photo, voice note or PDF (the request body, with
+        its ``Content-Type``), at most 10 MB. Answers the ``ref`` and hash to send
+        as the turn's ``media``. 404 in live mode: the channel keeps media."""
+        if uploads is None:
+            raise HTTPException(404, "not found")
+        demo_gate(request, key)
+        size = request.headers.get("content-length", "")
+        if size.isdigit() and int(size) > MAX_BYTES:
+            raise HTTPException(413, "the file is over 10 MB")
+        data = bytearray()
+        async for chunk in request.stream():
+            data.extend(chunk)
+            if len(data) > MAX_BYTES:
+                raise HTTPException(413, "the file is over 10 MB")
+        return uploads.put(key.tenant_id, bytes(data), request.headers.get("content-type", ""))
+
+    @app.get("/v1/messages/{message_id}/media", responses={
+        **_ERRORS, 200: {"content": {"application/octet-stream": {}},
+                         "description": "The attachment's bytes"}},
+             response_class=Response, summary="Demo mode: a console attachment's bytes")
+    def get_media(message_id: str, key: Owner) -> Response:
+        """The file the owner attached to this message in the console. 404 for
+        any other message, another copy's, or in live mode."""
+        if uploads is None or not message_id.startswith("in:"):
+            raise HTTPException(404, "not found")
+        with engine.connect() as conn:
+            row = conn.execute(sa.select(s.inbound_messages.c.media_ref).where(
+                s.inbound_messages.c.tenant_id == key.tenant_id,
+                s.inbound_messages.c.external_id == message_id[3:])).first()
+        ref = str(row.media_ref) if row is not None else ""
+        data = uploads.read(key.tenant_id, ref) if ref else None
+        if data is None:
+            raise HTTPException(404, "not found")
+        return Response(content=data, media_type=uploads.mime_of(ref),
+                        headers={"Cache-Control": "private, no-store",
+                                 "X-Content-Type-Options": "nosniff",
+                                 "Content-Disposition": "inline"})
+
     # -------------------------------------------------------------- console
 
     @app.get("/v1/threads", response_model=ThreadList, responses=_ERRORS)
@@ -281,7 +353,7 @@ def create_app(settings: Settings | None = None, agent: Agent | None = None, *,
     @app.get("/v1/threads/{thread_id}", response_model=ThreadDetail, responses=_ERRORS,
              summary="A thread's messages and reasoning steps")
     def get_thread(thread_id: str, key: Owner) -> dict[str, Any]:
-        return reads.get_thread(engine, key.tenant_id, thread_id)
+        return reads.get_thread(engine, key.tenant_id, thread_id, uploads=uploads is not None)
 
     @app.get("/v1/shops", response_model=ShopList, responses=_ERRORS)
     def get_shops(key: Owner) -> dict[str, Any]:

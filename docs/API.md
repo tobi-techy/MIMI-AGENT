@@ -138,8 +138,21 @@ A public console on synthetic data (`mimi/api/demo.py`):
 * Approving a credit review, a credit limit change or a raise of the daily
   allowance is refused (403); declining works.
 * `GET /v1/me` shows the session's expiry and today's spend against the caps.
+* Console attachments (`mimi/api/uploads.py`): the demo console has no
+  WhatsApp channel to keep media, so the API stands in for one.
+  `POST /v1/media` takes one file as the raw request body with its
+  `Content-Type` (JPEG, PNG or WebP photo; Ogg, WebM, M4A, MP3 or WAV voice
+  note; PDF), at most 10 MB, and answers `ref`, `sha256`, `mime`, `kind` and
+  `size` to send as the turn's `media`. The first bytes must be the type the
+  file claims; at most 30 files and 60 MB per copy. A turn's `local:` `media.ref` must
+  be one of the caller's own uploads with its hash (422 otherwise), so a
+  visitor can never point Mimi at another copy's file or the eval fixtures.
+  `GET /v1/messages/{message_id}/media` reads an attachment back (the owner's
+  own `in:` messages only). Uploads live under `MIMI_MEDIA_DIR` (a temporary
+  directory when unset) and go when their copy is swept. The upload passes
+  the same caps gate as a turn; it calls no model.
 
-In live mode the two demo routes are 404 and nothing above applies.
+In live mode the demo routes are 404 and nothing above applies.
 
 ## Auth and tenancy
 
@@ -163,7 +176,7 @@ approval reads as 404. Keys are compared by SHA-256 in constant time; give
 | `POST /v1/events` | any | One system event from Go or the scheduler: `event_id` (the dedupe key), `kind` (`webhook` or `routine`), `name` (`delivery_completed`, `stock.weekly_check`, ...), `shop_id` (empty for the distributor), `received_at`, `simulated`. Queued as a turn on the shop's thread and routed by rule (202 with the turn id). The words the helper sees are written by code from the kind, name and shop; an event carries no free text. Another distributor's shop is 404 |
 | `GET /v1/turns/{turn_id}` | any | State, status, route, run id (the trace id) and replies |
 | `GET /v1/threads` | owner | Threads, newest first: kind, shop, last message, pending approvals, and for the console `helper` / `helper_name` (newest routed turn's helper), `status` (`needs_you`: a pending approval or a parked turn; `running`: a turn queued or running; `done`) and a code-written `title` (never shop text). `limit`, `offset`, `kind` |
-| `GET /v1/threads/{thread_id}` | owner | Messages, reasoning steps (routing and every harness step: tool, tier, short line, model, cost, time; never the model's private text), turns, router state |
+| `GET /v1/threads/{thread_id}` | owner | Messages (each with `voice`: the reply has a voice note at `/v1/messages/{id}/voice`, and `media`: in demo, the owner's console attachment at `/v1/messages/{id}/media`), reasoning steps (routing and every harness step: tool, tier, short line, model, cost, time; never the model's private text), turns, router state |
 | `GET /v1/shops` | owner | Shops with credit limit, outstanding and overdue (kobo and naira, summed in code), phone as last four digits |
 | `GET /v1/shops/{shop_id}` | owner | Plus open invoices, payments, promises, the last 10 deliveries with lines, disputes |
 | `GET /v1/approvals` | owner | `status=pending` (default), `approved`, `rejected`, `superseded`, `withdrawn`, `all`; each with the tool, preview, payload, the drafted message and `supersedes` / `superseded_by` (RAI-301) |
@@ -175,6 +188,7 @@ approval reads as 404. Keys are compared by SHA-256 in constant time; give
 | `GET /` | none | Liveness for the platform probe: `{"status": "ok"}`, no database |
 | `GET /v1/me` | any | The caller's tenant, role and mode (`live` or `demo`); in demo, the session's expiry and today's spend against the caps |
 | `POST /v1/demo/sessions`, `POST /v1/demo/reset` | none, demo session | Demo mode only (404 in live mode) |
+| `POST /v1/media`, `GET /v1/messages/{message_id}/media` | owner (demo session) | Demo mode only: keep one console attachment for a turn, and read it back (404 in live mode) |
 
 Replies come back with `status`: `ready` (hand it to the channel now) or
 `pending_approval` (it waits in approvals). A `ready` WhatsApp reply to a

@@ -12,7 +12,9 @@ import sqlalchemy as sa
 from sqlalchemy.engine import Engine
 
 from mimi.api import threadmeta
+from mimi.api import voice as vx
 from mimi.api.agent import NotFound, approval_dict
+from mimi.api.uploads import PREFIX as UPLOAD_PREFIX
 from mimi.store import schema as s
 from mimi.store.book import SqlGo
 from mimi.store.util import loads, mask_phone
@@ -161,19 +163,35 @@ def list_threads(engine: Engine, tenant: str, *, limit: int, offset: int,
 PRIVATE_KEYS = frozenset({"private_text"})
 
 
-def get_thread(engine: Engine, tenant: str, thread_id: str) -> dict[str, Any]:
+def get_thread(engine: Engine, tenant: str, thread_id: str, *,
+               uploads: bool = False) -> dict[str, Any]:
+    """``uploads``: demo mode, where the owner's console attachments are kept
+    and can be read back (``media`` on their message)."""
     with engine.connect() as conn:
         t = conn.execute(sa.select(s.threads).where(
             s.threads.c.tenant_id == tenant, s.threads.c.thread_id == thread_id)).first()
         if t is None:
             raise NotFound(thread_id)
+        rows = list(conn.execute(sa.select(s.messages).where(
+            s.messages.c.tenant_id == tenant, s.messages.c.thread_id == thread_id)
+            .order_by(s.messages.c.ts, s.messages.c.message_id)))
+        uploaded: set[str] = set()
+        if uploads:
+            own = f"{UPLOAD_PREFIX}{tenant}/"
+            uploaded = {f"in:{r.external_id}" for r in conn.execute(
+                sa.select(s.inbound_messages.c.external_id).where(
+                    s.inbound_messages.c.tenant_id == tenant,
+                    s.inbound_messages.c.thread_id == thread_id,
+                    s.inbound_messages.c.media_ref.startswith(own, autoescape=True)))}
         msgs = [{
             "message_id": m.message_id, "direction": m.direction, "sender": m.sender,
             "channel": m.channel, "shop_id": m.shop_id, "text": m.text, "kind": m.kind,
             "status": m.status, "turn_id": m.turn_id, "simulated": bool(m.simulated),
-            "at": m.at} for m in conn.execute(sa.select(s.messages).where(
-                s.messages.c.tenant_id == tenant, s.messages.c.thread_id == thread_id)
-                .order_by(s.messages.c.ts, s.messages.c.message_id))]
+            "at": m.at,
+            # only a ready shop reply can have a voice note; skip the check for the rest
+            "voice": (m.direction == "out" and m.channel == "shop_whatsapp"
+                      and vx.reply_voice(conn, tenant, m) is not None),
+            "media": m.message_id in uploaded} for m in rows]
         steps = [{
             "event_id": e.event_id, "turn_id": e.turn_id, "run_id": e.run_id, "type": e.type,
             "step": e.step, "tool": e.tool, "tier": e.tier, "short": e.short,

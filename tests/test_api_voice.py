@@ -130,3 +130,20 @@ def test_the_flag_is_per_distributor(env: dict[str, Any], monkeypatch: pytest.Mo
             shop_voice_consent)).scalar() == 0
     monkeypatch.setenv("MIMI_VOICE_REPLIES", "all")
     assert vx.voice_enabled("tenant-b")
+
+
+def test_the_thread_marks_which_replies_have_a_voice_note(env: dict[str, Any]) -> None:
+    """The console reads the flag off the thread and fetches the audio with
+    its bearer in a header (never a token in the URL)."""
+    turn(env["c"], "wamid.v1", "VOICE ON")
+    typed = turn(env["c"], "wamid.v2", "Good morning")
+    spoken = voice_note(env["c"], "wamid.v3", "Good morning, how market")
+    owner = {"Authorization": f"Bearer {OWNER}"}
+    r = env["c"].get(f"/v1/threads/{spoken['thread_id']}", headers=owner)
+    assert r.status_code == 200, r.text
+    flags = {m["message_id"]: m["voice"] for m in r.json()["messages"]}
+    said = next(x for x in spoken["replies"] if x["channel"] == "shop_whatsapp")
+    plain = next(x for x in typed["replies"] if x["channel"] == "shop_whatsapp")
+    assert flags[said["message_id"]] is True and flags[plain["message_id"]] is False
+    assert not any(v for k, v in flags.items() if k.startswith("in:"))
+    assert all(m["media"] is False for m in r.json()["messages"])  # live mode: no uploads

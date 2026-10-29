@@ -170,10 +170,13 @@ class Session:
 
 class DemoStore:
     def __init__(self, engine: Engine, conf: DemoConfig, *,
-                 clock: Callable[[], float] = wall) -> None:
+                 clock: Callable[[], float] = wall,
+                 on_drop: Callable[[str], None] | None = None) -> None:
         self.engine = engine
         self.conf = conf
         self.clock = clock
+        # Called with a copy's tenant id after the copy is swept (its uploads go too).
+        self.on_drop = on_drop
 
     # ------------------------------------------------------------ helpers
 
@@ -271,6 +274,8 @@ class DemoStore:
                 conn.execute(s.demo_sessions.update().where(
                     s.demo_sessions.c.token_digest == r.token_digest).values(swept=True))
                 done += 1
+            if self.on_drop is not None:
+                self.on_drop(r.session_tenant)
         return done
 
     # --------------------------------------------------------------- caps

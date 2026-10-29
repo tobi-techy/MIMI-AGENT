@@ -138,6 +138,22 @@ class Message(_Out):
     turn_id: str
     simulated: bool
     at: str
+    # A reply read aloud (RAI-290): fetch it from GET /v1/messages/{message_id}/voice.
+    voice: bool = False
+    # Demo mode: the bytes the owner attached in the console, from
+    # GET /v1/messages/{message_id}/media.
+    media: bool = False
+
+
+class MediaOut(_Out):
+    """A console upload kept for this demo copy: send ``ref``, ``sha256``,
+    ``mime`` and ``kind`` as the turn's ``media``."""
+
+    ref: str
+    sha256: str
+    mime: str
+    kind: Literal["image", "voice", "document"]
+    size: int
 
 
 class Step(_Out):

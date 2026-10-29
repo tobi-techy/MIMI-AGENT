@@ -794,6 +794,46 @@
         "title": "MediaIn",
         "type": "object"
       },
+      "MediaOut": {
+        "additionalProperties": false,
+        "description": "A console upload kept for this demo copy: send ``ref``, ``sha256``,\n``mime`` and ``kind`` as the turn's ``media``.",
+        "properties": {
+          "kind": {
+            "enum": [
+              "image",
+              "voice",
+              "document"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "mime": {
+            "title": "Mime",
+            "type": "string"
+          },
+          "ref": {
+            "title": "Ref",
+            "type": "string"
+          },
+          "sha256": {
+            "title": "Sha256",
+            "type": "string"
+          },
+          "size": {
+            "title": "Size",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "ref",
+          "sha256",
+          "mime",
+          "kind",
+          "size"
+        ],
+        "title": "MediaOut",
+        "type": "object"
+      },
       "Message": {
         "additionalProperties": false,
         "properties": {
@@ -812,6 +852,11 @@
           "kind": {
             "title": "Kind",
             "type": "string"
+          },
+          "media": {
+            "default": false,
+            "title": "Media",
+            "type": "boolean"
           },
           "message_id": {
             "title": "Message Id",
@@ -840,6 +885,11 @@
           "turn_id": {
             "title": "Turn Id",
             "type": "string"
+          },
+          "voice": {
+            "default": false,
+            "title": "Voice",
+            "type": "boolean"
           }
         },
         "required": [
@@ -2362,6 +2412,250 @@
           }
         ],
         "summary": "The caller's distributor, role and mode"
+      }
+    },
+    "/v1/media": {
+      "post": {
+        "description": "The raw bytes of one photo, voice note or PDF (the request body, with\nits ``Content-Type``), at most 10 MB. Answers the ``ref`` and hash to send\nas the turn's ``media``. 404 in live mode: the channel keeps media.",
+        "operationId": "post_media_v1_media_post",
+        "requestBody": {
+          "content": {
+            "application/pdf": {
+              "schema": {
+                "format": "binary",
+                "type": "string"
+              }
+            },
+            "audio/mp4": {
+              "schema": {
+                "format": "binary",
+                "type": "string"
+              }
+            },
+            "audio/mpeg": {
+              "schema": {
+                "format": "binary",
+                "type": "string"
+              }
+            },
+            "audio/ogg": {
+              "schema": {
+                "format": "binary",
+                "type": "string"
+              }
+            },
+            "audio/wav": {
+              "schema": {
+                "format": "binary",
+                "type": "string"
+              }
+            },
+            "audio/webm": {
+              "schema": {
+                "format": "binary",
+                "type": "string"
+              }
+            },
+            "image/jpeg": {
+              "schema": {
+                "format": "binary",
+                "type": "string"
+              }
+            },
+            "image/png": {
+              "schema": {
+                "format": "binary",
+                "type": "string"
+              }
+            },
+            "image/webp": {
+              "schema": {
+                "format": "binary",
+                "type": "string"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MediaOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Request Entity Too Large"
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Unsupported Media Type"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Too Many Requests"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Demo mode: keep one console attachment for a turn"
+      }
+    },
+    "/v1/messages/{message_id}/media": {
+      "get": {
+        "description": "The file the owner attached to this message in the console. 404 for\nany other message, another copy's, or in live mode.",
+        "operationId": "get_media_v1_messages__message_id__media_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "message_id",
+            "required": true,
+            "schema": {
+              "title": "Message Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/octet-stream": {}
+            },
+            "description": "The attachment's bytes"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Demo mode: a console attachment's bytes"
       }
     },
     "/v1/messages/{message_id}/voice": {
