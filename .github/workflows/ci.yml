@@ -157,7 +157,7 @@ jobs:
         run: python -m mimi.api.e2e --no-write --db "$MIMI_TEST_DATABASE_URL"
 
   docker:
-    name: docker image starts and answers
+    name: docker image starts on port 3000 and answers
     runs-on: ubuntu-latest
     env:
       # Throwaway keys for a container that lives for this job only.
@@ -168,15 +168,16 @@ jobs:
       - run: docker build -t mimi-agent:ci .
       - name: Container migrates, seeds the synthetic world and answers a turn (offline model)
         run: |
-          docker run -d --name mimi -p 8000:8000 \
+          docker run -d --name mimi -p 3000:3000 \
             -e MIMI_API_KEYS="$CI_API_KEYS" \
             mimi-agent:ci
-          for i in $(seq 1 60); do curl -sf localhost:8000/v1/health && break; sleep 1; done
-          curl -sf -X POST localhost:8000/v1/turns \
+          for i in $(seq 1 60); do curl -sf localhost:3000/ && break; sleep 1; done
+          curl -sf localhost:3000/v1/health
+          curl -sf -X POST localhost:3000/v1/turns \
             -H "Authorization: Bearer $CI_CHANNEL_KEY" -H 'Content-Type: application/json' \
             -d '{"message_id":"ci.1","phone":"+2340000000100","text":"hi"}' | tee /tmp/turn.json
           grep -q '"state":"done"' /tmp/turn.json
-          test "$(curl -s -o /dev/null -w '%{http_code}' localhost:8000/v1/shops)" = 401
+          test "$(curl -s -o /dev/null -w '%{http_code}' localhost:3000/v1/shops)" = 401
       - if: always()
         run: docker logs mimi 2>&1 | tail -40 || true
 

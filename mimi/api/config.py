@@ -18,6 +18,9 @@
 * ``META_API_KEY`` and friends (``mimi.models.env``): Muse Spark. Unset means
   the offline model, which production refuses.
 * ``MIMI_PHONE_PSEUDONYM_KEY``: required in production (``mimi.harness.inbound``).
+* ``MIMI_MODE``: ``live`` (default: bearer keys only) or ``demo`` (public demo
+  sessions on synthetic copies behind naira caps; ``mimi.api.demo`` lists its
+  ``MIMI_DEMO_*`` settings).
 """
 
 from __future__ import annotations
@@ -29,10 +32,12 @@ from collections.abc import Mapping
 from dataclasses import dataclass, field
 from typing import Literal
 
+from mimi.api.demo import DemoConfig
 from mimi.store.db import database_url
 
 Role = Literal["owner", "channel"]
 ROLES: tuple[Role, ...] = ("owner", "channel")
+MODES: tuple[str, ...] = ("live", "demo")
 DEFAULT_CORS = ("https://console.userail.money",)
 # The Makefile's local demo Bearer keys (docs/API.md). Public, so never valid in
 # production.
@@ -49,6 +54,8 @@ class ApiKey:
     tenant_id: str
     role: Role
     digest: str  # sha256 hex of the key
+    # A demo visitor's session token (MIMI_MODE=demo), not a configured key.
+    session: bool = False
 
 
 def key_digest(key: str) -> str:
@@ -90,6 +97,8 @@ class Settings:
     has_model_key: bool = False
     release: str = ""
     extra: dict[str, str] = field(default_factory=dict)
+    mode: str = "live"
+    demo: DemoConfig = field(default_factory=DemoConfig)
 
     @property
     def production(self) -> bool:
@@ -109,7 +118,13 @@ class Settings:
             lease_s=float(e.get("MIMI_LEASE_S", "30") or 30),
             has_model_key=bool(e.get("META_API_KEY", "").strip()),
             release=e.get("MIMI_RELEASE", "").strip(),
+            mode=(e.get("MIMI_MODE", "live").strip().lower() or "live"),
+            demo=DemoConfig.from_env(e),
         )
+
+    @property
+    def demo_mode(self) -> bool:
+        return self.mode == "demo"
 
     def lookup(self, presented: str) -> ApiKey | None:
         """The key's tenant and role, compared in constant time."""
@@ -124,12 +139,20 @@ class Settings:
 
     def check(self) -> None:
         """Refuse to start a production API that is not safe to run."""
+        if self.mode not in MODES:
+            raise ConfigError(f"MIMI_MODE is {self.mode!r}: use live or demo")
         if not self.production:
             return
         from mimi.harness.inbound import _pseudonym_key
 
         _pseudonym_key()  # raises without MIMI_PHONE_PSEUDONYM_KEY in production
-        if not self.keys:
+        if self.demo_mode:
+            # Demo visitors sign in with API-issued session tokens; configured
+            # keys are optional (an operator's), never required.
+            if not self.demo.ip_salt:
+                raise ConfigError("MIMI_DEMO_IP_SALT is not set: demo mode in production "
+                                  "hashes visitor addresses with it")
+        elif not self.keys:
             raise ConfigError("MIMI_API_KEYS is not set: refusing to serve without auth")
         if not self.has_model_key:
             raise ConfigError("META_API_KEY is not set: production never runs the offline model")

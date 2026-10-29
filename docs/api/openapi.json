@@ -413,6 +413,112 @@
         "title": "DeliveryOut",
         "type": "object"
       },
+      "DemoCaps": {
+        "additionalProperties": false,
+        "properties": {
+          "global_daily_cap_kobo": {
+            "title": "Global Daily Cap Kobo",
+            "type": "integer"
+          },
+          "ip_daily_cap_kobo": {
+            "title": "Ip Daily Cap Kobo",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "ip_daily_cap_kobo",
+          "global_daily_cap_kobo"
+        ],
+        "title": "DemoCaps",
+        "type": "object"
+      },
+      "DemoSessionOut": {
+        "additionalProperties": false,
+        "description": "A demo session: send ``token`` as ``Authorization: Bearer`` until ``expires_at``.",
+        "properties": {
+          "caps": {
+            "$ref": "#/components/schemas/DemoCaps"
+          },
+          "expires_at": {
+            "title": "Expires At",
+            "type": "string"
+          },
+          "mode": {
+            "const": "demo",
+            "title": "Mode",
+            "type": "string"
+          },
+          "tenant_id": {
+            "title": "Tenant Id",
+            "type": "string"
+          },
+          "token": {
+            "title": "Token",
+            "type": "string"
+          },
+          "ttl_s": {
+            "title": "Ttl S",
+            "type": "number"
+          }
+        },
+        "required": [
+          "token",
+          "tenant_id",
+          "mode",
+          "expires_at",
+          "ttl_s",
+          "caps"
+        ],
+        "title": "DemoSessionOut",
+        "type": "object"
+      },
+      "DemoStatus": {
+        "additionalProperties": false,
+        "description": "A demo caller's session and today's spend against the caps (kobo).",
+        "properties": {
+          "expires_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expires At"
+          },
+          "global_cap_kobo": {
+            "title": "Global Cap Kobo",
+            "type": "integer"
+          },
+          "global_spent_kobo": {
+            "title": "Global Spent Kobo",
+            "type": "integer"
+          },
+          "ip_cap_kobo": {
+            "title": "Ip Cap Kobo",
+            "type": "integer"
+          },
+          "ip_spent_kobo": {
+            "title": "Ip Spent Kobo",
+            "type": "integer"
+          },
+          "paused": {
+            "title": "Paused",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "expires_at",
+          "ip_spent_kobo",
+          "ip_cap_kobo",
+          "global_spent_kobo",
+          "global_cap_kobo",
+          "paused"
+        ],
+        "title": "DemoStatus",
+        "type": "object"
+      },
       "Draft": {
         "additionalProperties": false,
         "properties": {
@@ -562,6 +668,60 @@
           "version"
         ],
         "title": "Health",
+        "type": "object"
+      },
+      "Liveness": {
+        "additionalProperties": false,
+        "properties": {
+          "status": {
+            "const": "ok",
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "status"
+        ],
+        "title": "Liveness",
+        "type": "object"
+      },
+      "MeOut": {
+        "additionalProperties": false,
+        "properties": {
+          "demo": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/DemoStatus"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "mode": {
+            "enum": [
+              "live",
+              "demo"
+            ],
+            "title": "Mode",
+            "type": "string"
+          },
+          "role": {
+            "title": "Role",
+            "type": "string"
+          },
+          "tenant_id": {
+            "title": "Tenant Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "tenant_id",
+          "role",
+          "mode",
+          "demo"
+        ],
+        "title": "MeOut",
         "type": "object"
       },
       "MediaIn": {
@@ -1063,6 +1223,16 @@
       "ThreadSummary": {
         "additionalProperties": false,
         "properties": {
+          "helper": {
+            "description": "The helper on the thread's newest routed turn (order, collector, credit, stock, brand, proof or mimi).",
+            "title": "Helper",
+            "type": "string"
+          },
+          "helper_name": {
+            "description": "Its display name (Order, Collector, Credit, Stock, Brand, Proof or Mimi).",
+            "title": "Helper Name",
+            "type": "string"
+          },
           "kind": {
             "title": "Kind",
             "type": "string"
@@ -1095,8 +1265,23 @@
             "title": "Shop Name",
             "type": "string"
           },
+          "status": {
+            "description": "needs_you: a pending approval or a turn waiting on the owner; running: a turn queued or running; done: otherwise.",
+            "enum": [
+              "needs_you",
+              "running",
+              "done"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
           "thread_id": {
             "title": "Thread Id",
+            "type": "string"
+          },
+          "title": {
+            "description": "A short title written by code (never shop text).",
+            "title": "Title",
             "type": "string"
           }
         },
@@ -1109,7 +1294,11 @@
           "last_text",
           "last_sender",
           "messages",
-          "pending_approvals"
+          "pending_approvals",
+          "helper",
+          "helper_name",
+          "status",
+          "title"
         ],
         "title": "ThreadSummary",
         "type": "object"
@@ -1438,6 +1627,25 @@
   },
   "openapi": "3.1.0",
   "paths": {
+    "/": {
+      "get": {
+        "description": "For the platform's probe: the process is up and serving. Readiness,\nwith the database and queue, is ``GET /v1/health``.",
+        "operationId": "live__get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Liveness"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Liveness (no database, no auth)"
+      }
+    },
     "/v1/approvals": {
       "get": {
         "operationId": "get_approvals_v1_approvals_get",
@@ -1809,6 +2017,168 @@
         "summary": "Credit limits per shop and credit requests"
       }
     },
+    "/v1/demo/reset": {
+      "post": {
+        "operationId": "demo_reset_v1_demo_reset_post",
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DemoSessionOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Too Many Requests"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Demo mode: end this session and start a fresh copy"
+      }
+    },
+    "/v1/demo/sessions": {
+      "post": {
+        "description": "A fresh copy of the synthetic Coral Lane Trading world and a token\nfor it (send it as ``Authorization: Bearer``). 404 in live mode.",
+        "operationId": "demo_session_v1_demo_sessions_post",
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DemoSessionOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Too Many Requests"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "Demo mode: start a session on a fresh synthetic copy"
+      }
+    },
     "/v1/events": {
       "post": {
         "description": "Queues the event as a turn on the shop's thread (or the job thread).\n\nThe words the helper sees are written here from the event's kind and\nshop, never taken from the caller: a system event carries no free text.",
@@ -1883,6 +2253,26 @@
               }
             },
             "description": "Validation Error"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Too Many Requests"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Service Unavailable"
           }
         },
         "security": [
@@ -1909,6 +2299,69 @@
           }
         },
         "summary": "Health"
+      }
+    },
+    "/v1/me": {
+      "get": {
+        "operationId": "me_v1_me_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MeOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Conflict"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "The caller's distributor, role and mode"
       }
     },
     "/v1/messages/{message_id}/voice": {
@@ -2430,6 +2883,26 @@
               }
             },
             "description": "Validation Error"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Too Many Requests"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Service Unavailable"
           }
         },
         "security": [

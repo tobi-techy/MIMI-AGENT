@@ -300,7 +300,7 @@ exactly once. The book is still all synthetic; the model calls are real.
 ```bash
 make api          # migrate, seed the synthetic world once, serve on :8000 (local demo keys)
 make api-worker   # an extra worker process (optional)
-docker build -t mimi-agent . && docker run -p 8000:8000 -e MIMI_API_KEYS=... -e META_API_KEY=... mimi-agent
+docker build -t mimi-agent . && docker run -p 3000:3000 -e MIMI_API_KEYS=... -e META_API_KEY=... mimi-agent
 ```
 
 Endpoints, settings, auth and the durability rules:

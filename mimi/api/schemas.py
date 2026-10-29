@@ -183,6 +183,14 @@ class ThreadSummary(_Out):
     last_sender: str
     messages: int
     pending_approvals: int
+    helper: str = Field(..., description="The helper on the thread's newest routed turn "
+                        "(order, collector, credit, stock, brand, proof or mimi).")
+    helper_name: str = Field(..., description="Its display name (Order, Collector, Credit, "
+                             "Stock, Brand, Proof or Mimi).")
+    status: Literal["needs_you", "running", "done"] = Field(
+        ..., description="needs_you: a pending approval or a turn waiting on the owner; "
+        "running: a turn queued or running; done: otherwise.")
+    title: str = Field(..., description="A short title written by code (never shop text).")
 
 
 class ThreadList(_Out):
@@ -327,3 +335,41 @@ class CreditOut(_Out):
 
 class ErrorOut(_Out):
     detail: str
+
+
+class Liveness(_Out):
+    status: Literal["ok"]
+
+
+class DemoStatus(_Out):
+    """A demo caller's session and today's spend against the caps (kobo)."""
+
+    expires_at: str | None
+    ip_spent_kobo: int
+    ip_cap_kobo: int
+    global_spent_kobo: int
+    global_cap_kobo: int
+    paused: bool
+
+
+class MeOut(_Out):
+    tenant_id: str
+    role: str
+    mode: Literal["live", "demo"]
+    demo: DemoStatus | None
+
+
+class DemoCaps(_Out):
+    ip_daily_cap_kobo: int
+    global_daily_cap_kobo: int
+
+
+class DemoSessionOut(_Out):
+    """A demo session: send ``token`` as ``Authorization: Bearer`` until ``expires_at``."""
+
+    token: str
+    tenant_id: str
+    mode: Literal["demo"]
+    expires_at: str
+    ttl_s: float
+    caps: DemoCaps

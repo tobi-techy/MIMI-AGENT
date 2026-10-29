@@ -469,6 +469,36 @@ artifacts = sa.Table(
     sa.Column("content", sa.Text(), nullable=False),
 )
 
+# ------------------------------------------------------------- demo mode
+# MIMI_MODE=demo (mimi.api.demo): one row per visitor session. The token and
+# the visitor's address are kept only as digests. The session's copy of the
+# synthetic world lives under ``session_tenant`` (named so a tenant reset
+# never deletes the row: the per-address count and cap outlive the copy).
+
+demo_sessions = sa.Table(
+    "demo_sessions", metadata,
+    sa.Column("token_digest", sa.String(64), primary_key=True),
+    sa.Column("session_tenant", sa.String(64), nullable=False),
+    sa.Column("ip_hash", sa.String(64), nullable=False),
+    sa.Column("day", sa.String(10), nullable=False),  # Africa/Lagos, the day it started
+    sa.Column("created_at", sa.String(40), nullable=False),
+    sa.Column("created_ts", sa.Float(), nullable=False),
+    sa.Column("expires_ts", sa.Float(), nullable=False),
+    sa.Column("swept", sa.Boolean(), nullable=False, default=False),
+    sa.Index("ix_demo_sessions_ip", "ip_hash", "day"),
+    sa.Index("ix_demo_sessions_tenant", "session_tenant"),
+)
+
+# Model spend of swept sessions, per Africa/Lagos day and visitor address, so
+# the daily caps still count it after the copy is deleted.
+demo_usage = sa.Table(
+    "demo_usage", metadata,
+    sa.Column("day", sa.String(10), nullable=False),
+    sa.Column("ip_hash", sa.String(64), nullable=False),
+    sa.Column("kobo", sa.BigInteger(), nullable=False, default=0),
+    sa.PrimaryKeyConstraint("day", "ip_hash"),
+)
+
 BOOK_TABLES = (reps, shops, consent_withheld, skus, deliveries, delivery_lines, receivables,
                payments, bank_feed, promises, disputes)
 AGENT_TABLES = (threads, inbound_messages, turns, turn_attempts, messages, thread_events,

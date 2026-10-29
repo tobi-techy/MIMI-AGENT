@@ -29,6 +29,19 @@ class SeedError(RuntimeError):
     pass
 
 
+def delete_tenant(conn: sa.Connection, tid: str) -> None:
+    """Delete every row of one tenant: the book, the agent's state, the tenant."""
+    for t in (*s.BOOK_TABLES, s.threads, s.inbound_messages, s.messages,
+              s.thread_events, s.intents, s.approvals, s.credit_requests, s.spend,
+              s.asked_once, s.kill_switches, s.history, s.prefixes, s.artifacts,
+              s.thread_inbox):
+        conn.execute(t.delete().where(t.c.tenant_id == tid))
+    ids = sa.select(s.turns.c.turn_id).where(s.turns.c.tenant_id == tid)
+    conn.execute(s.turn_attempts.delete().where(s.turn_attempts.c.turn_id.in_(ids)))
+    conn.execute(s.turns.delete().where(s.turns.c.tenant_id == tid))
+    conn.execute(s.tenants.delete().where(s.tenants.c.tenant_id == tid))
+
+
 def seed_world(engine: Engine, world: World, *, tenant_id: str | None = None,
                name: str | None = None, owner_phones: tuple[str, ...] = (DEMO_OWNER_PHONE,),
                reset: bool = False, daily_cap_kobo: int = 50_000) -> dict[str, int]:
@@ -41,14 +54,7 @@ def seed_world(engine: Engine, world: World, *, tenant_id: str | None = None,
         if exists and not reset:
             raise SeedError(f"tenant {tid!r} is already seeded (use --reset)")
         if exists:
-            for t in (*s.BOOK_TABLES, s.threads, s.inbound_messages, s.messages,
-                      s.thread_events, s.intents, s.approvals, s.credit_requests, s.spend,
-                      s.asked_once, s.kill_switches, s.history, s.prefixes, s.artifacts):
-                conn.execute(t.delete().where(t.c.tenant_id == tid))
-            ids = sa.select(s.turns.c.turn_id).where(s.turns.c.tenant_id == tid)
-            conn.execute(s.turn_attempts.delete().where(s.turn_attempts.c.turn_id.in_(ids)))
-            conn.execute(s.turns.delete().where(s.turns.c.tenant_id == tid))
-            conn.execute(s.tenants.delete().where(s.tenants.c.tenant_id == tid))
+            delete_tenant(conn, tid)
 
         def put(table: sa.Table, rows: list[dict[str, Any]]) -> None:
             if rows:

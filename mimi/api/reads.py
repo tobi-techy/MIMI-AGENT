@@ -11,6 +11,7 @@ from typing import Any
 import sqlalchemy as sa
 from sqlalchemy.engine import Engine
 
+from mimi.api import threadmeta
 from mimi.api.agent import NotFound, approval_dict
 from mimi.store import schema as s
 from mimi.store.book import SqlGo
@@ -123,11 +124,24 @@ def _thread_summary(conn: sa.Connection, tenant: str, t: Any) -> dict[str, Any]:
     if t.shop_id:
         shop_name = str(conn.execute(sa.select(s.shops.c.name).where(
             s.shops.c.tenant_id == tenant, s.shops.c.shop_id == t.shop_id)).scalar() or "")
+    rep_name = ""
+    if t.kind == "rep":
+        rep_id = t.thread_id.rsplit(":", 1)[-1]
+        rep_name = str(conn.execute(sa.select(s.reps.c.name).where(
+            s.reps.c.tenant_id == tenant, s.reps.c.rep_id == rep_id)).scalar() or "")
+    turns = [{"helper": r.helper, "skill": r.skill, "state": r.state}
+             for r in conn.execute(sa.select(s.turns.c.helper, s.turns.c.skill,
+                                             s.turns.c.state).where(
+                 s.turns.c.tenant_id == tenant, s.turns.c.thread_id == t.thread_id)
+                 .order_by(s.turns.c.created_ts, s.turns.c.turn_id))]
+    meta = threadmeta.derive(kind=t.kind, thread_id=t.thread_id, shop_id=t.shop_id,
+                             shop_name=shop_name, pending=int(pending or 0), turns=turns,
+                             rep_name=rep_name)
     return {"thread_id": t.thread_id, "kind": t.kind, "shop_id": t.shop_id,
             "shop_name": shop_name, "last_at": t.last_at,
             "last_text": (last.text[:200] if last else ""),
             "last_sender": (last.sender if last else ""), "messages": int(n or 0),
-            "pending_approvals": int(pending or 0)}
+            "pending_approvals": int(pending or 0), **meta}
 
 
 def list_threads(engine: Engine, tenant: str, *, limit: int, offset: int,

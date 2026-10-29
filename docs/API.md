@@ -27,7 +27,7 @@ console / WhatsApp webhook
   (`reads.py`), the helpers it hires (`helpers.py`) and the no-key model
   (`offline.py`).
 * `mimi/store/`: tables (`schema.py`, alembic `0006_api_store`, `0007_tenant_days`,
-  `0008_thread_inbox`), the engine
+  `0008_thread_inbox`, `0009_demo_sessions`), the engine
   (`db.py`), `SqlGo` (`book.py`, the same ports as `FakeGo`), the turn queue
   (`queue.py`), the context builder's stores (`context_stores.py`) and the
   seed (`seed.py`).
@@ -71,12 +71,16 @@ Docker:
 
 ```bash
 docker build -t mimi-agent .
-docker run -p 8000:8000 -e MIMI_API_KEYS=... -e META_API_KEY=... mimi-agent
+docker run -p 3000:3000 -e MIMI_API_KEYS=... -e META_API_KEY=... mimi-agent
 ```
 
 The image migrates, seeds the synthetic world once (`MIMI_SEED_DEMO=0`
-turns that off) and serves on `$PORT` (default 8000). Its default database is
-SQLite in `/data` (mount a volume); set `DATABASE_URL` for Postgres.
+turns that off) and serves on `0.0.0.0:$PORT` (default 3000, the port the
+hosting platform probes; `make api` still serves on 8000 locally). Its
+health check, and the platform's probe, is `GET /` (liveness: no database,
+no auth); `GET /v1/health` is the readiness check with the database and
+queue. Its default database is SQLite in `/data` (mount a volume); set
+`DATABASE_URL` for Postgres.
 
 ## Settings
 
@@ -92,6 +96,14 @@ SQLite in `/data` (mount a volume); set `DATABASE_URL` for Postgres.
 | `META_API_KEY`, `META_API_BASE`, `MIMI_MODEL` | none, `https://api.meta.ai/v1`, `muse-spark-1.3` | Muse Spark for the harness and the router's last layer |
 | `MIMI_PHONE_PSEUDONYM_KEY` | dev key | required in production (thread ids for unknown numbers) |
 | `MIMI_RELEASE` | | shown by `/v1/health` |
+| `MIMI_MODE` | `live` | `live` (bearer keys only) or `demo` (public demo sessions, below) |
+| `MIMI_DEMO_IP_DAILY_CAP_NAIRA` | 100 (placeholder) | demo: model spend per visitor address per Africa/Lagos day, across its sessions |
+| `MIMI_DEMO_GLOBAL_DAILY_CAP_NAIRA` | 2000 (placeholder) | demo: model spend across every demo session per day |
+| `MIMI_DEMO_SESSION_TTL_S` | 3600 | demo: how long a session token lasts |
+| `MIMI_DEMO_SESSIONS_PER_IP` | 20 | demo: new sessions per visitor address per day |
+| `MIMI_DEMO_KILL` | off | demo: `1` refuses every new turn (503); reads keep working |
+| `MIMI_DEMO_TRUST_FORWARDED` | off | demo: `1` reads the visitor address from the right-most `X-Forwarded-For` entry (only behind a proxy that appends it) |
+| `MIMI_DEMO_IP_SALT` | dev salt | demo: key for the address digests; required in production |
 | `MIMI_MEDIA_DIR` | none | where the helpers read a message's image by its `ref` (`local:<path>`), checked against its `sha256`; the simulator and the e2e eval use it. Without it no image is read |
 
 Production (`MIMI_ENV=production`) refuses to start without
@@ -99,7 +111,35 @@ Production (`MIMI_ENV=production`) refuses to start without
 (it never runs the offline model), on SQLite (there is no override), and with
 either of the Makefile's local demo keys in `MIMI_API_KEYS`. `make api` and
 `make api-seed` with `MIMI_ENV=production` fill in no defaults: they stop
-unless `DATABASE_URL` and `MIMI_API_KEYS` are set.
+unless `DATABASE_URL` and `MIMI_API_KEYS` are set. With `MIMI_MODE=demo`,
+production needs `MIMI_DEMO_IP_SALT` instead of `MIMI_API_KEYS` (visitors use
+session tokens the API issues) and still refuses SQLite, the offline model
+and the Makefile's demo keys.
+
+## Demo mode (`MIMI_MODE=demo`)
+
+A public console on synthetic data (`mimi/api/demo.py`):
+
+* `POST /v1/demo/sessions` (no auth) seeds a fresh copy of the fictional
+  Coral Lane Trading world under a new tenant (`demo-<hex>`, the same seed as
+  `python -m mimi.store seed --tenant-id`) and returns a session `token`
+  (send it as `Authorization: Bearer`), `expires_at` and the caps. The token
+  is an owner key for that copy only; the store keeps its SHA-256 and a keyed
+  digest of the visitor address, never either in plain. No key is ever
+  baked into the console's JavaScript.
+* `POST /v1/demo/reset` ends the caller's session and starts a fresh copy.
+* A token past its TTL is 401 (`demo session expired`). Expired copies are
+  deleted when a new session starts (after a 10 minute grace); their spend
+  is kept per address and day so the caps still count it.
+* Before a turn or event is queued: `MIMI_DEMO_KILL` (503), the global daily
+  cap, then the per-address daily cap (429). Nothing is written when refused.
+  Each copy's own daily cap is the per-address cap, so a run that goes over
+  mid-turn parks on the loop's daily cap like any distributor.
+* Approving a credit review, a credit limit change or a raise of the daily
+  allowance is refused (403); declining works.
+* `GET /v1/me` shows the session's expiry and today's spend against the caps.
+
+In live mode the two demo routes are 404 and nothing above applies.
 
 ## Auth and tenancy
 
@@ -122,7 +162,7 @@ approval reads as 404. Keys are compared by SHA-256 in constant time; give
 | `POST /v1/turns` | any | One inbound message: `message_id` (the dedupe key), `source` (`shop_message`, `owner_message`, `rep_message`), `phone`, `text`, `button_id`, `media` (`kind`, `ref`, `mime`, `sha256`, size, `caption`, `transcript`), `received_at`, `simulated`. Waits for the replies (200) or answers 202 with the turn id; `?wait=false` queues only. The same `message_id` again returns the same turn and replies with `duplicate: true` |
 | `POST /v1/events` | any | One system event from Go or the scheduler: `event_id` (the dedupe key), `kind` (`webhook` or `routine`), `name` (`delivery_completed`, `stock.weekly_check`, ...), `shop_id` (empty for the distributor), `received_at`, `simulated`. Queued as a turn on the shop's thread and routed by rule (202 with the turn id). The words the helper sees are written by code from the kind, name and shop; an event carries no free text. Another distributor's shop is 404 |
 | `GET /v1/turns/{turn_id}` | any | State, status, route, run id (the trace id) and replies |
-| `GET /v1/threads` | owner | Threads, newest first: kind, shop, last message, pending approvals. `limit`, `offset`, `kind` |
+| `GET /v1/threads` | owner | Threads, newest first: kind, shop, last message, pending approvals, and for the console `helper` / `helper_name` (newest routed turn's helper), `status` (`needs_you`: a pending approval or a parked turn; `running`: a turn queued or running; `done`) and a code-written `title` (never shop text). `limit`, `offset`, `kind` |
 | `GET /v1/threads/{thread_id}` | owner | Messages, reasoning steps (routing and every harness step: tool, tier, short line, model, cost, time; never the model's private text), turns, router state |
 | `GET /v1/shops` | owner | Shops with credit limit, outstanding and overdue (kobo and naira, summed in code), phone as last four digits |
 | `GET /v1/shops/{shop_id}` | owner | Plus open invoices, payments, promises, the last 10 deliveries with lines, disputes |
@@ -132,6 +172,9 @@ approval reads as 404. Keys are compared by SHA-256 in constant time; give
 | `GET /v1/credit` | owner | Per-shop limit, outstanding, available, and credit requests from helpers' credit intents (Credit, RAI-271) |
 | `GET /v1/messages/{message_id}/voice` | any | The reply's voice note (RAI-290): its own text read aloud, made now and never stored (`audio/ogg`, or `audio/wav` from the offline speaker). 404 when the reply has no `voice` block |
 | `GET /v1/health` | none | Database, model mode (`live` or `offline`), queue depth, version |
+| `GET /` | none | Liveness for the platform probe: `{"status": "ok"}`, no database |
+| `GET /v1/me` | any | The caller's tenant, role and mode (`live` or `demo`); in demo, the session's expiry and today's spend against the caps |
+| `POST /v1/demo/sessions`, `POST /v1/demo/reset` | none, demo session | Demo mode only (404 in live mode) |
 
 Replies come back with `status`: `ready` (hand it to the channel now) or
 `pending_approval` (it waits in approvals). A `ready` WhatsApp reply to a

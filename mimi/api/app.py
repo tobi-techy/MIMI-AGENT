@@ -13,7 +13,10 @@ Endpoints (all under ``/v1``, all but health need ``Authorization: Bearer``):
 * ``GET /v1/approvals``; ``POST /v1/approvals/{id}/approve`` and ``/reject``
   (owner key only).
 * ``GET /v1/credit``: limits and credit requests.
-* ``GET /v1/health``.
+* ``GET /v1/health``; ``GET /`` (liveness only: no database, no auth).
+* ``GET /v1/me``: the caller's tenant, role and mode.
+* ``POST /v1/demo/sessions``, ``POST /v1/demo/reset``: demo mode only
+  (``MIMI_MODE=demo``, ``mimi.api.demo``); 404 in live mode.
 
 Each key belongs to one distributor; every query is filtered by it, so a
 key can never read or change another distributor's rows. This module is the
@@ -39,14 +42,25 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from mimi.api import reads
 from mimi.api.agent import Agent, Conflict, NotFound
 from mimi.api.config import LOCALHOST_REGEX, ApiKey, Settings
+from mimi.api.demo import (
+    EXPIRED,
+    DemoRefused,
+    DemoStore,
+    SessionExpired,
+    client_address,
+    refuses_approval,
+)
 from mimi.api.schemas import (
     ApprovalList,
     CreditOut,
     DecisionIn,
     DecisionOut,
+    DemoSessionOut,
     ErrorOut,
     EventIn,
     Health,
+    Liveness,
+    MeOut,
     ShopDetail,
     ShopList,
     ThreadDetail,
@@ -65,6 +79,8 @@ _bearer = HTTPBearer(auto_error=False)
 _ERRORS: dict[int | str, dict[str, Any]] = {
     401: {"model": ErrorOut}, 403: {"model": ErrorOut}, 404: {"model": ErrorOut},
     409: {"model": ErrorOut}}
+_DEMO_ERRORS: dict[int | str, dict[str, Any]] = {
+    **_ERRORS, 429: {"model": ErrorOut}, 503: {"model": ErrorOut}}
 
 
 def create_app(settings: Settings | None = None, agent: Agent | None = None, *,
@@ -102,14 +118,41 @@ def create_app(settings: Settings | None = None, agent: Agent | None = None, *,
         allow_methods=["GET", "POST", "OPTIONS"],
         allow_headers=["Authorization", "Content-Type"])
     engine = agent.engine
+    demo = DemoStore(engine, settings.demo) if settings.demo_mode else None
+    app.state.demo = demo
 
     def auth(creds: Annotated[HTTPAuthorizationCredentials | None, Depends(_bearer)]
              ) -> ApiKey:
-        key = settings.lookup(creds.credentials if creds else "")
+        token = creds.credentials if creds else ""
+        key = settings.lookup(token)
+        if key is None and demo is not None and token:
+            try:
+                sess = demo.lookup(token)
+            except SessionExpired:
+                raise HTTPException(401, EXPIRED,
+                                    headers={"WWW-Authenticate": "Bearer"}) from None
+            if sess is not None:
+                key = ApiKey(sess.tenant_id, "owner", sess.digest, session=True)
         if key is None:
             raise HTTPException(401, "a valid bearer key is required",
                                 headers={"WWW-Authenticate": "Bearer"})
         return key
+
+    def visitor(request: Request, key: ApiKey | None = None) -> str:
+        """The demo caller's address digest: the session's, else the request's."""
+        assert demo is not None
+        if key is not None and key.session:
+            sess = demo.session(key.digest)
+            if sess is not None:
+                return sess.ip_hash
+        peer = request.client.host if request.client else ""
+        return demo.ip_hash(client_address(peer, request.headers.get("x-forwarded-for", ""),
+                                           trust=settings.demo.trust_forwarded))
+
+    def demo_gate(request: Request, key: ApiKey) -> None:
+        """Demo caps and kill switch, checked before anything is queued."""
+        if demo is not None:
+            demo.gate(visitor(request, key))
 
     def reader(key: Annotated[ApiKey, Depends(auth)]) -> ApiKey:
         if key.role != "owner":
@@ -127,6 +170,10 @@ def create_app(settings: Settings | None = None, agent: Agent | None = None, *,
     async def _ct(_: Request, exc: CrossTenant) -> JSONResponse:
         return JSONResponse({"detail": "not found"}, status_code=404)
 
+    @app.exception_handler(DemoRefused)
+    async def _dr(_: Request, exc: DemoRefused) -> JSONResponse:
+        return JSONResponse({"detail": str(exc)}, status_code=exc.status)
+
     @app.exception_handler(Conflict)
     async def _cf(_: Request, exc: Conflict) -> JSONResponse:
         return JSONResponse({"detail": str(exc)}, status_code=409)
@@ -134,13 +181,14 @@ def create_app(settings: Settings | None = None, agent: Agent | None = None, *,
     # ---------------------------------------------------------------- turns
 
     @app.post("/v1/turns", response_model=TurnOut, responses={202: {"model": TurnOut},
-                                                               **_ERRORS},
+                                                               **_DEMO_ERRORS},
               summary="Send one inbound message to Mimi")
-    def post_turn(body: TurnIn, key: Any_, response: Response,
+    def post_turn(body: TurnIn, key: Any_, response: Response, request: Request,
                   wait: Annotated[bool, Query(description="wait for the replies")] = True
                   ) -> dict[str, Any]:
         if body.tenant_id and body.tenant_id != key.tenant_id:
             raise HTTPException(403, "this key belongs to another distributor")
+        demo_gate(request, key)
         media = Media()
         ref = ""
         if body.media is not None:
@@ -170,14 +218,16 @@ def create_app(settings: Settings | None = None, agent: Agent | None = None, *,
             response.status_code = 202
         return _turn_out(view)
 
-    @app.post("/v1/events", response_model=TurnOut, status_code=202, responses=_ERRORS,
+    @app.post("/v1/events", response_model=TurnOut, status_code=202,
+              responses=_DEMO_ERRORS,
               summary="Send one system event (a Go webhook or a routine) to Mimi")
-    def post_event(body: EventIn, key: Any_) -> dict[str, Any]:
+    def post_event(body: EventIn, key: Any_, request: Request) -> dict[str, Any]:
         """Queues the event as a turn on the shop's thread (or the job thread).
 
         The words the helper sees are written here from the event's kind and
         shop, never taken from the caller: a system event carries no free text.
         """
+        demo_gate(request, key)
         at = body.received_at or datetime.now(UTC)
         if at.tzinfo is None:
             at = assume_lagos(at)  # no zone: Africa/Lagos (RAI-308)
@@ -251,6 +301,11 @@ def create_app(settings: Settings | None = None, agent: Agent | None = None, *,
     def _decide(approval_id: str, key: ApiKey, body: DecisionIn | None, approve: bool,
                 wait: bool) -> dict[str, Any]:
         b = body or DecisionIn(note="", by="owner")
+        if approve and settings.demo_mode:
+            a = agent.approval(key.tenant_id, approval_id)
+            if refuses_approval(a["tool"], a["intent_kind"]):
+                raise HTTPException(403, "the demo never raises a credit limit or the "
+                                         "daily allowance; you can decline it")
         row, follow = agent.decide(key.tenant_id, approval_id, approve=approve, by=b.by,
                                    note=b.note)
         if follow is not None and wait and not follow.finished:
@@ -289,6 +344,47 @@ def create_app(settings: Settings | None = None, agent: Agent | None = None, *,
         return {"status": "ok" if db == "ok" else "degraded", "db": db,
                 "model": agent.model_mode, "queue_depth": depth,
                 "version": settings.release or VERSION}
+
+    @app.get("/", response_model=Liveness, summary="Liveness (no database, no auth)")
+    def live() -> dict[str, Any]:
+        """For the platform's probe: the process is up and serving. Readiness,
+        with the database and queue, is ``GET /v1/health``."""
+        return {"status": "ok"}
+
+    @app.get("/v1/me", response_model=MeOut, responses=_ERRORS,
+             summary="The caller's distributor, role and mode")
+    def me(key: Any_, request: Request) -> dict[str, Any]:
+        status = None
+        if demo is not None:
+            status = demo.status(demo.session(key.digest) if key.session else None,
+                                 visitor(request, key))
+        return {"tenant_id": key.tenant_id, "role": key.role, "mode": settings.mode,
+                "demo": status}
+
+    def _demo_on() -> DemoStore:
+        if demo is None:
+            raise HTTPException(404, "not found")
+        return demo
+
+    @app.post("/v1/demo/sessions", response_model=DemoSessionOut, status_code=201,
+              responses=_DEMO_ERRORS,
+              summary="Demo mode: start a session on a fresh synthetic copy")
+    def demo_session(request: Request) -> dict[str, Any]:
+        """A fresh copy of the synthetic Coral Lane Trading world and a token
+        for it (send it as ``Authorization: Bearer``). 404 in live mode."""
+        store = _demo_on()
+        return store.start(visitor(request))
+
+    @app.post("/v1/demo/reset", response_model=DemoSessionOut, status_code=201,
+              responses=_DEMO_ERRORS,
+              summary="Demo mode: end this session and start a fresh copy")
+    def demo_reset(key: Any_, request: Request) -> dict[str, Any]:
+        store = _demo_on()
+        if not key.session:
+            raise HTTPException(403, "only a demo session can be reset")
+        ip = visitor(request, key)
+        store.end(key.digest)
+        return store.start(ip)
 
     return app
 
