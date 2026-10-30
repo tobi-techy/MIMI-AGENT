@@ -147,6 +147,9 @@ def main() -> int:
                 "category": category,
                 "fake_kind": fake_kind,
                 "file": f"screens/{cid}.jpg",
+                # Provenance (RAI-261): every screen is drawn by code; real ones would be
+                # "real-with-consent", redacted, and reported separately.
+                "source": "synthetic",
                 "sha256": hashlib.sha256(data).hexdigest(),
                 "bytes": len(data),
                 "shop_id": shop_id,
