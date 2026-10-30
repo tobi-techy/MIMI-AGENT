@@ -18,11 +18,13 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from mimi.flags import fixes_2026_10_30
 from mimi.harness.builtins import digest, lagos_day, register_builtins
 from mimi.harness.errors import ToolError
 from mimi.harness.loop import Helper, RunBudget
 from mimi.harness.policy import RiskPolicy
 from mimi.harness.registry import ToolContext, ToolRegistry, build_toolset
+from mimi.owed import is_overdue
 from mimi.tz import lagos_day as _lagos_day
 
 REGISTRY_VERSION = "harness-2026-10-27.1"
@@ -80,7 +82,7 @@ def get_balance(ctx: ToolContext, args: ShopIn) -> BalanceOut:
     """One shop's balance from the book: outstanding and overdue in kobo, open invoices, oldest days overdue, credit limit."""
     shop = ctx.book.shop(ctx.tenant_id, args.shop_id)
     rows = ctx.book.receivables(ctx.tenant_id, args.shop_id)
-    overdue = [r for r in rows if r["status"] == "overdue"]
+    overdue = [r for r in rows if is_overdue(r)]
     return BalanceOut(
         shop_id=args.shop_id, shop_name=shop["name"],
         outstanding_kobo=sum(r["outstanding_kobo"] for r in rows),
@@ -138,7 +140,7 @@ def get_invoices(ctx: ToolContext, args: InvoicesIn) -> InvoicesOut:
         if not ctx.grants.allows(r["shop_id"], "shop:invoices"):
             hidden.add(r["shop_id"])
             continue
-        if args.overdue_only and r["status"] != "overdue":
+        if args.overdue_only and not is_overdue(r):
             continue
         kept.append(r)
     totals: dict[str, ShopTotal] = {}
@@ -152,8 +154,9 @@ def get_invoices(ctx: ToolContext, args: InvoicesIn) -> InvoicesOut:
             "invoices": t.invoices + 1,
         })
     floor = args.min_overdue_naira * 100
-    shops = sorted((t for t in totals.values() if t.overdue_kobo > floor),
-                   key=lambda t: (-t.overdue_kobo, t.shop_id))[: args.limit]
+    above = sorted((t for t in totals.values() if t.overdue_kobo > floor),
+                   key=lambda t: (-t.overdue_kobo, t.shop_id))
+    shops = above[: args.limit]
     keep = {s.shop_id for s in shops}
     invoices = [InvoiceRow(invoice_id=r["delivery_id"], shop_id=r["shop_id"],
                            shop_name=r["shop_name"], due_on=r["due_on"],
@@ -164,7 +167,11 @@ def get_invoices(ctx: ToolContext, args: InvoicesIn) -> InvoicesOut:
     # Across shops, totals are enough (and keep the context small); invoice
     # rows come back for one shop.
     return InvoicesOut(invoices=invoices[:20] if args.shop_id else [], shops=shops,
-                       total_overdue_kobo=sum(s.overdue_kobo for s in shops),
+                       # Every shop above the floor, not only the ``limit`` listed:
+                       # the total is the book's (mimi.owed), never a page of it.
+                       # Behind the switch until the recorded runs are redone.
+                       total_overdue_kobo=sum(s.overdue_kobo for s in (
+                           above if fixes_2026_10_30() else shops)),
                        shops_not_sharing=len(hidden))
 
 
@@ -378,7 +385,7 @@ def propose_reminder_plan(ctx: ToolContext, args: PlanIn) -> PlanOut:
                             "Leave it out of the plan and tell the owner why.")
         shop = ctx.book.shop(ctx.tenant_id, item.shop_id)
         rows = [r for r in ctx.book.receivables(ctx.tenant_id, item.shop_id)
-                if r["status"] == "overdue"]
+                if is_overdue(r)]
         if not rows:
             raise ToolError(f"{item.shop_id} has nothing overdue.",
                             "Remove it from the plan and call propose_reminder_plan again.")

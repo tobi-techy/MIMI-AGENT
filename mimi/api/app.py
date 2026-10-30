@@ -52,6 +52,7 @@ from mimi.api.demo import (
     DemoStore,
     SessionExpired,
     client_address,
+    client_ip,
     refuses_approval,
 )
 from mimi.api.media import MAX_BYTES
@@ -60,6 +61,7 @@ from mimi.api.schemas import (
     CreditOut,
     DecisionIn,
     DecisionOut,
+    DemoLimitError,
     DemoSessionOut,
     ErrorOut,
     EventIn,
@@ -90,7 +92,7 @@ _ERRORS: dict[int | str, dict[str, Any]] = {
     401: {"model": ErrorOut}, 403: {"model": ErrorOut}, 404: {"model": ErrorOut},
     409: {"model": ErrorOut}}
 _DEMO_ERRORS: dict[int | str, dict[str, Any]] = {
-    **_ERRORS, 429: {"model": ErrorOut}, 503: {"model": ErrorOut}}
+    **_ERRORS, 429: {"model": DemoLimitError}, 503: {"model": DemoLimitError}}
 
 
 def create_app(settings: Settings | None = None, agent: Agent | None = None, *,
@@ -161,8 +163,11 @@ def create_app(settings: Settings | None = None, agent: Agent | None = None, *,
             if sess is not None:
                 return sess.ip_hash
         peer = request.client.host if request.client else ""
-        return demo.ip_hash(client_address(peer, request.headers.get("x-forwarded-for", ""),
-                                           trust=settings.demo.trust_forwarded))
+        return demo.ip_hash(client_address(peer, request.headers, settings.demo))
+
+    def ip_source(request: Request) -> str:
+        peer = request.client.host if request.client else ""
+        return client_ip(peer, request.headers, settings.demo)[1]
 
     def demo_gate(request: Request, key: ApiKey) -> None:
         """Demo caps and kill switch, checked before anything is queued."""
@@ -187,7 +192,7 @@ def create_app(settings: Settings | None = None, agent: Agent | None = None, *,
 
     @app.exception_handler(DemoRefused)
     async def _dr(_: Request, exc: DemoRefused) -> JSONResponse:
-        return JSONResponse({"detail": str(exc)}, status_code=exc.status)
+        return JSONResponse(exc.payload(), status_code=exc.status)
 
     @app.exception_handler(UploadRefused)
     async def _ur(_: Request, exc: UploadRefused) -> JSONResponse:
@@ -441,7 +446,7 @@ def create_app(settings: Settings | None = None, agent: Agent | None = None, *,
         status = None
         if demo is not None:
             status = demo.status(demo.session(key.digest) if key.session else None,
-                                 visitor(request, key))
+                                 visitor(request, key), ip_source(request))
         return {"tenant_id": key.tenant_id, "role": key.role, "mode": settings.mode,
                 "demo": status}
 

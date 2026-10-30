@@ -128,6 +128,13 @@ _NO = re.compile(r"^(?:n|no|no o|nope|not yet|reject|decline|don't|dont|cancel|r
 # phrase layer: "any orders available now" once reached Brand on the model's
 # word and got a dead end back. Rules only; the model's catalogue is unchanged.
 OWNER_RULES: tuple[tuple[str, re.Pattern[str]], ...] = (
+    # The morning brief first: it names debts, orders and stock in one ask
+    # ("who owes, what came in yesterday, what needs me today").
+    ("mimi/owner-brief", re.compile(
+        r"\b(?:morning|daily|today'?s|day'?s)\s+(?:brief|briefing|summary|rundown|report)\b"
+        r"|\bbrief me\b|\bmy brief\b"
+        r"|\bwhat (?:needs|requires|wants) (?:me|my attention|my eye|attention)\b"
+        r"|\bwhat came in yesterday\b", re.I)),
     ("order/open-orders", re.compile(
         r"\b(?:any|new|open|pending|waiting|latest|recent|today'?s)\s+(?:shop\s+)?orders?\b"
         r"|\borders?\s+(?:available|waiting|pending|open|today|now|came in|that came|so far)\b"
@@ -138,7 +145,9 @@ OWNER_RULES: tuple[tuple[str, re.Pattern[str]], ...] = (
         r"\bwhat(?:'s| is| do we have)?\s+(?:in|on)\s+stock\b|(?<!out of )\bin stock\b"
         r"|\bstock (?:levels?|position|situation|left|status)\b"
         r"|\b(?:what|which) (?:products?|items?|goods) (?:are |is )?(?:available|left|low)\b"
-        r"|\bwhat (?:can|do) (?:shops|they) (?:order|buy)\b|\bstock (?:available|now)\b",
+        r"|\bwhat (?:can|do) (?:shops|they) (?:order|buy)\b|\bstock (?:available|now)\b"
+        r"|\b(?:running|getting|going|run)\s+(?:out|low)\b(?!\s+of\s+(?:time|patience|money|cash))"
+        r"|\b(?:low|out of) stock\b",
         re.I)),
 )
 

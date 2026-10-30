@@ -51,6 +51,7 @@ from mimi.api.helpers import HelperDeps
 from mimi.api.media import checked_media
 from mimi.api.photo_label import media_pointer
 from mimi.clock import wall, wall_utc
+from mimi.flags import fixes_2026_10_30
 from mimi.harness import fastclass
 from mimi.harness import handoff as hx
 from mimi.harness import lexicon as lx
@@ -80,6 +81,7 @@ from mimi.harness.types import RunEvent
 from mimi.models.base import ChatModel
 from mimi.observe.langfuse_export import exporter_from_env
 from mimi.orders.catalogue import family_of
+from mimi.owed import naira_sign
 from mimi.stock.copy import numbers_in
 from mimi.store import schema as s
 from mimi.store.book import SqlGo, moves_money
@@ -312,6 +314,30 @@ class _Lease(threading.Thread):
 
     def stop(self) -> None:
         self._stop.set()
+
+
+# Helpers whose prompts say "send nothing and end the turn" for a question
+# they have no tools for; their silence is a hand-back, never a dead end.
+# Brand for anyone; the delivery-receipt Order helper for the owner only (a
+# shop's receipt flow may end quietly on purpose, e.g. after a which question).
+QUIET_HANDBACK_HELPERS: frozenset[str] = frozenset({"brand", "order"})
+# Order skills with their own work where a quiet end is the right answer
+# (a receipt is the message; intake has its own helper config).
+QUIET_KEEP_SKILLS: frozenset[str] = frozenset({"order/order-intake"})
+
+
+def _code_answers(d: RouteDecision) -> bool:
+    """Whether code answers this owner lookup from the book (no model).
+
+    Open orders and low stock: always. The morning brief: when an owner rule
+    picked it ("morning brief", "brief me", "what needs me today"), or with
+    ``MIMI_FIXES_2026_10_30`` on (every deployed image) for any brief route,
+    "how is business today?" included. With the switch off that vaguer ask
+    still reaches the model as recorded, so the recorded owner thread that
+    later turns replay against is unchanged until the paid re-record."""
+    if d.skill != "mimi/owner-brief":
+        return True
+    return d.rule.startswith("owner_rule:") or fixes_2026_10_30()
 
 
 class Agent:
@@ -656,7 +682,7 @@ class Agent:
             self._complete(holder, d, events, prior, status="done_quiet", steer=sv)
             return
         if (lead.source == "owner_message" and d.status == "routed"
-                and d.skill in cx.CODE_LOOKUPS):
+                and d.skill in cx.CODE_LOOKUPS and _code_answers(d)):
             # What is open now (orders, low stock): code reads the book and
             # answers with a card; no model, no spend (docs/HANDOFFS.md).
             self._complete(holder, d, events, prior, status="done", steer=sv, lookup=True)
@@ -734,6 +760,14 @@ class Agent:
         useful = [b for b in said if not hx.deflecting_texts([b])]
         if (held or leaked) and not useful:
             return ("failed" if r.status == "failed" else "deflected"), held + leaked
+        if (not said and not r.intents and r.status != "failed"
+                and d.skill not in QUIET_KEEP_SKILLS
+                and (d.helper == "brand" or (d.helper in QUIET_HANDBACK_HELPERS
+                                             and lead.sender == "owner"))):
+            # Brand and the delivery-receipt Order helper end a question they
+            # have no tools for quietly (their prompts, 30 Oct 2026): Mimi
+            # takes it back instead of leaving the person with nothing.
+            return "no_tools", []
         return None
 
     def _hand_back(self, holder: list[Claim], ck: dict[str, Any], d: RouteDecision,
@@ -1876,6 +1910,11 @@ class Agent:
         # Every outbound message, model- or code-written, passes the style
         # guard (RAI-303): no dashes, no filler, figures never change.
         text = clean_reply(text, where=kind)
+        if channel == "owner_console":
+            # Naira as the owner reads it: "N7,231,000" becomes "₦7,231,000"
+            # (figures unchanged). Shop texts keep their recorded wording until
+            # the shop persona replays are re-recorded.
+            text = naira_sign(text)
         insert_ignore(conn, s.messages, {
             "tenant_id": tenant, "message_id": f"out:{key}", "thread_id": thread,
             "turn_id": turn_id, "direction": "out", "sender": "mimi", "channel": channel,

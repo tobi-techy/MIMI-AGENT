@@ -615,6 +615,128 @@
         "title": "DemoCaps",
         "type": "object"
       },
+      "DemoLimit": {
+        "additionalProperties": false,
+        "description": "Why a demo request was refused, in one fixed shape the console shows.",
+        "properties": {
+          "cap_kobo": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cap Kobo"
+          },
+          "cap_naira": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cap Naira"
+          },
+          "code": {
+            "enum": [
+              "visitor_daily_cap",
+              "global_daily_cap",
+              "paused",
+              "too_many_sessions",
+              ""
+            ],
+            "title": "Code",
+            "type": "string"
+          },
+          "message": {
+            "title": "Message",
+            "type": "string"
+          },
+          "resets_at": {
+            "title": "Resets At",
+            "type": "string"
+          },
+          "retry": {
+            "enum": [
+              "tomorrow",
+              "later"
+            ],
+            "title": "Retry",
+            "type": "string"
+          },
+          "scope": {
+            "enum": [
+              "visitor",
+              "global",
+              "demo"
+            ],
+            "title": "Scope",
+            "type": "string"
+          },
+          "spent_kobo": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Spent Kobo"
+          },
+          "spent_naira": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Spent Naira"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "scope",
+          "title",
+          "message",
+          "spent_kobo",
+          "cap_kobo",
+          "spent_naira",
+          "cap_naira",
+          "resets_at",
+          "retry"
+        ],
+        "title": "DemoLimit",
+        "type": "object"
+      },
+      "DemoLimitError": {
+        "additionalProperties": false,
+        "properties": {
+          "demo_limit": {
+            "$ref": "#/components/schemas/DemoLimit"
+          },
+          "detail": {
+            "title": "Detail",
+            "type": "string"
+          }
+        },
+        "required": [
+          "detail",
+          "demo_limit"
+        ],
+        "title": "DemoLimitError",
+        "type": "object"
+      },
       "DemoSessionOut": {
         "additionalProperties": false,
         "description": "A demo session: send ``token`` as ``Authorization: Bearer`` until ``expires_at``.",
@@ -682,6 +804,11 @@
             "title": "Ip Cap Kobo",
             "type": "integer"
           },
+          "ip_source": {
+            "default": "",
+            "title": "Ip Source",
+            "type": "string"
+          },
           "ip_spent_kobo": {
             "title": "Ip Spent Kobo",
             "type": "integer"
@@ -689,6 +816,11 @@
           "paused": {
             "title": "Paused",
             "type": "boolean"
+          },
+          "resets_at": {
+            "default": "",
+            "title": "Resets At",
+            "type": "string"
           }
         },
         "required": [
@@ -1483,6 +1615,26 @@
       "ShopList": {
         "additionalProperties": false,
         "properties": {
+          "overdue_total_kobo": {
+            "default": 0,
+            "title": "Overdue Total Kobo",
+            "type": "integer"
+          },
+          "overdue_total_naira": {
+            "default": "",
+            "title": "Overdue Total Naira",
+            "type": "string"
+          },
+          "owed_total_kobo": {
+            "default": 0,
+            "title": "Owed Total Kobo",
+            "type": "integer"
+          },
+          "owed_total_naira": {
+            "default": "",
+            "title": "Owed Total Naira",
+            "type": "string"
+          },
           "shops": {
             "items": {
               "$ref": "#/components/schemas/ShopSummary"
@@ -2860,7 +3012,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ErrorOut"
+                  "$ref": "#/components/schemas/DemoLimitError"
                 }
               }
             },
@@ -2870,7 +3022,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ErrorOut"
+                  "$ref": "#/components/schemas/DemoLimitError"
                 }
               }
             },
@@ -2944,7 +3096,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ErrorOut"
+                  "$ref": "#/components/schemas/DemoLimitError"
                 }
               }
             },
@@ -2954,7 +3106,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ErrorOut"
+                  "$ref": "#/components/schemas/DemoLimitError"
                 }
               }
             },
@@ -3043,7 +3195,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ErrorOut"
+                  "$ref": "#/components/schemas/DemoLimitError"
                 }
               }
             },
@@ -3053,7 +3205,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ErrorOut"
+                  "$ref": "#/components/schemas/DemoLimitError"
                 }
               }
             },
@@ -3287,7 +3439,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ErrorOut"
+                  "$ref": "#/components/schemas/DemoLimitError"
                 }
               }
             },
@@ -3297,7 +3449,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ErrorOut"
+                  "$ref": "#/components/schemas/DemoLimitError"
                 }
               }
             },
@@ -4035,7 +4187,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ErrorOut"
+                  "$ref": "#/components/schemas/DemoLimitError"
                 }
               }
             },
@@ -4045,7 +4197,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ErrorOut"
+                  "$ref": "#/components/schemas/DemoLimitError"
                 }
               }
             },

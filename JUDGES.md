@@ -56,7 +56,7 @@ anything is queued. The naira figures are placeholders the operator sets.
 
 | | |
 |---|---|
-| Model spend per visitor address | ₦100 a day (`MIMI_DEMO_IP_DAILY_CAP_NAIRA`), counted across all of that address's sessions, reset at midnight Lagos time |
+| Model spend per visitor address | ₦400 a day, about 25 turns (`MIMI_DEMO_IP_DAILY_CAP_NAIRA`), counted across all of that address's sessions, reset at midnight Lagos time; the address is Cloudflare's `CF-Connecting-IP`, never a client's own `X-Forwarded-For` |
 | Model spend for the whole demo | ₦2,000 a day (`MIMI_DEMO_GLOBAL_DAILY_CAP_NAIRA`) |
 | Sessions | one hour each (`MIMI_DEMO_SESSION_TTL_S`), 20 per address a day |
 | Kill switch | `MIMI_DEMO_KILL=1` refuses every new turn; reads keep working |
