@@ -96,6 +96,82 @@ the shop's language (Spitch speech; Pidgin through an English-language
 voice). The text always goes with it, and every amount and day is in the
 text. No audio is stored.
 
+## Architecture
+
+![Mimi architecture: shop phone or simulator, the HTTP API, front door, router, helpers, agent loop, claims gate, durable store, console](docs/architecture.png)
+
+Everything in this repository was built in the hackathon window. The
+console's screens and design are the one part that existed before the event
+(a UI prototype); its connection to this API was written in the window, in
+the console's own repository. The WhatsApp webhook is in the API, but no test
+number is live yet, so the demo's shop side is the simulator. The diagram's
+source is [`docs/architecture.mmd`](docs/architecture.mmd); the PNG is
+rendered from it with mermaid-cli.
+
+```mermaid
+flowchart LR
+  subgraph SHOP["Shop side"]
+    direction TB
+    phone["Shop phone<br/>WhatsApp webhook<br/>(test number pending)"]
+    sim["Shop simulator<br/>'simulated shop phone'<br/>personas on Muse Spark<br/>contributor tier"]
+  end
+
+  turns["HTTP API<br/>POST /v1/turns<br/>POST /v1/events<br/>keys, demo sessions,<br/>naira caps, kill switch"]
+  voice["Voice notes in<br/>transcribe, then<br/>read like text"]
+  fd["Front door<br/>dedupe, one turn<br/>per thread, bursts,<br/>owner first"]
+  router["Router<br/>rules, phrases,<br/>fast classifier,<br/>Muse Spark last;<br/>open-ask binding,<br/>steering"]
+  helpers["Helpers<br/>Order<br/>Collector<br/>Credit<br/>Stock<br/>Proof"]
+  loop["Agent loop<br/>12 steps, 60 s, N50 a run<br/>daily naira cap<br/>typed tools, tiers from code"]
+  claims["Claims gate<br/>figures, dates, names<br/>must match the records<br/>never says money moved"]
+  store[("Durable store<br/>and turn queue<br/>leases, checkpoints,<br/>outbox, approvals")]
+
+  subgraph CONSOLE["Distributor console"]
+    direction TB
+    client["Console API client,<br/>demo sessions, live threads,<br/>approvals, uploads<br/>(console repo, this week)"]
+    screens["Console screens<br/>and design<br/>(prototype, before)"]
+  end
+
+  subgraph MODELS["Models"]
+    direction LR
+    muse["Muse Spark 1.3<br/>reasoning, vision"]
+    sam["SAM 3.1<br/>shelf packs"]
+    mvoice["Muse voice<br/>transcribe 1.0"]
+    spitch["Spitch<br/>STT, TTS<br/>(third party)"]
+  end
+
+  subgraph KEY["Key"]
+    direction TB
+    k1["Built this week"]
+    k2["Before the event"]
+    k3["Not live yet"]
+  end
+
+  helpers ~~~ KEY
+  phone --> turns
+  sim --> turns
+  turns --> voice --> fd --> router --> helpers --> loop --> claims --> store
+  store -- "reads and approvals<br/>through the API" --> client --> screens
+  voice -.-> mvoice
+  voice -.-> spitch
+  router -.-> muse
+  loop -.-> muse
+  helpers -.-> sam
+  claims -. "voice replies" .-> spitch
+
+  classDef built fill:#ffffff,stroke:#000000,stroke-width:2.5px,color:#000000;
+  classDef before fill:#e4e4e4,stroke:#555555,stroke-width:1.5px,stroke-dasharray:6 4,color:#222222;
+  classDef model fill:#ffffff,stroke:#000000,stroke-width:1px,color:#000000;
+  classDef pending fill:#ffffff,stroke:#555555,stroke-width:1.5px,stroke-dasharray:2 3,color:#222222;
+  class sim,turns,voice,fd,router,helpers,loop,claims,store,client,k1 built;
+  class screens,k2 before;
+  class muse,sam,mvoice,spitch model;
+  class phone,k3 pending;
+```
+
+The demo video's script, with each scene's shop, messages, Mimi's recorded
+replies and timing, is [`docs/DEMO-SCRIPT.md`](docs/DEMO-SCRIPT.md); the
+hosting steps for the judge demo are [`docs/DEPLOY-DEMO.md`](docs/DEPLOY-DEMO.md).
+
 ## Quickstart
 
 Python 3.11 or 3.12.
