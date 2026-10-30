@@ -28,14 +28,24 @@ in demo (``refuses_approval``); declining them still works.
 Environment (naira figures are whole naira; the defaults are placeholders for
 the operator to set):
 
-* ``MIMI_DEMO_IP_DAILY_CAP_NAIRA`` (default 100)
+* ``MIMI_DEMO_IP_DAILY_CAP_NAIRA`` (default 400: about 25 turns, enough for
+  the judges' script; it was 100, which ended a visit after 4 to 8 turns)
 * ``MIMI_DEMO_GLOBAL_DAILY_CAP_NAIRA`` (default 2000)
 * ``MIMI_DEMO_SESSION_TTL_S`` (default 3600)
 * ``MIMI_DEMO_SESSIONS_PER_IP`` (default 20 a day)
 * ``MIMI_DEMO_KILL`` (``1`` refuses new turns)
-* ``MIMI_DEMO_TRUST_FORWARDED`` (``1``: read the visitor address from the
-  right-most ``X-Forwarded-For`` entry, which the platform's proxy appends;
-  off by default, because a client can send that header itself)
+* ``MIMI_DEMO_CLIENT_IP_HEADER`` (default ``cf-connecting-ip``): the one
+  header the edge sets to the visitor's address. Cloudflare (in front of
+  Atlasflow's edge) writes ``CF-Connecting-IP`` itself and overwrites any
+  value a client sends. Read only when the socket peer is a trusted proxy;
+  ``none`` turns it off.
+* ``MIMI_DEMO_TRUSTED_PROXIES`` (default private, loopback and CGNAT ranges:
+  the platform's own edge): comma-separated CIDRs whose requests may carry
+  that header; ``*`` trusts any peer (only when the app is reachable through
+  the edge alone).
+* ``X-Forwarded-For`` is never read: a client can write it, and a fake one
+  used to buy a fresh allowance (30 Oct 2026). ``MIMI_DEMO_TRUST_FORWARDED``
+  is ignored.
 * ``MIMI_DEMO_IP_SALT`` (the key the address digests are made with; required
   in production)
 """
@@ -44,6 +54,7 @@ from __future__ import annotations
 
 import hashlib
 import hmac
+import ipaddress
 import secrets
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
@@ -64,8 +75,12 @@ from mimi.world.loader import load_world
 from mimi.world.model import World
 
 # PLACEHOLDERS for Tobi to set (whole naira). Conservative on purpose.
-DEFAULT_IP_CAP_NAIRA = 100
+DEFAULT_IP_CAP_NAIRA = 400  # about 25 turns at about N16 a turn (30 Oct 2026)
 DEFAULT_GLOBAL_CAP_NAIRA = 2_000
+DEFAULT_CLIENT_IP_HEADER = "cf-connecting-ip"
+DEFAULT_TRUSTED_PROXIES = ("10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16", "100.64.0.0/10",
+                           "127.0.0.0/8", "169.254.0.0/16", "::1/128", "fc00::/7",
+                           "fe80::/10")
 DEFAULT_TTL_S = 3600.0
 DEFAULT_SESSIONS_PER_IP = 20
 # An expired copy is deleted only this long after its TTL, so a turn that was
@@ -90,11 +105,56 @@ EXPIRED = "demo session expired: start a new one"
 
 
 class DemoRefused(Exception):
-    """A demo request that is refused, with the HTTP status to answer."""
+    """A demo request that is refused, with the HTTP status to answer.
 
-    def __init__(self, status: int, message: str) -> None:
+    ``payload()`` is the body the API answers with: ``detail`` (the message,
+    kept for older clients) and ``demo_limit``, one fixed shape the console
+    shows (docs/API.md, "Demo limits"):
+
+    ``code`` (``visitor_daily_cap``, ``global_daily_cap``, ``paused``,
+    ``too_many_sessions``), ``scope`` (``visitor``, ``global``, ``demo``),
+    ``title`` and ``message`` (plain words to show), ``spent_kobo``,
+    ``cap_kobo`` and their ``*_naira`` strings (null when not a spend cap),
+    ``resets_at`` (next midnight Africa/Lagos, ISO 8601) and ``retry``
+    (``tomorrow`` or ``later``).
+    """
+
+    def __init__(self, status: int, message: str, *, code: str = "", scope: str = "demo",
+                 title: str = "", spent_kobo: int | None = None,
+                 cap_kobo: int | None = None, resets_at: str = "",
+                 retry: str = "later") -> None:
         super().__init__(message)
         self.status = status
+        self.code = code
+        self.scope = scope
+        self.title = title
+        self.spent_kobo = spent_kobo
+        self.cap_kobo = cap_kobo
+        self.resets_at = resets_at
+        self.retry = retry
+
+    def payload(self) -> dict[str, Any]:
+        from mimi.owed import naira
+
+        msg = str(self)
+        return {"detail": msg, "demo_limit": {
+            "code": self.code, "scope": self.scope, "title": self.title,
+            "message": msg[:1].upper() + msg[1:] + ("" if msg.endswith(".") else "."),
+            "spent_kobo": self.spent_kobo, "cap_kobo": self.cap_kobo,
+            "spent_naira": naira(self.spent_kobo) if self.spent_kobo is not None else None,
+            "cap_naira": naira(self.cap_kobo) if self.cap_kobo is not None else None,
+            "resets_at": self.resets_at, "retry": self.retry}}
+
+
+def next_lagos_midnight(ts: float) -> str:
+    """ISO time of the next midnight in Africa/Lagos after ``ts``."""
+    from datetime import timedelta
+
+    from mimi.tz import LAGOS
+
+    local = datetime.fromtimestamp(ts, LAGOS)
+    nxt = (local + timedelta(days=1)).replace(hour=0, minute=0, second=0, microsecond=0)
+    return nxt.isoformat()
 
 
 class SessionExpired(Exception):
@@ -112,7 +172,8 @@ class DemoConfig:
     session_ttl_s: float = DEFAULT_TTL_S
     sessions_per_ip: int = DEFAULT_SESSIONS_PER_IP
     killed: bool = False
-    trust_forwarded: bool = False
+    client_ip_header: str = DEFAULT_CLIENT_IP_HEADER
+    trusted_proxies: tuple[str, ...] = DEFAULT_TRUSTED_PROXIES
     ip_salt: str = ""
 
     @classmethod
@@ -128,7 +189,8 @@ class DemoConfig:
             sessions_per_ip=int(e.get("MIMI_DEMO_SESSIONS_PER_IP", "")
                                 or DEFAULT_SESSIONS_PER_IP),
             killed=_flag(e.get("MIMI_DEMO_KILL", "")),
-            trust_forwarded=_flag(e.get("MIMI_DEMO_TRUST_FORWARDED", "")),
+            client_ip_header=_header_name(e.get("MIMI_DEMO_CLIENT_IP_HEADER")),
+            trusted_proxies=_proxies(e.get("MIMI_DEMO_TRUSTED_PROXIES")),
             ip_salt=e.get("MIMI_DEMO_IP_SALT", "").strip(),
         )
 
@@ -142,13 +204,69 @@ def refuses_approval(tool: str, intent_kind: str) -> bool:
     return tool in CAP_RAISES or intent_kind in CAP_RAISES
 
 
-def client_address(peer: str, forwarded: str, *, trust: bool) -> str:
-    """The visitor's address: the socket peer, or the proxy's right-most entry."""
-    if trust and forwarded.strip():
-        hops = [h.strip() for h in forwarded.split(",") if h.strip()]
-        if hops:
-            return hops[-1]
-    return peer or "unknown"
+def _header_name(raw: str | None) -> str:
+    if raw is None or not raw.strip():
+        return DEFAULT_CLIENT_IP_HEADER
+    v = raw.strip().lower()
+    if v in ("none", "off", "0", "false"):
+        return ""
+    if v == "x-forwarded-for":
+        raise ValueError("MIMI_DEMO_CLIENT_IP_HEADER: X-Forwarded-For is client-writable; "
+                         "use the edge's own header (cf-connecting-ip)")
+    return v
+
+
+def _proxies(raw: str | None) -> tuple[str, ...]:
+    if raw is None or not raw.strip():
+        return DEFAULT_TRUSTED_PROXIES
+    out = tuple(p.strip() for p in raw.split(",") if p.strip())
+    for p in out:
+        if p != "*":
+            ipaddress.ip_network(p, strict=False)  # a typo fails at start-up
+    return out
+
+
+def _ip(raw: str) -> str:
+    """``raw`` as a canonical address, or "" when it is not one."""
+    v = raw.strip()
+    if v.startswith("[") and "]" in v:
+        v = v[1:v.index("]")]
+    try:
+        return str(ipaddress.ip_address(v))
+    except ValueError:
+        return ""
+
+
+def peer_trusted(peer: str, proxies: tuple[str, ...]) -> bool:
+    if "*" in proxies:
+        return True
+    ip = _ip(peer)
+    if not ip:
+        return False
+    addr = ipaddress.ip_address(ip)
+    for p in proxies:
+        net = ipaddress.ip_network(p, strict=False)
+        if addr.version == net.version and addr in net:
+            return True
+    return False
+
+
+def client_ip(peer: str, headers: Mapping[str, str], conf: DemoConfig) -> tuple[str, str]:
+    """The visitor's address and where it came from: ``header`` or ``peer``.
+
+    Only the edge's own single-value header (``CF-Connecting-IP``), and only
+    on a request whose socket peer is a trusted proxy. Never
+    ``X-Forwarded-For``: a client writes that. Anything else is the peer."""
+    name = conf.client_ip_header
+    if name and peer_trusted(peer, conf.trusted_proxies):
+        got = _ip(str(headers.get(name, "") or ""))
+        if got:
+            return got, "header"
+    return (_ip(peer) or peer or "unknown"), "peer"
+
+
+def client_address(peer: str, headers: Mapping[str, str], conf: DemoConfig) -> str:
+    return client_ip(peer, headers, conf)[0]
 
 
 def token_digest(token: str) -> str:
@@ -200,7 +318,9 @@ class DemoStore:
                                  .where(s.demo_sessions.c.ip_hash == ip_hash,
                                         s.demo_sessions.c.day == day)).scalar() or 0)
         if n >= self.conf.sessions_per_ip:
-            raise DemoRefused(429, TOO_MANY)
+            raise DemoRefused(429, TOO_MANY, code="too_many_sessions", scope="visitor",
+                              title="Too many demo sessions today",
+                              resets_at=next_lagos_midnight(now), retry="tomorrow")
         tenant = TENANT_PREFIX + secrets.token_hex(8)
         world = _world()
         seed_world(self.engine, world, tenant_id=tenant,
@@ -305,17 +425,32 @@ class DemoStore:
     def gate(self, ip_hash: str) -> None:
         """Refuse a new turn when the demo is paused or a daily cap is used up."""
         if self.conf.killed:
-            raise DemoRefused(503, PAUSED)
+            raise DemoRefused(503, PAUSED, code="paused", scope="demo",
+                              title="The demo is paused")
         u = self.usage(ip_hash)
+        resets = next_lagos_midnight(self.clock())
         if u["global_spent_kobo"] >= self.conf.global_daily_cap_kobo:
-            raise DemoRefused(429, GLOBAL_CAPPED)
+            raise DemoRefused(429, GLOBAL_CAPPED, code="global_daily_cap", scope="global",
+                              title="Today's demo allowance is used up",
+                              spent_kobo=u["global_spent_kobo"],
+                              cap_kobo=self.conf.global_daily_cap_kobo, resets_at=resets,
+                              retry="tomorrow")
         if u["ip_spent_kobo"] >= self.conf.ip_daily_cap_kobo:
-            raise DemoRefused(429, IP_CAPPED)
+            raise DemoRefused(429, IP_CAPPED, code="visitor_daily_cap", scope="visitor",
+                              title="You have used today's demo allowance",
+                              spent_kobo=u["ip_spent_kobo"],
+                              cap_kobo=self.conf.ip_daily_cap_kobo, resets_at=resets,
+                              retry="tomorrow")
 
-    def status(self, sess: Session | None, ip_hash: str) -> dict[str, Any]:
+    def status(self, sess: Session | None, ip_hash: str,
+               ip_source: str = "") -> dict[str, Any]:
         """What ``GET /v1/me`` shows a demo caller."""
         u = self.usage(sess.ip_hash if sess else ip_hash)
         return {"expires_at": now_iso(sess.expires_ts) if sess else None,
+                # "header" when the edge's client address header was used, "peer"
+                # when the socket address was (never the address itself).
+                "ip_source": ip_source,
+                "resets_at": next_lagos_midnight(self.clock()),
                 "ip_spent_kobo": u["ip_spent_kobo"],
                 "ip_cap_kobo": self.conf.ip_daily_cap_kobo,
                 "global_spent_kobo": u["global_spent_kobo"],

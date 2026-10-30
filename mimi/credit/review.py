@@ -32,6 +32,7 @@ from typing import Any, Literal
 
 from mimi.credit.shelf import ShelfCount
 from mimi.harness.loop import naira_text
+from mimi.owed import is_overdue
 
 RECOMMENDER_VERSION = "credit-review-v0.1"
 Outcome = Literal["support", "hold", "not_now"]
@@ -86,7 +87,7 @@ def credit_file(history: Mapping[str, Any], shop: Mapping[str, Any],
     unverified = [p for p in pays if not (p["bank_confirmed"] and p["amount_kobo"] > 0)]
     on_time = sum(1 for p in verified if p["day"] <= due_by_delivery.get(p["delivery_id"], p["day"]))
     proms = [p for p in history["promises"] if p["made_day"] >= start]
-    overdue = [r for r in receivables if r["status"] == "overdue"]
+    overdue = [r for r in receivables if is_overdue(r)]
     outstanding = sum(int(r["outstanding_kobo"]) for r in receivables)
     limit = int(shop.get("credit_limit_kobo") or 0)
     recent: dict[str, int] = {}

@@ -169,7 +169,7 @@ reads it.
 Cards today: `collector/chase` (a shop row for "highest debtor"; a list of
 debtors otherwise), `collector/collections` and `collector/payment-check` (a
 shop row when the owner names one shop), `order/open-orders` (list),
-`stock/low-stock-report` (list).
+`stock/low-stock-report` (list), `mimi/owner-brief` (list, the morning brief).
 
 ```json
 {
@@ -304,12 +304,51 @@ matches `thread_id` and `helper`. A task whose approval still waits is
 (`handoff` in a real task is the full record from section 1; it is `null`
 above only to keep the example short.)
 
-## What is not changed
+## Fixes from the live distributor test (30 Oct 2026)
 
-* Helper prompts and tool lists are unchanged, so every recorded model answer
-  still replays. Two helper prompts still tell the model to send off-topic
-  questions to "the right helper or the rep" (`mimi/brand/tools.py`
-  `BRAND_SKILL`, `mimi/receipts/tools.py` `ORDER_SKILL`); the gate and the
-  hand-back now catch that in code. Rewriting those lines needs a paid
-  re-record of the Brand and Order evals.
+* Morning brief (`mimi/owner-brief`) is answered by code, like open orders
+  and low stock: no model, no spend. Owner rules route "morning brief",
+  "daily summary", "brief me", "what needs my attention today", "what came
+  in yesterday". `cards.brief_facts` reads the book: who owes (total overdue,
+  top 3 debtors, from `mimi.owed`), what came in yesterday (payments on the
+  book's day before today and their total, how many the bank feed shows,
+  shop orders that reached approvals), what needs the owner today
+  (approvals, credit asks, payments flagged in the last 7 days, open
+  disputes, items that may run out within 3 days). A vaguer ask the
+  lexicon routes to the brief ("how is business today?") is code too with
+  `MIMI_FIXES_2026_10_30=1` (set in the Dockerfile); with it off (CI) it
+  still reaches the model as recorded, since later recorded owner-thread
+  turns replay against that exchange. The reply is three short
+  sentences written by code; the card is a `list` titled `Morning brief`
+  whose `item_id`s start `owes:`, `in:` or `needs:` (the console may group
+  them), with `qty` for counts and `amount_kobo` for money. `total_kobo` is
+  null (the rows are not one kind of money).
+* "What's running out?", "running low", "out of stock" from the owner route
+  by rule to `stock/low-stock-report`; naming a shop ("... at Mama Sola
+  Provisions") narrows the card to that shop.
+* Debtors: one overdue figure everywhere (`mimi.owed`). Collector's
+  `get_invoices` now totals every shop, not only the `limit` it lists (it
+  said N7,154,850 for the book's ₦7,231,000). Debtor cards sort by overdue
+  and their sentence carries the book's total overdue. "Top 5", "which
+  stores owe the most" give a list of that many; a singular ask gives the
+  highest debtor's `shop_row`.
+* Money strings the API writes for the owner use `₦` (cards, reads, owner
+  console replies; `mimi.owed.naira`, `naira_sign`). Shop WhatsApp texts and
+  model-facing tool outputs keep `N` until the shop persona and harness
+  replays are re-recorded.
+* Brand's and the delivery-receipt Order helper's prompts no longer send
+  anyone to "the rep" or "the right helper": they end quietly, and a quiet
+  end on a person's message is a hand-back (`code: no_tools`) that Mimi
+  re-routes once, as below.
+
+## What still needs a paid re-record
+
+* `BRAND_SKILL` and `ORDER_SKILL` changed (`brand-v0.2`, `order-v0.2`):
+  recorded Brand and delivery-receipt Order answers replay as stale until
+  re-recorded (the e2e brand scene and Order receipt scenes; run the e2e and
+  harness evals `--live`).
+* The `mimi/chat` helper prompt (`mimi/api/helpers.py`) and
+  `skills/owner-brief` still say the brief is not ready; owner brief asks no
+  longer reach a model, so this only matters for a non-owner sender. Rewrite
+  with the next paid re-record.
 * The router's model prompt, catalogue text and thresholds are unchanged.

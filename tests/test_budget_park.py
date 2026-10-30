@@ -116,7 +116,9 @@ def test_owner_messages_still_park_without_a_holding_reply(engine: Any) -> None:
     a = _agent(engine)
     v = a.submit("coral-lane", Inbound(source="owner_message", org_id="coral-lane",
                                        external_id="cap.o1", received_at=NOW,
-                                       payload=Payload(text="How is business today?")))
+                                       # A model turn (the brief is answered by code now).
+                                       payload=Payload(text="Draft soft reminders for "
+                                                            "the overdue shops")))
     while a.process() is not None:
         pass
     out = _out(engine, str(v.turn_id))

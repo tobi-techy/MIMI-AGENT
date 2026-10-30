@@ -158,7 +158,7 @@ def test_highest_debtor_gets_a_shop_row_card_and_one_sentence(env: dict[str, Any
     assert row["shop_id"] == top.shop_id and row["owed_kobo"] == top.owed_kobo
     owed = sum(r["outstanding_kobo"] for r in env["agent"].go.receivables(A, top.shop_id))
     assert row["owed_kobo"] == owed and row["credit_limit_kobo"] > 0
-    assert row["days_late"] >= 0 and row["owed_naira"].startswith("N")
+    assert row["days_late"] >= 0 and row["owed_naira"].startswith("₦")
     assert {a["action"] for a in card["actions"]} == {"remind", "open_shop"}
     (text,) = owner_replies(t)
     assert hx.sentence_count(text) == 1 and row["owed_naira"] in text and row["name"] in text
@@ -352,9 +352,9 @@ def test_open_orders_card_lists_pending_orders_from_the_book(env: dict[str, Any]
     card = t["card"]
     assert card["total"] == 1 and card["items"][0]["qty"] == 7
     assert card["items"][0]["amount_kobo"] == 1_550_000
-    assert card["items"][0]["amount_naira"] == "N15,500"
+    assert card["items"][0]["amount_naira"] == "₦15,500"
     (text,) = owner_replies(t)
-    assert text == "1 order is waiting for your approval, N15,500 in all."
+    assert text == "1 order is waiting for your approval, ₦15,500 in all."
 
 
 def test_a_card_is_never_built_for_a_shop(env: dict[str, Any]) -> None:

@@ -11,6 +11,7 @@ from typing import Any
 import sqlalchemy as sa
 from sqlalchemy.engine import Engine
 
+from mimi import owed
 from mimi.api import threadmeta
 from mimi.api import voice as vx
 from mimi.api.agent import NotFound, approval_dict, turn_handoff
@@ -22,7 +23,7 @@ from mimi.store.util import loads, mask_phone
 
 
 def naira(kobo: int) -> str:
-    return f"N{kobo / 100:,.0f}" if kobo % 100 == 0 else f"N{kobo / 100:,.2f}"
+    return owed.naira(kobo)
 
 
 # ------------------------------------------------------------------ shops
@@ -49,8 +50,12 @@ def _shop_rows(conn: sa.Connection, tenant: str, shop_id: str | None = None) -> 
     return list(conn.execute(q).all())
 
 
-def _shop_summary(row: Any) -> dict[str, Any]:
+def _shop_summary(row: Any, book: owed.ShopOwed | None = None) -> dict[str, Any]:
     out, over = int(row.outstanding or 0), int(row.overdue or 0)
+    n_open = int(row.open_n or 0)
+    if book is not None:
+        # One definition of owed and overdue for every surface (mimi.owed).
+        out, over, n_open = book.owed_kobo, book.overdue_kobo, book.open_invoices
     return {
         "shop_id": row.shop_id, "name": row.name, "owner": row.owner, "area": row.area,
         "shop_type": row.shop_type, "size": row.size, "rep_id": row.rep_id,
@@ -59,15 +64,19 @@ def _shop_summary(row: Any) -> dict[str, Any]:
         "credit_limit_naira": naira(int(row.credit_limit_kobo)),
         "outstanding_kobo": out, "outstanding_naira": naira(out),
         "overdue_kobo": over, "overdue_naira": naira(over),
-        "open_invoices": int(row.open_n or 0), "simulated": bool(row.simulated),
+        "open_invoices": n_open, "simulated": bool(row.simulated),
     }
 
 
 def list_shops(engine: Engine, tenant: str) -> dict[str, Any]:
     with engine.connect() as conn:
         rows = _shop_rows(conn, tenant)
-    shops = [_shop_summary(r) for r in rows]
-    return {"shops": shops, "total": len(shops)}
+    book = owed.totals(SqlGo(engine).receivables(tenant, None)) if rows else owed.Owed()
+    shops = [_shop_summary(r, book.shops.get(r.shop_id)) for r in rows]
+    return {"shops": shops, "total": len(shops),
+            "owed_total_kobo": book.owed_kobo, "owed_total_naira": naira(book.owed_kobo),
+            "overdue_total_kobo": book.overdue_kobo,
+            "overdue_total_naira": naira(book.overdue_kobo)}
 
 
 def get_shop(engine: Engine, tenant: str, shop_id: str) -> dict[str, Any]:
@@ -95,10 +104,11 @@ def get_shop(engine: Engine, tenant: str, shop_id: str) -> dict[str, Any]:
                     for d in conn.execute(sa.select(s.disputes).where(
                         s.disputes.c.tenant_id == tenant, s.disputes.c.shop_id == shop_id))]
     receivables = go.receivables(tenant, shop_id)
+    one = owed.totals(receivables).shops.get(shop_id)
     for x in receivables:
         x["outstanding_naira"] = naira(x["outstanding_kobo"])
     return {
-        "shop": _shop_summary(rows[0]),
+        "shop": _shop_summary(rows[0], one),
         "thread_id": f"{tenant}:shop:{shop_id}",
         "receivables": receivables,
         "payments": go.payments(tenant, shop_id, 10),
