@@ -59,6 +59,7 @@ from mimi.harness.context import pointer
 from mimi.harness.errors import ConnectorDown, ToolError, error_text
 from mimi.harness.gateway import AllModelsFailed, Gateway, worst_case_kobo
 from mimi.harness.go import BookAPI, ControlPlane, CrossTenant, EventLog, NoConsent
+from mimi.harness.plain import PLAIN_MODEL
 from mimi.harness.policy import RiskPolicy
 from mimi.harness.registry import RESERVED_ARGS, ToolContext, Toolset, ToolSpec
 from mimi.harness.style import clean_reply
@@ -78,6 +79,7 @@ from mimi.harness.types import (
     Tier,
 )
 from mimi.harness.untrusted import defang
+from mimi.models import metering
 from mimi.tz import LAGOS
 
 log = logging.getLogger(__name__)
@@ -205,6 +207,17 @@ def business_key(tenant_id: str, intent_kind: str, fields: dict[str, Any]) -> st
     return "ik_" + _h(tenant_id, intent_kind, fields)[:32]
 
 
+def _fold_side_spend(state: LoopState) -> None:
+    """Fold the turn's model spend outside the loop (router, steer, readers) into
+    the run, so the per-run budget counts it (``mimi.models.metering``)."""
+    sc = metering.current()
+    if sc is None:
+        return
+    kobo, calls = sc.fold()
+    state.spend.side_kobo += kobo
+    state.spend.side_calls += calls
+
+
 def _naira(kobo: int) -> str:
     return f"N{kobo / 100:,.2f}"
 
@@ -290,8 +303,8 @@ class Harness:
         )
         if context is not None:
             state.tools = [dict(t) for t in context.tools]
-            state.prefix_len = 2
-            state.history_len = len(context.messages) - 3
+            state.prefix_len = len(context.prefix.messages())
+            state.history_len = len(context.messages) - state.prefix_len - 1
             state.context = context.manifest.trace_metadata()
         data: dict[str, Any] = {
             "wake_source": event.wake_source, "toolset_hash": state.toolset_hash,
@@ -381,6 +394,7 @@ class Harness:
         *,
         owner_messages: Sequence[str] = (),
         enforce_run_budget: bool = True,
+        gateway: Gateway | None = None,
     ) -> StepResult:
         """One model call and its tool calls. Pure in, state out."""
         t0 = self.perf()
@@ -391,6 +405,7 @@ class Harness:
         now = self.clock()
         day = now.astimezone(LAGOS).date()
 
+        _fold_side_spend(state)
         if self._gates(state, helper, day, enforce_run_budget):
             return self._step_result(state, n_ev, n_int, n_dr, 0)
 
@@ -404,7 +419,8 @@ class Harness:
         tools = state.tools or helper.toolset.schemas()
         tm = self.perf()
         try:
-            reply = self.gateway.chat(state.messages, tools)
+            # A plain-code path (``mimi.harness.plain``) puts its own model first.
+            reply = (gateway or self.gateway).chat(state.messages, tools)
         except AllModelsFailed as exc:
             for fb in exc.fallbacks:
                 self._emit(state, "model_fallback", model=fb.model, short=fb.error)
@@ -415,13 +431,18 @@ class Harness:
             self._emit(state, "model_fallback", model=fb.model,
                        short=f"{fb.model} failed ({fb.error}); used next model")
         turn = reply.turn
-        state.spend.model_calls += 1
+        by_code = turn.fake and turn.model == PLAIN_MODEL
+        state.spend.model_calls += 0 if by_code else 1
         state.spend.kobo += reply.cost_kobo
         state.max_call_kobo = max(state.max_call_kobo, reply.cost_kobo)
         state.spend.prompt_tokens += turn.prompt_tokens
         state.spend.completion_tokens += turn.completion_tokens
         state.cached_tokens += turn.cached_tokens
-        self.control.add_spend(state.tenant_id, helper.name, day, reply.cost_kobo)
+        metering.book(self.control, state.tenant_id, helper.name, day, reply.cost_kobo)
+        metering.charge(metering.CODE if by_code else metering.HARNESS, turn.model,
+                        prompt_tokens=turn.prompt_tokens,
+                        completion_tokens=turn.completion_tokens,
+                        cached_tokens=turn.cached_tokens, kobo=reply.cost_kobo, booked=True)
         self._emit(state, "model_called", model=turn.model, cost_kobo=reply.cost_kobo,
                    duration_ms=model_s * 1000,
                    short=", ".join(c.name for c in turn.tool_calls) or "final",
@@ -495,6 +516,7 @@ class Harness:
         state.step += 1
         state.spend.steps += 1
         state.spend.seconds += step_s
+        _fold_side_spend(state)  # the readers this step's tools called
 
         if state.fail_reason:
             self._finish(state, "failed", state.fail_reason)
@@ -600,16 +622,18 @@ class Harness:
                 + len(json.dumps(state.tools or helper.toolset.schemas())),
                 self.gateway.max_tokens,
             ))
-            if state.spend.kobo >= b.max_kobo or state.spend.kobo + reserve > b.max_kobo:
+            used = state.spend.total_kobo
+            if used >= b.max_kobo or used + reserve > b.max_kobo:
                 hit = "kobo"
-                q = (f"I paused {helper.name}: this job has used {_naira(state.spend.kobo)} "
+                q = (f"I paused {helper.name}: this job has used {_naira(used)} "
                      f"of its {_naira(b.max_kobo)} model budget and the next step could "
                      f"cost up to {_naira(reserve)}. {self._progress(state)} Keep going?")
         if hit:
-            self._emit(state, "budget_hit", short=f"{hit} budget", cost_kobo=state.spend.kobo,
+            self._emit(state, "budget_hit", short=f"{hit} budget",
+                       cost_kobo=state.spend.total_kobo,
                        data={"dimension": hit, "steps": state.spend.steps,
                              "seconds": round(state.spend.seconds, 3),
-                             "kobo": state.spend.kobo})
+                             "kobo": state.spend.total_kobo})
             self._owner_draft(state, q)
             self._finish(state, "stopped_budget", f"{hit} budget reached", question=q)
             return True

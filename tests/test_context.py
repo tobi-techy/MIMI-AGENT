@@ -284,3 +284,55 @@ def test_shop_text_cannot_close_its_wrapper_or_pose_as_a_book_slice() -> None:
     assert newest.count("</shop_message>") == 1 and "<owner_message>" not in newest
     assert newest.count("<book_slice") == 1  # only the one the builder read from Go
     assert 123456789 not in _known_kobo(ctx.messages)
+
+
+# ------------------------------------- shared-first prefix (MIMI_CTX_SHARED_PREFIX)
+
+
+def test_shared_prefix_layout_is_off_by_default_and_recorded_prompts_keep_their_bytes() -> None:
+    b, _, helper = builder()
+    ctx = b.build(ev(), helper, "collector/collections")
+    assert ctx.prefix.layout == "" and len(ctx.prefix.messages()) == 2
+
+
+def test_shared_prefix_puts_what_threads_share_first(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("MIMI_CTX_SHARED_PREFIX", "1")
+    b, _, helper = builder()
+    a = b.build(ev(shop="shop-001", thread="t-a"), helper, "collector/collections")
+    c = b.build(ev(shop="shop-002", thread="t-b"), helper, "collector/collections")
+    pa, pc = a.prefix.messages(), c.prefix.messages()
+    assert len(pa) == 3 and a.prefix.layout == "shared"
+    # System, tools and the shared block are byte-identical across threads and shops.
+    assert pa[:2] == pc[:2] and a.tools == c.tools
+    shared = pa[1]["content"]
+    assert "Thread:" not in shared and "Shop on this thread" not in shared
+    assert "<memory_snapshot>" not in shared and "Distributor:" in shared
+    # The per-thread block and the shop's memory follow.
+    assert "Thread: t-a" in pa[2]["content"] and "Shop on this thread: shop-001" in pa[2]["content"]
+    assert pa[2] != pc[2]
+    assert "5_thread" in a.manifest.section_hashes
+
+
+def test_shared_prefix_keeps_the_thread_stable_and_history_appends(
+        monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("MIMI_CTX_SHARED_PREFIX", "1")
+    go = FakeGo(W)
+    b, _, helper = builder(go=go)
+    h = Harness(book=go, control=go, events=go, gateway=Gateway([ScriptedModel(
+        lambda m, t: say("done"))]), policy=GoPolicy(), clock=lambda: ce._at(W, WAT))
+    first = None
+    for i in range(3):
+        e = ev(thread="t-s", i=i)
+        ctx = b.build(e, helper, "collector/collections")
+        state = h.start(e, helper, context=ctx)
+        assert state.prefix_len == 3
+        assert state.history_len == len(ctx.messages) - 4
+        if first is None:
+            first = ctx.messages[:3]
+        assert ctx.messages[:3] == first  # pinned for the thread
+        b.record_turn(e, ctx.messages, state.prefix_len, state.history_len)
+    assert len(b.history.turns(W.tenant_id, "t-s")) == 3
+    # A pinned prefix keeps its layout when the flag goes off again.
+    monkeypatch.setenv("MIMI_CTX_SHARED_PREFIX", "0")
+    again = b.build(ev(thread="t-s", i=4), helper, "collector/collections")
+    assert again.prefix.layout == "shared"

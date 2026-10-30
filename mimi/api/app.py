@@ -454,6 +454,8 @@ def create_app(settings: Settings | None = None, agent: Agent | None = None, *,
         store = _demo_on()
         if not key.session:
             raise HTTPException(403, "only a demo session can be reset")
+        # Paused: refuse before ending the session, so the caller keeps it.
+        store.refuse_if_paused()
         ip = visitor(request, key)
         store.end(key.digest)
         return store.start(ip)

@@ -18,6 +18,7 @@ from typing import Any
 
 import httpx
 
+from mimi.models import cachekey, metering
 from mimi.models.base import ChatMessage, ChatResult, ModelError
 
 DEFAULT_BASE = "https://api.meta.ai/v1"
@@ -68,6 +69,7 @@ class MetaChatModel:
         meta: Mapping[str, str] | None = None,
         response_format: Mapping[str, object] | None = None,
     ) -> ChatResult:
+        metering.guard(self.name)
         body: dict[str, Any] = {
             "model": self.name,
             "messages": [_message(m) for m in messages],
@@ -77,6 +79,10 @@ class MetaChatModel:
             body["reasoning_effort"] = self._effort
         if response_format:
             body["response_format"] = dict(response_format)
+        if cachekey.enabled():
+            key = cachekey.prompt_cache_key(messages)
+            if key:
+                body["prompt_cache_key"] = key
         last: str = ""
         for attempt in range(self._retries + 1):
             started = time.monotonic()
