@@ -147,8 +147,10 @@ def load_run(workdir: Path) -> WeekRun:
 class Workers:
     """N worker processes, and a monitor that services forced kills."""
 
-    def __init__(self, run: WeekRun, *, n: int, live: bool, price_as: str) -> None:
+    def __init__(self, run: WeekRun, *, n: int, live: bool, price_as: str,
+                 ceiling_kobo: int | None = None) -> None:
         self.run, self.n, self.live, self.price_as = run, n, live, price_as
+        self.ceiling_kobo = ceiling_kobo
         self.wd = run.workdir
         self.procs: dict[str, subprocess.Popen[bytes]] = {}
         self.plan: list[dict[str, Any]] = []
@@ -187,7 +189,10 @@ class Workers:
         if self.live:
             cmd.append("--live")
         log = open(self.wd / f"{name}.log", "wb")  # noqa: SIM115
-        self.procs[name] = subprocess.Popen(cmd, env={**os.environ, "PYTHONUNBUFFERED": "1"},
+        env = {**os.environ, "PYTHONUNBUFFERED": "1"}
+        if self.ceiling_kobo:
+            env["MIMI_WEEK_MAX_KOBO"] = str(self.ceiling_kobo)  # the meter refuses past it
+        self.procs[name] = subprocess.Popen(cmd, env=env,
                                             stdout=log, stderr=subprocess.STDOUT)
         self.run.worker_log.append(f"started {name}")
         return name
@@ -320,11 +325,13 @@ class Week:
 
     def __init__(self, run: WeekRun, api: Api, engine: Any, world: World, workers: Workers,
                  *, loop: int, tenant: str, clock_file: Path, compress: float,
-                 live_ceiling_kobo: int | None, on_wave: Callable[[], None]) -> None:
+                 live_ceiling_kobo: int | None, on_wave: Callable[[], None],
+                 max_kobo_per_turn: int = 0) -> None:
         self.run, self.api, self.engine, self.world = run, api, engine, world
         self.workers, self.loop, self.tenant = workers, loop, tenant
         self.clock_file, self.compress = clock_file, compress
         self.ceiling = live_ceiling_kobo
+        self.max_kobo_per_turn = max_kobo_per_turn
         self.on_wave = on_wave
         self.go = GoSim(engine, world, tenant)
         self.rng = random.Random(f"{run.seed}:{loop}")
@@ -425,6 +432,9 @@ class Week:
             no_leases(self.engine)
             set_to(self.clock_file, max(w[0] for w in wave))
             for _, _, _, act in wave:
+                self._check_ceiling()  # before every send, not only between waves
+                if self.run.stopped:
+                    break
                 act()
             self.settle()
             self.wave_n += 1
@@ -453,16 +463,38 @@ class Week:
             time.sleep(0.05)
 
     def _check_ceiling(self) -> None:
-        if self.ceiling is None:
+        if self.ceiling is None or self.run.stopped:
+            return
+        from mimi.api.week.meter import total_kobo
+
+        wd = self.run.workdir
+        if (wd / "auth-failed").exists():
+            self._stop_all(f"Meta API refused the key: {(wd / 'auth-failed').read_text().strip()}"
+                           "; run stopped, no retry")
             return
         with self.engine.connect() as conn:
-            spent = int(conn.execute(sa.select(sa.func.sum(s.spend.c.kobo))).scalar() or 0)
+            store = int(conn.execute(sa.select(sa.func.sum(s.spend.c.kobo))).scalar() or 0)
+            done = int(conn.execute(sa.select(sa.func.count()).select_from(s.turns).where(
+                s.turns.c.state.in_(("done", "merged", "parked")))).scalar() or 0)
+        # The meter sees every Meta call (router, readers, SAM); the store
+        # only the harness's. The ceiling holds against the larger.
+        spent = max(store, total_kobo(wd))
+        if self.max_kobo_per_turn and done >= 30 and spent > self.max_kobo_per_turn * done:
+            self._stop_all(f"cost per turn too high: {spent} kobo over {done} turns "
+                           f"(> {self.max_kobo_per_turn} kobo a turn); run stopped early")
+            return
         if spent >= self.ceiling:
             with self.engine.begin() as conn:  # hard stop: every helper of every tenant
                 for t in conn.execute(sa.select(s.tenants.c.tenant_id)).scalars():
                     conn.execute(s.kill_switches.insert().values(tenant_id=t, helper="*"))
             self.run.stopped = (f"naira ceiling reached: spent {spent} kobo of "
                                 f"{self.ceiling} kobo; kill switch on, run stopped")
+
+    def _stop_all(self, why: str) -> None:
+        with self.engine.begin() as conn:
+            for t in conn.execute(sa.select(s.tenants.c.tenant_id)).scalars():
+                conn.execute(s.kill_switches.insert().values(tenant_id=t, helper="*"))
+        self.run.stopped = why
 
     # --------------------------------------------------------------- the days
     def play(self, days: int = DAYS) -> None:
@@ -549,7 +581,8 @@ def drain(engine: Any, timeout: float = 120.0) -> bool:
 def run_week(*, workdir: Path, db_url: str = "", seed: int = 273, workers: int = 1,
              live: bool = False, max_naira: int | None = None, price_as: str = "muse-spark-1.3",
              soak_hours: float = 0.0, soak_kills: int = 0, week_kills: int = 0,
-             max_loops: int = 0, compress: float = 0.0, days: int = DAYS) -> WeekRun:
+             max_loops: int = 0, compress: float = 0.0, days: int = DAYS,
+             max_naira_per_turn: int = 0) -> WeekRun:
     """One offline week (``soak_hours=0``), or the soak: the week looped for
     ``soak_hours`` with ``soak_kills`` forced worker kills spread over it."""
     from fastapi.testclient import TestClient
@@ -587,7 +620,7 @@ def run_week(*, workdir: Path, db_url: str = "", seed: int = 273, workers: int =
     settings = Settings(database_url=db_url, keys=keys, workers=0, lease_s=LEASE_S)
     api_agent = Agent(engine, models=[OfflineModel()], router_model=None, deps=HelperDeps(),
                       lease_s=LEASE_S)
-    pool = Workers(run, n=workers, live=live, price_as=price_as)
+    pool = Workers(run, n=workers, live=live, price_as=price_as, ceiling_kobo=ceiling)
     pool.engine = engine
     deadline = run.started + soak_hours * 3600
     kill_times = [run.started + (i + 0.5) * (soak_hours * 3600) / soak_kills
@@ -629,7 +662,7 @@ def run_week(*, workdir: Path, db_url: str = "", seed: int = 273, workers: int =
                 api = Api(client, tenant)
                 wk = Week(run, api, engine, world, pool, loop=loop, tenant=tenant,
                           clock_file=clock_file, compress=compress, live_ceiling_kobo=ceiling,
-                          on_wave=on_wave)
+                          on_wave=on_wave, max_kobo_per_turn=max_naira_per_turn * 100)
                 t0 = time.time()
                 wk.play(days)
                 drain(engine)
@@ -638,6 +671,7 @@ def run_week(*, workdir: Path, db_url: str = "", seed: int = 273, workers: int =
                 run.loops.append({"loop": loop, "tenant": tenant, "waves": wk.wave_n,
                                   "seconds": round(time.time() - t0, 1)})
                 loop += 1
+                save_run(run)  # after every loop, so a long soak's records survive a crash
                 if soak_hours and time.time() >= deadline and not pool.pending_kills():
                     break
                 if soak_hours and time.time() >= deadline + 1800:

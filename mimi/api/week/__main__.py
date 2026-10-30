@@ -40,6 +40,9 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--max-naira", type=int, default=0,
                     help="live only: a hard ceiling on model spend; the run sets every "
                     "kill switch and stops when it is reached")
+    ap.add_argument("--max-naira-per-turn", type=int, default=0,
+                    help="live only: stop early when the average spend per settled turn "
+                    "goes over this (checked after 30 turns)")
     ap.add_argument("--price-as", default="muse-spark-1.3",
                     help="offline: price each playbook turn as this model (projected cost, "
                     "so budgets and the daily cap run as live); '' for zero")
@@ -78,7 +81,8 @@ def main(argv: list[str] | None = None) -> int:
                    price_as=args.price_as if not args.live else "",
                    soak_hours=args.soak_hours, soak_kills=args.soak_kills,
                    week_kills=args.week_kills, max_loops=args.max_loops,
-                   compress=args.compress, days=args.days)
+                   compress=args.compress, days=args.days,
+                   max_naira_per_turn=args.max_naira_per_turn)
     report = score(run)
     text = markdown(report)
     print(text)
