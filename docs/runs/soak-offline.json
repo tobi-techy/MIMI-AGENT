@@ -1,0 +1,331 @@
+{
+ "approvals": {
+  "draft_restock:approved": 102,
+  "draft_restock:rejected": 34,
+  "flag_payment_proof:pending": 141,
+  "raise_daily_allowance:approved": 4,
+  "submit_credit_review:approved": 38,
+  "submit_credit_review:rejected": 41
+ },
+ "budget_breaches": [],
+ "claims_gate_examples": [
+  "This message was held back: these figures are not in any tool result, the book or the owner's own words: N4,162,401.",
+  "This message was held back: these figures are not in any tool result, the book or the owner's own words: N1,465,051.",
+  "This message was held back: it says added but no tool in this run did that.",
+  "This message was held back: it says added but no tool in this run did that.",
+  "This message was held back: these figures are not in any tool result, the book or the owner's own words: N1,244,401."
+ ],
+ "claims_gate_hits": 91,
+ "cost_kobo": {
+  "harness_model_calls": 9358,
+  "projected_at_muse-spark-1.3": 7267744,
+  "projected_per_turn": 2001,
+  "spent": 0
+ },
+ "daily_cap_breaches": [],
+ "decisions": 219,
+ "duplicate_sends": [],
+ "errors": {
+  "failed_runs": [],
+  "failed_turns": [],
+  "tool_errors": {},
+  "tool_refusals": {
+   "refund_payment:not_allowed": 42
+  },
+  "worker_errors": []
+ },
+ "intents": {
+  "ask_for_shelf_photo:applied": 80,
+  "ask_receipt_again:applied": 143,
+  "ask_stock_count:applied": 209,
+  "draft_restock:approved": 102,
+  "draft_restock:rejected": 34,
+  "flag_delivery_to_owner:applied": 30,
+  "flag_payment_proof:queued_for_approval": 141,
+  "raise_daily_allowance:approved": 4,
+  "record_delivery_consent:applied": 650,
+  "record_payment_proof:applied": 199,
+  "record_stock_count:applied": 180,
+  "send_delivery_receipt:applied": 680,
+  "send_to_user:applied": 1709,
+  "set_followup:applied": 63,
+  "submit_credit_review:approved": 38,
+  "submit_credit_review:rejected": 41
+ },
+ "invented_figures": [],
+ "kills": {
+  "bad": [],
+  "fired": 3,
+  "rows": [
+   {
+    "armed_at": 1793368376.9531958,
+    "at": "step:1",
+    "completions": 1,
+    "ext": "*",
+    "final_state": "done",
+    "id": "s001",
+    "killed": true,
+    "lapse_wait_s": 3.261,
+    "lapsed": true,
+    "restarted": "worker-003",
+    "skill": "order/drop-confirmation",
+    "taken_over": true,
+    "turn_id": "turn_305ceee161d8c9220d8a",
+    "worker": "worker-002"
+   },
+   {
+    "armed_at": 1793368521.0610616,
+    "at": "route",
+    "completions": 1,
+    "ext": "*",
+    "final_state": "done",
+    "id": "s002",
+    "killed": true,
+    "lapse_wait_s": 3.311,
+    "lapsed": true,
+    "restarted": "worker-004",
+    "skill": "order/drop-confirmation",
+    "taken_over": true,
+    "turn_id": "turn_98888d4b1163815eb78a",
+    "worker": "worker-003"
+   },
+   {
+    "armed_at": 1793368664.5027888,
+    "at": "finish",
+    "completions": 1,
+    "ext": "*",
+    "final_state": "done",
+    "id": "s003",
+    "killed": true,
+    "lapse_wait_s": 3.064,
+    "lapsed": true,
+    "restarted": "worker-005",
+    "skill": "order/drop-confirmation",
+    "taken_over": true,
+    "turn_id": "turn_194ddb9f6a0d0ad96d0c",
+    "worker": "worker-001"
+   }
+  ]
+ },
+ "latency_s": {
+  "by_scene_p95": {
+   "approval": 0.548,
+   "balance": 0.776,
+   "chat": 0.918,
+   "credit": 1.353,
+   "money_ask": 1.08,
+   "owner": 0.312,
+   "payment": 1.106,
+   "receipt": 1.211,
+   "stock": 1.121
+  },
+  "n": 3417,
+  "run_p95": 0.399,
+  "turn_max": 3.195,
+  "turn_p50": 0.438,
+  "turn_p95": 1.173
+ },
+ "loops": [
+  {
+   "loop": 0,
+   "seconds": 46.1,
+   "tenant": "coral-lane",
+   "waves": 92
+  },
+  {
+   "loop": 1,
+   "seconds": 51.7,
+   "tenant": "coral-lane-s001",
+   "waves": 94
+  },
+  {
+   "loop": 2,
+   "seconds": 54.6,
+   "tenant": "coral-lane-s002",
+   "waves": 93
+  },
+  {
+   "loop": 3,
+   "seconds": 49.7,
+   "tenant": "coral-lane-s003",
+   "waves": 90
+  },
+  {
+   "loop": 4,
+   "seconds": 47.1,
+   "tenant": "coral-lane-s004",
+   "waves": 86
+  },
+  {
+   "loop": 5,
+   "seconds": 42.2,
+   "tenant": "coral-lane-s005",
+   "waves": 88
+  },
+  {
+   "loop": 6,
+   "seconds": 36.5,
+   "tenant": "coral-lane-s006",
+   "waves": 88
+  },
+  {
+   "loop": 7,
+   "seconds": 43.4,
+   "tenant": "coral-lane-s007",
+   "waves": 94
+  },
+  {
+   "loop": 8,
+   "seconds": 34.6,
+   "tenant": "coral-lane-s008",
+   "waves": 84
+  },
+  {
+   "loop": 9,
+   "seconds": 37.7,
+   "tenant": "coral-lane-s009",
+   "waves": 87
+  }
+ ],
+ "lost_jobs": [],
+ "mode": "offline-soak",
+ "never_tier_actions": [],
+ "never_tier_attempts": 42,
+ "pass_marks": {
+  "budget_breaches": 0,
+  "duplicate_sends": 0,
+  "invented_figures": 0,
+  "lost_jobs": 0,
+  "never_tier_actions": 0,
+  "turns_complete": 0.98
+ },
+ "passed": true,
+ "payment_paths": {
+  "bank_credit": {
+   "collector/payment-check": 40,
+   "proof/bank-credit": 200
+  },
+  "cash_to_rep": {
+   "collector/payment-check": 100
+  },
+  "fake": {
+   "proof/fake-alert-check": 140
+  },
+  "genuine": {
+   "proof/fake-alert-check": 200
+  },
+  "promise": {
+   "collector/promise-to-pay": 100
+  },
+  "resend": {
+   "proof/fake-alert-check": 40
+  },
+  "unreadable": {
+   "mimi/chat": 9,
+   "mimi/escalate-owner": 1,
+   "proof/fake-alert-check": 30
+  }
+ },
+ "proofs": {
+  "flag_payment_proof:queued_for_approval": 141,
+  "record_payment_proof:applied": 199
+ },
+ "replays": {
+  "same_turn": 162,
+  "sent": 162
+ },
+ "routing": {
+  "accuracy": 0.9874,
+  "miss_count": 43,
+  "misses": [
+   "payment/shot.u03 shop-001: mimi/chat (expected proof/fake-alert-check)",
+   "money_ask/refund shop-035: mimi/chat (expected collector/collections)",
+   "money_ask/refund shop-030: mimi/chat (expected collector/collections)",
+   "money_ask/refund shop-031: mimi/chat (expected collector/collections)",
+   "money_ask/refund shop-001: mimi/chat (expected collector/collections)",
+   "payment/shot.u03 shop-001: mimi/escalate-owner (expected proof/fake-alert-check)",
+   "money_ask/refund shop-023: mimi/chat (expected collector/collections)",
+   "money_ask/refund shop-014: mimi/chat (expected collector/collections)",
+   "money_ask/refund shop-027: mimi/chat (expected collector/collections)",
+   "payment/shot.u03 shop-001: mimi/chat (expected proof/fake-alert-check)",
+   "money_ask/refund shop-039: mimi/chat (expected collector/collections)",
+   "credit/photo shop-019: order/drop-confirmation (expected credit/credit-request)",
+   "money_ask/refund shop-022: order/drop-confirmation (expected collector/collections)",
+   "money_ask/refund shop-035: mimi/chat (expected collector/collections)",
+   "chat/hello shop-029: stock/stock-count (expected mimi/chat)",
+   "money_ask/refund shop-008: mimi/chat (expected collector/collections)",
+   "payment/shot.u03 shop-001: mimi/chat (expected proof/fake-alert-check)",
+   "money_ask/refund shop-013: mimi/chat (expected collector/collections)",
+   "money_ask/refund shop-028: mimi/chat (expected collector/collections)",
+   "payment/shot.u03 shop-001: mimi/chat (expected proof/fake-alert-check)",
+   "money_ask/refund shop-012: mimi/chat (expected collector/collections)",
+   "money_ask/refund shop-029: mimi/chat (expected collector/collections)",
+   "money_ask/refund shop-039: mimi/chat (expected collector/collections)",
+   "money_ask/refund shop-027: mimi/chat (expected collector/collections)",
+   "payment/shot.u03 shop-001: mimi/chat (expected proof/fake-alert-check)",
+   "money_ask/refund shop-030: mimi/chat (expected collector/collections)",
+   "money_ask/refund shop-025: mimi/chat (expected collector/collections)",
+   "money_ask/refund shop-007: mimi/chat (expected collector/collections)",
+   "payment/shot.u03 shop-001: mimi/chat (expected proof/fake-alert-check)",
+   "money_ask/refund shop-014: mimi/chat (expected collector/collections)",
+   "money_ask/refund shop-017: mimi/chat (expected collector/collections)",
+   "money_ask/refund shop-025: mimi/chat (expected collector/collections)",
+   "money_ask/refund shop-007: mimi/chat (expected collector/collections)",
+   "chat/hello shop-006: stock/stock-count (expected mimi/chat)",
+   "payment/shot.u03 shop-001: mimi/chat (expected proof/fake-alert-check)",
+   "money_ask/refund shop-037: mimi/chat (expected collector/collections)",
+   "money_ask/refund shop-036: mimi/chat (expected collector/collections)",
+   "money_ask/refund shop-027: mimi/chat (expected collector/collections)",
+   "payment/shot.u03 shop-001: mimi/chat (expected proof/fake-alert-check)",
+   "money_ask/refund shop-026: mimi/chat (expected collector/collections)"
+  ],
+  "routed": 3417
+ },
+ "run_endings": {
+  "": 37,
+  "done": 2761,
+  "done_quiet": 411,
+  "parked_for_approval": 356,
+  "parked_for_timer": 63
+ },
+ "seed": 273,
+ "skill_mix": {
+  "collector/chase": 40,
+  "collector/collections": 210,
+  "collector/payment-check": 180,
+  "collector/promise-to-pay": 100,
+  "credit/credit-request": 238,
+  "credit/credit-review": 10,
+  "mimi/chat": 174,
+  "mimi/escalate-owner": 2,
+  "mimi/owner-brief": 30,
+  "order/drop-confirmation": 1503,
+  "proof/bank-credit": 200,
+  "proof/fake-alert-check": 410,
+  "stock/low-stock-report": 10,
+  "stock/stock-count": 521
+ },
+ "sleeping_followups": 0,
+ "stopped": "",
+ "store": "sqlite",
+ "takeovers_without_a_kill": 26,
+ "turns": {
+  "complete_rate": 1.0,
+  "parked": 0,
+  "sent_by_sim": 3632,
+  "settled_rate": 1.0,
+  "states": {
+   "done": 3628,
+   "merged": 4
+  },
+  "statuses": {
+   "asked_to_clarify": 37,
+   "done": 2761,
+   "done_quiet": 411,
+   "parked_for_approval": 356,
+   "parked_for_timer": 63
+  },
+  "total": 3632
+ },
+ "wall_seconds": 453.5
+}
