@@ -253,3 +253,66 @@ def test_side_spend_counts_toward_the_run_budget() -> None:
     assert model.calls == 0
     assert go.daily_spend(W.tenant_id, NOW.date())[0] == helper.budget.max_kobo
     assert sc.tally()["vision"]["calls"] == 1
+
+
+# ------------------------------------------------------------------ cache key
+
+
+def test_prompt_cache_key_is_sent_and_stable_per_helper_prefix() -> None:
+    import httpx
+
+    from mimi.harness.gateway import OpenAIToolModel, RecordedToolModel
+    from mimi.models.cachekey import prompt_cache_key
+    from mimi.models.meta import MetaChatModel
+
+    seen: list[dict[str, Any]] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        seen.append(json.loads(request.content))
+        return httpx.Response(200, json={"model": "muse-spark-1.3", "choices": [
+            {"message": {"content": "ok"}, "finish_reason": "stop"}], "usage": {}})
+
+    tools = [{"type": "function", "function": {"name": "get_balance", "parameters": {}}}]
+    sys_a = {"role": "system", "content": "rules\n\n# Helper: collector\nskill v1"}
+    m = OpenAIToolModel(api_key="k", model="muse-spark-1.3",  # pragma: allowlist secret
+                        transport=httpx.MockTransport(handler))
+    with metering.metered("harness"):
+        m.chat([sys_a, {"role": "user", "content": "shop-001 thread"}], tools, max_tokens=10)
+        m.chat([sys_a, {"role": "user", "content": "shop-040 other thread"}], tools,
+               max_tokens=10)
+        m.chat([{**sys_a, "content": sys_a["content"] + " v2"},
+                {"role": "user", "content": "x"}], tools, max_tokens=10)
+    k1, k2, k3 = (b["prompt_cache_key"] for b in seen)
+    assert k1 == k2 and k1.startswith("mimi-collector-")  # per helper, not per thread
+    assert k3 != k1  # a new prompt version is a new prefix
+    # The replay key ignores it: a recorded answer still replays.
+    assert "prompt_cache_key" not in json.dumps(
+        RecordedToolModel.key("m", [sys_a], tools))
+    chat = MetaChatModel(api_key="k", model="muse-spark-1.3",  # pragma: allowlist secret
+                         transport=httpx.MockTransport(handler))
+    from mimi.models.base import ChatMessage
+
+    with metering.metered("steer"):
+        chat.complete([ChatMessage("developer", "classify parts"), ChatMessage("user", "a")])
+    assert seen[-1]["prompt_cache_key"] == prompt_cache_key(
+        [ChatMessage("developer", "classify parts")])
+
+
+def test_prompt_cache_key_can_be_switched_off(monkeypatch: pytest.MonkeyPatch) -> None:
+    import httpx
+
+    from mimi.harness.gateway import OpenAIToolModel
+
+    seen: list[dict[str, Any]] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        seen.append(json.loads(request.content))
+        return httpx.Response(200, json={"model": "m", "choices": [
+            {"message": {"content": "ok"}}], "usage": {}})
+
+    monkeypatch.setenv("MIMI_PROMPT_CACHE_KEY", "0")
+    m = OpenAIToolModel(api_key="k", model="m",  # pragma: allowlist secret
+                        transport=httpx.MockTransport(handler))
+    with metering.metered("harness"):
+        m.chat([{"role": "system", "content": "s"}], [], max_tokens=5)
+    assert "prompt_cache_key" not in seen[0]

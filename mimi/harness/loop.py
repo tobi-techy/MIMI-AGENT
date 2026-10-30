@@ -59,6 +59,7 @@ from mimi.harness.context import pointer
 from mimi.harness.errors import ConnectorDown, ToolError, error_text
 from mimi.harness.gateway import AllModelsFailed, Gateway, worst_case_kobo
 from mimi.harness.go import BookAPI, ControlPlane, CrossTenant, EventLog, NoConsent
+from mimi.harness.plain import PLAIN_MODEL
 from mimi.harness.policy import RiskPolicy
 from mimi.harness.registry import RESERVED_ARGS, ToolContext, Toolset, ToolSpec
 from mimi.harness.style import clean_reply
@@ -302,8 +303,8 @@ class Harness:
         )
         if context is not None:
             state.tools = [dict(t) for t in context.tools]
-            state.prefix_len = 2
-            state.history_len = len(context.messages) - 3
+            state.prefix_len = len(context.prefix.messages())
+            state.history_len = len(context.messages) - state.prefix_len - 1
             state.context = context.manifest.trace_metadata()
         data: dict[str, Any] = {
             "wake_source": event.wake_source, "toolset_hash": state.toolset_hash,
@@ -393,6 +394,7 @@ class Harness:
         *,
         owner_messages: Sequence[str] = (),
         enforce_run_budget: bool = True,
+        gateway: Gateway | None = None,
     ) -> StepResult:
         """One model call and its tool calls. Pure in, state out."""
         t0 = self.perf()
@@ -417,7 +419,8 @@ class Harness:
         tools = state.tools or helper.toolset.schemas()
         tm = self.perf()
         try:
-            reply = self.gateway.chat(state.messages, tools)
+            # A plain-code path (``mimi.harness.plain``) puts its own model first.
+            reply = (gateway or self.gateway).chat(state.messages, tools)
         except AllModelsFailed as exc:
             for fb in exc.fallbacks:
                 self._emit(state, "model_fallback", model=fb.model, short=fb.error)
@@ -428,14 +431,16 @@ class Harness:
             self._emit(state, "model_fallback", model=fb.model,
                        short=f"{fb.model} failed ({fb.error}); used next model")
         turn = reply.turn
-        state.spend.model_calls += 1
+        by_code = turn.fake and turn.model == PLAIN_MODEL
+        state.spend.model_calls += 0 if by_code else 1
         state.spend.kobo += reply.cost_kobo
         state.max_call_kobo = max(state.max_call_kobo, reply.cost_kobo)
         state.spend.prompt_tokens += turn.prompt_tokens
         state.spend.completion_tokens += turn.completion_tokens
         state.cached_tokens += turn.cached_tokens
         metering.book(self.control, state.tenant_id, helper.name, day, reply.cost_kobo)
-        metering.charge(metering.HARNESS, turn.model, prompt_tokens=turn.prompt_tokens,
+        metering.charge(metering.CODE if by_code else metering.HARNESS, turn.model,
+                        prompt_tokens=turn.prompt_tokens,
                         completion_tokens=turn.completion_tokens,
                         cached_tokens=turn.cached_tokens, kobo=reply.cost_kobo, booked=True)
         self._emit(state, "model_called", model=turn.model, cost_kobo=reply.cost_kobo,

@@ -537,6 +537,8 @@ def score(run: Run, usage_path: Path | None = None) -> dict[str, Any]:
                 steer_kobo += kob
             elif role == metering.SAM:
                 sam_images += int(mu.get("units") or 1)
+            elif role == metering.CODE:
+                pass  # a plain-code step stood in for the model: N0, not a model call
             else:
                 helper_calls += 1
                 helper_kobo += kob
@@ -588,7 +590,8 @@ def score(run: Run, usage_path: Path | None = None) -> dict[str, Any]:
                       "by_role": by_role},
         "calls": {"harness_model_calls": model_calls, "helper_model_calls": helper_calls,
                   "agent_model_calls": sum(v["calls"] for kr, v in by_role.items()
-                                           if kr != metering.SAM),
+                                           if kr not in (metering.SAM, metering.CODE)),
+                  "plain_code_steps": by_role.get(metering.CODE, {}).get("calls", 0),
                   "sam_images": sam_images, "persona_calls": run.persona_calls,
                   "persona_live_calls": run.persona_live_calls,
                   "worker_live_rows": live_rows},
