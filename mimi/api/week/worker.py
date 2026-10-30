@@ -114,8 +114,15 @@ def build_agent(db_url: str, *, workdir: Path, worker_id: str, live: bool,
                                     or "muse-spark-1.3",
                                     base_url=os.environ.get("META_API_BASE", "").strip()
                                     or "https://api.meta.ai/v1", timeout_s=30.0)
+        from dataclasses import replace
+
+        from mimi.api.week import meter
+
+        meter.install(workdir, worker_id)  # every Meta call priced, against the ceiling
+        # The week's photos live in the eval folders, as offline.
+        deps = replace(deps_from_env(), media=LocalMedia(EVAL))
         agent = WeekAgent(engine, models=[tool], router_model=from_env("mimi"),
-                          deps=deps_from_env(), lease_s=LEASE_S, worker_id=worker_id)
+                          deps=deps, lease_s=LEASE_S, worker_id=worker_id)
     else:
         agent = WeekAgent(engine, models=[Playbook(price_as=price_as)], router_model=None,
                           deps=offline_deps(), lease_s=LEASE_S, worker_id=worker_id)

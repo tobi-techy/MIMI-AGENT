@@ -51,8 +51,20 @@ python -m mimi.api.week --workers 2 --soak-hours 6 --soak-kills 20      # make w
 
 # Live: real Muse Spark and SAM 3.1 calls. Needs META_API_KEY and a hard
 # naira ceiling; the run sets every kill switch and stops when it is reached.
-python -m mimi.api.week --live --max-naira 2000
+SPITCH_API_KEY= python -m mimi.api.week --live --max-naira 8000 --max-naira-per-turn 40 \
+  --workers 2 --week-kills 6 --name week-live
 ```
+
+Live spend is metered (`meter.py`): a live worker wraps `httpx.Client.send`
+and prices every response from `api.meta.ai` (harness, router, readers, steer
+and SAM 3.1) from the usage it returns, into `meter-<worker>.jsonl` in the
+workdir. The store's `spend` table only holds the harness's calls, so the
+ceiling is checked against the meter, before every send as well as between
+waves, and the meter refuses any call once the total is at the ceiling. A
+401/403 writes `auth-failed` and the run stops with no retry.
+`--max-naira-per-turn` stops the run early when the average per settled turn
+goes over it (after 30 turns). Keep the workdir off a network filesystem: on
+the sandbox's FUSE mount SQLite ran about 8x slower, so soaks use `/tmp`.
 
 Other flags: `--seed` (default 273), `--db` (a Postgres URL is wiped, so a
 throwaway database only), `--compress` (seconds between waves),
@@ -121,6 +133,59 @@ of wall time, 2 workers, 3 forced kills. Full report:
 | Latency p50 / p95 / max | 0.44 / 1.17 / 3.20 s |
 | Cost | ₦0 spent; ₦72,677.44 projected (₦20.01 a turn) |
 
+## Live week (30 Oct 2026)
+
+Seed 273, SQLite, 2 workers, 6 kills armed, ceiling N8,000, Muse Spark 1.3 and
+SAM 3.1, Spitch off. Full report: `docs/runs/week-live.md` and `.json`.
+
+**It stopped at the ceiling on day 4 (Thursday)**: 295 turns of the 360 a
+full week sends, in 22.8 min. Verdict FAIL, on the budget marks below.
+
+| Mark | Result | Pass? |
+|---|---|---|
+| Spent | **N8,022.04** (888 Meta calls; N22.04 over the ceiling from calls already in flight; 3 calls refused) | ceiling held to one wave's in-flight calls |
+| Cost per turn | N31.09 per done turn (N27.19 over all 295); harness alone N26.17, against N19.96 projected | 1.56x the projection |
+| Turns complete | 100.0% (258 done, 37 parked) | pass, but see the budget stops |
+| Invented figures sent | 0 | pass |
+| Duplicate sends | 0 | pass |
+| Replays returning the first turn | 10/10 | pass |
+| Lost jobs | 0 | pass |
+| Forced kills | 4 fired (the run stopped before 5 and 6), 4 taken over, each completed once | pass |
+| Never-tier actions | 0 (the refund probe is on a later day, so 0 attempts too) | pass |
+| Budget breaches (per run, N50) | **2** (N52.07 and N56.54, both credit-request) | **fail** |
+| Daily-cap breaches (N3,000) | **1** (Monday, N3,011.42) | **fail** |
+| Claims-gate holds | 15 (2 runs failed after one repair, nothing sent) | counted |
+| Lease takeovers with no planned kill | 3 | counted |
+| Routing (live router) | 99.3% of 278 | counted |
+| Turn latency p50 / p95 / max | 19.6 / 49.2 / 73.3 s end to end (wave of up to 40 sends on 2 workers); run p95 18.4 s; Meta call p50 1.69 s, max 9.2 s | counted |
+
+What the live week found:
+
+1. **The run budget's reserve under-predicts a growing prompt.** Before each
+   step the loop reserves `max(dearest call so far, chars/3 estimate)`; in a
+   credit request each call costs more than the last (N15.88, N16.72, then
+   N19.47), so a run at N32.60 with a N16.72 reserve started a step that took
+   it to N52.07. Same shape in the other breach.
+2. **The daily cap checks spent, not spent plus in flight.** Two workers ran
+   turns that started under N3,000 and ended at N3,011.42.
+3. **About 16% of live spend is invisible to the budgets.** Router, readers,
+   steer and SAM 3.1 (230 chat calls and 14 SAM images, N1,270.23) are not in
+   the store's `spend`, so neither the per-run budget nor the daily cap counts
+   them. Only the week's meter saw them.
+4. **The budgets are tight for live prices.** 35 done turns (13.6%) stopped
+   at the per-run N50 and asked the owner to go on (18 drop confirmations,
+   6 bank credits, 5 payment checks, 3 fake-alert checks, 3 stock counts), and
+   Monday hit the N3,000 day cap: 37 turns parked asking for a raise (20
+   fake-alert checks, 10 stock counts, 6 drop confirmations, the owner brief).
+   The completion mark counts both as settled, so it reads 100% while about a
+   quarter of the turns did not finish their job.
+5. **Routing**: 2 misses in 278. "Unclear" receipt answer from shop-012 went
+   to `collector/payment-check` (expected `order/drop-confirmation`), and the
+   unreadable screenshot `shot.u03` went to `mimi/chat` (as offline). The
+   refund probe was not reached. The week's personas never say "any orders
+   available", so that Brand misroute is not tested here; offline the lexicon
+   has no rule for it (no score), so it falls to the model layer.
+
 ## Bugs the week found (fixed on this branch)
 
 1. **Acknowledgements released an open receipt** (`mimi/harness/binding.py`).
@@ -158,6 +223,7 @@ of wall time, 2 workers, 3 forced kills. Full report:
   to another worker even with no kill (1 in the latest week, 26 in the
   short soak's 3,632 turns). The turn still
   completes once, but it is counted so a rise shows up.
-* **Not run yet:** the 6 h soak with 20 kills and the live week (both need a
-  budget yes), and one fewer model call per ask turn (needs a paid
-  re-record of the recorded answers).
+* **Not run yet:** a full live week (the N8,000 ceiling covers about four
+  days at live prices; a full week needs about N9,800 at N27 a turn), and one
+  fewer model call per ask turn (needs a paid re-record of the recorded
+  answers).

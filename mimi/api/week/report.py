@@ -134,8 +134,15 @@ def score(run: WeekRun) -> dict[str, Any]:
             except ValueError:
                 pass
     # ---- cost
-    real_kobo = sum(int(x["kobo"]) for x in spend) if run.mode.startswith("live") else 0
-    projected = sum(int(x["kobo"]) for x in spend)
+    live = run.mode.startswith("live")
+    meter: dict[str, Any] = {}
+    if live:
+        from mimi.api.week.meter import summary
+
+        meter = summary(run.workdir)  # every Meta call: harness, router, readers, SAM
+    harness_kobo = sum(int(x["kobo"]) for x in spend)
+    real_kobo = max(int(meter.get("kobo") or 0), harness_kobo) if live else 0
+    projected = harness_kobo
     harness_calls = sum(int(json.loads(t["result"] or "{}").get("model_calls") or 0)
                         for t in turns)
     # ---- invented figures (sent) and claims-gate hits (held)
@@ -275,6 +282,8 @@ def score(run: WeekRun) -> dict[str, Any]:
                       "by_scene_p95": {k: quantile(v, 0.95) for k, v in sorted(by_scene.items())}},
         "cost_kobo": {"spent": real_kobo, "projected_at_" + _price(run): projected,
                       "projected_per_turn": projected // max(1, len(done)),
+                      "spent_per_turn": real_kobo // max(1, len(done)),
+                      "harness_kobo": harness_kobo, "meter": meter,
                       "harness_model_calls": harness_calls},
         "claims_gate_hits": len(gate),
         "claims_gate_examples": [str(e["short"])[:140] for e in gate[:5]],
@@ -382,12 +391,15 @@ def markdown(r: dict[str, Any]) -> str:
         f"| Forced worker kills fired (each taken over, completed once) | "
         f"{r['kills']['fired']} ({sum(k['taken_over'] and k['completions'] == 1 for k in r['kills']['rows'])}"
         f" ok) | |",
-        f"| Routing (informative; offline router has no model) | {r['routing']['accuracy']:.1%}"
+        f"| Routing ({'live router' if r['mode'].startswith('live') else 'informative; offline router has no model'}) | {r['routing']['accuracy']:.1%}"
         f" of {r['routing']['routed']} | |",
         f"| Turn latency p50 / p95 / max | {r['latency_s']['turn_p50']} / "
         f"{r['latency_s']['turn_p95']} / {r['latency_s']['turn_max']} s | |",
-        f"| Cost | spent {naira(c['spent'])}; projected at Muse Spark 1.3 prices "
-        f"{naira(proj)} ({naira(c['projected_per_turn'])} a turn) | |",
+        (f"| Cost | spent {naira(c['spent'])} ({naira(c.get('spent_per_turn', 0))} a turn; "
+         f"{c.get('meter', {}).get('calls', 0)} Meta calls; harness alone "
+         f"{naira(c.get('harness_kobo', 0))}) | |" if r["mode"].startswith("live") else
+         f"| Cost | spent {naira(c['spent'])}; projected at Muse Spark 1.3 prices "
+         f"{naira(proj)} ({naira(c['projected_per_turn'])} a turn) | |"),
         "",
         "## Skill mix (done turns)",
         "",
@@ -427,14 +439,27 @@ def markdown(r: dict[str, Any]) -> str:
                   *[f"| {k['id']} | {k['at']} | {k.get('turn_id', '')} | {k['skill']} | "
                     f"{k['taken_over']} | {k['final_state']} | {k['completions']} | "
                     f"{k.get('lapse_wait_s')} |" for k in r["kills"]["rows"]], ""]
+    m = c.get("meter") or {}
+    if m:
+        lines += ["## Live spend by endpoint (the meter: every Meta call)", "",
+                  "| Endpoint, model | Calls | Prompt / completion tokens | Spent | Statuses |",
+                  "|---|---|---|---|---|",
+                  *[f"| {k} | {v['calls']} | {v['prompt_tokens']:,} / {v['completion_tokens']:,}"
+                    f" | {naira(v['kobo'])} | {v['statuses']} |"
+                    for k, v in sorted(m["by_endpoint"].items())],
+                  "", f"Calls refused at the ceiling: {m['refused_at_ceiling']}. Call latency "
+                  f"p50 {m['call_latency_p50_s']} s, max {m['call_latency_max_s']} s.", ""]
     if r["routing"]["misses"]:
-        lines += ["## Routing misses (informative)", "",
+        lines += ["## Routing misses", "",
                   *[f"* {x}" for x in r["routing"]["misses"][:25]], ""]
     if len(r["loops"]) > 1:
         lines += ["## Soak loops", "", "| Loop | Tenant | Waves | Seconds |", "|---|---|---|---|",
                   *[f"| {x['loop']} | {x['tenant']} | {x['waves']} | {x['seconds']} |"
                     for x in r["loops"]], ""]
     lines += ["All data synthetic (Coral Lane Trading, fictional shops, banks and numbers). "
-              "Offline runs make no model call; projected cost is what the same turns would "
-              "cost at Muse Spark 1.3 prices.", ""]
+              + ("Live: real Muse Spark and SAM 3.1 calls; spent is the meter's total of every "
+                 "Meta call, priced from the usage each response returned."
+                 if r["mode"].startswith("live") else
+                 "Offline runs make no model call; projected cost is what the same turns would "
+                 "cost at Muse Spark 1.3 prices."), ""]
     return "\n".join(lines)

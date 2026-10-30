@@ -13,6 +13,7 @@ import time
 from datetime import datetime, timedelta
 from pathlib import Path
 
+import pytest
 import sqlalchemy as sa
 
 from mimi.api.week.go import GoSim
@@ -151,3 +152,31 @@ def test_one_simulated_day_through_the_api_with_a_worker_kill(tmp_path: Path) ->
     assert r["claims_gate_hits"] >= 0 and r["cost_kobo"]["spent"] == 0
     assert r["passed"], r
     assert time.time() - t0 < 120
+
+
+def test_the_live_meter_prices_every_meta_call_and_refuses_past_the_ceiling(
+        tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    import httpx
+
+    from mimi.api.week import meter
+
+    chat = meter.price("/v1/chat/completions", {"model": "muse-spark-1.3"},
+                       {"usage": {"prompt_tokens": 3000, "completion_tokens": 300}})
+    assert chat == (804, "muse-spark-1.3", 3000, 300)
+    # An unknown model name is priced as the dearest, never as free.
+    assert meter.price("/v1/chat/completions", {"model": "muse-x"},
+                       {"usage": {"prompt_tokens": 3000, "completion_tokens": 300}})[0] == 804
+    sam = meter.price("/v1/responses", {"model": "sam-3.1", "input": [
+        {"content": [{"type": "input_text"}, {"type": "input_image"}]}]}, {})
+    assert sam[0] == 400
+    (tmp_path / "meter-w0.jsonl").write_text('{"kobo": 1000}\n')
+    monkeypatch.setenv("MIMI_WEEK_MAX_KOBO", "1000")
+    orig = httpx.Client.send
+    try:
+        meter.install(tmp_path, "w1")
+        with pytest.raises(httpx.TransportError):
+            httpx.Client().post("https://api.meta.ai/v1/chat/completions", json={})
+    finally:
+        httpx.Client.send = orig  # type: ignore[method-assign]
+    assert meter.total_kobo(tmp_path) == 1000
+    assert meter.summary(tmp_path)["refused_at_ceiling"] == 1
