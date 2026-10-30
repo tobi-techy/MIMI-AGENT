@@ -1,6 +1,6 @@
 PY ?= python
 
-.PHONY: credit-eval credit-eval-live credit-fixtures sim-credit e2e e2e-live e2e-postgres e2e-traced binding-eval binding-eval-live steer-eval steer-eval-live which-eval order-eval order-eval-live photo-route-eval photo-route-eval-live
+.PHONY: week week-day week-soak credit-eval credit-eval-live credit-fixtures sim-credit e2e e2e-live e2e-postgres e2e-traced binding-eval binding-eval-live steer-eval steer-eval-live which-eval order-eval order-eval-live photo-route-eval photo-route-eval-live
 .PHONY: loop-safety-eval claims-eval review-pocs install test eval eval-live eval-fake voice-eval voice-eval-live voice-fixtures voice-values-eval voice-values-eval-live voice-values-fixtures proof-eval proof-eval-live proof-fixtures stock-backtest stock-eval stock-eval-live stock-eval-fake sim-stock trace-stock sim sim-live sim-voice sim-voice-v2 sim-screens trace-smoke langfuse-setup langfuse-monitor langfuse-datasets proof-experiment voice-experiment receipts-experiment judge-calibration world-check lint typecheck secrets provenance migrate check harness-eval harness-eval-live trace-harness router-eval router-eval-live context-eval context-eval-live router-train trace-router api api-worker api-seed api-openapi api-openapi-check
 
 install:            ## editable install with dev tools
@@ -246,3 +246,12 @@ photo-route-eval:   ## photo routing: 27 fresh list photos and look-alikes, repl
 
 photo-route-eval-live: ## record the photo routing eval's Muse Spark calls (needs META_API_KEY; about N180 from empty)
 	$(PY) -m mimi.api.photo_route_eval --live
+
+week:               ## simulated week offline (RAI-273): 40 shops, 7 days, 2 workers, 6 kills; writes docs/runs/week-offline.*
+	META_API_KEY= SPITCH_API_KEY= $(PY) -m mimi.api.week --workers 2 --week-kills 6
+
+week-day:           ## one simulated day with 1 kill, as CI runs it (no write)
+	META_API_KEY= SPITCH_API_KEY= $(PY) -m mimi.api.week --days 1 --workers 2 --week-kills 1 --no-write
+
+week-soak:          ## the soak offline: the week looped for 6 h with 20 forced kills; writes docs/runs/soak-offline.*
+	META_API_KEY= SPITCH_API_KEY= $(PY) -m mimi.api.week --workers 2 --soak-hours 6 --soak-kills 20

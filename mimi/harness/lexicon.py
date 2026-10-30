@@ -106,6 +106,9 @@ _R: list[tuple[str, float, str]] = [
     # ---------------- collector/chase (owner)
     ("collector/chase", 3, r"\bchase\b|\bremind (?:everyone|everybody|all|them|the shops|debtors)\b"),
     ("collector/chase", 3, r"\bwho (?:still )?(?:owes|dey owe|is owing)\b|\bdebtors?\b|\boverdue (?:list|shops|accounts)\b"),
+    # RAI-273 week run: "Which shops owe me the most?" had no phrase rule and the
+    # fast classifier sent it to stock/low-stock-report (a money misroute).
+    ("collector/chase", 3, r"\bwhich (?:shops?|customers?|people|ones) (?:still )?(?:owes?|dey owe|are owing|is owing)\b"),
     ("collector/chase", 3, r"\bsend (?:out )?reminders\b|\bcollect (?:my |our )?money from\b"),
     ("collector/chase", 3, r"\b(?:gentle|polite|soft|friendly) reminders?\b|\bremind (?:the )?(?:\w+ )?shops\b"),
     ("collector/chase", 3, r"\bfollow up (?:the ones|those|everybody|everyone|all)\b"),

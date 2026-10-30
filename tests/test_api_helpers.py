@@ -235,3 +235,21 @@ def test_stock_check_tap_and_restock_draft(api: Any) -> None:
     apr = c.get("/v1/approvals", headers=_h("owner")).json()["approvals"]
     d = next(a for a in apr if a["tool"] == "draft_restock")
     assert d["payload"]["places_order"] is False and d["payload"]["status"] == "draft"
+
+
+def test_a_resent_screenshot_is_a_resend_not_a_new_payment(api: Any) -> None:
+    """RAI-273 week run: the same shop sending the same image again was checked as
+    new (its proof id repeats, and the earlier record was skipped as "this one"),
+    so a genuine resend could fail a time rule and be flagged as a fake."""
+    c, _, engine = api
+    _screenshot(c, "g03", "shop-038", "p1")
+    again = _screenshot(c, "g03", "shop-038", "p1-again")
+    assert again["skill"] == "proof/fake-alert-check"
+    with engine.connect() as conn:
+        shorts = [r.short for r in conn.execute(sa.select(s.thread_events).where(
+            s.thread_events.c.turn_id == again["turn_id"],
+            s.thread_events.c.type == "tool_result"))]
+    assert any(x.startswith("duplicate") for x in shorts), shorts
+    tools = _intents(engine, "shop-038")
+    assert tools.count(("record_payment_proof", "applied")) == 1
+    assert not [t for t, _ in tools if t == "flag_payment_proof"]
