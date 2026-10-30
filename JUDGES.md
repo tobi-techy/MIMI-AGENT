@@ -11,10 +11,14 @@ numbers, brands and banks are made up.
 
 ## 1. Open the hosted demo
 
-> **Not deployed yet.** The Cloudflare build for the demo console at
-> `https://demo.userail.money` is prepared in the console's repository
-> (`deploy/demo-console/`), with the API address left as a placeholder;
-> nothing is live. Until it is, run it on your machine (section 4).
+> **Hosted demo link: `DEMO_LINK_PLACEHOLDER`** (to be replaced with
+> `https://demo.userail.money` once it is deployed; API: `API_LINK_PLACEHOLDER`).
+>
+> **Not deployed yet.** The steps are in
+> [`docs/DEPLOY-DEMO.md`](docs/DEPLOY-DEMO.md): the API from this repo's
+> `Dockerfile` in demo mode, and the demo console on Cloudflare at
+> `https://demo.userail.money`. Nothing is live. Until it is, run it on your
+> machine (section 4).
 
 When it is live:
 
