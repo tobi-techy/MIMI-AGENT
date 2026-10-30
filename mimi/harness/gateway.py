@@ -32,7 +32,7 @@ from typing import Any, Protocol
 
 import httpx
 
-from mimi.models import metering
+from mimi.models import cachekey, metering
 from mimi.models.cache import note_migration, requests_index, versioned_key
 
 # Prices and the naira rate live in one place (``mimi.models.prices``, with
@@ -128,6 +128,10 @@ class OpenAIToolModel:
             body["tool_choice"] = "auto"
         if self._effort:
             body["reasoning_effort"] = self._effort
+        if cachekey.enabled():
+            key = cachekey.prompt_cache_key(messages, tools)
+            if key:
+                body["prompt_cache_key"] = key
         started = time.monotonic()
         try:
             resp = self._client.post(self._url, json=body, headers=self._headers)

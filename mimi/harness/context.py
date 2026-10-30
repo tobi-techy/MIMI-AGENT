@@ -66,6 +66,15 @@ ARTIFACT_TOKENS = 2_000
 BUILDER_VERSION = "context-2026-10-27.1"
 
 
+def shared_prefix_on() -> bool:
+    """``MIMI_CTX_SHARED_PREFIX=1``: pin new prefixes in the "shared" layout
+    (``ThreadPrefix.layout``). Off by default: it changes every recorded prompt,
+    so the harness, context, credit, order and e2e evals need a live re-record."""
+    import os
+
+    return os.environ.get("MIMI_CTX_SHARED_PREFIX", "0").strip() == "1"
+
+
 def est_tokens(obj: Any) -> int:
     text = obj if isinstance(obj, str) else json.dumps(obj, ensure_ascii=False,
                                                        sort_keys=True)
@@ -159,16 +168,34 @@ class ThreadPrefix(BaseModel):
     # owner's) re-pins when the run's shop changes, so a run about one shop
     # never carries another shop's identity or memory (review finding 4).
     shop_id: str = ""
+    # "" (the layout recorded evals use): memory, routines and the whole
+    # environment in one message after the tools. "shared"
+    # (``MIMI_CTX_SHARED_PREFIX=1``): what every thread of this helper shares
+    # (routines, distributor, helper, tools) comes first; the per-thread and
+    # per-shop part (``thread_env``: thread, shop, day opened; the shop's
+    # memory) follows in its own message, so a new thread re-pays only from
+    # there. A pinned prefix keeps the layout it was pinned with.
+    layout: str = ""
+    thread_env: str = ""
 
     def messages(self) -> list[dict[str, Any]]:
+        if self.layout == "shared":
+            return [{"role": "system", "content": self.system},
+                    {"role": "user", "content": "\n\n".join(
+                        x for x in (self.routines, self.environment) if x)},
+                    {"role": "user", "content": "\n\n".join(
+                        x for x in (self.thread_env, self.memory) if x)}]
         return [{"role": "system", "content": self.system},
                 {"role": "user", "content": "\n\n".join(
                     x for x in (self.memory, self.routines, self.environment) if x)}]
 
     def hashes(self) -> dict[str, str]:
-        return {"1_system": sha(self.system), "2_tools": sha(self.tools),
-                "3_memory": sha(self.memory), "4_routines": sha(self.routines),
-                "5_environment": sha(self.environment)}
+        out = {"1_system": sha(self.system), "2_tools": sha(self.tools),
+               "3_memory": sha(self.memory), "4_routines": sha(self.routines),
+               "5_environment": sha(self.environment)}
+        if self.layout == "shared":
+            out["5_thread"] = sha(self.thread_env)
+        return out
 
     @property
     def prefix_hash(self) -> str:
@@ -498,6 +525,7 @@ class ContextBuilder:
             ("memory snapshot", 3, prefix.memory, "owner style and this shop's habits"),
             ("routines", 4, prefix.routines, f"{helper.name}'s scheduled jobs"),
             ("environment", 5, prefix.environment, "who, where and when the thread began"),
+            ("thread", 5, prefix.thread_env, "this thread, its shop and the day it began"),
         ):
             if text:
                 man.pieces.append(Piece(name=name, section=sec, tokens=est_tokens(text),
@@ -623,13 +651,22 @@ class ContextBuilder:
         ]
         if shop_id:
             env_lines.insert(3, f"Shop on this thread: {shop_id}")
+        layout, thread_env = "", ""
+        if shared_prefix_on():
+            # Shared first: the per-thread lines move to their own block after it.
+            layout = "shared"
+            per_thread = [x for x in env_lines if x.startswith(
+                ("Thread:", "Shop on this thread:", "Thread opened:"))]
+            env_lines = [x for x in env_lines if x not in per_thread]
+            thread_env = "<thread>\n" + "\n".join(per_thread) + "\n</thread>"
         environment = "<environment>\n" + "\n".join(env_lines) + "\n</environment>"
         return ThreadPrefix(
             tenant_id=tenant, thread_id=event.thread_id, helper=helper.name,
             system=helper.system_prompt(), tools=helper.toolset.schemas(), memory=memory,
             routines=routines, environment=environment, opened_at=opened.isoformat(),
             registry_version=helper.toolset.registry_version,
-            skill_version=helper.skill_version, shop_id=shop_id)
+            skill_version=helper.skill_version, shop_id=shop_id, layout=layout,
+            thread_env=thread_env)
 
     def _slice(self, event: RunEvent, skill: str, shop_id: str,
                man: Manifest) -> tuple[dict[str, Any], str]:

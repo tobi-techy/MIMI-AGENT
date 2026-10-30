@@ -50,7 +50,7 @@ from mimi.api.helpers import HelperDeps
 from mimi.api.media import checked_media
 from mimi.api.photo_label import media_pointer
 from mimi.clock import wall, wall_utc
-from mimi.harness import fastclass
+from mimi.harness import fastclass, plain
 from mimi.harness import steer as st
 from mimi.harness.batch import is_mixed, mixed_text, run_sender
 from mimi.harness.binding import AnswerBinder, ask_is_live, delivery_ids_in
@@ -637,6 +637,18 @@ class Agent:
                                      extra_notes=list(sv.get("notes") or []))
             state = self.harness.start(event, helper, context=ctx, route=route)
             ck.update(event=event.model_dump(mode="json"), loop=state.model_dump(mode="json"))
+            if plain.enabled():
+                p = plain.choose(skill=d.skill, source=event.wake_source,
+                                 sender=lead.sender, text=event.text,
+                                 button=lead.payload.button_id or "", shop_id=event.shop_id,
+                                 n_events=len(events), media=lead.payload.media.kind,
+                                 steered=bool(sv.get("parts") or sv.get("primary_text")
+                                              or sv.get("followups") or sv.get("join")))
+                if p is not None:
+                    # Code runs this turn's loop (``mimi.harness.plain``); any
+                    # surprise hands the step to the model.
+                    ck["plain"] = {**asdict(p),
+                                   "start": state.prefix_len + state.history_len}
             self._checkpoint(holder, ck)
         while state.finished is None:
             if self._stop_requested(claim.turn_id):
@@ -649,9 +661,12 @@ class Agent:
                 self._complete(holder, d, events, prior, status="cancelled_by_sender",
                                state=state, event=event, apply=False, steer=sv)
                 return
-            res = self.harness.step(state, helper)
+            code = self._plain_gateway(ck)
+            res = self.harness.step(state, helper, gateway=code[0] if code else None)
             state = LoopState.model_validate(res.state)
             ck["loop"] = res.state
+            if code and code[1].fallbacks:
+                ck["plain"] = {**ck["plain"], "active": False}  # the model has it now
             self._checkpoint(holder, ck)
         if (state.finished.status == "stopped_budget"
                 and state.finished.reason == DAILY_CAP_REASON):
@@ -659,6 +674,17 @@ class Agent:
             return
         self._complete(holder, d, events, prior, status=state.finished.status,
                        state=state, event=event, steer=sv)
+
+    def _plain_gateway(self, ck: dict[str, Any]) -> tuple[Gateway, plain.PlainModel] | None:
+        """The plain-code path's gateway for this step: code first, the real
+        models behind it (a fallback is the same step, same run)."""
+        pc = ck.get("plain") or {}
+        if not pc or pc.get("active") is False:
+            return None
+        pm = plain.PlainModel(plain.PlanInput(pc["plan"], pc["shop_id"], pc.get("text", "")),
+                              int(pc["start"]))
+        gw = self.harness.gateway
+        return Gateway([pm, *gw.models], max_tokens=gw.max_tokens), pm
 
     # ============================================================ budget park
 

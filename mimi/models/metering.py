@@ -52,6 +52,7 @@ JUDGE = "judge"  # receipt reply verdicts
 STOCK = "stock"  # worded stock answers
 SAM = "sam"
 STT = "stt"
+CODE = "code"  # a plain-code path stood in for the model (``mimi.harness.plain``): N0
 CLASSIFIERS = frozenset({ROUTER, BINDING, STEER})
 
 
