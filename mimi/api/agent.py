@@ -44,13 +44,17 @@ from typing import Any
 import sqlalchemy as sa
 from sqlalchemy.engine import Engine
 
+from mimi.api import cards as cx
 from mimi.api import steering as sx
 from mimi.api import voice as vx
 from mimi.api.helpers import HelperDeps
 from mimi.api.media import checked_media
 from mimi.api.photo_label import media_pointer
 from mimi.clock import wall, wall_utc
+from mimi.flags import fixes_2026_10_30
 from mimi.harness import fastclass
+from mimi.harness import handoff as hx
+from mimi.harness import lexicon as lx
 from mimi.harness import steer as st
 from mimi.harness.batch import is_mixed, mixed_text, run_sender
 from mimi.harness.binding import AnswerBinder, ask_is_live, delivery_ids_in
@@ -60,14 +64,24 @@ from mimi.harness.gateway import Gateway, ToolModel, kobo_cost
 from mimi.harness.inbound import Directory, Inbound, Payload
 from mimi.harness.loop import LAGOS, Harness, Helper, LoopState, _naira, business_key
 from mimi.harness.policy import GoPolicy, RiskPolicy
-from mimi.harness.router import _NO, _YES, RouteDecision, Router, ThreadState, lead_of
+from mimi.harness.router import (
+    _NO,
+    _YES,
+    RouteDecision,
+    Router,
+    ThreadState,
+    lead_of,
+    owner_rule,
+)
 from mimi.harness.router import label as skill_label
+from mimi.harness.skills import allowed_for
 from mimi.harness.style import clean_reply
 from mimi.harness.tracing import trace_job
 from mimi.harness.types import RunEvent
 from mimi.models.base import ChatModel
 from mimi.observe.langfuse_export import exporter_from_env
 from mimi.orders.catalogue import family_of
+from mimi.owed import naira_sign
 from mimi.stock.copy import numbers_in
 from mimi.store import schema as s
 from mimi.store.book import SqlGo, moves_money
@@ -183,6 +197,13 @@ class TurnView:
     replies: list[dict[str, Any]] = field(default_factory=list)
     route: dict[str, Any] = field(default_factory=dict)
     error: str = ""
+    # The handoff contract (docs/HANDOFFS.md): who Mimi asked and how it went,
+    # a helper's hand-back, the answer card and the next-step chips.
+    handoff: dict[str, Any] | None = None
+    handback: dict[str, Any] | None = None
+    card: dict[str, Any] | None = None
+    chips: list[dict[str, Any]] = field(default_factory=list)
+    task_status: str = ""
 
     @property
     def finished(self) -> bool:
@@ -202,6 +223,38 @@ def thread_kind(tenant_id: str, thread_id: str) -> tuple[str, str]:
     if head in ("owner", "rep", "job", "new"):
         return head, ""
     return "other", ""
+
+
+def turn_handoff(t: Any) -> dict[str, Any] | None:
+    """A turn row's handoff record: the finished one on its result, or, while
+    the turn is queued or running, a ``working`` one from its routing
+    checkpoint (so a console polling ``GET /v1/turns/{id}`` sees "Asking
+    Collector" before the answer)."""
+    result = loads(t.result, {})
+    if result.get("handoff"):
+        return dict(result["handoff"])
+    if t.state not in ("queued", "leased", "parked"):
+        return None
+    ck = loads(t.checkpoint, {})
+    raw = ck.get("decision")
+    if not raw:
+        return None
+    try:
+        d = RouteDecision.model_validate(raw)
+    except ValueError:
+        return None
+    first = (ck.get("handbacks") or [None])[0]
+    helper = d.helper if d.status == "routed" else "mimi"
+    ho = hx.Handoff(handoff_id=f"ho_{t.turn_id}", to_helper=helper,
+                    to_title=hx.title(helper), skill=d.skill,
+                    reason=hx.ack(helper, hop=1 if first else 0,
+                                  from_helper=str(first["from_helper"]) if first else ""),
+                    via=hx.via_of(d.layer, d.rule), hop=1 if first else 0,
+                    status="needs_you" if t.state == "parked" else "working",
+                    steps=[hx.HandoffStep(name=f"route:{d.layer}", kind="route",
+                                          ms=round(d.latency_ms, 3))],
+                    started_at=str(t.created_at))
+    return hx.dump(ho)
 
 
 def _settles(pending: str, routed: str, proposed: set[str], flagged: bool) -> bool:
@@ -261,6 +314,30 @@ class _Lease(threading.Thread):
 
     def stop(self) -> None:
         self._stop.set()
+
+
+# Helpers whose prompts say "send nothing and end the turn" for a question
+# they have no tools for; their silence is a hand-back, never a dead end.
+# Brand for anyone; the delivery-receipt Order helper for the owner only (a
+# shop's receipt flow may end quietly on purpose, e.g. after a which question).
+QUIET_HANDBACK_HELPERS: frozenset[str] = frozenset({"brand", "order"})
+# Order skills with their own work where a quiet end is the right answer
+# (a receipt is the message; intake has its own helper config).
+QUIET_KEEP_SKILLS: frozenset[str] = frozenset({"order/order-intake"})
+
+
+def _code_answers(d: RouteDecision) -> bool:
+    """Whether code answers this owner lookup from the book (no model).
+
+    Open orders and low stock: always. The morning brief: when an owner rule
+    picked it ("morning brief", "brief me", "what needs me today"), or with
+    ``MIMI_FIXES_2026_10_30`` on (every deployed image) for any brief route,
+    "how is business today?" included. With the switch off that vaguer ask
+    still reaches the model as recorded, so the recorded owner thread that
+    later turns replay against is unchanged until the paid re-record."""
+    if d.skill != "mimi/owner-brief":
+        return True
+    return d.rule.startswith("owner_rule:") or fixes_2026_10_30()
 
 
 class Agent:
@@ -445,12 +522,16 @@ class Agent:
                     reply["voice"] = voice  # the same text, read aloud (RAI-290)
                 replies.append(reply)
         result = loads(lead.result, {})
+        ho = turn_handoff(lead)
         return TurnView(
             turn_id=t.turn_id, tenant_id=tenant_id, thread_id=t.thread_id, state=lead.state,
             status=lead.status, duplicate=duplicate,
             merged_into=t.merged_into or "", helper=lead.helper, skill=lead.skill,
             run_id=lead.run_id, attempts=lead.attempts, replies=replies,
-            route=dict(result.get("route") or {}), error=lead.error)
+            route=dict(result.get("route") or {}), error=lead.error,
+            handoff=ho, handback=result.get("handback"), card=result.get("card"),
+            chips=list(result.get("chips") or []),
+            task_status=str(ho["status"]) if ho else hx.task_status(lead.state, lead.status))
 
     def wait(self, tenant_id: str, turn_id: str, timeout_s: float,
              *, duplicate: bool = False, poll_s: float = 0.1) -> TurnView:
@@ -578,7 +659,7 @@ class Agent:
             holder[0] = self.queue.join_batch(holder[0], list(sv["join"]), ck)
             claim = holder[0]
             events = self._load_batch(claim.tenant_id, claim.batch)
-        if sv.get("route"):
+        if sv.get("route") and not ck.get("handback"):
             r = sv["route"]
             d = d.model_copy(update={"status": "routed", "helper": r["helper"],
                                      "skill": r["skill"], "rule": r["rule"], "layer": "rule",
@@ -600,9 +681,18 @@ class Agent:
             # by code: nothing for a model to do (RAI-302).
             self._complete(holder, d, events, prior, status="done_quiet", steer=sv)
             return
+        if (lead.source == "owner_message" and d.status == "routed"
+                and d.skill in cx.CODE_LOOKUPS and _code_answers(d)):
+            # What is open now (orders, low stock): code reads the book and
+            # answers with a card; no model, no spend (docs/HANDOFFS.md).
+            self._complete(holder, d, events, prior, status="done", steer=sv, lookup=True)
+            return
         # A skill can have its own helper config (Order intake, RAI-302).
         helper = self.helpers.get(d.skill) or self.helpers.get(d.helper)
         if helper is None:
+            if self._hand_back(holder, ck, d, events, prior, sv, code="no_helper", spans=[],
+                               run_id=""):
+                return
             self._complete(holder, d, events, prior, status=f"no_helper_yet:{d.helper}",
                            steer=sv)
             return
@@ -644,8 +734,119 @@ class Agent:
                 and state.finished.reason == DAILY_CAP_REASON):
             self._park(holder, ck, d, events, state)
             return
+        back = self._needs_hand_back(d, lead, state.finished)
+        if back is not None and self._hand_back(
+                holder, ck, d, events, prior, sv, code=back[0], spans=back[1],
+                run_id=state.finished.run_id):
+            return
         self._complete(holder, d, events, prior, status=state.finished.status,
                        state=state, event=event, steer=sv)
+
+    # ============================================================ hand-back
+
+    @staticmethod
+    def _needs_hand_back(d: RouteDecision, lead: Inbound, r: Any
+                         ) -> tuple[hx.HandbackCode, list[str]] | None:
+        """A helper that could not answer a person: it pointed them elsewhere
+        (the claims gate held the deflection, or one got through) and nothing
+        useful reached them. Then the message goes back to Mimi (one hop)."""
+        if lead.sender not in ("owner", "shop", "rep") or d.helper == "mimi" or r is None:
+            return None
+        if any(i.tool not in ("send_to_user", "ask_question") for i in r.intents):
+            return None  # it did real work: never drop that for a re-route
+        held = hx.deflected(r.events)
+        said = [dr.body for dr in r.outbound_drafts]
+        leaked = hx.deflecting_texts(said)
+        useful = [b for b in said if not hx.deflecting_texts([b])]
+        if (held or leaked) and not useful:
+            return ("failed" if r.status == "failed" else "deflected"), held + leaked
+        if (not said and not r.intents and r.status != "failed"
+                and d.skill not in QUIET_KEEP_SKILLS
+                and (d.helper == "brand" or (d.helper in QUIET_HANDBACK_HELPERS
+                                             and lead.sender == "owner"))):
+            # Brand and the delivery-receipt Order helper end a question they
+            # have no tools for quietly (their prompts, 30 Oct 2026): Mimi
+            # takes it back instead of leaving the person with nothing.
+            return "no_tools", []
+        return None
+
+    def _hand_back(self, holder: list[Claim], ck: dict[str, Any], d: RouteDecision,
+                   events: Sequence[Inbound], prior: ThreadState, sv: dict[str, Any], *,
+                   code: hx.HandbackCode, spans: list[str], run_id: str) -> bool:
+        """Mimi takes a message back from a helper and re-routes it once.
+
+        Returns True when this turn was handled here (re-run on the right
+        helper, or Mimi asked one clear question); False to complete as
+        before (a non-person event)."""
+        lead = lead_of(events)
+        sender = lead.sender
+        if sender not in ("owner", "shop", "rep"):
+            return False
+        text = "\n".join(e.text for e in events if e.text).strip()
+        first = ck.get("handback")
+        target = "" if first else hx.reroute(
+            text, sender, exclude_helper=d.helper, spans=spans,
+            owner_rule=owner_rule(text) if sender == "owner" else "")
+        why = {"deflected": "pointed the message elsewhere instead of answering",
+               "failed": "could not answer without pointing elsewhere",
+               "no_helper": "has no tools for this yet",
+               "no_tools": "has no tools for this"}[code]
+        rec = hx.Handback(from_helper=d.helper, from_skill=d.skill, code=code,
+                          reason=f"{hx.title(d.helper)} {why}", spans=spans[:4],
+                          first_run_id=run_id,
+                          resolved="rerouted" if target else (
+                              "asked_owner" if sender == "owner" else "asked_sender"),
+                          to_helper=target.split("/")[0] if target else "",
+                          to_skill=target)
+        if first:
+            # The second helper could not answer either: no third hop.
+            rec = rec.model_copy(update={"first_run_id": str(first.get("first_run_id", ""))})
+        ck = {k: v for k, v in ck.items() if k not in ("loop", "event", "parked")}
+        hbs = list(ck.get("handbacks") or []) + [rec.model_dump(mode="json")]
+        ck["handbacks"] = hbs
+        thread_id = holder[0].thread_id
+        if target and not first:
+            d2 = d.model_copy(update={
+                "status": "routed", "helper": target.split("/")[0], "skill": target,
+                "layer": "rule", "rule": f"handback:{d.helper}", "confidence": 1.0,
+                "clarify_question": "", "options": ()})
+            d2 = d2.model_copy(update={"events": d.events + tuple(
+                e for e in Router._events(d2, lead.received_at, thread_id)
+                if e.kind == "handed_to")})
+            ck["handback"] = rec.model_dump(mode="json")
+            ck["decision"] = d2.model_dump(mode="json")
+            self._checkpoint(holder, ck)
+            self._run(holder)
+            return True
+        if sender == "owner" and d.skill in cx.CARD_SKILLS:
+            # Mimi answers herself from the book: the card and its sentence.
+            ans = cx.answer_for(self.engine, holder[0].tenant_id, d.skill, text)
+            if ans.card is not None and ans.sentence:
+                rec = rec.model_copy(update={"resolved": "mimi_answered", "to_helper": "mimi",
+                                             "to_skill": d.skill})
+                ck["handbacks"] = hbs[:-1] + [rec.model_dump(mode="json")]
+                ck["handback"] = rec.model_dump(mode="json")
+                self._checkpoint(holder, ck)
+                self._complete(holder, d, events, prior, status="done", steer=sv,
+                               lookup=True)
+                return True
+        # Else one clear question with the two likeliest helpers as buttons,
+        # never a dead end and never a guess.
+        sc = lx.score(text, frozenset(k.key for k in allowed_for(sender)))
+        pad = (("collector/chase", "order/open-orders") if sender == "owner"
+               else ("order/order-intake", "collector/collections"))
+        cands = list(dict.fromkeys([k for k in (sc.top, sc.second) if k] + list(pad)))[:2]
+        base = {"source": lead.source, "external_id": lead.external_id,
+                "thread_id": thread_id}
+        dc = self.router._clarify(cands, sender, d.language, base, layer="rule",
+                                  rule=f"handback:{d.helper}:clarify")
+        dc = dc.model_copy(update={"events": d.events + Router._events(
+            dc, lead.received_at, thread_id)})
+        ck["handback"] = rec.model_dump(mode="json")
+        ck["decision"] = dc.model_dump(mode="json")
+        self._checkpoint(holder, ck)
+        self._complete(holder, dc, events, prior, status="asked_to_clarify", steer=sv)
+        return True
 
     # ============================================================ budget park
 
@@ -1155,7 +1356,7 @@ class Agent:
     def _complete(self, holder: list[Claim], d: RouteDecision, events: Sequence[Inbound],
                   prior: ThreadState, *, status: str, state: LoopState | None = None,
                   event: RunEvent | None = None, apply: bool = True,
-                  steer: dict[str, Any] | None = None) -> None:
+                  steer: dict[str, Any] | None = None, lookup: bool = False) -> None:
         claim = holder[0]
         sv = steer or {}
         code = sv.get("code") or {}
@@ -1171,6 +1372,19 @@ class Agent:
                                             "model_called": d.model_called,
                                             "cost_kobo": d.cost_kobo}}
         run_id = ""
+        fin = state.finished if state is not None else None
+        # The answer card (owner console only, figures from the book by code)
+        # and, for a pure read, the one sentence that goes with it.
+        words = "\n".join(e.text for e in events if e.text).strip()
+        ans = cx.Answer(None, "")
+        if (lead.source == "owner_message" and d.status == "routed" and apply
+                and status not in ("stopped_by_owner", "cancelled_by_sender")
+                and (fin is None or fin.status != "failed")):
+            ans = cx.answer_for(self.engine, tenant, d.skill, words)
+        did_work = fin is not None and any(
+            i.tool not in ("send_to_user", "ask_question") for i in fin.intents)
+        override = ans.sentence if (ans.card is not None and not did_work) else ""
+        owner_said = False
         with self.engine.begin() as conn:
             for i, ev in enumerate(d.events):
                 insert_ignore(conn, s.thread_events, {
@@ -1272,8 +1486,16 @@ class Agent:
                                   else getattr(self.helpers.get(d.helper), "shadow", False))
                         if outcome.endswith(("refused", "shadowed")) or shadow:
                             continue  # refused, or a shadow-mode run: nothing goes out
+                        body = dr.body
+                        if (ans.card is not None and dr.channel == "owner_console"
+                                and dr.kind != "question"):
+                            # A card carries the detail: one short sentence beside it.
+                            if owner_said:
+                                continue
+                            body = override or hx.first_sentence(body)
+                            owner_said = True
                         self._out(conn, tenant, thread, turn_id, key=dr.idempotency_key,
-                                  channel=dr.channel, shop_id=dr.shop_id, text=dr.body,
+                                  channel=dr.channel, shop_id=dr.shop_id, text=body,
                                   kind=dr.kind,
                                   status="pending_approval" if dr.tier == "approve"
                                   else "ready", ts=now + n * 1e-3)
@@ -1313,6 +1535,16 @@ class Agent:
                 next_state = replace(next_state, pending_skill=prior.pending_skill,
                                      expects=prior.expects, asked_at=prior.asked_at,
                                      ask_ref=prior.ask_ref)
+            if ans.card is not None and not owner_said and ans.sentence:
+                # A lookup code answers, or a helper that said nothing to the
+                # owner: the card's own sentence, never a dead end.
+                self._out(conn, tenant, thread, turn_id, key=f"card:{turn_id}",
+                          channel="owner_console", shop_id="", text=ans.sentence,
+                          kind="reply", status="ready", ts=now)
+            if lookup:
+                result.update({"run_status": "done", "reason": "answered by code from the book",
+                               "model_calls": 0})
+            self._handoff_records(conn, claim, d, lead, fin, status, result, ans, now)
             if sv.get("fix_keep") is not None and not next_state.fix:
                 next_state = replace(next_state, fix=str(sv["fix_keep"]))
             elif prior.fix and not sv.get("fix_done") and not next_state.fix:
@@ -1349,6 +1581,68 @@ class Agent:
             trace_job(d, state.finished if state is not None else None, self.exporter,
                       job_id=turn_id, status=status, job=self._job_story(claim),
                       shop_id=thread_kind(tenant, thread)[1] or "owner")
+
+    def _handoff_records(self, conn: sa.Connection, claim: Claim, d: RouteDecision,
+                         lead: Inbound, fin: Any, status: str, result: dict[str, Any],
+                         ans: cx.Answer, now: float) -> None:
+        """The handoff contract for this turn (docs/HANDOFFS.md): the typed
+        handoff with its steps, any hand-back, the card and the chips, kept on
+        the turn's result and written to the thread as two events: ``handoff``
+        before the answer ("Asking Collector") and ``handoff_result`` after it
+        (Mimi posting the helper's result back on the thread)."""
+        tenant, thread, turn_id = claim.tenant_id, claim.thread_id, claim.turn_id
+        hbs = [hx.Handback.model_validate(h) for h in claim.checkpoint.get("handbacks") or []]
+        first = hbs[0] if hbs else None
+        pending = int(conn.execute(sa.select(sa.func.count()).select_from(s.approvals).where(
+            s.approvals.c.tenant_id == tenant, s.approvals.c.turn_id == turn_id,
+            s.approvals.c.status == "pending")).scalar() or 0)
+        tstatus = hx.task_status("done", status, pending_approvals=pending)
+        helper = d.helper if d.status == "routed" else "mimi"
+        steps = hx.steps_from_events(fin.events if fin is not None else (),
+                                     route_ms=d.latency_ms,
+                                     route_at=lead.received_at.isoformat(),
+                                     route_name=f"route:{d.layer}")
+        for hb in hbs:
+            steps.insert(1, hx.HandoffStep(name=f"handback:{hb.from_helper}", kind="handback",
+                                           status="refused"))
+        if ans.card is not None:
+            steps.append(hx.HandoffStep(name=f"card:{ans.card.kind}", kind="code",
+                                        at=now_iso(now)))
+        ho = hx.Handoff(
+            handoff_id=f"ho_{turn_id}", to_helper=helper, to_title=hx.title(helper),
+            skill=d.skill, reason=hx.ack(helper, hop=1 if first else 0,
+                                         from_helper=first.from_helper if first else ""),
+            via=hx.via_of(d.layer, d.rule), hop=1 if first else 0, status=tstatus,
+            steps=steps, started_at=lead.received_at.isoformat(), finished_at=now_iso(now))
+        chips = hx.safe_chips(hx.chips_for(d.skill, lead.sender, ans.card)) if (
+            d.status == "routed" and lead.source == "owner_message") else []
+        result["handoff"] = hx.dump(ho)
+        result["handback"] = hx.dump(hbs[-1]) if hbs else None
+        result["card"] = hx.dump(ans.card)
+        result["chips"] = hx.dump_list(chips)
+        at0 = lead.received_at
+        if ans.card is not None:
+            # What code read from the book for the card, kept like a tool read
+            # so every figure in the card's sentence is traceable to this turn.
+            insert_ignore(conn, s.thread_events, {
+                "tenant_id": tenant, "event_id": f"card_{turn_id}", "thread_id": thread,
+                "run_id": "", "turn_id": turn_id, "seq": -1, "step": 0, "type": "card_read",
+                "tool": f"card:{ans.card.kind}", "tier": "auto", "short": ans.card.title[:300],
+                "cost_kobo": 0, "model": "", "duration_ms": 0.0, "data": dumps(result["card"]),
+                "at": now_iso(now - 1e-3), "ts": now - 1e-3})
+        for key, typ, short, ts, data in (
+                (f"ho_{turn_id}", "handoff", ho.reason, at0.timestamp() + 1e-4,
+                 {"handoff": result["handoff"]}),
+                (f"hor_{turn_id}", "handoff_result",
+                 f"{ho.to_title}: {tstatus.replace('_', ' ')}"
+                 + (f". {ans.sentence}" if ans.sentence and ans.card is not None else ""),
+                 now + 0.5, {"status": tstatus, "card": result["card"] is not None,
+                             "handback": result["handback"]})):
+            insert_ignore(conn, s.thread_events, {
+                "tenant_id": tenant, "event_id": key, "thread_id": thread, "run_id": "",
+                "turn_id": turn_id, "seq": -1, "step": 0, "type": typ, "tool": "",
+                "tier": "", "short": short[:300], "cost_kobo": 0, "model": "",
+                "duration_ms": 0.0, "data": dumps(data), "at": now_iso(ts), "ts": ts})
 
     def _voice_choice(self, holder: list[Claim], lead: Inbound,
                       cmd: tuple[bool, str | None]) -> None:
@@ -1616,6 +1910,11 @@ class Agent:
         # Every outbound message, model- or code-written, passes the style
         # guard (RAI-303): no dashes, no filler, figures never change.
         text = clean_reply(text, where=kind)
+        if channel == "owner_console":
+            # Naira as the owner reads it: "N7,231,000" becomes "₦7,231,000"
+            # (figures unchanged). Shop texts keep their recorded wording until
+            # the shop persona replays are re-recorded.
+            text = naira_sign(text)
         insert_ignore(conn, s.messages, {
             "tenant_id": tenant, "message_id": f"out:{key}", "thread_id": thread,
             "turn_id": turn_id, "direction": "out", "sender": "mimi", "channel": channel,

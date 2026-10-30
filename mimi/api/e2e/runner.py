@@ -575,6 +575,14 @@ def _collect(*, live: bool, cache_dir: Path, workdir: Path | None = None,
             a for a in api.get("/v1/approvals?status=all").json()["approvals"]
             if a["shop_id"] == sid and a["tool"] == "submit_order"]
 
+        # ------------- handoffs: the owner asks what is open (docs/HANDOFFS.md)
+        run.checks["open_orders_pending"] = [
+            a for a in api.get("/v1/approvals?status=pending").json()["approvals"]
+            if a["tool"] in ("submit_order", "revise_order")]
+        send(TurnRec("handoff", "owner", "open_orders", "", ("order/open-orders",)),
+             api.turn("e2e.owner.orders.1", source="owner_message", text=sc.OPEN_ORDERS_TEXT,
+                      when=at(19, 10)))
+
         # ---------------------------------------------------- the owner decides
         pending = api.get("/v1/approvals?status=pending").json()["approvals"]
         run.checks["approvals_before"] = pending

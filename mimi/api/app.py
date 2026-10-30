@@ -52,6 +52,7 @@ from mimi.api.demo import (
     DemoStore,
     SessionExpired,
     client_address,
+    client_ip,
     refuses_approval,
 )
 from mimi.api.media import MAX_BYTES
@@ -60,6 +61,7 @@ from mimi.api.schemas import (
     CreditOut,
     DecisionIn,
     DecisionOut,
+    DemoLimitError,
     DemoSessionOut,
     ErrorOut,
     EventIn,
@@ -69,6 +71,7 @@ from mimi.api.schemas import (
     MeOut,
     ShopDetail,
     ShopList,
+    TaskList,
     ThreadDetail,
     ThreadList,
     TurnIn,
@@ -89,7 +92,7 @@ _ERRORS: dict[int | str, dict[str, Any]] = {
     401: {"model": ErrorOut}, 403: {"model": ErrorOut}, 404: {"model": ErrorOut},
     409: {"model": ErrorOut}}
 _DEMO_ERRORS: dict[int | str, dict[str, Any]] = {
-    **_ERRORS, 429: {"model": ErrorOut}, 503: {"model": ErrorOut}}
+    **_ERRORS, 429: {"model": DemoLimitError}, 503: {"model": DemoLimitError}}
 
 
 def create_app(settings: Settings | None = None, agent: Agent | None = None, *,
@@ -160,8 +163,11 @@ def create_app(settings: Settings | None = None, agent: Agent | None = None, *,
             if sess is not None:
                 return sess.ip_hash
         peer = request.client.host if request.client else ""
-        return demo.ip_hash(client_address(peer, request.headers.get("x-forwarded-for", ""),
-                                           trust=settings.demo.trust_forwarded))
+        return demo.ip_hash(client_address(peer, request.headers, settings.demo))
+
+    def ip_source(request: Request) -> str:
+        peer = request.client.host if request.client else ""
+        return client_ip(peer, request.headers, settings.demo)[1]
 
     def demo_gate(request: Request, key: ApiKey) -> None:
         """Demo caps and kill switch, checked before anything is queued."""
@@ -186,7 +192,7 @@ def create_app(settings: Settings | None = None, agent: Agent | None = None, *,
 
     @app.exception_handler(DemoRefused)
     async def _dr(_: Request, exc: DemoRefused) -> JSONResponse:
-        return JSONResponse({"detail": str(exc)}, status_code=exc.status)
+        return JSONResponse(exc.payload(), status_code=exc.status)
 
     @app.exception_handler(UploadRefused)
     async def _ur(_: Request, exc: UploadRefused) -> JSONResponse:
@@ -223,6 +229,8 @@ def create_app(settings: Settings | None = None, agent: Agent | None = None, *,
                           transcript=m.transcript, transcript_lang=m.transcript_lang)
         if not (body.text.strip() or body.button_id or media.kind != "none"):
             raise HTTPException(422, "a turn needs text, a button or media")
+        if body.assign_to and body.source != "owner_message":
+            raise HTTPException(422, "only the owner can assign a helper")
         at = body.received_at or wall_utc()
         if at.tzinfo is None:
             # A channel time without a zone is a Lagos wall-clock time
@@ -232,7 +240,7 @@ def create_app(settings: Settings | None = None, agent: Agent | None = None, *,
             source=body.source, org_id=key.tenant_id, external_id=body.message_id,
             received_at=at,
             payload=Payload(text=body.text, from_phone=body.phone, media=media,
-                            button_id=body.button_id))
+                            button_id=body.button_id, assign_to=body.assign_to))
         view = agent.submit(key.tenant_id, inbound, media_ref=ref, simulated=body.simulated)
         if wait and not view.finished:
             agent.process(view.turn_id)
@@ -355,6 +363,15 @@ def create_app(settings: Settings | None = None, agent: Agent | None = None, *,
     def get_thread(thread_id: str, key: Owner) -> dict[str, Any]:
         return reads.get_thread(engine, key.tenant_id, thread_id, uploads=uploads is not None)
 
+    @app.get("/v1/tasks", response_model=TaskList, responses=_ERRORS,
+             summary="Helper tasks and their status (working, needs_you, done)")
+    def get_tasks(key: Owner, thread_id: str = "", helper: str = "",
+                  status: Annotated[str, Query(pattern=r"^(|working|needs_you|done|handed_back"
+                                                       r"|failed)$")] = "",
+                  limit: Annotated[int, Query(ge=1, le=200)] = 50) -> dict[str, Any]:
+        return reads.list_tasks(engine, key.tenant_id, thread_id=thread_id, helper=helper,
+                                status=status, limit=limit)
+
     @app.get("/v1/shops", response_model=ShopList, responses=_ERRORS)
     def get_shops(key: Owner) -> dict[str, Any]:
         return reads.list_shops(engine, key.tenant_id)
@@ -429,7 +446,7 @@ def create_app(settings: Settings | None = None, agent: Agent | None = None, *,
         status = None
         if demo is not None:
             status = demo.status(demo.session(key.digest) if key.session else None,
-                                 visitor(request, key))
+                                 visitor(request, key), ip_source(request))
         return {"tenant_id": key.tenant_id, "role": key.role, "mode": settings.mode,
                 "demo": status}
 

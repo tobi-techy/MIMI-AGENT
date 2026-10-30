@@ -97,12 +97,14 @@ queue. Its default database is SQLite in `/data` (mount a volume); set
 | `MIMI_PHONE_PSEUDONYM_KEY` | dev key | required in production (thread ids for unknown numbers) |
 | `MIMI_RELEASE` | | shown by `/v1/health` |
 | `MIMI_MODE` | `live` | `live` (bearer keys only) or `demo` (public demo sessions, below) |
-| `MIMI_DEMO_IP_DAILY_CAP_NAIRA` | 100 (placeholder) | demo: model spend per visitor address per Africa/Lagos day, across its sessions |
-| `MIMI_DEMO_GLOBAL_DAILY_CAP_NAIRA` | 2000 (placeholder) | demo: model spend across every demo session per day |
+| `MIMI_DEMO_IP_DAILY_CAP_NAIRA` | 400 | demo: model spend per visitor address per Africa/Lagos day, across its sessions (about 25 turns; 100 ended a visit after 4 to 8) |
+| `MIMI_DEMO_GLOBAL_DAILY_CAP_NAIRA` | 2000 | demo: model spend across every demo session per day |
 | `MIMI_DEMO_SESSION_TTL_S` | 3600 | demo: how long a session token lasts |
 | `MIMI_DEMO_SESSIONS_PER_IP` | 20 | demo: new sessions per visitor address per day |
 | `MIMI_DEMO_KILL` | off | demo: `1` refuses every new turn (503); reads keep working |
-| `MIMI_DEMO_TRUST_FORWARDED` | off | demo: `1` reads the visitor address from the right-most `X-Forwarded-For` entry (only behind a proxy that appends it) |
+| `MIMI_DEMO_CLIENT_IP_HEADER` | `cf-connecting-ip` | demo: the one header the edge sets to the visitor's address (Cloudflare, in front of Atlasflow, writes `CF-Connecting-IP` and overwrites a client's own); read only from a trusted peer; `none` turns it off. `X-Forwarded-For` is refused here |
+| `MIMI_DEMO_TRUSTED_PROXIES` | private, loopback and CGNAT ranges | demo: comma-separated CIDRs (the platform edge) whose requests may carry that header; `*` trusts any peer, only when the app is reachable through the edge alone |
+| `MIMI_DEMO_TRUST_FORWARDED` | ignored | removed 30 Oct 2026: `X-Forwarded-For` is never read (a made-up one bought a fresh allowance) |
 | `MIMI_DEMO_IP_SALT` | dev salt | demo: key for the address digests; required in production |
 | `MIMI_MEDIA_DIR` | none | where the helpers read a message's image by its `ref` (`local:<path>`), checked against its `sha256`; the simulator and the e2e eval use it. Without it no image is read |
 
@@ -137,7 +139,48 @@ A public console on synthetic data (`mimi/api/demo.py`):
   mid-turn parks on the loop's daily cap like any distributor.
 * Approving a credit review, a credit limit change or a raise of the daily
   allowance is refused (403); declining works.
-* `GET /v1/me` shows the session's expiry and today's spend against the caps.
+* `GET /v1/me` shows the session's expiry, today's spend against the caps,
+  `resets_at` and `ip_source` (`header` when the visitor address came from
+  the edge's `CF-Connecting-IP`, `peer` when it is the socket address; never
+  the address itself). After a deploy, `ip_source` must read `header`, or
+  every visitor shares one allowance.
+* The visitor address is never taken from `X-Forwarded-For` (or `X-Real-IP`):
+  a client can write those. Only `MIMI_DEMO_CLIENT_IP_HEADER` from a peer in
+  `MIMI_DEMO_TRUSTED_PROXIES`, else the socket peer.
+
+### Demo limits: the refusal the console shows
+
+Every demo refusal (429 for a cap or too many sessions, 503 when paused)
+answers one shape. `detail` is kept for older clients; `demo_limit` is what
+the console shows (OpenAPI `DemoLimitError`):
+
+| Field | Type | What |
+|---|---|---|
+| `code` | string | `visitor_daily_cap`, `global_daily_cap`, `paused`, `too_many_sessions` |
+| `scope` | string | `visitor` (this address), `global` (every visitor), `demo` (paused) |
+| `title` | string | a short heading: `You have used today's demo allowance` |
+| `message` | string | one plain sentence to show under it |
+| `spent_kobo`, `cap_kobo` | int or null | today's spend and the cap (null when not a spend cap) |
+| `spent_naira`, `cap_naira` | string or null | the same as `₦400` |
+| `resets_at` | string | next midnight Africa/Lagos, ISO 8601 (`2026-10-31T00:00:00+01:00`); empty when paused |
+| `retry` | string | `tomorrow` or `later` |
+
+```json
+{
+  "detail": "you have used today's demo allowance; it resets at midnight Lagos time",
+  "demo_limit": {
+    "code": "visitor_daily_cap", "scope": "visitor",
+    "title": "You have used today's demo allowance",
+    "message": "You have used today's demo allowance; it resets at midnight Lagos time.",
+    "spent_kobo": 40120, "cap_kobo": 40000, "spent_naira": "₦401.20", "cap_naira": "₦400",
+    "resets_at": "2026-10-31T00:00:00+01:00", "retry": "tomorrow"
+  }
+}
+```
+
+A run that crosses the cap mid-turn is not refused: it parks on the loop's
+daily cap (the owner gets the usual holding note) and the next turn gets the
+refusal above.
 * Console attachments (`mimi/api/uploads.py`): the demo console has no
   WhatsApp channel to keep media, so the API stands in for one.
   `POST /v1/media` takes one file as the raw request body with its
@@ -172,9 +215,10 @@ approval reads as 404. Keys are compared by SHA-256 in constant time; give
 
 | Method and path | Role | What |
 |---|---|---|
-| `POST /v1/turns` | any | One inbound message: `message_id` (the dedupe key), `source` (`shop_message`, `owner_message`, `rep_message`), `phone`, `text`, `button_id`, `media` (`kind`, `ref`, `mime`, `sha256`, size, `caption`, `transcript`), `received_at`, `simulated`. Waits for the replies (200) or answers 202 with the turn id; `?wait=false` queues only. The same `message_id` again returns the same turn and replies with `duplicate: true` |
+| `POST /v1/turns` | any | One inbound message: `message_id` (the dedupe key), `source` (`shop_message`, `owner_message`, `rep_message`), `phone`, `text`, `button_id`, `media` (`kind`, `ref`, `mime`, `sha256`, size, `caption`, `transcript`), `received_at`, `simulated`, `assign_to` (owner only: the helper to hand it to, [HANDOFFS.md](HANDOFFS.md)). Waits for the replies (200) or answers 202 with the turn id; `?wait=false` queues only. The same `message_id` again returns the same turn and replies with `duplicate: true` |
 | `POST /v1/events` | any | One system event from Go or the scheduler: `event_id` (the dedupe key), `kind` (`webhook` or `routine`), `name` (`delivery_completed`, `stock.weekly_check`, ...), `shop_id` (empty for the distributor), `received_at`, `simulated`. Queued as a turn on the shop's thread and routed by rule (202 with the turn id). The words the helper sees are written by code from the kind, name and shop; an event carries no free text. Another distributor's shop is 404 |
-| `GET /v1/turns/{turn_id}` | any | State, status, route, run id (the trace id) and replies |
+| `GET /v1/turns/{turn_id}` | any | State, status, route, run id (the trace id) and replies; plus the handoff contract (`handoff`, `handback`, `card`, `chips`, `task_status`, [HANDOFFS.md](HANDOFFS.md)) |
+| `GET /v1/tasks` | owner | Each helper task (a turn Mimi handed to a helper), newest first, with its status (`working`, `needs_you`, `done`, `handed_back`, `failed`); `thread_id`, `helper`, `status`, `limit` ([HANDOFFS.md](HANDOFFS.md)) |
 | `GET /v1/threads` | owner | Threads, newest first: kind, shop, last message, pending approvals, and for the console `helper` / `helper_name` (newest routed turn's helper), `status` (`needs_you`: a pending approval or a parked turn; `running`: a turn queued or running; `done`) and a code-written `title` (never shop text). `limit`, `offset`, `kind` |
 | `GET /v1/threads/{thread_id}` | owner | Messages (each with `voice`: the reply has a voice note at `/v1/messages/{id}/voice`, and `media`: in demo, the owner's console attachment at `/v1/messages/{id}/media`), reasoning steps (routing and every harness step: tool, tier, short line, model, cost, time; never the model's private text), turns, router state |
 | `GET /v1/shops` | owner | Shops with credit limit, outstanding and overdue (kobo and naira, summed in code), phone as last four digits |

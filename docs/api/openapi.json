@@ -148,6 +148,189 @@
         "title": "ApprovalOut",
         "type": "object"
       },
+      "Card": {
+        "additionalProperties": false,
+        "properties": {
+          "actions": {
+            "items": {
+              "$ref": "#/components/schemas/CardAction"
+            },
+            "title": "Actions",
+            "type": "array"
+          },
+          "as_of": {
+            "default": "",
+            "title": "As Of",
+            "type": "string"
+          },
+          "empty_text": {
+            "default": "",
+            "title": "Empty Text",
+            "type": "string"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ListItem"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "kind": {
+            "enum": [
+              "shop_row",
+              "list"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "shop_row": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ShopRow"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "skill": {
+            "title": "Skill",
+            "type": "string"
+          },
+          "source": {
+            "const": "book",
+            "default": "book",
+            "title": "Source",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "total": {
+            "default": 0,
+            "title": "Total",
+            "type": "integer"
+          },
+          "total_kobo": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Total Kobo"
+          },
+          "total_naira": {
+            "default": "",
+            "title": "Total Naira",
+            "type": "string"
+          }
+        },
+        "required": [
+          "kind",
+          "title",
+          "skill"
+        ],
+        "title": "Card",
+        "type": "object"
+      },
+      "CardAction": {
+        "additionalProperties": false,
+        "properties": {
+          "action": {
+            "enum": [
+              "remind",
+              "open_shop",
+              "open_order",
+              "open_approvals",
+              "ask"
+            ],
+            "title": "Action",
+            "type": "string"
+          },
+          "intent": {
+            "$ref": "#/components/schemas/ChipIntent"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "tier": {
+            "const": "safe",
+            "default": "safe",
+            "title": "Tier",
+            "type": "string"
+          }
+        },
+        "required": [
+          "action",
+          "label",
+          "intent"
+        ],
+        "title": "CardAction",
+        "type": "object"
+      },
+      "Chip": {
+        "additionalProperties": false,
+        "properties": {
+          "intent": {
+            "$ref": "#/components/schemas/ChipIntent"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "tier": {
+            "const": "safe",
+            "default": "safe",
+            "title": "Tier",
+            "type": "string"
+          }
+        },
+        "required": [
+          "label",
+          "intent"
+        ],
+        "title": "Chip",
+        "type": "object"
+      },
+      "ChipIntent": {
+        "additionalProperties": false,
+        "description": "What the console sends when the chip is tapped.\n\n``turn``: POST /v1/turns with ``text`` (and ``assign_to`` when set).\n``open``: navigate to ``target`` (a shop, an order, the approvals list);\nno turn, nothing changes.",
+        "properties": {
+          "assign_to": {
+            "default": "",
+            "title": "Assign To",
+            "type": "string"
+          },
+          "kind": {
+            "enum": [
+              "turn",
+              "open"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "target": {
+            "default": "",
+            "title": "Target",
+            "type": "string"
+          },
+          "text": {
+            "default": "",
+            "title": "Text",
+            "type": "string"
+          }
+        },
+        "required": [
+          "kind"
+        ],
+        "title": "ChipIntent",
+        "type": "object"
+      },
       "CreditLimit": {
         "additionalProperties": false,
         "properties": {
@@ -432,6 +615,128 @@
         "title": "DemoCaps",
         "type": "object"
       },
+      "DemoLimit": {
+        "additionalProperties": false,
+        "description": "Why a demo request was refused, in one fixed shape the console shows.",
+        "properties": {
+          "cap_kobo": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cap Kobo"
+          },
+          "cap_naira": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cap Naira"
+          },
+          "code": {
+            "enum": [
+              "visitor_daily_cap",
+              "global_daily_cap",
+              "paused",
+              "too_many_sessions",
+              ""
+            ],
+            "title": "Code",
+            "type": "string"
+          },
+          "message": {
+            "title": "Message",
+            "type": "string"
+          },
+          "resets_at": {
+            "title": "Resets At",
+            "type": "string"
+          },
+          "retry": {
+            "enum": [
+              "tomorrow",
+              "later"
+            ],
+            "title": "Retry",
+            "type": "string"
+          },
+          "scope": {
+            "enum": [
+              "visitor",
+              "global",
+              "demo"
+            ],
+            "title": "Scope",
+            "type": "string"
+          },
+          "spent_kobo": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Spent Kobo"
+          },
+          "spent_naira": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Spent Naira"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "scope",
+          "title",
+          "message",
+          "spent_kobo",
+          "cap_kobo",
+          "spent_naira",
+          "cap_naira",
+          "resets_at",
+          "retry"
+        ],
+        "title": "DemoLimit",
+        "type": "object"
+      },
+      "DemoLimitError": {
+        "additionalProperties": false,
+        "properties": {
+          "demo_limit": {
+            "$ref": "#/components/schemas/DemoLimit"
+          },
+          "detail": {
+            "title": "Detail",
+            "type": "string"
+          }
+        },
+        "required": [
+          "detail",
+          "demo_limit"
+        ],
+        "title": "DemoLimitError",
+        "type": "object"
+      },
       "DemoSessionOut": {
         "additionalProperties": false,
         "description": "A demo session: send ``token`` as ``Authorization: Bearer`` until ``expires_at``.",
@@ -499,6 +804,11 @@
             "title": "Ip Cap Kobo",
             "type": "integer"
           },
+          "ip_source": {
+            "default": "",
+            "title": "Ip Source",
+            "type": "string"
+          },
           "ip_spent_kobo": {
             "title": "Ip Spent Kobo",
             "type": "integer"
@@ -506,6 +816,11 @@
           "paused": {
             "title": "Paused",
             "type": "boolean"
+          },
+          "resets_at": {
+            "default": "",
+            "title": "Resets At",
+            "type": "string"
           }
         },
         "required": [
@@ -632,6 +947,218 @@
         "title": "HTTPValidationError",
         "type": "object"
       },
+      "Handback": {
+        "additionalProperties": false,
+        "description": "A helper returned the message to Mimi instead of answering it.",
+        "properties": {
+          "code": {
+            "enum": [
+              "deflected",
+              "no_tools",
+              "no_helper",
+              "failed"
+            ],
+            "title": "Code",
+            "type": "string"
+          },
+          "first_run_id": {
+            "default": "",
+            "title": "First Run Id",
+            "type": "string"
+          },
+          "from_helper": {
+            "title": "From Helper",
+            "type": "string"
+          },
+          "from_skill": {
+            "title": "From Skill",
+            "type": "string"
+          },
+          "reason": {
+            "title": "Reason",
+            "type": "string"
+          },
+          "resolved": {
+            "enum": [
+              "rerouted",
+              "mimi_answered",
+              "asked_owner",
+              "asked_sender"
+            ],
+            "title": "Resolved",
+            "type": "string"
+          },
+          "spans": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Spans",
+            "type": "array"
+          },
+          "to_helper": {
+            "default": "",
+            "title": "To Helper",
+            "type": "string"
+          },
+          "to_skill": {
+            "default": "",
+            "title": "To Skill",
+            "type": "string"
+          }
+        },
+        "required": [
+          "from_helper",
+          "from_skill",
+          "code",
+          "reason",
+          "resolved"
+        ],
+        "title": "Handback",
+        "type": "object"
+      },
+      "Handoff": {
+        "additionalProperties": false,
+        "properties": {
+          "contract": {
+            "default": "handoffs-2026-10-30.1",
+            "title": "Contract",
+            "type": "string"
+          },
+          "finished_at": {
+            "default": "",
+            "title": "Finished At",
+            "type": "string"
+          },
+          "from_helper": {
+            "const": "mimi",
+            "default": "mimi",
+            "title": "From Helper",
+            "type": "string"
+          },
+          "handoff_id": {
+            "title": "Handoff Id",
+            "type": "string"
+          },
+          "hop": {
+            "default": 0,
+            "title": "Hop",
+            "type": "integer"
+          },
+          "reason": {
+            "title": "Reason",
+            "type": "string"
+          },
+          "skill": {
+            "title": "Skill",
+            "type": "string"
+          },
+          "started_at": {
+            "default": "",
+            "title": "Started At",
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "working",
+              "needs_you",
+              "done",
+              "handed_back",
+              "failed"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "steps": {
+            "items": {
+              "$ref": "#/components/schemas/HandoffStep"
+            },
+            "title": "Steps",
+            "type": "array"
+          },
+          "to_helper": {
+            "title": "To Helper",
+            "type": "string"
+          },
+          "to_title": {
+            "title": "To Title",
+            "type": "string"
+          },
+          "via": {
+            "enum": [
+              "rule",
+              "lexical",
+              "fast",
+              "model",
+              "mention",
+              "assign",
+              "handback",
+              "binding"
+            ],
+            "title": "Via",
+            "type": "string"
+          }
+        },
+        "required": [
+          "handoff_id",
+          "to_helper",
+          "to_title",
+          "skill",
+          "reason",
+          "via",
+          "status"
+        ],
+        "title": "Handoff",
+        "type": "object"
+      },
+      "HandoffStep": {
+        "additionalProperties": false,
+        "description": "One step of the helper's work, written by code from the run's events.",
+        "properties": {
+          "at": {
+            "default": "",
+            "title": "At",
+            "type": "string"
+          },
+          "kind": {
+            "enum": [
+              "route",
+              "tool",
+              "model",
+              "reply",
+              "handback",
+              "code"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "ms": {
+            "default": 0.0,
+            "title": "Ms",
+            "type": "number"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "status": {
+            "default": "ok",
+            "enum": [
+              "ok",
+              "refused",
+              "held",
+              "failed"
+            ],
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "kind"
+        ],
+        "title": "HandoffStep",
+        "type": "object"
+      },
       "Health": {
         "additionalProperties": false,
         "properties": {
@@ -668,6 +1195,67 @@
           "version"
         ],
         "title": "Health",
+        "type": "object"
+      },
+      "ListItem": {
+        "additionalProperties": false,
+        "properties": {
+          "amount_kobo": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Amount Kobo"
+          },
+          "amount_naira": {
+            "default": "",
+            "title": "Amount Naira",
+            "type": "string"
+          },
+          "item_id": {
+            "title": "Item Id",
+            "type": "string"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "qty": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Qty"
+          },
+          "shop_id": {
+            "default": "",
+            "title": "Shop Id",
+            "type": "string"
+          },
+          "status": {
+            "default": "",
+            "title": "Status",
+            "type": "string"
+          },
+          "unit": {
+            "default": "",
+            "title": "Unit",
+            "type": "string"
+          }
+        },
+        "required": [
+          "item_id",
+          "label"
+        ],
+        "title": "ListItem",
         "type": "object"
       },
       "Liveness": {
@@ -1027,6 +1615,26 @@
       "ShopList": {
         "additionalProperties": false,
         "properties": {
+          "overdue_total_kobo": {
+            "default": 0,
+            "title": "Overdue Total Kobo",
+            "type": "integer"
+          },
+          "overdue_total_naira": {
+            "default": "",
+            "title": "Overdue Total Naira",
+            "type": "string"
+          },
+          "owed_total_kobo": {
+            "default": 0,
+            "title": "Owed Total Kobo",
+            "type": "integer"
+          },
+          "owed_total_naira": {
+            "default": "",
+            "title": "Owed Total Naira",
+            "type": "string"
+          },
           "shops": {
             "items": {
               "$ref": "#/components/schemas/ShopSummary"
@@ -1044,6 +1652,65 @@
           "total"
         ],
         "title": "ShopList",
+        "type": "object"
+      },
+      "ShopRow": {
+        "additionalProperties": false,
+        "properties": {
+          "credit_limit_kobo": {
+            "title": "Credit Limit Kobo",
+            "type": "integer"
+          },
+          "credit_limit_naira": {
+            "title": "Credit Limit Naira",
+            "type": "string"
+          },
+          "days_late": {
+            "title": "Days Late",
+            "type": "integer"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "open_invoices": {
+            "default": 0,
+            "title": "Open Invoices",
+            "type": "integer"
+          },
+          "overdue_kobo": {
+            "title": "Overdue Kobo",
+            "type": "integer"
+          },
+          "overdue_naira": {
+            "title": "Overdue Naira",
+            "type": "string"
+          },
+          "owed_kobo": {
+            "title": "Owed Kobo",
+            "type": "integer"
+          },
+          "owed_naira": {
+            "title": "Owed Naira",
+            "type": "string"
+          },
+          "shop_id": {
+            "title": "Shop Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "shop_id",
+          "name",
+          "owed_kobo",
+          "owed_naira",
+          "overdue_kobo",
+          "overdue_naira",
+          "days_late",
+          "credit_limit_kobo",
+          "credit_limit_naira"
+        ],
+        "title": "ShopRow",
         "type": "object"
       },
       "ShopSummary": {
@@ -1205,9 +1872,159 @@
         "title": "Step",
         "type": "object"
       },
+      "TaskList": {
+        "additionalProperties": false,
+        "properties": {
+          "by_status": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "title": "By Status",
+            "type": "object"
+          },
+          "tasks": {
+            "items": {
+              "$ref": "#/components/schemas/TaskOut"
+            },
+            "title": "Tasks",
+            "type": "array"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "tasks",
+          "total",
+          "by_status"
+        ],
+        "title": "TaskList",
+        "type": "object"
+      },
+      "TaskOut": {
+        "additionalProperties": false,
+        "description": "One helper task: a turn Mimi handed to a helper (docs/HANDOFFS.md).",
+        "properties": {
+          "card": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Card"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "chips": {
+            "items": {
+              "$ref": "#/components/schemas/Chip"
+            },
+            "title": "Chips",
+            "type": "array"
+          },
+          "created_at": {
+            "title": "Created At",
+            "type": "string"
+          },
+          "finished_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Finished At"
+          },
+          "handback": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Handback"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "handoff": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Handoff"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "helper": {
+            "title": "Helper",
+            "type": "string"
+          },
+          "helper_name": {
+            "title": "Helper Name",
+            "type": "string"
+          },
+          "reason": {
+            "title": "Reason",
+            "type": "string"
+          },
+          "skill": {
+            "title": "Skill",
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "working",
+              "needs_you",
+              "done",
+              "handed_back",
+              "failed"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "task_id": {
+            "title": "Task Id",
+            "type": "string"
+          },
+          "thread_id": {
+            "title": "Thread Id",
+            "type": "string"
+          },
+          "turn_id": {
+            "title": "Turn Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "task_id",
+          "turn_id",
+          "thread_id",
+          "helper",
+          "helper_name",
+          "skill",
+          "status",
+          "reason",
+          "handoff",
+          "created_at",
+          "finished_at"
+        ],
+        "title": "TaskOut",
+        "type": "object"
+      },
       "ThreadDetail": {
         "additionalProperties": false,
         "properties": {
+          "handoffs": {
+            "description": "Each turn's handoff, oldest first (docs/HANDOFFS.md).",
+            "items": {
+              "$ref": "#/components/schemas/Handoff"
+            },
+            "title": "Handoffs",
+            "type": "array"
+          },
           "messages": {
             "items": {
               "$ref": "#/components/schemas/Message"
@@ -1357,6 +2174,22 @@
         "additionalProperties": false,
         "description": "One inbound message from a shop, a rep or the owner.",
         "properties": {
+          "assign_to": {
+            "default": "",
+            "description": "The owner names the helper (docs/HANDOFFS.md): overrides routing to that helper's owner skills, still under every policy tier. Owner messages only (422 otherwise). Same as '@Collector ...' at the start.",
+            "enum": [
+              "",
+              "order",
+              "collector",
+              "credit",
+              "stock",
+              "brand",
+              "proof",
+              "mimi"
+            ],
+            "title": "Assign To",
+            "type": "string"
+          },
           "button_id": {
             "default": "",
             "maxLength": 200,
@@ -1443,6 +2276,25 @@
             "title": "Attempts",
             "type": "integer"
           },
+          "card": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Card"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The answer card (owner console): figures read from the book by code."
+          },
+          "chips": {
+            "description": "2 or 3 safe next steps.",
+            "items": {
+              "$ref": "#/components/schemas/Chip"
+            },
+            "title": "Chips",
+            "type": "array"
+          },
           "duplicate": {
             "title": "Duplicate",
             "type": "boolean"
@@ -1450,6 +2302,28 @@
           "error": {
             "title": "Error",
             "type": "string"
+          },
+          "handback": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Handback"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "A helper returned the message to Mimi instead of answering; she re-routed it once."
+          },
+          "handoff": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Handoff"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Who Mimi asked and how it went (docs/HANDOFFS.md). Present on every routed turn; status 'working' while it runs."
           },
           "helper": {
             "title": "Helper",
@@ -1486,6 +2360,19 @@
           },
           "status": {
             "title": "Status",
+            "type": "string"
+          },
+          "task_status": {
+            "default": "",
+            "enum": [
+              "",
+              "working",
+              "needs_you",
+              "done",
+              "handed_back",
+              "failed"
+            ],
+            "title": "Task Status",
             "type": "string"
           },
           "thread_id": {
@@ -2125,7 +3012,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ErrorOut"
+                  "$ref": "#/components/schemas/DemoLimitError"
                 }
               }
             },
@@ -2135,7 +3022,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ErrorOut"
+                  "$ref": "#/components/schemas/DemoLimitError"
                 }
               }
             },
@@ -2209,7 +3096,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ErrorOut"
+                  "$ref": "#/components/schemas/DemoLimitError"
                 }
               }
             },
@@ -2219,7 +3106,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ErrorOut"
+                  "$ref": "#/components/schemas/DemoLimitError"
                 }
               }
             },
@@ -2308,7 +3195,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ErrorOut"
+                  "$ref": "#/components/schemas/DemoLimitError"
                 }
               }
             },
@@ -2318,7 +3205,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ErrorOut"
+                  "$ref": "#/components/schemas/DemoLimitError"
                 }
               }
             },
@@ -2552,7 +3439,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ErrorOut"
+                  "$ref": "#/components/schemas/DemoLimitError"
                 }
               }
             },
@@ -2562,7 +3449,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ErrorOut"
+                  "$ref": "#/components/schemas/DemoLimitError"
                 }
               }
             },
@@ -2887,6 +3774,124 @@
         "summary": "Get Shop"
       }
     },
+    "/v1/tasks": {
+      "get": {
+        "operationId": "get_tasks_v1_tasks_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "thread_id",
+            "required": false,
+            "schema": {
+              "default": "",
+              "title": "Thread Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "helper",
+            "required": false,
+            "schema": {
+              "default": "",
+              "title": "Helper",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "default": "",
+              "pattern": "^(|working|needs_you|done|handed_back|failed)$",
+              "title": "Status",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 200,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskList"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Helper tasks and their status (working, needs_you, done)"
+      }
+    },
     "/v1/threads": {
       "get": {
         "operationId": "get_threads_v1_threads_get",
@@ -3182,7 +4187,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ErrorOut"
+                  "$ref": "#/components/schemas/DemoLimitError"
                 }
               }
             },
@@ -3192,7 +4197,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ErrorOut"
+                  "$ref": "#/components/schemas/DemoLimitError"
                 }
               }
             },

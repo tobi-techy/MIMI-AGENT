@@ -98,6 +98,13 @@
    "sha256": "2e7c22cc4f360de359bc94b0f71773472b411492565949911be86de20dd747fb",
    "version": "1.1.0"
   },
+  "open-orders": {
+   "history": {
+    "1.0.0": "a13bb41aad4a06b462767dc20e91585d28c9dce55f442533414b2084378cb6dd"
+   },
+   "sha256": "a13bb41aad4a06b462767dc20e91585d28c9dce55f442533414b2084378cb6dd",
+   "version": "1.0.0"
+  },
   "order-intake": {
    "history": {
     "1.0.0": "b903882c8ee24affcf7e18296a1dd71509579fbd93e153adf5d7535f3783c865"

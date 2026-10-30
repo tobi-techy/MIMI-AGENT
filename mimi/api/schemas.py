@@ -12,6 +12,8 @@ from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from mimi.harness.handoff import Card, Chip, Handback, Handoff
+
 RECEIVED_AT = ("When the message was received, with its zone. Defaults to now. A time "
                "without a zone is read as Africa/Lagos (WAT, UTC+1).")
 
@@ -56,6 +58,11 @@ class TurnIn(BaseModel):
     media: MediaIn | None = None
     received_at: datetime | None = Field(None, description=RECEIVED_AT)
     simulated: bool = Field(False, description="Simulator traffic: tagged everywhere.")
+    assign_to: Literal["", "order", "collector", "credit", "stock", "brand", "proof",
+                       "mimi"] = Field(
+        "", description="The owner names the helper (docs/HANDOFFS.md): overrides routing to "
+                        "that helper's owner skills, still under every policy tier. Owner "
+                        "messages only (422 otherwise). Same as '@Collector ...' at the start.")
 
 
 class EventIn(BaseModel):
@@ -116,6 +123,15 @@ class TurnOut(_Out):
     replies: list[Reply]
     route: dict[str, Any]
     error: str
+    handoff: Handoff | None = Field(None, description="Who Mimi asked and how it went "
+                                    "(docs/HANDOFFS.md). Present on every routed turn; "
+                                    "status 'working' while it runs.")
+    handback: Handback | None = Field(None, description="A helper returned the message to "
+                                      "Mimi instead of answering; she re-routed it once.")
+    card: Card | None = Field(None, description="The answer card (owner console): figures "
+                              "read from the book by code.")
+    chips: list[Chip] = Field(default_factory=list, description="2 or 3 safe next steps.")
+    task_status: Literal["", "working", "needs_you", "done", "handed_back", "failed"] = ""
 
 
 class Health(_Out):
@@ -220,6 +236,33 @@ class ThreadDetail(_Out):
     messages: list[Message]
     steps: list[Step]
     turns: list[TurnSummary]
+    handoffs: list[Handoff] = Field(default_factory=list, description="Each turn's handoff, "
+                                    "oldest first (docs/HANDOFFS.md).")
+
+
+class TaskOut(_Out):
+    """One helper task: a turn Mimi handed to a helper (docs/HANDOFFS.md)."""
+
+    task_id: str
+    turn_id: str
+    thread_id: str
+    helper: str
+    helper_name: str
+    skill: str
+    status: Literal["working", "needs_you", "done", "handed_back", "failed"]
+    reason: str
+    handoff: Handoff | None
+    handback: Handback | None = None
+    card: Card | None = None
+    chips: list[Chip] = Field(default_factory=list)
+    created_at: str
+    finished_at: str | None
+
+
+class TaskList(_Out):
+    tasks: list[TaskOut]
+    total: int
+    by_status: dict[str, int]
 
 
 class ShopSummary(_Out):
@@ -244,6 +287,11 @@ class ShopSummary(_Out):
 class ShopList(_Out):
     shops: list[ShopSummary]
     total: int
+    # Summed once in code (mimi.owed): the same figures Collector and the cards use.
+    owed_total_kobo: int = 0
+    owed_total_naira: str = ""
+    overdue_total_kobo: int = 0
+    overdue_total_naira: str = ""
 
 
 class DeliveryLineOut(_Out):
@@ -353,6 +401,26 @@ class ErrorOut(_Out):
     detail: str
 
 
+class DemoLimit(_Out):
+    """Why a demo request was refused, in one fixed shape the console shows."""
+
+    code: Literal["visitor_daily_cap", "global_daily_cap", "paused", "too_many_sessions", ""]
+    scope: Literal["visitor", "global", "demo"]
+    title: str
+    message: str
+    spent_kobo: int | None
+    cap_kobo: int | None
+    spent_naira: str | None
+    cap_naira: str | None
+    resets_at: str
+    retry: Literal["tomorrow", "later"]
+
+
+class DemoLimitError(_Out):
+    detail: str
+    demo_limit: DemoLimit
+
+
 class Liveness(_Out):
     status: Literal["ok"]
 
@@ -361,6 +429,8 @@ class DemoStatus(_Out):
     """A demo caller's session and today's spend against the caps (kobo)."""
 
     expires_at: str | None
+    ip_source: str = ""
+    resets_at: str = ""
     ip_spent_kobo: int
     ip_cap_kobo: int
     global_spent_kobo: int

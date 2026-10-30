@@ -11,17 +11,19 @@ from typing import Any
 import sqlalchemy as sa
 from sqlalchemy.engine import Engine
 
+from mimi import owed
 from mimi.api import threadmeta
 from mimi.api import voice as vx
-from mimi.api.agent import NotFound, approval_dict
+from mimi.api.agent import NotFound, approval_dict, turn_handoff
 from mimi.api.uploads import PREFIX as UPLOAD_PREFIX
+from mimi.harness import handoff as hx
 from mimi.store import schema as s
 from mimi.store.book import SqlGo
 from mimi.store.util import loads, mask_phone
 
 
 def naira(kobo: int) -> str:
-    return f"N{kobo / 100:,.0f}" if kobo % 100 == 0 else f"N{kobo / 100:,.2f}"
+    return owed.naira(kobo)
 
 
 # ------------------------------------------------------------------ shops
@@ -48,8 +50,12 @@ def _shop_rows(conn: sa.Connection, tenant: str, shop_id: str | None = None) -> 
     return list(conn.execute(q).all())
 
 
-def _shop_summary(row: Any) -> dict[str, Any]:
+def _shop_summary(row: Any, book: owed.ShopOwed | None = None) -> dict[str, Any]:
     out, over = int(row.outstanding or 0), int(row.overdue or 0)
+    n_open = int(row.open_n or 0)
+    if book is not None:
+        # One definition of owed and overdue for every surface (mimi.owed).
+        out, over, n_open = book.owed_kobo, book.overdue_kobo, book.open_invoices
     return {
         "shop_id": row.shop_id, "name": row.name, "owner": row.owner, "area": row.area,
         "shop_type": row.shop_type, "size": row.size, "rep_id": row.rep_id,
@@ -58,15 +64,19 @@ def _shop_summary(row: Any) -> dict[str, Any]:
         "credit_limit_naira": naira(int(row.credit_limit_kobo)),
         "outstanding_kobo": out, "outstanding_naira": naira(out),
         "overdue_kobo": over, "overdue_naira": naira(over),
-        "open_invoices": int(row.open_n or 0), "simulated": bool(row.simulated),
+        "open_invoices": n_open, "simulated": bool(row.simulated),
     }
 
 
 def list_shops(engine: Engine, tenant: str) -> dict[str, Any]:
     with engine.connect() as conn:
         rows = _shop_rows(conn, tenant)
-    shops = [_shop_summary(r) for r in rows]
-    return {"shops": shops, "total": len(shops)}
+    book = owed.totals(SqlGo(engine).receivables(tenant, None)) if rows else owed.Owed()
+    shops = [_shop_summary(r, book.shops.get(r.shop_id)) for r in rows]
+    return {"shops": shops, "total": len(shops),
+            "owed_total_kobo": book.owed_kobo, "owed_total_naira": naira(book.owed_kobo),
+            "overdue_total_kobo": book.overdue_kobo,
+            "overdue_total_naira": naira(book.overdue_kobo)}
 
 
 def get_shop(engine: Engine, tenant: str, shop_id: str) -> dict[str, Any]:
@@ -94,10 +104,11 @@ def get_shop(engine: Engine, tenant: str, shop_id: str) -> dict[str, Any]:
                     for d in conn.execute(sa.select(s.disputes).where(
                         s.disputes.c.tenant_id == tenant, s.disputes.c.shop_id == shop_id))]
     receivables = go.receivables(tenant, shop_id)
+    one = owed.totals(receivables).shops.get(shop_id)
     for x in receivables:
         x["outstanding_naira"] = naira(x["outstanding_kobo"])
     return {
-        "shop": _shop_summary(rows[0]),
+        "shop": _shop_summary(rows[0], one),
         "thread_id": f"{tenant}:shop:{shop_id}",
         "receivables": receivables,
         "payments": go.payments(tenant, shop_id, 10),
@@ -202,17 +213,66 @@ def get_thread(engine: Engine, tenant: str, thread_id: str, *,
                 s.thread_events.c.thread_id == thread_id)
                 .order_by(s.thread_events.c.ts, s.thread_events.c.seq,
                           s.thread_events.c.event_id))]
+        rows_t = list(conn.execute(sa.select(s.turns).where(
+            s.turns.c.tenant_id == tenant, s.turns.c.thread_id == thread_id)
+            .order_by(s.turns.c.created_ts, s.turns.c.turn_id)))
         turns = [{
             "turn_id": r.turn_id, "state": r.state, "status": r.status, "helper": r.helper,
             "skill": r.skill, "run_id": r.run_id, "attempts": r.attempts,
             "simulated": bool(r.simulated), "created_at": r.created_at,
-            "finished_at": r.finished_at}
-            for r in conn.execute(sa.select(s.turns).where(
-                s.turns.c.tenant_id == tenant, s.turns.c.thread_id == thread_id)
-                .order_by(s.turns.c.created_ts, s.turns.c.turn_id))]
+            "finished_at": r.finished_at} for r in rows_t]
+        handoffs = [h for h in (turn_handoff(r) for r in rows_t) if h]
         summary = _thread_summary(conn, tenant, t)
     return {"thread": summary, "state": loads(t.state, {}), "messages": msgs,
-            "steps": steps, "turns": turns}
+            "steps": steps, "turns": turns, "handoffs": handoffs}
+
+
+# ------------------------------------------------------------------ tasks
+
+
+def list_tasks(engine: Engine, tenant: str, *, thread_id: str = "", helper: str = "",
+               status: str = "", limit: int = 50) -> dict[str, Any]:
+    """Each turn Mimi handed to a helper, newest first, with its task status
+    (``working``, ``needs_you``, ``done``, ``handed_back``, ``failed``;
+    docs/HANDOFFS.md). Merged turns are left out (their lead carries them)."""
+    with engine.connect() as conn:
+        q = sa.select(s.turns).where(s.turns.c.tenant_id == tenant,
+                                     s.turns.c.state != "merged")
+        if thread_id:
+            q = q.where(s.turns.c.thread_id == thread_id)
+        rows = list(conn.execute(q.order_by(s.turns.c.created_ts.desc(),
+                                            s.turns.c.turn_id.desc()).limit(500)))
+        pending = {r.turn_id: int(r.n) for r in conn.execute(
+            sa.select(s.approvals.c.turn_id, sa.func.count().label("n")).where(
+                s.approvals.c.tenant_id == tenant, s.approvals.c.status == "pending")
+            .group_by(s.approvals.c.turn_id))}
+    tasks: list[dict[str, Any]] = []
+    counts: dict[str, int] = {}
+    for r in rows:
+        ho = turn_handoff(r)
+        if ho is None:
+            continue
+        res = loads(r.result, {})
+        st = ho["status"]
+        if st == "done" and pending.get(r.turn_id):
+            st = "needs_you"  # its approval still waits (it was decided later otherwise)
+        elif st == "needs_you" and r.state == "done" and not pending.get(r.turn_id) and (
+                r.status == "parked_for_approval"):
+            st = "done"  # the owner decided it since
+        if helper and ho["to_helper"] != helper:
+            continue
+        counts[st] = counts.get(st, 0) + 1
+        if status and st != status:
+            continue
+        if len(tasks) < limit:
+            tasks.append({
+                "task_id": ho["handoff_id"], "turn_id": r.turn_id, "thread_id": r.thread_id,
+                "helper": ho["to_helper"], "helper_name": hx.title(ho["to_helper"]),
+                "skill": ho["skill"], "status": st, "reason": ho["reason"], "handoff": ho,
+                "handback": res.get("handback"), "card": res.get("card"),
+                "chips": list(res.get("chips") or []), "created_at": r.created_at,
+                "finished_at": r.finished_at})
+    return {"tasks": tasks, "total": sum(counts.values()), "by_status": counts}
 
 
 # -------------------------------------------------------------- approvals
