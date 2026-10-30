@@ -97,6 +97,9 @@ jobs:
         run: python -m mimi.sim --shop-ids shop-019,shop-037,shop-025 --transcript --screenshots 1 --fakes 0.4
       - name: End-to-end eval on SQLite, 10+ simulated shops through the HTTP API, the durable store and real worker processes with 11 forced SIGKILLs (recorded Muse Spark, SAM 3.1 and persona answers; fails on scene success < 90%, routing < 95%, any safety violation, money move, invented figure, duplicate reply, lost job or cross-tenant read)
         run: python -m mimi.api.e2e --no-write
+      - name: Simulated week, one day (RAI-273; 40 shops through the HTTP API, the durable store and 2 worker processes with 1 forced SIGKILL; offline, no model call; fails on turns complete < 98%, any invented figure, duplicate send, lost job, budget or daily-cap breach or never-tier action)
+        timeout-minutes: 5
+        run: python -m mimi.api.week --days 1 --workers 2 --week-kills 1 --no-write
       - name: Two open asks eval, 40 held-out replies with a delivery receipt and a correction question open on one thread (code only, no model; fails under 95% or on any ambiguous reply bound)
         run: python -m mimi.api.which_eval --no-write
       - name: Pending-ask binding eval, 43 held-out replies to delivery receipt asks (recorded Muse Spark answers; fails under 95% correct route and action, or on any false consent)
