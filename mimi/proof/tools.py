@@ -175,10 +175,19 @@ def _prior(ctx: ToolContext, skip: str) -> tuple[list[PriorProof], list[dict[str
     prior = []
     for r in rows:
         p = r["payload"]
-        if p.get("proof_id") == skip or r["outcome"] == "refused":
+        if r["outcome"] == "refused":
             continue
+        pid = str(p.get("proof_id", ""))
+        if pid == skip:
+            # The same shop sent this same image before: photo ids are content
+            # hashes, so the proof id repeats. That earlier record is a resend's
+            # original, not this proof (RAI-273 week run: skipping it checked a
+            # resend as new, and once its invoice was paid it failed
+            # time_after_delivery and a genuine payment was flagged as fake).
+            # Rows are written when a turn completes, so none is this turn's own.
+            pid = f"{pid}-earlier"
         prior.append(PriorProof(
-            proof_id=str(p.get("proof_id", "")), shop_id=r["shop_id"],
+            proof_id=pid, shop_id=r["shop_id"],
             image_sha256=str(p.get("image_sha256", "")),
             reference=str(p.get("reference") or p.get("reference_as_shown") or ""),
             session_id="", received_at=r["created_at"],
