@@ -76,6 +76,7 @@ TURN_TIMEOUT_S = 120.0
 DAILY_CAP_KOBO = 300_000  # N3,000 a day of (projected) model spend for the synthetic tenant
 KEY_PREFIX = "wk-key"
 KILL_EVERY = 12  # waves between the one week's forced kills
+MAX_TENANTS = 2000  # loops a soak can run (one tenant each)
 
 
 def tenant_for(loop: int) -> str:
@@ -549,6 +550,16 @@ def fresh_store(db_url: str) -> Any:
     return engine
 
 
+def compact(engine: Any, tenants: list[str]) -> None:
+    """A soak's housekeeping: drop the run checkpoints of a finished loop's
+    settled turns (about 40 KB each, nine tenths of the store, and nothing
+    reads them once a turn is done). Sleeping and parked turns keep theirs."""
+    with engine.begin() as conn:
+        conn.execute(s.turns.update().where(
+            s.turns.c.tenant_id.in_(tenants),
+            s.turns.c.state.in_(("done", "merged", "failed"))).values(checkpoint="{}"))
+
+
 def idle(engine: Any) -> bool:
     """Nothing runnable or running (sleeping follow-ups and parked jobs aside)."""
     now = clock.wall()
@@ -634,11 +645,13 @@ def run_week(*, workdir: Path, db_url: str = "", seed: int = 273, workers: int =
     if resume:
         engine = make_engine(db_url)
         ensure_schema(engine)
+        compact(engine, [x["tenant"] for x in run.loops])
     else:
         engine = fresh_store(db_url)
     ceiling = max_naira * 100 if (live and max_naira) else None
     n_loops = max_loops or (10_000 if soak_hours else 1)
-    tenants = [tenant_for(i) for i in range(min(n_loops, 400))]
+    # One tenant (and API keys) per loop: a 6 h offline soak runs 300 to 500.
+    tenants = [tenant_for(i) for i in range(min(n_loops, MAX_TENANTS))]
     keys = parse_keys(",".join(f"{t}:owner:{keys_for(t)['owner']},"
                                f"{t}:channel:{keys_for(t)['channel']}" for t in tenants))
     settings = Settings(database_url=db_url, keys=keys, workers=0, lease_s=LEASE_S)
@@ -708,7 +721,7 @@ def run_week(*, workdir: Path, db_url: str = "", seed: int = 273, workers: int =
         with TestClient(create_app(settings, agent=api_agent, workers=0)) as client:
             pool.start_all()
             loop = len(run.loops)
-            while loop < n_loops and not run.stopped:
+            while loop < min(n_loops, MAX_TENANTS) and not run.stopped:
                 tenant = tenant_for(loop)
                 if loop:
                     if not drain(engine):
@@ -730,6 +743,8 @@ def run_week(*, workdir: Path, db_url: str = "", seed: int = 273, workers: int =
                 run.loops.append({"loop": loop, "tenant": tenant, "waves": wk.wave_n,
                                   "seconds": round(time.time() - t0, 1)})
                 loop += 1
+                if soak_hours:
+                    compact(engine, [tenant])
                 run.soak_elapsed = soak_now() if soak_hours else 0.0
                 run.segments[-1].update(loops=loop - run.segments[-1]["from_loop"],
                                         soak_s_after=round(run.soak_elapsed, 1))
