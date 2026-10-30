@@ -299,6 +299,8 @@ def test_every_bound_skill_is_a_subset_of_its_helper_and_tiers_come_from_policy(
     cat = catalog()
     pol = GoPolicy()
     for key in BY_KEY:
+        if BY_KEY[key].code_only:
+            continue  # answered by code, no helper run (docs/HANDOFFS.md)
         h, base = on[key], off.get(key) or off[key.split("/")[0]]
         doc = cat.skills[key]
         extra = set(h.toolset.names) - set(base.toolset.names) - {READ_SKILL} - set(doc.scripts)
@@ -440,6 +442,9 @@ def test_flag_on_binds_every_routed_skill_and_traces_its_version(
     on = helpers(True, monkeypatch)
     cat = catalog()
     for key in BY_KEY:
+        if BY_KEY[key].code_only:
+            assert key not in on  # answered by code: no model body is bound
+            continue
         assert on[key].skill_version == cat.skills[key].tag
     # RAI-309: a bound skill's tag is the version its recorded loop answers
     # replay under, so a skill bump (or any edit to its folder) is a cache miss.
