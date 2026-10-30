@@ -59,6 +59,12 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--out", default=str(ROOT / "docs" / "runs"))
     ap.add_argument("--name", default="")
     ap.add_argument("--no-write", action="store_true")
+    ap.add_argument("--resume", action="store_true",
+                    help="soak: carry on the soak in --workdir (its run.json and store)")
+    ap.add_argument("--checkpoint", default="",
+                    help="soak: copy the store and run.json here between loops")
+    ap.add_argument("--checkpoint-every", type=float, default=600.0,
+                    help="seconds between checkpoints (default 600)")
     ap.add_argument("--rescore", default="", help="score a finished run's workdir again")
     args = ap.parse_args(argv)
     if args.cmd == "worker":
@@ -82,7 +88,9 @@ def main(argv: list[str] | None = None) -> int:
                    soak_hours=args.soak_hours, soak_kills=args.soak_kills,
                    week_kills=args.week_kills, max_loops=args.max_loops,
                    compress=args.compress, days=args.days,
-                   max_naira_per_turn=args.max_naira_per_turn)
+                   max_naira_per_turn=args.max_naira_per_turn, resume=args.resume,
+                   checkpoint=Path(args.checkpoint) if args.checkpoint else None,
+                   checkpoint_every=args.checkpoint_every)
     report = score(run)
     text = markdown(report)
     print(text)

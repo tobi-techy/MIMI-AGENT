@@ -66,6 +66,14 @@ waves, and the meter refuses any call once the total is at the ceiling. A
 goes over it (after 30 turns). Keep the workdir off a network filesystem: on
 the sandbox's FUSE mount SQLite ran about 8x slower, so soaks use `/tmp`.
 
+A soak that may outlive its machine: `--checkpoint DIR` copies the store
+and `run.json` to DIR every `--checkpoint-every` seconds (default 600),
+between loops with the queue drained and no kill armed. If the process dies,
+copy both back into the workdir and run the same command with `--resume`:
+it carries on from the next loop with the soak time and kills already done
+counted (the time after the last checkpoint is not). The report lists the
+segments.
+
 Other flags: `--seed` (default 273), `--db` (a Postgres URL is wiped, so a
 throwaway database only), `--compress` (seconds between waves),
 `--max-loops`, `--price-as` (offline: the model the projected cost uses;

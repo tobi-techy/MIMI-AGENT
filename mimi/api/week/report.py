@@ -268,6 +268,8 @@ def score(run: WeekRun) -> dict[str, Any]:
         "mode": run.mode, "seed": run.seed, "store": run.db_url.split(":", 1)[0],
         "loops": run.loops, "stopped": run.stopped,
         "wall_seconds": round(run.finished - run.started, 1),
+        "soak_seconds": round(getattr(run, "soak_elapsed", 0.0), 1),
+        "segments": list(getattr(run, "segments", [])),
         "turns": {"total": total, "sent_by_sim": len(run.sent), "states": dict(states),
                   "complete_rate": pct(len(done), total - len(parked)),
                   "settled_rate": pct(len(settled), total), "parked": len(parked),
@@ -452,6 +454,19 @@ def markdown(r: dict[str, Any]) -> str:
     if r["routing"]["misses"]:
         lines += ["## Routing misses", "",
                   *[f"* {x}" for x in r["routing"]["misses"][:25]], ""]
+    segs = r.get("segments") or []
+    if r.get("soak_seconds"):
+        lines += [f"Soak time run: {r['soak_seconds'] / 3600:.2f} h in {len(segs)} segment(s)"
+                  + (" (resumed from checkpoints; time after the last checkpoint of a "
+                     "segment that died is not counted)" if len(segs) > 1 else
+                     " (one continuous process)") + ".", ""]
+        if len(segs) > 1:
+            lines += ["| Segment | From loop | Loops | Soak h before | Soak h after |",
+                      "|---|---|---|---|---|",
+                      *[f"| {i + 1} | {x.get('from_loop')} | {x.get('loops', 0)} | "
+                        f"{x.get('soak_s_before', 0) / 3600:.2f} | "
+                        f"{x.get('soak_s_after', 0) / 3600:.2f} |" for i, x in enumerate(segs)],
+                      ""]
     if len(r["loops"]) > 1:
         lines += ["## Soak loops", "", "| Loop | Tenant | Waves | Seconds |", "|---|---|---|---|",
                   *[f"| {x['loop']} | {x['tenant']} | {x['waves']} | {x['seconds']} |"
