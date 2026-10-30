@@ -123,6 +123,10 @@ class WeekRun:
     stopped: str = ""  # why the run stopped early, if it did
     started: float = 0.0
     finished: float = 0.0
+    # A soak resumed from a checkpoint (``--resume``): soak time actually run
+    # (checkpoint copies and downtime left out), and one row per segment.
+    soak_elapsed: float = 0.0
+    segments: list[dict[str, Any]] = field(default_factory=list)
 
 
 def save_run(run: WeekRun) -> Path:
@@ -582,9 +586,17 @@ def run_week(*, workdir: Path, db_url: str = "", seed: int = 273, workers: int =
              live: bool = False, max_naira: int | None = None, price_as: str = "muse-spark-1.3",
              soak_hours: float = 0.0, soak_kills: int = 0, week_kills: int = 0,
              max_loops: int = 0, compress: float = 0.0, days: int = DAYS,
-             max_naira_per_turn: int = 0) -> WeekRun:
+             max_naira_per_turn: int = 0, resume: bool = False,
+             checkpoint: Path | None = None, checkpoint_every: float = 600.0) -> WeekRun:
     """One offline week (``soak_hours=0``), or the soak: the week looped for
-    ``soak_hours`` with ``soak_kills`` forced worker kills spread over it."""
+    ``soak_hours`` with ``soak_kills`` forced worker kills spread over it.
+
+    ``resume`` (a soak, SQLite): carry on a soak whose workdir holds its
+    ``run.json`` and store, from the next loop, with the soak time and kills
+    already done counted. ``checkpoint``: every ``checkpoint_every`` seconds,
+    between loops (queue drained, no kill armed), copy the store and
+    ``run.json`` there, so a soak survives the machine going away: copy both
+    back into the workdir and run again with ``--resume``."""
     from fastapi.testclient import TestClient
 
     from mimi.api.agent import Agent
@@ -599,19 +611,31 @@ def run_week(*, workdir: Path, db_url: str = "", seed: int = 273, workers: int =
     for f in workdir.glob("killpoint-*"):
         f.unlink()
     (workdir / "stop").unlink(missing_ok=True)
-    db_url = db_url or f"sqlite:///{workdir / 'week.db'}"
-    if db_url.startswith("sqlite:///"):
-        Path(db_url[len("sqlite:///"):]).unlink(missing_ok=True)
-    mode = "live" if live else "offline"
-    run = WeekRun(mode=mode if not soak_hours else f"{mode}-soak", workdir=workdir,
-                  db_url=db_url, seed=seed, started=time.time())
+    (workdir / "kill-plan.json").unlink(missing_ok=True)
+    if resume:
+        if not soak_hours:
+            raise SystemExit("--resume is for a soak (--soak-hours)")
+        run = load_run(workdir)
+        db_url = run.db_url
+        run.stopped = ""
+    else:
+        db_url = db_url or f"sqlite:///{workdir / 'week.db'}"
+        if db_url.startswith("sqlite:///"):
+            Path(db_url[len("sqlite:///"):]).unlink(missing_ok=True)
+        mode = "live" if live else "offline"
+        run = WeekRun(mode=mode if not soak_hours else f"{mode}-soak", workdir=workdir,
+                      db_url=db_url, seed=seed, started=time.time())
     clock_file = workdir / "simclock.json"
     clock_file.unlink(missing_ok=True)
     prev = clock.set_source(None)
     install(clock_file)
     world = load_world()
     set_to(clock_file, datetime(2026, 10, 26, 6, 0, tzinfo=LAGOS), allow_back=True)
-    engine = fresh_store(db_url)
+    if resume:
+        engine = make_engine(db_url)
+        ensure_schema(engine)
+    else:
+        engine = fresh_store(db_url)
     ceiling = max_naira * 100 if (live and max_naira) else None
     n_loops = max_loops or (10_000 if soak_hours else 1)
     tenants = [tenant_for(i) for i in range(min(n_loops, 400))]
@@ -622,11 +646,46 @@ def run_week(*, workdir: Path, db_url: str = "", seed: int = 273, workers: int =
                       lease_s=LEASE_S)
     pool = Workers(run, n=workers, live=live, price_as=price_as, ceiling_kobo=ceiling)
     pool.engine = engine
-    deadline = run.started + soak_hours * 3600
-    kill_times = [run.started + (i + 0.5) * (soak_hours * 3600) / soak_kills
-                  for i in range(soak_kills)] if soak_hours and soak_kills else []
+    seg_start = time.time()
+    before_s = run.soak_elapsed
+    ckpt_s = [0.0]  # this segment's time spent copying checkpoints (not soak time)
+
+    def soak_now() -> float:
+        return before_s + (time.time() - seg_start) - ckpt_s[0]
+
+    deadline = seg_start + soak_hours * 3600 - before_s
+    # Kill i is due at soak time (i + 0.5) * T / K; the ones already fired
+    # (a resumed soak) are not armed again.
+    kill_times = [seg_start + (i + 0.5) * (soak_hours * 3600) / soak_kills - before_s
+                  for i in range(len(run.kills), soak_kills)] if soak_hours and soak_kills \
+        else []
     points = ("step:1", "route", "finish", "step:2")
-    kill_n = [0]
+    kill_n = [len(run.kills)]
+    run.segments.append({"started": seg_start, "from_loop": len(run.loops),
+                         "soak_s_before": round(before_s, 1), "resumed": resume})
+    last_ckpt = [time.time()]
+
+    def take_checkpoint() -> None:
+        if checkpoint is None or not db_url.startswith("sqlite:///"):
+            return
+        import shutil
+        import sqlite3
+
+        t0 = time.time()
+        checkpoint.mkdir(parents=True, exist_ok=True)
+        src = sqlite3.connect(db_url[len("sqlite:///"):])
+        dst = sqlite3.connect(checkpoint / "week.db.tmp")
+        with dst:
+            src.backup(dst)
+        src.close()
+        dst.close()
+        os.replace(checkpoint / "week.db.tmp", checkpoint / "week.db")
+        shutil.copyfile(workdir / "run.json", checkpoint / "run.json.tmp")
+        os.replace(checkpoint / "run.json.tmp", checkpoint / "run.json")
+        ckpt_s[0] += time.time() - t0
+        last_ckpt[0] = time.time()
+        run.worker_log.append(f"checkpoint at loop {len(run.loops)}, soak "
+                              f"{soak_now() / 3600:.2f} h, {time.time() - t0:.1f} s")
 
     waves = [0]
 
@@ -648,7 +707,7 @@ def run_week(*, workdir: Path, db_url: str = "", seed: int = 273, workers: int =
     try:
         with TestClient(create_app(settings, agent=api_agent, workers=0)) as client:
             pool.start_all()
-            loop = 0
+            loop = len(run.loops)
             while loop < n_loops and not run.stopped:
                 tenant = tenant_for(loop)
                 if loop:
@@ -671,7 +730,14 @@ def run_week(*, workdir: Path, db_url: str = "", seed: int = 273, workers: int =
                 run.loops.append({"loop": loop, "tenant": tenant, "waves": wk.wave_n,
                                   "seconds": round(time.time() - t0, 1)})
                 loop += 1
+                run.soak_elapsed = soak_now() if soak_hours else 0.0
+                run.segments[-1].update(loops=loop - run.segments[-1]["from_loop"],
+                                        soak_s_after=round(run.soak_elapsed, 1))
                 save_run(run)  # after every loop, so a long soak's records survive a crash
+                if checkpoint is not None and time.time() - last_ckpt[0] >= checkpoint_every \
+                        and not pool.pending_kills():
+                    take_checkpoint()
+                    deadline = seg_start + soak_hours * 3600 - before_s + ckpt_s[0]
                 if soak_hours and time.time() >= deadline and not pool.pending_kills():
                     break
                 if soak_hours and time.time() >= deadline + 1800:
