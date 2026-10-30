@@ -123,6 +123,35 @@ _YES = re.compile(r"^(?:y|yes|yes o|yes sir|yes ma|yeah|yep|ok|okay|confirm(?:ed
                   r"toh|ee|ehh|ihe a|o di mma)[.! ]*$", re.I)
 _NO = re.compile(r"^(?:n|no|no o|nope|not yet|reject|decline|don't|dont|cancel|rara|"
                  r"a'a|aa|mba|no be so)[.! ]*$", re.I)
+# Owner questions about what is open now (RAI handoffs, docs/HANDOFFS.md).
+# No skill the model can pick covers them, so a rule picks them before the
+# phrase layer: "any orders available now" once reached Brand on the model's
+# word and got a dead end back. Rules only; the model's catalogue is unchanged.
+OWNER_RULES: tuple[tuple[str, re.Pattern[str]], ...] = (
+    ("order/open-orders", re.compile(
+        r"\b(?:any|new|open|pending|waiting|latest|recent|today'?s)\s+(?:shop\s+)?orders?\b"
+        r"|\borders?\s+(?:available|waiting|pending|open|today|now|came in|that came|so far)\b"
+        r"|\b(?:show|list|see|check)\s+(?:me\s+)?(?:the\s+|all\s+|my\s+)?(?:open\s+|new\s+)?"
+        r"orders\b|\bwho (?:has |have )?(?:placed an? )?order(?:ed|s)?\b(?! .{0,20}\bvan\b)"
+        r"|\bhow many orders\b|\bwhat orders\b", re.I)),
+    ("stock/low-stock-report", re.compile(
+        r"\bwhat(?:'s| is| do we have)?\s+(?:in|on)\s+stock\b|(?<!out of )\bin stock\b"
+        r"|\bstock (?:levels?|position|situation|left|status)\b"
+        r"|\b(?:what|which) (?:products?|items?|goods) (?:are |is )?(?:available|left|low)\b"
+        r"|\bwhat (?:can|do) (?:shops|they) (?:order|buy)\b|\bstock (?:available|now)\b",
+        re.I)),
+)
+
+
+def owner_rule(text: str) -> str:
+    """The skill an owner rule picks for ``text``, or "" (never a money skill)."""
+    t = lexicon.normalise(text)
+    for key, rx in OWNER_RULES:
+        if rx.search(t):
+            return key
+    return ""
+
+
 _TAP = re.compile(r"^(?:0 ?- ?2|3 ?- ?5|6 ?\+|zero|none|\d{1,3})(?: (?:left|remain|cartons?))?$",
                   re.I)
 
@@ -376,20 +405,39 @@ class Router:
             if _STOP.match(folded):
                 return rule("mimi/stop", "owner_stop", lane="fast")
             m = lexicon.MENTION.search(text)
-            if m:
-                helper = m.group(1).lower()
+            assigned = p.assign_to.strip().lower()
+            if assigned or m:
+                # The owner named the helper: ``assign_to`` on the turn, else an
+                # @mention. Still only the owner's own skills of that helper,
+                # still every policy tier (docs/HANDOFFS.md).
+                helper = assigned or (m.group(1).lower() if m else "")
+                helper = "order" if helper == "orders" else helper
                 rest = lexicon.MENTION.sub("", text)
                 own = frozenset(s.key for s in allowed_for("owner") if s.helper == helper)
                 lx = lexicon.score(rest, own)
                 tagged = lexicon.score(text, own)  # rules that read the @tag itself
                 if tagged.top_score > lx.top_score:
                     lx = tagged
-                key = lx.top if lx.top_score > 0 else default_skill(helper, "owner")
+                ruled = owner_rule(rest)
+                if lx.top_score > 0:
+                    key = lx.top
+                elif ruled and ruled.split("/")[0] == helper:
+                    key = ruled
+                else:
+                    key = default_skill(helper, "owner")
                 if key not in BY_KEY:
                     key = default_skill(helper, "owner")
-                return rule(key, f"owner_mention:@{helper}")
+                how = "owner_assign" if assigned else "owner_mention"
+                return rule(key, f"{how}:@{helper}")
             if thread.approval_skill and (_YES.match(folded) or _NO.match(folded)):
                 return rule(thread.approval_skill, "approval_reply")
+            ruled = owner_rule(text)
+            if ruled:
+                own_lx = lexicon.score(text, frozenset(s.key for s in allowed_for("owner")))
+                if not own_lx.settled or own_lx.top.split("/")[0] == ruled.split("/")[0]:
+                    # What is open now: a rule, never the model (a money word
+                    # the phrase rules settle on keeps its own route).
+                    return rule(ruled, f"owner_rule:{ruled.split('/')[1]}", language=lang)
             return self._classify(lead, text, "owner", thread, base, lang)
 
         # shop or rep

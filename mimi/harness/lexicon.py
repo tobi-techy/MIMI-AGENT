@@ -124,6 +124,13 @@ _R: list[tuple[str, float, str]] = [
     ("order/order-intake", 2, r"\b(?:do you have|una get|e dey (?:available)?\?|is .{2,30} available|you get)\b"),
     ("order/order-intake", 3, rf"\b(?:price (?:of|for)|how much (?:is|be|for) (?:one |a |1 )?{UNIT})\b"),
     ("order/order-intake", 3, rf"\b(?:wants?|needs?) {QTY} {UNIT}\b"),
+    # Availability and "can I order" (docs/HANDOFFS.md): an order question,
+    # never Brand ("any orders available now" once got a dead end there).
+    ("order/order-intake", 3, r"\bwhat(?:'s| is| do you have| una get| dey)? (?:in|for) stock\b|(?<!out of )\bin stock\b(?!.{0,30}\b(?:left|remain\w*)\b)"),
+    ("order/order-intake", 3, r"\bcan (?:i|we) (?:order|buy|place an order)\b|\b(?:i|we) (?:want|wan) to (?:know )?(?:what|wetin) (?:una|you) (?:get|have|dey sell)\b"),
+    ("order/order-intake", 3, r"\b(?:what|wetin|which) (?:goods|products?|items?) (?:do )?(?:you|una) (?:get|have|carry|sell|dey sell)\b|\b(?:any|wetin) (?!(?:promo|promos|promotion|offer|offers|discount|bonus)\b)(?:\w+ ){0,2}(?:available|dey available)\b"),
+    ("order/order-intake", 1, r"\b(?:is|are) (?:\w+ ){1,4}(?:available|in stock)\b"),
+    ("order/order-intake", 3, r"\b(?:una|you|u) (?:get|dey get|have|still get) .{1,30}\b(?:for stock|in stock|for shop|available)\b"),
     ("order/order-intake", 3, r"\bmo fe (?:ra|order|gba)\b|\be (?:mu|gbe) .{2,30} wa\b|\bse e ni\b"),
     ("order/order-intake", 3, r"\bina so (?:in sayi|a kawo|ku kawo|kaya)\b|\ba kawo min\b|\bku kawo min\b"),
     # Repeat orders, pay-on-delivery orders, Yoruba "help me bring/buy" (RAI-302).
@@ -335,7 +342,7 @@ _INJECTION = [
     _WRAPPER_TAG,
 ]
 INJECTION = tuple(re.compile(p, re.I) for p in _INJECTION)
-MENTION = re.compile(r"@(order|collector|credit|stock|brand|proof|mimi)\b", re.I)
+MENTION = re.compile(r"@(orders?|collector|credit|stock|brand|proof|mimi)\b", re.I)
 
 
 def injection_spans(text: str) -> list[str]:

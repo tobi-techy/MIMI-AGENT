@@ -329,6 +329,34 @@ def score(run: Run, usage_path: Path | None = None) -> dict[str, Any]:
          f"{p_out[0][:60] if p_out else '-'!r}, email route "
          f"{email.view.get('skill') if email else '-'}, drafts "
          f"{[i['outcome'] for i in drafts]}, sent elsewhere {len(brand_sends)}")
+    # ---- Handoffs (docs/HANDOFFS.md): "Any orders available now" goes to Order by
+    # rule, code answers from the book with a list card, never Brand, never a dead end.
+    from mimi.harness.claims import deflections
+
+    ho_t = next((t for t in run.turns if t.scene == "handoff"), None)
+    hv = ho_t.view if ho_t else {}
+    pend = run.checks.get("open_orders_pending") or []
+    ho_out = [r["text"] for r in hv.get("replies", []) if r["channel"] == "owner_console"]
+    card = hv.get("card") or {}
+    ho = hv.get("handoff") or {}
+    ok = (hv.get("skill") == "order/open-orders"
+          and (hv.get("route") or {}).get("rule") == "owner_rule:open-orders"
+          and not (hv.get("route") or {}).get("model_called")
+          and ho.get("from_helper") == "mimi" and ho.get("to_helper") == "order"
+          and ho.get("reason") == "Asking Order" and ho.get("status") == "done"
+          and card.get("kind") == "list" and card.get("total") == len(pend)
+          and len(ho_out) == 1 and not deflections(ho_out[0]) and 2 <= len(hv.get("chips") or [])
+          <= 3)
+    unit("handoff: 'Any orders available now' to Order, answered from the book (never Brand)",
+         "owner", ok, f"route {hv.get('skill', '-')} by {(hv.get('route') or {}).get('rule', '-')}"
+         f", {ho.get('reason', '-')!r} {ho.get('status', '-')}, card {card.get('kind', '-')} "
+         f"{card.get('total', '-')}/{len(pend)} pending, reply {ho_out[0][:60] if ho_out else '-'!r}")
+    # Every person's turn carries a handoff record from Mimi (the console shows it first).
+    person = [t for t in run.turns if t.view.get("state") == "done"
+              and t.view.get("status") not in ("stopped_running_turns",)]
+    missing = [t.turn_id for t in person if not (t.view.get("handoff") or {}).get("from_helper")]
+    unit("handoff: every finished turn carries a typed handoff from Mimi", "all",
+         bool(person) and not missing, f"{len(person) - len(missing)}/{len(person)} turns")
     # ---- Order intake (RAI-302): a list photo, then a voice edit before approval
     apr_now = {a["approval_id"]: a for a in run.checks["approvals_all"]["approvals"]}
     prices = {x.sku: x.price_on(world.live_day, world.price_rise_day) for x in world.skus}
@@ -460,7 +488,9 @@ def score(run: Run, usage_path: Path | None = None) -> dict[str, Any]:
         book.setdefault(r.shop_id, set()).update({r.outstanding_kobo, r.total_kobo})
     reads: dict[str, set[int]] = {}
     for e in db["events"]:
-        if e["tenant_id"] == T and e["type"] in ("tool_result", "tool_called"):
+        # card_read: what code read from the book for an owner's answer card
+        # (docs/HANDOFFS.md), recorded on the turn like a tool read.
+        if e["tenant_id"] == T and e["type"] in ("tool_result", "tool_called", "card_read"):
             _kobo_values(json.loads(e["data"] or "{}"), reads.setdefault(e["turn_id"], set()))
     invented: list[str] = []
     for m in out_msgs:
