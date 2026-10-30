@@ -13,8 +13,9 @@ from sqlalchemy.engine import Engine
 
 from mimi.api import threadmeta
 from mimi.api import voice as vx
-from mimi.api.agent import NotFound, approval_dict
+from mimi.api.agent import NotFound, approval_dict, turn_handoff
 from mimi.api.uploads import PREFIX as UPLOAD_PREFIX
+from mimi.harness import handoff as hx
 from mimi.store import schema as s
 from mimi.store.book import SqlGo
 from mimi.store.util import loads, mask_phone
@@ -202,17 +203,66 @@ def get_thread(engine: Engine, tenant: str, thread_id: str, *,
                 s.thread_events.c.thread_id == thread_id)
                 .order_by(s.thread_events.c.ts, s.thread_events.c.seq,
                           s.thread_events.c.event_id))]
+        rows_t = list(conn.execute(sa.select(s.turns).where(
+            s.turns.c.tenant_id == tenant, s.turns.c.thread_id == thread_id)
+            .order_by(s.turns.c.created_ts, s.turns.c.turn_id)))
         turns = [{
             "turn_id": r.turn_id, "state": r.state, "status": r.status, "helper": r.helper,
             "skill": r.skill, "run_id": r.run_id, "attempts": r.attempts,
             "simulated": bool(r.simulated), "created_at": r.created_at,
-            "finished_at": r.finished_at}
-            for r in conn.execute(sa.select(s.turns).where(
-                s.turns.c.tenant_id == tenant, s.turns.c.thread_id == thread_id)
-                .order_by(s.turns.c.created_ts, s.turns.c.turn_id))]
+            "finished_at": r.finished_at} for r in rows_t]
+        handoffs = [h for h in (turn_handoff(r) for r in rows_t) if h]
         summary = _thread_summary(conn, tenant, t)
     return {"thread": summary, "state": loads(t.state, {}), "messages": msgs,
-            "steps": steps, "turns": turns}
+            "steps": steps, "turns": turns, "handoffs": handoffs}
+
+
+# ------------------------------------------------------------------ tasks
+
+
+def list_tasks(engine: Engine, tenant: str, *, thread_id: str = "", helper: str = "",
+               status: str = "", limit: int = 50) -> dict[str, Any]:
+    """Each turn Mimi handed to a helper, newest first, with its task status
+    (``working``, ``needs_you``, ``done``, ``handed_back``, ``failed``;
+    docs/HANDOFFS.md). Merged turns are left out (their lead carries them)."""
+    with engine.connect() as conn:
+        q = sa.select(s.turns).where(s.turns.c.tenant_id == tenant,
+                                     s.turns.c.state != "merged")
+        if thread_id:
+            q = q.where(s.turns.c.thread_id == thread_id)
+        rows = list(conn.execute(q.order_by(s.turns.c.created_ts.desc(),
+                                            s.turns.c.turn_id.desc()).limit(500)))
+        pending = {r.turn_id: int(r.n) for r in conn.execute(
+            sa.select(s.approvals.c.turn_id, sa.func.count().label("n")).where(
+                s.approvals.c.tenant_id == tenant, s.approvals.c.status == "pending")
+            .group_by(s.approvals.c.turn_id))}
+    tasks: list[dict[str, Any]] = []
+    counts: dict[str, int] = {}
+    for r in rows:
+        ho = turn_handoff(r)
+        if ho is None:
+            continue
+        res = loads(r.result, {})
+        st = ho["status"]
+        if st == "done" and pending.get(r.turn_id):
+            st = "needs_you"  # its approval still waits (it was decided later otherwise)
+        elif st == "needs_you" and r.state == "done" and not pending.get(r.turn_id) and (
+                r.status == "parked_for_approval"):
+            st = "done"  # the owner decided it since
+        if helper and ho["to_helper"] != helper:
+            continue
+        counts[st] = counts.get(st, 0) + 1
+        if status and st != status:
+            continue
+        if len(tasks) < limit:
+            tasks.append({
+                "task_id": ho["handoff_id"], "turn_id": r.turn_id, "thread_id": r.thread_id,
+                "helper": ho["to_helper"], "helper_name": hx.title(ho["to_helper"]),
+                "skill": ho["skill"], "status": st, "reason": ho["reason"], "handoff": ho,
+                "handback": res.get("handback"), "card": res.get("card"),
+                "chips": list(res.get("chips") or []), "created_at": r.created_at,
+                "finished_at": r.finished_at})
+    return {"tasks": tasks, "total": sum(counts.values()), "by_status": counts}
 
 
 # -------------------------------------------------------------- approvals

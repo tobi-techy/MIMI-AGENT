@@ -82,6 +82,9 @@ class Payload(BaseModel):
     # "<action>:<task key>"), so it is never split or classified twice.
     part_of: str = ""
     steer: str = ""
+    # The helper the owner assigned this message to (``assign_to`` on
+    # POST /v1/turns, docs/HANDOFFS.md). Honoured for the owner only.
+    assign_to: str = ""
 
 
 class Inbound(BaseModel):
