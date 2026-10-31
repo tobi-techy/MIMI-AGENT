@@ -170,7 +170,7 @@ def test_delivery_receipt_and_yes_through_events_and_turns(api: Any) -> None:
                                     "text": "YES"}, headers=_h("chan")).json()
     assert yes["route"]["rule"] == "pending_answer:yes_no"
     assert ("record_delivery_consent", "applied") in _intents(engine, "shop-040")
-    assert yes["replies"][-1]["text"] == "Thank you. Delivery dlv-56-9039 is confirmed."
+    assert yes["replies"][-1]["text"] == "Thanks for confirming. Delivery dlv-56-9039 is now marked as received."
 
 
 def _screenshot(c: Any, sid: str, shop: str, mid: str) -> dict[str, Any]:

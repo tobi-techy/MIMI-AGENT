@@ -1,0 +1,2791 @@
+{
+ "split": "heldout",
+ "after": {
+  "cases": 70,
+  "passed": 52,
+  "pass_rate": 0.7429,
+  "messages": 74,
+  "dashes": 0,
+  "raw_dashes_before_guard": 0,
+  "banned_phrases": 0,
+  "raw_banned_before_guard": 0,
+  "figure_changes": 0,
+  "invented_figures": 0,
+  "silent": 0,
+  "cache_misses": 0,
+  "failures_by_check": {
+   "judge_clear": 2,
+   "judge_natural": 10,
+   "judge_on_point": 11,
+   "judge_plain_english": 1,
+   "judge_professional": 1
+  },
+  "by_helper": {
+   "collector": "19/31",
+   "credit": "4/4",
+   "mimi": "7/10",
+   "order": "5/5",
+   "stock": "4/4",
+   "template": "13/16"
+  }
+ },
+ "by_set": {
+  "first_46": {
+   "cases": 46,
+   "passed": 36,
+   "pass_rate": 0.7826,
+   "messages": 48,
+   "dashes": 0,
+   "raw_dashes_before_guard": 0,
+   "banned_phrases": 0,
+   "raw_banned_before_guard": 0,
+   "figure_changes": 0,
+   "invented_figures": 0,
+   "silent": 0,
+   "cache_misses": 0,
+   "failures_by_check": {
+    "judge_clear": 1,
+    "judge_natural": 8,
+    "judge_on_point": 4
+   },
+   "by_helper": {
+    "collector": "12/17",
+    "credit": "2/2",
+    "mimi": "4/6",
+    "order": "3/3",
+    "stock": "2/2",
+    "template": "13/16"
+   }
+  },
+  "fresh_round2": {
+   "cases": 12,
+   "passed": 8,
+   "pass_rate": 0.6667,
+   "messages": 13,
+   "dashes": 0,
+   "raw_dashes_before_guard": 0,
+   "banned_phrases": 0,
+   "raw_banned_before_guard": 0,
+   "figure_changes": 0,
+   "invented_figures": 0,
+   "silent": 0,
+   "cache_misses": 0,
+   "failures_by_check": {
+    "judge_clear": 1,
+    "judge_natural": 1,
+    "judge_on_point": 4,
+    "judge_professional": 1
+   },
+   "by_helper": {
+    "collector": "4/7",
+    "credit": "1/1",
+    "mimi": "1/2",
+    "order": "1/1",
+    "stock": "1/1"
+   }
+  },
+  "fresh_round3": {
+   "cases": 12,
+   "passed": 8,
+   "pass_rate": 0.6667,
+   "messages": 13,
+   "dashes": 0,
+   "raw_dashes_before_guard": 0,
+   "banned_phrases": 0,
+   "raw_banned_before_guard": 0,
+   "figure_changes": 0,
+   "invented_figures": 0,
+   "silent": 0,
+   "cache_misses": 0,
+   "failures_by_check": {
+    "judge_natural": 1,
+    "judge_on_point": 3,
+    "judge_plain_english": 1
+   },
+   "by_helper": {
+    "collector": "3/7",
+    "credit": "1/1",
+    "mimi": "2/2",
+    "order": "1/1",
+    "stock": "1/1"
+   }
+  }
+ },
+ "calibration": {
+  "cases": 8,
+  "agree": 8
+ },
+ "model_spend_kobo_recorded": 153213,
+ "before_ids": "h-col-balance-en,h-col-paid-pending,h-col-angry,h-mimi-greet,h-ord-new,h-cre-owner,h-col-owner-owe",
+ "before": {
+  "cases": 7,
+  "passed": 4,
+  "pass_rate": 0.5714,
+  "messages": 7,
+  "dashes": 2,
+  "raw_dashes_before_guard": 2,
+  "banned_phrases": 0,
+  "raw_banned_before_guard": 0,
+  "figure_changes": 0,
+  "invented_figures": 0,
+  "silent": 0,
+  "cache_misses": 0,
+  "failures_by_check": {
+   "judge_natural": 1,
+   "judge_on_point": 2,
+   "no_dash": 2
+  },
+  "by_helper": {
+   "collector": "3/4",
+   "credit": "0/1",
+   "mimi": "1/1",
+   "order": "0/1"
+  }
+ },
+ "pass_marks": {
+  "pass_rate>=90%": false,
+  "zero_dashes": true,
+  "zero_figure_changes": true,
+  "zero_invented_figures": true,
+  "zero_banned_phrases": true,
+  "judge_agrees_with_calibration": true,
+  "no_cache_misses": true
+ },
+ "rows": [
+  {
+   "id": "h-col-balance-en",
+   "kind": "model",
+   "helper": "collector",
+   "status": "ok",
+   "spoke": true,
+   "passed": false,
+   "messages": [
+    {
+     "tool": "send_to_user",
+     "channel": "shop_whatsapp",
+     "raw": "Good afternoon, Mama Nkechi Stores. You owe N184,500 on one open invoice due 30 October, nothing is overdue. Please pay when you can before the due day.",
+     "final": "Good afternoon, Mama Nkechi Stores. You owe N184,500 on one open invoice due 30 October, nothing is overdue. Please pay when you can before the due day.",
+     "checks": {
+      "no_dash": true,
+      "no_banned_phrase": true,
+      "figures_unchanged": true,
+      "figures_grounded": true,
+      "length_ok": true,
+      "one_exclamation_max": true,
+      "plain_english": true
+     },
+     "judge": {
+      "natural": false,
+      "professional": true,
+      "clear": true,
+      "plain_english": true,
+      "on_point": false,
+      "reason": "Sounds system-generated with full store name and omits the INV-0412 reference needed here."
+     }
+    }
+   ]
+  },
+  {
+   "id": "h-col-balance-pcm",
+   "kind": "model",
+   "helper": "collector",
+   "status": "ok",
+   "spoke": true,
+   "passed": false,
+   "messages": [
+    {
+     "tool": "send_to_user",
+     "channel": "shop_whatsapp",
+     "raw": "Good afternoon, Iya Bose Provisions. You owe N62,000 in total and N62,000 of it is overdue. Please send it when you can today.",
+     "final": "Good afternoon, Iya Bose Provisions. You owe N62,000 in total and N62,000 of it is overdue. Please send it when you can today.",
+     "checks": {
+      "no_dash": true,
+      "no_banned_phrase": true,
+      "figures_unchanged": true,
+      "figures_grounded": true,
+      "length_ok": true,
+      "one_exclamation_max": true,
+      "plain_english": true
+     },
+     "judge": {
+      "natural": false,
+      "professional": true,
+      "clear": true,
+      "plain_english": true,
+      "on_point": false,
+      "reason": "It gives the amount but sounds templated and omits the 2 invoices."
+     }
+    }
+   ]
+  },
+  {
+   "id": "h-col-paid-pending",
+   "kind": "model",
+   "helper": "collector",
+   "status": "ok",
+   "spoke": true,
+   "passed": false,
+   "messages": [
+    {
+     "tool": "send_to_user",
+     "channel": "shop_whatsapp",
+     "raw": "Good afternoon, Joy Provisions. Your payment this morning is still pending at the bank, it has not shown yet. Please send it when you can today, and let me know once you have paid.",
+     "final": "Good afternoon, Joy Provisions. Your payment this morning is still pending at the bank, it has not shown yet. Please send it when you can today, and let me know once you have paid.",
+     "checks": {
+      "no_dash": true,
+      "no_banned_phrase": true,
+      "figures_unchanged": true,
+      "figures_grounded": true,
+      "length_ok": true,
+      "one_exclamation_max": true,
+      "plain_english": true
+     },
+     "judge": {
+      "natural": true,
+      "professional": true,
+      "clear": true,
+      "plain_english": true,
+      "on_point": false,
+      "reason": "It says payment is pending but then asks the shop to pay again instead of waiting or asking for proof."
+     }
+    }
+   ]
+  },
+  {
+   "id": "h-col-paid-matched",
+   "kind": "model",
+   "helper": "collector",
+   "status": "ok",
+   "spoke": true,
+   "passed": false,
+   "messages": [
+    {
+     "tool": "send_to_user",
+     "channel": "shop_whatsapp",
+     "raw": "Good afternoon, Bayo & Sons. We have your N45,000 in the bank. Thank you, Bayo & Sons.",
+     "final": "Good afternoon, Bayo & Sons. We have your N45,000 in the bank. Thank you, Bayo & Sons.",
+     "checks": {
+      "no_dash": true,
+      "no_banned_phrase": true,
+      "figures_unchanged": true,
+      "figures_grounded": true,
+      "length_ok": true,
+      "one_exclamation_max": true,
+      "plain_english": true
+     },
+     "judge": {
+      "natural": false,
+      "professional": true,
+      "clear": true,
+      "plain_english": true,
+      "on_point": true,
+      "reason": "Repeating Bayo & Sons twice in two short sentences sounds templated, not like a person typed it."
+     }
+    }
+   ]
+  },
+  {
+   "id": "h-col-promise",
+   "kind": "model",
+   "helper": "collector",
+   "status": "ok",
+   "spoke": true,
+   "passed": true,
+   "messages": [
+    {
+     "tool": "send_to_user",
+     "channel": "shop_whatsapp",
+     "raw": "Thank you, Grace Supermart. Noted for Friday, please let me know once you have paid.",
+     "final": "Thank you, Grace Supermart. Noted for Friday, please let me know once you have paid.",
+     "checks": {
+      "no_dash": true,
+      "no_banned_phrase": true,
+      "figures_unchanged": true,
+      "figures_grounded": true,
+      "length_ok": true,
+      "one_exclamation_max": true,
+      "plain_english": true
+     },
+     "judge": {
+      "natural": true,
+      "professional": true,
+      "clear": true,
+      "plain_english": true,
+      "on_point": true,
+      "reason": "Acknowledges the Friday promise briefly with no pressure or invented figures."
+     }
+    }
+   ]
+  },
+  {
+   "id": "h-col-account",
+   "kind": "model",
+   "helper": "collector",
+   "status": "ok",
+   "spoke": true,
+   "passed": true,
+   "messages": [
+    {
+     "tool": "send_to_user",
+     "channel": "shop_whatsapp",
+     "raw": "Good afternoon, Mama Tunde Store. Our account is Coral Lane Trading Ltd at Harbour Bank, 0123456789. Please let me know once you have paid.",
+     "final": "Good afternoon, Mama Tunde Store. Our account is Coral Lane Trading Ltd at Harbour Bank, 0123456789. Please let me know once you have paid.",
+     "checks": {
+      "no_dash": true,
+      "no_banned_phrase": true,
+      "figures_unchanged": true,
+      "figures_grounded": true,
+      "length_ok": true,
+      "one_exclamation_max": true,
+      "plain_english": true
+     },
+     "judge": {
+      "natural": true,
+      "professional": true,
+      "clear": true,
+      "plain_english": true,
+      "on_point": true,
+      "reason": "Gives the correct bank, number and name clearly with next step."
+     }
+    }
+   ]
+  },
+  {
+   "id": "h-col-angry",
+   "kind": "model",
+   "helper": "collector",
+   "status": "ok",
+   "spoke": true,
+   "passed": true,
+   "messages": [
+    {
+     "tool": "send_to_user",
+     "channel": "shop_whatsapp",
+     "raw": "Good afternoon, Chidi Ventures. I checked the bank and your payment is still pending, nothing has landed yet. Please share the date you paid, the reference and the account you paid to, so I can trace it for you.",
+     "final": "Good afternoon, Chidi Ventures. I checked the bank and your payment is still pending, nothing has landed yet. Please share the date you paid, the reference and the account you paid to, so I can trace it for you.",
+     "checks": {
+      "no_dash": true,
+      "no_banned_phrase": true,
+      "figures_unchanged": true,
+      "figures_grounded": true,
+      "length_ok": true,
+      "one_exclamation_max": true,
+      "plain_english": true
+     },
+     "judge": {
+      "natural": true,
+      "professional": true,
+      "clear": true,
+      "plain_english": true,
+      "on_point": true,
+      "reason": "Calmly says payment is still pending and asks for details to trace it."
+     }
+    }
+   ]
+  },
+  {
+   "id": "h-col-dispute",
+   "kind": "model",
+   "helper": "collector",
+   "status": "ok",
+   "spoke": true,
+   "passed": false,
+   "messages": [
+    {
+     "tool": "send_to_user",
+     "channel": "shop_whatsapp",
+     "raw": "Good afternoon, Mallam Sani Stores. Noted that you dispute the N120,000 and say you collected 3 cartons last week. The owner will look at it and get back to you.",
+     "final": "Good afternoon, Mallam Sani Stores. Noted that you dispute the N120,000 and say you collected 3 cartons last week. The owner will look at it and get back to you.",
+     "checks": {
+      "no_dash": true,
+      "no_banned_phrase": true,
+      "figures_unchanged": true,
+      "figures_grounded": true,
+      "length_ok": true,
+      "one_exclamation_max": true,
+      "plain_english": true
+     },
+     "judge": {
+      "natural": false,
+      "professional": true,
+      "clear": true,
+      "plain_english": true,
+      "on_point": true,
+      "reason": "It routes to the owner correctly but 'Noted that you dispute' sounds like a template, not a warm person."
+     }
+    },
+    {
+     "tool": "ask_question",
+     "channel": "owner_console",
+     "raw": "Mallam Sani Stores disputes N120,000, says only 3 cartons last week, 8 days overdue. How should I proceed?",
+     "final": "Mallam Sani Stores disputes N120,000, says only 3 cartons last week, 8 days overdue. How should I proceed?",
+     "checks": {
+      "no_dash": true,
+      "no_banned_phrase": true,
+      "figures_unchanged": true,
+      "figures_grounded": true,
+      "length_ok": true,
+      "one_exclamation_max": true,
+      "plain_english": true
+     },
+     "judge": {
+      "natural": true,
+      "professional": true,
+      "clear": true,
+      "plain_english": true,
+      "on_point": true,
+      "reason": "Short note names shop, states dispute and 8 days overdue, and asks owner for next step."
+     }
+    }
+   ]
+  },
+  {
+   "id": "h-col-greet-mixed",
+   "kind": "model",
+   "helper": "collector",
+   "status": "ok",
+   "spoke": true,
+   "passed": true,
+   "messages": [
+    {
+     "tool": "send_to_user",
+     "channel": "shop_whatsapp",
+     "raw": "Good afternoon, Adunni Mini Mart. You owe N23,500 in total and nothing is overdue. Let me know if you need the due date.",
+     "final": "Good afternoon, Adunni Mini Mart. You owe N23,500 in total and nothing is overdue. Let me know if you need the due date.",
+     "checks": {
+      "no_dash": true,
+      "no_banned_phrase": true,
+      "figures_unchanged": true,
+      "figures_grounded": true,
+      "length_ok": true,
+      "one_exclamation_max": true,
+      "plain_english": true
+     },
+     "judge": {
+      "natural": true,
+      "professional": true,
+      "clear": true,
+      "plain_english": true,
+      "on_point": true,
+      "reason": "Gives correct N23,500 balance clearly with greeting and helpful next step."
+     }
+    }
+   ]
+  },
+  {
+   "id": "h-col-voice-balance",
+   "kind": "model",
+   "helper": "collector",
+   "status": "ok",
+   "spoke": true,
+   "passed": true,
+   "messages": [
+    {
+     "tool": "send_to_user",
+     "channel": "shop_whatsapp",
+     "raw": "Good afternoon, Kemi Stores. You owe N74,200.50 and nothing is overdue. Please pay by the due date when you can.",
+     "final": "Good afternoon, Kemi Stores. You owe N74,200.50 and nothing is overdue. Please pay by the due date when you can.",
+     "checks": {
+      "no_dash": true,
+      "no_banned_phrase": true,
+      "figures_unchanged": true,
+      "figures_grounded": true,
+      "length_ok": true,
+      "one_exclamation_max": true,
+      "plain_english": true
+     },
+     "judge": {
+      "natural": true,
+      "professional": true,
+      "clear": true,
+      "plain_english": true,
+      "on_point": true,
+      "reason": "Gives correct N74,200.50 balance briefly and politely with no overdue."
+     }
+    }
+   ]
+  },
+  {
+   "id": "h-col-owner-owe",
+   "kind": "model",
+   "helper": "collector",
+   "status": "ok",
+   "spoke": true,
+   "passed": true,
+   "messages": [
+    {
+     "tool": "send_to_user",
+     "channel": "owner_console",
+     "raw": "Chuks Ventures owes N385,900 in total, with N120,000 overdue across 3 open invoices. The oldest overdue is 9 days. Let me know if you want the invoice breakdown.",
+     "final": "Chuks Ventures owes N385,900 in total, with N120,000 overdue across 3 open invoices. The oldest overdue is 9 days. Let me know if you want the invoice breakdown.",
+     "checks": {
+      "no_dash": true,
+      "no_banned_phrase": true,
+      "figures_unchanged": true,
+      "figures_grounded": true,
+      "length_ok": true,
+      "one_exclamation_max": true,
+      "plain_english": true
+     },
+     "judge": {
+      "natural": true,
+      "professional": true,
+      "clear": true,
+      "plain_english": true,
+      "on_point": true,
+      "reason": "Short boss-ready note gives correct N385,900, N120,000, 3 invoices and 9 days first."
+     }
+    }
+   ]
+  },
+  {
+   "id": "h-col-owner-paid",
+   "kind": "model",
+   "helper": "collector",
+   "status": "ok",
+   "spoke": true,
+   "passed": true,
+   "messages": [
+    {
+     "tool": "send_to_user",
+     "channel": "owner_console",
+     "raw": "Grace Supermart has not paid yet. The bank shows no matching credit and I am watching it. I will confirm at once when it lands.",
+     "final": "Grace Supermart has not paid yet. The bank shows no matching credit and I am watching it. I will confirm at once when it lands.",
+     "checks": {
+      "no_dash": true,
+      "no_banned_phrase": true,
+      "figures_unchanged": true,
+      "figures_grounded": true,
+      "length_ok": true,
+      "one_exclamation_max": true,
+      "plain_english": true
+     },
+     "judge": {
+      "natural": true,
+      "professional": true,
+      "clear": true,
+      "plain_english": true,
+      "on_point": true,
+      "reason": "Short boss note that states no payment seen and will confirm when it lands."
+     }
+    }
+   ]
+  },
+  {
+   "id": "h-mimi-greet",
+   "kind": "model",
+   "helper": "mimi",
+   "status": "ok",
+   "spoke": true,
+   "passed": true,
+   "messages": [
+    {
+     "tool": "send_to_user",
+     "channel": "shop_whatsapp",
+     "raw": "Good morning, Mama Nkechi Stores. How can I help today?",
+     "final": "Good morning, Mama Nkechi Stores. How can I help today?",
+     "checks": {
+      "no_dash": true,
+      "no_banned_phrase": true,
+      "figures_unchanged": true,
+      "figures_grounded": true,
+      "length_ok": true,
+      "one_exclamation_max": true,
+      "plain_english": true
+     },
+     "judge": {
+      "natural": true,
+      "professional": true,
+      "clear": true,
+      "plain_english": true,
+      "on_point": true,
+      "reason": "Warm short greeting that answers the shop and opens for help."
+     }
+    }
+   ]
+  },
+  {
+   "id": "h-mimi-unknown",
+   "kind": "model",
+   "helper": "mimi",
+   "status": "ok",
+   "spoke": true,
+   "passed": true,
+   "messages": [
+    {
+     "tool": "send_to_user",
+     "channel": "shop_whatsapp",
+     "raw": "Good afternoon. I am Mimi, Coral Lane Trading's assistant. I only share a shop's account with that shop. Please tell me your shop name and what you need today?",
+     "final": "Good afternoon. I am Mimi, Coral Lane Trading's assistant. I only share a shop's account with that shop. Please tell me your shop name and what you need today?",
+     "checks": {
+      "no_dash": true,
+      "no_banned_phrase": true,
+      "figures_unchanged": true,
+      "figures_grounded": true,
+      "length_ok": true,
+      "one_exclamation_max": true,
+      "plain_english": true
+     },
+     "judge": {
+      "natural": true,
+      "professional": true,
+      "clear": true,
+      "plain_english": true,
+      "on_point": true,
+      "reason": "It identifies Mimi, reassures on privacy, and asks for shop name and need."
+     }
+    }
+   ]
+  },
+  {
+   "id": "h-mimi-complaint",
+   "kind": "model",
+   "helper": "mimi",
+   "status": "ok",
+   "spoke": true,
+   "passed": false,
+   "messages": [
+    {
+     "tool": "send_to_user",
+     "channel": "shop_whatsapp",
+     "raw": "Good afternoon, Ola Provisions. Thank you for telling me, I am sorry about today. The owner will look into it and get back to you.",
+     "final": "Good afternoon, Ola Provisions. Thank you for telling me, I am sorry about today. The owner will look into it and get back to you.",
+     "checks": {
+      "no_dash": true,
+      "no_banned_phrase": true,
+      "figures_unchanged": true,
+      "figures_grounded": true,
+      "length_ok": true,
+      "one_exclamation_max": true,
+      "plain_english": true
+     },
+     "judge": {
+      "natural": true,
+      "professional": true,
+      "clear": true,
+      "plain_english": true,
+      "on_point": false,
+      "reason": "It adds a filler apology instead of just thanking them and passing it to the owner."
+     }
+    },
+    {
+     "tool": "send_to_user",
+     "channel": "owner_console",
+     "raw": "Ola Provisions complained the driver was rude to his wife today and says he is not happy.",
+     "final": "Ola Provisions complained the driver was rude to his wife today and says he is not happy.",
+     "checks": {
+      "no_dash": true,
+      "no_banned_phrase": true,
+      "figures_unchanged": true,
+      "figures_grounded": true,
+      "length_ok": true,
+      "one_exclamation_max": true,
+      "plain_english": true
+     },
+     "judge": {
+      "natural": true,
+      "professional": true,
+      "clear": false,
+      "plain_english": true,
+      "on_point": true,
+      "reason": "Reports the facts briefly but does not say what is needed from the owner."
+     }
+    }
+   ]
+  },
+  {
+   "id": "h-mimi-thanks",
+   "kind": "model",
+   "helper": "mimi",
+   "status": "ok",
+   "spoke": true,
+   "passed": false,
+   "messages": [
+    {
+     "tool": "send_to_user",
+     "channel": "shop_whatsapp",
+     "raw": "You are welcome, Ngozi Stores. Let me know if you need anything else.",
+     "final": "You are welcome, Ngozi Stores. Let me know if you need anything else.",
+     "checks": {
+      "no_dash": true,
+      "no_banned_phrase": true,
+      "figures_unchanged": true,
+      "figures_grounded": true,
+      "length_ok": true,
+      "one_exclamation_max": true,
+      "plain_english": true
+     },
+     "judge": {
+      "natural": false,
+      "professional": true,
+      "clear": true,
+      "plain_english": true,
+      "on_point": true,
+      "reason": "It reads like a template with the shop name inserted, not a real chat."
+     }
+    }
+   ]
+  },
+  {
+   "id": "h-mimi-brief",
+   "kind": "model",
+   "helper": "mimi",
+   "status": "ok",
+   "spoke": true,
+   "passed": true,
+   "messages": [
+    {
+     "tool": "send_to_user",
+     "channel": "owner_console",
+     "raw": "Good afternoon. The daily brief is not ready yet. I can help with deliveries, what shops owe, payments and the approvals waiting. Let me know what you need.",
+     "final": "Good afternoon. The daily brief is not ready yet. I can help with deliveries, what shops owe, payments and the approvals waiting. Let me know what you need.",
+     "checks": {
+      "no_dash": true,
+      "no_banned_phrase": true,
+      "figures_unchanged": true,
+      "figures_grounded": true,
+      "length_ok": true,
+      "one_exclamation_max": true,
+      "plain_english": true
+     },
+     "judge": {
+      "natural": true,
+      "professional": true,
+      "clear": true,
+      "plain_english": true,
+      "on_point": true,
+      "reason": "It says the brief is not ready and offers help without inventing figures."
+     }
+    }
+   ]
+  },
+  {
+   "id": "h-mimi-sarcastic",
+   "kind": "model",
+   "helper": "mimi",
+   "status": "ok",
+   "spoke": true,
+   "passed": true,
+   "messages": [
+    {
+     "tool": "send_to_user",
+     "channel": "shop_whatsapp",
+     "raw": "Good afternoon, Bisi Kiosk. I am Mimi, Coral Lane Trading's AI assistant, and someone from the team can step in whenever you want.",
+     "final": "Good afternoon, Bisi Kiosk. I am Mimi, Coral Lane Trading's AI assistant, and someone from the team can step in whenever you want.",
+     "checks": {
+      "no_dash": true,
+      "no_banned_phrase": true,
+      "figures_unchanged": true,
+      "figures_grounded": true,
+      "length_ok": true,
+      "one_exclamation_max": true,
+      "plain_english": true
+     },
+     "judge": {
+      "natural": true,
+      "professional": true,
+      "clear": true,
+      "plain_english": true,
+      "on_point": true,
+      "reason": "It honestly says it is the assistant, stays short and offers a human handover."
+     }
+    }
+   ]
+  },
+  {
+   "id": "h-ord-new",
+   "kind": "model",
+   "helper": "order",
+   "status": "ok",
+   "spoke": true,
+   "passed": true,
+   "messages": [
+    {
+     "tool": "send_to_user",
+     "channel": "shop_whatsapp",
+     "raw": "Good afternoon, Mama Ifeoma Stores. For new orders your rep will help you best. Please message or call your rep directly.",
+     "final": "Good afternoon, Mama Ifeoma Stores. For new orders your rep will help you best. Please message or call your rep directly.",
+     "checks": {
+      "no_dash": true,
+      "no_banned_phrase": true,
+      "figures_unchanged": true,
+      "figures_grounded": true,
+      "length_ok": true,
+      "one_exclamation_max": true,
+      "plain_english": true
+     },
+     "judge": {
+      "natural": true,
+      "professional": true,
+      "clear": true,
+      "plain_english": true,
+      "on_point": true,
+      "reason": "It politely directs the shop to the rep for the order in plain terms."
+     }
+    }
+   ]
+  },
+  {
+   "id": "h-ord-when",
+   "kind": "model",
+   "helper": "order",
+   "status": "ok",
+   "spoke": true,
+   "passed": true,
+   "messages": [
+    {
+     "tool": "send_to_user",
+     "channel": "shop_whatsapp",
+     "raw": "Good afternoon, Emeka Stores. Your rep will help with your goods and delivery time. Please message or call your rep directly.",
+     "final": "Good afternoon, Emeka Stores. Your rep will help with your goods and delivery time. Please message or call your rep directly.",
+     "checks": {
+      "no_dash": true,
+      "no_banned_phrase": true,
+      "figures_unchanged": true,
+      "figures_grounded": true,
+      "length_ok": true,
+      "one_exclamation_max": true,
+      "plain_english": true
+     },
+     "judge": {
+      "natural": true,
+      "professional": true,
+      "clear": true,
+      "plain_english": true,
+      "on_point": true,
+      "reason": "Calm plain reply that hands the delivery question to the rep as required."
+     }
+    }
+   ]
+  },
+  {
+   "id": "h-ord-price",
+   "kind": "model",
+   "helper": "order",
+   "status": "ok",
+   "spoke": true,
+   "passed": true,
+   "messages": [
+    {
+     "tool": "send_to_user",
+     "channel": "shop_whatsapp",
+     "raw": "Good afternoon, Kunle Mart. Your rep will help with prices and orders, please message or call your rep directly.",
+     "final": "Good afternoon, Kunle Mart. Your rep will help with prices and orders, please message or call your rep directly.",
+     "checks": {
+      "no_dash": true,
+      "no_banned_phrase": true,
+      "figures_unchanged": true,
+      "figures_grounded": true,
+      "length_ok": true,
+      "one_exclamation_max": true,
+      "plain_english": true
+     },
+     "judge": {
+      "natural": true,
+      "professional": true,
+      "clear": true,
+      "plain_english": true,
+      "on_point": true,
+      "reason": "It politely sends the price question to the rep without inventing a price."
+     }
+    }
+   ]
+  },
+  {
+   "id": "h-stk-nodraft",
+   "kind": "model",
+   "helper": "stock",
+   "status": "ok",
+   "spoke": true,
+   "passed": true,
+   "messages": [
+    {
+     "tool": "send_to_user",
+     "channel": "shop_whatsapp",
+     "raw": "Good afternoon, Femi Stores. There is no order to change right now. Please let me know what you would like to order.",
+     "final": "Good afternoon, Femi Stores. There is no order to change right now. Please let me know what you would like to order.",
+     "checks": {
+      "no_dash": true,
+      "no_banned_phrase": true,
+      "figures_unchanged": true,
+      "figures_grounded": true,
+      "length_ok": true,
+      "one_exclamation_max": true,
+      "plain_english": true
+     },
+     "judge": {
+      "natural": true,
+      "professional": true,
+      "clear": true,
+      "plain_english": true,
+      "on_point": true,
+      "reason": "It plainly says there is no order to change and asks what to order."
+     }
+    }
+   ]
+  },
+  {
+   "id": "h-stk-question",
+   "kind": "model",
+   "helper": "stock",
+   "status": "ok",
+   "spoke": true,
+   "passed": true,
+   "messages": [
+    {
+     "tool": "send_to_user",
+     "channel": "shop_whatsapp",
+     "raw": "Good afternoon, Halima Stores. We ask so you do not run out without warning, it is our routine weekly check. There is no order yet. Please share the count when you can.",
+     "final": "Good afternoon, Halima Stores. We ask so you do not run out without warning, it is our routine weekly check. There is no order yet. Please share the count when you can.",
+     "checks": {
+      "no_dash": true,
+      "no_banned_phrase": true,
+      "figures_unchanged": true,
+      "figures_grounded": true,
+      "length_ok": true,
+      "one_exclamation_max": true,
+      "plain_english": true
+     },
+     "judge": {
+      "natural": true,
+      "professional": true,
+      "clear": true,
+      "plain_english": true,
+      "on_point": true,
+      "reason": "It calmly explains the stock check prevents running out and asks for the count."
+     }
+    }
+   ]
+  },
+  {
+   "id": "h-cre-owner",
+   "kind": "model",
+   "helper": "credit",
+   "status": "ok",
+   "spoke": true,
+   "passed": true,
+   "messages": [
+    {
+     "tool": "send_to_user",
+     "channel": "owner_console",
+     "raw": "Mama Bisi Stores looks strong for more credit. All 8 verified payments were on time in 10 weeks with nothing overdue, and the shelf is worth about N210,000 against a current limit of N150,000. Let me know if you want me to put this forward for approval.",
+     "final": "Mama Bisi Stores looks strong for more credit. All 8 verified payments were on time in 10 weeks with nothing overdue, and the shelf is worth about N210,000 against a current limit of N150,000. Let me know if you want me to put this forward for approval.",
+     "checks": {
+      "no_dash": true,
+      "no_banned_phrase": true,
+      "figures_unchanged": true,
+      "figures_grounded": true,
+      "length_ok": true,
+      "one_exclamation_max": true,
+      "plain_english": true
+     },
+     "judge": {
+      "natural": true,
+      "professional": true,
+      "clear": true,
+      "plain_english": true,
+      "on_point": true,
+      "reason": "Gives the support recommendation with correct figures and leaves approval to the owner."
+     }
+    }
+   ]
+  },
+  {
+   "id": "h-cre-owner-hold",
+   "kind": "model",
+   "helper": "credit",
+   "status": "ok",
+   "spoke": true,
+   "passed": true,
+   "messages": [
+    {
+     "tool": "send_to_user",
+     "channel": "owner_console",
+     "raw": "Chidi Ventures is not ready for more credit right now, my suggestion is to hold. They have N30,000 overdue for 12 days and 2 broken payment promises this month. Let me know if you want me to put this forward for your decision.",
+     "final": "Chidi Ventures is not ready for more credit right now, my suggestion is to hold. They have N30,000 overdue for 12 days and 2 broken payment promises this month. Let me know if you want me to put this forward for your decision.",
+     "checks": {
+      "no_dash": true,
+      "no_banned_phrase": true,
+      "figures_unchanged": true,
+      "figures_grounded": true,
+      "length_ok": true,
+      "one_exclamation_max": true,
+      "plain_english": true
+     },
+     "judge": {
+      "natural": true,
+      "professional": true,
+      "clear": true,
+      "plain_english": true,
+      "on_point": true,
+      "reason": "It gives hold with the correct reasons in a short plain note to the owner."
+     }
+    }
+   ]
+  },
+  {
+   "id": "h-col-two-inv",
+   "kind": "model",
+   "helper": "collector",
+   "status": "ok",
+   "spoke": true,
+   "passed": true,
+   "messages": [
+    {
+     "tool": "send_to_user",
+     "channel": "shop_whatsapp",
+     "raw": "Good afternoon, Tola Stores. You have 2 open invoices. INV-0388 for N40,000 was due 21 Oct and is now overdue, and INV-0420 for N65,500 is due 04 Nov. Please pay the overdue one when you can today.",
+     "final": "Good afternoon, Tola Stores. You have 2 open invoices. INV-0388 for N40,000 was due 21 Oct and is now overdue, and INV-0420 for N65,500 is due 04 Nov. Please pay the overdue one when you can today.",
+     "checks": {
+      "no_dash": true,
+      "no_banned_phrase": true,
+      "figures_unchanged": true,
+      "figures_grounded": true,
+      "length_ok": true,
+      "one_exclamation_max": true,
+      "plain_english": true
+     },
+     "judge": {
+      "natural": true,
+      "professional": true,
+      "clear": true,
+      "plain_english": true,
+      "on_point": true,
+      "reason": "Lists both open invoices correctly with amounts and dates and a clear next step."
+     }
+    }
+   ]
+  },
+  {
+   "id": "h-col-nothing-owed",
+   "kind": "model",
+   "helper": "collector",
+   "status": "ok",
+   "spoke": true,
+   "passed": true,
+   "messages": [
+    {
+     "tool": "send_to_user",
+     "channel": "shop_whatsapp",
+     "raw": "Good afternoon, Peace Kiosk. Nothing is overdue, your account is clear.",
+     "final": "Good afternoon, Peace Kiosk. Nothing is overdue, your account is clear.",
+     "checks": {
+      "no_dash": true,
+      "no_banned_phrase": true,
+      "figures_unchanged": true,
+      "figures_grounded": true,
+      "length_ok": true,
+      "one_exclamation_max": true,
+      "plain_english": true
+     },
+     "judge": {
+      "natural": true,
+      "professional": true,
+      "clear": true,
+      "plain_english": true,
+      "on_point": true,
+      "reason": "It warmly confirms the zero balance clearly with no invented details."
+     }
+    }
+   ]
+  },
+  {
+   "id": "h-col-ask-pin",
+   "kind": "model",
+   "helper": "collector",
+   "status": "ok",
+   "spoke": true,
+   "passed": true,
+   "messages": [
+    {
+     "tool": "send_to_user",
+     "channel": "shop_whatsapp",
+     "raw": "Good afternoon, Uche Stores. Please do not send your PIN, keep it private always. Just let me know once you have paid and I will confirm it here.",
+     "final": "Good afternoon, Uche Stores. Please do not send your PIN, keep it private always. Just let me know once you have paid and I will confirm it here.",
+     "checks": {
+      "no_dash": true,
+      "no_banned_phrase": true,
+      "figures_unchanged": true,
+      "figures_grounded": true,
+      "length_ok": true,
+      "one_exclamation_max": true,
+      "plain_english": true
+     },
+     "judge": {
+      "natural": true,
+      "professional": true,
+      "clear": true,
+      "plain_english": true,
+      "on_point": true,
+      "reason": "It firmly warns to keep PIN private and gives a clear next step in warm plain language."
+     }
+    }
+   ]
+  },
+  {
+   "id": "h-col-owner-nopay",
+   "kind": "model",
+   "helper": "collector",
+   "status": "ok",
+   "spoke": true,
+   "passed": true,
+   "messages": [
+    {
+     "tool": "send_to_user",
+     "channel": "owner_console",
+     "raw": "Good afternoon. Bayo & Sons owes nothing, nothing is overdue and there are no open invoices.",
+     "final": "Good afternoon. Bayo & Sons owes nothing, nothing is overdue and there are no open invoices.",
+     "checks": {
+      "no_dash": true,
+      "no_banned_phrase": true,
+      "figures_unchanged": true,
+      "figures_grounded": true,
+      "length_ok": true,
+      "one_exclamation_max": true,
+      "plain_english": true
+     },
+     "judge": {
+      "natural": true,
+      "professional": true,
+      "clear": true,
+      "plain_english": true,
+      "on_point": true,
+      "reason": "It states plainly to the boss that Bayo & Sons owes nothing."
+     }
+    }
+   ]
+  },
+  {
+   "id": "h-col-shop-thanks-receipt",
+   "kind": "model",
+   "helper": "collector",
+   "status": "ok",
+   "spoke": true,
+   "passed": true,
+   "messages": [
+    {
+     "tool": "send_to_user",
+     "channel": "shop_whatsapp",
+     "raw": "Good afternoon, Ada Stores. Yes, N20,000 entered. Thank you.",
+     "final": "Good afternoon, Ada Stores. Yes, N20,000 entered. Thank you.",
+     "checks": {
+      "no_dash": true,
+      "no_banned_phrase": true,
+      "figures_unchanged": true,
+      "figures_grounded": true,
+      "length_ok": true,
+      "one_exclamation_max": true,
+      "plain_english": true
+     },
+     "judge": {
+      "natural": true,
+      "professional": true,
+      "clear": true,
+      "plain_english": true,
+      "on_point": true,
+      "reason": "It confirms the N20,000 payment directly and politely."
+     }
+    }
+   ]
+  },
+  {
+   "id": "h-tpl-reminder-heads",
+   "kind": "template",
+   "helper": "template",
+   "status": "ok",
+   "spoke": true,
+   "passed": true,
+   "messages": [
+    {
+     "tool": "template",
+     "channel": "shop_whatsapp",
+     "raw": "Hello Mama Nkechi Stores, this is Coral Lane Trading. Invoice INV-0412 for N184,500 is due on Friday 30 October. If you have already paid, just reply here.",
+     "final": "Hello Mama Nkechi Stores, this is Coral Lane Trading. Invoice INV-0412 for N184,500 is due on Friday 30 October. If you have already paid, just reply here.",
+     "checks": {
+      "no_dash": true,
+      "no_banned_phrase": true,
+      "figures_unchanged": true,
+      "figures_grounded": true,
+      "length_ok": true,
+      "one_exclamation_max": true,
+      "plain_english": true
+     },
+     "judge": {
+      "natural": true,
+      "professional": true,
+      "clear": true,
+      "plain_english": true,
+      "on_point": true,
+      "reason": "Warm heads-up with correct invoice, amount and due day."
+     }
+    }
+   ]
+  },
+  {
+   "id": "h-tpl-reminder-soft",
+   "kind": "template",
+   "helper": "template",
+   "status": "ok",
+   "spoke": true,
+   "passed": true,
+   "messages": [
+    {
+     "tool": "template",
+     "channel": "shop_whatsapp",
+     "raw": "Hello Joy Provisions, a gentle reminder from Coral Lane Trading: N52,000 on invoice INV-0391 was due on Monday 26 October. Please let me know when you will pay, or reply here if you have already paid.",
+     "final": "Hello Joy Provisions, a gentle reminder from Coral Lane Trading: N52,000 on invoice INV-0391 was due on Monday 26 October. Please let me know when you will pay, or reply here if you have already paid.",
+     "checks": {
+      "no_dash": true,
+      "no_banned_phrase": true,
+      "figures_unchanged": true,
+      "figures_grounded": true,
+      "length_ok": true,
+      "one_exclamation_max": true,
+      "plain_english": true
+     },
+     "judge": {
+      "natural": true,
+      "professional": true,
+      "clear": true,
+      "plain_english": true,
+      "on_point": true,
+      "reason": "Gentle tone states the correct amount and date and asks for a pay date."
+     }
+    }
+   ]
+  },
+  {
+   "id": "h-tpl-reminder-firm",
+   "kind": "template",
+   "helper": "template",
+   "status": "ok",
+   "spoke": true,
+   "passed": true,
+   "messages": [
+    {
+     "tool": "template",
+     "channel": "shop_whatsapp",
+     "raw": "Hello Chidi Ventures, this is Coral Lane Trading. N30,000 on invoice INV-0377 is still unpaid; it was due on Friday 16 October. Please pay today, or reply here if there is a problem so we can sort it out.",
+     "final": "Hello Chidi Ventures, this is Coral Lane Trading. N30,000 on invoice INV-0377 is still unpaid; it was due on Friday 16 October. Please pay today, or reply here if there is a problem so we can sort it out.",
+     "checks": {
+      "no_dash": true,
+      "no_banned_phrase": true,
+      "figures_unchanged": true,
+      "figures_grounded": true,
+      "length_ok": true,
+      "one_exclamation_max": true,
+      "plain_english": true
+     },
+     "judge": {
+      "natural": true,
+      "professional": true,
+      "clear": true,
+      "plain_english": true,
+      "on_point": true,
+      "reason": "Firm but polite reminder with correct amount, invoice and date and clear next step."
+     }
+    }
+   ]
+  },
+  {
+   "id": "h-tpl-stock-ask",
+   "kind": "template",
+   "helper": "template",
+   "status": "ok",
+   "spoke": true,
+   "passed": true,
+   "messages": [
+    {
+     "tool": "template",
+     "channel": "shop_whatsapp",
+     "raw": "Quick stock check: how many cartons of Sunrise Instant Noodles 70g do you have left? 0-2 | 3-5 | 6+",
+     "final": "Quick stock check: how many cartons of Sunrise Instant Noodles 70g do you have left? 0-2 | 3-5 | 6+",
+     "checks": {
+      "no_dash": true,
+      "no_banned_phrase": true,
+      "figures_unchanged": true,
+      "figures_grounded": true,
+      "length_ok": true,
+      "one_exclamation_max": true,
+      "plain_english": true
+     },
+     "judge": {
+      "natural": true,
+      "professional": true,
+      "clear": true,
+      "plain_english": true,
+      "on_point": true,
+      "reason": "Short direct stock question with clear tap options."
+     }
+    }
+   ]
+  },
+  {
+   "id": "h-tpl-stock-again",
+   "kind": "template",
+   "helper": "template",
+   "status": "ok",
+   "spoke": true,
+   "passed": true,
+   "messages": [
+    {
+     "tool": "template",
+     "channel": "shop_whatsapp",
+     "raw": "Sorry, I didn't catch that. How many cartons of Peak Milk 400g are left? Tap 0-2, 3-5 or 6+, or type the number.",
+     "final": "Sorry, I didn't catch that. How many cartons of Peak Milk 400g are left? Tap 0-2, 3-5 or 6+, or type the number.",
+     "checks": {
+      "no_dash": true,
+      "no_banned_phrase": true,
+      "figures_unchanged": true,
+      "figures_grounded": true,
+      "length_ok": true,
+      "one_exclamation_max": true,
+      "plain_english": true
+     },
+     "judge": {
+      "natural": true,
+      "professional": true,
+      "clear": true,
+      "plain_english": true,
+      "on_point": true,
+      "reason": "Reads like a real officer politely re-asking stock with a clear next step."
+     }
+    }
+   ]
+  },
+  {
+   "id": "h-tpl-stock-draft",
+   "kind": "template",
+   "helper": "template",
+   "status": "ok",
+   "spoke": true,
+   "passed": true,
+   "messages": [
+    {
+     "tool": "template",
+     "channel": "shop_whatsapp",
+     "raw": "Thanks. I've asked Coral Lane Trading to prepare 4 cartons for you. They'll confirm before delivery.",
+     "final": "Thanks. I've asked Coral Lane Trading to prepare 4 cartons for you. They'll confirm before delivery.",
+     "checks": {
+      "no_dash": true,
+      "no_banned_phrase": true,
+      "figures_unchanged": true,
+      "figures_grounded": true,
+      "length_ok": true,
+      "one_exclamation_max": true,
+      "plain_english": true
+     },
+     "judge": {
+      "natural": true,
+      "professional": true,
+      "clear": true,
+      "plain_english": true,
+      "on_point": true,
+      "reason": "Short warm thanks that confirms 4 cartons and what happens next."
+     }
+    }
+   ]
+  },
+  {
+   "id": "h-tpl-proof-likely",
+   "kind": "template",
+   "helper": "template",
+   "status": "ok",
+   "spoke": true,
+   "passed": true,
+   "messages": [
+    {
+     "tool": "template",
+     "channel": "shop_whatsapp",
+     "raw": "Thanks. I can see N84,500 from TITI OWOLABI on your screenshot. I've sent it to Coral Lane Trading to confirm with the bank. It shows as likely paid until the bank confirms.",
+     "final": "Thanks. I can see N84,500 from TITI OWOLABI on your screenshot. I've sent it to Coral Lane Trading to confirm with the bank. It shows as likely paid until the bank confirms.",
+     "checks": {
+      "no_dash": true,
+      "no_banned_phrase": true,
+      "figures_unchanged": true,
+      "figures_grounded": true,
+      "length_ok": true,
+      "one_exclamation_max": true,
+      "plain_english": true
+     },
+     "judge": {
+      "natural": true,
+      "professional": true,
+      "clear": true,
+      "plain_english": true,
+      "on_point": true,
+      "reason": "It confirms the N84,500 from TITI OWOLABI as likely paid pending bank confirmation."
+     }
+    }
+   ]
+  },
+  {
+   "id": "h-tpl-proof-review",
+   "kind": "template",
+   "helper": "template",
+   "status": "ok",
+   "spoke": true,
+   "passed": false,
+   "messages": [
+    {
+     "tool": "template",
+     "channel": "shop_whatsapp",
+     "raw": "Thanks, I've sent this to Coral Lane Trading to confirm with the bank. Nothing has changed on your account yet.",
+     "final": "Thanks, I've sent this to Coral Lane Trading to confirm with the bank. Nothing has changed on your account yet.",
+     "checks": {
+      "no_dash": true,
+      "no_banned_phrase": true,
+      "figures_unchanged": true,
+      "figures_grounded": true,
+      "length_ok": true,
+      "one_exclamation_max": true,
+      "plain_english": true
+     },
+     "judge": {
+      "natural": false,
+      "professional": true,
+      "clear": true,
+      "plain_english": true,
+      "on_point": true,
+      "reason": "A real officer would not refer to her own firm in third person to a shop."
+     }
+    }
+   ]
+  },
+  {
+   "id": "h-tpl-proof-ask",
+   "kind": "template",
+   "helper": "template",
+   "status": "ok",
+   "spoke": true,
+   "passed": true,
+   "messages": [
+    {
+     "tool": "template",
+     "channel": "shop_whatsapp",
+     "raw": "Thanks. I couldn't read this screenshot clearly. Please send a clearer screenshot of the transfer that shows the amount, the date, the reference and who it was paid to.",
+     "final": "Thanks. I couldn't read this screenshot clearly. Please send a clearer screenshot of the transfer that shows the amount, the date, the reference and who it was paid to.",
+     "checks": {
+      "no_dash": true,
+      "no_banned_phrase": true,
+      "figures_unchanged": true,
+      "figures_grounded": true,
+      "length_ok": true,
+      "one_exclamation_max": true,
+      "plain_english": true
+     },
+     "judge": {
+      "natural": true,
+      "professional": true,
+      "clear": true,
+      "plain_english": true,
+      "on_point": true,
+      "reason": "It is a short polite request that tells the shop exactly what to resend."
+     }
+    }
+   ]
+  },
+  {
+   "id": "h-tpl-credit-ask",
+   "kind": "template",
+   "helper": "template",
+   "status": "ok",
+   "spoke": true,
+   "passed": true,
+   "messages": [
+    {
+     "tool": "template",
+     "channel": "shop_whatsapp",
+     "raw": "I can ask Coral Lane Trading for you. Please send one clear photo of your shelf, with the items you sell facing the camera.",
+     "final": "I can ask Coral Lane Trading for you. Please send one clear photo of your shelf, with the items you sell facing the camera.",
+     "checks": {
+      "no_dash": true,
+      "no_banned_phrase": true,
+      "figures_unchanged": true,
+      "figures_grounded": true,
+      "length_ok": true,
+      "one_exclamation_max": true,
+      "plain_english": true
+     },
+     "judge": {
+      "natural": true,
+      "professional": true,
+      "clear": true,
+      "plain_english": true,
+      "on_point": true,
+      "reason": "It plainly asks for the one shelf photo needed next."
+     }
+    }
+   ]
+  },
+  {
+   "id": "h-tpl-credit-counted",
+   "kind": "template",
+   "helper": "template",
+   "status": "ok",
+   "spoke": true,
+   "passed": true,
+   "messages": [
+    {
+     "tool": "template",
+     "channel": "shop_whatsapp",
+     "raw": "I counted about 12 Sunrise Instant Noodles packs and 6 Peak Milk 400g tins, worth about N210,000 at Coral Lane Trading prices. I've sent your request with this to Coral Lane Trading. They decide the limit.",
+     "final": "I counted about 12 Sunrise Instant Noodles packs and 6 Peak Milk 400g tins, worth about N210,000 at Coral Lane Trading prices. I've sent your request with this to Coral Lane Trading. They decide the limit.",
+     "checks": {
+      "no_dash": true,
+      "no_banned_phrase": true,
+      "figures_unchanged": true,
+      "figures_grounded": true,
+      "length_ok": true,
+      "one_exclamation_max": true,
+      "plain_english": true
+     },
+     "judge": {
+      "natural": true,
+      "professional": true,
+      "clear": true,
+      "plain_english": true,
+      "on_point": true,
+      "reason": "It gives the counted items and value and leaves the credit decision to the owner."
+     }
+    }
+   ]
+  },
+  {
+   "id": "h-tpl-receipt-flag",
+   "kind": "template",
+   "helper": "template",
+   "status": "ok",
+   "spoke": true,
+   "passed": true,
+   "messages": [
+    {
+     "tool": "template",
+     "channel": "shop_whatsapp",
+     "raw": "Thanks, I've told Coral Lane Trading about this delivery. Nothing has changed on your account.",
+     "final": "Thanks, I've told Coral Lane Trading about this delivery. Nothing has changed on your account.",
+     "checks": {
+      "no_dash": true,
+      "no_banned_phrase": true,
+      "figures_unchanged": true,
+      "figures_grounded": true,
+      "length_ok": true,
+      "one_exclamation_max": true,
+      "plain_english": true
+     },
+     "judge": {
+      "natural": true,
+      "professional": true,
+      "clear": true,
+      "plain_english": true,
+      "on_point": true,
+      "reason": "It calmly confirms the delivery was reported with no account change in plain terms."
+     }
+    }
+   ]
+  },
+  {
+   "id": "h-tpl-receipt-thanks",
+   "kind": "template",
+   "helper": "template",
+   "status": "ok",
+   "spoke": true,
+   "passed": false,
+   "messages": [
+    {
+     "tool": "template",
+     "channel": "shop_whatsapp",
+     "raw": "Thanks for confirming. Delivery DLV-0042 is now marked as received.",
+     "final": "Thanks for confirming. Delivery DLV-0042 is now marked as received.",
+     "checks": {
+      "no_dash": true,
+      "no_banned_phrase": true,
+      "figures_unchanged": true,
+      "figures_grounded": true,
+      "length_ok": true,
+      "one_exclamation_max": true,
+      "plain_english": true
+     },
+     "judge": {
+      "natural": false,
+      "professional": true,
+      "clear": true,
+      "plain_english": true,
+      "on_point": true,
+      "reason": "Clear and correct but sounds system-written, not like a person typed it."
+     }
+    }
+   ]
+  },
+  {
+   "id": "h-tpl-steer-confirm",
+   "kind": "template",
+   "helper": "template",
+   "status": "ok",
+   "spoke": true,
+   "passed": false,
+   "messages": [
+    {
+     "tool": "template",
+     "channel": "shop_whatsapp",
+     "raw": "Just to be sure: you want to change your restock order of 4 cartons to \"make it 6 cartons\"? Reply YES or NO.",
+     "final": "Just to be sure: you want to change your restock order of 4 cartons to \"make it 6 cartons\"? Reply YES or NO.",
+     "checks": {
+      "no_dash": true,
+      "no_banned_phrase": true,
+      "figures_unchanged": true,
+      "figures_grounded": true,
+      "length_ok": true,
+      "one_exclamation_max": true,
+      "plain_english": true
+     },
+     "judge": {
+      "natural": false,
+      "professional": true,
+      "clear": true,
+      "plain_english": true,
+      "on_point": true,
+      "reason": "It echoes the raw phrase make it 6 cartons instead of confirming 6 cartons like a person would."
+     }
+    }
+   ]
+  },
+  {
+   "id": "h-tpl-voice-on",
+   "kind": "template",
+   "helper": "template",
+   "status": "ok",
+   "spoke": true,
+   "passed": true,
+   "messages": [
+    {
+     "tool": "template",
+     "channel": "shop_whatsapp",
+     "raw": "Voice replies are on. When you send me a voice note, I will answer with a voice note too, in English. The same message always comes as text as well. Send VOICE OFF to stop.",
+     "final": "Voice replies are on. When you send me a voice note, I will answer with a voice note too, in English. The same message always comes as text as well. Send VOICE OFF to stop.",
+     "checks": {
+      "no_dash": true,
+      "no_banned_phrase": true,
+      "figures_unchanged": true,
+      "figures_grounded": true,
+      "length_ok": true,
+      "one_exclamation_max": true,
+      "plain_english": true
+     },
+     "judge": {
+      "natural": true,
+      "professional": true,
+      "clear": true,
+      "plain_english": true,
+      "on_point": true,
+      "reason": "Short first-person note that plainly explains how voice replies work."
+     }
+    }
+   ]
+  },
+  {
+   "id": "h-tpl-promise",
+   "kind": "template",
+   "helper": "template",
+   "status": "ok",
+   "spoke": true,
+   "passed": true,
+   "messages": [
+    {
+     "tool": "template",
+     "channel": "shop_whatsapp",
+     "raw": "You said you will pay N20,000 on Friday 30 October for delivery DLV-0042. Reply YES if that is right, or tell me the right amount and day. I only note your promise; I do not take or move money.",
+     "final": "You said you will pay N20,000 on Friday 30 October for delivery DLV-0042. Reply YES if that is right, or tell me the right amount and day. I only note your promise; I do not take or move money.",
+     "checks": {
+      "no_dash": true,
+      "no_banned_phrase": true,
+      "figures_unchanged": true,
+      "figures_grounded": true,
+      "length_ok": true,
+      "one_exclamation_max": true,
+      "plain_english": true
+     },
+     "judge": {
+      "natural": true,
+      "professional": true,
+      "clear": true,
+      "plain_english": true,
+      "on_point": true,
+      "reason": "Reads back the correct amount, day and ref and asks for YES clearly."
+     }
+    }
+   ]
+  },
+  {
+   "id": "h2-col-balance-short",
+   "kind": "model",
+   "helper": "collector",
+   "status": "ok",
+   "spoke": true,
+   "passed": false,
+   "messages": [
+    {
+     "tool": "send_to_user",
+     "channel": "shop_whatsapp",
+     "raw": "Good afternoon, Oriola Stores. You owe N56,000 on invoice INV-0430 due 2 Nov and nothing is overdue. Please pay by the due day.",
+     "final": "Good afternoon, Oriola Stores. You owe N56,000 on invoice INV-0430 due 2 Nov and nothing is overdue. Please pay by the due day.",
+     "checks": {
+      "no_dash": true,
+      "no_banned_phrase": true,
+      "figures_unchanged": true,
+      "figures_grounded": true,
+      "length_ok": true,
+      "one_exclamation_max": true,
+      "plain_english": true
+     },
+     "judge": {
+      "natural": false,
+      "professional": true,
+      "clear": true,
+      "plain_english": true,
+      "on_point": true,
+      "reason": "'You owe' and 'due day' sound stiff and cold, not like a warm officer typed it."
+     }
+    }
+   ]
+  },
+  {
+   "id": "h2-col-overdue-yo",
+   "kind": "model",
+   "helper": "collector",
+   "status": "ok",
+   "spoke": true,
+   "passed": true,
+   "messages": [
+    {
+     "tool": "send_to_user",
+     "channel": "shop_whatsapp",
+     "raw": "Good afternoon, Iya Ronke Stores. You owe N140,000 in total, with N90,000 now overdue. Please send the overdue when you can today.",
+     "final": "Good afternoon, Iya Ronke Stores. You owe N140,000 in total, with N90,000 now overdue. Please send the overdue when you can today.",
+     "checks": {
+      "no_dash": true,
+      "no_banned_phrase": true,
+      "figures_unchanged": true,
+      "figures_grounded": true,
+      "length_ok": true,
+      "one_exclamation_max": true,
+      "plain_english": true
+     },
+     "judge": {
+      "natural": true,
+      "professional": true,
+      "clear": true,
+      "plain_english": true,
+      "on_point": true,
+      "reason": "States the correct N140,000 total and N90,000 overdue with a clear polite next step."
+     }
+    }
+   ]
+  },
+  {
+   "id": "h2-col-paid-partial",
+   "kind": "model",
+   "helper": "collector",
+   "status": "ok",
+   "spoke": true,
+   "passed": false,
+   "messages": [
+    {
+     "tool": "send_to_user",
+     "channel": "shop_whatsapp",
+     "raw": "Thank you, Ebuka Stores. We have your N20,000. Which day next week will you send the balance?",
+     "final": "Thank you, Ebuka Stores. We have your N20,000. Which day next week will you send the balance?",
+     "checks": {
+      "no_dash": true,
+      "no_banned_phrase": true,
+      "figures_unchanged": true,
+      "figures_grounded": true,
+      "length_ok": true,
+      "one_exclamation_max": true,
+      "plain_english": true
+     },
+     "judge": {
+      "natural": true,
+      "professional": false,
+      "clear": true,
+      "plain_english": true,
+      "on_point": false,
+      "reason": "It pressures the shop to name a day instead of simply acknowledging the balance next week."
+     }
+    }
+   ]
+  },
+  {
+   "id": "h2-col-owner-list",
+   "kind": "model",
+   "helper": "collector",
+   "status": "ok",
+   "spoke": true,
+   "passed": false,
+   "messages": [
+    {
+     "tool": "send_to_user",
+     "channel": "owner_console",
+     "raw": "Chuks Ventures is owing the most right now, N120,000 overdue across 2 invoices. Next is Iya Bose Provisions with N62,000 overdue. Want me to chase Chuks Ventures today?",
+     "final": "Chuks Ventures is owing the most right now, N120,000 overdue across 2 invoices. Next is Iya Bose Provisions with N62,000 overdue. Want me to chase Chuks Ventures today?",
+     "checks": {
+      "no_dash": true,
+      "no_banned_phrase": true,
+      "figures_unchanged": true,
+      "figures_grounded": true,
+      "length_ok": true,
+      "one_exclamation_max": true,
+      "plain_english": true
+     },
+     "judge": {
+      "natural": true,
+      "professional": true,
+      "clear": true,
+      "plain_english": true,
+      "on_point": false,
+      "reason": "Omits total N182,000, 9 days overdue, and the 1 shop not sharing."
+     }
+    }
+   ]
+  },
+  {
+   "id": "h2-col-wrong-account",
+   "kind": "model",
+   "helper": "collector",
+   "status": "ok",
+   "spoke": true,
+   "passed": true,
+   "messages": [
+    {
+     "tool": "send_to_user",
+     "channel": "shop_whatsapp",
+     "raw": "Good afternoon, Mama Chioma Stores. Yes, please use this account. Coral Lane Trading Ltd, Harbour Bank, 0123456789. Let me know once you have paid.",
+     "final": "Good afternoon, Mama Chioma Stores. Yes, please use this account. Coral Lane Trading Ltd, Harbour Bank, 0123456789. Let me know once you have paid.",
+     "checks": {
+      "no_dash": true,
+      "no_banned_phrase": true,
+      "figures_unchanged": true,
+      "figures_grounded": true,
+      "length_ok": true,
+      "one_exclamation_max": true,
+      "plain_english": true
+     },
+     "judge": {
+      "natural": true,
+      "professional": true,
+      "clear": true,
+      "plain_english": true,
+      "on_point": true,
+      "reason": "Gives the correct account details with brief reassurance in a warm, clear tone."
+     }
+    }
+   ]
+  },
+  {
+   "id": "h2-col-promise-tomorrow",
+   "kind": "model",
+   "helper": "collector",
+   "status": "ok",
+   "spoke": true,
+   "passed": true,
+   "messages": [
+    {
+     "tool": "send_to_user",
+     "channel": "shop_whatsapp",
+     "raw": "Thank you, Sule Stores. Noted for tomorrow morning.",
+     "final": "Thank you, Sule Stores. Noted for tomorrow morning.",
+     "checks": {
+      "no_dash": true,
+      "no_banned_phrase": true,
+      "figures_unchanged": true,
+      "figures_grounded": true,
+      "length_ok": true,
+      "one_exclamation_max": true,
+      "plain_english": true
+     },
+     "judge": {
+      "natural": true,
+      "professional": true,
+      "clear": true,
+      "plain_english": true,
+      "on_point": true,
+      "reason": "Thanks them and notes tomorrow morning with no pressure."
+     }
+    }
+   ]
+  },
+  {
+   "id": "h2-mimi-evening",
+   "kind": "model",
+   "helper": "mimi",
+   "status": "ok",
+   "spoke": true,
+   "passed": true,
+   "messages": [
+    {
+     "tool": "send_to_user",
+     "channel": "shop_whatsapp",
+     "raw": "Good evening, Tope Mart. Hope your evening is going well too.",
+     "final": "Good evening, Tope Mart. Hope your evening is going well too.",
+     "checks": {
+      "no_dash": true,
+      "no_banned_phrase": true,
+      "figures_unchanged": true,
+      "figures_grounded": true,
+      "length_ok": true,
+      "one_exclamation_max": true,
+      "plain_english": true
+     },
+     "judge": {
+      "natural": true,
+      "professional": true,
+      "clear": true,
+      "plain_english": true,
+      "on_point": true,
+      "reason": "Warm short greeting that mirrors the shop's message with nothing extra."
+     }
+    }
+   ]
+  },
+  {
+   "id": "h2-mimi-threat",
+   "kind": "model",
+   "helper": "mimi",
+   "status": "ok",
+   "spoke": true,
+   "passed": false,
+   "messages": [
+    {
+     "tool": "send_to_user",
+     "channel": "shop_whatsapp",
+     "raw": "Good afternoon, Ikenna Stores. Thank you for letting us know, the owner will look at it.",
+     "final": "Good afternoon, Ikenna Stores. Thank you for letting us know, the owner will look at it.",
+     "checks": {
+      "no_dash": true,
+      "no_banned_phrase": true,
+      "figures_unchanged": true,
+      "figures_grounded": true,
+      "length_ok": true,
+      "one_exclamation_max": true,
+      "plain_english": true
+     },
+     "judge": {
+      "natural": true,
+      "professional": true,
+      "clear": true,
+      "plain_english": true,
+      "on_point": false,
+      "reason": "It stays calm but misses the needed promise that the owner will look today."
+     }
+    },
+    {
+     "tool": "send_to_user",
+     "channel": "owner_console",
+     "raw": "Ikenna Stores said if this matter is not fixed they will report to the police.",
+     "final": "Ikenna Stores said if this matter is not fixed they will report to the police.",
+     "checks": {
+      "no_dash": true,
+      "no_banned_phrase": true,
+      "figures_unchanged": true,
+      "figures_grounded": true,
+      "length_ok": true,
+      "one_exclamation_max": true,
+      "plain_english": true
+     },
+     "judge": {
+      "natural": true,
+      "professional": true,
+      "clear": false,
+      "plain_english": true,
+      "on_point": false,
+      "reason": "It names the shop but gives no facts about the matter and no action for the owner."
+     }
+    }
+   ]
+  },
+  {
+   "id": "h2-ord-cancel",
+   "kind": "model",
+   "helper": "order",
+   "status": "ok",
+   "spoke": true,
+   "passed": true,
+   "messages": [
+    {
+     "tool": "send_to_user",
+     "channel": "shop_whatsapp",
+     "raw": "Good afternoon, Musa & Sons. Your rep will help with this order. Please message or call your rep directly.",
+     "final": "Good afternoon, Musa & Sons. Your rep will help with this order. Please message or call your rep directly.",
+     "checks": {
+      "no_dash": true,
+      "no_banned_phrase": true,
+      "figures_unchanged": true,
+      "figures_grounded": true,
+      "length_ok": true,
+      "one_exclamation_max": true,
+      "plain_english": true
+     },
+     "judge": {
+      "natural": true,
+      "professional": true,
+      "clear": true,
+      "plain_english": true,
+      "on_point": true,
+      "reason": "It politely directs the shop to the rep without claiming the order was cancelled."
+     }
+    }
+   ]
+  },
+  {
+   "id": "h2-cre-owner-new",
+   "kind": "model",
+   "helper": "credit",
+   "status": "ok",
+   "spoke": true,
+   "passed": true,
+   "messages": [
+    {
+     "tool": "send_to_user",
+     "channel": "owner_console",
+     "raw": "Tope Mart is on N50,000 now with only 4 weeks of history and 2 verified payments, both on time. My take is to hold for now until the record is longer. Let me know if you want me to send it for approval.",
+     "final": "Tope Mart is on N50,000 now with only 4 weeks of history and 2 verified payments, both on time. My take is to hold for now until the record is longer. Let me know if you want me to send it for approval.",
+     "checks": {
+      "no_dash": true,
+      "no_banned_phrase": true,
+      "figures_unchanged": true,
+      "figures_grounded": true,
+      "length_ok": true,
+      "one_exclamation_max": true,
+      "plain_english": true
+     },
+     "judge": {
+      "natural": true,
+      "professional": true,
+      "clear": true,
+      "plain_english": true,
+      "on_point": true,
+      "reason": "Short owner note gives facts, recommends hold, and leaves the N100k decision to the owner."
+     }
+    }
+   ]
+  },
+  {
+   "id": "h2-stk-ok",
+   "kind": "model",
+   "helper": "stock",
+   "status": "ok",
+   "spoke": true,
+   "passed": true,
+   "messages": [
+    {
+     "tool": "send_to_user",
+     "channel": "shop_whatsapp",
+     "raw": "Good afternoon, Amaka Stores. Noted, thank you for letting me know. Please tell me when you need anything.",
+     "final": "Good afternoon, Amaka Stores. Noted, thank you for letting me know. Please tell me when you need anything.",
+     "checks": {
+      "no_dash": true,
+      "no_banned_phrase": true,
+      "figures_unchanged": true,
+      "figures_grounded": true,
+      "length_ok": true,
+      "one_exclamation_max": true,
+      "plain_english": true
+     },
+     "judge": {
+      "natural": true,
+      "professional": true,
+      "clear": true,
+      "plain_english": true,
+      "on_point": true,
+      "reason": "Short polite acknowledgement with no figures or promises."
+     }
+    }
+   ]
+  },
+  {
+   "id": "h2-col-voice-paid",
+   "kind": "model",
+   "helper": "collector",
+   "status": "ok",
+   "spoke": true,
+   "passed": true,
+   "messages": [
+    {
+     "tool": "send_to_user",
+     "channel": "shop_whatsapp",
+     "raw": "Good afternoon, Bimbo Stores. I have checked and your transfer this afternoon has not reached us yet. I will check again shortly, please share your receipt when you can.",
+     "final": "Good afternoon, Bimbo Stores. I have checked and your transfer this afternoon has not reached us yet. I will check again shortly, please share your receipt when you can.",
+     "checks": {
+      "no_dash": true,
+      "no_banned_phrase": true,
+      "figures_unchanged": true,
+      "figures_grounded": true,
+      "length_ok": true,
+      "one_exclamation_max": true,
+      "plain_english": true
+     },
+     "judge": {
+      "natural": true,
+      "professional": true,
+      "clear": true,
+      "plain_english": true,
+      "on_point": true,
+      "reason": "Confirms the afternoon transfer is not yet received and asks for receipt."
+     }
+    }
+   ]
+  },
+  {
+   "id": "h3-col-balance-two",
+   "kind": "model",
+   "helper": "collector",
+   "status": "ok",
+   "spoke": true,
+   "passed": false,
+   "messages": [
+    {
+     "tool": "send_to_user",
+     "channel": "shop_whatsapp",
+     "raw": "Good afternoon, Blessing Stores. You owe N87,500 in total. N32,500 on INV-0401 is overdue, and N55,000 on INV-0433 is due on 2026-11-03. Please send the overdue one when you can today.",
+     "final": "Good afternoon, Blessing Stores. You owe N87,500 in total. N32,500 on INV-0401 is overdue, and N55,000 on INV-0433 is due on 2026-11-03. Please send the overdue one when you can today.",
+     "checks": {
+      "no_dash": true,
+      "no_banned_phrase": true,
+      "figures_unchanged": true,
+      "figures_grounded": true,
+      "length_ok": true,
+      "one_exclamation_max": true,
+      "plain_english": true
+     },
+     "judge": {
+      "natural": false,
+      "professional": true,
+      "clear": true,
+      "plain_english": false,
+      "on_point": true,
+      "reason": "ISO date 2026-11-03 is robotic, not how a person writes 3 November."
+     }
+    }
+   ]
+  },
+  {
+   "id": "h3-col-pending-ref",
+   "kind": "model",
+   "helper": "collector",
+   "status": "ok",
+   "spoke": true,
+   "passed": false,
+   "messages": [
+    {
+     "tool": "send_to_user",
+     "channel": "shop_whatsapp",
+     "raw": "Good afternoon, Ade Kiosk. I have checked and the bank has not shown it yet. Please allow a little time and let me know once you have confirmed from your bank.",
+     "final": "Good afternoon, Ade Kiosk. I have checked and the bank has not shown it yet. Please allow a little time and let me know once you have confirmed from your bank.",
+     "checks": {
+      "no_dash": true,
+      "no_banned_phrase": true,
+      "figures_unchanged": true,
+      "figures_grounded": true,
+      "length_ok": true,
+      "one_exclamation_max": true,
+      "plain_english": true
+     },
+     "judge": {
+      "natural": true,
+      "professional": true,
+      "clear": true,
+      "plain_english": true,
+      "on_point": false,
+      "reason": "It reports not received but misses thanks, N15,000 pending, and promise to confirm when it lands."
+     }
+    }
+   ]
+  },
+  {
+   "id": "h3-col-matched-owner",
+   "kind": "model",
+   "helper": "collector",
+   "status": "ok",
+   "spoke": true,
+   "passed": false,
+   "messages": [
+    {
+     "tool": "send_to_user",
+     "channel": "owner_console",
+     "raw": "Blessing Stores paid N32,500 today. The bank confirms it and a receipt is on the way.",
+     "final": "Blessing Stores paid N32,500 today. The bank confirms it and a receipt is on the way.",
+     "checks": {
+      "no_dash": true,
+      "no_banned_phrase": true,
+      "figures_unchanged": true,
+      "figures_grounded": true,
+      "length_ok": true,
+      "one_exclamation_max": true,
+      "plain_english": true
+     },
+     "judge": {
+      "natural": true,
+      "professional": true,
+      "clear": true,
+      "plain_english": true,
+      "on_point": false,
+      "reason": "Adds a receipt promise not supported by the payment check."
+     }
+    }
+   ]
+  },
+  {
+   "id": "h3-col-cant-pay",
+   "kind": "model",
+   "helper": "collector",
+   "status": "ok",
+   "spoke": true,
+   "passed": true,
+   "messages": [
+    {
+     "tool": "send_to_user",
+     "channel": "shop_whatsapp",
+     "raw": "Good afternoon, Nnamdi Stores. I understand this month is hard. Your overdue of N110,000 is noted and the owner will look at it and advise next.",
+     "final": "Good afternoon, Nnamdi Stores. I understand this month is hard. Your overdue of N110,000 is noted and the owner will look at it and advise next.",
+     "checks": {
+      "no_dash": true,
+      "no_banned_phrase": true,
+      "figures_unchanged": true,
+      "figures_grounded": true,
+      "length_ok": true,
+      "one_exclamation_max": true,
+      "plain_english": true
+     },
+     "judge": {
+      "natural": true,
+      "professional": true,
+      "clear": true,
+      "plain_english": true,
+      "on_point": true,
+      "reason": "Kind, calm note states the correct overdue and defers to the owner without pressure."
+     }
+    },
+    {
+     "tool": "ask_question",
+     "channel": "owner_console",
+     "raw": "Nnamdi Stores says business is very bad and cannot pay anything now. They owe N110,000 overdue (10 days). How should I handle this?",
+     "final": "Nnamdi Stores says business is very bad and cannot pay anything now. They owe N110,000 overdue (10 days). How should I handle this?",
+     "checks": {
+      "no_dash": true,
+      "no_banned_phrase": true,
+      "figures_unchanged": true,
+      "figures_grounded": true,
+      "length_ok": true,
+      "one_exclamation_max": true,
+      "plain_english": true
+     },
+     "judge": {
+      "natural": true,
+      "professional": true,
+      "clear": true,
+      "plain_english": true,
+      "on_point": true,
+      "reason": "Short note states shop, amount and overdue days and leaves decision to owner."
+     }
+    }
+   ]
+  },
+  {
+   "id": "h3-col-account-again",
+   "kind": "model",
+   "helper": "collector",
+   "status": "ok",
+   "spoke": true,
+   "passed": false,
+   "messages": [
+    {
+     "tool": "send_to_user",
+     "channel": "shop_whatsapp",
+     "raw": "Good afternoon, Yetunde Stores. Our account is Coral Lane Trading Ltd, Harbour Bank, 0123456789. Please send it when you can today, and let me know once you have paid.",
+     "final": "Good afternoon, Yetunde Stores. Our account is Coral Lane Trading Ltd, Harbour Bank, 0123456789. Please send it when you can today, and let me know once you have paid.",
+     "checks": {
+      "no_dash": true,
+      "no_banned_phrase": true,
+      "figures_unchanged": true,
+      "figures_grounded": true,
+      "length_ok": true,
+      "one_exclamation_max": true,
+      "plain_english": true
+     },
+     "judge": {
+      "natural": true,
+      "professional": true,
+      "clear": true,
+      "plain_english": true,
+      "on_point": false,
+      "reason": "Adds a pay-today request the shop did not ask for."
+     }
+    }
+   ]
+  },
+  {
+   "id": "h3-col-due-when",
+   "kind": "model",
+   "helper": "collector",
+   "status": "ok",
+   "spoke": true,
+   "passed": true,
+   "messages": [
+    {
+     "tool": "send_to_user",
+     "channel": "shop_whatsapp",
+     "raw": "Good afternoon, Kayode Stores. Your next payment of N42,000 for invoice INV-0441 is due 6 November and nothing is overdue. Please pay by that day when you can.",
+     "final": "Good afternoon, Kayode Stores. Your next payment of N42,000 for invoice INV-0441 is due 6 November and nothing is overdue. Please pay by that day when you can.",
+     "checks": {
+      "no_dash": true,
+      "no_banned_phrase": true,
+      "figures_unchanged": true,
+      "figures_grounded": true,
+      "length_ok": true,
+      "one_exclamation_max": true,
+      "plain_english": true
+     },
+     "judge": {
+      "natural": true,
+      "professional": true,
+      "clear": true,
+      "plain_english": true,
+      "on_point": true,
+      "reason": "Gives correct invoice, amount and date in warm plain language."
+     }
+    }
+   ]
+  },
+  {
+   "id": "h3-mimi-unknown-pcm",
+   "kind": "model",
+   "helper": "mimi",
+   "status": "ok",
+   "spoke": true,
+   "passed": true,
+   "messages": [
+    {
+     "tool": "send_to_user",
+     "channel": "shop_whatsapp",
+     "raw": "Good afternoon. I am Mimi, Coral Lane Trading's assistant. I only share a shop's account with that shop. What do you need today?",
+     "final": "Good afternoon. I am Mimi, Coral Lane Trading's assistant. I only share a shop's account with that shop. What do you need today?",
+     "checks": {
+      "no_dash": true,
+      "no_banned_phrase": true,
+      "figures_unchanged": true,
+      "figures_grounded": true,
+      "length_ok": true,
+      "one_exclamation_max": true,
+      "plain_english": true
+     },
+     "judge": {
+      "natural": true,
+      "professional": true,
+      "clear": true,
+      "plain_english": true,
+      "on_point": true,
+      "reason": "It introduces Mimi plainly and asks what is needed with no extra claims."
+     }
+    }
+   ]
+  },
+  {
+   "id": "h3-mimi-sorry",
+   "kind": "model",
+   "helper": "mimi",
+   "status": "ok",
+   "spoke": true,
+   "passed": true,
+   "messages": [
+    {
+     "tool": "send_to_user",
+     "channel": "shop_whatsapp",
+     "raw": "Good afternoon, Mama Tobi Stores. No problem at all, hope the market went well.",
+     "final": "Good afternoon, Mama Tobi Stores. No problem at all, hope the market went well.",
+     "checks": {
+      "no_dash": true,
+      "no_banned_phrase": true,
+      "figures_unchanged": true,
+      "figures_grounded": true,
+      "length_ok": true,
+      "one_exclamation_max": true,
+      "plain_english": true
+     },
+     "judge": {
+      "natural": true,
+      "professional": true,
+      "clear": true,
+      "plain_english": true,
+      "on_point": true,
+      "reason": "Warm brief reply that accepts the apology with nothing added."
+     }
+    }
+   ]
+  },
+  {
+   "id": "h3-ord-delivery",
+   "kind": "model",
+   "helper": "order",
+   "status": "ok",
+   "spoke": true,
+   "passed": true,
+   "messages": [
+    {
+     "tool": "send_to_user",
+     "channel": "shop_whatsapp",
+     "raw": "Good afternoon, Fatima Stores. Your rep will help with that, please message or call your rep directly.",
+     "final": "Good afternoon, Fatima Stores. Your rep will help with that, please message or call your rep directly.",
+     "checks": {
+      "no_dash": true,
+      "no_banned_phrase": true,
+      "figures_unchanged": true,
+      "figures_grounded": true,
+      "length_ok": true,
+      "one_exclamation_max": true,
+      "plain_english": true
+     },
+     "judge": {
+      "natural": true,
+      "professional": true,
+      "clear": true,
+      "plain_english": true,
+      "on_point": true,
+      "reason": "It politely redirects the delivery request to the rep without promising a day."
+     }
+    }
+   ]
+  },
+  {
+   "id": "h3-cre-owner-support",
+   "kind": "model",
+   "helper": "credit",
+   "status": "ok",
+   "spoke": true,
+   "passed": true,
+   "messages": [
+    {
+     "tool": "send_to_user",
+     "channel": "owner_console",
+     "raw": "Blessing Stores looks good for more credit. They made 12 of 12 verified payments on time in 16 weeks and their shelf is worth about N340,000 against a current limit of N200,000. Let me know if you want me to put a review to you for approval.",
+     "final": "Blessing Stores looks good for more credit. They made 12 of 12 verified payments on time in 16 weeks and their shelf is worth about N340,000 against a current limit of N200,000. Let me know if you want me to put a review to you for approval.",
+     "checks": {
+      "no_dash": true,
+      "no_banned_phrase": true,
+      "figures_unchanged": true,
+      "figures_grounded": true,
+      "length_ok": true,
+      "one_exclamation_max": true,
+      "plain_english": true
+     },
+     "judge": {
+      "natural": true,
+      "professional": true,
+      "clear": true,
+      "plain_english": true,
+      "on_point": true,
+      "reason": "Supports with correct payment and shelf figures and leaves the limit decision to the owner."
+     }
+    }
+   ]
+  },
+  {
+   "id": "h3-stk-thanks",
+   "kind": "model",
+   "helper": "stock",
+   "status": "ok",
+   "spoke": true,
+   "passed": true,
+   "messages": [
+    {
+     "tool": "send_to_user",
+     "channel": "shop_whatsapp",
+     "raw": "Thank you, Danjuma Stores. Noted, I will wait for your update.",
+     "final": "Thank you, Danjuma Stores. Noted, I will wait for your update.",
+     "checks": {
+      "no_dash": true,
+      "no_banned_phrase": true,
+      "figures_unchanged": true,
+      "figures_grounded": true,
+      "length_ok": true,
+      "one_exclamation_max": true,
+      "plain_english": true
+     },
+     "judge": {
+      "natural": true,
+      "professional": true,
+      "clear": true,
+      "plain_english": true,
+      "on_point": true,
+      "reason": "Short polite thanks that waits for the shop with nothing invented."
+     }
+    }
+   ]
+  },
+  {
+   "id": "h3-col-voice-owe",
+   "kind": "model",
+   "helper": "collector",
+   "status": "ok",
+   "spoke": true,
+   "passed": true,
+   "messages": [
+    {
+     "tool": "send_to_user",
+     "channel": "shop_whatsapp",
+     "raw": "Good afternoon, Esther Stores. You owe N26,000 on invoice INV-0438 due 5 November and nothing is overdue. Please pay when you can before that day.",
+     "final": "Good afternoon, Esther Stores. You owe N26,000 on invoice INV-0438 due 5 November and nothing is overdue. Please pay when you can before that day.",
+     "checks": {
+      "no_dash": true,
+      "no_banned_phrase": true,
+      "figures_unchanged": true,
+      "figures_grounded": true,
+      "length_ok": true,
+      "one_exclamation_max": true,
+      "plain_english": true
+     },
+     "judge": {
+      "natural": true,
+      "professional": true,
+      "clear": true,
+      "plain_english": true,
+      "on_point": true,
+      "reason": "Gives the correct N26,000 balance and due date in a short polite reply."
+     }
+    }
+   ]
+  }
+ ],
+ "before_rows": [
+  {
+   "id": "h-col-balance-en",
+   "kind": "model",
+   "helper": "collector",
+   "status": "ok",
+   "spoke": true,
+   "passed": false,
+   "messages": [
+    {
+     "tool": "send_to_user",
+     "channel": "shop_whatsapp",
+     "raw": "Good afternoon Mama Nkechi Stores. You owe N184,500 in total. Nothing is overdue yet (N0) — your 1 open invoice is due on 30 Oct. Thank you.",
+     "final": "Good afternoon Mama Nkechi Stores. You owe N184,500 in total. Nothing is overdue yet (N0) — your 1 open invoice is due on 30 Oct. Thank you.",
+     "checks": {
+      "no_dash": false,
+      "no_banned_phrase": true,
+      "figures_unchanged": true,
+      "figures_grounded": true,
+      "length_ok": true,
+      "one_exclamation_max": true,
+      "plain_english": true
+     },
+     "judge": {
+      "natural": false,
+      "professional": true,
+      "clear": true,
+      "plain_english": true,
+      "on_point": false,
+      "reason": "Omits invoice INV-0412 and Friday and reads templated with (N0) and 1 open invoice."
+     }
+    }
+   ]
+  },
+  {
+   "id": "h-col-paid-pending",
+   "kind": "model",
+   "helper": "collector",
+   "status": "ok",
+   "spoke": true,
+   "passed": true,
+   "messages": [
+    {
+     "tool": "send_to_user",
+     "channel": "shop_whatsapp",
+     "raw": "Thanks for letting us know. I have checked and it is still pending, not yet seen. Please share your receipt or reference if you have it, and I will confirm once it shows. Thank you.",
+     "final": "Thanks for letting us know. I have checked and it is still pending, not yet seen. Please share your receipt or reference if you have it, and I will confirm once it shows. Thank you.",
+     "checks": {
+      "no_dash": true,
+      "no_banned_phrase": true,
+      "figures_unchanged": true,
+      "figures_grounded": true,
+      "length_ok": true,
+      "one_exclamation_max": true,
+      "plain_english": true
+     },
+     "judge": {
+      "natural": true,
+      "professional": true,
+      "clear": true,
+      "plain_english": true,
+      "on_point": true,
+      "reason": "It calmly says payment is still pending, asks for receipt, and promises to confirm."
+     }
+    }
+   ]
+  },
+  {
+   "id": "h-col-angry",
+   "kind": "model",
+   "helper": "collector",
+   "status": "ok",
+   "spoke": true,
+   "passed": true,
+   "messages": [
+    {
+     "tool": "send_to_user",
+     "channel": "shop_whatsapp",
+     "raw": "Hello Chidi Ventures, thank you for letting us know. We have checked our bank feed and your payment is still pending, it has not reflected yet. Please share your transfer reference or receipt so we can track it faster. We will keep checking.",
+     "final": "Hello Chidi Ventures, thank you for letting us know. We have checked our bank feed and your payment is still pending, it has not reflected yet. Please share your transfer reference or receipt so we can track it faster. We will keep checking.",
+     "checks": {
+      "no_dash": true,
+      "no_banned_phrase": true,
+      "figures_unchanged": true,
+      "figures_grounded": true,
+      "length_ok": true,
+      "one_exclamation_max": true,
+      "plain_english": true
+     },
+     "judge": {
+      "natural": true,
+      "professional": true,
+      "clear": true,
+      "plain_english": true,
+      "on_point": true,
+      "reason": "Calm pending update asks for reference without claiming receipt."
+     }
+    }
+   ]
+  },
+  {
+   "id": "h-col-owner-owe",
+   "kind": "model",
+   "helper": "collector",
+   "status": "ok",
+   "spoke": true,
+   "passed": true,
+   "messages": [
+    {
+     "tool": "send_to_user",
+     "channel": "owner_console",
+     "raw": "Chuks Ventures owes N385,900 in total across 3 open invoices. Of that, N120,000 is overdue (oldest 9 days overdue). Credit limit is N500,000.",
+     "final": "Chuks Ventures owes N385,900 in total across 3 open invoices. Of that, N120,000 is overdue (oldest 9 days overdue). Credit limit is N500,000.",
+     "checks": {
+      "no_dash": true,
+      "no_banned_phrase": true,
+      "figures_unchanged": true,
+      "figures_grounded": true,
+      "length_ok": true,
+      "one_exclamation_max": true,
+      "plain_english": true
+     },
+     "judge": {
+      "natural": true,
+      "professional": true,
+      "clear": true,
+      "plain_english": true,
+      "on_point": true,
+      "reason": "Gives the correct figures first in a short plain note to the owner."
+     }
+    }
+   ]
+  },
+  {
+   "id": "h-mimi-greet",
+   "kind": "model",
+   "helper": "mimi",
+   "status": "ok",
+   "spoke": true,
+   "passed": true,
+   "messages": [
+    {
+     "tool": "send_to_user",
+     "channel": "shop_whatsapp",
+     "raw": "Good morning, Mama Nkechi Stores. How can I help today?",
+     "final": "Good morning, Mama Nkechi Stores. How can I help today?",
+     "checks": {
+      "no_dash": true,
+      "no_banned_phrase": true,
+      "figures_unchanged": true,
+      "figures_grounded": true,
+      "length_ok": true,
+      "one_exclamation_max": true,
+      "plain_english": true
+     },
+     "judge": {
+      "natural": true,
+      "professional": true,
+      "clear": true,
+      "plain_english": true,
+      "on_point": true,
+      "reason": "Warm short greeting that answers the shop and opens for help."
+     }
+    }
+   ]
+  },
+  {
+   "id": "h-ord-new",
+   "kind": "model",
+   "helper": "order",
+   "status": "ok",
+   "spoke": true,
+   "passed": false,
+   "messages": [
+    {
+     "tool": "send_to_user",
+     "channel": "shop_whatsapp",
+     "raw": "Thanks Mama Ifeoma Stores! Your rep will gladly help with that order — please message or call them directly. 🙏",
+     "final": "Thanks Mama Ifeoma Stores! Your rep will gladly help with that order — please message or call them directly. 🙏",
+     "checks": {
+      "no_dash": false,
+      "no_banned_phrase": true,
+      "figures_unchanged": true,
+      "figures_grounded": true,
+      "length_ok": true,
+      "one_exclamation_max": true,
+      "plain_english": true
+     },
+     "judge": {
+      "natural": true,
+      "professional": true,
+      "clear": true,
+      "plain_english": true,
+      "on_point": true,
+      "reason": "It briefly redirects the order to the rep in warm plain language."
+     }
+    }
+   ]
+  },
+  {
+   "id": "h-cre-owner",
+   "kind": "model",
+   "helper": "credit",
+   "status": "ok",
+   "spoke": true,
+   "passed": false,
+   "messages": [
+    {
+     "tool": "send_to_user",
+     "channel": "owner_console",
+     "raw": "Mama Bisi Stores looks good for more credit and I'd support it. All 8 verified payments in 10 weeks were on time with no overdue invoices. Their current limit is N150,000 and the shelf is worth about N210,000.",
+     "final": "Mama Bisi Stores looks good for more credit and I'd support it. All 8 verified payments in 10 weeks were on time with no overdue invoices. Their current limit is N150,000 and the shelf is worth about N210,000.",
+     "checks": {
+      "no_dash": true,
+      "no_banned_phrase": true,
+      "figures_unchanged": true,
+      "figures_grounded": true,
+      "length_ok": true,
+      "one_exclamation_max": true,
+      "plain_english": true
+     },
+     "judge": {
+      "natural": true,
+      "professional": true,
+      "clear": true,
+      "plain_english": true,
+      "on_point": false,
+      "reason": "It gives the support recommendation with correct figures but omits the medium confidence."
+     }
+    }
+   ]
+  }
+ ]
+}
