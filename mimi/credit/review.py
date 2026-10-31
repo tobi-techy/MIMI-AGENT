@@ -32,6 +32,7 @@ from typing import Any, Literal
 
 from mimi.credit.shelf import ShelfCount
 from mimi.harness.loop import naira_text
+from mimi.provenance import verified_records
 
 RECOMMENDER_VERSION = "credit-review-v0.1"
 Outcome = Literal["support", "hold", "not_now"]
@@ -82,8 +83,11 @@ def credit_file(history: Mapping[str, Any], shop: Mapping[str, Any],
     dels = [d for d in history["deliveries"] if d["day"] >= start]
     due_by_delivery = {d["delivery_id"]: int(d["due_day"]) for d in history["deliveries"]}
     pays = [p for p in history["payments"] if p["day"] >= start]
-    verified = [p for p in pays if p["bank_confirmed"] and p["amount_kobo"] > 0]
-    unverified = [p for p in pays if not (p["bank_confirmed"] and p["amount_kobo"] > 0)]
+    # Credit reads verified records only (RAI-295): the one door is
+    # ``verified_records``; a likely or estimated payment is shown, not counted.
+    verified = [p for p in verified_records(pays) if p["amount_kobo"] > 0]
+    counted = {id(p) for p in verified}
+    unverified = [p for p in pays if id(p) not in counted]
     on_time = sum(1 for p in verified if p["day"] <= due_by_delivery.get(p["delivery_id"], p["day"]))
     proms = [p for p in history["promises"] if p["made_day"] >= start]
     overdue = [r for r in receivables if r["status"] == "overdue"]
