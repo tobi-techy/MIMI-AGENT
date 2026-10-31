@@ -307,3 +307,132 @@ def test_provenance_is_a_leaf() -> None:
             assert not node.module.startswith("mimi"), node.module
         if isinstance(node, ast.Import):
             assert not any(a.name.startswith("mimi") for a in node.names)
+
+
+# ------------------------------------------------------------------ the store and the migration
+
+
+def _alembic(url: str, *args: str) -> None:
+    import os
+    import subprocess
+    import sys
+
+    env = {**os.environ, "MIMI_DB_URL": url, "DATABASE_URL": ""}
+    subprocess.run([sys.executable, "-m", "alembic", *args], cwd=ROOT, env=env, check=True,
+                   capture_output=True)
+
+
+def test_migration_labels_every_old_row_and_is_reversible(tmp_path: Path) -> None:
+    import sqlalchemy as sa
+
+    url = f"sqlite:///{tmp_path / 'old.db'}"
+    _alembic(url, "upgrade", "0009")
+    e = sa.create_engine(url)
+    with e.begin() as c:
+        c.execute(sa.text(
+            "INSERT INTO payments (tenant_id, payment_id, shop_id, delivery_id, day, paid_on, "
+            "amount_kobo, method, reference, status, partial, fake_alert) VALUES "
+            "('t','p-bank','s1','d-1',1,'2026-10-01',100,'transfer','r','matched',0,0),"
+            "('t','p-cash','s1','d-2',1,'2026-10-01',100,'cash_to_rep','','matched',0,0),"
+            "('t','p-fake','s1','d-2',1,'2026-10-01',100,'transfer','r2','unmatched',0,1)"))
+        c.execute(sa.text(
+            "INSERT INTO bank_feed (tenant_id, credit_id, payment_id, amount_kobo, received_at, "
+            "narration) VALUES ('t','cr-1','p-bank',100,'2026-10-01T10:00:00+01:00','x'),"
+            "('t','cr-2','p-fake',100,'2026-10-01T10:00:00+01:00','x')"))
+        c.execute(sa.text(
+            "INSERT INTO deliveries (tenant_id, delivery_id, shop_id, rep_id, day, delivered_on, "
+            "minute, total_kobo, status, witnessed_at, live) VALUES "
+            "('t','d-1','s1','r',1,'2026-10-01',0,100,'delivered','2026-10-01T11:00:00+01:00',0),"
+            "('t','d-2','s1','r',1,'2026-10-01',0,100,'delivered',NULL,0),"
+            "('t','d-3','s1','r',1,'2026-10-01',0,100,'delivered','2026-10-01T11:00:00+01:00',0)"))
+        for pid, level, credit in (("m-v", "verified", "cr-9"), ("m-l", "likely", ""),
+                                   ("m-r", "review", ""), ("m-a", "ask", "")):
+            c.execute(sa.text(
+                "INSERT INTO payment_proofs (proof_id, tenant_id, shop_id, sender, received_at, "
+                "image_sha256, image_bytes, reading_json, read_via, level, bank_credit_id) "
+                "VALUES (:p,'t','s1','','2026-10-01T10:00:00+01:00','x',0,'{}','seed',:l,:c)"),
+                {"p": pid, "l": level, "c": credit})
+    _alembic(url, "upgrade", "head")
+    with e.connect() as c:
+        got = {}
+        for table, key in (("payments", "payment_id"), ("deliveries", "delivery_id"),
+                           ("payment_proofs", "proof_id")):
+            for r in c.execute(sa.text(
+                    f"SELECT {key}, proof_level, witnesses, proof_policy_version FROM {table}")):
+                assert r[1] in PROOF_LEVELS and r[3] == "v1" and parse_witnesses(r[2]), r
+                got[r[0]] = r[1]
+    assert got == {"p-bank": "verified", "p-cash": "estimated", "p-fake": "estimated",
+                   "d-1": "verified", "d-2": "estimated", "d-3": "likely",
+                   "m-v": "verified", "m-l": "likely", "m-r": "estimated", "m-a": "estimated"}
+    _alembic(url, "downgrade", "0009")
+    cols = {c["name"] for c in sa.inspect(sa.create_engine(url)).get_columns("payments")}
+    assert "proof_level" not in cols
+    assert "proof_events" not in sa.inspect(sa.create_engine(url)).get_table_names()
+
+
+def _book(tmp_path: Path):  # type: ignore[no-untyped-def]
+    from mimi.store import ensure_schema, make_engine, seed_world
+    from mimi.store.proofbook import SqlProofBook
+    from mimi.world.loader import load_world
+
+    e = make_engine(f"sqlite:///{tmp_path / 'book.db'}")
+    ensure_schema(e)
+    w = load_world()
+    seed_world(e, w)
+    return e, w, SqlProofBook(e)
+
+
+def test_seeded_book_is_fully_labelled_and_credit_sees_verified_only(tmp_path: Path) -> None:
+    import sqlalchemy as sa
+
+    from mimi.store import SqlGo
+    from mimi.store import schema as s
+
+    e, w, book = _book(tmp_path)
+    with e.connect() as c:
+        for t in (s.payments, s.deliveries):
+            rows = c.execute(sa.select(t.c.proof_level, t.c.witnesses,
+                                       t.c.proof_policy_version)).all()
+            assert rows and all(r[0] in PROOF_LEVELS and parse_witnesses(r[1]) and r[2] == "v1"
+                                for r in rows)
+    counts = book.level_counts(w.tenant_id)
+    assert counts["payment"]["verified"] == len({c.payment_id for c in w.bank_feed} - {
+        p.payment_id for p in w.payments if p.fake_alert})
+    # credit's read over the store: every counted payment is verified
+    go = SqlGo(e)
+    for shop in w.shops[:10]:
+        hist = go.credit_history(w.tenant_id, shop.shop_id)
+        for p in verified_records(hist["payments"]):
+            assert p["bank_confirmed"] and p["proof_level"] == "verified"
+        assert all(p["proof_level"] != "verified" for p in unverified_records(hist["payments"]))
+
+
+def test_store_witness_upgrade_writes_one_event(tmp_path: Path) -> None:
+    e, w, book = _book(tmp_path)
+    cash = next(p for p in w.payments if p.method == "cash_to_rep")
+    tid = w.tenant_id
+    assert book.stamp(tid, "payment", cash.payment_id).proof_level == "estimated"
+    st = book.add_witness(tid, "payment", cash.payment_id, witness("shop_yes", "wamid.7"), AT)
+    assert st.proof_level == "likely"
+    again = book.add_witness(tid, "payment", cash.payment_id, witness("shop_yes", "wamid.7"), AT)
+    assert again == st
+    st = book.add_witness(tid, "payment", cash.payment_id, witness("bank_feed", "cr-cash"),
+                          "2026-10-13T09:00:00+01:00")
+    assert st.proof_level == "verified"
+    evs = book.events(tid, cash.payment_id)
+    assert [(x.old_level, x.new_level) for x in evs] == [("estimated", "likely"),
+                                                         ("likely", "verified")]
+    d = w.deliveries[0]
+    st = book.add_witness(tid, "delivery", d.delivery_id, witness("shop_yes", "wamid.8"), AT)
+    assert st.proof_level == "likely" and len(book.events(tid, d.delivery_id)) == 1
+    with pytest.raises(KeyError):
+        book.add_witness(tid, "payment", "nope", witness("shop_yes", "x"), AT)
+
+
+def test_store_asks_a_shop_once_only(tmp_path: Path) -> None:
+    e, w, book = _book(tmp_path)
+    d = w.deliveries[0].delivery_id
+    assert book.ask_once(w.tenant_id, "delivery", d, AT)
+    assert not book.ask_once(w.tenant_id, "delivery", d, AT)
+    # the skipped ask did not lower the level
+    assert book.stamp(w.tenant_id, "delivery", d).proof_level == "estimated"

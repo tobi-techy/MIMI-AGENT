@@ -15,6 +15,7 @@ from mimi.api import threadmeta
 from mimi.api import voice as vx
 from mimi.api.agent import NotFound, approval_dict
 from mimi.api.uploads import PREFIX as UPLOAD_PREFIX
+from mimi.provenance import POLICY_VERSION, parse_witnesses, proof_word
 from mimi.store import schema as s
 from mimi.store.book import SqlGo
 from mimi.store.util import loads, mask_phone
@@ -62,6 +63,17 @@ def _shop_summary(row: Any) -> dict[str, Any]:
     }
 
 
+_UNLABELLED = {"proof_level": "estimated", "proof": "estimated",
+               "proof_policy_version": POLICY_VERSION}
+
+
+def _proof(row: Any) -> dict[str, str]:
+    """A record's proof level, its plain word and the rules version (RAI-295)."""
+    return {"proof_level": row.proof_level,
+            "proof": proof_word(row.proof_level, parse_witnesses(row.witnesses)),
+            "proof_policy_version": row.proof_policy_version}
+
+
 def list_shops(engine: Engine, tenant: str) -> dict[str, Any]:
     with engine.connect() as conn:
         rows = _shop_rows(conn, tenant)
@@ -93,6 +105,17 @@ def get_shop(engine: Engine, tenant: str, shop_id: str) -> dict[str, Any]:
                      "missing": d.missing, "text": d.text, "status": d.status}
                     for d in conn.execute(sa.select(s.disputes).where(
                         s.disputes.c.tenant_id == tenant, s.disputes.c.shop_id == shop_id))]
+    # RAI-295: every payment and delivery carries its proof level and the
+    # word the console shows beside the figure ("likely (rep and shop)").
+    pays = go.payments(tenant, shop_id, 10)
+    with engine.connect() as conn:
+        proof = {p.payment_id: _proof(p) for p in conn.execute(
+            sa.select(s.payments.c.payment_id, s.payments.c.proof_level,
+                      s.payments.c.witnesses, s.payments.c.proof_policy_version)
+            .where(s.payments.c.tenant_id == tenant,
+                   s.payments.c.payment_id.in_([p["payment_id"] for p in pays])))}
+    for p in pays:
+        p.update(proof.get(p["payment_id"], _UNLABELLED))
     receivables = go.receivables(tenant, shop_id)
     for x in receivables:
         x["outstanding_naira"] = naira(x["outstanding_kobo"])
@@ -100,12 +123,13 @@ def get_shop(engine: Engine, tenant: str, shop_id: str) -> dict[str, Any]:
         "shop": _shop_summary(rows[0]),
         "thread_id": f"{tenant}:shop:{shop_id}",
         "receivables": receivables,
-        "payments": go.payments(tenant, shop_id, 10),
+        "payments": pays,
         "promises": go.promises(tenant, shop_id),
         "deliveries": [{
             "delivery_id": d.delivery_id, "delivered_on": d.delivered_on, "rep_id": d.rep_id,
             "total_kobo": int(d.total_kobo), "total_naira": naira(int(d.total_kobo)),
-            "status": d.status, "lines": lines.get(d.delivery_id, [])} for d in ds],
+            "status": d.status, **_proof(d), "lines": lines.get(d.delivery_id, [])}
+            for d in ds],
         "disputes": disputes,
     }
 

@@ -262,6 +262,10 @@ class DeliveryOut(_Out):
     total_kobo: int
     total_naira: str
     status: str
+    # RAI-295: verified | likely | estimated, and the word shown beside it.
+    proof_level: Literal["verified", "likely", "estimated"]
+    proof: str
+    proof_policy_version: str
     lines: list[DeliveryLineOut]
 
 

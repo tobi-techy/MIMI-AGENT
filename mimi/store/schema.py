@@ -23,6 +23,17 @@ def _tenant() -> sa.Column[str]:
     return sa.Column("tenant_id", sa.String(64), nullable=False)
 
 
+def _proof() -> tuple[sa.Column[str], ...]:
+    """Every record carries its proof level (RAI-295, ``mimi.provenance``): the
+    level, the witnesses behind it (JSON list of kind and source row id) and
+    the rules version that set it. Alembic ``0010_proof_levels``."""
+    return (
+        sa.Column("proof_level", sa.String(16), nullable=False, default="estimated"),
+        sa.Column("witnesses", sa.Text(), nullable=False, default="[]"),
+        sa.Column("proof_policy_version", sa.String(16), nullable=False, default="v1"),
+    )
+
+
 # ------------------------------------------------------------------ the book
 # Loaded by ``python -m mimi.store seed`` from the synthetic world. In
 # production Go owns these; ``SqlGo`` is the port the harness reads them by.
@@ -109,6 +120,7 @@ deliveries = sa.Table(
     sa.Column("status", sa.String(32), nullable=False, default="delivered"),
     sa.Column("witnessed_at", sa.String(40), nullable=True),
     sa.Column("live", sa.Boolean(), nullable=False, default=False),
+    *_proof(),
     sa.PrimaryKeyConstraint("tenant_id", "delivery_id"),
     sa.Index("ix_deliveries_tenant_shop", "tenant_id", "shop_id"),
 )
@@ -160,6 +172,7 @@ payments = sa.Table(
     sa.Column("split_of", sa.String(64), nullable=True),
     # A fake transfer alert: no money arrived; never counts as paid.
     sa.Column("fake_alert", sa.Boolean(), nullable=False, default=False),
+    *_proof(),
     sa.PrimaryKeyConstraint("tenant_id", "payment_id"),
     sa.Index("ix_payments_tenant_shop", "tenant_id", "shop_id"),
 )
@@ -200,6 +213,34 @@ disputes = sa.Table(
     sa.Column("text", sa.Text(), nullable=False, default=""),
     sa.Column("status", sa.String(16), nullable=False),
     sa.PrimaryKeyConstraint("tenant_id", "dispute_id"),
+)
+
+# Every change to a record's proof level, append-only (RAI-295): the witness
+# that landed (or "policy" for a rules bump), the old and new level, when.
+proof_events = sa.Table(
+    "proof_events", metadata,
+    _tenant(),
+    sa.Column("event_id", sa.String(64), nullable=False),
+    sa.Column("record_type", sa.String(32), nullable=False),
+    sa.Column("record_id", sa.String(64), nullable=False),
+    sa.Column("old_level", sa.String(16), nullable=False),
+    sa.Column("new_level", sa.String(16), nullable=False),
+    sa.Column("witness_kind", sa.String(32), nullable=False),
+    sa.Column("witness_source", sa.String(200), nullable=False),
+    sa.Column("policy_version", sa.String(16), nullable=False),
+    sa.Column("at", sa.String(40), nullable=False),
+    sa.PrimaryKeyConstraint("tenant_id", "event_id"),
+    sa.Index("ix_proof_events_record", "tenant_id", "record_type", "record_id"),
+)
+
+# A shop is asked to confirm a record once; a skipped ask is never chased.
+proof_asks = sa.Table(
+    "proof_asks", metadata,
+    _tenant(),
+    sa.Column("record_type", sa.String(32), nullable=False),
+    sa.Column("record_id", sa.String(64), nullable=False),
+    sa.Column("asked_at", sa.String(40), nullable=False),
+    sa.PrimaryKeyConstraint("tenant_id", "record_type", "record_id"),
 )
 
 # ------------------------------------------------------------- the agent
@@ -500,7 +541,7 @@ demo_usage = sa.Table(
 )
 
 BOOK_TABLES = (reps, shops, consent_withheld, skus, deliveries, delivery_lines, receivables,
-               payments, bank_feed, promises, disputes)
+               payments, bank_feed, promises, disputes, proof_events, proof_asks)
 AGENT_TABLES = (threads, inbound_messages, turns, turn_attempts, messages, thread_events,
                 intents, approvals, credit_requests, spend, asked_once, kill_switches, history,
                 prefixes, artifacts)

@@ -49,6 +49,7 @@ from mimi.proof.intents import ProofForApproval, RecordBankWitness, RecordPaymen
 from mimi.proof.ledger import ProofLedger, ProofRecord
 from mimi.proof.reading import ProofReading, ReadResult
 from mimi.proof.witness import BANK_WINDOW, BankFeed, find_credit
+from mimi.provenance import ProofStamp, add_witness, parse_witnesses, witness
 from mimi.receipts.intents import MessagePurpose, SendShopMessage
 from mimi.runtime.budgets import Budget
 from mimi.runtime.job import Job
@@ -234,6 +235,21 @@ class ProofFlow:
 
     # ------------------------------------------------------------ helpers
 
+    def _witness(self, rec: ProofRecord, kind: str, source_id: str, at: datetime) -> None:
+        """A witness landed on this payment: recompute its proof level (RAI-295)
+        and append the ``proof_events`` row. Never a silent edit."""
+        current = None
+        if rec.witnesses not in ("", "[]"):
+            ws = parse_witnesses(rec.witnesses)
+            current = ProofStamp("payment_transfer", rec.proof_level, ws,  # type: ignore[arg-type]
+                                 rec.proof_policy_version)
+        after, event = add_witness(current, "payment_transfer", rec.proof_id,
+                                   witness(kind, source_id), at.isoformat())
+        if event is None:
+            return
+        self.ledger.update(rec.proof_id, **after.columns())
+        self.ledger.add_event(event)
+
     def _say(
         self,
         scope: ShopScope,
@@ -298,6 +314,8 @@ class ProofFlow:
                 delivery_ids_json=json.dumps(list(a.match.delivery_ids)),
                 **common,
             )
+            self._witness(self.ledger.get(rec.proof_id), "alert_screenshot_checked",
+                          rec.proof_id, ctx.now)
             proof = RecordPaymentProof(
                 scope,
                 rec.proof_id,
@@ -389,6 +407,7 @@ class ProofFlow:
         reps = [invoices[d].rep_id for d in rec.delivery_ids if d in invoices and invoices[d].rep_id]
         if credit is not None and rec.delivery_ids and reps:
             self.ledger.update(rec.proof_id, level="verified", bank_credit_id=credit.credit_id)
+            self._witness(self.ledger.get(rec.proof_id), "bank_feed", credit.credit_id, ctx.now)
             witness = RecordBankWitness(
                 scope,
                 rec.proof_id,
@@ -418,6 +437,10 @@ class ProofFlow:
             )
         if ctx.now >= deadline:
             self.ledger.update(rec.proof_id, level="review")
+            # No credit in the bank window: the payment goes back down to the
+            # shop's word (estimated), as an event.
+            self._witness(self.ledger.get(rec.proof_id), "bank_no_credit",
+                          f"window:{rec.proof_id}", ctx.now)
             flag = ProofForApproval(
                 scope,
                 rec.proof_id,
