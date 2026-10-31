@@ -43,8 +43,10 @@ class ZohoCrmConnector(Connector):
         raw = self.transport.execute(resource, user_id=self.tenant_id,
                                      connected_account_id=self.connection_id,
                                      arguments=dict(filters or {}))
-        items = raw.get("data") if isinstance(raw.get("data"), list) else raw.get("records", [])
-        items = [i for i in items if isinstance(i, dict)]
+        data = raw.get("data")
+        recs = raw.get("records", [])
+        raw_items = data if isinstance(data, list) else recs if isinstance(recs, list) else []
+        items = [i for i in raw_items if isinstance(i, dict)]
         rows = [Row(values=mapper(i), source=resource) for i in items]
         return ReadResult(rows=rows, rows_read=len(items),
                           rows_mapped=sum(1 for r in rows if r.values.get("shop_id")),

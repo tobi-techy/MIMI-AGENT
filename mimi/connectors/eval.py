@@ -21,6 +21,7 @@ import argparse
 import json
 import sys
 from pathlib import Path
+from typing import Any
 
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
@@ -61,12 +62,13 @@ def run_sheets() -> dict:
         else:
             misses.append(case["id"])
         try:
-            got = map_rows(case["grid"], case["mapping"])
+            got: Any = map_rows(case["grid"], case["mapping"])
         except ValueError:
             got = "__error__"
         if "want_error" in case:
             continue
-        for want, row in zip(case["want_rows"], got if isinstance(got, list) else []):
+        rows: list[dict[str, Any]] = got if isinstance(got, list) else []
+        for want, row in zip(case["want_rows"], rows, strict=False):
             for key in ("item", "qty_left", "date"):
                 if key in want and row.get(key) != want[key]:
                     invented += 1
