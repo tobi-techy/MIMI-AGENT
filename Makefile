@@ -161,6 +161,12 @@ context-eval-live:  ## record both arms (needs META_API_KEY; about N1,200 builde
 router-train:       ## regenerate the fast classifier's synthetic training set (contributor tier; resumable)
 	$(PY) scripts/make_router_train.py
 
+compaction-eval:    ## thread compaction: 30 long threads + 20 long jobs, scripted drafts (CI)
+	META_API_KEY= $(PY) -m mimi.harness.compaction_eval
+
+compaction-eval-live: ## record the compaction eval's Muse Spark drafts (needs META_API_KEY)
+	$(PY) -m mimi.harness.compaction_eval --live
+
 trace-router:       ## eight routing decisions and four context-built runs traced to Langfuse (replayed; no model cost)
 	$(PY) scripts/trace_router_context.py --public
 

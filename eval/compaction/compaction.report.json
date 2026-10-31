@@ -1,0 +1,18 @@
+{
+ "draft": "scripted (offline)",
+ "failures": [],
+ "jobs": "20/20",
+ "marks": {
+  "job_note_agreement_95": true,
+  "newest_verbatim": true,
+  "no_free_text_figures": true,
+  "probe_facts_present": true,
+  "promise_decision_recall_100": true,
+  "raw_history_kept": true,
+  "tokens_down_60": true
+ },
+ "recall": "30/30",
+ "threads": "30/30",
+ "token_drop_median": 0.726,
+ "token_drop_min": 0.717
+}
