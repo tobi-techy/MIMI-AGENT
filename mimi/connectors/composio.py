@@ -220,8 +220,10 @@ class FakeComposio(ComposioTransport):
                       arguments: dict[str, Any]) -> dict[str, Any]:
         row = allowlist.get(action)
         if row is None or row.kind != "write" or row.slug.startswith("PROXY_"):
-            raise ConnectorError(f"{action} is not a wrapped tools-execute write.",
-                                 next_step="Use the wrapped write path.")
+            raise ConnectorError(
+                f"{action} is not a wrapped tools-execute write: proxy writes "
+                f"run over proxy execute.",
+                next_step="Use the wrapped write path.")
         self.calls.append({"action": action, "user_id": user_id,
                            "connected_account_id": connected_account_id,
                            "arguments": dict(arguments)})

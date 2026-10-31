@@ -449,7 +449,7 @@ def create_app(settings: Settings | None = None, agent: Agent | None = None, *,
             payload = check_state(settings_c.state_secret, state)
         except ValueError as exc:
             raise HTTPException(422, str(exc)) from exc
-        if _connector_state_used(engine, state):
+        if _connector_state_used(engine, key.tenant_id, state):
             raise HTTPException(422, "that link was already used; start a new connect")
         connected_id = params.get("connected_account_id", "")
         if not connected_id:
@@ -464,7 +464,7 @@ def create_app(settings: Settings | None = None, agent: Agent | None = None, *,
                         toolkit=str(payload.get("toolkit") or ""),
                         connected_account_id=connected_id,
                         region=settings_c.zoho_region, connected_at=now_iso(wall()))
-        _connector_state_mark(engine, state)
+        _connector_state_mark(engine, key.tenant_id, state)
         status = str(info.get("status") or "ACTIVE")
         return {"connection_id": connection_id, "status": status,
                 "next": "Settings > Connectors"}
@@ -562,18 +562,19 @@ def _connector_transport() -> Any:
     return FakeComposio(settings)
 
 
-def _connector_state_used(engine: Any, state: str) -> bool:
+def _connector_state_used(engine: Any, tenant: str, state: str) -> bool:
     import hashlib
 
     digest = hashlib.sha256(state.encode()).hexdigest()
     with engine.connect() as conn:
         sub = (sa.select(sa.literal(1)).select_from(s.artifacts).where(
+            s.artifacts.c.tenant_id == tenant,
             s.artifacts.c.path == f"connector-state:{digest}"))
         hit = conn.execute(sa.select(sub.exists())).scalar()
-        return hit is not None
+        return bool(hit)
 
 
-def _connector_state_mark(engine: Any, state: str) -> None:
+def _connector_state_mark(engine: Any, tenant: str, state: str) -> None:
     import hashlib
 
     from mimi.store.util import insert_ignore
@@ -581,7 +582,7 @@ def _connector_state_mark(engine: Any, state: str) -> None:
     digest = hashlib.sha256(state.encode()).hexdigest()
     with engine.begin() as conn:
         insert_ignore(conn, s.artifacts, {
-            "path": f"connector-state:{digest}", "tenant_id": "",
+            "path": f"connector-state:{digest}", "tenant_id": tenant,
             "content": now_iso(wall())})
 
 

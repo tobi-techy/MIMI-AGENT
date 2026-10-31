@@ -35,7 +35,9 @@ class CsvConnector(Connector):
         mapping = dict(args.get("mapping") or {})
         if filename.lower().endswith(EXCEL_EXTENSIONS):
             grid = _excel_grid(args.get("bytes"), filename)
-        elif filename.lower().endswith(".csv") or text:
+        elif filename.lower().endswith(".csv"):
+            grid = _csv_grid(text)
+        elif text and not filename:
             grid = _csv_grid(text)
         else:
             raise ConnectorError(

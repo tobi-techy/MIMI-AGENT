@@ -21,7 +21,7 @@ from sqlalchemy.engine import Engine
 from mimi.connectors import consent as ct
 from mimi.connectors.base import Connector, ConnectorError
 from mimi.store import schema as s
-from mimi.store.util import dumps, now_iso
+from mimi.store.util import dumps
 from mimi.tz import now_lagos
 
 STALE_DAYS = 10
@@ -43,12 +43,22 @@ def sync(*, engine: Engine, tenant_id: str, connection_id: str,
         errors.extend(run_errors)
     except ConnectorError as exc:
         errors.append(str(exc))
+    # The run stamps the sync day (Africa/Lagos), not the wall clock: a run
+    # for a given day compares against that day in source_fresh.
+    stamped = f"{day}T00:00:00+01:00"
     run = {"tenant_id": tenant_id, "connection_id": connection_id, "shop_id": shop_id,
            "scope": scope, "rows_read": rows_read, "rows_mapped": rows_mapped,
-           "errors": dumps(errors), "started_at": now_iso(), "finished_at": now_iso(),
-           "run_id": _run_id(tenant_id, connection_id, day)}
+           "errors": dumps(errors), "started_at": stamped, "finished_at": stamped,
+           "run_id": _run_id(tenant_id, connection_id, shop_id, scope, day)}
     with engine.begin() as conn:
-        conn.execute(sa.insert(s.connector_sync_runs).values(**run))
+        try:
+            conn.execute(sa.insert(s.connector_sync_runs).values(**run))
+        except sa.exc.IntegrityError:
+            # Same tenant, connection, shop, scope and day ran before (for
+            # example a denied run before consent): the fresh run wins.
+            conn.execute(s.connector_sync_runs.update().where(
+                s.connector_sync_runs.c.tenant_id == tenant_id,
+                s.connector_sync_runs.c.run_id == run["run_id"]).values(**run))
     return run
 
 
@@ -57,13 +67,16 @@ def source_fresh(engine: Engine, tenant_id: str, shop_id: str,
     """True when an item source synced rows in the last 10 days."""
     day = today or now_lagos().date().isoformat()
     cutoff = (date.fromisoformat(day) - timedelta(days=STALE_DAYS)).isoformat()
+    # finished_at is an ISO timestamp with its zone; the cutoff is a day.
+    # A string compare works because ISO days order the same as ISO times.
+    cutoff_ts = f"{cutoff}T00:00:00"
     with engine.connect() as conn:
         sub = (sa.select(sa.literal(1)).select_from(s.connector_sync_runs).where(
             s.connector_sync_runs.c.tenant_id == tenant_id,
             s.connector_sync_runs.c.shop_id == shop_id,
             s.connector_sync_runs.c.scope.in_(["stock", "sales"]),
             s.connector_sync_runs.c.rows_mapped > 0,
-            s.connector_sync_runs.c.finished_at >= cutoff))
+            s.connector_sync_runs.c.finished_at >= cutoff_ts))
         hit = conn.execute(sa.select(sub.exists())).scalar()
         return bool(hit)
 
@@ -102,5 +115,6 @@ def _apply(engine: Engine, tenant_id: str, rows: Any, *,
     return len(rows), mapped, errors
 
 
-def _run_id(tenant_id: str, connection_id: str, day: str) -> str:
-    return hashlib.sha256(f"{tenant_id}:{connection_id}:{day}".encode()).hexdigest()[:24]
+def _run_id(tenant_id: str, connection_id: str, shop_id: str, scope: str, day: str) -> str:
+    return hashlib.sha256(
+        f"{tenant_id}:{connection_id}:{shop_id}:{scope}:{day}".encode()).hexdigest()[:24]

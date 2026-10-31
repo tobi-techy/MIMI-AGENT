@@ -96,6 +96,8 @@ def map_rows(grid: list[list[Any]], mapping: dict[str, str]) -> list[dict[str, A
         raise ValueError("That file is empty. Send a sheet with an item column.")
     header = [str(c).strip() for c in grid[0]]
     body = [r for r in grid[1:] if any(str(c).strip() for c in r)]
+    if not body:
+        raise ValueError("That file is empty. Send a sheet with an item column.")
     if len(body) > MAX_ROWS:
         raise ValueError("That file is too big (over 10,000 rows). Send a smaller one.")
     if not mapping:
