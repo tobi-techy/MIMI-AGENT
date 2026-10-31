@@ -44,13 +44,21 @@ class CountSink:
         return count
 
     def for_shop(self, shop_id: str, week: str = "") -> list[SubmittedCount]:
-        return [c for c in self.counts
-                if c.shop_id == shop_id and (not week or c.week == week)]
+        return [c for c in self.counts if c.shop_id == shop_id and (not week or c.week == week)]
 
 
-def submit_count(sink: CountSink, *, shop_id: str, sku: str, bucket: str, units: int,
-                 exact: bool, source: CountSource, week: str,
-                 message_id: str = "") -> SubmittedCount:
+def submit_count(
+    sink: CountSink,
+    *,
+    shop_id: str,
+    sku: str,
+    bucket: str,
+    units: int,
+    exact: bool,
+    source: CountSource,
+    week: str,
+    message_id: str = "",
+) -> SubmittedCount:
     """Store one check-in count. A typed or voice number overrides the
     estimate exactly (``exact`` True); a tap resets it to the bucket."""
     if source not in SOURCES:
@@ -59,8 +67,7 @@ def submit_count(sink: CountSink, *, shop_id: str, sku: str, bucket: str, units:
         raise ValueError(f"unknown bucket {bucket!r}")
     if units < 0:
         raise ValueError("a count cannot be negative")
-    return sink.submit(SubmittedCount(shop_id, sku, bucket, units, exact, source, week,
-                                      message_id))
+    return sink.submit(SubmittedCount(shop_id, sku, bucket, units, exact, source, week, message_id))
 
 
 __all__ = ["SOURCES", "CountSink", "CountSource", "SubmittedCount", "submit_count"]

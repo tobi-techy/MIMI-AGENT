@@ -18,22 +18,46 @@ import re
 from dataclasses import dataclass
 from typing import Literal
 
-ReplyKind = Literal["no", "skip", "yes_supplier", "count_tap", "count_typed",
-                    "stop", "restock_yes", "restock_no", "unclear"]
+ReplyKind = Literal[
+    "no",
+    "skip",
+    "yes_supplier",
+    "count_tap",
+    "count_typed",
+    "stop",
+    "restock_yes",
+    "restock_no",
+    "unclear",
+]
 
 _TAP = re.compile(r"^\s*(0\s*[-to]+\s*2|3\s*[-to]+\s*5|6\s*\+)\s*[.!]?\s*$", re.I)
 _DIGITS = re.compile(r"^\s*(\d{1,4})\s*[.!]?\s*$")
-_NO = re.compile(r"^(?:no|no o|nothing|none|i no buy|i didn't buy|i did not buy|"
-                 r"nothing this week|ko si|babu|nothing else)[.! ]*$", re.I)
+_NO = re.compile(
+    r"^(?:no|no o|nothing|none|i no buy|i didn't buy|i did not buy|"
+    r"nothing this week|ko si|babu|nothing else)[.! ]*$",
+    re.I,
+)
 _SKIP = re.compile(r"^(?:skip|later|not now|busy|i go do am later|ma binu)[.! ]*$", re.I)
-_STOP = re.compile(r"^(?:stop|stop it|stop all|no more messages|do not message me|"
-                  r"don't message me|unsubscribe)[.! ]*$", re.I)
-_YES_SUPPLIER = re.compile(r"^(?:yes|yes o|yeah|yep|i bought|i buy|i purchased|mo ra|"
-                           r"na so|bought something|sai na saya)[.! ]*$", re.I)
-_RESTOCK_YES = re.compile(r"^(?:yes add it|add it|yes add|ok add|yes please add|"
-                          r"yes to the van|ehen add am)[.! ]*$", re.I)
-_RESTOCK_NO = re.compile(r"^(?:no thanks|no don't add|don't add|do not add|"
-                         r"no van|not now)[.! ]*$", re.I)
+_STOP = re.compile(
+    r"^(?:stop|stop it|stop all|no more messages|do not message me|"
+    r"don't message me|unsubscribe)[.! ]*$",
+    re.I,
+)
+_YES_SUPPLIER = re.compile(
+    r"^(?:yes|yes o|yeah|yep|i bought|i buy|i purchased|mo ra|"
+    r"na so|bought something|sai na saya)[.! ]*$",
+    re.I,
+)
+_RESTOCK_YES = re.compile(
+    r"^(?:yes add it|add it|yes add|ok add|yes please add|"
+    r"yes to the van|ehen add am)[.! ]*$",
+    re.I,
+)
+_RESTOCK_NO = re.compile(
+    r"^(?:no thanks|no don't add|don't add|do not add|"
+    r"no van|not now)[.! ]*$",
+    re.I,
+)
 
 
 @dataclass(frozen=True)

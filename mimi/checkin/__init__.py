@@ -13,5 +13,12 @@ itself. A missed check-in is skipped, never nagged twice.
 from mimi.checkin.env import CheckinMode, checkin_mode, mode_from_env
 from mimi.checkin.state import CheckinRecord, CheckinStore, SkipLedger, Streaks
 
-__all__ = ["CheckinMode", "CheckinRecord", "CheckinStore", "SkipLedger", "Streaks",
-           "checkin_mode", "mode_from_env"]
+__all__ = [
+    "CheckinMode",
+    "CheckinRecord",
+    "CheckinStore",
+    "SkipLedger",
+    "Streaks",
+    "checkin_mode",
+    "mode_from_env",
+]

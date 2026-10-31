@@ -37,8 +37,9 @@ class CheckinStore:
     records: dict[tuple[str, str], CheckinRecord] = field(default_factory=dict)
     seen_events: set[str] = field(default_factory=set)
 
-    def start(self, shop_id: str, week: str, event_id: str,
-              low_stock_sku: str = "") -> tuple[CheckinRecord, bool]:
+    def start(
+        self, shop_id: str, week: str, event_id: str, low_stock_sku: str = ""
+    ) -> tuple[CheckinRecord, bool]:
         """Start (or replay) a week's check-in. ``(record, is_new)``: a repeat
         event id returns the existing record with ``is_new`` False, so a retry
         never sends a duplicate."""
@@ -57,8 +58,7 @@ class CheckinStore:
         rec = self.records.get(key)
         if rec is None or rec.status != "asked":
             return None
-        rec = CheckinRecord(rec.shop_id, rec.week, rec.event_id, "answered",
-                            rec.low_stock_sku, at)
+        rec = CheckinRecord(rec.shop_id, rec.week, rec.event_id, "answered", rec.low_stock_sku, at)
         self.records[key] = rec
         return rec
 
@@ -68,8 +68,7 @@ class CheckinStore:
         rec = self.records.get(key)
         if rec is None or rec.status != "asked":
             return None
-        rec = CheckinRecord(rec.shop_id, rec.week, rec.event_id, "skipped",
-                            rec.low_stock_sku)
+        rec = CheckinRecord(rec.shop_id, rec.week, rec.event_id, "skipped", rec.low_stock_sku)
         self.records[key] = rec
         return rec
 
@@ -78,8 +77,9 @@ class CheckinStore:
         rec = self.records.get(key)
         if rec is None:
             return None
-        rec = CheckinRecord(rec.shop_id, rec.week, rec.event_id, "stopped",
-                            rec.low_stock_sku, rec.answered_at)
+        rec = CheckinRecord(
+            rec.shop_id, rec.week, rec.event_id, "stopped", rec.low_stock_sku, rec.answered_at
+        )
         self.records[key] = rec
         return rec
 
@@ -106,8 +106,7 @@ class SkipLedger:
         return self.skips.get(shop_id, 0)
 
     def needs_connect_offer(self, shop_id: str) -> bool:
-        return (self.consecutive(shop_id) >= CONNECT_AFTER_SKIPS
-                and shop_id not in self.offered)
+        return self.consecutive(shop_id) >= CONNECT_AFTER_SKIPS and shop_id not in self.offered
 
     def mark_offered(self, shop_id: str) -> None:
         self.offered.add(shop_id)
@@ -137,5 +136,11 @@ class Streaks:
         return self.current(shop_id) >= STREAK_CREDIT_LINE_AFTER
 
 
-__all__ = ["CONNECT_AFTER_SKIPS", "STREAK_CREDIT_LINE_AFTER", "CheckinRecord", "CheckinStore",
-           "SkipLedger", "Streaks"]
+__all__ = [
+    "CONNECT_AFTER_SKIPS",
+    "STREAK_CREDIT_LINE_AFTER",
+    "CheckinRecord",
+    "CheckinStore",
+    "SkipLedger",
+    "Streaks",
+]

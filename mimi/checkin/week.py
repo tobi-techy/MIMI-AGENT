@@ -23,12 +23,12 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Literal
+from typing import Literal, cast
 
 from mimi.checkin import copy
 from mimi.checkin.replies import read_reply
 from mimi.checkin.state import CheckinStore, SkipLedger, Streaks
-from mimi.checkin.submit import CountSink, submit_count
+from mimi.checkin.submit import CountSink, CountSource, submit_count
 from mimi.stock.history import Bucket, assumed_units, bucket_of
 
 WeekResult = Literal["asked", "duplicate", "not_allowed", "off"]
@@ -53,10 +53,18 @@ class CheckinWeek:
     sink: CountSink = field(default_factory=CountSink)
     stopped: set[str] = field(default_factory=set)
 
-    def plan_week(self, shop_id: str, week: str, event_id: str, *,
-                  shop_name: str = "", low_stock_sku: str = "",
-                  low_stock_item: str = "", low_stock_unit: str = "",
-                  mode: str = "on") -> tuple[WeekPlan | None, WeekResult]:
+    def plan_week(
+        self,
+        shop_id: str,
+        week: str,
+        event_id: str,
+        *,
+        shop_name: str = "",
+        low_stock_sku: str = "",
+        low_stock_item: str = "",
+        low_stock_unit: str = "",
+        mode: str = "on",
+    ) -> tuple[WeekPlan | None, WeekResult]:
         """The week's messages, or None when nothing goes out. Never sends
         twice: a repeat event id replays the existing record."""
         if mode == "off":
@@ -67,8 +75,9 @@ class CheckinWeek:
             if self.skips.needs_connect_offer(shop_id):
                 self.skips.mark_offered(shop_id)
                 self.store.start(shop_id, week, event_id)
-                return WeekPlan(copy.connect_offer_text(), ("Connect", "No"),
-                                template="mimi_weekly_checkin"), "asked"
+                return WeekPlan(
+                    copy.connect_offer_text(), ("Connect", "No"), template="mimi_weekly_checkin"
+                ), "asked"
             return None, "not_allowed"
         rec, is_new = self.store.start(shop_id, week, event_id, low_stock_sku)
         if not is_new:
@@ -87,9 +96,16 @@ class CheckinWeek:
         self.streaks.note_skip(shop_id)
         return f"skipped ({n} in a row)"
 
-    def answer_week(self, shop_id: str, week: str, text: str, *,
-                    sku: str = "", estimated_left: int = 0,
-                    message_id: str = "") -> dict[str, object]:
+    def answer_week(
+        self,
+        shop_id: str,
+        week: str,
+        text: str,
+        *,
+        sku: str = "",
+        estimated_left: int = 0,
+        message_id: str = "",
+    ) -> dict[str, object]:
         """Route one reply. Returns what happened; counts go through
         ``submit_count`` with source checkin_bucket / typed / voice."""
         reply = read_reply(text)
@@ -106,36 +122,59 @@ class CheckinWeek:
                 self.streaks.note_skip(shop_id)
             return {"kind": reply.kind, "stored": False}
         if reply.kind in ("count_tap", "count_typed"):
-            bucket: Bucket = reply.bucket or bucket_of(reply.units or 0)  # type: ignore[assignment]
-            units = reply.units if reply.units is not None else assumed_units(bucket,
-                                                                              estimated_left)
+            bucket: Bucket = cast(Bucket, reply.bucket or bucket_of(reply.units or 0))
+            units = (
+                reply.units if reply.units is not None else assumed_units(bucket, estimated_left)
+            )
             exact = reply.units is not None
-            source = "typed" if exact else "checkin_bucket"
-            submit_count(self.sink, shop_id=shop_id, sku=sku, bucket=bucket, units=units,
-                         exact=exact, source=source, week=week,  # type: ignore[arg-type]
-                         message_id=message_id)
+            source: CountSource = "typed" if exact else "checkin_bucket"
+            submit_count(
+                self.sink,
+                shop_id=shop_id,
+                sku=sku,
+                bucket=bucket,
+                units=units,
+                exact=exact,
+                source=source,
+                week=week,
+                message_id=message_id,
+            )
             self.store.answer(shop_id, week)
             self.skips.note_answer(shop_id)
             self.streaks.note_answer(shop_id)
-            return {"kind": "count", "bucket": bucket, "units": units, "exact": exact,
-                    "via": "typed" if exact else "tap"}
+            return {
+                "kind": "count",
+                "bucket": bucket,
+                "units": units,
+                "exact": exact,
+                "via": "typed" if exact else "tap",
+            }
         if reply.kind == "yes_supplier":
             return {"kind": "yes_supplier", "needs_lines": True}
         if reply.kind in ("restock_yes", "restock_no"):
             return {"kind": reply.kind, "draft_only": True}
         return {"kind": "unclear", "needs_confirm": True}
 
-    def voice_count(self, shop_id: str, week: str, units: int, *,
-                    sku: str = "", message_id: str = "") -> dict[str, object]:
+    def voice_count(
+        self, shop_id: str, week: str, units: int, *, sku: str = "", message_id: str = ""
+    ) -> dict[str, object]:
         """A voice note's exact number: overrides the estimate exactly."""
         bucket = bucket_of(units)
-        submit_count(self.sink, shop_id=shop_id, sku=sku, bucket=bucket, units=units,
-                     exact=True, source="voice", week=week, message_id=message_id)
+        submit_count(
+            self.sink,
+            shop_id=shop_id,
+            sku=sku,
+            bucket=bucket,
+            units=units,
+            exact=True,
+            source="voice",
+            week=week,
+            message_id=message_id,
+        )
         self.store.answer(shop_id, week)
         self.skips.note_answer(shop_id)
         self.streaks.note_answer(shop_id)
-        return {"kind": "count", "bucket": bucket, "units": units, "exact": True,
-                "via": "voice"}
+        return {"kind": "count", "bucket": bucket, "units": units, "exact": True, "via": "voice"}
 
     def streak_line(self, shop_id: str) -> str:
         n = self.streaks.current(shop_id)
