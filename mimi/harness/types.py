@@ -71,6 +71,9 @@ EventType = Literal[
     "artifact_stored",
     # A loop guard tripped (mimi.harness.guards).
     "loop_guard",
+    # When to speak (RAI-300): the decision and its reason, on every turn
+    # that proposed a message.
+    "speak_decision",
     # The verification gate held an outbound claim back (mimi.harness.claims).
     "claim_blocked",
 ]

@@ -90,7 +90,8 @@ def run_observations(events: Sequence[Event]) -> list[Observation]:
                           **({"idempotency_key": ev.data["idempotency_key"]}
                              if "idempotency_key" in ev.data else {})},
                 level="WARNING" if ev.type == "tool_refused" else "DEFAULT"))
-        elif ev.type in ("repair_requested", "model_output_invalid", "field_ignored"):
+        elif ev.type in ("repair_requested", "model_output_invalid", "field_ignored",
+                         "speak_decision"):
             current.children.append(Observation("span", ev.type, _ns(ev), level="WARNING",
                                                 status_message=ev.short))
         elif ev.type == "step_finished":
@@ -139,6 +140,12 @@ def build_turn(result: RunResult, *, shop_id: str = "owner", synthetic: bool = T
     turn.observations.extend(run_observations(evs))
     turn.score("run_status", result.status, "CATEGORICAL")
     turn.score("stopped_budget", result.status == "stopped_budget", "BOOLEAN")
+    for ev in evs:
+        # RAI-300: the speak decision tag with its reason on every turn that
+        # proposed a message.
+        if ev.type == "speak_decision":
+            turn.score("speak_decision", str(ev.data.get("action", "")), "CATEGORICAL")
+            turn.metadata["speak_reason"] = ev.short
     turn.score("side_effect_in_loop", False, "BOOLEAN",
                "write tools return intents; Go applies them after the step is saved")
     turn.score("model_calls", float(result.model_calls), "NUMERIC")
