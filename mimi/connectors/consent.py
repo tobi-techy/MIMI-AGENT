@@ -75,12 +75,12 @@ def may_read(engine: Engine, tenant: str, shop_id: str, scope: str) -> bool:
     if scope not in SCOPES:
         return False
     with engine.connect() as conn:
-        hit = conn.execute(sa.select(sa.literal(1)).where(sa.exists(sa.select(1).select_from(
-            s.consent_grants).where(
-                s.consent_grants.c.tenant_id == tenant,
-                s.consent_grants.c.shop_id == shop_id,
-                s.consent_grants.c.scope == scope,
-                s.consent_grants.c.revoked_at.is_(None)))))).scalar()
+        sub = (sa.select(sa.literal(1)).select_from(s.consent_grants).where(
+            s.consent_grants.c.tenant_id == tenant,
+            s.consent_grants.c.shop_id == shop_id,
+            s.consent_grants.c.scope == scope,
+            s.consent_grants.c.revoked_at.is_(None)))
+        hit = conn.execute(sa.select(sub.exists())).scalar()
         return bool(hit)
 
 

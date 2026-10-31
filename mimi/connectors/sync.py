@@ -58,13 +58,13 @@ def source_fresh(engine: Engine, tenant_id: str, shop_id: str,
     day = today or now_lagos().date().isoformat()
     cutoff = (date.fromisoformat(day) - timedelta(days=STALE_DAYS)).isoformat()
     with engine.connect() as conn:
-        hit = conn.execute(sa.select(sa.literal(1)).where(sa.exists(sa.select(1).select_from(
-            s.connector_sync_runs).where(
-                s.connector_sync_runs.c.tenant_id == tenant_id,
-                s.connector_sync_runs.c.shop_id == shop_id,
-                s.connector_sync_runs.c.scope.in_(["stock", "sales"]),
-                s.connector_sync_runs.c.rows_mapped > 0,
-                s.connector_sync_runs.c.finished_at >= cutoff))))).scalar()
+        sub = (sa.select(sa.literal(1)).select_from(s.connector_sync_runs).where(
+            s.connector_sync_runs.c.tenant_id == tenant_id,
+            s.connector_sync_runs.c.shop_id == shop_id,
+            s.connector_sync_runs.c.scope.in_(["stock", "sales"]),
+            s.connector_sync_runs.c.rows_mapped > 0,
+            s.connector_sync_runs.c.finished_at >= cutoff))
+        hit = conn.execute(sa.select(sub.exists())).scalar()
         return bool(hit)
 
 
