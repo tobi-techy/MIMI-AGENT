@@ -32,11 +32,16 @@ from mimi.store.util import now_iso
 class SqlPolicyRules:
     engine: Engine
 
-    def rules(self, tenant_id: str) -> Mapping[str, str]:
-        with self.engine.connect() as conn:
-            rows = conn.execute(sa.select(s.policy_rules.c.action_type,
-                                          s.policy_rules.c.behaviour).where(
-                s.policy_rules.c.tenant_id == tenant_id)).all()
+    def rules(self, tenant_id: str, conn: sa.Connection | None = None) -> Mapping[str, str]:
+        """Read fresh. ``conn``: a caller's open transaction (SQLite would block
+        a second connection behind its write lock)."""
+        q = sa.select(s.policy_rules.c.action_type, s.policy_rules.c.behaviour).where(
+            s.policy_rules.c.tenant_id == tenant_id)
+        if conn is not None:
+            rows = conn.execute(q).all()
+        else:
+            with self.engine.connect() as c:
+                rows = c.execute(q).all()
         return {r.action_type: r.behaviour for r in rows}
 
     def update(self, tenant_id: str, changes: Sequence[tuple[str, str]], *, by: str,

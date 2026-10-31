@@ -347,7 +347,7 @@ def check_rule(action_type: str, behaviour: str) -> None:
 class RuleStore(Protocol):
     """A distributor's own rows: action type to behaviour. Only the API writes."""
 
-    def rules(self, tenant_id: str) -> Mapping[str, str]: ...
+    def rules(self, tenant_id: str, conn: Any = None) -> Mapping[str, str]: ...
 
 
 @dataclass
@@ -356,7 +356,7 @@ class MemoryRules:
 
     rows: dict[str, dict[str, str]] = field(default_factory=dict)
 
-    def rules(self, tenant_id: str) -> Mapping[str, str]:
+    def rules(self, tenant_id: str, conn: Any = None) -> Mapping[str, str]:
         return dict(self.rows.get(tenant_id, {}))
 
     def set(self, tenant_id: str, action_type: str, behaviour: str) -> None:
@@ -399,7 +399,8 @@ class Decision:
 class RiskPolicy(Protocol):
     def base_tier(self, tool: str) -> Tier: ...
 
-    def tier(self, tenant_id: str, tool: str, payload: Mapping[str, Any]) -> Tier: ...
+    def tier(self, tenant_id: str, tool: str, payload: Mapping[str, Any], *,
+             conn: Any = None) -> Tier: ...
 
     def decide(self, tenant_id: str, action_type: str,
                context: Mapping[str, Any]) -> Decision: ...
@@ -433,10 +434,14 @@ class GoPolicy:
             return "never"
         return self.tiers.get(tool, "never")
 
-    def tier(self, tenant_id: str, tool: str, payload: Mapping[str, Any]) -> Tier:
-        """The tier of one step: always through ``decide`` (RAI-323)."""
-        return self.decide(tenant_id, action_type_for(tool, payload),
-                           {"tool": tool, "payload": payload}).tier
+    def tier(self, tenant_id: str, tool: str, payload: Mapping[str, Any], *,
+             conn: Any = None) -> Tier:
+        """The tier of one step: always through ``decide`` (RAI-323). ``conn``:
+        the caller's open store transaction, so the rules are read inside it."""
+        ctx: dict[str, Any] = {"tool": tool, "payload": payload}
+        if conn is not None:
+            ctx["conn"] = conn
+        return self.decide(tenant_id, action_type_for(tool, payload), ctx).tier
 
     def decide(self, tenant_id: str, action_type: str,
                context: Mapping[str, Any]) -> Decision:
@@ -472,7 +477,7 @@ class GoPolicy:
         source: Source = "default"
         if self.rules is not None and self.owner_rules:
             try:
-                row = self.rules.rules(tenant_id).get(action_type)
+                row = self.rules.rules(tenant_id, conn=context.get("conn")).get(action_type)
             except Exception as exc:  # fail closed: the owner may have been stricter
                 log.warning("policy rules unreadable: %s", type(exc).__name__)
                 return Decision(action_type, "ask", "approve", "fail_closed",

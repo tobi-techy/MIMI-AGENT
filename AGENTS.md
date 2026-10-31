@@ -38,7 +38,9 @@ re-recorded. A new helper factory calls `versions.register(helper)`.
    dry_run=..., cost_tier=..., connector=...)`. Write tools need `idem` and a
    dry run, or registration fails.
 3. Add its tier to `mimi/harness/policy.py` (`BASE_TIERS`); a tool with no
-   policy row is `never`. Moving money and changing bank details are
+   policy row is `never`. Give a write tool an action type in `ACTION_TYPES`
+   (or `INTERNAL_ACTIONS`), and a read tool a place in `READ_TOOLS`;
+   `tests/test_policy_rulebook.py` fails otherwise (docs/POLICY.md). Moving money and changing bank details are
    `never` for every helper and cannot be put in a toolset.
 4. Add it to the helper's allow list. Never add or remove a tool for one turn.
 5. Errors are `ToolError(message, next_step)`: always say what to do next.

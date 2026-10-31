@@ -179,9 +179,11 @@ approval reads as 404. Keys are compared by SHA-256 in constant time; give
 | `GET /v1/threads/{thread_id}` | owner | Messages (each with `voice`: the reply has a voice note at `/v1/messages/{id}/voice`, and `media`: in demo, the owner's console attachment at `/v1/messages/{id}/media`), reasoning steps (routing and every harness step: tool, tier, short line, model, cost, time; never the model's private text), turns, router state |
 | `GET /v1/shops` | owner | Shops with credit limit, outstanding and overdue (kobo and naira, summed in code), phone as last four digits |
 | `GET /v1/shops/{shop_id}` | owner | Plus open invoices, payments, promises, the last 10 deliveries with lines, disputes |
-| `GET /v1/approvals` | owner | `status=pending` (default), `approved`, `rejected`, `superseded`, `withdrawn`, `all`; each with the tool, preview, payload, the drafted message and `supersedes` / `superseded_by` (RAI-301) |
+| `GET /v1/approvals` | owner | `status=pending` (default), `approved`, `rejected`, `superseded`, `withdrawn`, `all`; each with the tool, preview, payload, the drafted message, `supersedes` / `superseded_by` (RAI-301) and `handling` (`approve`, or `hand_off`: the owner does it by hand and approving never sends Mimi's draft, RAI-323) |
 | `POST /v1/approvals/{id}/approve` | owner | Releases the drafted message, marks the intent approved and wakes the helper on its thread (`approval_answered`, through the router). A money verb is refused (409). Deciding twice is 409 |
 | `POST /v1/approvals/{id}/reject` | owner | Nothing is sent; the helper is told |
+| `GET /v1/policy` | owner | The rulebook (RAI-323, docs/POLICY.md): each step with its behaviour (`act`, `act_if_preapproved`, `ask`, `hand_off`), default, allowed behaviours and who changed it; built-in stops listed `locked`; `editable` false in demo mode |
+| `PUT /v1/policy` | owner | Change rules: `{"rules": [{"action_type", "behaviour"}], "by"}`. 409 for a built-in stop, floor or unknown type (nothing changes); 403 for a demo session or demo mode. Logged with who; in force on the next turn |
 | `GET /v1/credit` | owner | Per-shop limit, outstanding, available, and credit requests from helpers' credit intents (Credit, RAI-271) |
 | `GET /v1/messages/{message_id}/voice` | any | The reply's voice note (RAI-290): its own text read aloud, made now and never stored (`audio/ogg`, or `audio/wav` from the offline speaker). 404 when the reply has no `voice` block |
 | `GET /v1/health` | none | Database, model mode (`live` or `offline`), queue depth, version |

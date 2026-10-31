@@ -706,7 +706,7 @@ class Agent:
                        "new_cap_kobo": new_cap}
             record = {
                 "tool": "raise_daily_allowance", "intent_kind": "raise_daily_allowance",
-                "tier": self.policy.tier(tenant, "raise_daily_allowance", payload),
+                "tier": self.policy.tier(tenant, "raise_daily_allowance", payload, conn=conn),
                 "scope": "org:plan", "tenant_id": tenant, "shop_id": "",
                 "idempotency_key": business_key(tenant, "raise_daily_allowance",
                                                 {"day": day.isoformat(), "cap_kobo": cap}),
@@ -1514,7 +1514,7 @@ class Agent:
         payload = {"message": note, "shop_id": shop_id, "about": task.key}
         record = {
             "tool": "notify_owner", "intent_kind": "notify_owner",
-            "tier": self.policy.tier(tenant, "notify_owner", payload), "scope": "org:plan",
+            "tier": self.policy.tier(tenant, "notify_owner", payload, conn=conn), "scope": "org:plan",
             "tenant_id": tenant, "shop_id": shop_id,
             "idempotency_key": business_key(tenant, "notify_owner",
                                             {"shop_id": shop_id, "about": task.key,
@@ -1538,7 +1538,7 @@ class Agent:
                    "delivery_id": str(code.get("delivery_id", ""))}
         record = {
             "tool": "notify_owner", "intent_kind": "notify_owner",
-            "tier": self.policy.tier(tenant, "notify_owner", payload), "scope": "org:plan",
+            "tier": self.policy.tier(tenant, "notify_owner", payload, conn=conn), "scope": "org:plan",
             "tenant_id": tenant, "shop_id": shop_id,
             "idempotency_key": business_key(tenant, "notify_owner",
                                             {"shop_id": shop_id, "about": "two_open_asks",
@@ -1595,7 +1595,8 @@ class Agent:
                                    f"\"{words}\"")}
             record = {
                 "tool": "flag_delivery_to_owner", "intent_kind": "flag_delivery_to_owner",
-                "tier": self.policy.tier(tenant, "flag_delivery_to_owner", {"shop_id": shop_id}),
+                "tier": self.policy.tier(tenant, "flag_delivery_to_owner", {"shop_id": shop_id},
+                                         conn=conn),
                 "scope": "shop:invoices", "tenant_id": tenant,
                 "shop_id": shop_id,
                 "idempotency_key": business_key(tenant, "flag_delivery_to_owner",
