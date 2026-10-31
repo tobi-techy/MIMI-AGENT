@@ -155,16 +155,17 @@ class ThreadSummary(BaseModel):
 
 RECORD_TABLES = ("receivables", "promises", "payments", "deliveries")
 
-# A naira figure in free text: N12,000, N20,000.50, 50000 kobo. Refs
+# A naira figure in free text: N12,000, N20,000.50, 50000 kobo. The N is
+# case sensitive (an "n 2026" inside a date is not money); refs
 # ("ref receivables D-0001") never match: they carry no N sign or kobo word.
-_NAIRA = re.compile(r"N\s?\d[\d,]*(\.\d{1,2})?|\b\d[\d,]*\s*kobo\b", re.IGNORECASE)
+_NAIRA = re.compile(r"N\s?\d[\d,]*(\.\d{1,2})?|\b\d[\d,]*\s*kobo\b")
 
 
 def free_text_figures(text: str) -> list[str]:
     """Naira figures in prose (refs excluded). Empty means the text is clean."""
     scrubbed = re.sub(r"ref\s+(receivables|promises|payments|deliveries)\s+\S+", "", text,
                       flags=re.IGNORECASE)
-    return _NAIRA.findall(scrubbed)
+    return [m.group(0) for m in _NAIRA.finditer(scrubbed)]
 
 
 class CompactionError(RuntimeError):
@@ -313,22 +314,40 @@ def validate(summary: ThreadSummary, *, turns: Sequence[Sequence[dict[str, Any]]
                        *[d.text for d in summary.decisions], summary.tone,
                        *summary.open_questions])
     for fig in free_text_figures(prose):
-        problems.append(f"free-text naira figure {fig[0] if isinstance(fig, tuple) else fig!r}: "
+        problems.append(f"free-text naira figure {fig!r}: "
                         "amounts live in refs, never in prose")
         break
     facts = facts if facts is not None else window_facts(turns)
     summary_words = " ".join([prose, " ".join(summary.covered_turns)]).lower()
+    ref_ids = {r.record_id.lower() for r in summary.refs}
     for kind in ("promises", "decisions"):
         for fact in facts.get(kind, []):
-            key = _key(fact)
-            if key and key not in summary_words:
-                problems.append(f"{kind[:-1]} lost in compaction: {fact[:120]}")
+            if _fact_kept(fact, summary_words, ref_ids):
+                continue
+            problems.append(f"{kind[:-1]} lost in compaction: {fact[:120]}")
     for ref in summary.refs:
         if ref.record not in RECORD_TABLES:
             problems.append(f"ref to unknown table {ref.record!r}")
         if not ref.record_id:
             problems.append("ref with no record id")
     return problems
+
+
+def _fact_kept(fact: str, summary_words: str, ref_ids: set[str]) -> bool:
+    """A window fact counts as kept when its record id or day survived in the
+    summary prose or its refs; otherwise two of its content words must."""
+    low = fact.lower()
+    for rid in re.findall(r"[a-z]+-\d[\w-]*", low):
+        if rid in summary_words or rid in ref_ids:
+            return True
+    for day in re.findall(r"\d{4}-\d{2}-\d{2}", low):
+        if day in summary_words:
+            return True
+    words = [w.strip(".,;:!?\"'()").lower() for w in fact.split()]
+    stop = {"the", "a", "an", "to", "of", "on", "in", "and", "or", "was", "is",
+            "for", "with", "recorded", "promised", "decided", "owner", "shop"}
+    keep = [w for w in words if len(w) > 3 and w not in stop]
+    return sum(1 for w in keep[:6] if w in summary_words) >= 2
 
 
 def _key(fact: str) -> str:
