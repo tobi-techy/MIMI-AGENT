@@ -224,11 +224,20 @@ def judge(c: SpeakCase) -> dict[str, Any]:
     on_trace = any(e.type == "run_finished" and e.data.get("speak_decision") for e in r.events)
     dup_sent = (sum(1 for d in r.outbound_drafts if d.channel == c.channel) > 1
                 if c.repeat else False)
+    dup_held = (any(e.data.get("action") == "stay_quiet"
+                    and "already sent" in (e.short or "") for e in decisions)
+                if c.repeat else False)
     if c.want == "speak":
         ok = sent and r.status == "done" and reasoned and on_trace and not dup_sent
     elif c.want == "digest":
         ok = (not sent and bool(store.items) and reasoned and on_trace
               and r.status in ("done_quiet", "done"))
+    elif c.kind == "duplicate":
+        # The first draft says it once; the repeat is held as stay_quiet.
+        # Zero duplicate updates: exactly one draft leaves, and the hold is
+        # logged with its reason.
+        ok = (sum(1 for d in r.outbound_drafts if d.channel == c.channel) == 1
+              and dup_held and reasoned and on_trace and not store.items)
     else:
         ok = not sent and not store.items and r.status == "done_quiet" and reasoned
     return {"case": c.cid, "kind": c.kind, "want": c.want, "ok": ok, "sent": sent,
