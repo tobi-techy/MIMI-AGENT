@@ -88,6 +88,27 @@ def test_yoruba_complete_is_not_a_pidgin_pay() -> None:
     assert read_promise("Gbogbo ẹrù ti pé", WED).status == "none"
 
 
+def test_merged_pidgin_pay_verbs_count_as_paying() -> None:
+    # Spitch merges the verb ("agope", "agopedi"); the reader hears it.
+    r = read_promise("eji agope fifteen thousand ojo eti", WED)
+    assert r.status == "promise" and r.amount_kobo == 1_500_000 and r.due_on == D("2026-10-30")
+    r = read_promise("na saturday agopedi twelve thousand", WED)
+    assert r.status == "promise" and r.amount_kobo == 1_200_000 and r.due_on == D("2026-10-31")
+    # Bare "pe" is still Yoruba "complete", never a promise.
+    assert read_promise("pe 20k tomorrow", WED).status == "none"
+
+
+def test_a_transcriber_stutter_inside_one_number_is_not_two_amounts() -> None:
+    # Muse heard "twenty-five thousand" twice over (eval clip vv-01,
+    # dev split): one promise of N25,000, never several_amounts.
+    r = read_promise("i will pay twenty five five thousand naira tomorrow.", WED)
+    assert r.status == "promise", r
+    assert r.amount_kobo == 2_500_000 and r.due_on == D("2026-10-29")
+    # Words that fit two values are still asked about, never picked.
+    r = read_promise("I will pay two thousand five on Friday", WED)
+    assert r.issue == "ambiguous_amount" and set(r.amount_options) == {250_000, 200_500}
+
+
 def test_questions_name_both_options() -> None:
     q = question_text("ambiguous_amount", "dlv-1", None, D("2026-10-30"),
                       amount_options=(250_000, 200_500))
