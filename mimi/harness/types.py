@@ -73,6 +73,8 @@ EventType = Literal[
     "loop_guard",
     # The verification gate held an outbound claim back (mimi.harness.claims).
     "claim_blocked",
+    # The rulebook answered for one consequential step (RAI-323).
+    "policy_decided",
 ]
 
 
@@ -130,6 +132,10 @@ class IntentRecord(_Frozen):
     step: int = 0
     # Shadow mode (RAI-235): Go records the intent and applies nothing.
     shadow: bool = False
+    # The rulebook's answer (RAI-323): ``hand_off`` is an approval the owner
+    # completes by hand; Mimi never carries it out. Empty before the rulebook.
+    action_type: str = ""
+    behaviour: str = ""
 
 
 Channel = Literal["shop_whatsapp", "owner_whatsapp", "owner_console", "rep_whatsapp"]

@@ -59,7 +59,7 @@ from mimi.harness.context import pointer
 from mimi.harness.errors import ConnectorDown, ToolError, error_text
 from mimi.harness.gateway import AllModelsFailed, Gateway, worst_case_kobo
 from mimi.harness.go import BookAPI, ControlPlane, CrossTenant, EventLog, NoConsent
-from mimi.harness.policy import RiskPolicy
+from mimi.harness.policy import Decision, RiskPolicy, action_type_for
 from mimi.harness.registry import RESERVED_ARGS, ToolContext, Toolset, ToolSpec
 from mimi.harness.style import clean_reply
 from mimi.harness.types import (
@@ -222,6 +222,7 @@ class Harness:
         perf: Callable[[], float] = time.perf_counter,
         max_repairs: int = 1,
         artifacts: Any = None,
+        preapprovals: Callable[[str, str, dict[str, Any]], bool] | None = None,
     ) -> None:
         self.book = book
         self.control = control
@@ -234,6 +235,9 @@ class Harness:
         # ``mimi.harness.context.ArtifactStore``: read outputs over 2,000
         # tokens are stored there and only a pointer enters the transcript.
         self.artifacts = artifacts
+        # Code's word on a standing pre-approval (RAI-323, ``act_if_preapproved``):
+        # (tenant, action_type, payload) -> bool. None: nothing is pre-approved.
+        self.preapprovals = preapprovals
 
     # ================================================================== API
 
@@ -1112,11 +1116,13 @@ class Harness:
                  call_id: str, args: BaseModel, out: BaseModel, scope: str, position: int,
                  t: float) -> tuple[str, float]:
         payload = out.model_dump(mode="json")
-        tier: Tier = self.policy.tier(state.tenant_id, spec.name, payload)
+        decision = self._decide(state, spec.name, payload)
+        tier: Tier = decision.tier
         if tier == "never":
             ms = (self.perf() - t) * 1000
             self._emit(state, "tool_refused", tool=spec.name, tier="never", scope=scope,
-                       short="tier never", duration_ms=ms, data={"reason": "never"})
+                       short="tier never", duration_ms=ms,
+                       data={"reason": "never", "action_type": decision.action_type})
             state.messages.append(self._tool_msg(call_id, error_text(
                 "Mimi never does this.",
                 "Tell the owner what is needed; only the owner acts on money or bank details.")))
@@ -1134,8 +1140,11 @@ class Harness:
         rec = IntentRecord(
             tool=spec.name, intent_kind=spec.intent_kind, tier=tier, scope=scope,
             tenant_id=state.tenant_id, shop_id=shop_id, idempotency_key=bkey,
-            attempt_key=akey, payload=payload, preview=preview, step=state.step,
-            shadow=helper.shadow,
+            attempt_key=akey, payload=payload,
+            preview=("Hand-off, for you to do yourself: " + preview
+                     if decision.hand_off else preview),
+            step=state.step, shadow=helper.shadow,
+            action_type=decision.action_type, behaviour=decision.behaviour,
         )
         if any(i.idempotency_key == bkey for i in state.intents):
             ms = (self.perf() - t) * 1000
@@ -1161,10 +1170,33 @@ class Harness:
             "notify": "Go will apply it and tell the owner.",
             "approve": "It waits in the owner's approvals; this turn will stop after this step.",
         }[tier]
+        if decision.hand_off:
+            follow = ("The owner does this step by hand; Mimi does not carry it out. "
+                      "This turn will stop after this step.")
         state.messages.append(self._tool_msg(call_id, json.dumps(
             {"ok": True, "proposed": spec.intent_kind, "tier": tier, "next": follow,
              "preview": preview}, ensure_ascii=False)))
         return f"{spec.name}: proposed ({tier})", ms
+
+    def _decide(self, state: LoopState, tool: str, payload: dict[str, Any]) -> Decision:
+        """The rulebook's answer for one proposed step (``policy.decide``, RAI-323).
+
+        Every write intent passes here before Go sees it; the decision is an
+        event (the audit row in the thread's event log and a trace span)."""
+        action = action_type_for(tool, payload)
+        pre = False
+        if self.preapprovals is not None:
+            try:
+                pre = bool(self.preapprovals(state.tenant_id, action, payload))
+            except Exception as exc:  # a lookup failure is "not pre-approved"
+                log.warning("preapproval lookup failed: %s", type(exc).__name__)
+        d = self.policy.decide(state.tenant_id, action,
+                               {"tool": tool, "payload": payload, "preapproved": pre})
+        self._emit(state, "policy_decided", tool=tool, tier=d.tier,
+                   short=f"{d.action_type}: {d.behaviour} ({d.source})"[:160],
+                   data={"action_type": d.action_type, "behaviour": d.behaviour,
+                         "outcome": d.outcome, "source": d.source, "locked": d.locked})
+        return d
 
     def _effects(self, state: LoopState, tool: str, payload: dict[str, Any], tier: Tier,
                  shop_id: str, key: str) -> None:

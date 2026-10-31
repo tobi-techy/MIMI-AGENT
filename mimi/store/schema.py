@@ -374,6 +374,9 @@ approvals = sa.Table(
     sa.Column("created_at", sa.String(40), nullable=False),
     sa.Column("created_ts", sa.Float(), nullable=False),
     sa.Column("decided_at", sa.String(40), nullable=True),
+    # "" (approve: Mimi carries it out once approved) or "hand_off" (the owner
+    # does it by hand; approving only records that it was done). RAI-323.
+    sa.Column("handling", sa.String(16), nullable=False, default=""),
     sa.UniqueConstraint("tenant_id", "idempotency_key", name="uq_approvals_tenant_key"),
     sa.Index("ix_approvals_tenant_status", "tenant_id", "status"),
 )
@@ -497,6 +500,35 @@ demo_usage = sa.Table(
     sa.Column("ip_hash", sa.String(64), nullable=False),
     sa.Column("kobo", sa.BigInteger(), nullable=False, default=0),
     sa.PrimaryKeyConstraint("day", "ip_hash"),
+)
+
+# The distributor's rulebook (RAI-323, alembic 0010): one behaviour per action
+# type the owner changed; no row means the default. Built-in stops never have
+# a row. Only the API (owner key) writes here; nothing a helper or a message
+# says can.
+policy_rules = sa.Table(
+    "policy_rules", metadata,
+    _tenant(),
+    sa.Column("action_type", sa.String(64), nullable=False),
+    sa.Column("behaviour", sa.String(24), nullable=False),
+    sa.Column("updated_by", sa.String(100), nullable=False, default=""),
+    sa.Column("updated_at", sa.String(40), nullable=False),
+    sa.PrimaryKeyConstraint("tenant_id", "action_type"),
+)
+
+# Every rule change: who, when, from what to what.
+policy_changes = sa.Table(
+    "policy_changes", metadata,
+    sa.Column("change_id", sa.String(64), primary_key=True),
+    _tenant(),
+    sa.Column("action_type", sa.String(64), nullable=False),
+    sa.Column("old_behaviour", sa.String(24), nullable=False),
+    sa.Column("new_behaviour", sa.String(24), nullable=False),
+    sa.Column("changed_by", sa.String(100), nullable=False),
+    sa.Column("key_digest", sa.String(64), nullable=False, default=""),
+    sa.Column("created_at", sa.String(40), nullable=False),
+    sa.Column("created_ts", sa.Float(), nullable=False),
+    sa.Index("ix_policy_changes_tenant", "tenant_id", "created_ts"),
 )
 
 BOOK_TABLES = (reps, shops, consent_withheld, skus, deliveries, delivery_lines, receivables,

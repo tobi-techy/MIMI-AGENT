@@ -590,7 +590,9 @@ class SqlGo:
                 "turn_id": turn_id, "thread_id": thread_id, "helper": helper, "skill": skill,
                 "shop_id": shop_id, "tool": tool, "intent_kind": kind,
                 "preview": str(record.get("preview", "")), "payload": dumps(payload),
-                "status": "pending", "created_at": now, "created_ts": wall()})
+                "status": "pending", "created_at": now, "created_ts": wall(),
+                # The rulebook's hand-off (RAI-323): the owner does it by hand.
+                "handling": "hand_off" if record.get("behaviour") == "hand_off" else ""})
         if outcome not in ("refused", "shadowed") and is_credit_intent(tool, kind) and shop_id:
             amount = 0
             for f in ("amount_kobo", "new_limit_kobo", "limit_kobo", "bump_kobo"):

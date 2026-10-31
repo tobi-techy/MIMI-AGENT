@@ -302,6 +302,9 @@ class ApprovalOut(_Out):
     # and that replaced it. A superseded or withdrawn item cannot be decided.
     supersedes: str | None = None
     superseded_by: str | None = None
+    # approve: Mimi carries it out once approved. hand_off: the owner's rule
+    # says the owner does this step by hand; approving records it was done.
+    handling: str = "approve"
 
 
 class ApprovalList(_Out):
@@ -389,3 +392,52 @@ class DemoSessionOut(_Out):
     expires_at: str
     ttl_s: float
     caps: DemoCaps
+
+
+# --------------------------------------------------------------- the rulebook
+
+
+class PolicyRuleOut(_Out):
+    """One step in the owner's rulebook (RAI-323)."""
+
+    action_type: str
+    helper: str
+    label: str
+    # act | act_if_preapproved | ask | hand_off; never for a built-in stop.
+    behaviour: str
+    default: str
+    # A built-in stop: no rule, API call or message can change it.
+    locked: bool
+    allowed: list[str]
+    changed_by: str
+    changed_at: str
+
+
+class PolicyChangeOut(_Out):
+    action_type: str
+    from_: str = Field(alias="from")
+    to: str
+    by: str
+    at: str
+
+
+class PolicyOut(_Out):
+    rules: list[PolicyRuleOut]
+    # False in demo mode or with MIMI_POLICY_RULES=0: the list is read-only.
+    editable: bool
+    changes: list[PolicyChangeOut]
+
+
+class PolicyRuleIn(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    action_type: str = Field(max_length=64)
+    behaviour: Literal["act", "act_if_preapproved", "ask", "hand_off"]
+
+
+class PolicyIn(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    rules: list[PolicyRuleIn] = Field(min_length=1, max_length=50)
+    # Who changed it, for the log (the console sends the owner's name).
+    by: str = Field(default="owner", max_length=100)
