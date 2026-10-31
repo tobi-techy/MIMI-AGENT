@@ -53,12 +53,31 @@ items, credit extended, edits to decided orders.
 
 ## Results
 
-After RAI-304 (photo look in the router, 28 Oct 2026): 47/47 fully right,
-invented prices or items 0, credit extended 0, edits to decided orders 0.
-h25, h26 and h27 now go to Order by the photo rule; the other 44 cases
-replayed from the recorded answers unchanged. Live cost of that rerun N90.08
-(4 vision, 1 router and 8 loop calls). The router change was tuned on
-`eval/photo_route/dev.jsonl` and scored on a fresh set, not on h25 to h27.
+Current state (offline replay, N0.00 live cost this run; the skills flag is
+the blessed demo path, so the default-mode cache is not re-recorded live):
+
+* Default mode (`python -m mimi.api.order_eval --no-write`): 46/47 fully
+  right (97.9%), invented prices or items 0, credit extended 0, edits to
+  decided orders 0 (`heldout.report.json`, PASS). The one miss is h08
+  (pidgin, unclear): "Oga abeg make una carry 3 carton noodles plus 6 pack
+  of omo come", then "the big 900g one", replays as 3 cartons of Big Pack
+  120g noodles instead of 3 cartons of 70g noodles plus 6 packs of
+  Brightwash 900g detergent. The miss entered with the RAI-306 re-record
+  on the new intake slice; the RAI-304 photo fix still holds.
+* Skills mode (`MIMI_SKILLS=1`, same command): 47/47 fully right,
+  invented prices or items 0, credit extended 0, edits to decided orders 0
+  (`heldout.skills.report.json`, PASS).
+* Photo routing (`eval/photo_route/fresh.report.json`): 27/27, so the
+  RAI-304 photo hole stays closed.
+
+### After RAI-304 (photo look in the router, 28 Oct 2026)
+
+At the time: 47/47 fully right, invented prices or items 0, credit
+extended 0, edits to decided orders 0. h25, h26 and h27 now go to Order by
+the photo rule; the other 44 cases replayed from the recorded answers
+unchanged. Live cost of that rerun N90.08 (4 vision, 1 router and 8 loop
+calls). The router change was tuned on `eval/photo_route/dev.jsonl` and
+scored on a fresh set, not on h25 to h27.
 
 ### Before RAI-304 (one recorded live run, 28 Oct 2026)
 
