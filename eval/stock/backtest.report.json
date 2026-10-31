@@ -171,7 +171,47 @@
   "max_questions_per_item_week": true,
   "max_questions_per_shop_week": true,
   "drafts_without_count": true,
-  "orders_placed": true
+  "orders_placed": true,
+  "record_rows_estimated": true,
+  "record_rows_traceable": true
+ },
+ "record_v03": {
+  "policy_version": "stock-estimates-v0.3",
+  "lead_time_days": 2,
+  "proposed_marks": {
+   "stock_out_recall": 0.8,
+   "false_alarm_rate": 0.3
+  },
+  "reorders_dev": {
+   "rows": 5656,
+   "stock_outs": 325,
+   "stock_out_recall": 0.7292,
+   "flags": 1860,
+   "false_alarm_rate": 0.1774,
+   "days_to_run_out_mae": 2.631,
+   "band_coverage": 0.7283,
+   "rows_not_estimated": 0,
+   "rows_untraceable": 0,
+   "proposed": {
+    "stock_out_recall": false,
+    "false_alarm_rate": true
+   }
+  },
+  "reorders_held_out": {
+   "rows": 5656,
+   "stock_outs": 338,
+   "stock_out_recall": 0.6893,
+   "flags": 1849,
+   "false_alarm_rate": 0.1969,
+   "days_to_run_out_mae": 2.959,
+   "band_coverage": 0.6917,
+   "rows_not_estimated": 0,
+   "rows_untraceable": 0,
+   "proposed": {
+    "stock_out_recall": false,
+    "false_alarm_rate": true
+   }
+  }
  },
  "digest": "f66dce36587877df896fd49879e4a3d3d05c5f79ee217fc0ff147a957ad412f1"
 }

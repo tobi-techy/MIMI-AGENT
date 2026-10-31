@@ -147,6 +147,7 @@ def play(
     counted = {(p["scope"]["shop_id"], p["sku"]) for k, p in sink.accepted.values()
                if k == "record_stock_count"}
     return {"scored": scored, "asks": asks, "kinds": dict(kinds), "drafts": drafts,
+            "counts": {key: ledger.counts_for(key) for key in histories},
             "drafts_without_count": sum(1 for d in drafts
                                         if (d["scope"]["shop_id"], d["sku"]) not in counted),
             "orders_placed": sum(1 for d in drafts if d.get("places_order") or d["status"] != "draft"),
@@ -218,14 +219,81 @@ def score(run: dict[str, Any], no_counts: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+# ---------------------------------------------------------------- v0.3 records (RAI-294)
+
+LEAD_TIME_DAYS = 2
+# Proposed in RAI-294, to confirm with Tobi after the first run: reported, not gated.
+RECORD_PROPOSED = {"stock_out_recall": 0.80, "false_alarm_rate": 0.30}
+
+
+def record_metrics(world: World, histories: dict[Key, ItemHistory],
+                   truth: dict[Key, ItemTruth], counts: dict[Key, Any]) -> dict[str, Any]:
+    """The stored-record view of the same play (``estimate_row``): recall of
+    stock-outs warned at least the lead time ahead, false alarms, mean absolute
+    error of ``days_to_run_out`` against the true shelf, the share of truths
+    inside the confidence band, and the hard marks (every row estimated, every
+    figure traceable to input ids)."""
+    from mimi.stock.estimator import CountIn, DeliveryIn, UnitBook, count_wanted, estimate_row
+
+    day0 = world.date_of(0)
+    events = warned = flags = false_flags = 0
+    errors: list[float] = []
+    in_band = banded = 0
+    untraceable = not_estimated = rows = 0
+    for key, h in histories.items():
+        ub = UnitBook(h.sku, h.unit, 1)
+        ins = [DeliveryIn(s.delivery_id, s.day, s.quantity, h.unit) for s in h.stock_in]
+        cs = [CountIn(f"count:{key[0]}:{key[1]}:{c.day}:{i}", c.day,
+                      "tap" if c.source == "tap" else "typed", bucket=c.bucket,
+                      quantity=c.units, unit=h.unit, after_delivery=c.after_delivery)
+              for i, c in enumerate(counts.get(key, []))]
+        known = {d.input_id for d in ins} | {c.input_id for c in cs}
+        outs_seen: set[int] = set()
+        for day in range(SCORE_FROM, LAST_DAY + 1):
+            r = estimate_row(key[0], ub, ins, cs, day, day0=day0, visit_days=h.visit_days)
+            rows += 1
+            not_estimated += r.proof_level != "estimated"
+            untraceable += not r.inputs or not set(r.inputs) <= known
+            true_out = truth[key].run_out_day(day)
+            flagged = count_wanted(r, lead_time_days=LEAD_TIME_DAYS, top_item=False)
+            if flagged:
+                flags += 1
+                false_flags += true_out is None or true_out - day > LEAD_TIME_DAYS + 4
+            if true_out is not None and true_out - day == LEAD_TIME_DAYS and true_out not in outs_seen:
+                outs_seen.add(true_out)
+                events += 1
+                warned += flagged
+            if r.status == "ok" and r.days_to_run_out is not None and true_out is not None \
+                    and true_out - day < 14:
+                truth_days = true_out - day + 1
+                errors.append(abs(r.days_to_run_out - truth_days))
+                width = 1 + 4 * (1 - r.confidence)
+                banded += 1
+                in_band += abs(r.days_to_run_out - truth_days) <= width
+    recall = round(warned / max(1, events), 4)
+    false_rate = round(false_flags / max(1, flags), 4)
+    return {
+        "rows": rows, "stock_outs": events, "stock_out_recall": recall,
+        "flags": flags, "false_alarm_rate": false_rate,
+        "days_to_run_out_mae": round(sum(errors) / max(1, len(errors)), 3),
+        "band_coverage": round(in_band / max(1, banded), 4),
+        "rows_not_estimated": not_estimated, "rows_untraceable": untraceable,
+        "proposed": {k: (recall >= v if k == "stock_out_recall" else false_rate <= v)
+                     for k, v in RECORD_PROPOSED.items()},
+    }
+
+
 def run_all() -> dict[str, Any]:
     world = load_world()
     out: dict[str, Any] = {"policy_version": POLICY_VERSION, "plan_days": PLAN_DAYS,
                            "scored_days": [SCORE_FROM, LAST_DAY], "histories": {}}
+    records: dict[str, Any] = {}
     for name, seed in (("reorders_dev", DEV_SEED), ("reorders_held_out", HELD_OUT_SEED)):
         rw = generate_reorders(world, seed)
+        ran = play(world, rw.histories, rw.truth)
         out["histories"][name] = {"seed": seed, **score(
-            play(world, rw.histories, rw.truth), play(world, rw.histories, rw.truth, ask=False))}
+            ran, play(world, rw.histories, rw.truth, ask=False))}
+        records[name] = record_metrics(world, rw.histories, rw.truth, ran["counts"])
     from mimi.stock.history import item_histories
 
     hist = item_histories(world)
@@ -251,6 +319,14 @@ def run_all() -> dict[str, Any]:
         k: (out["headline"][k] >= mark if k == "run_out_within_2_days" else out["headline"][k] <= mark)
         for k, mark in PASS_MARKS.items()
     }
+    from mimi.stock.estimator import RECORD_POLICY
+
+    out["record_v03"] = {"policy_version": RECORD_POLICY, "lead_time_days": LEAD_TIME_DAYS,
+                         "proposed_marks": RECORD_PROPOSED, **records}
+    out["pass"]["record_rows_estimated"] = all(r["rows_not_estimated"] == 0
+                                               for r in records.values())
+    out["pass"]["record_rows_traceable"] = all(r["rows_untraceable"] == 0
+                                               for r in records.values())
     out["digest"] = hashlib.sha256(json.dumps([out["histories"], out["robustness"]],
                                               sort_keys=True).encode()).hexdigest()
     return out
@@ -291,6 +367,24 @@ def _table(r: dict[str, Any]) -> str:
     out.append("")
     out.append(f"Spread over {len(rb['seeds'])} more unseen reorder seeds (no mark): mean {rb['mean']:.1%}, "
                f"min {rb['min']:.1%}, max {rb['max']:.1%}, {rb['at_or_over_bar']} of {len(rb['seeds'])} at or over 70%")
+    rec = r.get("record_v03", {})
+    if rec:
+        out.append("")
+        out.append(f"Stored records ({rec['policy_version']}, lead time {rec['lead_time_days']} days; "
+                   "proposed bars reported, not gated):")
+        out.append("| Metric | Proposed | Reorders, held-out seed 7 | Reorders, dev seed 2610 |")
+        out.append("|---|---|---|---|")
+        a2, b2 = rec["reorders_held_out"], rec["reorders_dev"]
+        for label, key, mark, pct in (
+                ("Stock-outs warned >= lead time ahead", "stock_out_recall", ">= 80%", True),
+                ("False alarms", "false_alarm_rate", "<= 30%", True),
+                ("Mean abs. error, days to run out", "days_to_run_out_mae", "", False),
+                ("Truth inside the confidence band", "band_coverage", "", True),
+                ("Rows not estimated", "rows_not_estimated", "0", False),
+                ("Rows without input ids", "rows_untraceable", "0", False)):
+            fa = f"{a2[key]:.1%}" if pct else f"{a2[key]}"
+            fb = f"{b2[key]:.1%}" if pct else f"{b2[key]}"
+            out.append(f"| {label} | {mark} | {fa} | {fb} |")
     out.append("")
     out.append("pass: " + json.dumps(r["pass"]))
     return "\n".join(out)

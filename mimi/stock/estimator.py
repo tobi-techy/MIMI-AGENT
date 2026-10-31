@@ -460,10 +460,16 @@ def estimate_row(
         if c.kind == "tap":
             if c.bucket not in BUCKET_RANGE:
                 return empty("unknown_unit")
-            # The bucket's middle for the maths (6+ is 6: the estimate
-            # cannot be read before the count is placed); the range is kept.
-            mid = {"0-2": 1, "3-5": 4, "6+": 6}[c.bucket]
-            scounts.append(StockCount(c.day, c.bucket, mid * units.pieces,  # type: ignore[arg-type]
+            # The bucket's middle for the maths; the range is kept for display.
+            # For "6+" the caller may pass the units it assumed (the estimate
+            # when already 6 or more, ``history.assumed_units``).
+            mid_base = {"0-2": 1, "3-5": 4, "6+": 6}[c.bucket] * units.pieces
+            if c.bucket == "6+" and c.quantity is not None:
+                given = units.to_base(c.quantity, c.unit)
+                if given is None:
+                    return empty("unknown_unit")
+                mid_base = max(mid_base, given)
+            scounts.append(StockCount(c.day, c.bucket, mid_base,  # type: ignore[arg-type]
                                       after_delivery=c.after_delivery, source="tap"))
         else:
             base = units.to_base(c.quantity if c.quantity is not None else -1, c.unit)

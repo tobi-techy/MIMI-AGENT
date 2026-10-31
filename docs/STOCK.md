@@ -84,6 +84,70 @@ digest is checked twice).
 Every estimate is logged with its inputs (`StockLedger.runs`; traced as the
 `estimate-stock` tool step) with `policy_version` `stock-estimator-v0.2`.
 
+## Stored estimates v0.3 (RAI-294): `stock_estimates`, with confidence
+
+`estimate_row(...)` in `mimi/stock/estimator.py` wraps `estimate` (the
+numbers above, which the backtest gates) and makes the record a person and
+the other helpers read. Still pure: same inputs, same row.
+
+* **Base units** (RAI-154): every quantity goes through `UnitBook` (a
+  carton of 40 is 40 base units). Half cartons ("1/2 ctn") and the inner
+  unit ("30 packets") convert; an unknown unit, or part of a piece, gives
+  **no estimate** (`status = unknown_unit`), never a guess.
+* **Stock in** is confirmed deliveries plus what the shop says it bought
+  elsewhere. An unconfirmed delivery changes nothing.
+* **Anchor** is the latest count of any kind (one-tap bucket, typed, voice,
+  book read, POS, connected tool). A bucket uses its middle for the maths and
+  keeps its range (`anchor_range = "0-2"`) for display. A count always
+  overrides the estimate.
+* **Fewer than 2 deliveries**: `status = not_enough_history`, no rate and no
+  run-out date.
+* **Confidence** (proposed, to tune): 1.0 after an exact count, 0.7 after a
+  bucket, 0.6 from a delivery; minus 0.04 a day since the anchor; minus 0.15
+  when the reorder gaps vary a lot (coefficient of variation over 0.5).
+  Words: High (>= 0.7), Medium (0.4 to 0.7), Low (< 0.4). It falls every day
+  without a new count and never rises without a new input.
+* **Proof level** is always `estimated` (RAI-295, `mimi.provenance`), with
+  the estimator and any counts as witnesses, the proof policy version, the
+  record policy `stock-estimates-v0.3`, and the input ids behind every figure.
+* **Run-out date** (Africa/Lagos calendar date) and **money tied up**
+  (`est_left x` the distributor's price, integer kobo, estimated).
+* **Low-item trigger** `count_wanted`: days to run out within the lead time
+  plus 2, or a top item at Low confidence. At most one ask per shop per week
+  (`StockBook.count_wanted`), never repeated if skipped.
+
+`StockBook` (`mimi/stock/estimates.py`) keeps the append-only
+`stock_estimates` table (alembic `0011_stock_estimates`; a recompute with the
+same inputs and policy writes no row) and `stock_reports` (what shops told
+Mimi). Reads: `latest`, `history`, `shop_view` (the shop's own items, always
+"about"), `run_low` (the distributor's "likely to run low" list: flags and
+confidence words, never a shop's quantities). Credit never reads either table
+(architecture test).
+
+### The count door for the weekly check-in (RAI-276)
+
+```python
+book = StockBook(engine)
+res = book.submit_count(tenant_id, shop_id, product_id,
+                        report_id="wamid.ABC",          # resend = no-op ("duplicate")
+                        at=received_at,                 # zoned datetime (Africa/Lagos)
+                        kind="tap", bucket="0-2")       # or kind="typed"|"voice"|"book"|
+                                                        # "pos"|"connected_tool",
+                                                        # quantity="7", unit="ctn"
+res.accepted, res.reason, res.row   # reason: recorded | duplicate | unknown_unit |
+                                    #         bad_count | unknown_item
+book.report_bought_elsewhere(tenant_id, shop_id, product_id, report_id=..., at=...,
+                             quantity="2", unit="ctn")
+book.count_wanted(tenant_id, shop_id, now=..., lead_time_days=2)  # product id or None
+```
+
+The backtest reports the stored-record view on the same play (lead time 2
+days): stock-outs warned at least the lead time ahead, false alarms, mean
+absolute error of days to run out, and the share of truths inside the
+confidence band. The proposed bars (recall >= 80%, false alarms <= 30%) are
+reported, not gated, until Tobi confirms them after the first run; the hard
+marks (every row estimated, every row traceable to its inputs) are gated.
+
 ## Trigger and caps (`mimi/stock/trigger.py`)
 
 * Ask when the estimated days to run out is **under 3** (proposed in

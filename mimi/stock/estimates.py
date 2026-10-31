@@ -203,6 +203,11 @@ class StockBook:
         elif ub.to_base(quantity, unit) is None:
             return SubmitResult(False, "unknown_unit", None)
         day = self.day_of(tenant_id, at)
+        if kind == "tap" and bucket == "6+" and quantity is None:
+            # "6 or more": the estimate when it is already 6 or more, else 6.
+            prev = self.latest(tenant_id, shop_id, product_id)
+            if prev is not None and prev.est_left is not None and prev.est_left >= 6:
+                quantity, unit = str(int(prev.est_left + 0.5)), ub.unit
         with self.engine.begin() as conn:
             seen = conn.execute(sa.select(s.stock_reports.c.report_id).where(
                 s.stock_reports.c.tenant_id == tenant_id,
