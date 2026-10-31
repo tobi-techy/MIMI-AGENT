@@ -183,6 +183,11 @@ approval reads as 404. Keys are compared by SHA-256 in constant time; give
 | `POST /v1/approvals/{id}/approve` | owner | Releases the drafted message, marks the intent approved and wakes the helper on its thread (`approval_answered`, through the router). A money verb is refused (409). Deciding twice is 409 |
 | `POST /v1/approvals/{id}/reject` | owner | Nothing is sent; the helper is told |
 | `GET /v1/credit` | owner | Per-shop limit, outstanding, available, and credit requests from helpers' credit intents (Credit, RAI-271) |
+| `GET /v1/connectors` | owner | Connector toolkits (Zoho Books, Zoho CRM, Google Sheets, CSV/Excel, Mono soon) with their reads, writes and connections (RAI-277; `docs/CONNECTORS.md`) |
+| `POST /v1/connectors/{toolkit}/connect` | owner | Start the connect flow: body `{region}` for Zoho (`com`, `eu`, `in`, `cn`, `au`); returns `redirect_url` and a single-use `state`. Demo and offline runs return a fake redirect, never real OAuth |
+| `GET /v1/connectors/callback` | owner | Composio returns here: checks the state (expired or reused links get 422 and a WhatsApp nudge for a new link), reads the connected account, sends the owner back to Settings > Connectors |
+| `GET /v1/connectors/{connection_id}` | owner | Status plus a sync preview (counts and the first 3 mapped rows) |
+| `DELETE /v1/connectors/{connection_id}` | owner | Deletes the Composio connected account and writes a revoke row before the next sync |
 | `GET /v1/messages/{message_id}/voice` | any | The reply's voice note (RAI-290): its own text read aloud, made now and never stored (`audio/ogg`, or `audio/wav` from the offline speaker). 404 when the reply has no `voice` block |
 | `GET /v1/health` | none | Database, model mode (`live` or `offline`), queue depth, version |
 | `GET /` | none | Liveness for the platform probe: `{"status": "ok"}`, no database |
