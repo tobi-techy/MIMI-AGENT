@@ -227,6 +227,14 @@ META_API_KEY= python -m mimi.sim --stock --transcript
 python -m mimi.sim --stock --transcript --cache /tmp/smoke/stock              # live
 python -m mimi.sim --stock --stock-words --transcript --cache /tmp/smoke/stock # shops type
 python -m mimi.sim --stock --stock-history route --shop-ids shop-001 --transcript
+
+# The weekly check-in eval (RAI-276): 50 replies + 20 other-supplier answers,
+# replaying the recorded Muse Spark answers (CI); --live records them
+export MIMI_CHECKIN=quiet   # 0 off (default) | quiet (store counts, no restock offer) | 1 on
+python -m mimi.checkin.eval
+python -m mimi.checkin.eval --live          # resumes from eval/checkin/replies.cache.json
+python -m mimi.checkin.eval --live --fresh  # every case a new call
+python -m mimi.checkin.eval --fake          # keyword FakeModel (plumbing)
 ```
 
 The scene's transcript shows Mimi's estimate for each item it asks about

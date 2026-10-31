@@ -97,6 +97,11 @@ BASE_TIERS: dict[str, Tier] = {
     "record_stock_count": "notify",
     "draft_restock": "approve",
     "revise_restock": "approve",
+    # Weekly check-in (RAI-276 on the harness; on the stock helper's toolset)
+    "send_weekly_checkin": "notify",
+    "read_checkin_reply": "auto",
+    "record_supplier_lines": "notify",
+    "submit_checkin_count": "notify",
     # Order intake (RAI-302). Every order waits for the owner or rep.
     "read_order_photo": "auto",
     "price_order": "auto",

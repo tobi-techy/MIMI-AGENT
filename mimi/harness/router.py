@@ -103,6 +103,7 @@ ROUTINES: dict[str, str] = {
     "collector.promise_check": "collector/promise-to-pay",
     "mimi.morning_brief": "mimi/owner-brief",
     "stock.weekly_check": "stock/stock-count",
+    "checkin.weekly": "stock/stock-count",
     "stock.low_stock_report": "stock/low-stock-report",
     "proof.feed_reconcile": "proof/bank-credit",
     "credit.weekly_review": "credit/credit-review",

@@ -310,12 +310,43 @@ With Langfuse on, each question is two traces in one session
 public link to one draft trace. Counts appear in Mimi's own traces only; the
 distributor-facing intent never carries them.
 
+## The weekly check-in (RAI-276)
+
+The shop's only routine job, one tap a week, on the stock helper's toolset
+(`mimi/checkin/`). Monday 08:00 WAT the scheduler posts `checkin.weekly`
+(`POST /v1/events`, `kind=routine`, idempotent on `event_id`); the routine
+rule routes it to the stock helper, which calls `send_weekly_checkin` and
+ends the turn (the ask is the message). The existing `stock.weekly_check`
+wake keeps working. A missed week is skipped, never nudged twice; three
+skips switch to one Connect offer (RAI-277); `stop` ends check-ins. Counts
+go through the RAI-294 count submit interface (`mimi/checkin/submit.py`,
+source `checkin_bucket` / `typed` / `voice`); restock drafts reuse
+`draft_quantity` / `verify` and wait in approvals. `MIMI_CHECKIN` is `0`
+(off, default), `quiet` (store counts, no restock offer) or `1` (on);
+`make checkin-eval` replays the 70 recorded answers in `eval/checkin/`.
+
+### WhatsApp templates for Meta approval (RAI-254)
+
+Interactive buttons and templates for messages outside the 24-hour window
+belong to the WhatsApp adapter (not in this repo). Submit these three with
+the copy below:
+
+| Template | Purpose | Copy |
+|---|---|---|
+| `mimi_weekly_checkin` | the Monday one-tap check-in | Morning Mama Chi. One quick one. Bought anything from anyone else this week? [No] [Yes, send a voice note or receipt] [Skip] |
+| `mimi_low_stock_count` | the low-stock one-tap count | Indomie 70g left? Cartons: 0-2 / 3-5 / 6+. [0-2] [3-5] [6+] |
+| `mimi_checkin_confirm` | the count confirmation and restock offer | Got it: Indomie 70g 0-2. Add 10 cartons to the next van? [Yes] [No] |
+
+Shop names are filled per shop; figures always come from code. No money
+moves, no order is placed, nothing is sent to the van until the distributor
+approves.
+
 ## Limits
 
 * Synthetic history only. The reorder model is our assumption about how
   Ado-Ekiti shops restock; real shops will differ (several suppliers, credit
   pauses, festive spikes).
 * A count is taken as the shelf that morning, before the day's delivery.
-* The weekly "bought anything from anyone else?" check-in (RAI-276) is not
-  built, so stock bought elsewhere stays invisible.
+* The weekly check-in (RAI-276) stores other-supplier lines as Mimi-only
+  stock-in; the estimator reads them once the RAI-294 submit lands.
 * No SAM 3.1 shelf count yet; no learned forecasting (out of scope).
