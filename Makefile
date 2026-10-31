@@ -1,7 +1,7 @@
 PY ?= python
 
 .PHONY: credit-eval credit-eval-live credit-fixtures sim-credit e2e e2e-live e2e-postgres e2e-traced binding-eval binding-eval-live steer-eval steer-eval-live which-eval order-eval order-eval-live photo-route-eval photo-route-eval-live
-.PHONY: loop-safety-eval claims-eval review-pocs install test eval eval-live eval-fake voice-eval voice-eval-live voice-fixtures voice-values-eval voice-values-eval-live voice-values-fixtures proof-eval proof-eval-live proof-fixtures stock-backtest stock-eval stock-eval-live stock-eval-fake sim-stock trace-stock sim sim-live sim-voice sim-voice-v2 sim-screens trace-smoke langfuse-setup langfuse-monitor langfuse-datasets proof-experiment voice-experiment receipts-experiment judge-calibration world-check lint typecheck secrets provenance migrate check harness-eval harness-eval-live trace-harness router-eval router-eval-live context-eval context-eval-live router-train trace-router api api-worker api-seed api-openapi api-openapi-check
+.PHONY: loop-safety-eval claims-eval review-pocs install test eval eval-live eval-fake voice-eval voice-eval-live voice-fixtures voice-values-eval voice-values-eval-live voice-values-fixtures proof-eval proof-eval-live proof-fixtures stock-backtest stock-eval stock-eval-live stock-eval-fake sim-stock trace-stock sim sim-live sim-voice sim-voice-v2 sim-screens trace-smoke langfuse-setup langfuse-monitor langfuse-datasets proof-experiment voice-experiment receipts-experiment judge-calibration world-check lint typecheck secrets provenance migrate check harness-eval harness-eval-live trace-harness router-eval router-eval-live context-eval context-eval-live router-train trace-router api api-worker api-seed api-openapi api-openapi-check connectors-eval connectors-eval-live connectors-fixtures
 
 install:            ## editable install with dev tools
 	$(PY) -m pip install -e '.[dev,otel,langfuse]'
@@ -246,3 +246,15 @@ photo-route-eval:   ## photo routing: 27 fresh list photos and look-alikes, repl
 
 photo-route-eval-live: ## record the photo routing eval's Muse Spark calls (needs META_API_KEY; about N180 from empty)
 	$(PY) -m mimi.api.photo_route_eval --live
+
+# --- Connectors: shop tools with consent (RAI-277) ---
+
+connectors-fixtures: ## recorded Composio replies and 30 messy sheets from the Coral Lane world
+	$(PY) scripts/make_connector_fixtures.py
+	$(PY) scripts/make_connector_sheet_cases.py
+
+connectors-eval:    ## connectors eval, replaying recorded Composio fixtures (CI, no key); pass marks
+	META_API_KEY= SPITCH_API_KEY= $(PY) -m mimi.connectors.eval --no-write
+
+connectors-eval-live: ## live check against a Zoho Books trial org (needs COMPOSIO_API_KEY + auth ids)
+	$(PY) -m mimi.connectors.eval --live
