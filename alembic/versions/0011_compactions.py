@@ -7,8 +7,8 @@ threshold compacts once it is due and no turn is queued.
 
 Matches ``mimi/store/schema.py`` (``tests/test_store.py`` checks the two).
 
-Revision ID: 0010
-Revises: 0009
+Revision ID: 0011
+Revises: 0010
 Create Date: 2026-11-01
 """
 
@@ -18,8 +18,8 @@ import sqlalchemy as sa
 
 from alembic import op
 
-revision = "0010"
-down_revision = "0009"
+revision = "0011"
+down_revision = "0010"
 branch_labels = None
 depends_on = None
 
