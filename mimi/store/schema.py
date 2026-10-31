@@ -243,6 +243,62 @@ proof_asks = sa.Table(
     sa.PrimaryKeyConstraint("tenant_id", "record_type", "record_id"),
 )
 
+# Stock (RAI-294). What shops told Mimi about an item: counts of any kind (a
+# one-tap bucket, a typed or voice number, a book read, POS or a connected
+# tool) and buys from other suppliers. Quantities as given, plus base units.
+stock_reports = sa.Table(
+    "stock_reports", metadata,
+    _tenant(),
+    sa.Column("report_id", sa.String(200), nullable=False),
+    sa.Column("shop_id", sa.String(64), nullable=False),
+    sa.Column("product_id", sa.String(64), nullable=False),
+    # "tap" | "typed" | "voice" | "book" | "pos" | "connected_tool" | "bought_elsewhere"
+    sa.Column("kind", sa.String(32), nullable=False),
+    sa.Column("day", sa.Integer(), nullable=False),
+    sa.Column("at", sa.String(40), nullable=False),  # ISO 8601 with its zone
+    sa.Column("bucket", sa.String(8), nullable=True),
+    sa.Column("quantity", sa.String(32), nullable=True),  # as given ("1/2", "7")
+    sa.Column("unit", sa.String(32), nullable=False, default=""),
+    sa.Column("after_delivery", sa.Boolean(), nullable=False, default=False),
+    sa.PrimaryKeyConstraint("tenant_id", "report_id"),
+    sa.Index("ix_stock_reports_item", "tenant_id", "shop_id", "product_id"),
+)
+
+# The stock estimates (RAI-294), append-only: a recompute with new inputs
+# writes a new row; the same inputs and policy write nothing. Always
+# ``proof_level = estimated`` (RAI-295). Never read by credit.
+stock_estimates = sa.Table(
+    "stock_estimates", metadata,
+    _tenant(),
+    sa.Column("estimate_id", sa.String(64), nullable=False),  # the inputs hash
+    sa.Column("shop_id", sa.String(64), nullable=False),
+    sa.Column("product_id", sa.String(64), nullable=False),
+    sa.Column("unit", sa.String(32), nullable=False),
+    sa.Column("as_of_day", sa.Integer(), nullable=False),
+    sa.Column("status", sa.String(32), nullable=False),
+    sa.Column("anchor_qty", sa.Float(), nullable=True),
+    sa.Column("anchor_range", sa.String(8), nullable=True),
+    sa.Column("anchor_day", sa.Integer(), nullable=True),
+    sa.Column("anchor_source", sa.String(32), nullable=False, default=""),
+    sa.Column("stock_in_since_anchor", sa.Float(), nullable=True),
+    sa.Column("est_out_since_anchor", sa.Float(), nullable=True),
+    sa.Column("est_left", sa.Float(), nullable=True),
+    sa.Column("est_left_raw", sa.Float(), nullable=True),
+    sa.Column("est_daily_rate", sa.Float(), nullable=True),
+    sa.Column("rate_source", sa.String(32), nullable=False, default=""),
+    sa.Column("days_to_run_out", sa.Float(), nullable=True),
+    sa.Column("run_out_date", sa.String(10), nullable=True),
+    sa.Column("confidence", sa.Float(), nullable=False),
+    sa.Column("confidence_word", sa.String(8), nullable=False),
+    sa.Column("money_tied_kobo", sa.BigInteger(), nullable=True),
+    *_proof(),
+    sa.Column("inputs", sa.Text(), nullable=False, default="[]"),  # JSON list of input ids
+    sa.Column("policy_version", sa.String(32), nullable=False),
+    sa.Column("computed_at", sa.String(40), nullable=False),
+    sa.PrimaryKeyConstraint("tenant_id", "estimate_id"),
+    sa.Index("ix_stock_estimates_item", "tenant_id", "shop_id", "product_id", "as_of_day"),
+)
+
 # ------------------------------------------------------------- the agent
 
 threads = sa.Table(
@@ -541,7 +597,8 @@ demo_usage = sa.Table(
 )
 
 BOOK_TABLES = (reps, shops, consent_withheld, skus, deliveries, delivery_lines, receivables,
-               payments, bank_feed, promises, disputes, proof_events, proof_asks)
+               payments, bank_feed, promises, disputes, proof_events, proof_asks,
+               stock_reports, stock_estimates)
 AGENT_TABLES = (threads, inbound_messages, turns, turn_attempts, messages, thread_events,
                 intents, approvals, credit_requests, spend, asked_once, kill_switches, history,
                 prefixes, artifacts)

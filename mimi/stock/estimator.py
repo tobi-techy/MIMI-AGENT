@@ -30,12 +30,21 @@ Quantities are whole units of the SKU's pack; the sell rate is units a day
 
 from __future__ import annotations
 
+import hashlib
+import json
 import math
+import statistics
 from collections.abc import Sequence
 from dataclasses import asdict, dataclass
+from datetime import date, timedelta
+from fractions import Fraction
 from typing import Any, Literal
 
-from mimi.stock.history import ItemHistory, StockCount, StockIn
+from mimi.provenance import POLICY_VERSION as PROOF_POLICY
+from mimi.provenance import stamp as proof_stamp
+from mimi.provenance import witness as proof_witness
+from mimi.stock.history import ItemHistory, StockCount, StockIn, bucket_of
+from mimi.stock.items import pack_size
 
 Confidence = Literal["low", "medium", "high"]
 POLICY_VERSION = "stock-estimator-v0.2"
@@ -259,3 +268,268 @@ def estimate(
         confidence=confidence_for(len({s.day for s in window}), since_count),
         last_count_day=last_count.day if last_count is not None else None,
     )
+
+
+# =====================================================================
+# v0.3 record layer (RAI-294): one ``stock_estimates`` row per shop and item
+# =====================================================================
+#
+# ``estimate_row`` wraps ``estimate`` (the v0.2 numbers the backtest gates)
+# and adds what a stored record needs: base units (RAI-154), confirmed stock
+# in only, "not enough history" under two deliveries, a numeric confidence
+# that decays every day without a new count, the proof level (always
+# ``estimated``, RAI-295), the input ids behind every figure, a run-out date
+# and the money tied up in stock. Still pure: same inputs, same row.
+
+RECORD_POLICY = "stock-estimates-v0.3"
+CountKind = Literal["tap", "typed", "voice", "book", "pos", "connected_tool"]
+EXACT_KINDS: tuple[str, ...] = ("typed", "voice", "book", "pos", "connected_tool")
+BUCKET_RANGE: dict[str, tuple[int, int | None]] = {"0-2": (0, 2), "3-5": (3, 5), "6+": (6, None)}
+# Confidence (proposed in RAI-294, to tune in the backtest).
+CONF_EXACT = 1.0
+CONF_BUCKET = 0.7
+CONF_NO_COUNT = 0.6
+CONF_DECAY_PER_DAY = 0.04
+CONF_UNEVEN_DROP = 0.15
+UNEVEN_GAP_CV = 0.5
+MIN_DELIVERIES = 2
+# The words a person reads; never the number alone.
+ConfidenceWord = Literal["High", "Medium", "Low"]
+# Words a shop or rep may use for the smaller unit inside a pack.
+INNER_UNITS = ("piece", "pieces", "pc", "pcs", "packet", "packets", "sachet", "sachets",
+               "unit", "units")
+
+
+def confidence_word(score: float) -> ConfidenceWord:
+    return "High" if score >= 0.7 else "Medium" if score >= 0.4 else "Low"
+
+
+@dataclass(frozen=True)
+class UnitBook:
+    """How one product converts to its base unit (RAI-154): the SKU's own
+    unit (``ctn``) holds ``pieces`` base units; the inner unit is one each."""
+
+    product_id: str
+    unit: str
+    pieces: int
+
+    @classmethod
+    def for_sku(cls, product_id: str, name: str, unit: str) -> UnitBook:
+        return cls(product_id, unit, pack_size(name) or 1)
+
+    def to_base(self, quantity: Fraction | int | float | str, unit: str) -> int | None:
+        """Base units, or None for a unit we do not know (or a part of a
+        piece): no guess is ever made."""
+        q = Fraction(str(quantity))
+        u = unit.strip().lower()
+        if q < 0:
+            return None
+        if u in (self.unit.lower(), "", f"{self.unit.lower()}s") or _same_unit(u, self.unit):
+            base = q * self.pieces
+        elif self.pieces > 1 and u in INNER_UNITS:
+            base = q
+        else:
+            return None
+        return int(base) if base.denominator == 1 else None
+
+
+_UNIT_ALIASES = {"ctn": ("carton", "cartons", "ctns"), "bag": ("bags",), "pk": ("pack", "packs"),
+                 "btl": ("bottle", "bottles"), "tin": ("tins",), "pc": ("piece", "pieces"),
+                 "tub": ("tubs",), "keg": ("kegs",)}
+
+
+def _same_unit(u: str, unit: str) -> bool:
+    return u in _UNIT_ALIASES.get(unit.lower(), ())
+
+
+@dataclass(frozen=True)
+class DeliveryIn:
+    """Stock in: a delivery line (or an other-supplier buy the shop reported)."""
+
+    input_id: str
+    day: int
+    quantity: Fraction | int | float | str
+    unit: str
+    confirmed: bool = True
+    source: Literal["distributor", "other_supplier"] = "distributor"
+
+
+@dataclass(frozen=True)
+class CountIn:
+    """A count of any kind: a one-tap bucket, a typed or voice number, a book
+    read, POS or a connected tool. A count always overrides the estimate."""
+
+    input_id: str
+    day: int
+    kind: CountKind
+    bucket: str | None = None
+    quantity: Fraction | int | float | str | None = None
+    unit: str = ""
+    after_delivery: bool = False
+
+
+@dataclass(frozen=True)
+class EstimateRow:
+    """One ``stock_estimates`` row. Quantities are in the product's own unit
+    (cartons, packs) as decimals for display ("about 3.5 cartons"); the maths
+    ran in base units."""
+
+    shop_id: str
+    product_id: str
+    unit: str
+    as_of_day: int
+    status: Literal["ok", "not_enough_history", "unknown_unit", "no_stock_in"]
+    anchor_qty: float | None
+    anchor_range: str | None  # the bucket a one-tap count gave ("0-2")
+    anchor_day: int | None
+    anchor_source: str  # count kind, "last_delivery" or ""
+    stock_in_since_anchor: float | None
+    est_out_since_anchor: float | None
+    est_left: float | None
+    est_left_raw: float | None  # before flooring at zero
+    est_daily_rate: float | None
+    rate_source: str
+    days_to_run_out: float | None
+    run_out_date: str | None  # Africa/Lagos calendar date, ISO
+    confidence: float
+    confidence_word: ConfidenceWord
+    money_tied_kobo: int | None  # est_left x cost price, estimated
+    proof_level: str
+    witnesses: str
+    proof_policy_version: str
+    inputs: tuple[str, ...]
+    policy_version: str
+    inputs_hash: str
+
+    def as_dict(self) -> dict[str, Any]:
+        d = asdict(self)
+        d["inputs"] = list(self.inputs)
+        return d
+
+
+def _hash(payload: Any) -> str:
+    raw = json.dumps(payload, sort_keys=True, default=str).encode()
+    return hashlib.sha256(raw).hexdigest()[:32]
+
+
+def estimate_row(
+    shop_id: str,
+    units: UnitBook,
+    deliveries: Sequence[DeliveryIn],
+    counts: Sequence[CountIn],
+    as_of_day: int,
+    *,
+    day0: date,
+    cost_kobo: int = 0,
+    visit_days: int | None = None,
+    name: str = "",
+) -> EstimateRow:
+    """The record for one shop and item on the morning of ``as_of_day``."""
+    used_in = [d for d in deliveries if d.confirmed and d.day < as_of_day]
+    used_counts = [c for c in counts if c.day <= as_of_day]
+    input_ids = tuple(sorted({d.input_id for d in used_in} | {c.input_id for c in used_counts}))
+    inputs_hash = _hash({"shop": shop_id, "product": units.product_id,
+                         "policy": RECORD_POLICY, "estimator": POLICY_VERSION,
+                         "proof": PROOF_POLICY, "as_of_day": as_of_day, "cost": cost_kobo,
+                         "visit": visit_days, "unit": [units.unit, units.pieces],
+                         "in": sorted((d.input_id, d.day, str(d.quantity), d.unit, d.source)
+                                      for d in used_in),
+                         "counts": sorted((c.input_id, c.day, c.kind, c.bucket, str(c.quantity),
+                                           c.unit, c.after_delivery) for c in used_counts)})
+    st = proof_stamp("stock_estimate", [proof_witness("estimator", f"{shop_id}:{units.product_id}"),
+                                        *(proof_witness("shop_count", c.input_id)
+                                          for c in used_counts)])
+
+    def empty(status: str, conf: float = 0.0) -> EstimateRow:
+        return EstimateRow(shop_id, units.product_id, units.unit, as_of_day, status,  # type: ignore[arg-type]
+                           None, None, None, "", None, None, None, None, None, "none", None,
+                           None, round(conf, 2), confidence_word(conf), None, st.proof_level,
+                           st.witnesses_json(), st.proof_policy_version, input_ids,
+                           RECORD_POLICY, inputs_hash)
+
+    stock_in: list[StockIn] = []
+    for d in sorted(used_in, key=lambda d: (d.day, d.input_id)):
+        base = units.to_base(d.quantity, d.unit)
+        if base is None:
+            return empty("unknown_unit")
+        stock_in.append(StockIn(d.day, base, d.input_id))
+    if not stock_in:
+        return empty("no_stock_in")
+    scounts: list[StockCount] = []
+    for c in sorted(used_counts, key=lambda c: (c.day, c.after_delivery, c.input_id)):
+        if c.kind == "tap":
+            if c.bucket not in BUCKET_RANGE:
+                return empty("unknown_unit")
+            # The bucket's middle for the maths (6+ is 6: the estimate
+            # cannot be read before the count is placed); the range is kept.
+            mid = {"0-2": 1, "3-5": 4, "6+": 6}[c.bucket]
+            scounts.append(StockCount(c.day, c.bucket, mid * units.pieces,  # type: ignore[arg-type]
+                                      after_delivery=c.after_delivery, source="tap"))
+        else:
+            base = units.to_base(c.quantity if c.quantity is not None else -1, c.unit)
+            if base is None:
+                return empty("unknown_unit")
+            scounts.append(StockCount(c.day, bucket_of(base // units.pieces), base,
+                                      after_delivery=c.after_delivery, source="typed"))
+    hist = ItemHistory(shop_id, units.product_id, name, units.unit, tuple(stock_in),
+                       visit_days=visit_days)
+    e = estimate(hist, scounts, as_of_day)
+    assert e is not None  # stock_in is not empty
+    per = float(units.pieces)
+    delivery_days = sorted({s.day for s in stock_in})
+    # Confidence: where it starts, then down a step every day since.
+    last_count = next((c for c in reversed(sorted(used_counts, key=lambda c: (
+        c.day, c.after_delivery, c.input_id)))), None)
+    counted = e.anchor == "count" and last_count is not None
+    source: str
+    if counted:
+        assert last_count is not None
+        start = CONF_EXACT if last_count.kind in EXACT_KINDS else CONF_BUCKET
+        source = last_count.kind
+        arange = last_count.bucket if last_count.kind == "tap" else None
+    else:
+        start, source, arange = CONF_NO_COUNT, "last_delivery", None
+    conf = start - CONF_DECAY_PER_DAY * max(0, as_of_day - e.anchor_day)
+    gaps = [b - a for a, b in zip(delivery_days, delivery_days[1:], strict=False)]
+    if len(gaps) >= 2 and statistics.mean(gaps) > 0 and (
+            statistics.pstdev(gaps) / statistics.mean(gaps) > UNEVEN_GAP_CV):
+        conf -= CONF_UNEVEN_DROP
+    conf = max(0.0, min(1.0, conf))
+    if len(delivery_days) < MIN_DELIVERIES:
+        row = empty("not_enough_history", conf)
+        return EstimateRow(**{**asdict(row), "inputs": row.inputs,
+                              "anchor_qty": round(e.assumed_after_anchor / per, 2)
+                              if counted else None,
+                              "anchor_range": arange, "anchor_day": e.anchor_day,
+                              "anchor_source": source})
+    rate = e.sell_rate_per_day
+    out_since = rate * (as_of_day - e.anchor_day)
+    raw_left = e.assumed_after_anchor + e.units_in_since_anchor - out_since
+    left = max(0.0, raw_left)
+    days = e.days_to_run_out
+    run_out = None
+    if e.run_out_day is not None:
+        run_out = (day0 + timedelta(days=e.run_out_day)).isoformat()
+    money = int(math.floor(left * cost_kobo / per)) if cost_kobo else None
+    return EstimateRow(
+        shop_id=shop_id, product_id=units.product_id, unit=units.unit, as_of_day=as_of_day,
+        status="ok", anchor_qty=round(e.assumed_after_anchor / per, 2), anchor_range=arange,
+        anchor_day=e.anchor_day, anchor_source=source,
+        stock_in_since_anchor=round(e.units_in_since_anchor / per, 2),
+        est_out_since_anchor=round(out_since / per, 2), est_left=round(left / per, 2),
+        est_left_raw=round(raw_left / per, 2), est_daily_rate=round(rate / per, 4),
+        rate_source=e.rate_source, days_to_run_out=days, run_out_date=run_out,
+        confidence=round(conf, 2), confidence_word=confidence_word(conf),
+        money_tied_kobo=money, proof_level=st.proof_level, witnesses=st.witnesses_json(),
+        proof_policy_version=st.proof_policy_version, inputs=input_ids,
+        policy_version=RECORD_POLICY, inputs_hash=inputs_hash)
+
+
+def count_wanted(row: EstimateRow, *, lead_time_days: int, top_item: bool) -> bool:
+    """The low-item trigger: ask for a one-tap count when the item may run
+    out within the lead time plus two days, or a top item's confidence is
+    Low. The weekly cap (one ask per shop) is the caller's (``StockBook``)."""
+    if row.status != "ok":
+        return False
+    soon = row.days_to_run_out is not None and row.days_to_run_out <= lead_time_days + 2
+    return soon or (top_item and row.confidence_word == "Low")
