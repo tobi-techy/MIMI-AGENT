@@ -489,7 +489,43 @@ class Agent:
     def run_worker(self, stop: threading.Event, *, idle_s: float = 0.5) -> None:
         while not stop.is_set():
             if self.process() is None:
+                self.compact_due()
                 stop.wait(idle_s)
+
+    def _maybe_schedule_compaction(self, tenant: str, thread: str, d: Any) -> None:
+        """A finished turn over the threshold leaves a compaction timer."""
+        from mimi.api import compaction as cm
+        from mimi.harness.context import est_tokens as _est
+
+        with self.engine.connect() as conn:
+            n = conn.execute(sa.select(sa.func.count()).select_from(s.history).where(
+                s.history.c.tenant_id == tenant, s.history.c.thread_id == thread)
+                ).scalar() or 0
+        if n < 2:
+            return
+        cm.schedule_if_big(self.engine, tenant=tenant, thread=thread,
+                           helper=d.helper, skill=d.skill,
+                           prompt_tokens=_est(self.builder.history.turns(tenant, thread)),
+                           turns=int(n))
+
+    def compact_due(self, *, limit: int = 5) -> list[dict[str, Any]]:
+        """Compact threads whose timer fired. Idle workers call this; tests call it directly."""
+        from mimi.api import compaction as cm
+
+        out = []
+        for timer in cm.due_threads(self.engine, limit=limit):
+            tenant, thread = str(timer["tenant_id"]), str(timer["thread_id"])
+            try:
+                res = cm.compact_thread(
+                    self.engine, tenant=tenant, thread=thread, book=self.go,
+                    model=self.router.model if hasattr(self.router, "model") else None,
+                    shop_id=thread_kind(tenant, thread)[1])
+            except Exception:
+                log.exception("compaction failed for %s", thread)
+                continue
+            res.update(tenant_id=tenant, thread_id=thread)
+            out.append(res)
+        return out
 
     def see_photo(self, inbound: Inbound) -> str:
         """What a shop's camera photo shows, for the router (RAI-304).
@@ -1349,6 +1385,12 @@ class Agent:
             trace_job(d, state.finished if state is not None else None, self.exporter,
                       job_id=turn_id, status=status, job=self._job_story(claim),
                       shop_id=thread_kind(tenant, thread)[1] or "owner")
+        # Thread compaction (RAI-285): a big turn leaves a timer; an idle
+        # worker compacts it. Never raises: the turn is already done.
+        try:
+            self._maybe_schedule_compaction(tenant, thread, d)
+        except Exception:
+            log.exception("compaction schedule failed for %s", thread)
 
     def _voice_choice(self, holder: list[Claim], lead: Inbound,
                       cmd: tuple[bool, str | None]) -> None:
