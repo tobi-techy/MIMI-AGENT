@@ -224,7 +224,7 @@ Do not show a soak figure until the RAI-273 soak report exists.
 ### Scene 6: end card (2:35 to 2:45, 10 s)
 
 On screen: `github.com/tobi-techy/MIMI-AGENT`, the hosted demo link
-(placeholder until deployed: see `docs/DEPLOY-DEMO.md`), "Data is
+(`https://demo.userail.money`), "Data is
 synthetic. Model calls are real." and "Built on Muse Spark 1.3 and SAM 3.1".
 
 **Voiceover:**

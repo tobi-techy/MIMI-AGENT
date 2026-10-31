@@ -189,4 +189,6 @@ curl -s -o /dev/null -w '%{http_code}\n' -X OPTIONS $API/v1/me \
    session, ask "Who owes me the most?", approve or decline a card, play a
    voice note, Reset demo.
 
-Then replace the placeholder in `JUDGES.md` section 1 with the two links.
+`JUDGES.md` section 1 already carries the live links (API on Atlasflow at
+`https://mimi-agent-tobi-omotade-2cd167ac.atlasflow.dev`, console at
+`https://demo.userail.money`); update it if either host changes.
