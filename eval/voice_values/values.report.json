@@ -30,7 +30,7 @@
  "voice_replies_heard_back": {
   "replies": [
    {
-    "clip": "vv-04",
+    "clip": "vv-01",
     "voice": "english",
     "heard": "",
     "right": null
@@ -69,27 +69,27 @@
   "router": {
    "summary": {
     "all": {
-     "right": 42,
+     "right": 44,
      "n": 50,
-     "accuracy": 0.84
+     "accuracy": 0.88
     },
     "by_split": {
      "dev": {
-      "right": 18,
+      "right": 19,
       "n": 20,
-      "accuracy": 0.9
+      "accuracy": 0.95
      },
      "heldout": {
-      "right": 24,
+      "right": 25,
       "n": 30,
-      "accuracy": 0.8
+      "accuracy": 0.8333
      }
     },
     "by_language": {
      "english": {
-      "right": 10,
+      "right": 11,
       "n": 11,
-      "accuracy": 0.9091
+      "accuracy": 1.0
      },
      "hausa": {
       "right": 6,
@@ -112,22 +112,22 @@
       "accuracy": 0.5714
      },
      "yoruba_english": {
-      "right": 5,
+      "right": 6,
       "n": 8,
-      "accuracy": 0.625
+      "accuracy": 0.75
      }
     },
     "read_back_wrong": 0,
     "recorded_without_yes": 0,
     "recorded_wrong": 0,
-    "recorded_after_yes": 23,
+    "recorded_after_yes": 25,
     "low_or_failed_transcripts": 0,
     "voice_replies": 42,
     "voice_replies_text_only": 0,
     "voice_figures_not_in_text": 0,
     "statuses": {
-     "unclear": 19,
-     "promise": 23,
+     "promise": 25,
+     "unclear": 17,
      "paid_claim": 6,
      "none": 2
     }
@@ -142,21 +142,21 @@
      "status": "ok",
      "provider": "muse",
      "reading": {
-      "status": "unclear",
-      "issue": "several_amounts",
-      "amount_kobo": null,
+      "status": "promise",
+      "issue": "",
+      "amount_kobo": 2500000,
       "due_on": "2026-10-29",
       "amount_options": [],
       "date_options": []
      },
-     "right": false,
-     "why": "unclear:several_amounts",
-     "message_purpose": "promise_clarify",
-     "message": "I heard more than one amount for delivery dlv-eval-01. How much will you pay, and on what day?",
+     "right": true,
+     "why": "",
+     "message_purpose": "promise_readback",
+     "message": "You said you will pay N25,000 on Thursday 29 October 2026 for delivery dlv-eval-01. Reply YES if that is right, or tell me the right amount and day. I only note your promise; I do not take or move money.",
      "recorded_without_yes": false,
      "recorded_wrong": false,
-     "recorded_after_yes": false,
-     "voice_script": "I heard more than one amount for this delivery. How much will you pay, and on what day?",
+     "recorded_after_yes": true,
+     "voice_script": "You said you will pay twenty-five thousand naira on Thursday, the twenty-ninth of October, for this delivery. Reply YES if that is right, or tell me the right amount and day. I only note your promise. I do not take or move money.",
      "voice_language": "english",
      "voice_why_not": "",
      "voice_figures_ok": true
@@ -775,25 +775,25 @@
      "split": "heldout",
      "lang": "yoruba_english",
      "phenomenon": "Yoruba weekday",
-     "transcript": "eji, ago pay fifteen thousand ọjo yesterday.",
+     "transcript": "eji agope fifteen thousand ojo eti",
      "status": "ok",
-     "provider": "muse",
+     "provider": "spitch",
      "reading": {
-      "status": "unclear",
-      "issue": "past_date",
+      "status": "promise",
+      "issue": "",
       "amount_kobo": 1500000,
-      "due_on": null,
+      "due_on": "2026-10-30",
       "amount_options": [],
       "date_options": []
      },
-     "right": false,
-     "why": "unclear:past_date",
-     "message_purpose": "promise_clarify",
-     "message": "That day has passed. On what day will you pay N15,000 for delivery dlv-eval-01?",
+     "right": true,
+     "why": "",
+     "message_purpose": "promise_readback",
+     "message": "You said you will pay N15,000 on Friday 30 October 2026 for delivery dlv-eval-01. Reply YES if that is right, or tell me the right amount and day. I only note your promise; I do not take or move money.",
      "recorded_without_yes": false,
      "recorded_wrong": false,
-     "recorded_after_yes": false,
-     "voice_script": "That day has passed. On what day will you pay fifteen thousand naira for this delivery?",
+     "recorded_after_yes": true,
+     "voice_script": "You said you will pay fifteen thousand naira on Friday, the thirtieth of October, for this delivery. Reply YES if that is right, or tell me the right amount and day. I only note your promise. I do not take or move money.",
      "voice_language": "yoruba:en",
      "voice_why_not": "",
      "voice_figures_ok": true
@@ -1565,20 +1565,20 @@
   "router_no_hint": {
    "summary": {
     "all": {
-     "right": 35,
+     "right": 37,
      "n": 50,
-     "accuracy": 0.7
+     "accuracy": 0.74
     },
     "by_split": {
      "dev": {
-      "right": 15,
+      "right": 16,
       "n": 20,
-      "accuracy": 0.75
+      "accuracy": 0.8
      },
      "heldout": {
-      "right": 20,
+      "right": 21,
       "n": 30,
-      "accuracy": 0.6667
+      "accuracy": 0.7
      }
     },
     "by_language": {
@@ -1598,9 +1598,9 @@
       "accuracy": 1.0
      },
      "pidgin": {
-      "right": 9,
+      "right": 10,
       "n": 12,
-      "accuracy": 0.75
+      "accuracy": 0.8333
      },
      "yoruba": {
       "right": 5,
@@ -1608,22 +1608,22 @@
       "accuracy": 0.7143
      },
      "yoruba_english": {
-      "right": 3,
+      "right": 4,
       "n": 8,
-      "accuracy": 0.375
+      "accuracy": 0.5
      }
     },
     "read_back_wrong": 0,
     "recorded_without_yes": 0,
     "recorded_wrong": 0,
-    "recorded_after_yes": 21,
+    "recorded_after_yes": 23,
     "low_or_failed_transcripts": 0,
-    "voice_replies": 34,
+    "voice_replies": 36,
     "voice_replies_text_only": 0,
     "voice_figures_not_in_text": 0,
     "statuses": {
-     "promise": 21,
-     "none": 11,
+     "promise": 23,
+     "none": 9,
      "unclear": 13,
      "paid_claim": 5
     }
@@ -2185,22 +2185,22 @@
      "status": "ok",
      "provider": "spitch",
      "reading": {
-      "status": "none",
+      "status": "promise",
       "issue": "",
-      "amount_kobo": null,
-      "due_on": null,
+      "amount_kobo": 1200000,
+      "due_on": "2026-10-31",
       "amount_options": [],
       "date_options": []
      },
-     "right": false,
-     "why": "none:",
-     "message_purpose": "",
-     "message": "",
+     "right": true,
+     "why": "",
+     "message_purpose": "promise_readback",
+     "message": "You said you will pay N12,000 on Saturday 31 October 2026 for delivery dlv-eval-01. Reply YES if that is right, or tell me the right amount and day. I only note your promise; I do not take or move money.",
      "recorded_without_yes": false,
      "recorded_wrong": false,
-     "recorded_after_yes": false,
-     "voice_script": "",
-     "voice_language": "",
+     "recorded_after_yes": true,
+     "voice_script": "You said you will pay twelve thousand naira on Saturday, the thirty-first of October, for this delivery. Reply YES if that is right, or tell me the right amount and day. I only note your promise. I do not take or move money.",
+     "voice_language": "pidgin",
      "voice_why_not": "",
      "voice_figures_ok": true
     },
@@ -2269,22 +2269,22 @@
      "status": "ok",
      "provider": "spitch",
      "reading": {
-      "status": "none",
+      "status": "promise",
       "issue": "",
-      "amount_kobo": null,
-      "due_on": null,
+      "amount_kobo": 1500000,
+      "due_on": "2026-10-30",
       "amount_options": [],
       "date_options": []
      },
-     "right": false,
-     "why": "none:",
-     "message_purpose": "",
-     "message": "",
+     "right": true,
+     "why": "",
+     "message_purpose": "promise_readback",
+     "message": "You said you will pay N15,000 on Friday 30 October 2026 for delivery dlv-eval-01. Reply YES if that is right, or tell me the right amount and day. I only note your promise; I do not take or move money.",
      "recorded_without_yes": false,
      "recorded_wrong": false,
-     "recorded_after_yes": false,
-     "voice_script": "",
-     "voice_language": "",
+     "recorded_after_yes": true,
+     "voice_script": "You said you will pay fifteen thousand naira on Friday, the thirtieth of October, for this delivery. Reply YES if that is right, or tell me the right amount and day. I only note your promise. I do not take or move money.",
+     "voice_language": "yoruba:en",
      "voice_why_not": "",
      "voice_figures_ok": true
     },
