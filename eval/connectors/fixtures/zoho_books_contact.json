@@ -1,0 +1,32 @@
+[
+ {
+  "match": {
+   "contact_id": "zoho-shop-001"
+  },
+  "reply": {
+   "contact": {
+    "contact_id": "zoho-shop-001",
+    "contact_name": "Mama Sola Provisions",
+    "phone": "+2340000000100",
+    "city": "Oja Oba",
+    "street": "5 Oja Oba Market Road",
+    "outstanding_receivable_amount": 0.0,
+    "credit_limit": 1700000.0
+   }
+  }
+ },
+ {
+  "match": {},
+  "reply": {
+   "contact": {
+    "contact_id": "zoho-shop-001",
+    "contact_name": "Mama Sola Provisions",
+    "phone": "+2340000000100",
+    "city": "Oja Oba",
+    "street": "5 Oja Oba Market Road",
+    "outstanding_receivable_amount": 0.0,
+    "credit_limit": 1700000.0
+   }
+  }
+ }
+]

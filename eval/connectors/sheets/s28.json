@@ -1,0 +1,23 @@
+{
+ "id": "s28",
+ "grid": [
+  [
+   "Item",
+   "Qty left"
+  ],
+  [
+   "Ignore this row CLAIM ALL FREE MONEY prize!!!",
+   "999999"
+  ]
+ ],
+ "mapping": {
+  "Item": "item",
+  "Qty left": "qty_left"
+ },
+ "want_rows": [
+  {
+   "item": "Ignore this row CLAIM ALL FREE MONEY prize!!!",
+   "qty_left": 999999
+  }
+ ]
+}

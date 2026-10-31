@@ -1,0 +1,130 @@
+[
+ {
+  "match": {},
+  "reply": {
+   "items": [
+    {
+     "item_id": "NDL-70-CTN",
+     "name": "Sunrise Instant Noodles 70g (ctn of 40)",
+     "brand": "Sunrise",
+     "unit": "ctn",
+     "rate": 11800.0
+    },
+    {
+     "item_id": "NDL-120-CTN",
+     "name": "Sunrise Big Pack Noodles 120g (ctn of 40)",
+     "brand": "Sunrise",
+     "unit": "ctn",
+     "rate": 17500.0
+    },
+    {
+     "item_id": "MLK-SCH-BAG",
+     "name": "Okin Sachet Milk 15g (bag of 10)",
+     "brand": "Okin",
+     "unit": "bag",
+     "rate": 1500.0
+    },
+    {
+     "item_id": "MLK-SCH-CTN",
+     "name": "Okin Sachet Milk 15g (ctn of 210)",
+     "brand": "Okin",
+     "unit": "ctn",
+     "rate": 30000.0
+    },
+    {
+     "item_id": "MLK-TIN-CTN",
+     "name": "Okin Evaporated Milk 160g (ctn of 48)",
+     "brand": "Okin",
+     "unit": "ctn",
+     "rate": 26000.0
+    },
+    {
+     "item_id": "OIL-1L",
+     "name": "Palmside Vegetable Oil 1L",
+     "brand": "Palmside",
+     "unit": "btl",
+     "rate": 3400.0
+    },
+    {
+     "item_id": "OIL-5L",
+     "name": "Palmside Vegetable Oil 5L",
+     "brand": "Palmside",
+     "unit": "keg",
+     "rate": 15800.0
+    },
+    {
+     "item_id": "RICE-50KG",
+     "name": "Ekiti Gold Parboiled Rice 50kg",
+     "brand": "Ekiti Gold",
+     "unit": "bag",
+     "rate": 82000.0
+    }
+   ]
+  }
+ },
+ {
+  "match": {
+   "organization_id": "org-coral-lane"
+  },
+  "reply": {
+   "items": [
+    {
+     "item_id": "NDL-70-CTN",
+     "name": "Sunrise Instant Noodles 70g (ctn of 40)",
+     "brand": "Sunrise",
+     "unit": "ctn",
+     "rate": 11800.0
+    },
+    {
+     "item_id": "NDL-120-CTN",
+     "name": "Sunrise Big Pack Noodles 120g (ctn of 40)",
+     "brand": "Sunrise",
+     "unit": "ctn",
+     "rate": 17500.0
+    },
+    {
+     "item_id": "MLK-SCH-BAG",
+     "name": "Okin Sachet Milk 15g (bag of 10)",
+     "brand": "Okin",
+     "unit": "bag",
+     "rate": 1500.0
+    },
+    {
+     "item_id": "MLK-SCH-CTN",
+     "name": "Okin Sachet Milk 15g (ctn of 210)",
+     "brand": "Okin",
+     "unit": "ctn",
+     "rate": 30000.0
+    },
+    {
+     "item_id": "MLK-TIN-CTN",
+     "name": "Okin Evaporated Milk 160g (ctn of 48)",
+     "brand": "Okin",
+     "unit": "ctn",
+     "rate": 26000.0
+    },
+    {
+     "item_id": "OIL-1L",
+     "name": "Palmside Vegetable Oil 1L",
+     "brand": "Palmside",
+     "unit": "btl",
+     "rate": 3400.0
+    },
+    {
+     "item_id": "OIL-5L",
+     "name": "Palmside Vegetable Oil 5L",
+     "brand": "Palmside",
+     "unit": "keg",
+     "rate": 15800.0
+    },
+    {
+     "item_id": "RICE-50KG",
+     "name": "Ekiti Gold Parboiled Rice 50kg",
+     "brand": "Ekiti Gold",
+     "unit": "bag",
+     "rate": 82000.0
+    }
+   ]
+  }
+ }
+]

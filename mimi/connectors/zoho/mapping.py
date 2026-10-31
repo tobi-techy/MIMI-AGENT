@@ -20,6 +20,18 @@ def naira_to_kobo(amount: Any) -> int:
         return 0
 
 
+def map_organization(org: dict[str, Any]) -> dict[str, Any]:
+    """A Zoho Books organization into distributor fields."""
+    o = org or {}
+    return {
+        "shop_id": "",
+        "delivery_id": "",
+        "sku": "",
+        "organization_id": str(o.get("organization_id") or ""),
+        "name": str(o.get("name") or "Distributor"),
+    }
+
+
 def map_contact(contact: dict[str, Any]) -> dict[str, Any]:
     """A Zoho Books contact into shop fields."""
     c = contact or {}

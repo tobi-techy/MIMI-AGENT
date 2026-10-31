@@ -1,0 +1,15 @@
+[
+ {
+  "match": {},
+  "reply": {
+   "data": [
+    {
+     "id": "crm-shop-001",
+     "Account_Name": "Mama Sola Provisions",
+     "Phone": "+2340000000100",
+     "Billing_City": "Oja Oba"
+    }
+   ]
+  }
+ }
+]

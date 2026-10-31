@@ -1,0 +1,32 @@
+[
+ {
+  "match": {
+   "invoice_id": "zoho-dlv-04-0001"
+  },
+  "reply": {
+   "invoice": {
+    "invoice_id": "zoho-dlv-04-0001",
+    "invoice_number": "dlv-04-0001",
+    "customer_id": "zoho-shop-001",
+    "due_date": "2026-09-04",
+    "total": 495600.0,
+    "balance": 0.0,
+    "status": "paid"
+   }
+  }
+ },
+ {
+  "match": {},
+  "reply": {
+   "invoice": {
+    "invoice_id": "zoho-dlv-04-0001",
+    "invoice_number": "dlv-04-0001",
+    "customer_id": "zoho-shop-001",
+    "due_date": "2026-09-04",
+    "total": 495600.0,
+    "balance": 0.0,
+    "status": "paid"
+   }
+  }
+ }
+]

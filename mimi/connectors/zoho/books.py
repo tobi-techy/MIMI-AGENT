@@ -14,6 +14,7 @@ from mimi.connectors.zoho import mapping as m
 from mimi.store.util import now_iso
 
 _MAPPERS = {
+    "zoho_books_organizations": m.map_organization,
     "zoho_books_contacts": m.map_contact,
     "zoho_books_contact": m.map_contact,
     "zoho_books_invoices": m.map_invoice,
@@ -53,7 +54,12 @@ class ZohoBooksConnector(Connector):
                                      arguments=dict(filters or {}))
         items = _items(raw)
         rows = [Row(values=mapper(i), source=resource) for i in items]
-        return ReadResult(rows=rows, rows_read=len(items),
+        if resource == "zoho_books_organizations":
+            orgs = raw.get("organizations")
+            if isinstance(orgs, list):
+                rows = [Row(values=mapper(i), source=resource)
+                        for i in orgs if isinstance(i, dict)]
+        return ReadResult(rows=rows, rows_read=len(rows),
                           rows_mapped=sum(1 for r in rows if r.values.get("shop_id")
                                           or r.values.get("sku")
                                           or r.values.get("delivery_id")),

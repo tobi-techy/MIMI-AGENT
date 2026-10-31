@@ -1,0 +1,72 @@
+[
+ {
+  "match": {},
+  "reply": {
+   "invoices": [
+    {
+     "invoice_id": "zoho-dlv-04-0001",
+     "invoice_number": "dlv-04-0001",
+     "customer_id": "zoho-shop-001",
+     "due_date": "2026-09-04",
+     "total": 495600.0,
+     "balance": 0.0,
+     "status": "paid"
+    },
+    {
+     "invoice_id": "zoho-dlv-07-0002",
+     "invoice_number": "dlv-07-0002",
+     "customer_id": "zoho-shop-001",
+     "due_date": "2026-09-07",
+     "total": 289600.0,
+     "balance": 0.0,
+     "status": "paid"
+    },
+    {
+     "invoice_id": "zoho-dlv-11-0003",
+     "invoice_number": "dlv-11-0003",
+     "customer_id": "zoho-shop-001",
+     "due_date": "2026-09-11",
+     "total": 223800.0,
+     "balance": 0.0,
+     "status": "paid"
+    }
+   ]
+  }
+ },
+ {
+  "match": {
+   "organization_id": "org-coral-lane"
+  },
+  "reply": {
+   "invoices": [
+    {
+     "invoice_id": "zoho-dlv-04-0001",
+     "invoice_number": "dlv-04-0001",
+     "customer_id": "zoho-shop-001",
+     "due_date": "2026-09-04",
+     "total": 495600.0,
+     "balance": 0.0,
+     "status": "paid"
+    },
+    {
+     "invoice_id": "zoho-dlv-07-0002",
+     "invoice_number": "dlv-07-0002",
+     "customer_id": "zoho-shop-001",
+     "due_date": "2026-09-07",
+     "total": 289600.0,
+     "balance": 0.0,
+     "status": "paid"
+    },
+    {
+     "invoice_id": "zoho-dlv-11-0003",
+     "invoice_number": "dlv-11-0003",
+     "customer_id": "zoho-shop-001",
+     "due_date": "2026-09-11",
+     "total": 223800.0,
+     "balance": 0.0,
+     "status": "paid"
+    }
+   ]
+  }
+ }
+]

@@ -1,0 +1,27 @@
+{
+ "id": "s02",
+ "grid": [
+  [
+   "Product",
+   "Quantity",
+   "Day"
+  ],
+  [
+   "Peak Milk Sachet",
+   "12",
+   "2026-10-28"
+  ]
+ ],
+ "mapping": {
+  "Product": "item",
+  "Quantity": "qty_left",
+  "Day": "date"
+ },
+ "want_rows": [
+  {
+   "item": "Peak Milk Sachet",
+   "qty_left": 12,
+   "date": "2026-10-28"
+  }
+ ]
+}

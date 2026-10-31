@@ -23,6 +23,22 @@ HEADER_SYNONYMS: dict[str, str] = {
     "date": "date", "day": "date", "as of": "date", "as_of": "date",
     "price": "skip", "amount": "skip", "total": "skip", "note": "skip",
     "remark": "skip", "supplier": "skip", "brand": "skip",
+    # Yoruba (ASCII renderings shops type): oja (goods), elo ku (how many
+    # remain), ojo (day).
+    "oja": "item", "elo ku": "qty_left", "ojo": "date",
+    # Hausa: kaya (goods), adadi (number), rana (day).
+    "kaya": "item", "adadi": "qty_left", "rana": "date",
+    # Igbo (ASCII renderings): ngwa ahia (goods), ihe foduru (what remains),
+    # ubochi (day).
+    "ngwa ahia": "item", "ihe foduru": "qty_left", "ubochi": "date",
+}
+
+# Canonical words for the typo fallback: a header close to one of these
+# (typos like "Itme") maps the same way. Checked only when no rule hits.
+_FUZZY_CANONICAL: dict[str, str] = {
+    "item": "item", "product": "item", "goods": "item", "quantity": "qty_left",
+    "qty": "qty_left", "stock": "qty_left", "balance": "qty_left",
+    "remaining": "qty_left", "date": "date", "day": "date",
 }
 
 MAX_ROWS = 10_000
@@ -43,14 +59,34 @@ def suggest_mapping(header: list[str]) -> dict[str, str]:
             continue
         if any(k in key for k in ("item", "product", "goods", "name", "sku")):
             out[str(col)] = "item"
-        elif any(k in key for k in ("qty", "quant", "stock", "balance", "remain",
-                                    "left", "count", "pcs", "ctn", "carton")):
-            out[str(col)] = "qty_left"
         elif any(k in key for k in ("date", "day", "as of", "when")):
             out[str(col)] = "date"
+        elif any(k in key for k in ("qty", "quant", "stock", "balance", "remain",
+                                    "count", "pcs", "ctn", "carton")):
+            # "remain" alone (a prose note like "wetin remain note") is not a
+            # quantity column: it needs "qty", "left", "stock" or a unit word
+            # beside it before it counts.
+            if "remain" in key and not any(
+                    w in key for w in ("qty", "quant", "stock", "balance",
+                                       "left", "count", "pcs", "ctn", "carton")):
+                out[str(col)] = _fuzzy(key)
+            else:
+                out[str(col)] = "qty_left"
+        elif "left" in key and not any(
+                w in key for w in ("qty", "quant", "stock", "balance", "remain",
+                                   "count", "pcs", "ctn", "carton")):
+            out[str(col)] = _fuzzy(key)
         else:
-            out[str(col)] = "skip"
+            out[str(col)] = _fuzzy(key)
     return out
+
+
+def _fuzzy(key: str) -> str:
+    """A typo'd header ("Itme") maps like its canonical word; else Skip."""
+    hit = difflib.get_close_matches(key, list(_FUZZY_CANONICAL), n=1, cutoff=0.7)
+    if hit:
+        return _FUZZY_CANONICAL[hit[0]]
+    return "skip"
 
 
 def map_rows(grid: list[list[Any]], mapping: dict[str, str]) -> list[dict[str, Any]]:
@@ -64,7 +100,9 @@ def map_rows(grid: list[list[Any]], mapping: dict[str, str]) -> list[dict[str, A
         raise ValueError("That file is too big (over 10,000 rows). Send a smaller one.")
     if not mapping:
         mapping = suggest_mapping(header)
-    item_col = next((i for i, c in enumerate(header) if mapping.get(c) == "item"), None)
+    # A SKU column is the item identifier: it counts as the item column.
+    item_col = next((i for i, c in enumerate(header)
+                     if mapping.get(c) in ("item", "sku")), None)
     if item_col is None:
         raise ValueError("I cannot see an item column. Fix the mapping and confirm.")
     qty_col = next((i for i, c in enumerate(header) if mapping.get(c) == "qty_left"), None)

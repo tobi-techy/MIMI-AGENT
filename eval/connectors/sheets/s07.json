@@ -1,0 +1,27 @@
+{
+ "id": "s07",
+ "grid": [
+  [
+   "oja",
+   "elo ku",
+   "ojo"
+  ],
+  [
+   "Peak Milk Sachet",
+   "7",
+   "2026-10-28"
+  ]
+ ],
+ "mapping": {
+  "oja": "item",
+  "elo ku": "qty_left",
+  "ojo": "date"
+ },
+ "want_rows": [
+  {
+   "item": "Peak Milk Sachet",
+   "qty_left": 7,
+   "date": "2026-10-28"
+  }
+ ]
+}

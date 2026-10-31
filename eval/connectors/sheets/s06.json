@@ -1,0 +1,25 @@
+{
+ "id": "s06",
+ "grid": [
+  [
+   "market goods",
+   " wetin remain note ",
+   "  date "
+  ],
+  [
+   "Sunrise Noodles 70g",
+   "3",
+   "2026-10-28"
+  ]
+ ],
+ "mapping": {
+  "market goods": "item",
+  " wetin remain note ": "skip",
+  "  date ": "date"
+ },
+ "want_rows": [
+  {
+   "item": "Sunrise Noodles 70g"
+  }
+ ]
+}
