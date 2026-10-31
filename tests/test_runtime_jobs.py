@@ -34,6 +34,8 @@ from mimi.runtime.states import check_transition
 from mimi.runtime.tracing import RecordingStepTracer
 from mimi.types import ShopScope
 
+PLAIN_PAUSE = "This one's taking more work than usual. Nothing was lost. Keep going?"
+
 T0 = datetime(2026, 10, 26, 16, 0, tzinfo=UTC)
 SCOPE = ShopScope(tenant_id="coral-lane", shop_id="shop-chuks")
 
@@ -382,7 +384,7 @@ def test_step_budget_parks_and_asks_then_owner_yes_resumes(store: Any) -> None:
     assert report is not None and report.state is JobState.WAITING_ON_OWNER
     parked = store.get("job-1")
     assert (
-        parked.waiting_reason == "budget: This job has taken 2 of 2 steps. Keep going?"
+        parked.waiting_reason == "budget: " + PLAIN_PAUSE
     )
     assert r.run_once() is None  # nothing runs while it waits
 
@@ -399,7 +401,7 @@ def test_naira_budget_question_uses_code_figures(store: Any) -> None:
     report = runner(store, script, clock=clock).run_once()
     assert report is not None and report.state is JobState.WAITING_ON_OWNER
     assert store.get("job-1").waiting_reason == (
-        "budget: I have used N55.00 of the N50.00 allowed for this job. Keep going?"
+        "budget: " + PLAIN_PAUSE
     )
 
 

@@ -143,6 +143,27 @@
    "sha256": "d46240e98e60d41701feb6d60ae4212310d392d491d8a852bee3395af9ae1e6a",
    "version": "1.1.0"
   },
+  "proofs-today": {
+   "history": {
+    "1.0.0": "806b863bc86ed6c79641826ce64bd08cfbb76d04cc4cdf4a3029de00bd7d62c9"
+   },
+   "sha256": "806b863bc86ed6c79641826ce64bd08cfbb76d04cc4cdf4a3029de00bd7d62c9",
+   "version": "1.0.0"
+  },
+  "reorder": {
+   "history": {
+    "1.0.0": "f5ade14227b7f7bb2d5d8620a6b7ec99d219076f43b6d2a314e13dfcdb404b5f"
+   },
+   "sha256": "f5ade14227b7f7bb2d5d8620a6b7ec99d219076f43b6d2a314e13dfcdb404b5f",
+   "version": "1.0.0"
+  },
+  "rep-visit": {
+   "history": {
+    "1.0.0": "e137dff6154548137e5bb8ab00ab6826c4871a76a803880fbb843a7745ac8351"
+   },
+   "sha256": "e137dff6154548137e5bb8ab00ab6826c4871a76a803880fbb843a7745ac8351",
+   "version": "1.0.0"
+  },
   "route-load-out": {
    "history": {
     "1.0.0": "d35d3b4cd3489f6fca74f07fd573d1fb261ca98fe54bc3c041bb4bd5fff8ab01"

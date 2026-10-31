@@ -68,6 +68,7 @@ from mimi.api.schemas import (
     Health,
     Liveness,
     MediaOut,
+    MentionList,
     MeOut,
     ShopDetail,
     ShopList,
@@ -418,6 +419,17 @@ def create_app(settings: Settings | None = None, agent: Agent | None = None, *,
              summary="Credit limits per shop and credit requests")
     def get_credit(key: Owner) -> dict[str, Any]:
         return reads.credit(engine, key.tenant_id)
+
+    @app.get("/v1/mentions", response_model=MentionList, responses=_ERRORS,
+             summary="The owner's @ picker: helpers, shops and reps")
+    def get_mentions(key: Owner, q: Annotated[str, Query(max_length=80)] = "",
+                     kinds: Annotated[str, Query(
+                         pattern=r"^$|^(?:helper|shop|rep)(?:,(?:helper|shop|rep))*$")] = "",
+                     limit: Annotated[int, Query(ge=1, le=200)] = 50) -> dict[str, Any]:
+        """``q`` matches the start of a name or of any word in it (a leading
+        ``@`` is ignored); ``kinds`` is a comma list, empty for all three.
+        Helper rows carry ``assign_to`` for ``POST /v1/turns``."""
+        return reads.mentions(engine, key.tenant_id, q=q, kinds=kinds, limit=limit)
 
     @app.get("/v1/health", response_model=Health)
     def health(response: Response) -> dict[str, Any]:

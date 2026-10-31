@@ -12,7 +12,7 @@ import sqlalchemy as sa
 from sqlalchemy.engine import Engine
 
 from mimi import owed
-from mimi.api import threadmeta
+from mimi.api import display, threadmeta
 from mimi.api import voice as vx
 from mimi.api.agent import NotFound, approval_dict, turn_handoff
 from mimi.api.uploads import PREFIX as UPLOAD_PREFIX
@@ -152,7 +152,8 @@ def _thread_summary(conn: sa.Connection, tenant: str, t: Any) -> dict[str, Any]:
                              rep_name=rep_name)
     return {"thread_id": t.thread_id, "kind": t.kind, "shop_id": t.shop_id,
             "shop_name": shop_name, "last_at": t.last_at,
-            "last_text": (last.text[:200] if last else ""),
+            "last_text": (display.humanize(last.text, display.names_for(conn, tenant))[:200]
+                          if last else ""),
             "last_sender": (last.sender if last else ""), "messages": int(n or 0),
             "pending_approvals": int(pending or 0), **meta}
 
@@ -194,9 +195,14 @@ def get_thread(engine: Engine, tenant: str, thread_id: str, *,
                     s.inbound_messages.c.tenant_id == tenant,
                     s.inbound_messages.c.thread_id == thread_id,
                     s.inbound_messages.c.media_ref.startswith(own, autoescape=True)))}
+        names = display.names_for(conn, tenant)
         msgs = [{
             "message_id": m.message_id, "direction": m.direction, "sender": m.sender,
-            "channel": m.channel, "shop_id": m.shop_id, "text": m.text, "kind": m.kind,
+            "channel": m.channel, "shop_id": m.shop_id,
+            # Names for ids and ₦ money (``mimi.api.display``); the record keeps
+            # what was written.
+            "text": (display.decided_line(m.text, names) if m.sender == "system"
+                     else display.humanize(m.text, names)), "kind": m.kind,
             "status": m.status, "turn_id": m.turn_id, "simulated": bool(m.simulated),
             "at": m.at,
             # only a ready shop reply can have a voice note; skip the check for the rest
@@ -205,7 +211,8 @@ def get_thread(engine: Engine, tenant: str, thread_id: str, *,
             "media": m.message_id in uploaded} for m in rows]
         steps = [{
             "event_id": e.event_id, "turn_id": e.turn_id, "run_id": e.run_id, "type": e.type,
-            "step": e.step, "tool": e.tool, "tier": e.tier, "short": e.short,
+            "step": e.step, "tool": e.tool, "tier": e.tier,
+            "short": display.humanize(e.short, names),
             "model": e.model, "cost_kobo": int(e.cost_kobo),
             "duration_ms": round(float(e.duration_ms), 3), "at": e.at}
             for e in conn.execute(sa.select(s.thread_events).where(
@@ -286,12 +293,13 @@ def list_approvals(engine: Engine, tenant: str, *, status: str) -> dict[str, Any
         rows = conn.execute(q.order_by(s.approvals.c.created_ts.desc(),
                                        s.approvals.c.approval_id)).all()
         out = []
+        names = display.names_for(conn, tenant)
         for a in rows:
             draft = conn.execute(sa.select(s.messages.c.text, s.messages.c.channel,
                                            s.messages.c.status).where(
                 s.messages.c.tenant_id == tenant,
                 s.messages.c.idempotency_key == a.idempotency_key)).first()
-            out.append(approval_dict(a, draft))
+            out.append(approval_dict(a, draft, names))
     return {"approvals": out, "total": len(out)}
 
 
@@ -308,14 +316,94 @@ def credit(engine: Engine, tenant: str) -> dict[str, Any]:
     for r in rows:
         lim, out = int(r.credit_limit_kobo), int(r.outstanding or 0)
         avail = max(0, lim - out)
+        over = max(0, out - lim) if lim > 0 else 0
         limits.append({
             "shop_id": r.shop_id, "name": r.name, "credit_limit_kobo": lim,
             "credit_limit_naira": naira(lim), "outstanding_kobo": out,
             "outstanding_naira": naira(out), "available_kobo": avail,
             "available_naira": naira(avail),
-            "used_pct": (out * 100 // lim) if lim > 0 else 0})
+            "used_pct": (out * 100 // lim) if lim > 0 else 0,
+            # Owes more than its limit (30 Oct 2026 run 2: Mama Sola owed
+            # ₦3,497,300 on a ₦1,700,000 limit and nothing said so).
+            "over_limit": over > 0, "over_limit_by_kobo": over,
+            "over_limit_by_naira": naira(over) if over else ""})
     return {"limits": limits, "requests": [{
         "request_id": q.request_id, "shop_id": q.shop_id, "amount_kobo": int(q.amount_kobo),
         "amount_naira": naira(int(q.amount_kobo)), "reason": q.reason, "status": q.status,
         "approval_id": q.approval_id, "created_at": q.created_at} for q in reqs]}
 
+
+
+# ------------------------------------------------------------------ mentions
+
+# The owner's @ picker. Helpers the owner can assign work to, then shops and
+# reps from the book. Mimi is not a row: she is the thread itself.
+HELPER_SUBTITLE: dict[str, str] = {
+    "collector": "who owes and reminders",
+    "credit": "credit limits and requests",
+    "order": "shop orders and deliveries",
+    "stock": "stock levels and low stock",
+    "proof": "payment proofs",
+    "brand": "promos and brand news",
+}
+MENTION_KINDS = ("helper", "shop", "rep")
+
+
+def _matches(q: str, *names: str) -> int:
+    """0 no match, 2 the name starts with q, 1 a later word starts with q."""
+    if not q:
+        return 2
+    best = 0
+    for n in names:
+        low = n.lower()
+        if low.startswith(q):
+            return 2
+        if any(w.startswith(q) for w in low.replace("&", " ").split()):
+            best = 1
+    return best
+
+
+def mentions(engine: Engine, tenant: str, *, q: str = "", kinds: str = "",
+             limit: int = 50) -> dict[str, Any]:
+    from mimi.harness.skills import HELPER_TITLE
+
+    want = {k.strip() for k in kinds.split(",") if k.strip()} or set(MENTION_KINDS)
+    query = q.strip().lstrip("@").strip().lower()
+    rows: list[tuple[int, int, dict[str, Any]]] = []
+    if "helper" in want:
+        for i, (h, sub) in enumerate(HELPER_SUBTITLE.items()):
+            title = HELPER_TITLE.get(h, h.title())
+            score = _matches(query, title, h)
+            if score:
+                rows.append((score, i, {"kind": "helper", "id": h, "name": title,
+                                        "subtitle": sub, "mention": f"@{title}",
+                                        "assign_to": h}))
+    with engine.connect() as conn:
+        reps = conn.execute(sa.select(s.reps.c.rep_id, s.reps.c.name, s.reps.c.areas)
+                            .where(s.reps.c.tenant_id == tenant)
+                            .order_by(s.reps.c.name)).all()
+        rep_name = {r.rep_id: r.name for r in reps}
+        if "shop" in want:
+            shops = conn.execute(sa.select(s.shops.c.shop_id, s.shops.c.name, s.shops.c.area,
+                                           s.shops.c.rep_id)
+                                 .where(s.shops.c.tenant_id == tenant)
+                                 .order_by(s.shops.c.name)).all()
+            for i, sh in enumerate(shops):
+                score = _matches(query, sh.name)
+                if score:
+                    sub = ", ".join(x for x in (sh.area, rep_name.get(sh.rep_id, "")) if x)
+                    rows.append((score, 100 + i, {"kind": "shop", "id": sh.shop_id,
+                                                  "name": sh.name, "subtitle": sub,
+                                                  "mention": sh.name, "assign_to": ""}))
+        if "rep" in want:
+            for i, r in enumerate(reps):
+                score = _matches(query, r.name)
+                if score:
+                    areas = loads(r.areas) if r.areas else []
+                    sub = ", ".join(str(a) for a in areas) if isinstance(areas, list) else ""
+                    rows.append((score, 10_000 + i, {"kind": "rep", "id": r.rep_id,
+                                                     "name": r.name, "subtitle": sub,
+                                                     "mention": r.name, "assign_to": ""}))
+    rows.sort(key=lambda x: (-x[0], x[1]))
+    out = [r for _, _, r in rows]
+    return {"mentions": out[:limit], "total": len(out)}

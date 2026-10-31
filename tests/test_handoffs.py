@@ -188,8 +188,11 @@ def test_any_orders_goes_to_order_never_brand_and_answers_from_the_book(
     assert t["helper"] == "order" and t["skill"] == "order/open-orders"
     assert t["route"]["rule"] == "owner_rule:open-orders" and not t["route"]["model_called"]
     assert t["handoff"]["reason"] == "Asking Order"
-    assert t["card"]["kind"] == "list" and t["card"]["title"] == "Open orders"
+    # No order waits in the seeded book: one line and no card (an empty card's
+    # own text repeated the line, 30 Oct 2026 run 2).
+    assert t["card"] is None
     (text,) = owner_replies(t)
+    assert text == "No shop order is waiting for you right now."
     assert not C.deflections(text)
     assert t["route"]["cost_kobo"] == 0
 

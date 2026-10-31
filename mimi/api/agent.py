@@ -45,6 +45,7 @@ import sqlalchemy as sa
 from sqlalchemy.engine import Engine
 
 from mimi.api import cards as cx
+from mimi.api import display
 from mimi.api import steering as sx
 from mimi.api import voice as vx
 from mimi.api.helpers import HelperDeps
@@ -510,12 +511,14 @@ class Agent:
                     s.turns.c.turn_id == t.merged_into,
                     s.turns.c.tenant_id == tenant_id)).first() or t
             replies = []
+            names = display.names_for(conn, tenant_id)
             for m in conn.execute(sa.select(s.messages).where(
                     s.messages.c.tenant_id == tenant_id, s.messages.c.turn_id == lead.turn_id,
                     s.messages.c.direction == "out").order_by(s.messages.c.ts,
                                                               s.messages.c.message_id)):
                 reply = {"message_id": m.message_id, "channel": m.channel,
-                         "shop_id": m.shop_id, "text": m.text, "kind": m.kind,
+                         "shop_id": m.shop_id, "text": display.humanize(m.text, names),
+                         "kind": m.kind,
                          "status": m.status, "at": m.at}
                 voice = vx.reply_voice(conn, tenant_id, m)
                 if voice is not None:
@@ -682,7 +685,8 @@ class Agent:
             self._complete(holder, d, events, prior, status="done_quiet", steer=sv)
             return
         if (lead.source == "owner_message" and d.status == "routed"
-                and d.skill in cx.CODE_LOOKUPS and _code_answers(d)):
+                and ((d.skill in cx.CODE_LOOKUPS and _code_answers(d))
+                     or self._code_read(claim.tenant_id, d, events))):
             # What is open now (orders, low stock): code reads the book and
             # answers with a card; no model, no spend (docs/HANDOFFS.md).
             self._complete(holder, d, events, prior, status="done", steer=sv, lookup=True)
@@ -741,6 +745,19 @@ class Agent:
             return
         self._complete(holder, d, events, prior, status=state.finished.status,
                        state=state, event=event, steer=sv)
+
+    def _code_read(self, tenant: str, d: RouteDecision, events: Sequence[Inbound]) -> bool:
+        """An owner read on Collector or Credit that code answers from the book
+        (``cards.code_read``): no model, well under a second, instead of 3 to 6
+        Muse Spark calls (30 to 60 s on the demo, 30 Oct 2026 run 2). Behind
+        ``MIMI_FIXES_2026_10_30`` (on in every deployed image) so the recorded
+        owner turns replay as recorded until the paid re-record."""
+        if not fixes_2026_10_30() or d.skill not in cx.READ_SKILLS:
+            return False
+        words = "\n".join(e.text for e in events if e.text).strip()
+        if not cx.code_read(self.engine, tenant, d.skill, words):
+            return False
+        return bool(cx.answer_for(self.engine, tenant, d.skill, words).sentence)
 
     # ============================================================ hand-back
 
@@ -1383,7 +1400,12 @@ class Agent:
             ans = cx.answer_for(self.engine, tenant, d.skill, words)
         did_work = fin is not None and any(
             i.tool not in ("send_to_user", "ask_question") for i in fin.intents)
-        override = ans.sentence if (ans.card is not None and not did_work) else ""
+        # A helper that did the judging (Credit's recommendation) keeps its own
+        # first sentence: the code line only restated the card and dropped the
+        # answer (30 Oct 2026 run 2). Pure reads are answered by code anyway.
+        keep_own = fixes_2026_10_30() and d.skill == "credit/credit-review" and fin is not None
+        override = ans.sentence if (ans.card is not None and not did_work
+                                    and not keep_own) else ""
         owner_said = False
         with self.engine.begin() as conn:
             for i, ev in enumerate(d.events):
@@ -1535,7 +1557,7 @@ class Agent:
                 next_state = replace(next_state, pending_skill=prior.pending_skill,
                                      expects=prior.expects, asked_at=prior.asked_at,
                                      ask_ref=prior.ask_ref)
-            if ans.card is not None and not owner_said and ans.sentence:
+            if (ans.card is not None or lookup) and not owner_said and ans.sentence:
                 # A lookup code answers, or a helper that said nothing to the
                 # owner: the card's own sentence, never a dead end.
                 self._out(conn, tenant, thread, turn_id, key=f"card:{turn_id}",
@@ -1998,16 +2020,29 @@ class Agent:
                                            s.messages.c.status).where(
                 s.messages.c.tenant_id == tenant_id,
                 s.messages.c.idempotency_key == a.idempotency_key)).first()
-        return approval_dict(a, draft)
+            names = display.names_for(conn, tenant_id)
+        return approval_dict(a, draft, names)
 
 
-def approval_dict(a: Any, draft: Any | None) -> dict[str, Any]:
+def approval_dict(a: Any, draft: Any | None,
+                  names: display.Names | None = None) -> dict[str, Any]:
+    """``preview`` and the draft text as the owner reads them (names for ids,
+    ``₦`` money); ``preview_raw`` is the record as written."""
+    nm = names or display.Names()
+    payload = loads(a.payload, {})
+    over = bool(payload.get("over_credit"))
     return {
         "approval_id": a.approval_id, "status": a.status, "helper": a.helper,
-        "skill": a.skill, "shop_id": a.shop_id, "thread_id": a.thread_id,
+        "skill": a.skill, "shop_id": a.shop_id,
+        "shop_name": nm.shops.get((a.shop_id or "").lower(), ""), "thread_id": a.thread_id,
         "turn_id": a.turn_id, "tool": a.tool, "intent_kind": a.intent_kind,
-        "preview": a.preview, "payload": loads(a.payload, {}),
-        "draft": ({"text": draft.text, "channel": draft.channel, "status": draft.status}
+        "preview": display.humanize(a.preview, nm), "preview_raw": a.preview,
+        "payload": payload,
+        # An order that would push the shop past its credit limit, flagged by code.
+        "flags": ["over_credit_limit"] if over else [],
+        "over_limit_by_kobo": int(payload.get("over_by_kobo") or 0) if over else 0,
+        "draft": ({"text": display.humanize(draft.text, nm), "channel": draft.channel,
+                   "status": draft.status}
                   if draft is not None else None),
         "created_at": a.created_at, "decided_at": a.decided_at, "decided_by": a.decided_by,
         "note": a.note, "supersedes": getattr(a, "supersedes", None),

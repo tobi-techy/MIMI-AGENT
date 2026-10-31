@@ -382,6 +382,10 @@ SKILL_FOCUS: dict[str, str] = {
                        "propose_reminder_plan; the plan waits for the owner.",
     "proof/fake-alert-check": "Check the claimed payment against the bank feed; a screenshot "
                               "alone is never proof.",
+    "collector/rep-visit": "Read the shop's balance with get_balance, tell the shop's rep with "
+                           "notify_rep what to check on the visit (figures copied from the "
+                           "result), then tell the owner in one sentence which rep was told "
+                           "(send_to_user, owner_console, ends_turn=true).",
 }
 
 ROUTINES_BY_HELPER: dict[str, tuple[str, ...]] = {

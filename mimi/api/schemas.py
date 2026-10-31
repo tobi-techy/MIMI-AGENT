@@ -339,7 +339,14 @@ class ApprovalOut(_Out):
     turn_id: str
     tool: str
     intent_kind: str
-    preview: str
+    preview: str = Field(description="As the owner reads it: shop and rep names for ids, "
+                                     "money as ₦1,234,500 (mimi.api.display)")
+    preview_raw: str = Field("", description="The preview as the helper's dry run wrote it")
+    shop_name: str = ""
+    flags: list[Literal["over_credit_limit"]] = Field(
+        default_factory=list, description="over_credit_limit: approving this order would put "
+                                          "the shop past its credit limit (checked in code)")
+    over_limit_by_kobo: int = 0
     payload: dict[str, Any]
     draft: Draft | None
     created_at: str
@@ -379,6 +386,9 @@ class CreditLimit(_Out):
     available_kobo: int
     available_naira: str
     used_pct: int
+    over_limit: bool = False
+    over_limit_by_kobo: int = 0
+    over_limit_by_naira: str = ""
 
 
 class CreditRequest(_Out):
@@ -459,3 +469,24 @@ class DemoSessionOut(_Out):
     expires_at: str
     ttl_s: float
     caps: DemoCaps
+
+
+# ------------------------------------------------------------------ mentions
+
+
+class Mention(_Out):
+    """One row of the console's @ picker: a helper, a shop or a rep."""
+
+    kind: Literal["helper", "shop", "rep"]
+    id: str = Field(description="helper name, shop_id or rep_id")
+    name: str
+    subtitle: str = Field("", description="shop: area and rep; rep: areas; helper: what it does")
+    mention: str = Field(description="What the console inserts into the message: '@Collector', "
+                                     "or the shop's or rep's name as written in the book")
+    assign_to: str = Field("", description="helper rows only: the value for assign_to on "
+                                           "POST /v1/turns")
+
+
+class MentionList(_Out):
+    mentions: list[Mention]
+    total: int
