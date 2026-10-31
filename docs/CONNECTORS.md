@@ -51,8 +51,8 @@ live grant every read. `sync.py` pulls rows into `stock_counts` with
   `openpyxl`): parsed server side; bad files (empty, wrong format,
   10k+ rows) fail with a plain message.
 * Mono (`mono/`, stub only): same interface and a fake; the direct
-  connector lands later. Moniepoint and OPay stay on forwarded alerts
-  and exported reports.
+  connector lands later. Terminal and wallet providers stay on forwarded
+  alerts and exported reports.
 
 ## Consent
 

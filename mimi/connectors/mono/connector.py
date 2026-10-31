@@ -2,8 +2,8 @@
 
 Mono (Nigerian open banking) is not on Composio, so the direct connector
 lands later. This stub holds the interface shape and a fake transport so
-callers can be written and tested now. Moniepoint and OPay are not on
-Composio either; they stay on forwarded alerts and exported reports.
+callers can be written and tested now. Terminal and wallet providers are
+not wrapped either; they stay on forwarded alerts and exported reports.
 """
 
 from __future__ import annotations
