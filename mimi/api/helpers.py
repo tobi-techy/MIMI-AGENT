@@ -39,6 +39,8 @@ from typing import Any
 
 from mimi.api.media import LocalMedia, MediaSource, NoMedia, StorePhotos, StoreScreens
 from mimi.brand.tools import BRAND_SKILL, BRAND_TOOLS, BrandPorts, register_brand_tools
+from mimi.checkin.other import SupplierReader
+from mimi.checkin.tools import CHECKIN_TOOLS, CheckinPorts, register_checkin_tools
 from mimi.credit.sam import SamError, Segmentation, Segmenter
 from mimi.credit.tools import CreditPorts, credit_helper, register_credit
 from mimi.harness.collector import (
@@ -52,8 +54,6 @@ from mimi.harness.loop import Helper
 from mimi.harness.policy import GoPolicy, RiskPolicy
 from mimi.harness.registry import ToolRegistry, build_toolset
 from mimi.harness.versions import register
-from mimi.checkin.other import SupplierReader
-from mimi.checkin.tools import CHECKIN_TOOLS, CheckinPorts, register_checkin_tools
 from mimi.models.base import ChatMessage, ChatModel, ChatResult, ModelError
 from mimi.orders.reading import ListReader
 from mimi.orders.tools import ORDER_INTAKE_SKILL, ORDER_TOOLS, OrderPorts, register_order_tools
