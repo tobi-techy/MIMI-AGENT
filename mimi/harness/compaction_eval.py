@@ -134,15 +134,15 @@ def build_cases(world: World, n: int = 30) -> list[ThreadCase]:
                     f"dispute flagged: {d.delivery_id} {d.missing} missing, to the owner. "
                     f"Nothing is confirmed on a short delivery.")}])
             facts.append({"kind": "decision", "must": d.delivery_id})
-        for p in pays:
+        for pay in pays:
             turns.append([
                 {"role": "user", "content": (
-                    f"I just sent the transfer for {p.delivery_id} from the shop's "
+                    f"I just sent the transfer for {pay.delivery_id} from the shop's "
                     f"account. The reference is on the screenshot I sent.")},
                 {"role": "assistant", "content": (
-                    f"payment matched: {p.payment_id} to {p.delivery_id}, pending bank. "
+                    f"payment matched: {pay.payment_id} to {pay.delivery_id}, pending bank. "
                     f"A screenshot alone never verifies payment.")}])
-            facts.append({"kind": "promise", "must": p.delivery_id})
+            facts.append({"kind": "promise", "must": pay.delivery_id})
         # Padding routine turns (no facts) so the thread is long.
         while len(turns) < 16:
             turns.append([{"role": "user", "content": (
@@ -346,23 +346,29 @@ def job_agreement(world: World) -> dict[str, Any]:
         harness = Harness(book=go, control=go, events=go, gateway=Gateway([ScriptedModel(
             script)]), policy=policy, clock=lambda: at)
         steps = harness_steps(harness, {"collector": helper})["collector"]
-        base = dict(job_id=jid, tenant_id=world.tenant_id, helper="collector", goal=goal,
-                    new_owner_messages=(), now=at, thread_id="t", wake_source="routine",
-                    lineage=(), granted=False)
         # Full history: run three steps with the loop state carried.
         scratch: dict[str, Any] = {}
         full: Any = None
         for k in range(3):
-            full = steps(StepContext(step_index=k, plan=(), todo=(),
-                                     working_note="", scratch=scratch, **base))
+            full = steps(StepContext(
+                job_id=jid, tenant_id=world.tenant_id, helper="collector", goal=goal,
+                step_index=k, plan=(), todo=(), working_note="", scratch=scratch,
+                new_owner_messages=(), now=at, thread_id="t", wake_source="routine",
+                lineage=(), granted=False))
             scratch = dict(full.scratch)
         note, plan, todo = full.working_note, full.plan, full.todo
         # From the note: a fresh loop, no harness state.
-        resumed = steps(StepContext(step_index=0, plan=plan, todo=todo,
-                                    working_note=note, scratch={}, **base))
+        resumed = steps(StepContext(
+            job_id=jid, tenant_id=world.tenant_id, helper="collector", goal=goal,
+            step_index=0, plan=plan, todo=todo, working_note=note, scratch={},
+            new_owner_messages=(), now=at, thread_id="t", wake_source="routine",
+            lineage=(), granted=False))
         # From full history: one more step with the state carried.
-        continued = steps(StepContext(step_index=3, plan=plan, todo=todo,
-                                      working_note=note, scratch=scratch, **base))
+        continued = steps(StepContext(
+            job_id=jid, tenant_id=world.tenant_id, helper="collector", goal=goal,
+            step_index=3, plan=plan, todo=todo, working_note=note, scratch=scratch,
+            new_owner_messages=(), now=at, thread_id="t", wake_source="routine",
+            lineage=(), granted=False))
         total += 1
         if _intent_kinds(resumed) == _intent_kinds(continued):
             agree += 1
