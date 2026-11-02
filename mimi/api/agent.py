@@ -531,8 +531,13 @@ class Agent:
                     s.messages.c.tenant_id == tenant_id, s.messages.c.turn_id == lead.turn_id,
                     s.messages.c.direction == "out").order_by(s.messages.c.ts,
                                                               s.messages.c.message_id)):
+                # Owner console text is rewritten for the owner (names, ₦); a
+                # reply to a shop or rep is handed to its channel as written
+                # (docs/API.md), so its text stays exactly what was gated.
+                text = (display.humanize(m.text, names) if m.channel == "owner_console"
+                        else m.text)
                 reply = {"message_id": m.message_id, "channel": m.channel,
-                         "shop_id": m.shop_id, "text": display.humanize(m.text, names),
+                         "shop_id": m.shop_id, "text": text,
                          "kind": m.kind,
                          "status": m.status, "at": m.at}
                 voice = vx.reply_voice(conn, tenant_id, m)

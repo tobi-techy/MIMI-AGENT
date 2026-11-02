@@ -362,6 +362,33 @@ def test_owner_text_shows_names_and_naira(raw: str, shown: str) -> None:
     assert display.humanize(raw, names) == shown
 
 
+def test_a_shop_reply_in_the_turn_view_is_the_text_as_written(env: dict[str, Any]) -> None:
+    """Only owner console text is rewritten (names, ₦). A ``ready`` shop reply
+    is handed to its channel from the turn view (docs/API.md), so its text must
+    be exactly what the claims gate passed and the store holds."""
+    engine, agent = env["engine"], env["agent"]
+    raw = "Coral Lane Trading delivery receipt for shop-040\nTotal: N64,250\nReply YES."
+    owner_raw = "shop-040 owes N64,250."
+    with engine.begin() as conn:
+        conn.execute(sa.insert(s.turns).values(
+            turn_id="t-view-raw", tenant_id=A, thread_id="shop:shop-040", state="done",
+            version=1, attempts=1, completions=1, batch="[]", checkpoint="{}",
+            status="done", helper="order", skill="order/drop-confirmation", run_id="",
+            result="{}", error="", stop=False, simulated=False, solo=False,
+            created_at=AT.isoformat(), created_ts=AT.timestamp()))
+        for i, (mid, ch, text) in enumerate((("m-shop", "shop_whatsapp", raw),
+                                             ("m-owner", "owner_console", owner_raw))):
+            conn.execute(sa.insert(s.messages).values(
+                tenant_id=A, message_id=mid, thread_id="shop:shop-040", turn_id="t-view-raw",
+                direction="out", sender="mimi", channel=ch, shop_id="shop-040", text=text,
+                kind="reply", status="ready", idempotency_key=mid, simulated=False,
+                at=AT.isoformat(), ts=AT.timestamp() + i))
+    view = agent.view(A, "t-view-raw")
+    by = {r["channel"]: r["text"] for r in view.replies}
+    assert by["shop_whatsapp"] == raw
+    assert "shop-040" not in by["owner_console"] and "₦64,250" in by["owner_console"]
+
+
 def test_the_decided_system_line_has_no_ids() -> None:
     names = display.Names({"shop-001": "Mama Sola Provisions"}, {})
     line = display.decided_line("The owner approved approvals item apr_a3278d1027978ff5754c "
