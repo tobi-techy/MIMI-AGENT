@@ -90,9 +90,19 @@ def run_observations(events: Sequence[Event]) -> list[Observation]:
                           **({"idempotency_key": ev.data["idempotency_key"]}
                              if "idempotency_key" in ev.data else {})},
                 level="WARNING" if ev.type == "tool_refused" else "DEFAULT"))
-        elif ev.type in ("repair_requested", "model_output_invalid", "field_ignored"):
+        elif ev.type in ("repair_requested", "model_output_invalid", "field_ignored",
+                         "speak_decision"):
             current.children.append(Observation("span", ev.type, _ns(ev), level="WARNING",
                                                 status_message=ev.short))
+        elif ev.type == "compacted":
+            # Thread compaction (RAI-285): one span with tokens before/after.
+            current.children.append(Observation(
+                "span", "compaction", _ns(ev),
+                output={"short": ev.short},
+                metadata={"summary_version": int(ev.data.get("version", 0)),
+                          "summary_hash": str(ev.data.get("summary_hash", "")),
+                          "tokens_before": int(ev.data.get("tokens_before", 0)),
+                          "tokens_after": int(ev.data.get("tokens_after", 0))}))
         elif ev.type == "step_finished":
             current.duration_ns = int(ev.duration_ms * 1e6)
             current.output = {"tools": ev.tool, "short": ev.short}
@@ -136,9 +146,22 @@ def build_turn(result: RunResult, *, shop_id: str = "owner", synthetic: bool = T
         turn.metadata.update(result.context)
         turn.score("context_tokens", float(result.context.get("context_tokens", 0)), "NUMERIC")
         turn.score("manifest_present", True, "BOOLEAN")
+        # RAI-285: the compaction summary version, its hash and the token
+        # drop sit beside the prefix hash on every trace.
+        if result.context.get("summary_version"):
+            turn.score("summary_version", float(result.context["summary_version"]), "NUMERIC")
+            turn.score("compact_token_drop",
+                       float(result.context.get("compact_tokens_before", 0)
+                             - result.context.get("compact_tokens_after", 0)), "NUMERIC")
     turn.observations.extend(run_observations(evs))
     turn.score("run_status", result.status, "CATEGORICAL")
     turn.score("stopped_budget", result.status == "stopped_budget", "BOOLEAN")
+    for ev in evs:
+        # RAI-300: the speak decision tag with its reason on every turn that
+        # proposed a message.
+        if ev.type == "speak_decision":
+            turn.score("speak_decision", str(ev.data.get("action", "")), "CATEGORICAL")
+            turn.metadata["speak_reason"] = ev.short
     turn.score("side_effect_in_loop", False, "BOOLEAN",
                "write tools return intents; Go applies them after the step is saved")
     turn.score("model_calls", float(result.model_calls), "NUMERIC")

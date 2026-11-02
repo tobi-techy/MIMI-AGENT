@@ -503,6 +503,32 @@ prefixes = sa.Table(
     sa.PrimaryKeyConstraint("tenant_id", "thread_id", "helper"),
 )
 
+# Thread compaction (RAI-285): one row per summary version. Raw history in
+# ``history`` is never deleted; each version covers a window of turn ids and
+# the builder shows the newest version plus the turns after its window. The
+# ``due_ts`` row (version 0, no body) is the durable timer: a thread whose
+# big turn passed the threshold compacts once it is due and no turn is queued.
+compactions = sa.Table(
+    "compactions", metadata,
+    _tenant(),
+    sa.Column("thread_id", sa.String(200), nullable=False),
+    sa.Column("version", sa.Integer(), nullable=False),
+    sa.Column("helper", sa.String(32), nullable=False, default=""),
+    sa.Column("skill", sa.String(64), nullable=False, default=""),
+    # ThreadSummary JSON (version 0: the pending timer, empty).
+    sa.Column("body", sa.Text(), nullable=False, default=""),
+    sa.Column("summary_hash", sa.String(16), nullable=False, default=""),
+    # Turn ids covered, oldest first, JSON list (audit, never shown).
+    sa.Column("covered_turns", sa.Text(), nullable=False, default="[]"),
+    sa.Column("generation", sa.Integer(), nullable=False, default=0),
+    sa.Column("tokens_before", sa.Integer(), nullable=False, default=0),
+    sa.Column("tokens_after", sa.Integer(), nullable=False, default=0),
+    # Due epoch seconds for the pending timer (version 0 only).
+    sa.Column("due_ts", sa.Float(), nullable=False, default=0.0),
+    sa.Column("created_at", sa.String(40), nullable=False, default=""),
+    sa.PrimaryKeyConstraint("tenant_id", "thread_id", "version"),
+)
+
 artifacts = sa.Table(
     "artifacts", metadata,
     sa.Column("path", sa.String(300), primary_key=True),
@@ -624,4 +650,4 @@ BOOK_TABLES = (reps, shops, consent_withheld, skus, deliveries, delivery_lines, 
                payments, bank_feed, promises, disputes, proof_events, proof_asks)
 AGENT_TABLES = (threads, inbound_messages, turns, turn_attempts, messages, thread_events,
                 intents, approvals, credit_requests, spend, asked_once, kill_switches, history,
-                prefixes, artifacts)
+                prefixes, artifacts, compactions)

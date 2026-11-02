@@ -369,6 +369,29 @@ Jobs land in `runtime_jobs` (the durable state machine, readable by the
 console), shop replies in `shop_inbox`, voice-reply choices in
 `shop_voice_consent` and payment screenshots, as fields, in `payment_proofs`.
 
+## 4b. Thread compaction (RAI-285, off by default)
+
+A thread whose prompt passes the threshold rolls its older turns into one
+structured summary (open items, promises with days, decisions and who made
+them, tone, open questions). Amounts stay as references to book rows, never
+free-text naira; raw history is kept for audit. The next turn shows the
+summary plus the newest turns word for word. One model call per compaction,
+about 10 minutes after the big turn (while the provider cache is warm);
+never when a turn is queued for the thread.
+
+```bash
+export MIMI_COMPACTION=1            # off (0) by default
+export MIMI_COMPACT_TOKENS=100000   # compact past this many prompt tokens
+export MIMI_COMPACT_KEEP=6          # newest turns kept word for word
+export MIMI_COMPACT_DELAY_S=600     # seconds after the big turn
+
+META_API_KEY= python -m mimi.harness.compaction_eval          # 30 threads + 20 jobs (CI)
+python -m mimi.harness.compaction_eval --live                 # record real drafts
+```
+
+Eval report: `eval/compaction/compaction.report.json` (live drafts record
+into `eval/compaction/compactions.live.cache.json`).
+
 ## 5. Tests
 
 ```bash
