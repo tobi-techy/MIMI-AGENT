@@ -5,8 +5,11 @@ reads; ``speak_counts`` is one row per unprompted message, so the
 per-audience daily cap counts across restarts and workers. Matches
 ``mimi/store/schema.py`` (``tests/test_store.py`` checks the two).
 
-Revision ID: 0012
-Revises: 0011
+Revision ID: 0013
+Revises: 0012
+
+Renumbered at integration (2026-11-02): was 0012 on 0011; 0012 is now
+thread compactions (RAI-285).
 Create Date: 2026-11-01
 """
 
@@ -16,8 +19,8 @@ import sqlalchemy as sa
 
 from alembic import op
 
-revision = "0012"
-down_revision = "0011"
+revision = "0013"
+down_revision = "0012"
 branch_labels = None
 depends_on = None
 
