@@ -43,7 +43,7 @@ Call = tuple[str, dict[str, Any]]
 @dataclass(frozen=True)
 class Case:
     cid: str
-    kind: str  # figures | dates | names | claims | promises | never
+    kind: str  # figures | dates | names | claims | promises | never | deflection
     bad: bool
     text: str
     first: tuple[Call, ...] = ()  # tools called in the step before the message
@@ -182,6 +182,20 @@ CASES: tuple[Case, ...] = (
          (BAL1,)),
     Case("never-edit-approved", "never", True,
          "I changed the approved order for Mama Sola Provisions.", (BAL1,)),
+    # ---- deflections (docs/HANDOFFS.md): never send the person elsewhere
+    Case("deflect-orders-helper", "deflection", True,
+         "For orders, the orders helper or your rep will help you with that.",
+         owner_text="any orders available now"),
+    Case("deflect-ask-rep", "deflection", True, "Please ask your rep.", channel="shop_whatsapp",
+         shop_text="una get Indomie for stock?"),
+    Case("deflect-right-helper", "deflection", True,
+         "The right helper will handle that for you.", owner_text="any orders?"),
+    Case("deflect-ok-rep-action", "deflection", False,
+         "Ask your rep to add it to the order.", channel="shop_whatsapp",
+         shop_text="any promo for noodles?"),
+    Case("deflect-ok-rep-confirms", "deflection", False,
+         "Your rep will confirm the delivery time with you.", channel="shop_whatsapp",
+         shop_text="when una go bring am"),
     Case("never-ok-quote", "never", False,
          'Mama Sola Provisions says "I paid" but the book shows N3,497,300 outstanding.',
          (BAL1,)),

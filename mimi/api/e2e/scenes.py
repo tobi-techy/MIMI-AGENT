@@ -75,6 +75,10 @@ BRAND_SHOP = "shop-031"
 BRAND_SHOP_TEXT = "Good morning. Una get any promo for Sunrise noodles this month?"
 BRAND_OWNER_TEXT = ("Please draft an email to Okin asking them for more shelf posters for "
                     "our shops.")
+# Handoffs (docs/HANDOFFS.md): the owner's question from the demo recording
+# that once reached Brand and got a dead end. A router rule sends it to Order
+# and code answers it from the book (no model, so nothing to record).
+OPEN_ORDERS_TEXT = "Any orders available now"
 # Order intake (RAI-302). shop-013 sends a photo of its handwritten list; the
 # owner approves and the "approved" notice goes out. shop-037 types an order,
 # then a voice note removes a line before approval: version 2 replaces
