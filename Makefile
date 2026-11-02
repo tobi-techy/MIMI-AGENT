@@ -1,6 +1,6 @@
 PY ?= python
 
-.PHONY: credit-eval credit-eval-live credit-fixtures sim-credit e2e e2e-live e2e-postgres e2e-traced binding-eval binding-eval-live steer-eval steer-eval-live which-eval order-eval order-eval-live photo-route-eval photo-route-eval-live
+.PHONY: credit-eval credit-eval-live credit-fixtures sim-credit e2e e2e-live e2e-postgres demo-check e2e-traced binding-eval binding-eval-live steer-eval steer-eval-live which-eval order-eval order-eval-live photo-route-eval photo-route-eval-live
 .PHONY: loop-safety-eval claims-eval review-pocs install test eval eval-live eval-fake voice-eval voice-eval-live voice-fixtures voice-values-eval voice-values-eval-live voice-values-fixtures proof-eval proof-eval-live proof-fixtures stock-backtest stock-eval stock-eval-live stock-eval-fake sim-stock trace-stock sim sim-live sim-voice sim-voice-v2 sim-screens trace-smoke langfuse-setup langfuse-monitor langfuse-datasets proof-experiment voice-experiment receipts-experiment judge-calibration world-check lint typecheck secrets provenance migrate check harness-eval harness-eval-live trace-harness router-eval router-eval-live context-eval context-eval-live router-train trace-router api api-worker api-seed api-openapi api-openapi-check
 
 install:            ## editable install with dev tools
@@ -208,6 +208,9 @@ api-openapi-check:  ## fail when docs/api/openapi.json is stale
 
 e2e:                ## 10 simulated shops through the real API, store and worker processes; replays recorded Muse Spark, SAM 3.1 and persona answers; pass marks
 	META_API_KEY= $(PY) -m mimi.api.e2e --no-write
+
+demo-check:         ## the demo script's scenes (docs/DEMO-SCRIPT.md) against the e2e replay; N0
+	META_API_KEY= $(PY) scripts/demo_script_check.py
 
 e2e-postgres:       ## the same e2e on Postgres (set E2E_DB to a throwaway database: it is wiped)
 	META_API_KEY= $(PY) -m mimi.api.e2e --no-write --db "$${E2E_DB:?set E2E_DB}"
