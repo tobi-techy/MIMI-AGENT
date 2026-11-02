@@ -388,9 +388,15 @@ class Agent:
         self.steer_on = os.environ.get("MIMI_STEER", "1").strip() != "0"
         self.artifacts = SqlArtifactStore(engine)
         vx.ensure_schema(engine)  # shop_voice_consent (alembic 0004 in production)
+        from mimi.harness.speak import SpeakConfig
+        from mimi.store.speak import SqlDigestQueue, SqlSpeakCounts
+
         self.harness = Harness(book=self.go, control=self.go, events=self.go,
                                gateway=Gateway(list(models)), policy=self.policy,
-                               clock=self.clock, artifacts=self.artifacts)
+                               clock=self.clock, artifacts=self.artifacts,
+                               speak=SpeakConfig.from_env(),
+                               speak_counts=SqlSpeakCounts(engine),
+                               speak_digest=SqlDigestQueue(engine))
         self.builder = ContextBuilder(book=self.go, prefixes=SqlPrefixStore(engine),
                                       history=SqlHistoryStore(engine),
                                       artifacts=self.artifacts, clock=self.clock)

@@ -536,6 +536,34 @@ artifacts = sa.Table(
     sa.Column("content", sa.Text(), nullable=False),
 )
 
+# When to speak (RAI-300): the owner's digest queue (the daily note, RAI-289,
+# reads what it has not consumed) and one row per unprompted message, so the
+# per-audience daily cap counts across restarts and workers.
+digest_queue = sa.Table(
+    "digest_queue", metadata,
+    sa.Column("item_id", sa.Integer(), primary_key=True, autoincrement=True),
+    _tenant(),
+    sa.Column("shop_id", sa.String(64), nullable=False, default=""),
+    sa.Column("body", sa.Text(), nullable=False, default=""),
+    sa.Column("kind", sa.String(32), nullable=False, default="reply"),
+    sa.Column("day", sa.String(10), nullable=False),  # Africa/Lagos
+    sa.Column("reason", sa.Text(), nullable=False, default=""),
+    sa.Column("consumed", sa.Boolean(), nullable=False, default=False),
+    sa.Column("created_at", sa.String(40), nullable=False, default=""),
+    sa.Index("ix_digest_queue_tenant_day", "tenant_id", "day", "consumed"),
+)
+
+speak_counts = sa.Table(
+    "speak_counts", metadata,
+    sa.Column("count_id", sa.Integer(), primary_key=True, autoincrement=True),
+    _tenant(),
+    sa.Column("audience", sa.String(16), nullable=False),  # owner | shop | rep
+    sa.Column("shop_id", sa.String(64), nullable=False, default=""),
+    sa.Column("day", sa.String(10), nullable=False),  # Africa/Lagos
+    sa.Column("created_at", sa.String(40), nullable=False, default=""),
+    sa.Index("ix_speak_counts_tenant_day", "tenant_id", "audience", "shop_id", "day"),
+)
+
 # ------------------------------------------------------------- demo mode
 # MIMI_MODE=demo (mimi.api.demo): one row per visitor session. The token and
 # the visitor's address are kept only as digests. The session's copy of the

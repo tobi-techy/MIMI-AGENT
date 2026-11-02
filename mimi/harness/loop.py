@@ -55,6 +55,7 @@ from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 from mimi.harness import claims as C
 from mimi.harness import guards as G
+from mimi.harness import speak as S
 from mimi.harness.context import pointer
 from mimi.harness.errors import ConnectorDown, ToolError, error_text
 from mimi.harness.gateway import AllModelsFailed, Gateway, worst_case_kobo
@@ -158,6 +159,9 @@ class LoopState(BaseModel):
     # private text only.
     must_speak: bool = False
     nudged: bool = False
+    # The when-to-speak decisions of this run (RAI-300), each with its
+    # reason: every silence is logged here and on the trace.
+    speak: list[dict[str, Any]] = Field(default_factory=list)
     repair_step: int = -1
     # The dearest model call so far: the budget reserve never assumes less.
     max_call_kobo: int = 0
@@ -245,6 +249,9 @@ class Harness:
         perf: Callable[[], float] = time.perf_counter,
         max_repairs: int = 1,
         artifacts: Any = None,
+        speak: S.SpeakConfig | None = None,
+        speak_counts: S.SpeakCounts | None = None,
+        speak_digest: S.DigestQueue | None = None,
     ) -> None:
         self.book = book
         self.control = control
@@ -257,6 +264,13 @@ class Harness:
         # ``mimi.harness.context.ArtifactStore``: read outputs over 2,000
         # tokens are stored there and only a pointer enters the transcript.
         self.artifacts = artifacts
+        # When to speak (RAI-300): the decision in front of send_to_user.
+        # ``speak_counts``/``speak_digest`` default to in-memory stores; the
+        # API passes the durable ones.
+        self.speak = speak or S.SpeakConfig()
+        self.speak_counts = speak_counts or S.InMemorySpeakStore()
+        self.speak_digest = speak_digest or self.speak_counts \
+            if isinstance(self.speak_counts, S.InMemorySpeakStore) else S.InMemorySpeakStore()
 
     # ================================================================== API
 
@@ -778,18 +792,29 @@ class Harness:
                 i.tool not in INTERNAL_TOOLS for i in state.intents):
             self._finish(state, "done", "turn finished")
         else:
-            first = (content or "").strip().splitlines()
-            why = first[0][:160] if first else "nothing new to say"
-            self._finish(state, "done_quiet", f"quiet: {why}")
+            # RAI-300: every silence carries the speak decision's reason when
+            # the gate decided one; otherwise the model's own last line.
+            why = next((f"{s.get('action')}: {s.get('reason')}"
+                        for s in reversed(state.speak)), "")
+            if not why:
+                first = (content or "").strip().splitlines()
+                why = first[0][:160] if first else "nothing new to say"
+                why = f"quiet: {why}"
+            self._finish(state, "done_quiet", why[:200])
 
     def _finish(self, state: LoopState, status: RunStatus, reason: str,
                 question: str = "") -> None:
         failed = status == "failed"
+        data: dict[str, Any] = {"status": status, "steps": state.spend.steps,
+                                "model_calls": state.spend.model_calls,
+                                "wake_source": state.wake_source}
+        if state.speak:
+            # RAI-300: the speak decision and its reason on every trace.
+            data["speak_decision"] = state.speak[-1]["action"]
+            data["speak_reason"] = state.speak[-1]["reason"]
+            data["speak_log"] = list(state.speak)
         self._emit(state, "run_finished", short=f"{status}: {reason}"[:200],
-                   cost_kobo=state.spend.kobo,
-                   data={"status": status, "steps": state.spend.steps,
-                         "model_calls": state.spend.model_calls,
-                         "wake_source": state.wake_source})
+                   cost_kobo=state.spend.kobo, data=data)
         state.finished = RunResult(
             run_id=state.run_id,
             job_id=state.job_id,
@@ -1010,8 +1035,118 @@ class Harness:
                 G.record_trip("claim_blocked", tool=name, problems=problems, text=text[:240],
                               helper=state.helper, run_id=state.run_id)
                 return self._invalid(state, call_id, name, why, nxt), (self.perf() - t) * 1000
+        if spec.name == "send_to_user":
+            held = self._speak_gate(state, call_id, name, parsed, now, t)
+            if held is not None:
+                return held
         return self._propose(state, helper, spec, ctx, call_id, parsed, out, scope,
                              position, t)
+
+    def _speak_gate(self, state: LoopState, call_id: str, name: str,
+                    parsed: BaseModel, now: datetime,
+                    t: float) -> tuple[str, float] | None:
+        """When to speak (RAI-300): the decision in front of send_to_user.
+
+        Rules in code, the model only for the in-between cases. ``stay_quiet``
+        and ``batch_into_digest`` withdraw the draft and answer the call with
+        the reason; enforce mode ends the turn ``done_quiet`` once nothing
+        else can speak. Shadow mode logs the decision and still sends, so
+        ``off`` and ``shadow`` always return None (nothing held)."""
+        args = parsed.model_dump(mode="json")
+        channel = str(args.get("channel") or "")
+        body = str(args.get("body") or "")
+        shop_id = str(args.get("shop_id") or "")
+        day = now.astimezone(LAGOS).date()
+        held = self._speak_hold(state, name, call_id, channel=channel, shop_id=shop_id,
+                                body=body, kind=str(args.get("kind") or "reply"),
+                                day=day, t=t)
+        if held is None:
+            return None
+        decision, ms = held
+        if self.speak.mode in ("off", "shadow"):
+            return None
+        if decision.action == "speak_now":
+            return None
+        what = ("held for the daily note" if decision.action == "batch_into_digest"
+                else "stayed quiet")
+        state.messages.append(self._tool_msg(call_id, json.dumps(
+            {"ok": True, "not_sent": decision.action, "reason": decision.reason,
+             "next": f"The message {what}. End the turn unless something else "
+                     "needs saying."}, ensure_ascii=False)))
+        return f"{name}: {decision.action} ({decision.reason[:80]})", ms
+
+    def _speak_hold(self, state: LoopState, name: str, call_id: str, *, channel: str,
+                    shop_id: str, body: str, kind: str, day: date,
+                    t: float) -> tuple[S.SpeakDecision, float] | None:
+        """Decide and log; None when the draft is not a duplicate send.
+
+        A duplicate send_to_user with the same body in the same turn never
+        speaks twice: the first draft already says it, so the second is
+        held here as stay_quiet without consulting the cap."""
+        ms = (self.perf() - t) * 1000
+        if any(d.body == body for d in state.drafts):
+            decision = S.SpeakDecision(action="stay_quiet",
+                                       reason="this update was already sent", layer="rule")
+            self._log_speak(state, name, decision, channel=channel, shop_id=shop_id)
+            return decision, ms
+        facts = self._speak_facts(state, channel=channel, shop_id=shop_id, body=body,
+                                  kind=kind)
+        decision = S.decide(facts, tenant_id=state.tenant_id, day=day,
+                            counts=self.speak_counts, digest=self.speak_digest,
+                            limits=self.speak.limits)
+        self._log_speak(state, name, decision, channel=channel, shop_id=shop_id)
+        return decision, ms
+
+    def _log_speak(self, state: LoopState, name: str, decision: S.SpeakDecision, *,
+                   channel: str, shop_id: str) -> None:
+        state.speak.append({"action": decision.action, "reason": decision.reason,
+                            "layer": decision.layer, "channel": channel,
+                            "shop_id": shop_id})
+        self._emit(state, "speak_decision", tool=name, short=decision.reason[:200],
+                   data={"action": decision.action, "layer": decision.layer,
+                         "channel": channel, "shop_id": shop_id})
+
+    @staticmethod
+    def _speak_facts(state: LoopState, *, channel: str, shop_id: str, body: str,
+                     kind: str) -> S.SpeakFacts:
+        """What the turn found, read from the run in code (never the model).
+
+        A direct question from the recipient always speaks; an approval-tier
+        intent or a money-at-risk outcome always speaks; errors and blocked
+        jobs always reach the owner. A routine with nothing new stays quiet;
+        a clean routine batch waits for the digest."""
+        direct = state.must_speak
+        approval = any(i.tier == "approve" for i in state.intents)
+        approve_text = any("Approve and send?" in str(i.preview) for i in state.intents)
+        risk_text = any(k in body for k in ("flagged", "fake", "could not verify",
+                                            "dispute", "pending"))
+        money_risk = bool(risk_text and any(
+            i.tool in ("check_payment", "flag_payment_proof", "check_payment_screenshot")
+            for i in state.intents))
+        real_change = any(i.tool not in INTERNAL_TOOLS for i in state.intents)
+        read_only = all(i.tool in ("get_balance", "get_invoices", "get_payment_history",
+                                   "get_account_number", "check_payment", "read_stock_answer",
+                                   "get_stock_estimates", "get_open_deliveries")
+                        for i in state.intents)
+        money_facts = bool(state.intents) or bool(state.seen_results)
+        routine = state.wake_source in ("routine", "scheduled_check_in")
+        # A routine that only read (nothing proposed, nothing matched) has no
+        # news: quiet. One that matched clean (reads only, no flags) waits
+        # for the digest. Anything a person asked for, or any real change,
+        # is news and speaks.
+        no_news = routine and not money_facts and not real_change and not state.question
+        clean = routine and read_only and not state.question and not state.follow_up_at
+        dup = any(d.body == body for d in state.drafts)
+        return S.facts_from_turn(
+            channel=channel, shop_id=shop_id, direct_question=direct,
+            needs_decision=approval or approve_text or state.approval_pending,
+            money_at_risk=money_risk,
+            promise_due=state.follow_up_at is not None,
+            error_or_blocked=bool(state.fail_reason or state.guard),
+            new_money_facts=money_facts and not state.must_speak,
+            real_change=real_change,
+            no_new_facts=no_news, already_sent=dup, routine_clean=clean and not dup,
+            body=body, kind=kind)
 
     def _verify(self, state: LoopState, tool: str, text: str, parsed: BaseModel,
                 now: datetime) -> dict[str, list[str]]:
