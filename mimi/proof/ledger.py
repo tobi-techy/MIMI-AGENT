@@ -12,6 +12,7 @@ In memory for tests and the quick sim; ``SqlProofLedger`` persists the same
 
 from __future__ import annotations
 
+import hashlib
 import json
 import threading
 from dataclasses import asdict, dataclass, replace
@@ -21,6 +22,7 @@ import sqlalchemy as sa
 from sqlalchemy.engine import Engine
 
 from mimi.proof.checks import PriorProof
+from mimi.provenance import POLICY_VERSION, ProofEvent
 
 # "read": read, not yet assessed; "likely": likely paid (screenshot only);
 # "review": in the owner's approvals; "ask": Mimi asked for a clearer one;
@@ -50,6 +52,11 @@ class ProofRecord:
     session_id: str = ""
     delivery_ids_json: str = "[]"
     bank_credit_id: str = ""
+    # The proof level the v1 rules give this payment (RAI-295,
+    # ``mimi.provenance``), separate from the flow state in ``level``.
+    proof_level: str = "estimated"
+    witnesses: str = "[]"
+    proof_policy_version: str = POLICY_VERSION
 
     @property
     def delivery_ids(self) -> tuple[str, ...]:
@@ -86,11 +93,26 @@ class ProofLedger(Protocol):
 
     def credit_used(self, credit_id: str) -> bool: ...
 
+    def add_event(self, event: ProofEvent) -> None:
+        """Append a proof level change (``proof_events``); never edits one."""
+        ...
+
+    def events(self, record_id: str) -> list[ProofEvent]: ...
+
 
 class InMemoryProofLedger:
     def __init__(self) -> None:
         self._rows: dict[str, ProofRecord] = {}
+        self._events: list[ProofEvent] = []
         self._lock = threading.Lock()
+
+    def add_event(self, event: ProofEvent) -> None:
+        with self._lock:
+            self._events.append(event)
+
+    def events(self, record_id: str) -> list[ProofEvent]:
+        with self._lock:
+            return [e for e in self._events if e.record_id == record_id]
 
     def add(self, record: ProofRecord) -> bool:
         with self._lock:
@@ -150,7 +172,38 @@ payment_proofs = sa.Table(
     sa.Column("session_id", sa.String(), nullable=False, server_default="", index=True),
     sa.Column("delivery_ids_json", sa.Text(), nullable=False, server_default="[]"),
     sa.Column("bank_credit_id", sa.String(), nullable=False, server_default=""),
+    # RAI-295 (alembic 0010_proof_levels).
+    sa.Column("proof_level", sa.String(16), nullable=False, server_default="estimated"),
+    sa.Column("witnesses", sa.Text(), nullable=False, server_default="[]"),
+    sa.Column("proof_policy_version", sa.String(16), nullable=False,
+              server_default=POLICY_VERSION),
 )
+# The same table as ``mimi.store.schema.proof_events`` (alembic 0010), declared
+# here so the screenshot ledger can append to it without importing the store.
+# Payment screenshots are written under the ledger's tenant.
+proof_events = sa.Table(
+    "proof_events",
+    metadata,
+    sa.Column("tenant_id", sa.String(64), nullable=False),
+    sa.Column("event_id", sa.String(64), nullable=False),
+    sa.Column("record_type", sa.String(32), nullable=False),
+    sa.Column("record_id", sa.String(64), nullable=False),
+    sa.Column("old_level", sa.String(16), nullable=False),
+    sa.Column("new_level", sa.String(16), nullable=False),
+    sa.Column("witness_kind", sa.String(32), nullable=False),
+    sa.Column("witness_source", sa.String(200), nullable=False),
+    sa.Column("policy_version", sa.String(16), nullable=False),
+    sa.Column("at", sa.String(40), nullable=False),
+    sa.PrimaryKeyConstraint("tenant_id", "event_id"),
+    sa.Index("ix_proof_events_record", "tenant_id", "record_type", "record_id"),
+)
+
+
+def event_id(event: ProofEvent) -> str:
+    """Deterministic, so a replayed witness can never write a second row."""
+    key = "|".join((event.record_type, event.record_id, event.witness_kind,
+                    event.witness_source, event.policy_version))
+    return "pe_" + hashlib.sha256(key.encode()).hexdigest()[:24]
 
 
 class SqlProofLedger:
@@ -217,3 +270,22 @@ class SqlProofLedger:
 
     def credit_used(self, credit_id: str) -> bool:
         return bool(self._where(payment_proofs.c.bank_credit_id == credit_id))
+
+    def add_event(self, event: ProofEvent, tenant_id: str = "") -> None:
+        eid = event_id(event)
+        with self.engine.begin() as conn:
+            tid = tenant_id or (conn.execute(
+                sa.select(payment_proofs.c.tenant_id)
+                .where(payment_proofs.c.proof_id == event.record_id)).scalar() or "")
+            seen = conn.execute(sa.select(proof_events.c.event_id).where(
+                proof_events.c.tenant_id == tid, proof_events.c.event_id == eid)).first()
+            if seen is None:
+                conn.execute(proof_events.insert().values(tenant_id=tid, event_id=eid,
+                                                          **event.as_row()))
+
+    def events(self, record_id: str) -> list[ProofEvent]:
+        with self.engine.connect() as conn:
+            rows = conn.execute(sa.select(proof_events).where(
+                proof_events.c.record_id == record_id).order_by(proof_events.c.at)).mappings()
+            return [ProofEvent(**{k: v for k, v in dict(r).items()
+                                  if k not in ("tenant_id", "event_id")}) for r in rows]

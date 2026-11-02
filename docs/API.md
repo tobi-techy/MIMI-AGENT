@@ -101,7 +101,7 @@ queue. Its default database is SQLite in `/data` (mount a volume); set
 | `MIMI_DEMO_GLOBAL_DAILY_CAP_NAIRA` | 2000 | demo: model spend across every demo session per day |
 | `MIMI_DEMO_SESSION_TTL_S` | 3600 | demo: how long a session token lasts |
 | `MIMI_DEMO_SESSIONS_PER_IP` | 20 | demo: new sessions per visitor address per day |
-| `MIMI_DEMO_KILL` | off | demo: `1` refuses every new turn (503); reads keep working |
+| `MIMI_DEMO_KILL` | off | demo: `1` refuses every new turn and every new or reset session (503, same body as a refused turn); reads keep working |
 | `MIMI_DEMO_CLIENT_IP_HEADER` | `cf-connecting-ip` | demo: the one header the edge sets to the visitor's address (Cloudflare, in front of Atlasflow, writes `CF-Connecting-IP` and overwrites a client's own); read only from a trusted peer; `none` turns it off. `X-Forwarded-For` is refused here |
 | `MIMI_DEMO_TRUSTED_PROXIES` | private, loopback and CGNAT ranges | demo: comma-separated CIDRs (the platform edge) whose requests may carry that header; `*` trusts any peer, only when the app is reachable through the edge alone |
 | `MIMI_DEMO_TRUST_FORWARDED` | ignored | removed 30 Oct 2026: `X-Forwarded-For` is never read (a made-up one bought a fresh allowance) |
@@ -130,6 +130,9 @@ A public console on synthetic data (`mimi/api/demo.py`):
   digest of the visitor address, never either in plain. No key is ever
   baked into the console's JavaScript.
 * `POST /v1/demo/reset` ends the caller's session and starts a fresh copy.
+* While `MIMI_DEMO_KILL=1`, both answer 503 `{"detail": "the demo is paused right now; you can
+  still look around"}` (the body a refused turn gets) and seed nothing; a
+  refused reset leaves the caller's session as it was.
 * A token past its TTL is 401 (`demo session expired`). Expired copies are
   deleted when a new session starts (after a 10 minute grace); their spend
   is kept per address and day so the caps still count it.
@@ -223,16 +226,79 @@ approval reads as 404. Keys are compared by SHA-256 in constant time; give
 | `GET /v1/threads/{thread_id}` | owner | Messages (each with `voice`: the reply has a voice note at `/v1/messages/{id}/voice`, and `media`: in demo, the owner's console attachment at `/v1/messages/{id}/media`), reasoning steps (routing and every harness step: tool, tier, short line, model, cost, time; never the model's private text), turns, router state |
 | `GET /v1/shops` | owner | Shops with credit limit, outstanding and overdue (kobo and naira, summed in code), phone as last four digits |
 | `GET /v1/shops/{shop_id}` | owner | Plus open invoices, payments, promises, the last 10 deliveries with lines, disputes |
-| `GET /v1/approvals` | owner | `status=pending` (default), `approved`, `rejected`, `superseded`, `withdrawn`, `all`; each with the tool, preview, payload, the drafted message and `supersedes` / `superseded_by` (RAI-301) |
+| `GET /v1/approvals` | owner | `status=pending` (default), `approved`, `rejected`, `superseded`, `withdrawn`, `all`; each with the tool, preview, payload, the drafted message and `supersedes` / `superseded_by` (RAI-301). `preview` and the draft text are as the owner reads them (names for ids, `₦1,234,500`, below); `preview_raw` is the record as written; `shop_name`; `flags` (`["over_credit_limit"]` when approving the order would put the shop past its limit) and `over_limit_by_kobo`; `handling` (`approve`, or `hand_off`: the owner does it by hand and approving never sends Mimi's draft, RAI-323) |
 | `POST /v1/approvals/{id}/approve` | owner | Releases the drafted message, marks the intent approved and wakes the helper on its thread (`approval_answered`, through the router). A money verb is refused (409). Deciding twice is 409 |
 | `POST /v1/approvals/{id}/reject` | owner | Nothing is sent; the helper is told |
-| `GET /v1/credit` | owner | Per-shop limit, outstanding, available, and credit requests from helpers' credit intents (Credit, RAI-271) |
+| `GET /v1/policy` | owner | The rulebook (RAI-323, docs/POLICY.md): each step with its behaviour (`act`, `act_if_preapproved`, `ask`, `hand_off`), default, allowed behaviours and who changed it; built-in stops listed `locked`; `editable` false in demo mode |
+| `PUT /v1/policy` | owner | Change rules: `{"rules": [{"action_type", "behaviour"}], "by"}`. 409 for a built-in stop, floor or unknown type (nothing changes); 403 for a demo session or demo mode. Logged with who; in force on the next turn |
+| `GET /v1/credit` | owner | Per-shop limit, outstanding, available, and credit requests from helpers' credit intents (Credit, RAI-271). Each limit row also has `over_limit`, `over_limit_by_kobo`, `over_limit_by_naira` (owes more than its limit, from code) |
+| `POST /v1/credit/{shop_id}/limit` | owner | The owner sets a shop's limit: `{amount_ngn, reason?}` (whole naira) answers `{shop_id, old_limit_ngn, new_limit_ngn, change_id}`. Recorded as a `limit_change` step on the shop's thread. 404 for another distributor's shop |
+| `POST /v1/credit/changes/{change_id}/undo` | owner | Puts the limit back: `{shop_id, old_limit_ngn, new_limit_ngn, change_id, undone: true}`; a second undo is 409 |
+| `POST /v1/approvals/{id}/undo` | owner | An approved `zoho_payment`: Zoho Books' delete path (`result.undo_available` turns false). An approved `credit_over_limit`: the old limit back. 409 for anything else or a second undo |
+| `GET /v1/mentions` | owner | The console's @ picker: `{mentions: [{kind, id, name, subtitle, mention, assign_to}], total}`. `kind` is `helper`, `shop` or `rep`. `q` matches the start of a name or of any word in it (a leading `@` is ignored); `kinds` is a comma list (`shop`, `helper,rep`), empty for all; `limit` 1 to 200 (50). Helper rows carry `mention` (`@Collector`) and `assign_to` for `POST /v1/turns`; shop rows' `subtitle` is area and rep, rep rows' is their areas. A channel key is 403 |
+| `GET /v1/connectors` | owner | Connector toolkits (Zoho Books, Zoho CRM, Google Sheets, CSV/Excel, Mono soon) with their reads, writes and connections (RAI-277; `docs/CONNECTORS.md`) |
+| `POST /v1/connectors/{toolkit}/connect` | owner | Start the connect flow: body `{region}` for Zoho (`com`, `eu`, `in`, `cn`, `au`); returns `redirect_url` and a single-use `state`. Demo and offline runs return a fake redirect, never real OAuth |
+| `GET /v1/connectors/callback` | owner | Composio returns here: checks the state (expired or reused links get 422 and a WhatsApp nudge for a new link), reads the connected account, sends the owner back to Settings > Connectors |
+| `GET /v1/connectors/{connection_id}` | owner | Status plus a sync preview (counts and the first 3 mapped rows) |
+| `DELETE /v1/connectors/{connection_id}` | owner | Deletes the Composio connected account and writes a revoke row before the next sync |
 | `GET /v1/messages/{message_id}/voice` | any | The reply's voice note (RAI-290): its own text read aloud, made now and never stored (`audio/ogg`, or `audio/wav` from the offline speaker). 404 when the reply has no `voice` block |
 | `GET /v1/health` | none | Database, model mode (`live` or `offline`), queue depth, version |
 | `GET /` | none | Liveness for the platform probe: `{"status": "ok"}`, no database |
 | `GET /v1/me` | any | The caller's tenant, role and mode (`live` or `demo`); in demo, the session's expiry and today's spend against the caps |
 | `POST /v1/demo/sessions`, `POST /v1/demo/reset` | none, demo session | Demo mode only (404 in live mode) |
 | `POST /v1/media`, `GET /v1/messages/{message_id}/media` | owner (demo session) | Demo mode only: keep one console attachment for a turn, and read it back (404 in live mode) |
+
+### Demo wiring (2 Nov 2026, `mimi/api/demo_wiring.py`)
+
+The five demo scenes run end to end in code. The read fields and the new
+endpoints are always on; the paths that change what a recorded run does are
+behind `MIMI_DEMO_WIRING=1` (set in the Dockerfile, off in CI and `make check`).
+
+* **Reads.** `GET /v1/credit` limit rows and `GET /v1/shops/{id}` `shop` carry
+  `credit_limit_ngn`, `outstanding_ngn`, `overdue_ngn` and `overdue_days` (days
+  since the oldest overdue invoice fell due). `GET /v1/credit` adds `payments`
+  (the newest 50) and each payment row in both carries `amount_ngn`,
+  `proof_level` (stored: `verified`, `likely`, `estimated`), `proof_grade` (the
+  demo's words: `verified`, `estimated`, `unverified`) and its shop's
+  `overdue_days` / `overdue_ngn`.
+* **Approvals** carry `kind` (`zoho_payment`, `credit_over_limit`, or the tool
+  name), `blocked` (a pending `credit_over_limit`) and `result` (what code did on
+  approve).
+* **Morning brief.** `POST /v1/events {kind: routine, name: morning_brief}` (or
+  `mimi.morning_brief`): code writes the top three overdue shops by name and ₦
+  on the owner's thread. No model call.
+* **Screenshot to verified.** A screenshot Proof records as likely is kept as a
+  payment at level `likely`. `POST /v1/events {kind: webhook, name: bank_credit,
+  shop_id, amount_ngn?}` matches the newest likely payment (same amount when
+  given), stamps it `verified` with a bank witness, takes it off the invoice,
+  thanks the shop, tells the owner and opens a `zoho_payment` approval
+  (`payload`: `shop_name`, `amount_ngn`, `invoice_number`, `reference_number`).
+  No match: the owner is told and nothing changes. No model call.
+* **Zoho write.** Approving a `zoho_payment` records it through
+  `mimi/connectors/zoho/payments.py` (read back by reference, then one create);
+  `result` is `{zoho_payment_id, undo_available: true, demo}`. In demo mode, or
+  without an active Zoho Books connection and `ZOHO_BOOKS_ORGANIZATION_ID`, the
+  transport is `StoreZoho`: a deterministic fake that keeps its payments in
+  `artifacts` and never calls Zoho. Mimi never moves money.
+* **Over the limit.** A shop order queued over its limit also opens a
+  `credit_over_limit` approval with `order_ngn`, `limit_ngn`, `owed_ngn`,
+  `suggested_limit_ngn` (the shop's owed plus the order, rounded up to ₦50,000)
+  and code-written `reasons` (owed against the limit, bank-verified payments
+  and amount paid over 90 days, what is overdue). Approving sets the suggested
+  limit (undoable); the order's own approval is still the owner's call.
+* **Shop text** (behind the switch: the e2e's recorded shop personas read
+  Mimi's replies as recorded). What a shop reads (turn `replies` on `shop_whatsapp`, shop
+  messages in a thread read) passes `style.shop_text`: `₦` with commas and no
+  internal ids ("Thank you. Your delivery is confirmed."; the receipt's
+  `Ref dlv-..., 2026-10-26` line reads `Delivered 26 Oct 2026`). The stored
+  record, and everything a model reads, keeps what was gated.
+
+Owner-facing text is rewritten by `mimi.api.display` (30 Oct 2026 run 2):
+`shop-001` and `rep-03` become the shop's and rep's names from the book, an
+approvals, turn or run id (`apr_...`) is never shown, and `N50600`,
+`N50,600`, `N50,600.00` become `₦50,600`. This covers owner console replies,
+approval previews and drafts, thread messages and the "The owner approved
+..." system line. Ids stay in records, payloads and everything a model reads.
 
 Replies come back with `status`: `ready` (hand it to the channel now) or
 `pending_approval` (it waits in approvals). A `ready` WhatsApp reply to a

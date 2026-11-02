@@ -42,6 +42,7 @@ from contextlib import AbstractContextManager, contextmanager
 from dataclasses import dataclass, field
 from typing import Any, Literal, Protocol
 
+from mimi.models import prices as _PRICES
 from mimi.models.base import ChatMessage, ChatModel, ChatResult
 from mimi.runtime.tracing import AttrValue, StepSpan, StepTracer
 
@@ -62,32 +63,23 @@ FEATURE: dict[str, str] = {
     "stock_answer": "stock",
 }
 
-# USD per 1M tokens (input, output), Meta Model API standard and contributor
-# mode, from https://dev.meta.ai/docs/pricing-rate-limits (checked 27 Oct 2026).
+# Prices live in one place (``mimi.models.prices``, with their source).
+# ``TOKEN_PRICES`` here keeps its (input, output) shape for the traces.
 TOKEN_PRICES: dict[str, tuple[float, float]] = {
-    "muse-spark-1.3": (1.25, 4.25),
-    "muse-spark-1.2": (1.25, 4.25),
-    "muse-spark-1.1": (1.25, 4.25),
-    "muse-spark-1.3-contributor": (0.10, 0.20),
-    "muse-spark-1.2-contributor": (0.10, 0.20),
-}
-# USD per second of audio (docs/VOICE.md, checked 26 Oct 2026).
-AUDIO_PRICES: dict[str, float] = {"spitch": 0.00042, "muse": 0.18 / 3600}
+    m: (p.input, p.output) for m, p in _PRICES.TOKEN_PRICES.items()}
+AUDIO_PRICES: dict[str, float] = dict(_PRICES.AUDIO_PRICES)
 
 
-def token_cost(model: str, prompt_tokens: int, completion_tokens: int) -> float | None:
+def token_cost(model: str, prompt_tokens: int, completion_tokens: int,
+               cached_tokens: int = 0) -> float | None:
     """Estimated USD for one call; ``None`` when the model is unpriced (fakes)."""
-    price = TOKEN_PRICES.get(model)
-    if price is None:
-        return None
-    return round((prompt_tokens * price[0] + completion_tokens * price[1]) / 1e6, 8)
+    usd = _PRICES.token_usd(model, prompt_tokens, completion_tokens, cached_tokens)
+    return None if usd is None else round(usd, 8)
 
 
 def audio_cost(provider: str, seconds: float | None) -> float | None:
-    key = next((k for k in AUDIO_PRICES if provider.startswith(k)), None)
-    if key is None or not seconds:
-        return None
-    return round(seconds * AUDIO_PRICES[key], 8)
+    usd = _PRICES.audio_usd(provider, seconds)
+    return None if usd is None else round(usd, 8)
 
 
 def prompt_version(messages: Sequence[ChatMessage], meta: Mapping[str, str] | None = None) -> str:

@@ -39,6 +39,10 @@ otel = ["opentelemetry-api>=1.23.0"]
 langfuse = ["langfuse==5.0.4"]
 # Only when the sim or alembic points at Postgres.
 postgres = ["psycopg2-binary>=2.9.9"]
+# Shop-tool connectors (mimi/connectors): the Composio transport and Excel
+# import. Pinned like langfuse: only mimi/connectors/composio.py imports the
+# SDK, and Excel needs openpyxl (CSV itself is the standard library).
+connectors = ["composio==0.15.0", "openpyxl==3.1.5"]
 dev = [
     "pytest>=7.4.3",
     "ruff>=0.4.0",

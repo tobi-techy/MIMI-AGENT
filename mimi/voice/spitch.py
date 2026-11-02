@@ -26,6 +26,7 @@ from typing import Any
 
 import httpx
 
+from mimi.models import metering
 from mimi.voice.base import (
     AudioClip,
     Transcript,
@@ -80,6 +81,7 @@ class SpitchTranscriber:
         return data
 
     def transcribe(self, clip: AudioClip, ctx: VoiceContext) -> Transcript:
+        metering.guard(getattr(self, "name", "stt"))
         files = {"content": (f"voice.{clip.format}", clip.data, _MIME[clip.format])}
         try:
             resp, latency = post_with_retry(

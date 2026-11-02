@@ -1,0 +1,45 @@
+[
+ {
+  "match": {},
+  "reply": {
+   "data": [
+    {
+     "id": "crm-shop-001",
+     "Account_Name": "Mama Sola Provisions",
+     "Phone": "+2340000000100",
+     "Billing_City": "Oja Oba"
+    },
+    {
+     "id": "crm-shop-002",
+     "Account_Name": "Iya Tolu Foodstuff",
+     "Phone": "+2340000000101",
+     "Billing_City": "Ajilosun"
+    },
+    {
+     "id": "crm-shop-003",
+     "Account_Name": "Blessed Funke Mini Mart",
+     "Phone": "+2340000000102",
+     "Billing_City": "Okesa"
+    },
+    {
+     "id": "crm-shop-004",
+     "Account_Name": "Divine Favour Provisions",
+     "Phone": "+2340000000103",
+     "Billing_City": "Basiri"
+    },
+    {
+     "id": "crm-shop-005",
+     "Account_Name": "Funke & Sons Mini Mart",
+     "Phone": "+2340000000104",
+     "Billing_City": "Adebayo"
+    },
+    {
+     "id": "crm-shop-006",
+     "Account_Name": "Mama Folake Provisions",
+     "Phone": "+2340000000105",
+     "Billing_City": "Fajuyi"
+    }
+   ]
+  }
+ }
+]

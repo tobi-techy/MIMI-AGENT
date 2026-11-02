@@ -1,0 +1,25 @@
+{
+ "generated_by": "python -m mimi.harness.speak_eval",
+ "cases": 80,
+ "must_speak": "32/32",
+ "quiet": "20/20",
+ "duplicate_updates": 0,
+ "pass_marks": {
+  "speak_recall==100%": true,
+  "quiet_precision>=90%": true,
+  "zero_duplicate_updates": true,
+  "every_decision_has_a_logged_reason": true
+ },
+ "passed": true,
+ "by_kind": {
+  "approval": "6/6",
+  "cap": "8/8",
+  "digest": "8/8",
+  "duplicate": "4/4",
+  "news": "12/12",
+  "question": "20/20",
+  "quiet": "16/16",
+  "risk": "6/6"
+ },
+ "failures": []
+}

@@ -32,3 +32,20 @@ FIXES_ENV = "MIMI_FIXES_2026_10_30"
 
 def fixes_2026_10_30() -> bool:
     return os.environ.get(FIXES_ENV, "").strip().lower() in ("1", "true", "yes", "on")
+
+
+WIRING_ENV = "MIMI_DEMO_WIRING"
+
+
+def demo_wiring() -> bool:
+    """The demo scenes wired in code (``mimi.api.demo_wiring``, 2 Nov 2026).
+
+    ``MIMI_DEMO_WIRING=1`` (set in the Dockerfile) turns on the code paths that
+    change what a recorded run would do: the routine morning brief and the
+    bank-credit match answered by code (no model), a screenshot payment kept
+    as a payment row, the ``credit_over_limit`` approval beside an order
+    over its limit, and shop text handed over as the shop reads it (₦, no
+    internal ids, ``style.shop_text``: the e2e's shop personas read Mimi's
+    replies, so their recorded answers need the text as recorded). Off (CI, ``make check``) the recorded evals replay as
+    recorded; the new endpoints and read fields need no switch."""
+    return os.environ.get(WIRING_ENV, "").strip().lower() in ("1", "true", "yes", "on")

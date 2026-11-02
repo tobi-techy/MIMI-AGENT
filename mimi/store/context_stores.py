@@ -89,6 +89,12 @@ class SqlHistoryStore(HistoryStore):
 
     def summary(self, tenant: str, thread: str) -> str:
         with self.engine.connect() as conn:
+            latest = conn.execute(sa.select(s.compactions.c.body).where(
+                s.compactions.c.tenant_id == tenant, s.compactions.c.thread_id == thread,
+                s.compactions.c.version > 0)
+                .order_by(s.compactions.c.version.desc()).limit(1)).scalar()
+            if latest:
+                return str(loads(latest, {}).get("rendered", ""))
             return str(conn.execute(sa.select(s.threads.c.summary).where(
                 s.threads.c.tenant_id == tenant, s.threads.c.thread_id == thread)).scalar()
                 or "")
@@ -98,6 +104,45 @@ class SqlHistoryStore(HistoryStore):
             conn.execute(s.threads.update().where(
                 s.threads.c.tenant_id == tenant, s.threads.c.thread_id == thread)
                 .values(summary=text))
+
+    def save_compaction(self, tenant: str, thread: str, text: str, *,
+                        summary_hash: str = "") -> int:
+        """A new compaction version; returns its number (the thread's epoch)."""
+        with self.engine.begin() as conn:
+            top = conn.execute(sa.select(sa.func.max(s.compactions.c.version)).where(
+                s.compactions.c.tenant_id == tenant,
+                s.compactions.c.thread_id == thread)).scalar() or 0
+            version = int(top) + 1
+            insert_ignore(conn, s.compactions, {
+                "tenant_id": tenant, "thread_id": thread, "version": version,
+                "body": dumps({"rendered": text, "summary_hash": summary_hash})})
+            return version
+
+    def compaction_count(self, tenant: str, thread: str) -> int:
+        with self.engine.connect() as conn:
+            return int(conn.execute(sa.select(sa.func.max(s.compactions.c.version)).where(
+                s.compactions.c.tenant_id == tenant,
+                s.compactions.c.thread_id == thread)).scalar() or 0)
+
+    def summary_version(self, tenant: str, thread: str) -> tuple[int, str]:
+        """(version, hash) of the newest compaction, or (0, '') when none."""
+        with self.engine.connect() as conn:
+            row = conn.execute(sa.select(s.compactions.c.version, s.compactions.c.body).where(
+                s.compactions.c.tenant_id == tenant, s.compactions.c.thread_id == thread,
+                s.compactions.c.version > 0)
+                .order_by(s.compactions.c.version.desc()).limit(1)).first()
+        if row is None:
+            return 0, ""
+        return int(row[0]), str(loads(row[1], {}).get("summary_hash", ""))
+
+    def compaction_tokens(self, tenant: str, thread: str) -> tuple[int, int]:
+        with self.engine.connect() as conn:
+            row = conn.execute(sa.select(s.compactions.c.tokens_before,
+                                         s.compactions.c.tokens_after).where(
+                s.compactions.c.tenant_id == tenant, s.compactions.c.thread_id == thread,
+                s.compactions.c.version > 0)
+                .order_by(s.compactions.c.version.desc()).limit(1)).first()
+        return (int(row[0]), int(row[1])) if row is not None else (0, 0)
 
 
 def append_history(conn: sa.Connection, tenant: str, thread: str, turn_id: str,

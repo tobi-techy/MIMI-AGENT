@@ -66,18 +66,10 @@ class BudgetHit:
     spent: float | int
 
     def question(self) -> str:
-        """What Mimi asks the owner. Figures come from code, not the model."""
-        if self.dimension == "kobo":
-            return (
-                f"I have used N{self.spent / 100:,.2f} of the "
-                f"N{self.limit / 100:,.2f} allowed for this job. Keep going?"
-            )
-        if self.dimension == "steps":
-            return f"This job has taken {self.spent} of {self.limit} steps. Keep going?"
-        return (
-            f"This job has worked {self.spent:.0f}s of the {self.limit:.0f}s "
-            "allowed. Keep going?"
-        )
+        """What Mimi asks the owner, in plain words (30 Oct 2026 run 2): no
+        step, second or naira budget figures; those stay on the hit itself
+        (``dimension``, ``limit``, ``spent``) for the logs."""
+        return "This one's taking more work than usual. Nothing was lost. Keep going?"
 
 
 def first_hit(budget: Budget, spend: Spend) -> BudgetHit | None:

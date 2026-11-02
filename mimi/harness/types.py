@@ -71,8 +71,15 @@ EventType = Literal[
     "artifact_stored",
     # A loop guard tripped (mimi.harness.guards).
     "loop_guard",
+    # When to speak (RAI-300): the decision and its reason, on every turn
+    # that proposed a message.
+    "speak_decision",
     # The verification gate held an outbound claim back (mimi.harness.claims).
     "claim_blocked",
+    # Thread compaction wrote a summary version (mimi.harness.compaction).
+    "compacted",
+    # The rulebook answered for one consequential step (RAI-323).
+    "policy_decided",
 ]
 
 
@@ -130,6 +137,10 @@ class IntentRecord(_Frozen):
     step: int = 0
     # Shadow mode (RAI-235): Go records the intent and applies nothing.
     shadow: bool = False
+    # The rulebook's answer (RAI-323): ``hand_off`` is an approval the owner
+    # completes by hand; Mimi never carries it out. Empty before the rulebook.
+    action_type: str = ""
+    behaviour: str = ""
 
 
 Channel = Literal["shop_whatsapp", "owner_whatsapp", "owner_console", "rep_whatsapp"]
@@ -173,6 +184,15 @@ class Spend(BaseModel):
     kobo: int = 0
     prompt_tokens: int = 0
     completion_tokens: int = 0
+    # Model spend outside the loop's own calls (router, steer, binding, the
+    # readers its tools call, SAM, speech to text), folded in from the turn's
+    # metering scope (``mimi.models.metering``); it counts toward the run budget.
+    side_kobo: int = 0
+    side_calls: int = 0
+
+    @property
+    def total_kobo(self) -> int:
+        return self.kobo + self.side_kobo
 
 
 class RunResult(_Frozen):

@@ -115,6 +115,18 @@ def test_a_shop_message_gets_a_reply_through_router_and_harness(env: dict[str, A
 def test_money_question_goes_to_collector(env: dict[str, Any]) -> None:
     r = shop_turn(env["c"], "wamid.owe", "abeg wetin I owe now?").json()
     assert r["helper"] == "collector" and r["skill"] == "collector/collections"
+    # A balance-only question is answered by the plain-code path (on by
+    # default, ``mimi.harness.plain``): the book's figures, no model call.
+    # #45's display layer writes naira as ₦ in what people read.
+    text = r["replies"][0]["text"]
+    assert text.startswith("Hello ") and ("you owe ₦" in text or "you owe N" in text)
+
+
+def test_money_question_goes_to_the_model_with_plain_code_off(
+        env: dict[str, Any], monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("MIMI_PLAIN_CODE", "0")
+    r = shop_turn(env["c"], "wamid.owe0", "abeg wetin I owe now?").json()
+    assert r["helper"] == "collector" and r["skill"] == "collector/collections"
     assert r["replies"][0]["text"].startswith("Got it")
 
 
@@ -333,6 +345,12 @@ def test_shops_list_and_detail(env: dict[str, Any]) -> None:
     assert d["shop"]["name"] == W_A.shops[0].name and d["deliveries"]
     for dl in d["deliveries"]:
         assert dl["total_kobo"] == sum(x["line_total_kobo"] for x in dl["lines"])
+        assert dl["proof_level"] in ("verified", "likely", "estimated") and dl["proof"]
+    # RAI-295: every payment says how sure Mimi is, in words, never colour alone.
+    assert d["payments"] and all(p["proof_level"] in ("verified", "likely", "estimated")
+                                 and p["proof"].startswith(p["proof_level"])
+                                 and p["proof_policy_version"] == "v1"
+                                 for p in d["payments"])
     assert c.get("/v1/shops/shop-999", headers=h("a_owner")).status_code == 404
 
 

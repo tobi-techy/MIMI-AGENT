@@ -1,0 +1,23 @@
+{
+ "id": "s12",
+ "grid": [
+  [
+   "Item",
+   "Qty left"
+  ],
+  [
+   "Sunrise Noodles 70g",
+   "e don finish"
+  ]
+ ],
+ "mapping": {
+  "Item": "item",
+  "Qty left": "qty_left"
+ },
+ "want_rows": [
+  {
+   "item": "Sunrise Noodles 70g",
+   "qty_left": null
+  }
+ ]
+}

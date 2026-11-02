@@ -80,6 +80,9 @@ class EventIn(BaseModel):
                          description="The shop the event is about; empty for the distributor.")
     received_at: datetime | None = Field(None, description=RECEIVED_AT)
     simulated: bool = False
+    amount_ngn: int | None = Field(None, ge=1, le=1_000_000_000,
+                                   description="bank_credit only: the credited amount, whole "
+                                               "naira (matches the screenshot payment)")
 
 
 class VoiceReply(_Out):
@@ -282,6 +285,12 @@ class ShopSummary(_Out):
     overdue_naira: str
     open_invoices: int
     simulated: bool
+    # Whole naira and days (demo wiring, 2 Nov 2026): days since the oldest
+    # overdue invoice fell due, 0 when nothing is overdue.
+    credit_limit_ngn: int = 0
+    outstanding_ngn: int = 0
+    overdue_ngn: int = 0
+    overdue_days: int = 0
 
 
 class ShopList(_Out):
@@ -310,6 +319,10 @@ class DeliveryOut(_Out):
     total_kobo: int
     total_naira: str
     status: str
+    # RAI-295: verified | likely | estimated, and the word shown beside it.
+    proof_level: Literal["verified", "likely", "estimated"]
+    proof: str
+    proof_policy_version: str
     lines: list[DeliveryLineOut]
 
 
@@ -339,7 +352,14 @@ class ApprovalOut(_Out):
     turn_id: str
     tool: str
     intent_kind: str
-    preview: str
+    preview: str = Field(description="As the owner reads it: shop and rep names for ids, "
+                                     "money as ₦1,234,500 (mimi.api.display)")
+    preview_raw: str = Field("", description="The preview as the helper's dry run wrote it")
+    shop_name: str = ""
+    flags: list[Literal["over_credit_limit"]] = Field(
+        default_factory=list, description="over_credit_limit: approving this order would put "
+                                          "the shop past its credit limit (checked in code)")
+    over_limit_by_kobo: int = 0
     payload: dict[str, Any]
     draft: Draft | None
     created_at: str
@@ -350,6 +370,16 @@ class ApprovalOut(_Out):
     # and that replaced it. A superseded or withdrawn item cannot be decided.
     supersedes: str | None = None
     superseded_by: str | None = None
+    # approve: Mimi carries it out once approved. hand_off: the owner's rule
+    # says the owner does this step by hand; approving records it was done.
+    handling: str = "approve"
+    # Demo wiring (2 Nov 2026): zoho_payment, credit_over_limit, or the tool name.
+    kind: str = ""
+    blocked: bool = Field(False, description="credit_over_limit while pending: the order is "
+                                             "held over the shop's limit")
+    result: dict[str, Any] | None = Field(None, description="What code did once approved "
+                                                            "(zoho_payment_id, change_id, "
+                                                            "undo_available)")
 
 
 class ApprovalList(_Out):
@@ -379,6 +409,30 @@ class CreditLimit(_Out):
     available_kobo: int
     available_naira: str
     used_pct: int
+    over_limit: bool = False
+    over_limit_by_kobo: int = 0
+    over_limit_by_naira: str = ""
+    credit_limit_ngn: int = 0
+    outstanding_ngn: int = 0
+    overdue_ngn: int = 0
+    overdue_days: int = 0
+
+
+class CreditPayment(_Out):
+    """A recent payment with its proof (stored level and the demo's grade) and
+    its shop's overdue figures at read time."""
+
+    payment_id: str
+    shop_id: str
+    shop_name: str
+    amount_ngn: int
+    paid_on: str
+    method: str
+    proof_level: Literal["verified", "likely", "estimated"]
+    proof_grade: Literal["verified", "estimated", "unverified"]
+    proof: str
+    overdue_days: int
+    overdue_ngn: int
 
 
 class CreditRequest(_Out):
@@ -395,6 +449,22 @@ class CreditRequest(_Out):
 class CreditOut(_Out):
     limits: list[CreditLimit]
     requests: list[CreditRequest]
+    payments: list[CreditPayment] = Field(default_factory=list)
+
+
+class CreditLimitIn(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    amount_ngn: int = Field(..., ge=0, le=1_000_000_000, description="The new limit, whole naira.")
+    reason: str = Field("", max_length=500)
+
+
+class CreditLimitOut(_Out):
+    shop_id: str
+    old_limit_ngn: int
+    new_limit_ngn: int
+    change_id: str
+    undone: bool = False
 
 
 class ErrorOut(_Out):
@@ -419,6 +489,63 @@ class DemoLimit(_Out):
 class DemoLimitError(_Out):
     detail: str
     demo_limit: DemoLimit
+class ConnectorConnection(_Out):
+    connection_id: str
+    status: str
+    region: str
+    connected_at: str
+    revoked_at: str | None
+
+
+class ConnectorToolkit(_Out):
+    toolkit: str
+    label: str
+    blurb: str
+    reads: list[str]
+    writes: list[str]
+    connections: list[ConnectorConnection]
+
+
+class ConnectorList(_Out):
+    connectors: list[ConnectorToolkit]
+
+
+class ConnectorConnectIn(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    region: str = Field("", max_length=8,
+                        description="The Zoho account region (com, eu, in, cn or au).")
+
+
+class ConnectorConnectOut(_Out):
+    redirect_url: str
+    state: str
+
+
+class ConnectorSyncPreview(_Out):
+    rows_read: int
+    rows_mapped: int
+    errors: list[str]
+    finished_at: str | None
+
+
+class ConnectorPreviewRow(_Out):
+    shop_id: str
+    sku: str
+    item: str
+    quantity: int
+    counted_on: str
+
+
+class ConnectorDetail(_Out):
+    connection_id: str
+    toolkit: str
+    status: str
+    region: str
+    connected_at: str
+    revoked_at: str | None
+    last_sync: ConnectorSyncPreview | None
+    preview: list[ConnectorPreviewRow]
 
 
 class Liveness(_Out):
@@ -459,3 +586,73 @@ class DemoSessionOut(_Out):
     expires_at: str
     ttl_s: float
     caps: DemoCaps
+
+
+# ------------------------------------------------------------------ mentions
+
+
+class Mention(_Out):
+    """One row of the console's @ picker: a helper, a shop or a rep."""
+
+    kind: Literal["helper", "shop", "rep"]
+    id: str = Field(description="helper name, shop_id or rep_id")
+    name: str
+    subtitle: str = Field("", description="shop: area and rep; rep: areas; helper: what it does")
+    mention: str = Field(description="What the console inserts into the message: '@Collector', "
+                                     "or the shop's or rep's name as written in the book")
+    assign_to: str = Field("", description="helper rows only: the value for assign_to on "
+                                           "POST /v1/turns")
+
+
+class MentionList(_Out):
+    mentions: list[Mention]
+    total: int
+
+
+# --------------------------------------------------------------- the rulebook
+
+
+class PolicyRuleOut(_Out):
+    """One step in the owner's rulebook (RAI-323)."""
+
+    action_type: str
+    helper: str
+    label: str
+    # act | act_if_preapproved | ask | hand_off; never for a built-in stop.
+    behaviour: str
+    default: str
+    # A built-in stop: no rule, API call or message can change it.
+    locked: bool
+    allowed: list[str]
+    changed_by: str
+    changed_at: str
+
+
+class PolicyChangeOut(_Out):
+    action_type: str
+    from_: str = Field(alias="from")
+    to: str
+    by: str
+    at: str
+
+
+class PolicyOut(_Out):
+    rules: list[PolicyRuleOut]
+    # False in demo mode or with MIMI_POLICY_RULES=0: the list is read-only.
+    editable: bool
+    changes: list[PolicyChangeOut]
+
+
+class PolicyRuleIn(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    action_type: str = Field(max_length=64)
+    behaviour: Literal["act", "act_if_preapproved", "ask", "hand_off"]
+
+
+class PolicyIn(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    rules: list[PolicyRuleIn] = Field(min_length=1, max_length=50)
+    # Who changed it, for the log (the console sends the owner's name).
+    by: str = Field(default="owner", max_length=100)

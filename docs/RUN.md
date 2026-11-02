@@ -227,6 +227,14 @@ META_API_KEY= python -m mimi.sim --stock --transcript
 python -m mimi.sim --stock --transcript --cache /tmp/smoke/stock              # live
 python -m mimi.sim --stock --stock-words --transcript --cache /tmp/smoke/stock # shops type
 python -m mimi.sim --stock --stock-history route --shop-ids shop-001 --transcript
+
+# The weekly check-in eval (RAI-276): 50 replies + 20 other-supplier answers,
+# replaying the recorded Muse Spark answers (CI); --live records them
+export MIMI_CHECKIN=quiet   # 0 off (default) | quiet (store counts, no restock offer) | 1 on
+python -m mimi.checkin.eval
+python -m mimi.checkin.eval --live          # resumes from eval/checkin/replies.cache.json
+python -m mimi.checkin.eval --live --fresh  # every case a new call
+python -m mimi.checkin.eval --fake          # keyword FakeModel (plumbing)
 ```
 
 The scene's transcript shows Mimi's estimate for each item it asks about
@@ -314,6 +322,34 @@ the repo variable `LANGFUSE_MONITOR=true` and the `LANGFUSE_*` secrets) and
    `fake_ended_likely` score true, one on any `dispute_ended_in_consent`
    score true. The other checks run in `make langfuse-monitor`.
 
+## 3g. Connectors: shop tools with consent (RAI-277)
+
+```bash
+pip install -e '.[connectors]'   # composio==0.15.0 (transport) + openpyxl==3.1.5 (Excel)
+export COMPOSIO_API_KEY=...      # Composio key; never commit it
+export MIMI_CONNECTORS=composio  # fake (default, recorded fixtures) | composio | off
+export MIMI_COMPOSIO_AUTH_ZOHO_BOOKS=...    # our own Zoho Books OAuth app auth config
+export MIMI_COMPOSIO_AUTH_ZOHO=...          # our own Zoho CRM OAuth app auth config
+export MIMI_COMPOSIO_AUTH_GOOGLESHEETS=...  # our own Google OAuth app auth config
+export MIMI_COMPOSIO_CALLBACK_URL=https://<api>/v1/connectors/callback
+export MIMI_ZOHO_REGION=com                 # the Zoho account region (com, eu, in, cn, au)
+# optional version pins (defaults: 20261026_00 everywhere)
+export MIMI_COMPOSIO_VERSION_ZOHO_BOOKS=20261026_00
+export MIMI_COMPOSIO_VERSION_ZOHO=20261026_00
+export MIMI_COMPOSIO_VERSION_GOOGLESHEETS=20261026_00
+export MIMI_CONNECTOR_STATE_SECRET=...      # signs the OAuth state; dev default
+# Mono stub (unused until the direct Mono connector lands)
+export MONO_SECRET_KEY=... MONO_API_BASE=...
+
+make connectors-fixtures  # recorded Composio replies + 30 messy sheets from Coral Lane
+make connectors-eval      # replay (CI, no key): 30/30 mapping, 31/31 SKU, 0 invented
+make connectors-eval-live # Zoho Books trial org check (needs the keys above; optional)
+```
+
+Without `COMPOSIO_API_KEY` (or with `MIMI_CONNECTORS=fake`) every read
+replays `eval/connectors/fixtures/` and the endpoints use FakeComposio:
+demo sessions never start real OAuth. Full design: [`docs/CONNECTORS.md`](CONNECTORS.md).
+
 ## 4. Clock modes and persistence
 
 ```bash
@@ -340,6 +376,29 @@ python -m mimi.sim --db "$MIMI_DB_URL"
 Jobs land in `runtime_jobs` (the durable state machine, readable by the
 console), shop replies in `shop_inbox`, voice-reply choices in
 `shop_voice_consent` and payment screenshots, as fields, in `payment_proofs`.
+
+## 4b. Thread compaction (RAI-285, off by default)
+
+A thread whose prompt passes the threshold rolls its older turns into one
+structured summary (open items, promises with days, decisions and who made
+them, tone, open questions). Amounts stay as references to book rows, never
+free-text naira; raw history is kept for audit. The next turn shows the
+summary plus the newest turns word for word. One model call per compaction,
+about 10 minutes after the big turn (while the provider cache is warm);
+never when a turn is queued for the thread.
+
+```bash
+export MIMI_COMPACTION=1            # off (0) by default
+export MIMI_COMPACT_TOKENS=100000   # compact past this many prompt tokens
+export MIMI_COMPACT_KEEP=6          # newest turns kept word for word
+export MIMI_COMPACT_DELAY_S=600     # seconds after the big turn
+
+META_API_KEY= python -m mimi.harness.compaction_eval          # 30 threads + 20 jobs (CI)
+python -m mimi.harness.compaction_eval --live                 # record real drafts
+```
+
+Eval report: `eval/compaction/compaction.report.json` (live drafts record
+into `eval/compaction/compactions.live.cache.json`).
 
 ## 5. Tests
 

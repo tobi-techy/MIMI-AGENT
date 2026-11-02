@@ -55,11 +55,13 @@ from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 from mimi.harness import claims as C
 from mimi.harness import guards as G
+from mimi.harness import speak as S
 from mimi.harness.context import pointer
 from mimi.harness.errors import ConnectorDown, ToolError, error_text
 from mimi.harness.gateway import AllModelsFailed, Gateway, worst_case_kobo
 from mimi.harness.go import BookAPI, ControlPlane, CrossTenant, EventLog, NoConsent
-from mimi.harness.policy import RiskPolicy
+from mimi.harness.plain import PLAIN_MODEL
+from mimi.harness.policy import Decision, RiskPolicy, action_type_for
 from mimi.harness.registry import RESERVED_ARGS, ToolContext, Toolset, ToolSpec
 from mimi.harness.style import clean_reply
 from mimi.harness.types import (
@@ -78,6 +80,7 @@ from mimi.harness.types import (
     Tier,
 )
 from mimi.harness.untrusted import defang
+from mimi.models import metering
 from mimi.tz import LAGOS
 
 log = logging.getLogger(__name__)
@@ -156,6 +159,9 @@ class LoopState(BaseModel):
     # private text only.
     must_speak: bool = False
     nudged: bool = False
+    # The when-to-speak decisions of this run (RAI-300), each with its
+    # reason: every silence is logged here and on the trace.
+    speak: list[dict[str, Any]] = Field(default_factory=list)
     repair_step: int = -1
     # The dearest model call so far: the budget reserve never assumes less.
     max_call_kobo: int = 0
@@ -205,8 +211,29 @@ def business_key(tenant_id: str, intent_kind: str, fields: dict[str, Any]) -> st
     return "ik_" + _h(tenant_id, intent_kind, fields)[:32]
 
 
+def _fold_side_spend(state: LoopState) -> None:
+    """Fold the turn's model spend outside the loop (router, steer, readers) into
+    the run, so the per-run budget counts it (``mimi.models.metering``)."""
+    sc = metering.current()
+    if sc is None:
+        return
+    kobo, calls = sc.fold()
+    state.spend.side_kobo += kobo
+    state.spend.side_calls += calls
+
+
 def _naira(kobo: int) -> str:
     return f"N{kobo / 100:,.2f}"
+
+
+def pause_question(helper: str) -> str:
+    """What the owner reads when a job hits its per-turn budget: plain words,
+    no model budget, step or tool-call numbers (those stay in the events)."""
+    from mimi.harness.skills import HELPER_TITLE
+
+    who = HELPER_TITLE.get(helper, helper.title() if helper else "Mimi")
+    return (f"This one's taking more work than usual, so I paused {who}. Nothing was lost. "
+            "Keep going?")
 
 
 class Harness:
@@ -222,6 +249,10 @@ class Harness:
         perf: Callable[[], float] = time.perf_counter,
         max_repairs: int = 1,
         artifacts: Any = None,
+        speak: S.SpeakConfig | None = None,
+        speak_counts: S.SpeakCounts | None = None,
+        speak_digest: S.DigestQueue | None = None,
+        preapprovals: Callable[[str, str, dict[str, Any]], bool] | None = None,
     ) -> None:
         self.book = book
         self.control = control
@@ -234,6 +265,23 @@ class Harness:
         # ``mimi.harness.context.ArtifactStore``: read outputs over 2,000
         # tokens are stored there and only a pointer enters the transcript.
         self.artifacts = artifacts
+        # When to speak (RAI-300): the decision in front of send_to_user.
+        # ``speak_counts``/``speak_digest`` default to in-memory stores; the
+        # API passes the durable ones.
+        self.speak = speak or S.SpeakConfig()
+        self.speak_counts = speak_counts or S.InMemorySpeakStore()
+        # The durable digest when one is passed; else the in-memory store
+        # doubles as the digest (tests, the sim).
+        self.speak_digest: S.DigestQueue
+        if speak_digest is not None:
+            self.speak_digest = speak_digest
+        elif isinstance(self.speak_counts, S.InMemorySpeakStore):
+            self.speak_digest = self.speak_counts
+        else:
+            self.speak_digest = S.InMemorySpeakStore()
+        # Code's word on a standing pre-approval (RAI-323, ``act_if_preapproved``):
+        # (tenant, action_type, payload) -> bool. None: nothing is pre-approved.
+        self.preapprovals = preapprovals
 
     # ================================================================== API
 
@@ -290,8 +338,8 @@ class Harness:
         )
         if context is not None:
             state.tools = [dict(t) for t in context.tools]
-            state.prefix_len = 2
-            state.history_len = len(context.messages) - 3
+            state.prefix_len = len(context.prefix.messages())
+            state.history_len = len(context.messages) - state.prefix_len - 1
             state.context = context.manifest.trace_metadata()
         data: dict[str, Any] = {
             "wake_source": event.wake_source, "toolset_hash": state.toolset_hash,
@@ -381,6 +429,7 @@ class Harness:
         *,
         owner_messages: Sequence[str] = (),
         enforce_run_budget: bool = True,
+        gateway: Gateway | None = None,
     ) -> StepResult:
         """One model call and its tool calls. Pure in, state out."""
         t0 = self.perf()
@@ -391,6 +440,7 @@ class Harness:
         now = self.clock()
         day = now.astimezone(LAGOS).date()
 
+        _fold_side_spend(state)
         if self._gates(state, helper, day, enforce_run_budget):
             return self._step_result(state, n_ev, n_int, n_dr, 0)
 
@@ -404,7 +454,8 @@ class Harness:
         tools = state.tools or helper.toolset.schemas()
         tm = self.perf()
         try:
-            reply = self.gateway.chat(state.messages, tools)
+            # A plain-code path (``mimi.harness.plain``) puts its own model first.
+            reply = (gateway or self.gateway).chat(state.messages, tools)
         except AllModelsFailed as exc:
             for fb in exc.fallbacks:
                 self._emit(state, "model_fallback", model=fb.model, short=fb.error)
@@ -415,13 +466,18 @@ class Harness:
             self._emit(state, "model_fallback", model=fb.model,
                        short=f"{fb.model} failed ({fb.error}); used next model")
         turn = reply.turn
-        state.spend.model_calls += 1
+        by_code = turn.fake and turn.model == PLAIN_MODEL
+        state.spend.model_calls += 0 if by_code else 1
         state.spend.kobo += reply.cost_kobo
         state.max_call_kobo = max(state.max_call_kobo, reply.cost_kobo)
         state.spend.prompt_tokens += turn.prompt_tokens
         state.spend.completion_tokens += turn.completion_tokens
         state.cached_tokens += turn.cached_tokens
-        self.control.add_spend(state.tenant_id, helper.name, day, reply.cost_kobo)
+        metering.book(self.control, state.tenant_id, helper.name, day, reply.cost_kobo)
+        metering.charge(metering.CODE if by_code else metering.HARNESS, turn.model,
+                        prompt_tokens=turn.prompt_tokens,
+                        completion_tokens=turn.completion_tokens,
+                        cached_tokens=turn.cached_tokens, kobo=reply.cost_kobo, booked=True)
         self._emit(state, "model_called", model=turn.model, cost_kobo=reply.cost_kobo,
                    duration_ms=model_s * 1000,
                    short=", ".join(c.name for c in turn.tool_calls) or "final",
@@ -495,6 +551,7 @@ class Harness:
         state.step += 1
         state.spend.steps += 1
         state.spend.seconds += step_s
+        _fold_side_spend(state)  # the readers this step's tools called
 
         if state.fail_reason:
             self._finish(state, "failed", state.fail_reason)
@@ -585,14 +642,11 @@ class Harness:
         b = self.run_budget(state, helper)
         hit = ""
         q = ""
+        reserve = 0
         if state.spend.steps >= b.max_steps:
             hit = "steps"
-            q = (f"I paused {helper.name} after {state.spend.steps} steps (the limit is "
-                 f"{b.max_steps}). {self._progress(state)} Keep going?")
         elif state.spend.seconds >= b.max_seconds:
             hit = "seconds"
-            q = (f"I paused {helper.name} after {state.spend.seconds:.0f}s of work (the limit "
-                 f"is {b.max_seconds:.0f}s). {self._progress(state)} Keep going?")
         else:
             reserve = max(state.max_call_kobo, worst_case_kobo(
                 self.gateway.primary,
@@ -600,16 +654,21 @@ class Harness:
                 + len(json.dumps(state.tools or helper.toolset.schemas())),
                 self.gateway.max_tokens,
             ))
-            if state.spend.kobo >= b.max_kobo or state.spend.kobo + reserve > b.max_kobo:
+            used = state.spend.total_kobo
+            if used >= b.max_kobo or used + reserve > b.max_kobo:
                 hit = "kobo"
-                q = (f"I paused {helper.name}: this job has used {_naira(state.spend.kobo)} "
-                     f"of its {_naira(b.max_kobo)} model budget and the next step could "
-                     f"cost up to {_naira(reserve)}. {self._progress(state)} Keep going?")
         if hit:
-            self._emit(state, "budget_hit", short=f"{hit} budget", cost_kobo=state.spend.kobo,
+            # Plain words for the owner (30 Oct 2026 run 2): no step, second,
+            # tool-call or model-budget figures. The figures stay on the
+            # budget_hit event below and the reason; the logic is unchanged.
+            q = pause_question(helper.name)
+            self._emit(state, "budget_hit", short=f"{hit} budget",
+                       cost_kobo=state.spend.total_kobo,
                        data={"dimension": hit, "steps": state.spend.steps,
                              "seconds": round(state.spend.seconds, 3),
-                             "kobo": state.spend.kobo})
+                             "kobo": state.spend.total_kobo, "max_kobo": b.max_kobo,
+                             # Every figure behind the pause is in the trace (RAI-273).
+                             "reserve_kobo": reserve})
             self._owner_draft(state, q)
             self._finish(state, "stopped_budget", f"{hit} budget reached", question=q)
             return True
@@ -744,18 +803,29 @@ class Harness:
                 i.tool not in INTERNAL_TOOLS for i in state.intents):
             self._finish(state, "done", "turn finished")
         else:
-            first = (content or "").strip().splitlines()
-            why = first[0][:160] if first else "nothing new to say"
-            self._finish(state, "done_quiet", f"quiet: {why}")
+            # RAI-300: every silence carries the speak decision's reason when
+            # the gate decided one; otherwise the model's own last line.
+            why = next((f"{s.get('action')}: {s.get('reason')}"
+                        for s in reversed(state.speak)), "")
+            if not why:
+                first = (content or "").strip().splitlines()
+                why = first[0][:160] if first else "nothing new to say"
+                why = f"quiet: {why}"
+            self._finish(state, "done_quiet", why[:200])
 
     def _finish(self, state: LoopState, status: RunStatus, reason: str,
                 question: str = "") -> None:
         failed = status == "failed"
+        data: dict[str, Any] = {"status": status, "steps": state.spend.steps,
+                                "model_calls": state.spend.model_calls,
+                                "wake_source": state.wake_source}
+        if state.speak:
+            # RAI-300: the speak decision and its reason on every trace.
+            data["speak_decision"] = state.speak[-1]["action"]
+            data["speak_reason"] = state.speak[-1]["reason"]
+            data["speak_log"] = list(state.speak)
         self._emit(state, "run_finished", short=f"{status}: {reason}"[:200],
-                   cost_kobo=state.spend.kobo,
-                   data={"status": status, "steps": state.spend.steps,
-                         "model_calls": state.spend.model_calls,
-                         "wake_source": state.wake_source})
+                   cost_kobo=state.spend.kobo, data=data)
         state.finished = RunResult(
             run_id=state.run_id,
             job_id=state.job_id,
@@ -976,8 +1046,125 @@ class Harness:
                 G.record_trip("claim_blocked", tool=name, problems=problems, text=text[:240],
                               helper=state.helper, run_id=state.run_id)
                 return self._invalid(state, call_id, name, why, nxt), (self.perf() - t) * 1000
+        if spec.name == "send_to_user":
+            held = self._speak_gate(state, call_id, name, parsed, now, t)
+            if held is not None:
+                return held
         return self._propose(state, helper, spec, ctx, call_id, parsed, out, scope,
                              position, t)
+
+    def _speak_gate(self, state: LoopState, call_id: str, name: str,
+                    parsed: BaseModel, now: datetime,
+                    t: float) -> tuple[str, float] | None:
+        """When to speak (RAI-300): the decision in front of send_to_user.
+
+        Rules in code, the model only for the in-between cases. ``stay_quiet``
+        and ``batch_into_digest`` withdraw the draft and answer the call with
+        the reason; enforce mode ends the turn ``done_quiet`` once nothing
+        else can speak. Shadow mode logs the decision and still sends, so
+        ``off`` and ``shadow`` always return None (nothing held)."""
+        if self.speak.mode == "off":
+            # ``off`` skips the decision: nothing logged, counted or queued.
+            return None
+        args = parsed.model_dump(mode="json")
+        channel = str(args.get("channel") or "")
+        body = str(args.get("body") or "")
+        shop_id = str(args.get("shop_id") or "")
+        day = now.astimezone(LAGOS).date()
+        held = self._speak_hold(state, name, call_id, channel=channel, shop_id=shop_id,
+                                body=body, kind=str(args.get("kind") or "reply"),
+                                day=day, t=t)
+        if held is None:
+            return None
+        decision, ms = held
+        if self.speak.mode in ("off", "shadow"):
+            return None
+        if decision.action == "speak_now":
+            return None
+        what = ("held for the daily note" if decision.action == "batch_into_digest"
+                else "stayed quiet")
+        state.messages.append(self._tool_msg(call_id, json.dumps(
+            {"ok": True, "not_sent": decision.action, "reason": decision.reason,
+             "next": f"The message {what}. End the turn unless something else "
+                     "needs saying."}, ensure_ascii=False)))
+        return f"{name}: {decision.action} ({decision.reason[:80]})", ms
+
+    def _speak_hold(self, state: LoopState, name: str, call_id: str, *, channel: str,
+                    shop_id: str, body: str, kind: str, day: date,
+                    t: float) -> tuple[S.SpeakDecision, float] | None:
+        """Decide and log; None when the draft is not a duplicate send.
+
+        A duplicate send_to_user with the same body in the same turn never
+        speaks twice: the first draft already says it, so the second is
+        held here as stay_quiet without consulting the cap."""
+        ms = (self.perf() - t) * 1000
+        if any(d.body == body for d in state.drafts):
+            decision = S.SpeakDecision(action="stay_quiet",
+                                       reason="this update was already sent", layer="rule")
+            self._log_speak(state, name, decision, channel=channel, shop_id=shop_id)
+            return decision, ms
+        facts = self._speak_facts(state, channel=channel, shop_id=shop_id, body=body,
+                                  kind=kind)
+        # Shadow mode still sends the draft, so it must never also land in
+        # the owner's daily note: only enforce mode writes the real digest.
+        digest: S.DigestQueue = (self.speak_digest if self.speak.mode == "enforce"
+                                 else S.InMemorySpeakStore())
+        decision = S.decide(facts, tenant_id=state.tenant_id, day=day,
+                            counts=self.speak_counts, digest=digest,
+                            limits=self.speak.limits)
+        self._log_speak(state, name, decision, channel=channel, shop_id=shop_id)
+        return decision, ms
+
+    def _log_speak(self, state: LoopState, name: str, decision: S.SpeakDecision, *,
+                   channel: str, shop_id: str) -> None:
+        state.speak.append({"action": decision.action, "reason": decision.reason,
+                            "layer": decision.layer, "channel": channel,
+                            "shop_id": shop_id})
+        self._emit(state, "speak_decision", tool=name, short=decision.reason[:200],
+                   data={"action": decision.action, "layer": decision.layer,
+                         "channel": channel, "shop_id": shop_id})
+
+    @staticmethod
+    def _speak_facts(state: LoopState, *, channel: str, shop_id: str, body: str,
+                     kind: str) -> S.SpeakFacts:
+        """What the turn found, read from the run in code (never the model).
+
+        A direct question from the recipient always speaks; an approval-tier
+        intent or a money-at-risk outcome always speaks; errors and blocked
+        jobs always reach the owner. A routine with nothing new stays quiet;
+        a clean routine batch waits for the digest."""
+        direct = state.must_speak
+        approval = any(i.tier == "approve" for i in state.intents)
+        approve_text = any("Approve and send?" in str(i.preview) for i in state.intents)
+        risk_text = any(k in body for k in ("flagged", "fake", "could not verify",
+                                            "dispute", "pending"))
+        money_risk = bool(risk_text and any(
+            i.tool in ("check_payment", "flag_payment_proof", "check_payment_screenshot")
+            for i in state.intents))
+        real_change = any(i.tool not in INTERNAL_TOOLS for i in state.intents)
+        read_only = all(i.tool in ("get_balance", "get_invoices", "get_payment_history",
+                                   "get_account_number", "check_payment", "read_stock_answer",
+                                   "get_stock_estimates", "get_open_deliveries")
+                        for i in state.intents)
+        money_facts = bool(state.intents) or bool(state.seen_results)
+        routine = state.wake_source in ("routine", "scheduled_check_in")
+        # A routine that only read (nothing proposed, nothing matched) has no
+        # news: quiet. One that matched clean (reads only, no flags) waits
+        # for the digest. Anything a person asked for, or any real change,
+        # is news and speaks.
+        no_news = routine and not money_facts and not real_change and not state.question
+        clean = routine and read_only and not state.question and not state.follow_up_at
+        dup = any(d.body == body for d in state.drafts)
+        return S.facts_from_turn(
+            channel=channel, shop_id=shop_id, direct_question=direct,
+            needs_decision=approval or approve_text or state.approval_pending,
+            money_at_risk=money_risk,
+            promise_due=state.follow_up_at is not None,
+            error_or_blocked=bool(state.fail_reason or state.guard),
+            new_money_facts=money_facts and not state.must_speak,
+            real_change=real_change,
+            no_new_facts=no_news, already_sent=dup, routine_clean=clean and not dup,
+            body=body, kind=kind)
 
     def _verify(self, state: LoopState, tool: str, text: str, parsed: BaseModel,
                 now: datetime) -> dict[str, list[str]]:
@@ -1112,11 +1299,13 @@ class Harness:
                  call_id: str, args: BaseModel, out: BaseModel, scope: str, position: int,
                  t: float) -> tuple[str, float]:
         payload = out.model_dump(mode="json")
-        tier: Tier = self.policy.tier(state.tenant_id, spec.name, payload)
+        decision = self._decide(state, spec.name, payload)
+        tier: Tier = decision.tier
         if tier == "never":
             ms = (self.perf() - t) * 1000
             self._emit(state, "tool_refused", tool=spec.name, tier="never", scope=scope,
-                       short="tier never", duration_ms=ms, data={"reason": "never"})
+                       short="tier never", duration_ms=ms,
+                       data={"reason": "never", "action_type": decision.action_type})
             state.messages.append(self._tool_msg(call_id, error_text(
                 "Mimi never does this.",
                 "Tell the owner what is needed; only the owner acts on money or bank details.")))
@@ -1134,8 +1323,11 @@ class Harness:
         rec = IntentRecord(
             tool=spec.name, intent_kind=spec.intent_kind, tier=tier, scope=scope,
             tenant_id=state.tenant_id, shop_id=shop_id, idempotency_key=bkey,
-            attempt_key=akey, payload=payload, preview=preview, step=state.step,
-            shadow=helper.shadow,
+            attempt_key=akey, payload=payload,
+            preview=("Hand-off, for you to do yourself: " + preview
+                     if decision.hand_off else preview),
+            step=state.step, shadow=helper.shadow,
+            action_type=decision.action_type, behaviour=decision.behaviour,
         )
         if any(i.idempotency_key == bkey for i in state.intents):
             ms = (self.perf() - t) * 1000
@@ -1161,10 +1353,33 @@ class Harness:
             "notify": "Go will apply it and tell the owner.",
             "approve": "It waits in the owner's approvals; this turn will stop after this step.",
         }[tier]
+        if decision.hand_off:
+            follow = ("The owner does this step by hand; Mimi does not carry it out. "
+                      "This turn will stop after this step.")
         state.messages.append(self._tool_msg(call_id, json.dumps(
             {"ok": True, "proposed": spec.intent_kind, "tier": tier, "next": follow,
              "preview": preview}, ensure_ascii=False)))
         return f"{spec.name}: proposed ({tier})", ms
+
+    def _decide(self, state: LoopState, tool: str, payload: dict[str, Any]) -> Decision:
+        """The rulebook's answer for one proposed step (``policy.decide``, RAI-323).
+
+        Every write intent passes here before Go sees it; the decision is an
+        event (the audit row in the thread's event log and a trace span)."""
+        action = action_type_for(tool, payload)
+        pre = False
+        if self.preapprovals is not None:
+            try:
+                pre = bool(self.preapprovals(state.tenant_id, action, payload))
+            except Exception as exc:  # a lookup failure is "not pre-approved"
+                log.warning("preapproval lookup failed: %s", type(exc).__name__)
+        d = self.policy.decide(state.tenant_id, action,
+                               {"tool": tool, "payload": payload, "preapproved": pre})
+        self._emit(state, "policy_decided", tool=tool, tier=d.tier,
+                   short=f"{d.action_type}: {d.behaviour} ({d.source})"[:160],
+                   data={"action_type": d.action_type, "behaviour": d.behaviour,
+                         "outcome": d.outcome, "source": d.source, "locked": d.locked})
+        return d
 
     def _effects(self, state: LoopState, tool: str, payload: dict[str, Any], tier: Tier,
                  shop_id: str, key: str) -> None:

@@ -11,17 +11,18 @@ numbers, brands and banks are made up.
 
 ## 1. Open the hosted demo
 
-> **Not deployed yet.** The Cloudflare build for the demo console at
-> `https://demo.userail.money` is prepared in the console's repository
-> (`deploy/demo-console/`), with the API address left as a placeholder;
-> nothing is live. Until it is, run it on your machine (section 4).
+The API is live at `https://mimi-agent-tobi-omotade-2cd167ac.atlasflow.dev`
+(health at `GET /v1/health`, OpenAPI at `/openapi.json`). The demo console
+at `https://demo.userail.money` is a build in the console's own repository
+(`deploy/demo-console/`) that talks to that API; the API below is what this
+repo owns and what the film runs against.
 
-When it is live:
-
-1. Open `https://demo.userail.money`. No sign-up, no key: the page asks the
-   API for a demo session and you get **your own fresh copy** of Coral Lane
-   Trading. Nobody else sees what you do. The session lasts an hour; its
-   copy is deleted after that.
+1. Start a session: `POST /v1/demo/sessions`. No sign-up, no key: you get
+   **your own fresh copy** of Coral Lane Trading plus a token (send it as
+   `Authorization: Bearer`). Nobody else sees what you do. The session lasts
+   an hour; its copy is deleted after that. The film starts one fresh
+   session per take: a full six-beat rehearsal burns about ₦297 of model
+   spend, so never film two takes on one session.
 2. Things to try:
    * Ask Mimi something: "Who owes me the most this week?" Watch the
      thinking line show each step, then the reply.
@@ -52,14 +53,15 @@ repo's API, built in the window.
 ## 3. Demo caps and safety
 
 Enforced by the API (`mimi/api/demo.py`, `mimi/api/uploads.py`), before
-anything is queued. The naira figures are placeholders the operator sets.
+anything is queued. The live host runs the defaults below (`docs/API.md`):
+₦400 a day per visitor address and ₦2,000 a day for the whole demo.
 
 | | |
 |---|---|
 | Model spend per visitor address | ₦400 a day, about 25 turns (`MIMI_DEMO_IP_DAILY_CAP_NAIRA`), counted across all of that address's sessions, reset at midnight Lagos time; the address is Cloudflare's `CF-Connecting-IP`, never a client's own `X-Forwarded-For` |
 | Model spend for the whole demo | ₦2,000 a day (`MIMI_DEMO_GLOBAL_DAILY_CAP_NAIRA`) |
 | Sessions | one hour each (`MIMI_DEMO_SESSION_TTL_S`), 20 per address a day |
-| Kill switch | `MIMI_DEMO_KILL=1` refuses every new turn; reads keep working |
+| Kill switch | `MIMI_DEMO_KILL=1` refuses every new turn and every new or reset session (503, the same "the demo is paused" answer); reads keep working |
 | Refused in demo | approving a credit-limit raise or a raise of Mimi's own daily allowance (declining works) |
 | Attachments | JPEG, PNG or WebP photos, Ogg, WebM, M4A, MP3 or WAV voice notes, PDFs; 10 MB a file, 30 files and 60 MB a copy; the first bytes must match the type; a turn may only point at the caller's own uploads; deleted with the copy |
 | Keys | no key is in the console's JavaScript; the session token lives in the tab's session storage and is sent only as `Authorization: Bearer` (never in a URL, including audio and image loads) |

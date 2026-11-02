@@ -1,0 +1,27 @@
+{
+ "sheets": {
+  "n": 30,
+  "first_ok": 30,
+  "misses": [],
+  "sku_ok": 31,
+  "sku_n": 31,
+  "invented": 0
+ },
+ "sync": {
+  "contacts": 6,
+  "invoices": 3,
+  "items": 8,
+  "payments": 3,
+  "orgs": 0,
+  "accounts": 6,
+  "sheet_rows": 3,
+  "csv_rows": 1,
+  "unapproved_refused": true,
+  "write_external": "comment-001",
+  "undone_at_set": true,
+  "payment_id": "zp-001",
+  "found_back": "zp-001",
+  "proxy_calls": 3,
+  "refused_ok": true
+ }
+}

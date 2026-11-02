@@ -1,7 +1,7 @@
 PY ?= python
 
-.PHONY: credit-eval credit-eval-live credit-fixtures sim-credit e2e e2e-live e2e-postgres e2e-traced binding-eval binding-eval-live steer-eval steer-eval-live which-eval order-eval order-eval-live photo-route-eval photo-route-eval-live
-.PHONY: loop-safety-eval claims-eval review-pocs install test eval eval-live eval-fake voice-eval voice-eval-live voice-fixtures voice-values-eval voice-values-eval-live voice-values-fixtures proof-eval proof-eval-live proof-fixtures stock-backtest stock-eval stock-eval-live stock-eval-fake sim-stock trace-stock sim sim-live sim-voice sim-voice-v2 sim-screens trace-smoke langfuse-setup langfuse-monitor langfuse-datasets proof-experiment voice-experiment receipts-experiment judge-calibration world-check lint typecheck secrets provenance migrate check harness-eval harness-eval-live trace-harness router-eval router-eval-live context-eval context-eval-live router-train trace-router api api-worker api-seed api-openapi api-openapi-check
+.PHONY: week week-day week-soak credit-eval credit-eval-live credit-fixtures sim-credit e2e e2e-live e2e-postgres demo-check e2e-traced binding-eval binding-eval-live steer-eval steer-eval-live which-eval order-eval order-eval-live photo-route-eval photo-route-eval-live
+.PHONY: loop-safety-eval claims-eval policy-eval review-pocs install test eval eval-live eval-fake voice-eval voice-eval-live voice-fixtures voice-values-eval voice-values-eval-live voice-values-fixtures proof-eval proof-eval-live proof-fixtures stock-backtest stock-eval stock-eval-live stock-eval-fake sim-stock trace-stock sim sim-live sim-voice sim-voice-v2 sim-screens trace-smoke langfuse-setup langfuse-monitor langfuse-datasets proof-experiment voice-experiment receipts-experiment judge-calibration world-check lint typecheck secrets provenance migrate check harness-eval harness-eval-live trace-harness router-eval router-eval-live context-eval context-eval-live router-train trace-router api api-worker api-seed api-openapi api-openapi-check connectors-eval connectors-eval-live connectors-fixtures checkin-eval checkin-eval-live
 
 install:            ## editable install with dev tools
 	$(PY) -m pip install -e '.[dev,otel,langfuse]'
@@ -57,6 +57,12 @@ stock-eval-fake:    ## keyword FakeModel run of the same 30 cases (plumbing)
 stock-eval-live:    ## call Muse Spark (needs META_API_KEY); resumes from the cache
 	$(PY) -m mimi.stock.eval --live
 
+checkin-eval:       ## check-in reply eval, 50 replies + 20 supplier answers, replaying recorded Muse Spark
+	META_API_KEY= $(PY) -m mimi.checkin.eval
+
+checkin-eval-live:  ## call Muse Spark (needs META_API_KEY); resumes from the cache
+	$(PY) -m mimi.checkin.eval --live
+
 sim-stock:          ## offline low-stock scene: Monday stock check, one-tap counts, restock drafts
 	META_API_KEY= $(PY) -m mimi.sim --stock --transcript
 
@@ -87,7 +93,7 @@ provenance:         ## every commit was made in the hackathon window
 migrate:            ## create Mimi's tables; set MIMI_DB_URL first
 	alembic upgrade head
 
-check: lint typecheck test review-pocs loop-safety-eval claims-eval api-openapi-check eval voice-eval voice-values-eval proof-eval stock-backtest stock-eval harness-eval router-eval context-eval credit-eval e2e binding-eval which-eval steer-eval order-eval photo-route-eval world-check secrets provenance
+check: lint typecheck test review-pocs loop-safety-eval claims-eval policy-eval api-openapi-check eval voice-eval voice-values-eval proof-eval stock-backtest stock-eval checkin-eval harness-eval router-eval context-eval credit-eval e2e binding-eval which-eval steer-eval order-eval photo-route-eval world-check secrets provenance
 
 sim-voice-v2:       ## offline sim: voice notes, payment promises, voice replies
 	META_API_KEY= SPITCH_API_KEY= $(PY) -m mimi.sim --shops 3 --transcript --voice 1 --promises 1 --voice-replies
@@ -161,6 +167,12 @@ context-eval-live:  ## record both arms (needs META_API_KEY; about N1,200 builde
 router-train:       ## regenerate the fast classifier's synthetic training set (contributor tier; resumable)
 	$(PY) scripts/make_router_train.py
 
+compaction-eval:    ## thread compaction: 30 long threads + 20 long jobs, scripted drafts (CI)
+	META_API_KEY= $(PY) -m mimi.harness.compaction_eval
+
+compaction-eval-live: ## record the compaction eval's Muse Spark drafts (needs META_API_KEY)
+	$(PY) -m mimi.harness.compaction_eval --live
+
 trace-router:       ## eight routing decisions and four context-built runs traced to Langfuse (replayed; no model cost)
 	$(PY) scripts/trace_router_context.py --public
 
@@ -198,6 +210,9 @@ api: api-seed       ## the HTTP API on :8000 with one worker thread (offline mod
 api-worker:         ## an extra worker process for the API's turn queue (safe to kill)
 	@$(API_ENV) $(PY) -m mimi.api worker
 
+policy-eval:        ## the owner's rulebook (RAI-323): every action x behaviour, built-in stops, loosening attempts
+	$(PY) -m mimi.harness.policy_eval
+
 api-openapi:        ## regenerate docs/api/openapi.json
 	$(PY) -m mimi.api openapi
 
@@ -208,6 +223,9 @@ api-openapi-check:  ## fail when docs/api/openapi.json is stale
 
 e2e:                ## 10 simulated shops through the real API, store and worker processes; replays recorded Muse Spark, SAM 3.1 and persona answers; pass marks
 	META_API_KEY= $(PY) -m mimi.api.e2e --no-write
+
+demo-check:         ## the demo script's scenes (docs/DEMO-SCRIPT.md) against the e2e replay; N0
+	META_API_KEY= $(PY) scripts/demo_script_check.py
 
 e2e-postgres:       ## the same e2e on Postgres (set E2E_DB to a throwaway database: it is wiped)
 	META_API_KEY= $(PY) -m mimi.api.e2e --no-write --db "$${E2E_DB:?set E2E_DB}"
@@ -246,3 +264,24 @@ photo-route-eval:   ## photo routing: 27 fresh list photos and look-alikes, repl
 
 photo-route-eval-live: ## record the photo routing eval's Muse Spark calls (needs META_API_KEY; about N180 from empty)
 	$(PY) -m mimi.api.photo_route_eval --live
+
+week:               ## simulated week offline (RAI-273): 40 shops, 7 days, 2 workers, 6 kills; writes docs/runs/week-offline.*
+	META_API_KEY= SPITCH_API_KEY= $(PY) -m mimi.api.week --workers 2 --week-kills 6
+
+week-day:           ## one simulated day with 1 kill, as CI runs it (no write)
+	META_API_KEY= SPITCH_API_KEY= $(PY) -m mimi.api.week --days 1 --workers 2 --week-kills 1 --no-write
+
+week-soak:          ## the soak offline: the week looped for 6 h with 20 forced kills; writes docs/runs/soak-offline.*
+	META_API_KEY= SPITCH_API_KEY= $(PY) -m mimi.api.week --workers 2 --soak-hours 6 --soak-kills 20
+
+# --- Connectors: shop tools with consent (RAI-277) ---
+
+connectors-fixtures: ## recorded Composio replies and 30 messy sheets from the Coral Lane world
+	$(PY) scripts/make_connector_fixtures.py
+	$(PY) scripts/make_connector_sheet_cases.py
+
+connectors-eval:    ## connectors eval, replaying recorded Composio fixtures (CI, no key); pass marks
+	META_API_KEY= SPITCH_API_KEY= $(PY) -m mimi.connectors.eval --no-write
+
+connectors-eval-live: ## live check against a Zoho Books trial org (needs COMPOSIO_API_KEY + auth ids)
+	$(PY) -m mimi.connectors.eval --live

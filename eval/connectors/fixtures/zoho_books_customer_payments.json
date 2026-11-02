@@ -1,0 +1,51 @@
+[
+ {
+  "match": {},
+  "reply": {
+   "customer_payments": [
+    {
+     "payment_id": "zoho-pay-00005",
+     "customer_id": "zoho-shop-013",
+     "date": "2026-08-31",
+     "amount": 146200.0,
+     "payment_mode": "Bank Transfer",
+     "reference_number": "CLT-00005",
+     "status": "paid",
+     "invoices": [
+      {
+       "invoice_id": "zoho-dlv-00-0144"
+      }
+     ]
+    },
+    {
+     "payment_id": "zoho-pay-00016",
+     "customer_id": "zoho-shop-015",
+     "date": "2026-09-01",
+     "amount": 331300.0,
+     "payment_mode": "Bank Transfer",
+     "reference_number": "REP-RCPT-00016",
+     "status": "paid",
+     "invoices": [
+      {
+       "invoice_id": "zoho-dlv-01-0163"
+      }
+     ]
+    },
+    {
+     "payment_id": "zoho-pay-00004",
+     "customer_id": "zoho-shop-019",
+     "date": "2026-09-02",
+     "amount": 69100.0,
+     "payment_mode": "Bank Transfer",
+     "reference_number": "CLT-00004",
+     "status": "paid",
+     "invoices": [
+      {
+       "invoice_id": "zoho-dlv-00-0195"
+      }
+     ]
+    }
+   ]
+  }
+ }
+]

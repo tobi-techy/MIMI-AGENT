@@ -34,6 +34,7 @@ from mimi.harness.binding import AnswerBinder, ask_is_live
 from mimi.harness.gateway import ModelTurn, ScriptedModel, say
 from mimi.harness.inbound import Inbound, Payload
 from mimi.harness.router import Router, ThreadState
+from mimi.models import metering
 from mimi.models.base import ModelError
 from mimi.models.cache import CacheMiss
 from mimi.models.fake import FakeModel
@@ -195,8 +196,10 @@ def test_an_unrelated_question_goes_to_the_router_and_the_ask_stays_open(
         assert flags(engine) == []  # a chat is not a complaint
     # The real answer that follows still binds to Order.
     c2, agent2, engine2 = c, agent, engine
-    agent2.router.binder = AnswerBinder(model=router_fake({"label": "short",
-                                                           "confidence": 0.9}))
+    # Swapped in after the agent was built, so it goes behind the metering seam
+    # by hand (the agent meters every model it is given; ``mimi.models.metering``).
+    agent2.router.binder = AnswerBinder(model=metering.Metered(
+        router_fake({"label": "short", "confidence": 0.9}), metering.BINDING))
     with c2:
         v = reply(c2, agent2, "u-2", "2 ctn short", NOW + timedelta(minutes=9))
         assert v["skill"] == "order/drop-confirmation"

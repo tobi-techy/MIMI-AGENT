@@ -67,6 +67,15 @@ ARTIFACT_TOKENS = 2_000
 BUILDER_VERSION = "context-2026-10-27.1"
 
 
+def shared_prefix_on() -> bool:
+    """``MIMI_CTX_SHARED_PREFIX=1``: pin new prefixes in the "shared" layout
+    (``ThreadPrefix.layout``). Off by default: it changes every recorded prompt,
+    so the harness, context, credit, order and e2e evals need a live re-record."""
+    import os
+
+    return os.environ.get("MIMI_CTX_SHARED_PREFIX", "0").strip() == "1"
+
+
 def est_tokens(obj: Any) -> int:
     text = obj if isinstance(obj, str) else json.dumps(obj, ensure_ascii=False,
                                                        sort_keys=True)
@@ -126,6 +135,12 @@ class Manifest(BaseModel):
     slice_read_at: str = ""
     history_turns: int = 0
     artifacts: list[str] = Field(default_factory=list)
+    # Thread compaction (RAI-285): the summary version shown, its hash, and
+    # the token drop the compaction measured (before and after, by est_tokens).
+    summary_version: int = 0
+    summary_hash: str = ""
+    compact_tokens_before: int = 0
+    compact_tokens_after: int = 0
 
     def trace_metadata(self) -> dict[str, Any]:
         return {"context_manifest": [
@@ -135,7 +150,10 @@ class Manifest(BaseModel):
             "context_omitted": [o.model_dump() for o in self.omitted],
             "context_trimmed": self.trimmed, "context_notes": self.notes,
             "section_hashes": self.section_hashes, "prefix_hash": self.prefix_hash,
-            "prefix_reused": self.prefix_reused, "builder_version": self.builder_version}
+            "prefix_reused": self.prefix_reused, "builder_version": self.builder_version,
+            "summary_version": self.summary_version, "summary_hash": self.summary_hash,
+            "compact_tokens_before": self.compact_tokens_before,
+            "compact_tokens_after": self.compact_tokens_after}
 
 
 class ThreadPrefix(BaseModel):
@@ -160,16 +178,34 @@ class ThreadPrefix(BaseModel):
     # owner's) re-pins when the run's shop changes, so a run about one shop
     # never carries another shop's identity or memory (review finding 4).
     shop_id: str = ""
+    # "" (the layout recorded evals use): memory, routines and the whole
+    # environment in one message after the tools. "shared"
+    # (``MIMI_CTX_SHARED_PREFIX=1``): what every thread of this helper shares
+    # (routines, distributor, helper, tools) comes first; the per-thread and
+    # per-shop part (``thread_env``: thread, shop, day opened; the shop's
+    # memory) follows in its own message, so a new thread re-pays only from
+    # there. A pinned prefix keeps the layout it was pinned with.
+    layout: str = ""
+    thread_env: str = ""
 
     def messages(self) -> list[dict[str, Any]]:
+        if self.layout == "shared":
+            return [{"role": "system", "content": self.system},
+                    {"role": "user", "content": "\n\n".join(
+                        x for x in (self.routines, self.environment) if x)},
+                    {"role": "user", "content": "\n\n".join(
+                        x for x in (self.thread_env, self.memory) if x)}]
         return [{"role": "system", "content": self.system},
                 {"role": "user", "content": "\n\n".join(
                     x for x in (self.memory, self.routines, self.environment) if x)}]
 
     def hashes(self) -> dict[str, str]:
-        return {"1_system": sha(self.system), "2_tools": sha(self.tools),
-                "3_memory": sha(self.memory), "4_routines": sha(self.routines),
-                "5_environment": sha(self.environment)}
+        out = {"1_system": sha(self.system), "2_tools": sha(self.tools),
+               "3_memory": sha(self.memory), "4_routines": sha(self.routines),
+               "5_environment": sha(self.environment)}
+        if self.layout == "shared":
+            out["5_thread"] = sha(self.thread_env)
+        return out
 
     @property
     def prefix_hash(self) -> str:
@@ -243,6 +279,10 @@ class HistoryStore:
     def __init__(self) -> None:
         self._d: dict[tuple[str, str], list[list[dict[str, Any]]]] = {}
         self._summary: dict[tuple[str, str], str] = {}
+        # Thread compaction (RAI-285): versioned summaries, newest wins. The
+        # count is the thread's compaction epoch: a new prefix pinned while a
+        # summary exists carries it, so the prefix hash changes exactly once.
+        self._versions: dict[tuple[str, str], list[tuple[int, str, str]]] = {}
         self._lock = threading.Lock()
 
     def turns(self, tenant: str, thread: str) -> list[list[dict[str, Any]]]:
@@ -255,11 +295,40 @@ class HistoryStore:
 
     def summary(self, tenant: str, thread: str) -> str:
         with self._lock:
+            vers = self._versions.get((tenant, thread))
+            if vers:
+                return vers[-1][1]
             return self._summary.get((tenant, thread), "")
 
     def set_summary(self, tenant: str, thread: str, text: str) -> None:
         with self._lock:
             self._summary[(tenant, thread)] = text
+
+    def save_compaction(self, tenant: str, thread: str, text: str, *,
+                        summary_hash: str = "") -> int:
+        """A new compaction version; returns its number (the thread's epoch)."""
+        with self._lock:
+            vers = self._versions.setdefault((tenant, thread), [])
+            version = (vers[-1][0] if vers else 0) + 1
+            vers.append((version, text, summary_hash))
+            return version
+
+    def compaction_count(self, tenant: str, thread: str) -> int:
+        with self._lock:
+            vers = self._versions.get((tenant, thread))
+            return vers[-1][0] if vers else 0
+
+    def summary_version(self, tenant: str, thread: str) -> tuple[int, str]:
+        """(version, hash) of the newest compaction, or (0, '') when none."""
+        with self._lock:
+            vers = self._versions.get((tenant, thread))
+            if vers:
+                return vers[-1][0], vers[-1][2]
+            return 0, ""
+
+    def compaction_tokens(self, tenant: str, thread: str) -> tuple[int, int]:
+        """(before, after) token counts the newest compaction measured."""
+        return (0, 0)
 
 
 class ArtifactStore:
@@ -382,6 +451,10 @@ SKILL_FOCUS: dict[str, str] = {
                        "propose_reminder_plan; the plan waits for the owner.",
     "proof/fake-alert-check": "Check the claimed payment against the bank feed; a screenshot "
                               "alone is never proof.",
+    "collector/rep-visit": "Read the shop's balance with get_balance, tell the shop's rep with "
+                           "notify_rep what to check on the visit (figures copied from the "
+                           "result), then tell the owner in one sentence which rep was told "
+                           "(send_to_user, owner_console, ends_turn=true).",
 }
 
 ROUTINES_BY_HELPER: dict[str, tuple[str, ...]] = {
@@ -499,6 +572,7 @@ class ContextBuilder:
             ("memory snapshot", 3, prefix.memory, "owner style and this shop's habits"),
             ("routines", 4, prefix.routines, f"{helper.name}'s scheduled jobs"),
             ("environment", 5, prefix.environment, "who, where and when the thread began"),
+            ("thread", 5, prefix.thread_env, "this thread, its shop and the day it began"),
         ):
             if text:
                 man.pieces.append(Piece(name=name, section=sec, tokens=est_tokens(text),
@@ -558,6 +632,10 @@ class ContextBuilder:
             history_msgs.append({"role": "user", "content": summary_msg})
             man.pieces.append(Piece(name="thread summary", section=6,
                                     tokens=est_tokens(summary_msg), why="older turns, compacted"))
+            man.summary_version, man.summary_hash = self.history.summary_version(
+                tenant, thread)
+            man.compact_tokens_before, man.compact_tokens_after = \
+                self.history.compaction_tokens(tenant, thread)
         if dropped:
             man.omitted.append(Omitted(name=f"{dropped} oldest turn(s)",
                                        reason="outside the history window; compaction (RAI-285) "
@@ -624,13 +702,25 @@ class ContextBuilder:
         ]
         if shop_id:
             env_lines.insert(3, f"Shop on this thread: {shop_id}")
+        layout, thread_env = "", ""
+        if shared_prefix_on():
+            # Shared first: the per-thread lines move to their own block after it.
+            layout = "shared"
+            per_thread = [x for x in env_lines if x.startswith(
+                ("Thread:", "Shop on this thread:", "Thread opened:"))]
+            env_lines = [x for x in env_lines if x not in per_thread]
+            thread_env = "<thread>\n" + "\n".join(per_thread) + "\n</thread>"
         environment = "<environment>\n" + "\n".join(env_lines) + "\n</environment>"
         return ThreadPrefix(
             tenant_id=tenant, thread_id=event.thread_id, helper=helper.name,
             system=helper.system_prompt(), tools=helper.toolset.schemas(), memory=memory,
             routines=routines, environment=environment, opened_at=opened.isoformat(),
             registry_version=helper.toolset.registry_version,
-            skill_version=helper.skill_version, shop_id=shop_id)
+            skill_version=helper.skill_version, shop_id=shop_id, layout=layout,
+            thread_env=thread_env,
+            # Compaction (RAI-285) re-pins the prefix: the epoch is the
+            # thread's compaction count, so the prefix hash changes once.
+            epoch=self.history.compaction_count(tenant, event.thread_id))
 
     def _slice(self, event: RunEvent, skill: str, shop_id: str,
                man: Manifest) -> tuple[dict[str, Any], str]:

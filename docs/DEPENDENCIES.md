@@ -26,6 +26,8 @@ Optional extras:
 | `opentelemetry-api` | `otel` | Apache-2.0 | `mimi/runtime/tracing.py` `OtelStepTracer`, imported only when that tracer is built; the sim and tests use `RecordingStepTracer` |
 | `langfuse` 5.0.4 (pinned) | `langfuse` | MIT | `mimi/observe/` (traces, datasets, experiments), `scripts/trace_smoke.py`, `scripts/trace_stock.py`, `experiments/proof_experiment.py`; imported only when the `LANGFUSE_*` keys are set (the tests use a mock client) |
 | `psycopg2-binary` | `postgres` | LGPL with exceptions (dynamic use only, unmodified) | only when the sim, alembic or the API store points at Postgres (the Docker image installs it) |
+| `composio` 0.15.0 (pinned) | `connectors` | Apache-2.0 (checked on PyPI, 1 Nov 2026) | `mimi/connectors/composio.py` only (the Composio transport; FakeComposio replays fixtures with no SDK). Imported only when `MIMI_CONNECTORS=composio` with `COMPOSIO_API_KEY` |
+| `openpyxl` 3.1.5 (pinned) | `connectors` | MIT | `mimi/connectors/csv/connector.py` only (Excel import; CSV is the standard library). Imported only when an Excel file arrives |
 
 Their transitive packages: `httpcore` (BSD-3-Clause), `h11` (MIT), `anyio`
 (MIT), `idna` (BSD-3-Clause), `certifi` (MPL-2.0), `pydantic-core` (MIT),

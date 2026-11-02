@@ -43,7 +43,7 @@ from typing import Any
 
 from mimi.api.agent import Agent
 from mimi.api.e2e.clock import pin_worker
-from mimi.api.e2e.models import CachePaths, agent_models
+from mimi.api.e2e.models import CachePaths, Usage, agent_models
 from mimi.observe.langfuse_export import exporter_from_env
 from mimi.store.db import make_engine
 from mimi.store.queue import Claim
@@ -112,6 +112,19 @@ class PausingAgent(Agent):
                 time.sleep(3600)
 
 
+def log_charges(u: Usage) -> None:
+    """Every metered model call (``mimi.models.metering``) as one usage row, so
+    the report counts the router, steer, binding and readers as well as the loop."""
+    from mimi.models import metering
+
+    def row(c: metering.Charge) -> None:
+        u.log(kind="metered", role=c.role, model=c.model, kobo=c.kobo,
+              prompt_tokens=c.prompt_tokens, completion_tokens=c.completion_tokens,
+              cached_tokens=c.cached_tokens, units=c.units)
+
+    metering.add_listener(row)
+
+
 def build_agent(db_url: str, *, live: bool, paths: CachePaths, worker_id: str,
                 pause: str = "", marker: Path | None = None,
                 usage: Path | None = None, kill_plan: Path | None = None) -> Agent:
@@ -121,6 +134,7 @@ def build_agent(db_url: str, *, live: bool, paths: CachePaths, worker_id: str,
                          exporter=exporter_from_env(environment="e2e"))
     if usage is not None:
         agent.hold_dir = usage.parent
+        log_charges(Usage(usage))
     if kill_plan is not None and kill_plan.exists():
         agent.kill_plan = list(json.loads(kill_plan.read_text()))
         agent.kill_dir = kill_plan.parent

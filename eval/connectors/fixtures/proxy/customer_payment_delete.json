@@ -1,0 +1,16 @@
+[
+ {
+  "match": {
+   "payment_id": "zp-001"
+  },
+  "reply": {
+   "success": true
+  }
+ },
+ {
+  "match": {},
+  "reply": {
+   "success": true
+  }
+ }
+]
