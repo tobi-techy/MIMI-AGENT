@@ -289,9 +289,11 @@ def test_the_kill_switch_refuses_new_and_reset_sessions_like_a_turn(store_url: s
         turn = shop_turn(c, sess, "demo.k2")
         # The same friendly 503 answer, in the same shape as a refused turn.
         assert r.status_code == 503 == turn.status_code
-        assert r.json() == turn.json() == {"detail": demo.PAUSED}
+        # One refusal shape since #45 (detail plus demo_limit, code "paused").
+        assert r.json() == turn.json()
+        assert r.json()["detail"] == demo.PAUSED and r.json()["demo_limit"]["code"] == "paused"
         reset = c.post("/v1/demo/reset", headers=bearer(sess))
-        assert reset.status_code == 503 and reset.json() == {"detail": demo.PAUSED}
+        assert reset.status_code == 503 and reset.json() == turn.json()
         with engine.connect() as conn:
             assert conn.execute(sa.select(sa.func.count()).select_from(
                 s.demo_sessions)).scalar() == n0
