@@ -334,6 +334,11 @@ def test_likely_then_bank_witness_makes_it_verified_with_three_witnesses() -> No
     assert len(w) == 1 and w[0]["level"] == "verified"
     assert [x.split(":")[0] for x in w[0]["witnesses"]] == ["rep", "shop", "bank"]
     assert rig.ledger.get("wamid.1").level == "verified"
+    # RAI-295: the proof level went likely -> verified, one event per witness.
+    rec = rig.ledger.get("wamid.1")
+    assert rec.proof_level == "verified" and rec.proof_policy_version == "v1"
+    assert [(e.old_level, e.new_level, e.witness_kind) for e in rig.ledger.events("wamid.1")] == [
+        ("none", "likely", "alert_screenshot_checked"), ("likely", "verified", "bank_feed")]
 
 
 def test_likely_with_no_bank_credit_goes_to_approvals_after_the_window() -> None:
@@ -344,6 +349,9 @@ def test_likely_with_no_bank_credit_goes_to_approvals_after_the_window() -> None
     flags = rig.sink.payloads("proof_for_approval")
     assert [f["reason"] for f in flags] == ["no_bank_credit"]
     assert "record_bank_witness" not in rig.kinds()
+    # RAI-295: no credit in the window takes the level back down, as an event.
+    assert rig.ledger.get("wamid.1").proof_level == "estimated"
+    assert [e.new_level for e in rig.ledger.events("wamid.1")] == ["likely", "estimated"]
 
 
 def test_same_screenshot_twice_does_not_match_twice() -> None:
@@ -412,6 +420,17 @@ def test_sql_ledger_round_trip(tmp_path: Path) -> None:
     assert [p.proof_id for p in ledger.by_reference("KST1")] == ["wamid.1"]
     assert ledger.by_image("c" * 64)[0].shop_id == "shop-1"
     assert not ledger.credit_used("cr-1")
+    # RAI-295: proof columns and append-only events persist; a replay adds nothing.
+    from mimi.provenance import ProofEvent
+
+    ev = ProofEvent("payment_transfer", "wamid.1", "none", "likely",
+                    "alert_screenshot_checked", "wamid.1", "v1", T0.isoformat())
+    ledger.update("wamid.1", proof_level="likely",
+                  witnesses='[{"kind": "alert_screenshot_checked", "source_id": "wamid.1"}]')
+    ledger.add_event(ev)
+    ledger.add_event(ev)
+    assert ledger.get("wamid.1").proof_level == "likely"
+    assert ledger.events("wamid.1") == [ev]
 
 
 def _record(pid: str, shop: str, sha: str, **kw: Any) -> ProofRecord:

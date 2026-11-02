@@ -619,6 +619,23 @@
             "title": "Lines",
             "type": "array"
           },
+          "proof": {
+            "title": "Proof",
+            "type": "string"
+          },
+          "proof_level": {
+            "enum": [
+              "verified",
+              "likely",
+              "estimated"
+            ],
+            "title": "Proof Level",
+            "type": "string"
+          },
+          "proof_policy_version": {
+            "title": "Proof Policy Version",
+            "type": "string"
+          },
           "rep_id": {
             "title": "Rep Id",
             "type": "string"
@@ -643,6 +660,9 @@
           "total_kobo",
           "total_naira",
           "status",
+          "proof_level",
+          "proof",
+          "proof_policy_version",
           "lines"
         ],
         "title": "DeliveryOut",

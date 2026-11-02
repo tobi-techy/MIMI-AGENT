@@ -343,6 +343,12 @@ def test_shops_list_and_detail(env: dict[str, Any]) -> None:
     assert d["shop"]["name"] == W_A.shops[0].name and d["deliveries"]
     for dl in d["deliveries"]:
         assert dl["total_kobo"] == sum(x["line_total_kobo"] for x in dl["lines"])
+        assert dl["proof_level"] in ("verified", "likely", "estimated") and dl["proof"]
+    # RAI-295: every payment says how sure Mimi is, in words, never colour alone.
+    assert d["payments"] and all(p["proof_level"] in ("verified", "likely", "estimated")
+                                 and p["proof"].startswith(p["proof_level"])
+                                 and p["proof_policy_version"] == "v1"
+                                 for p in d["payments"])
     assert c.get("/v1/shops/shop-999", headers=h("a_owner")).status_code == 404
 
 
