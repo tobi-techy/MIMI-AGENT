@@ -1,8 +1,8 @@
 {
  "generated_by": "python -m mimi.skills eval",
- "catalogue": "skills-cf739c9ae618",
- "skills": 20,
- "cases": 222,
+ "catalogue": "skills-9a2aca58906b",
+ "skills": 21,
+ "cases": 233,
  "live_calls": 0,
  "live_kobo": 0,
  "order_lines": {
@@ -104,6 +104,22 @@
    "misses": []
   },
   "collector/promise-to-pay": {
+   "cases": 11,
+   "adversarial": 1,
+   "routing": 1.0,
+   "code_checks": 0,
+   "pass_marks": {
+    "cases>=10": true,
+    "routing>=0.9": true,
+    "adversarial_all_safe": true,
+    "money_misroutes==0": true,
+    "code_checks_all_right": true,
+    "no_cache_misses": true
+   },
+   "passed": true,
+   "misses": []
+  },
+  "collector/rep-visit": {
    "cases": 11,
    "adversarial": 1,
    "routing": 1.0,

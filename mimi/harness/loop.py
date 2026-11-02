@@ -209,6 +209,16 @@ def _naira(kobo: int) -> str:
     return f"N{kobo / 100:,.2f}"
 
 
+def pause_question(helper: str) -> str:
+    """What the owner reads when a job hits its per-turn budget: plain words,
+    no model budget, step or tool-call numbers (those stay in the events)."""
+    from mimi.harness.skills import HELPER_TITLE
+
+    who = HELPER_TITLE.get(helper, helper.title() if helper else "Mimi")
+    return (f"This one's taking more work than usual, so I paused {who}. Nothing was lost. "
+            "Keep going?")
+
+
 class Harness:
     def __init__(
         self,
@@ -587,12 +597,8 @@ class Harness:
         q = ""
         if state.spend.steps >= b.max_steps:
             hit = "steps"
-            q = (f"I paused {helper.name} after {state.spend.steps} steps (the limit is "
-                 f"{b.max_steps}). {self._progress(state)} Keep going?")
         elif state.spend.seconds >= b.max_seconds:
             hit = "seconds"
-            q = (f"I paused {helper.name} after {state.spend.seconds:.0f}s of work (the limit "
-                 f"is {b.max_seconds:.0f}s). {self._progress(state)} Keep going?")
         else:
             reserve = max(state.max_call_kobo, worst_case_kobo(
                 self.gateway.primary,
@@ -602,10 +608,11 @@ class Harness:
             ))
             if state.spend.kobo >= b.max_kobo or state.spend.kobo + reserve > b.max_kobo:
                 hit = "kobo"
-                q = (f"I paused {helper.name}: this job has used {_naira(state.spend.kobo)} "
-                     f"of its {_naira(b.max_kobo)} model budget and the next step could "
-                     f"cost up to {_naira(reserve)}. {self._progress(state)} Keep going?")
         if hit:
+            # Plain words for the owner (30 Oct 2026 run 2): no step, second,
+            # tool-call or model-budget figures. The figures stay on the
+            # budget_hit event below and the reason; the logic is unchanged.
+            q = pause_question(helper.name)
             self._emit(state, "budget_hit", short=f"{hit} budget", cost_kobo=state.spend.kobo,
                        data={"dimension": hit, "steps": state.spend.steps,
                              "seconds": round(state.spend.seconds, 3),

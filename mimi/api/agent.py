@@ -45,12 +45,14 @@ import sqlalchemy as sa
 from sqlalchemy.engine import Engine
 
 from mimi.api import cards as cx
+from mimi.api import display
 from mimi.api import steering as sx
 from mimi.api import voice as vx
 from mimi.api.helpers import HelperDeps
 from mimi.api.media import checked_media
 from mimi.api.photo_label import media_pointer
 from mimi.clock import wall, wall_utc
+from mimi.flags import fixes_2026_10_30
 from mimi.harness import fastclass
 from mimi.harness import handoff as hx
 from mimi.harness import lexicon as lx
@@ -80,6 +82,7 @@ from mimi.harness.types import RunEvent
 from mimi.models.base import ChatModel
 from mimi.observe.langfuse_export import exporter_from_env
 from mimi.orders.catalogue import family_of
+from mimi.owed import naira_sign
 from mimi.stock.copy import numbers_in
 from mimi.store import schema as s
 from mimi.store.book import SqlGo, moves_money
@@ -314,6 +317,30 @@ class _Lease(threading.Thread):
         self._stop.set()
 
 
+# Helpers whose prompts say "send nothing and end the turn" for a question
+# they have no tools for; their silence is a hand-back, never a dead end.
+# Brand for anyone; the delivery-receipt Order helper for the owner only (a
+# shop's receipt flow may end quietly on purpose, e.g. after a which question).
+QUIET_HANDBACK_HELPERS: frozenset[str] = frozenset({"brand", "order"})
+# Order skills with their own work where a quiet end is the right answer
+# (a receipt is the message; intake has its own helper config).
+QUIET_KEEP_SKILLS: frozenset[str] = frozenset({"order/order-intake"})
+
+
+def _code_answers(d: RouteDecision) -> bool:
+    """Whether code answers this owner lookup from the book (no model).
+
+    Open orders and low stock: always. The morning brief: when an owner rule
+    picked it ("morning brief", "brief me", "what needs me today"), or with
+    ``MIMI_FIXES_2026_10_30`` on (every deployed image) for any brief route,
+    "how is business today?" included. With the switch off that vaguer ask
+    still reaches the model as recorded, so the recorded owner thread that
+    later turns replay against is unchanged until the paid re-record."""
+    if d.skill != "mimi/owner-brief":
+        return True
+    return d.rule.startswith("owner_rule:") or fixes_2026_10_30()
+
+
 class Agent:
     def __init__(
         self,
@@ -484,12 +511,14 @@ class Agent:
                     s.turns.c.turn_id == t.merged_into,
                     s.turns.c.tenant_id == tenant_id)).first() or t
             replies = []
+            names = display.names_for(conn, tenant_id)
             for m in conn.execute(sa.select(s.messages).where(
                     s.messages.c.tenant_id == tenant_id, s.messages.c.turn_id == lead.turn_id,
                     s.messages.c.direction == "out").order_by(s.messages.c.ts,
                                                               s.messages.c.message_id)):
                 reply = {"message_id": m.message_id, "channel": m.channel,
-                         "shop_id": m.shop_id, "text": m.text, "kind": m.kind,
+                         "shop_id": m.shop_id, "text": display.humanize(m.text, names),
+                         "kind": m.kind,
                          "status": m.status, "at": m.at}
                 voice = vx.reply_voice(conn, tenant_id, m)
                 if voice is not None:
@@ -656,7 +685,8 @@ class Agent:
             self._complete(holder, d, events, prior, status="done_quiet", steer=sv)
             return
         if (lead.source == "owner_message" and d.status == "routed"
-                and d.skill in cx.CODE_LOOKUPS):
+                and ((d.skill in cx.CODE_LOOKUPS and _code_answers(d))
+                     or self._code_read(claim.tenant_id, d, events))):
             # What is open now (orders, low stock): code reads the book and
             # answers with a card; no model, no spend (docs/HANDOFFS.md).
             self._complete(holder, d, events, prior, status="done", steer=sv, lookup=True)
@@ -716,6 +746,19 @@ class Agent:
         self._complete(holder, d, events, prior, status=state.finished.status,
                        state=state, event=event, steer=sv)
 
+    def _code_read(self, tenant: str, d: RouteDecision, events: Sequence[Inbound]) -> bool:
+        """An owner read on Collector or Credit that code answers from the book
+        (``cards.code_read``): no model, well under a second, instead of 3 to 6
+        Muse Spark calls (30 to 60 s on the demo, 30 Oct 2026 run 2). Behind
+        ``MIMI_FIXES_2026_10_30`` (on in every deployed image) so the recorded
+        owner turns replay as recorded until the paid re-record."""
+        if not fixes_2026_10_30() or d.skill not in cx.READ_SKILLS:
+            return False
+        words = "\n".join(e.text for e in events if e.text).strip()
+        if not cx.code_read(self.engine, tenant, d.skill, words):
+            return False
+        return bool(cx.answer_for(self.engine, tenant, d.skill, words).sentence)
+
     # ============================================================ hand-back
 
     @staticmethod
@@ -734,6 +777,14 @@ class Agent:
         useful = [b for b in said if not hx.deflecting_texts([b])]
         if (held or leaked) and not useful:
             return ("failed" if r.status == "failed" else "deflected"), held + leaked
+        if (not said and not r.intents and r.status != "failed"
+                and d.skill not in QUIET_KEEP_SKILLS
+                and (d.helper == "brand" or (d.helper in QUIET_HANDBACK_HELPERS
+                                             and lead.sender == "owner"))):
+            # Brand and the delivery-receipt Order helper end a question they
+            # have no tools for quietly (their prompts, 30 Oct 2026): Mimi
+            # takes it back instead of leaving the person with nothing.
+            return "no_tools", []
         return None
 
     def _hand_back(self, holder: list[Claim], ck: dict[str, Any], d: RouteDecision,
@@ -1349,7 +1400,12 @@ class Agent:
             ans = cx.answer_for(self.engine, tenant, d.skill, words)
         did_work = fin is not None and any(
             i.tool not in ("send_to_user", "ask_question") for i in fin.intents)
-        override = ans.sentence if (ans.card is not None and not did_work) else ""
+        # A helper that did the judging (Credit's recommendation) keeps its own
+        # first sentence: the code line only restated the card and dropped the
+        # answer (30 Oct 2026 run 2). Pure reads are answered by code anyway.
+        keep_own = fixes_2026_10_30() and d.skill == "credit/credit-review" and fin is not None
+        override = ans.sentence if (ans.card is not None and not did_work
+                                    and not keep_own) else ""
         owner_said = False
         with self.engine.begin() as conn:
             for i, ev in enumerate(d.events):
@@ -1501,7 +1557,7 @@ class Agent:
                 next_state = replace(next_state, pending_skill=prior.pending_skill,
                                      expects=prior.expects, asked_at=prior.asked_at,
                                      ask_ref=prior.ask_ref)
-            if ans.card is not None and not owner_said and ans.sentence:
+            if (ans.card is not None or lookup) and not owner_said and ans.sentence:
                 # A lookup code answers, or a helper that said nothing to the
                 # owner: the card's own sentence, never a dead end.
                 self._out(conn, tenant, thread, turn_id, key=f"card:{turn_id}",
@@ -1876,6 +1932,11 @@ class Agent:
         # Every outbound message, model- or code-written, passes the style
         # guard (RAI-303): no dashes, no filler, figures never change.
         text = clean_reply(text, where=kind)
+        if channel == "owner_console":
+            # Naira as the owner reads it: "N7,231,000" becomes "₦7,231,000"
+            # (figures unchanged). Shop texts keep their recorded wording until
+            # the shop persona replays are re-recorded.
+            text = naira_sign(text)
         insert_ignore(conn, s.messages, {
             "tenant_id": tenant, "message_id": f"out:{key}", "thread_id": thread,
             "turn_id": turn_id, "direction": "out", "sender": "mimi", "channel": channel,
@@ -1959,16 +2020,29 @@ class Agent:
                                            s.messages.c.status).where(
                 s.messages.c.tenant_id == tenant_id,
                 s.messages.c.idempotency_key == a.idempotency_key)).first()
-        return approval_dict(a, draft)
+            names = display.names_for(conn, tenant_id)
+        return approval_dict(a, draft, names)
 
 
-def approval_dict(a: Any, draft: Any | None) -> dict[str, Any]:
+def approval_dict(a: Any, draft: Any | None,
+                  names: display.Names | None = None) -> dict[str, Any]:
+    """``preview`` and the draft text as the owner reads them (names for ids,
+    ``₦`` money); ``preview_raw`` is the record as written."""
+    nm = names or display.Names()
+    payload = loads(a.payload, {})
+    over = bool(payload.get("over_credit"))
     return {
         "approval_id": a.approval_id, "status": a.status, "helper": a.helper,
-        "skill": a.skill, "shop_id": a.shop_id, "thread_id": a.thread_id,
+        "skill": a.skill, "shop_id": a.shop_id,
+        "shop_name": nm.shops.get((a.shop_id or "").lower(), ""), "thread_id": a.thread_id,
         "turn_id": a.turn_id, "tool": a.tool, "intent_kind": a.intent_kind,
-        "preview": a.preview, "payload": loads(a.payload, {}),
-        "draft": ({"text": draft.text, "channel": draft.channel, "status": draft.status}
+        "preview": display.humanize(a.preview, nm), "preview_raw": a.preview,
+        "payload": payload,
+        # An order that would push the shop past its credit limit, flagged by code.
+        "flags": ["over_credit_limit"] if over else [],
+        "over_limit_by_kobo": int(payload.get("over_by_kobo") or 0) if over else 0,
+        "draft": ({"text": display.humanize(draft.text, nm), "channel": draft.channel,
+                   "status": draft.status}
                   if draft is not None else None),
         "created_at": a.created_at, "decided_at": a.decided_at, "decided_by": a.decided_by,
         "note": a.note, "supersedes": getattr(a, "supersedes", None),

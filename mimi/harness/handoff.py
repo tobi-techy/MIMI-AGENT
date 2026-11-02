@@ -49,7 +49,7 @@ TaskStatus = Literal["working", "needs_you", "done", "handed_back", "failed"]
 Via = Literal["rule", "lexical", "fast", "model", "mention", "assign", "handback", "binding"]
 HandbackCode = Literal["deflected", "no_tools", "no_helper", "failed"]
 CardKind = Literal["shop_row", "list"]
-ActionKind = Literal["remind", "open_shop", "open_order", "open_approvals", "ask"]
+ActionKind = Literal["remind", "open_shop", "open_order", "open_approvals", "ask", "set_limit"]
 IntentKind = Literal["turn", "open"]
 
 # Max re-routes after a hand-back: one hop, then Mimi answers or asks.
@@ -139,6 +139,29 @@ class ShopRow(_Rec):
     credit_limit_kobo: int
     credit_limit_naira: str
     open_invoices: int = 0
+    # Owed above the shop's credit limit (code-checked; 30 Oct 2026 run 2).
+    over_limit: bool = False
+    over_limit_by_kobo: int = 0
+    over_limit_by_naira: str = ""
+
+
+class LimitChange(_Rec):
+    """A credit-limit change the owner asked for in words, worked out by code.
+
+    Mimi never sets a limit: the console shows this beside the shop row and
+    the owner confirms it with Set credit limit (``POST
+    /v1/shops/{shop_id}/credit-limit``), or leaves it."""
+
+    shop_id: str
+    current_limit_kobo: int
+    current_limit_naira: str
+    proposed_limit_kobo: int
+    proposed_limit_naira: str
+    change_kobo: int  # proposed minus current (negative to lower it)
+    change_naira: str
+    would_be_over_limit: bool = False  # owed would still be above the new limit
+    needs: Literal["owner_confirm"] = "owner_confirm"
+    asked: str = ""  # the owner's words for the change, as said
 
 
 class ListItem(_Rec):
@@ -167,6 +190,8 @@ class Card(_Rec):
     actions: list[CardAction] = Field(default_factory=list)
     as_of: str = ""
     source: Literal["book"] = "book"
+    # A limit change the owner asked for, for them to confirm (never applied here).
+    limit_change: LimitChange | None = None
 
 
 # ------------------------------------------------------------------ acks
@@ -383,7 +408,7 @@ def chips_for(skill: str, sender: str, card: Card | None = None) -> list[Chip]:
     row = card.shop_row if card is not None else None
     out: list[Chip] = []
     if skill.startswith("collector/") and row is not None:
-        out = [_turn(f"Remind {row.name}", f"Send {row.shop_id} a soft reminder about the "
+        out = [_turn(f"Remind {row.name}", f"Send {row.name} a soft reminder about the "
                      "overdue balance", "collector"),
                _open(f"Open {row.name}", f"shop:{row.shop_id}"),
                _turn("Who else owes?", "Who else owes me money?", "collector")]

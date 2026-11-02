@@ -53,13 +53,12 @@ repo's API, built in the window.
 ## 3. Demo caps and safety
 
 Enforced by the API (`mimi/api/demo.py`, `mimi/api/uploads.py`), before
-anything is queued. The live host currently runs a per-address cap of N400
-and a global cap of ₦2000 a day; the ₦100 and ₦2000 figures in `docs/API.md`
-are the operator-set defaults, not the live values.
+anything is queued. The live host runs the defaults below (`docs/API.md`):
+₦400 a day per visitor address and ₦2,000 a day for the whole demo.
 
 | | |
 |---|---|
-| Model spend per visitor address | ₦400 a day on the live host (`MIMI_DEMO_IP_DAILY_CAP_NAIRA`; the ₦100 default lives in `docs/API.md`), counted across all of that address's sessions, reset at midnight Lagos time |
+| Model spend per visitor address | ₦400 a day, about 25 turns (`MIMI_DEMO_IP_DAILY_CAP_NAIRA`), counted across all of that address's sessions, reset at midnight Lagos time; the address is Cloudflare's `CF-Connecting-IP`, never a client's own `X-Forwarded-For` |
 | Model spend for the whole demo | ₦2,000 a day (`MIMI_DEMO_GLOBAL_DAILY_CAP_NAIRA`) |
 | Sessions | one hour each (`MIMI_DEMO_SESSION_TTL_S`), 20 per address a day |
 | Kill switch | `MIMI_DEMO_KILL=1` refuses every new turn; reads keep working |

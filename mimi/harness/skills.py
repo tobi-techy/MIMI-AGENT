@@ -75,6 +75,12 @@ SKILLS: tuple[Skill, ...] = (
     Skill("order", "open-orders",
           "The owner asks which shop orders are open or waiting now: any orders, new orders, "
           "orders waiting for approval.", ("owner",), rule_only=True, code_only=True),
+    # Owner only, rule-picked and answered by code (30 Oct 2026 run 2): "reorder
+    # for Mama Sola", "what should I restock first?". A reorder card read
+    # from the book; nothing is ordered or sent from it.
+    Skill("order", "reorder",
+          "The owner asks to reorder or restock for a shop, or what to restock first.",
+          ("owner",), rule_only=True, code_only=True),
     Skill("order", "delivery-status",
           "Goods not arrived yet: when is the van coming, where is my order, delivery late.",
           ("shop", "rep", "owner")),
@@ -93,7 +99,17 @@ SKILLS: tuple[Skill, ...] = (
     Skill("collector", "chase",
           "The owner asks to chase debtors: who owes me, remind everyone overdue, chase "
           "shops over 50k.", ("owner",), money=True),
+    # Owner only, rule-picked (30 Oct 2026 run 2): "assign Divine Favour to
+    # Tunde to visit today". Collector tells the rep (``notify_rep``).
+    Skill("collector", "rep-visit",
+          "The owner assigns a shop to a rep to visit or check on today.", ("owner",),
+          rule_only=True),
     # ---- Proof
+    # Owner only, rule-picked and answered by code (30 Oct 2026 run 2): "did
+    # any shop send a payment proof today? Check it against what they owe."
+    Skill("proof", "proofs-today",
+          "The owner asks which shops sent payment proofs today and how they compare with "
+          "what each owes.", ("owner",), money=True, rule_only=True, code_only=True),
     Skill("proof", "fake-alert-check",
           "A payment screenshot, a debit alert or a pasted bank SMS that needs checking "
           "before anyone counts it as paid.", ("shop", "rep", "owner"), money=True),

@@ -38,9 +38,16 @@ from pathlib import Path
 from typing import Any
 
 from mimi.api.media import LocalMedia, MediaSource, NoMedia, StorePhotos, StoreScreens
-from mimi.brand.tools import BRAND_SKILL, BRAND_TOOLS, BrandPorts, register_brand_tools
+from mimi.brand.tools import (
+    BRAND_SKILL,
+    BRAND_SKILL_RECORDED,
+    BRAND_TOOLS,
+    BrandPorts,
+    register_brand_tools,
+)
 from mimi.credit.sam import SamError, Segmentation, Segmenter
 from mimi.credit.tools import CreditPorts, credit_helper, register_credit
+from mimi.flags import fixes_2026_10_30
 from mimi.harness.collector import (
     BUILTIN_TOOLS,
     PROOF_SKILL,
@@ -57,7 +64,13 @@ from mimi.orders.reading import ListReader
 from mimi.orders.tools import ORDER_INTAKE_SKILL, ORDER_TOOLS, OrderPorts, register_order_tools
 from mimi.proof.reading import ScreenshotReader
 from mimi.proof.tools import SCREENSHOT_SKILL, SCREENSHOT_TOOLS, ProofPorts, register_proof_tools
-from mimi.receipts.tools import ORDER_SKILL, RECEIPT_TOOLS, ReceiptPorts, register_receipt_tools
+from mimi.receipts.tools import (
+    ORDER_SKILL,
+    ORDER_SKILL_RECORDED,
+    RECEIPT_TOOLS,
+    ReceiptPorts,
+    register_receipt_tools,
+)
 from mimi.receipts.verdict import ReceiptJudge
 from mimi.stock.answers import StockAnswerReader
 from mimi.stock.tools import STOCK_SKILL, STOCK_TOOLS, StockPorts, register_stock_tools
@@ -157,10 +170,11 @@ def build_helpers(policy: RiskPolicy | None = None, *, go: SqlGo | None = None,
         "proof", PROOF_SKILL + SCREENSHOT_SKILL,
         build_toolset(reg, "proof", PROOF_TOOLS + SCREENSHOT_TOOLS + BUILTIN_TOOLS, policy),
         skill_version="proof-v0.2")
+    fixed = fixes_2026_10_30()
     helpers["order"] = Helper(
-        "order", ORDER_SKILL + APPROVAL_LINE,
+        "order", (ORDER_SKILL if fixed else ORDER_SKILL_RECORDED) + APPROVAL_LINE,
         build_toolset(reg, "order", RECEIPT_TOOLS + BUILTIN_TOOLS, policy),
-        skill_version="order-v0.1")
+        skill_version="order-v0.2" if fixed else "order-v0.1")
     # Keyed by skill: the agent looks a skill up before its helper, so the
     # delivery-receipt Order helper (and its recorded evals) stays as it was.
     helpers["order/order-intake"] = Helper(
@@ -172,9 +186,9 @@ def build_helpers(policy: RiskPolicy | None = None, *, go: SqlGo | None = None,
         skill_version="stock-v0.1")
     register_brand_tools(reg, BrandPorts(distributor=dist))
     helpers["brand"] = Helper(
-        "brand", BRAND_SKILL,
+        "brand", BRAND_SKILL if fixed else BRAND_SKILL_RECORDED,
         build_toolset(reg, "brand", BRAND_TOOLS + BUILTIN_TOOLS, policy),
-        skill_version="brand-v0.1")
+        skill_version="brand-v0.2" if fixed else "brand-v0.1")
     credit = credit_helper(reg, policy, distributor=dist)
     helpers["credit"] = Helper(credit.name, credit.skill + APPROVAL_LINE, credit.toolset,
                                credit.budget, skill_version=credit.skill_version)

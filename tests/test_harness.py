@@ -36,7 +36,7 @@ from mimi.harness import (
 from mimi.harness.collector import COLLECTOR_TOOLS
 from mimi.harness.errors import NEXT
 from mimi.harness.gateway import ModelTurn, OpenAIToolModel, kobo_cost
-from mimi.harness.loop import invented_figures
+from mimi.harness.loop import invented_figures, pause_question
 from mimi.harness.registry import MAX_TOOL_CHARS, ToolRegistry
 from mimi.harness.tracing import build_turn, trace_run
 from mimi.observe.turns import RecordingExporter
@@ -128,7 +128,9 @@ def test_budget_hit_at_step_13_stops_and_asks_the_owner_without_dropping_work() 
     # The 12 steps ran; the 13th is refused before any model call.
     assert first.status == "stopped_budget" and first.spend.steps == 12
     assert loop.calls == 12
-    assert "12 steps" in first.owner_question and "Keep going?" in first.owner_question
+    # Plain words for the owner (30 Oct 2026 run 2); the figures are on the event.
+    assert first.owner_question == pause_question("collector")
+    assert "step" not in first.owner_question and "tool call" not in first.owner_question
     assert any(d.channel == "owner_console" and d.kind == "question"
                for d in first.outbound_drafts)
     hit = [e for e in first.events if e.type == "budget_hit"]
@@ -164,7 +166,8 @@ def test_naira_budget_reserves_the_next_call_and_never_overspends() -> None:
     h, helper, _, _ = rig(loop, budget=RunBudget(max_kobo=5_000))
     r = h.run(ev("x"), helper)
     assert r.status == "stopped_budget" and r.spend.kobo <= 5_000
-    assert "N50.00" in r.owner_question  # figures from code
+    # No model-budget figures for the owner; the budget logic is unchanged.
+    assert not any(ch.isdigit() for ch in r.owner_question) and "budget" not in r.owner_question
     assert r.spend.kobo == 4_500  # a sixth call could have cost up to N9
 
 
@@ -174,7 +177,7 @@ def test_time_budget_counts_working_seconds() -> None:
     ticks = iter(range(100_000))
     h.perf = lambda: next(ticks) * 0.25
     r = h.run(ev("x"), helper)
-    assert r.status == "stopped_budget" and "s of work" in r.owner_question
+    assert r.status == "stopped_budget" and "more work than usual" in r.owner_question
 
 
 def test_invalid_tool_args_are_repaired_once_then_fail_safe_with_a_logged_reason() -> None:

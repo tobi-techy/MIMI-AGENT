@@ -97,12 +97,14 @@ queue. Its default database is SQLite in `/data` (mount a volume); set
 | `MIMI_PHONE_PSEUDONYM_KEY` | dev key | required in production (thread ids for unknown numbers) |
 | `MIMI_RELEASE` | | shown by `/v1/health` |
 | `MIMI_MODE` | `live` | `live` (bearer keys only) or `demo` (public demo sessions, below) |
-| `MIMI_DEMO_IP_DAILY_CAP_NAIRA` | 100 (placeholder) | demo: model spend per visitor address per Africa/Lagos day, across its sessions |
-| `MIMI_DEMO_GLOBAL_DAILY_CAP_NAIRA` | 2000 (placeholder) | demo: model spend across every demo session per day |
+| `MIMI_DEMO_IP_DAILY_CAP_NAIRA` | 400 | demo: model spend per visitor address per Africa/Lagos day, across its sessions (about 25 turns; 100 ended a visit after 4 to 8) |
+| `MIMI_DEMO_GLOBAL_DAILY_CAP_NAIRA` | 2000 | demo: model spend across every demo session per day |
 | `MIMI_DEMO_SESSION_TTL_S` | 3600 | demo: how long a session token lasts |
 | `MIMI_DEMO_SESSIONS_PER_IP` | 20 | demo: new sessions per visitor address per day |
 | `MIMI_DEMO_KILL` | off | demo: `1` refuses every new turn (503); reads keep working |
-| `MIMI_DEMO_TRUST_FORWARDED` | off | demo: `1` reads the visitor address from the right-most `X-Forwarded-For` entry (only behind a proxy that appends it) |
+| `MIMI_DEMO_CLIENT_IP_HEADER` | `cf-connecting-ip` | demo: the one header the edge sets to the visitor's address (Cloudflare, in front of Atlasflow, writes `CF-Connecting-IP` and overwrites a client's own); read only from a trusted peer; `none` turns it off. `X-Forwarded-For` is refused here |
+| `MIMI_DEMO_TRUSTED_PROXIES` | private, loopback and CGNAT ranges | demo: comma-separated CIDRs (the platform edge) whose requests may carry that header; `*` trusts any peer, only when the app is reachable through the edge alone |
+| `MIMI_DEMO_TRUST_FORWARDED` | ignored | removed 30 Oct 2026: `X-Forwarded-For` is never read (a made-up one bought a fresh allowance) |
 | `MIMI_DEMO_IP_SALT` | dev salt | demo: key for the address digests; required in production |
 | `MIMI_MEDIA_DIR` | none | where the helpers read a message's image by its `ref` (`local:<path>`), checked against its `sha256`; the simulator and the e2e eval use it. Without it no image is read |
 
@@ -137,7 +139,48 @@ A public console on synthetic data (`mimi/api/demo.py`):
   mid-turn parks on the loop's daily cap like any distributor.
 * Approving a credit review, a credit limit change or a raise of the daily
   allowance is refused (403); declining works.
-* `GET /v1/me` shows the session's expiry and today's spend against the caps.
+* `GET /v1/me` shows the session's expiry, today's spend against the caps,
+  `resets_at` and `ip_source` (`header` when the visitor address came from
+  the edge's `CF-Connecting-IP`, `peer` when it is the socket address; never
+  the address itself). After a deploy, `ip_source` must read `header`, or
+  every visitor shares one allowance.
+* The visitor address is never taken from `X-Forwarded-For` (or `X-Real-IP`):
+  a client can write those. Only `MIMI_DEMO_CLIENT_IP_HEADER` from a peer in
+  `MIMI_DEMO_TRUSTED_PROXIES`, else the socket peer.
+
+### Demo limits: the refusal the console shows
+
+Every demo refusal (429 for a cap or too many sessions, 503 when paused)
+answers one shape. `detail` is kept for older clients; `demo_limit` is what
+the console shows (OpenAPI `DemoLimitError`):
+
+| Field | Type | What |
+|---|---|---|
+| `code` | string | `visitor_daily_cap`, `global_daily_cap`, `paused`, `too_many_sessions` |
+| `scope` | string | `visitor` (this address), `global` (every visitor), `demo` (paused) |
+| `title` | string | a short heading: `You have used today's demo allowance` |
+| `message` | string | one plain sentence to show under it |
+| `spent_kobo`, `cap_kobo` | int or null | today's spend and the cap (null when not a spend cap) |
+| `spent_naira`, `cap_naira` | string or null | the same as `₦400` |
+| `resets_at` | string | next midnight Africa/Lagos, ISO 8601 (`2026-10-31T00:00:00+01:00`); empty when paused |
+| `retry` | string | `tomorrow` or `later` |
+
+```json
+{
+  "detail": "you have used today's demo allowance; it resets at midnight Lagos time",
+  "demo_limit": {
+    "code": "visitor_daily_cap", "scope": "visitor",
+    "title": "You have used today's demo allowance",
+    "message": "You have used today's demo allowance; it resets at midnight Lagos time.",
+    "spent_kobo": 40120, "cap_kobo": 40000, "spent_naira": "₦401.20", "cap_naira": "₦400",
+    "resets_at": "2026-10-31T00:00:00+01:00", "retry": "tomorrow"
+  }
+}
+```
+
+A run that crosses the cap mid-turn is not refused: it parks on the loop's
+daily cap (the owner gets the usual holding note) and the next turn gets the
+refusal above.
 * Console attachments (`mimi/api/uploads.py`): the demo console has no
   WhatsApp channel to keep media, so the API stands in for one.
   `POST /v1/media` takes one file as the raw request body with its
@@ -180,16 +223,24 @@ approval reads as 404. Keys are compared by SHA-256 in constant time; give
 | `GET /v1/threads/{thread_id}` | owner | Messages (each with `voice`: the reply has a voice note at `/v1/messages/{id}/voice`, and `media`: in demo, the owner's console attachment at `/v1/messages/{id}/media`), reasoning steps (routing and every harness step: tool, tier, short line, model, cost, time; never the model's private text), turns, router state |
 | `GET /v1/shops` | owner | Shops with credit limit, outstanding and overdue (kobo and naira, summed in code), phone as last four digits |
 | `GET /v1/shops/{shop_id}` | owner | Plus open invoices, payments, promises, the last 10 deliveries with lines, disputes |
-| `GET /v1/approvals` | owner | `status=pending` (default), `approved`, `rejected`, `superseded`, `withdrawn`, `all`; each with the tool, preview, payload, the drafted message and `supersedes` / `superseded_by` (RAI-301) |
+| `GET /v1/approvals` | owner | `status=pending` (default), `approved`, `rejected`, `superseded`, `withdrawn`, `all`; each with the tool, preview, payload, the drafted message and `supersedes` / `superseded_by` (RAI-301). `preview` and the draft text are as the owner reads them (names for ids, `₦1,234,500`, below); `preview_raw` is the record as written; `shop_name`; `flags` (`["over_credit_limit"]` when approving the order would put the shop past its limit) and `over_limit_by_kobo` |
 | `POST /v1/approvals/{id}/approve` | owner | Releases the drafted message, marks the intent approved and wakes the helper on its thread (`approval_answered`, through the router). A money verb is refused (409). Deciding twice is 409 |
 | `POST /v1/approvals/{id}/reject` | owner | Nothing is sent; the helper is told |
-| `GET /v1/credit` | owner | Per-shop limit, outstanding, available, and credit requests from helpers' credit intents (Credit, RAI-271) |
+| `GET /v1/credit` | owner | Per-shop limit, outstanding, available, and credit requests from helpers' credit intents (Credit, RAI-271). Each limit row also has `over_limit`, `over_limit_by_kobo`, `over_limit_by_naira` (owes more than its limit, from code) |
+| `GET /v1/mentions` | owner | The console's @ picker: `{mentions: [{kind, id, name, subtitle, mention, assign_to}], total}`. `kind` is `helper`, `shop` or `rep`. `q` matches the start of a name or of any word in it (a leading `@` is ignored); `kinds` is a comma list (`shop`, `helper,rep`), empty for all; `limit` 1 to 200 (50). Helper rows carry `mention` (`@Collector`) and `assign_to` for `POST /v1/turns`; shop rows' `subtitle` is area and rep, rep rows' is their areas. A channel key is 403 |
 | `GET /v1/messages/{message_id}/voice` | any | The reply's voice note (RAI-290): its own text read aloud, made now and never stored (`audio/ogg`, or `audio/wav` from the offline speaker). 404 when the reply has no `voice` block |
 | `GET /v1/health` | none | Database, model mode (`live` or `offline`), queue depth, version |
 | `GET /` | none | Liveness for the platform probe: `{"status": "ok"}`, no database |
 | `GET /v1/me` | any | The caller's tenant, role and mode (`live` or `demo`); in demo, the session's expiry and today's spend against the caps |
 | `POST /v1/demo/sessions`, `POST /v1/demo/reset` | none, demo session | Demo mode only (404 in live mode) |
 | `POST /v1/media`, `GET /v1/messages/{message_id}/media` | owner (demo session) | Demo mode only: keep one console attachment for a turn, and read it back (404 in live mode) |
+
+Owner-facing text is rewritten by `mimi.api.display` (30 Oct 2026 run 2):
+`shop-001` and `rep-03` become the shop's and rep's names from the book, an
+approvals, turn or run id (`apr_...`) is never shown, and `N50600`,
+`N50,600`, `N50,600.00` become `₦50,600`. This covers owner console replies,
+approval previews and drafts, thread messages and the "The owner approved
+..." system line. Ids stay in records, payloads and everything a model reads.
 
 Replies come back with `status`: `ready` (hand it to the channel now) or
 `pending_approval` (it waits in approvals). A `ready` WhatsApp reply to a

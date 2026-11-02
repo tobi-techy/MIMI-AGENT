@@ -166,14 +166,22 @@ def test_regression_3_fake_screenshot_gets_exactly_one_neutral_reply(
 # ------------------------------------------------- 4. no invented brief
 
 
-def test_regression_4_owner_brief_with_no_data_says_not_ready(api: Any) -> None:
+def test_regression_4_owner_brief_is_from_the_book_never_invented(
+        api: Any, monkeypatch: pytest.MonkeyPatch) -> None:
+    """The brief was "not ready" (no data); since 30 Oct 2026 code answers it
+    from the book (``cards.brief_answer``): no model, no invented figure. A
+    vague "how is business" ask is code with the switch on (every deployed
+    image); an explicit "morning brief" is code either way."""
+    from mimi.api import cards as cx
+    from mimi.flags import FIXES_ENV
+
+    monkeypatch.setenv(FIXES_ENV, "1")
     c, agent, _ = api
     seen: list[str] = []
 
     def brief(messages: Any, tools: Any) -> ModelTurn:
-        seen.append("\n".join(str(m.get("content", "")) for m in messages
-                              if m.get("role") == "system"))
-        return say("The daily brief is not ready yet.")
+        seen.append("model called")
+        return say("Business is calm and steady today.")
 
     PLAY["fn"] = brief
     r = c.post("/v1/turns", json={"message_id": "r4-owner", "source": "owner_message",
@@ -185,21 +193,37 @@ def test_regression_4_owner_brief_with_no_data_says_not_ready(api: Any) -> None:
         agent.process(v["turn_id"])
         v = c.get(f"/v1/turns/{v['turn_id']}", headers=_h("owner")).json()
     assert v["skill"] == "mimi/owner-brief"
-    assert seen, "the brief never reached the model"
-    assert "daily brief is not ready yet" in seen[0]
-    assert "never say how business is going" in seen[0]
+    assert not seen, "the brief is code: no model call"
+    texts = [x["text"] for x in v["replies"] if x["channel"] == "owner_console"]
+    assert texts and "not ready" not in texts[0] and "calm" not in texts[0].lower()
+    f = cx.brief_facts(agent.engine, agent.go, "coral-lane")
+    allowed = {f["overdue_kobo"], f["paid_kobo"]} | {r_.overdue_kobo for r_ in f["top"]}
+    assert figures(texts[0]) and set(figures(texts[0])) <= allowed
 
-    # The recorded Muse Spark answer for this turn (the clean live recording): says
-    # the brief is not ready, gives no figure and no made-up summary.
-    cache = json.loads((ROOT / "eval/e2e/harness.cache.json").read_text())
-    bodies = [json.loads(tc["arguments"]).get("body", "")
-              for v_ in cache.values() for tc in v_.get("tool_calls", [])
-              if "daily brief" in tc.get("arguments", "")]
-    assert bodies
-    for body in bodies:
-        assert "not ready" in body
-        assert "calm" not in body.lower()
-        assert figures(body) == []  # no naira figure at all
+
+def test_regression_4_without_the_switch_a_vague_ask_replays_as_recorded(
+        api: Any, monkeypatch: pytest.MonkeyPatch) -> None:
+    """Switch off (CI replays): "how is business today?" still reaches the
+    model, so the recorded owner thread later turns replay against is the
+    same until the paid re-record."""
+    from mimi.flags import FIXES_ENV
+
+    monkeypatch.delenv(FIXES_ENV, raising=False)
+    c, agent, _ = api
+    seen: list[str] = []
+
+    def brief(messages: Any, tools: Any) -> ModelTurn:
+        seen.append("model called")
+        return say("The daily brief is not ready yet.")
+
+    PLAY["fn"] = brief
+    r = c.post("/v1/turns", json={"message_id": "r4-owner-off", "source": "owner_message",
+                                  "text": "Good evening. How is business today?"},
+               headers=_h("owner"))
+    v = r.json()
+    if v.get("state") != "done":
+        agent.process(v["turn_id"])
+    assert seen
 
 
 # ------------------------------------------------- 5. atomic cache write

@@ -55,6 +55,7 @@ from pydantic import BaseModel, ConfigDict, Field
 from mimi.harness.go import BookAPI, ConsentGrants, CrossTenant, NoConsent
 from mimi.harness.types import RunEvent
 from mimi.harness.untrusted import defang
+from mimi.owed import is_overdue
 from mimi.tz import LAGOS
 
 # Muse Spark averages about 3.25 characters a token on these prompts
@@ -381,6 +382,10 @@ SKILL_FOCUS: dict[str, str] = {
                        "propose_reminder_plan; the plan waits for the owner.",
     "proof/fake-alert-check": "Check the claimed payment against the bank feed; a screenshot "
                               "alone is never proof.",
+    "collector/rep-visit": "Read the shop's balance with get_balance, tell the shop's rep with "
+                           "notify_rep what to check on the visit (figures copied from the "
+                           "result), then tell the owner in one sentence which rep was told "
+                           "(send_to_user, owner_console, ends_turn=true).",
 }
 
 ROUTINES_BY_HELPER: dict[str, tuple[str, ...]] = {
@@ -667,7 +672,7 @@ class ContextBuilder:
             if read in ("balance", "open_invoices", "credit_room", "open_deliveries"):
                 rows = rows if rows is not None else self.book.receivables(tenant, shop_id)
             if read == "balance":
-                overdue = [r for r in rows or [] if r["status"] == "overdue"]
+                overdue = [r for r in rows or [] if is_overdue(r)]
                 data["balance"] = {
                     "outstanding_kobo": sum(r["outstanding_kobo"] for r in rows or []),
                     "overdue_kobo": sum(r["outstanding_kobo"] for r in overdue),

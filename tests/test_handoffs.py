@@ -158,7 +158,7 @@ def test_highest_debtor_gets_a_shop_row_card_and_one_sentence(env: dict[str, Any
     assert row["shop_id"] == top.shop_id and row["owed_kobo"] == top.owed_kobo
     owed = sum(r["outstanding_kobo"] for r in env["agent"].go.receivables(A, top.shop_id))
     assert row["owed_kobo"] == owed and row["credit_limit_kobo"] > 0
-    assert row["days_late"] >= 0 and row["owed_naira"].startswith("N")
+    assert row["days_late"] >= 0 and row["owed_naira"].startswith("₦")
     assert {a["action"] for a in card["actions"]} == {"remind", "open_shop"}
     (text,) = owner_replies(t)
     assert hx.sentence_count(text) == 1 and row["owed_naira"] in text and row["name"] in text
@@ -188,8 +188,11 @@ def test_any_orders_goes_to_order_never_brand_and_answers_from_the_book(
     assert t["helper"] == "order" and t["skill"] == "order/open-orders"
     assert t["route"]["rule"] == "owner_rule:open-orders" and not t["route"]["model_called"]
     assert t["handoff"]["reason"] == "Asking Order"
-    assert t["card"]["kind"] == "list" and t["card"]["title"] == "Open orders"
+    # No order waits in the seeded book: one line and no card (an empty card's
+    # own text repeated the line, 30 Oct 2026 run 2).
+    assert t["card"] is None
     (text,) = owner_replies(t)
+    assert text == "No shop order is waiting for you right now."
     assert not C.deflections(text)
     assert t["route"]["cost_kobo"] == 0
 
@@ -352,9 +355,9 @@ def test_open_orders_card_lists_pending_orders_from_the_book(env: dict[str, Any]
     card = t["card"]
     assert card["total"] == 1 and card["items"][0]["qty"] == 7
     assert card["items"][0]["amount_kobo"] == 1_550_000
-    assert card["items"][0]["amount_naira"] == "N15,500"
+    assert card["items"][0]["amount_naira"] == "₦15,500"
     (text,) = owner_replies(t)
-    assert text == "1 order is waiting for your approval, N15,500 in all."
+    assert text == "1 order is waiting for your approval, ₦15,500 in all."
 
 
 def test_a_card_is_never_built_for_a_shop(env: dict[str, Any]) -> None:

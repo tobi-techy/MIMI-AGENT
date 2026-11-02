@@ -59,6 +59,15 @@
               }
             ]
           },
+          "flags": {
+            "description": "over_credit_limit: approving this order would put the shop past its credit limit (checked in code)",
+            "items": {
+              "const": "over_credit_limit",
+              "type": "string"
+            },
+            "title": "Flags",
+            "type": "array"
+          },
           "helper": {
             "title": "Helper",
             "type": "string"
@@ -71,17 +80,34 @@
             "title": "Note",
             "type": "string"
           },
+          "over_limit_by_kobo": {
+            "default": 0,
+            "title": "Over Limit By Kobo",
+            "type": "integer"
+          },
           "payload": {
             "additionalProperties": true,
             "title": "Payload",
             "type": "object"
           },
           "preview": {
+            "description": "As the owner reads it: shop and rep names for ids, money as ₦1,234,500 (mimi.api.display)",
             "title": "Preview",
+            "type": "string"
+          },
+          "preview_raw": {
+            "default": "",
+            "description": "The preview as the helper's dry run wrote it",
+            "title": "Preview Raw",
             "type": "string"
           },
           "shop_id": {
             "title": "Shop Id",
+            "type": "string"
+          },
+          "shop_name": {
+            "default": "",
+            "title": "Shop Name",
             "type": "string"
           },
           "skill": {
@@ -183,6 +209,16 @@
             "title": "Kind",
             "type": "string"
           },
+          "limit_change": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/LimitChange"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "shop_row": {
             "anyOf": [
               {
@@ -246,7 +282,8 @@
               "open_shop",
               "open_order",
               "open_approvals",
-              "ask"
+              "ask",
+              "set_limit"
             ],
             "title": "Action",
             "type": "string"
@@ -360,6 +397,21 @@
           },
           "outstanding_naira": {
             "title": "Outstanding Naira",
+            "type": "string"
+          },
+          "over_limit": {
+            "default": false,
+            "title": "Over Limit",
+            "type": "boolean"
+          },
+          "over_limit_by_kobo": {
+            "default": 0,
+            "title": "Over Limit By Kobo",
+            "type": "integer"
+          },
+          "over_limit_by_naira": {
+            "default": "",
+            "title": "Over Limit By Naira",
             "type": "string"
           },
           "shop_id": {
@@ -615,6 +667,128 @@
         "title": "DemoCaps",
         "type": "object"
       },
+      "DemoLimit": {
+        "additionalProperties": false,
+        "description": "Why a demo request was refused, in one fixed shape the console shows.",
+        "properties": {
+          "cap_kobo": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cap Kobo"
+          },
+          "cap_naira": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cap Naira"
+          },
+          "code": {
+            "enum": [
+              "visitor_daily_cap",
+              "global_daily_cap",
+              "paused",
+              "too_many_sessions",
+              ""
+            ],
+            "title": "Code",
+            "type": "string"
+          },
+          "message": {
+            "title": "Message",
+            "type": "string"
+          },
+          "resets_at": {
+            "title": "Resets At",
+            "type": "string"
+          },
+          "retry": {
+            "enum": [
+              "tomorrow",
+              "later"
+            ],
+            "title": "Retry",
+            "type": "string"
+          },
+          "scope": {
+            "enum": [
+              "visitor",
+              "global",
+              "demo"
+            ],
+            "title": "Scope",
+            "type": "string"
+          },
+          "spent_kobo": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Spent Kobo"
+          },
+          "spent_naira": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Spent Naira"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "scope",
+          "title",
+          "message",
+          "spent_kobo",
+          "cap_kobo",
+          "spent_naira",
+          "cap_naira",
+          "resets_at",
+          "retry"
+        ],
+        "title": "DemoLimit",
+        "type": "object"
+      },
+      "DemoLimitError": {
+        "additionalProperties": false,
+        "properties": {
+          "demo_limit": {
+            "$ref": "#/components/schemas/DemoLimit"
+          },
+          "detail": {
+            "title": "Detail",
+            "type": "string"
+          }
+        },
+        "required": [
+          "detail",
+          "demo_limit"
+        ],
+        "title": "DemoLimitError",
+        "type": "object"
+      },
       "DemoSessionOut": {
         "additionalProperties": false,
         "description": "A demo session: send ``token`` as ``Authorization: Bearer`` until ``expires_at``.",
@@ -682,6 +856,11 @@
             "title": "Ip Cap Kobo",
             "type": "integer"
           },
+          "ip_source": {
+            "default": "",
+            "title": "Ip Source",
+            "type": "string"
+          },
           "ip_spent_kobo": {
             "title": "Ip Spent Kobo",
             "type": "integer"
@@ -689,6 +868,11 @@
           "paused": {
             "title": "Paused",
             "type": "boolean"
+          },
+          "resets_at": {
+            "default": "",
+            "title": "Resets At",
+            "type": "string"
           }
         },
         "required": [
@@ -1065,6 +1249,67 @@
         "title": "Health",
         "type": "object"
       },
+      "LimitChange": {
+        "additionalProperties": false,
+        "description": "A credit-limit change the owner asked for in words, worked out by code.\n\nMimi never sets a limit: the console shows this beside the shop row and\nthe owner confirms it with Set credit limit (``POST\n/v1/shops/{shop_id}/credit-limit``), or leaves it.",
+        "properties": {
+          "asked": {
+            "default": "",
+            "title": "Asked",
+            "type": "string"
+          },
+          "change_kobo": {
+            "title": "Change Kobo",
+            "type": "integer"
+          },
+          "change_naira": {
+            "title": "Change Naira",
+            "type": "string"
+          },
+          "current_limit_kobo": {
+            "title": "Current Limit Kobo",
+            "type": "integer"
+          },
+          "current_limit_naira": {
+            "title": "Current Limit Naira",
+            "type": "string"
+          },
+          "needs": {
+            "const": "owner_confirm",
+            "default": "owner_confirm",
+            "title": "Needs",
+            "type": "string"
+          },
+          "proposed_limit_kobo": {
+            "title": "Proposed Limit Kobo",
+            "type": "integer"
+          },
+          "proposed_limit_naira": {
+            "title": "Proposed Limit Naira",
+            "type": "string"
+          },
+          "shop_id": {
+            "title": "Shop Id",
+            "type": "string"
+          },
+          "would_be_over_limit": {
+            "default": false,
+            "title": "Would Be Over Limit",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "shop_id",
+          "current_limit_kobo",
+          "current_limit_naira",
+          "proposed_limit_kobo",
+          "proposed_limit_naira",
+          "change_kobo",
+          "change_naira"
+        ],
+        "title": "LimitChange",
+        "type": "object"
+      },
       "ListItem": {
         "additionalProperties": false,
         "properties": {
@@ -1290,6 +1535,77 @@
         "title": "MediaOut",
         "type": "object"
       },
+      "Mention": {
+        "additionalProperties": false,
+        "description": "One row of the console's @ picker: a helper, a shop or a rep.",
+        "properties": {
+          "assign_to": {
+            "default": "",
+            "description": "helper rows only: the value for assign_to on POST /v1/turns",
+            "title": "Assign To",
+            "type": "string"
+          },
+          "id": {
+            "description": "helper name, shop_id or rep_id",
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "enum": [
+              "helper",
+              "shop",
+              "rep"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "mention": {
+            "description": "What the console inserts into the message: '@Collector', or the shop's or rep's name as written in the book",
+            "title": "Mention",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "subtitle": {
+            "default": "",
+            "description": "shop: area and rep; rep: areas; helper: what it does",
+            "title": "Subtitle",
+            "type": "string"
+          }
+        },
+        "required": [
+          "kind",
+          "id",
+          "name",
+          "mention"
+        ],
+        "title": "Mention",
+        "type": "object"
+      },
+      "MentionList": {
+        "additionalProperties": false,
+        "properties": {
+          "mentions": {
+            "items": {
+              "$ref": "#/components/schemas/Mention"
+            },
+            "title": "Mentions",
+            "type": "array"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "mentions",
+          "total"
+        ],
+        "title": "MentionList",
+        "type": "object"
+      },
       "Message": {
         "additionalProperties": false,
         "properties": {
@@ -1483,6 +1799,26 @@
       "ShopList": {
         "additionalProperties": false,
         "properties": {
+          "overdue_total_kobo": {
+            "default": 0,
+            "title": "Overdue Total Kobo",
+            "type": "integer"
+          },
+          "overdue_total_naira": {
+            "default": "",
+            "title": "Overdue Total Naira",
+            "type": "string"
+          },
+          "owed_total_kobo": {
+            "default": 0,
+            "title": "Owed Total Kobo",
+            "type": "integer"
+          },
+          "owed_total_naira": {
+            "default": "",
+            "title": "Owed Total Naira",
+            "type": "string"
+          },
           "shops": {
             "items": {
               "$ref": "#/components/schemas/ShopSummary"
@@ -1525,6 +1861,21 @@
             "default": 0,
             "title": "Open Invoices",
             "type": "integer"
+          },
+          "over_limit": {
+            "default": false,
+            "title": "Over Limit",
+            "type": "boolean"
+          },
+          "over_limit_by_kobo": {
+            "default": 0,
+            "title": "Over Limit By Kobo",
+            "type": "integer"
+          },
+          "over_limit_by_naira": {
+            "default": "",
+            "title": "Over Limit By Naira",
+            "type": "string"
           },
           "overdue_kobo": {
             "title": "Overdue Kobo",
@@ -2860,7 +3211,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ErrorOut"
+                  "$ref": "#/components/schemas/DemoLimitError"
                 }
               }
             },
@@ -2870,7 +3221,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ErrorOut"
+                  "$ref": "#/components/schemas/DemoLimitError"
                 }
               }
             },
@@ -2944,7 +3295,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ErrorOut"
+                  "$ref": "#/components/schemas/DemoLimitError"
                 }
               }
             },
@@ -2954,7 +3305,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ErrorOut"
+                  "$ref": "#/components/schemas/DemoLimitError"
                 }
               }
             },
@@ -3043,7 +3394,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ErrorOut"
+                  "$ref": "#/components/schemas/DemoLimitError"
                 }
               }
             },
@@ -3053,7 +3404,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ErrorOut"
+                  "$ref": "#/components/schemas/DemoLimitError"
                 }
               }
             },
@@ -3287,7 +3638,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ErrorOut"
+                  "$ref": "#/components/schemas/DemoLimitError"
                 }
               }
             },
@@ -3297,7 +3648,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ErrorOut"
+                  "$ref": "#/components/schemas/DemoLimitError"
                 }
               }
             },
@@ -3310,6 +3661,116 @@
           }
         ],
         "summary": "Demo mode: keep one console attachment for a turn"
+      }
+    },
+    "/v1/mentions": {
+      "get": {
+        "description": "``q`` matches the start of a name or of any word in it (a leading\n``@`` is ignored); ``kinds`` is a comma list, empty for all three.\nHelper rows carry ``assign_to`` for ``POST /v1/turns``.",
+        "operationId": "get_mentions_v1_mentions_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "q",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 80,
+              "title": "Q",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "kinds",
+            "required": false,
+            "schema": {
+              "default": "",
+              "pattern": "^$|^(?:helper|shop|rep)(?:,(?:helper|shop|rep))*$",
+              "title": "Kinds",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 200,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MentionList"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "The owner's @ picker: helpers, shops and reps"
       }
     },
     "/v1/messages/{message_id}/media": {
@@ -4035,7 +4496,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ErrorOut"
+                  "$ref": "#/components/schemas/DemoLimitError"
                 }
               }
             },
@@ -4045,7 +4506,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ErrorOut"
+                  "$ref": "#/components/schemas/DemoLimitError"
                 }
               }
             },

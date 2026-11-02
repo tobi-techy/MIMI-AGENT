@@ -153,12 +153,13 @@ kobo with a naira string beside it, both from code.
 | Field | Type | What |
 |---|---|---|
 | `kind`, `title`, `skill` | string | |
-| `shop_row` | object or null | `shop_id`, `name`, `owed_kobo`, `owed_naira`, `overdue_kobo`, `overdue_naira`, `days_late` (oldest overdue invoice), `credit_limit_kobo`, `credit_limit_naira`, `open_invoices` |
+| `shop_row` | object or null | `shop_id`, `name`, `owed_kobo`, `owed_naira`, `overdue_kobo`, `overdue_naira`, `days_late` (oldest overdue invoice), `credit_limit_kobo`, `credit_limit_naira`, `open_invoices`, `over_limit`, `over_limit_by_kobo`, `over_limit_by_naira` |
 | `items` | list | `item_id`, `label`, `qty` (int or null), `unit`, `status`, `amount_kobo` (int or null), `amount_naira`, `shop_id` |
 | `total` | int | rows in the book behind the card (a list shows at most 8) |
 | `total_kobo`, `total_naira` | int or null, string | the sum of every row's amount behind a list (all rows, not only those shown), summed in code; null when the rows carry no amount |
 | `empty_text` | string | shown when `items` is empty |
-| `actions` | list | `{action, label, intent, tier}`; `action` is `remind`, `open_shop`, `open_order`, `open_approvals` or `ask`; `intent` as for chips |
+| `actions` | list | `{action, label, intent, tier}`; `action` is `remind`, `open_shop`, `open_order`, `open_approvals`, `ask` or `set_limit`; `intent` as for chips (`set_limit` opens `credit_limit:<shop_id>`) |
+| `limit_change` | object or null | a credit-limit change the owner asked for in words, worked out by code (below) |
 | `as_of` | string | the book's day |
 
 What code read for a card is kept on the turn as a `card_read` thread event
@@ -169,7 +170,7 @@ reads it.
 Cards today: `collector/chase` (a shop row for "highest debtor"; a list of
 debtors otherwise), `collector/collections` and `collector/payment-check` (a
 shop row when the owner names one shop), `order/open-orders` (list),
-`stock/low-stock-report` (list).
+`stock/low-stock-report` (list), `mimi/owner-brief` (list, the morning brief).
 
 ```json
 {
@@ -304,12 +305,100 @@ matches `thread_id` and `helper`. A task whose approval still waits is
 (`handoff` in a real task is the full record from section 1; it is `null`
 above only to keep the example short.)
 
-## What is not changed
+## Fixes from the live distributor test (30 Oct 2026)
 
-* Helper prompts and tool lists are unchanged, so every recorded model answer
-  still replays. Two helper prompts still tell the model to send off-topic
-  questions to "the right helper or the rep" (`mimi/brand/tools.py`
-  `BRAND_SKILL`, `mimi/receipts/tools.py` `ORDER_SKILL`); the gate and the
-  hand-back now catch that in code. Rewriting those lines needs a paid
-  re-record of the Brand and Order evals.
+* Morning brief (`mimi/owner-brief`) is answered by code, like open orders
+  and low stock: no model, no spend. Owner rules route "morning brief",
+  "daily summary", "brief me", "what needs my attention today", "what came
+  in yesterday". `cards.brief_facts` reads the book: who owes (total overdue,
+  top 3 debtors, from `mimi.owed`), what came in yesterday (payments on the
+  book's day before today and their total, how many the bank feed shows,
+  shop orders that reached approvals), what needs the owner today
+  (approvals, credit asks, payments flagged in the last 7 days, open
+  disputes, items that may run out within 3 days). A vaguer ask the
+  lexicon routes to the brief ("how is business today?") is code too with
+  `MIMI_FIXES_2026_10_30=1` (set in the Dockerfile); with it off (CI) it
+  still reaches the model as recorded, since later recorded owner-thread
+  turns replay against that exchange. The reply is three short
+  sentences written by code; the card is a `list` titled `Morning brief`
+  whose `item_id`s start `owes:`, `in:` or `needs:` (the console may group
+  them), with `qty` for counts and `amount_kobo` for money. `total_kobo` is
+  null (the rows are not one kind of money).
+* "What's running out?", "running low", "out of stock" from the owner route
+  by rule to `stock/low-stock-report`; naming a shop ("... at Mama Sola
+  Provisions") narrows the card to that shop.
+* Debtors: one overdue figure everywhere (`mimi.owed`). Collector's
+  `get_invoices` now totals every shop, not only the `limit` it lists (it
+  said N7,154,850 for the book's ₦7,231,000). Debtor cards sort by overdue
+  and their sentence carries the book's total overdue. "Top 5", "which
+  stores owe the most" give a list of that many; a singular ask gives the
+  highest debtor's `shop_row`.
+* Money strings the API writes for the owner use `₦` (cards, reads, owner
+  console replies; `mimi.owed.naira`, `naira_sign`). Shop WhatsApp texts and
+  model-facing tool outputs keep `N` until the shop persona and harness
+  replays are re-recorded.
+* Brand's and the delivery-receipt Order helper's prompts no longer send
+  anyone to "the rep" or "the right helper": they end quietly, and a quiet
+  end on a person's message is a hand-back (`code: no_tools`) that Mimi
+  re-routes once, as below.
+
+## Fixes from the second live test (30 Oct 2026, run 2)
+
+Regression tests: `tests/test_e2e_run2_bugs.py`.
+
+* No "is this about just saying hello?" loop. Owner rules run before the
+  phrase layer for payment proofs (`proof/proofs-today`), rep visits and
+  assignments (`collector/rep-visit`) and reorders (`order/reorder`). An
+  answer to Mimi's clarifying question resolves it first (a negated option,
+  "not hello", is never picked); after one question Mimi goes with her best
+  guess, and a message of four words or more is never treated as a greeting.
+* Credit-limit asks about a named shop ("What's Funke & Sons Mini Mart's
+  credit limit? Raise it by ₦100,000.") route by rule to
+  `credit/credit-review` and are answered by code. A change in words ("raise
+  it by 100k", "increase the limit to 3m", "cut it by N480,000") becomes
+  `card.limit_change`:
+
+  | Field | Type | What |
+  |---|---|---|
+  | `shop_id` | string | |
+  | `current_limit_kobo`, `current_limit_naira` | int, string | |
+  | `proposed_limit_kobo`, `proposed_limit_naira` | int, string | |
+  | `change_kobo`, `change_naira` | int, string | proposed minus current (negative to lower it) |
+  | `would_be_over_limit` | bool | the shop would still owe more than the new limit |
+  | `needs` | `owner_confirm` | Mimi never sets a limit |
+  | `asked` | string | the owner's words for the change |
+
+  plus a `set_limit` action. Nothing in the book changes until the owner
+  confirms (the write endpoint is on `feat/console-wiring`). A raise with no
+  amount asks "How much should the new limit be?".
+* Over the limit is flagged everywhere: `shop_row.over_limit*`, `GET
+  /v1/credit` limit rows, debtor sentences ("₦1,797,300 over its ₦1,700,000
+  credit limit"), approvals (`flags: ["over_credit_limit"]`,
+  `over_limit_by_kobo`) and open-order items ("over credit limit by
+  ₦120,000").
+* No duplicate Order reply: an empty open-orders card is one sentence and no
+  card.
+* Reorder card (`order/reorder`, code): a named shop's last delivered order,
+  priced now.
+* `GET /v1/mentions` for the @ picker (API.md).
+* Owner text names shops and reps, never ids, and writes `₦` with thousands
+  commas (`mimi.api.display`, API.md).
+* Collector and Credit owner reads (who owes the most, a shop's limit) are
+  code with `MIMI_FIXES_2026_10_30=1`: no model call, well under a second.
+* The brief says "is the most overdue (₦...)" rather than "owes" beside an
+  overdue figure.
+* The per-turn budget pause reads "This one's taking more work than usual,
+  so I paused Collector. Nothing was lost. Keep going?" (no numbers); the
+  budget logic is unchanged.
+
+## What still needs a paid re-record
+
+* `BRAND_SKILL` and `ORDER_SKILL` changed (`brand-v0.2`, `order-v0.2`):
+  recorded Brand and delivery-receipt Order answers replay as stale until
+  re-recorded (the e2e brand scene and Order receipt scenes; run the e2e and
+  harness evals `--live`).
+* The `mimi/chat` helper prompt (`mimi/api/helpers.py`) and
+  `skills/owner-brief` still say the brief is not ready; owner brief asks no
+  longer reach a model, so this only matters for a non-owner sender. Rewrite
+  with the next paid re-record.
 * The router's model prompt, catalogue text and thresholds are unchanged.
