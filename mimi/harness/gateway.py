@@ -32,28 +32,15 @@ from typing import Any, Protocol
 
 import httpx
 
+from mimi.models import cachekey, metering
 from mimi.models.cache import note_migration, requests_index, versioned_key
-from mimi.observe.turns import TOKEN_PRICES
 
-# Naira per US dollar for cost accounting. A planning figure, not a quote:
-# budgets are set in naira and the API bills in dollars. Override with
-# MIMI_USD_NGN. 1 USD = N1,600 = 160,000 kobo.
-DEFAULT_USD_NGN = 1_600
-
-
-def usd_to_kobo_rate() -> int:
-    raw = os.environ.get("MIMI_USD_NGN", "").strip()
-    return int(raw) * 100 if raw.isdigit() else DEFAULT_USD_NGN * 100
-
-
-def kobo_cost(model: str, prompt_tokens: int, completion_tokens: int) -> int:
-    """Integer kobo for one call, rounded up; 0 for an unpriced (fake) model."""
-    price = TOKEN_PRICES.get(model)
-    if price is None:
-        return 0
-    micro_usd = prompt_tokens * price[0] + completion_tokens * price[1]  # USD * 1e6
-    kobo = micro_usd * usd_to_kobo_rate() / 1e6
-    return int(-(-kobo // 1))
+# Prices and the naira rate live in one place (``mimi.models.prices``, with
+# their source); re-exported here for the callers that import them from the
+# gateway.
+from mimi.models.prices import DEFAULT_USD_NGN as DEFAULT_USD_NGN
+from mimi.models.prices import kobo_cost as kobo_cost
+from mimi.models.prices import usd_to_kobo_rate as usd_to_kobo_rate
 
 
 def worst_case_kobo(model: str, prompt_chars: int, max_tokens: int) -> int:
@@ -130,6 +117,7 @@ class OpenAIToolModel:
         self, messages: Sequence[dict[str, Any]], tools: Sequence[dict[str, Any]], *,
         max_tokens: int,
     ) -> ModelTurn:
+        metering.guard(self.name)
         body: dict[str, Any] = {
             "model": self.name,
             "messages": list(messages),
@@ -140,6 +128,10 @@ class OpenAIToolModel:
             body["tool_choice"] = "auto"
         if self._effort:
             body["reasoning_effort"] = self._effort
+        if cachekey.enabled():
+            key = cachekey.prompt_cache_key(messages, tools)
+            if key:
+                body["prompt_cache_key"] = key
         started = time.monotonic()
         try:
             resp = self._client.post(self._url, json=body, headers=self._headers)
@@ -216,14 +208,16 @@ class Gateway:
         failed: list[Fallback] = []
         for model in self.models:
             try:
-                turn = model.chat(messages, tools, max_tokens=self.max_tokens)
+                with metering.metered(metering.HARNESS):
+                    turn = model.chat(messages, tools, max_tokens=self.max_tokens)
             except ProviderError as exc:
                 failed.append(Fallback(model.name, exc.detail))
                 continue
             cost = (
                 turn.cost_kobo
                 if turn.cost_kobo is not None
-                else kobo_cost(turn.model, turn.prompt_tokens, turn.completion_tokens)
+                else kobo_cost(turn.model, turn.prompt_tokens, turn.completion_tokens,
+                               turn.cached_tokens)
             )
             return GatewayReply(turn, cost, failed)
         raise AllModelsFailed(failed)
@@ -252,6 +246,7 @@ class ScriptedModel:
         self, messages: Sequence[dict[str, Any]], tools: Sequence[dict[str, Any]], *,
         max_tokens: int,
     ) -> ModelTurn:
+        metering.guard(self.name)
         self.calls += 1
         self.seen.append([dict(m) for m in messages])
         if callable(self._turns):
@@ -324,6 +319,7 @@ class RecordedToolModel:
         self, messages: Sequence[dict[str, Any]], tools: Sequence[dict[str, Any]], *,
         max_tokens: int,
     ) -> ModelTurn:
+        metering.guard(self.name)
         base = self.key(self.name, messages, tools)
         v = dict(self.versions(messages, tools)) if self.versions else {}
         k = versioned_key(base, v)

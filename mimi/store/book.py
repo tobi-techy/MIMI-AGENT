@@ -31,6 +31,7 @@ from mimi.harness.go import ConsentGrants, CrossTenant
 from mimi.harness.inbound import Directory
 from mimi.harness.policy import go_allows
 from mimi.harness.types import Event
+from mimi.provenance import payment_stamp
 from mimi.runtime.outbox import MONEY_VERBS
 from mimi.store import schema as s
 from mimi.store.util import dumps, insert_ignore, loads, now_iso
@@ -275,8 +276,9 @@ class SqlGo:
         with self.engine.connect() as conn:
             due = {r.delivery_id: r for r in conn.execute(sa.select(s.receivables).where(
                 s.receivables.c.tenant_id == tenant_id, s.receivables.c.shop_id == shop_id))}
-            feed = {r.payment_id for r in conn.execute(
-                sa.select(s.bank_feed.c.payment_id).where(s.bank_feed.c.tenant_id == tenant_id))}
+            feed = {r.payment_id: r.credit_id for r in conn.execute(
+                sa.select(s.bank_feed.c.payment_id, s.bank_feed.c.credit_id)
+                .where(s.bank_feed.c.tenant_id == tenant_id))}
             pays = conn.execute(sa.select(s.payments).where(
                 s.payments.c.tenant_id == tenant_id, s.payments.c.shop_id == shop_id)
                 .order_by(s.payments.c.day, s.payments.c.payment_id)).all()
@@ -304,7 +306,8 @@ class SqlGo:
                 "payment_id": p.payment_id, "delivery_id": p.delivery_id, "day": int(p.day),
                 "paid_on": p.paid_on, "amount_kobo": 0 if p.fake_alert else int(p.amount_kobo),
                 "claimed_kobo": int(p.amount_kobo), "method": p.method,
-                "bank_confirmed": p.payment_id in feed, "status": p.status} for p in pays],
+                "bank_confirmed": p.payment_id in feed, "status": p.status,
+                **_stored_stamp(p, feed)} for p in pays],
             "promises": [{"made_day": date.fromisoformat(p.made_on).toordinal() - start,
                           "promised_day": date.fromisoformat(p.promised_on).toordinal() - start,
                           "kept": bool(p.kept)} for p in proms],
@@ -590,7 +593,9 @@ class SqlGo:
                 "turn_id": turn_id, "thread_id": thread_id, "helper": helper, "skill": skill,
                 "shop_id": shop_id, "tool": tool, "intent_kind": kind,
                 "preview": str(record.get("preview", "")), "payload": dumps(payload),
-                "status": "pending", "created_at": now, "created_ts": wall()})
+                "status": "pending", "created_at": now, "created_ts": wall(),
+                # The rulebook's hand-off (RAI-323): the owner does it by hand.
+                "handling": "hand_off" if record.get("behaviour") == "hand_off" else ""})
         if outcome not in ("refused", "shadowed") and is_credit_intent(tool, kind) and shop_id:
             amount = 0
             for f in ("amount_kobo", "new_limit_kobo", "limit_kobo", "bump_kobo"):
@@ -603,3 +608,14 @@ class SqlGo:
                 "status": "pending" if approval_id else "noted", "source_key": key,
                 "approval_id": approval_id, "created_at": now})
         return outcome, approval_id
+
+
+def _stored_stamp(p: Any, feed: dict[str, str]) -> dict[str, str]:
+    """A payment row's proof columns (RAI-295); stamped from the book when the
+    row predates them."""
+    level = getattr(p, "proof_level", None)
+    if level:
+        return {"proof_level": level, "witnesses": p.witnesses,
+                "proof_policy_version": p.proof_policy_version}
+    return payment_stamp(p.payment_id, p.method, fake_alert=bool(p.fake_alert),
+                         bank_credit_id=feed.get(p.payment_id, "")).columns()

@@ -98,6 +98,13 @@
    "sha256": "2e7c22cc4f360de359bc94b0f71773472b411492565949911be86de20dd747fb",
    "version": "1.1.0"
   },
+  "open-orders": {
+   "history": {
+    "1.0.0": "a13bb41aad4a06b462767dc20e91585d28c9dce55f442533414b2084378cb6dd"
+   },
+   "sha256": "a13bb41aad4a06b462767dc20e91585d28c9dce55f442533414b2084378cb6dd",
+   "version": "1.0.0"
+  },
   "order-intake": {
    "history": {
     "1.0.0": "b903882c8ee24affcf7e18296a1dd71509579fbd93e153adf5d7535f3783c865"
@@ -135,6 +142,27 @@
    },
    "sha256": "d46240e98e60d41701feb6d60ae4212310d392d491d8a852bee3395af9ae1e6a",
    "version": "1.1.0"
+  },
+  "proofs-today": {
+   "history": {
+    "1.0.0": "806b863bc86ed6c79641826ce64bd08cfbb76d04cc4cdf4a3029de00bd7d62c9"
+   },
+   "sha256": "806b863bc86ed6c79641826ce64bd08cfbb76d04cc4cdf4a3029de00bd7d62c9",
+   "version": "1.0.0"
+  },
+  "reorder": {
+   "history": {
+    "1.0.0": "f5ade14227b7f7bb2d5d8620a6b7ec99d219076f43b6d2a314e13dfcdb404b5f"
+   },
+   "sha256": "f5ade14227b7f7bb2d5d8620a6b7ec99d219076f43b6d2a314e13dfcdb404b5f",
+   "version": "1.0.0"
+  },
+  "rep-visit": {
+   "history": {
+    "1.0.0": "e137dff6154548137e5bb8ab00ab6826c4871a76a803880fbb843a7745ac8351"
+   },
+   "sha256": "e137dff6154548137e5bb8ab00ab6826c4871a76a803880fbb843a7745ac8351",
+   "version": "1.0.0"
   },
   "route-load-out": {
    "history": {

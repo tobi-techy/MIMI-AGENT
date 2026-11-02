@@ -79,6 +79,12 @@ LABELS: dict[str, tuple[str, ...]] = {
 }
 DEFAULT_LABELS: tuple[str, ...] = ("answer", "unclear", "unrelated")
 RELEASE_AT = 0.6
+# A greeting alone is "unrelated" (it releases); any other small-talk phrase
+# on an open ask is an acknowledgement ("ok", "noted", a thumbs up): "unclear".
+_GREETING = re.compile(
+    r"^(?:hi+|hello+|hey|helo|good (?:morning|afternoon|evening|night)|gud (?:morning|mrng|"
+    r"evening)|how far|how you dey|how body|e kaaro|e kaasan|e kale|e ku ise|bawo ni|sannu|"
+    r"ina kwana|ina wuni|kedu|ndewo)\b")
 
 _DESCRIBE: dict[str, str] = {
     "yes": "the shop confirms the goods arrived as listed",
@@ -219,6 +225,12 @@ class AnswerBinder:
         point at a skill of another helper; otherwise the reply binds."""
         allowed = frozenset(s.key for s in allowed_for(sender))
         lx = lexicon.score(lexicon.without_injection(text) or text, allowed)
+        if lx.top == "mimi/chat" and not _GREETING.match(lexicon.normalise(text)):
+            # "ok noted", "seen", a thumbs up: about the ask but not clear, the
+            # model's "unclear" label, never a release (RAI-273 week run: with
+            # no binder answer they went to small talk and the receipt stayed open).
+            return Bind(label="unclear", binds=True, layer="fallback", confidence=0.0,
+                        why=f"{why}; an acknowledgement, kept on the open ask")
         if lx.settled and lx.top and lx.top.split("/")[0] != skill.split("/")[0]:
             return Bind(label="unrelated", binds=False, layer="fallback", confidence=0.0,
                         why=f"{why}; phrases point to {lx.top}")

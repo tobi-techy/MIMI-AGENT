@@ -1,0 +1,16 @@
+{
+ "id": "s14",
+ "grid": [
+  [
+   "Item",
+   "Qty left",
+   "Date"
+  ]
+ ],
+ "mapping": {
+  "Item": "item",
+  "Qty left": "qty_left",
+  "Date": "date"
+ },
+ "want_error": "empty"
+}

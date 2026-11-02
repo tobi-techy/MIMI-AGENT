@@ -1,0 +1,27 @@
+{
+ "id": "s09",
+ "grid": [
+  [
+   "ngwa ahia",
+   "ihe foduru",
+   "ubochi"
+  ],
+  [
+   "Sunrise Noodles 70g",
+   "6",
+   "2026-10-28"
+  ]
+ ],
+ "mapping": {
+  "ngwa ahia": "item",
+  "ihe foduru": "qty_left",
+  "ubochi": "date"
+ },
+ "want_rows": [
+  {
+   "item": "Sunrise Noodles 70g",
+   "qty_left": 6,
+   "date": "2026-10-28"
+  }
+ ]
+}

@@ -63,6 +63,7 @@ def msg(text: str = "", source: str = "shop_message", phone: str = SHOP, **p: An
     (msg(source="routine", phone="", name="collector.overdue_sweep"), "collector/chase"),
     (msg(source="routine", phone="", name="mimi.morning_brief"), "mimi/owner-brief"),
     (msg(source="scheduled_check_in", phone="", name="stock.weekly_check"), "stock/stock-count"),
+    (msg(source="routine", phone="", name="checkin.weekly"), "stock/stock-count"),
     (msg(source="webhook", phone="", name="bank_credit"), "proof/bank-credit"),
     (msg(source="webhook", phone="", name="delivery_completed"), "order/drop-confirmation"),
     (msg(source="approval_answered", phone="", for_helper="credit", for_skill="credit-request"),

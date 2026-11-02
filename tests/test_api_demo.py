@@ -35,7 +35,9 @@ SHOP = W.shops[0]
 def cfg(**kw: Any) -> DemoConfig:
     base: dict[str, Any] = {"ip_daily_cap_kobo": 10_000, "global_daily_cap_kobo": 30_000,
                             "session_ttl_s": 3600.0, "sessions_per_ip": 5,
-                            "trust_forwarded": True, "ip_salt": "test-salt"}
+                            # The test client's peer is "testclient": trust it as
+                            # the edge, so CF-Connecting-IP names the visitor.
+                            "trusted_proxies": ("*",), "ip_salt": "test-salt"}
     base.update(kw)
     return DemoConfig(**base)
 
@@ -57,7 +59,7 @@ def env(store_url: str) -> Iterator[dict[str, Any]]:
 
 
 def ip(addr: str) -> dict[str, str]:
-    return {"X-Forwarded-For": f"10.9.9.9, {addr}"}
+    return {"CF-Connecting-IP": addr}
 
 
 def start(c: TestClient, addr: str = "198.51.100.1") -> dict[str, Any]:
@@ -168,11 +170,26 @@ def test_sessions_per_ip_are_capped(store_url: str) -> None:
     engine.dispose()
 
 
-def test_forwarded_for_is_ignored_unless_trusted(store_url: str) -> None:
-    client, engine = make(store_url, cfg(trust_forwarded=False, sessions_per_ip=1))
+def test_forwarded_for_never_buys_a_fresh_allowance(store_url: str) -> None:
+    # 30 Oct 2026 live test: a made-up X-Forwarded-For got a new allowance.
+    client, engine = make(store_url, cfg(sessions_per_ip=1))
+    with client as c:
+        h = {"CF-Connecting-IP": "198.51.100.1"}
+        assert c.post("/v1/demo/sessions", headers=h).status_code == 201
+        for fake in ("198.51.100.2", "10.9.9.9, 198.51.100.3", "203.0.113.9"):
+            r = c.post("/v1/demo/sessions", headers={**h, "X-Forwarded-For": fake,
+                                                     "X-Real-IP": fake})
+            assert r.status_code == 429, fake
+    engine.dispose()
+
+
+def test_the_client_ip_header_is_read_only_from_a_trusted_peer(store_url: str) -> None:
+    # Default proxies (private ranges): the test client's peer is not one, so a
+    # client-sent CF-Connecting-IP is ignored and the peer is the visitor.
+    client, engine = make(store_url, cfg(sessions_per_ip=1,
+                                         trusted_proxies=demo.DEFAULT_TRUSTED_PROXIES))
     with client as c:
         assert c.post("/v1/demo/sessions", headers=ip("198.51.100.1")).status_code == 201
-        # A spoofed header is not a new visitor: the socket address is the same.
         assert c.post("/v1/demo/sessions", headers=ip("198.51.100.2")).status_code == 429
     engine.dispose()
 
@@ -240,15 +257,49 @@ def test_the_session_tenant_cap_matches_the_ip_cap(env: dict[str, Any]) -> None:
 
 
 def test_the_kill_switch_refuses_new_turns_but_keeps_reads(store_url: str) -> None:
+    # A session started before the switch was thrown keeps reading.
+    before, engine0 = make(store_url, cfg())
+    with before as c0:
+        sess = start(c0)
+    engine0.dispose()
     client, engine = make(store_url, cfg(killed=True))
     with client as c:
-        sess = start(c)
         r = shop_turn(c, sess, "demo.k")
         assert r.status_code == 503 and "paused" in r.json()["detail"]
         ev = c.post("/v1/events", json={"kind": "routine", "event_id": "e1",
                                         "name": "owner_brief"}, headers=bearer(sess))
         assert ev.status_code == 503
         assert n_turns(engine, sess["tenant_id"]) == 0
+        assert c.get("/v1/shops", headers=bearer(sess)).status_code == 200
+        assert c.get("/v1/me", headers=bearer(sess)).json()["demo"]["paused"] is True
+    engine.dispose()
+
+
+def test_the_kill_switch_refuses_new_and_reset_sessions_like_a_turn(store_url: str) -> None:
+    before, engine0 = make(store_url, cfg())
+    with before as c0:
+        sess = start(c0)
+    engine0.dispose()
+    client, engine = make(store_url, cfg(killed=True))
+    with client as c:
+        with engine.connect() as conn:
+            n0 = conn.execute(sa.select(sa.func.count()).select_from(s.demo_sessions)).scalar()
+            t0 = conn.execute(sa.select(sa.func.count()).select_from(s.tenants)).scalar()
+        r = c.post("/v1/demo/sessions", headers=ip("198.51.100.1"))
+        turn = shop_turn(c, sess, "demo.k2")
+        # The same friendly 503 answer, in the same shape as a refused turn.
+        assert r.status_code == 503 == turn.status_code
+        # One refusal shape since #45 (detail plus demo_limit, code "paused").
+        assert r.json() == turn.json()
+        assert r.json()["detail"] == demo.PAUSED and r.json()["demo_limit"]["code"] == "paused"
+        reset = c.post("/v1/demo/reset", headers=bearer(sess))
+        assert reset.status_code == 503 and reset.json() == turn.json()
+        with engine.connect() as conn:
+            assert conn.execute(sa.select(sa.func.count()).select_from(
+                s.demo_sessions)).scalar() == n0
+            assert conn.execute(sa.select(sa.func.count()).select_from(
+                s.tenants)).scalar() == t0
+        # The reset was refused before it ended anything: the session still reads.
         assert c.get("/v1/shops", headers=bearer(sess)).status_code == 200
         assert c.get("/v1/me", headers=bearer(sess)).json()["demo"]["paused"] is True
     engine.dispose()
@@ -299,17 +350,28 @@ def test_demo_still_approves_an_ordinary_draft(env: dict[str, Any]) -> None:
 def test_demo_config_from_env_has_placeholder_defaults() -> None:
     st = Settings.from_env({"MIMI_MODE": "demo"})
     assert st.mode == "demo"
-    assert st.demo.ip_daily_cap_kobo == demo.DEFAULT_IP_CAP_NAIRA * 100 == 10_000
+    # N400 a visitor a day (about 25 turns), N2,000 for the whole demo.
+    assert st.demo.ip_daily_cap_kobo == demo.DEFAULT_IP_CAP_NAIRA * 100 == 40_000
     assert st.demo.global_daily_cap_kobo == demo.DEFAULT_GLOBAL_CAP_NAIRA * 100 == 200_000
-    assert st.demo.killed is False and st.demo.trust_forwarded is False
+    assert st.demo.killed is False
+    assert st.demo.client_ip_header == "cf-connecting-ip"
+    assert st.demo.trusted_proxies == demo.DEFAULT_TRUSTED_PROXIES
     st2 = Settings.from_env({"MIMI_MODE": "demo", "MIMI_DEMO_IP_DAILY_CAP_NAIRA": "50",
                              "MIMI_DEMO_GLOBAL_DAILY_CAP_NAIRA": "1500",
                              "MIMI_DEMO_KILL": "1", "MIMI_DEMO_SESSION_TTL_S": "900",
                              "MIMI_DEMO_SESSIONS_PER_IP": "3",
-                             "MIMI_DEMO_TRUST_FORWARDED": "1"})
+                             "MIMI_DEMO_TRUST_FORWARDED": "1",
+                             "MIMI_DEMO_CLIENT_IP_HEADER": "True-Client-IP",
+                             "MIMI_DEMO_TRUSTED_PROXIES": "10.0.0.0/8, 172.16.0.0/12"})
     d = st2.demo
     assert (d.ip_daily_cap_kobo, d.global_daily_cap_kobo, d.killed, d.session_ttl_s,
-            d.sessions_per_ip, d.trust_forwarded) == (5_000, 150_000, True, 900.0, 3, True)
+            d.sessions_per_ip) == (5_000, 150_000, True, 900.0, 3)
+    assert d.client_ip_header == "true-client-ip"
+    assert d.trusted_proxies == ("10.0.0.0/8", "172.16.0.0/12")
+    with pytest.raises(ValueError, match="X-Forwarded-For"):
+        DemoConfig.from_env({"MIMI_DEMO_CLIENT_IP_HEADER": "X-Forwarded-For"})
+    with pytest.raises(ValueError):
+        DemoConfig.from_env({"MIMI_DEMO_TRUSTED_PROXIES": "10.0.0.0/33"})
     assert Settings.from_env({}).mode == "live"
 
 

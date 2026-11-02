@@ -1,0 +1,27 @@
+{
+ "id": "s08",
+ "grid": [
+  [
+   "kaya",
+   "adadi",
+   "rana"
+  ],
+  [
+   "Mama Gold Rice 50kg",
+   "4",
+   "2026-10-28"
+  ]
+ ],
+ "mapping": {
+  "kaya": "item",
+  "adadi": "qty_left",
+  "rana": "date"
+ },
+ "want_rows": [
+  {
+   "item": "Mama Gold Rice 50kg",
+   "qty_left": 4,
+   "date": "2026-10-28"
+  }
+ ]
+}

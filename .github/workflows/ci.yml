@@ -71,6 +71,8 @@ jobs:
         run: python -m mimi.api.loop_safety_eval --no-write
       - name: Claims-gate eval (outbound figures, dates and names must match the run's records, shop numbers are never owner figures, done or sent or approved claims need a confirmed tool outcome, promises need a scheduled follow-up, money-moved claims always held; fails unless every bad case is held and no control is)
         run: python -m mimi.harness.claims_eval --no-write
+      - name: Policy eval (RAI-323, the owner's rulebook - every action type x behaviour, every built-in stop x behaviour, loosening attempts by shop or chat message; fails on any miss or a built-in stop bypass)
+        run: python -m mimi.harness.policy_eval --no-write
       - name: Harness evals (50 Collector scenarios scripted and recorded Muse Spark, 41 security cases, 200 replayed retries, runaway budgets, idle cost; fails on any pass mark)
         run: python -m mimi.harness.eval --no-write
       - name: Router eval, 300 labelled messages in five languages (rules, phrases, fast classifier, recorded Muse Spark answers; fails on accuracy < 95%, any money misroute, clarify > 8%, a rule case calling the model; the p95 < 800 ms mark is not measured on a replay)
@@ -97,6 +99,9 @@ jobs:
         run: python -m mimi.sim --shop-ids shop-019,shop-037,shop-025 --transcript --screenshots 1 --fakes 0.4
       - name: End-to-end eval on SQLite, 10+ simulated shops through the HTTP API, the durable store and real worker processes with 11 forced SIGKILLs (recorded Muse Spark, SAM 3.1 and persona answers; fails on scene success < 90%, routing < 95%, any safety violation, money move, invented figure, duplicate reply, lost job or cross-tenant read)
         run: python -m mimi.api.e2e --no-write
+      - name: Simulated week, one day (RAI-273; 40 shops through the HTTP API, the durable store and 2 worker processes with 1 forced SIGKILL; offline, no model call; fails on turns complete < 98%, any invented figure, duplicate send, lost job, budget or daily-cap breach or never-tier action)
+        timeout-minutes: 5
+        run: python -m mimi.api.week --days 1 --workers 2 --week-kills 1 --no-write
       - name: Two open asks eval, 40 held-out replies with a delivery receipt and a correction question open on one thread (code only, no model; fails under 95% or on any ambiguous reply bound)
         run: python -m mimi.api.which_eval --no-write
       - name: Pending-ask binding eval, 43 held-out replies to delivery receipt asks (recorded Muse Spark answers; fails under 95% correct route and action, or on any false consent)

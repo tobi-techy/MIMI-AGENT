@@ -23,6 +23,17 @@ def _tenant() -> sa.Column[str]:
     return sa.Column("tenant_id", sa.String(64), nullable=False)
 
 
+def _proof() -> tuple[sa.Column[str], ...]:
+    """Every record carries its proof level (RAI-295, ``mimi.provenance``): the
+    level, the witnesses behind it (JSON list of kind and source row id) and
+    the rules version that set it. Alembic ``0010_proof_levels``."""
+    return (
+        sa.Column("proof_level", sa.String(16), nullable=False, default="estimated"),
+        sa.Column("witnesses", sa.Text(), nullable=False, default="[]"),
+        sa.Column("proof_policy_version", sa.String(16), nullable=False, default="v1"),
+    )
+
+
 # ------------------------------------------------------------------ the book
 # Loaded by ``python -m mimi.store seed`` from the synthetic world. In
 # production Go owns these; ``SqlGo`` is the port the harness reads them by.
@@ -109,6 +120,7 @@ deliveries = sa.Table(
     sa.Column("status", sa.String(32), nullable=False, default="delivered"),
     sa.Column("witnessed_at", sa.String(40), nullable=True),
     sa.Column("live", sa.Boolean(), nullable=False, default=False),
+    *_proof(),
     sa.PrimaryKeyConstraint("tenant_id", "delivery_id"),
     sa.Index("ix_deliveries_tenant_shop", "tenant_id", "shop_id"),
 )
@@ -160,6 +172,7 @@ payments = sa.Table(
     sa.Column("split_of", sa.String(64), nullable=True),
     # A fake transfer alert: no money arrived; never counts as paid.
     sa.Column("fake_alert", sa.Boolean(), nullable=False, default=False),
+    *_proof(),
     sa.PrimaryKeyConstraint("tenant_id", "payment_id"),
     sa.Index("ix_payments_tenant_shop", "tenant_id", "shop_id"),
 )
@@ -200,6 +213,34 @@ disputes = sa.Table(
     sa.Column("text", sa.Text(), nullable=False, default=""),
     sa.Column("status", sa.String(16), nullable=False),
     sa.PrimaryKeyConstraint("tenant_id", "dispute_id"),
+)
+
+# Every change to a record's proof level, append-only (RAI-295): the witness
+# that landed (or "policy" for a rules bump), the old and new level, when.
+proof_events = sa.Table(
+    "proof_events", metadata,
+    _tenant(),
+    sa.Column("event_id", sa.String(64), nullable=False),
+    sa.Column("record_type", sa.String(32), nullable=False),
+    sa.Column("record_id", sa.String(64), nullable=False),
+    sa.Column("old_level", sa.String(16), nullable=False),
+    sa.Column("new_level", sa.String(16), nullable=False),
+    sa.Column("witness_kind", sa.String(32), nullable=False),
+    sa.Column("witness_source", sa.String(200), nullable=False),
+    sa.Column("policy_version", sa.String(16), nullable=False),
+    sa.Column("at", sa.String(40), nullable=False),
+    sa.PrimaryKeyConstraint("tenant_id", "event_id"),
+    sa.Index("ix_proof_events_record", "tenant_id", "record_type", "record_id"),
+)
+
+# A shop is asked to confirm a record once; a skipped ask is never chased.
+proof_asks = sa.Table(
+    "proof_asks", metadata,
+    _tenant(),
+    sa.Column("record_type", sa.String(32), nullable=False),
+    sa.Column("record_id", sa.String(64), nullable=False),
+    sa.Column("asked_at", sa.String(40), nullable=False),
+    sa.PrimaryKeyConstraint("tenant_id", "record_type", "record_id"),
 )
 
 # ------------------------------------------------------------- the agent
@@ -374,6 +415,9 @@ approvals = sa.Table(
     sa.Column("created_at", sa.String(40), nullable=False),
     sa.Column("created_ts", sa.Float(), nullable=False),
     sa.Column("decided_at", sa.String(40), nullable=True),
+    # "" (approve: Mimi carries it out once approved) or "hand_off" (the owner
+    # does it by hand; approving only records that it was done). RAI-323.
+    sa.Column("handling", sa.String(16), nullable=False, default=""),
     sa.UniqueConstraint("tenant_id", "idempotency_key", name="uq_approvals_tenant_key"),
     sa.Index("ix_approvals_tenant_status", "tenant_id", "status"),
 )
@@ -462,11 +506,65 @@ prefixes = sa.Table(
     sa.PrimaryKeyConstraint("tenant_id", "thread_id", "helper"),
 )
 
+# Thread compaction (RAI-285): one row per summary version. Raw history in
+# ``history`` is never deleted; each version covers a window of turn ids and
+# the builder shows the newest version plus the turns after its window. The
+# ``due_ts`` row (version 0, no body) is the durable timer: a thread whose
+# big turn passed the threshold compacts once it is due and no turn is queued.
+compactions = sa.Table(
+    "compactions", metadata,
+    _tenant(),
+    sa.Column("thread_id", sa.String(200), nullable=False),
+    sa.Column("version", sa.Integer(), nullable=False),
+    sa.Column("helper", sa.String(32), nullable=False, default=""),
+    sa.Column("skill", sa.String(64), nullable=False, default=""),
+    # ThreadSummary JSON (version 0: the pending timer, empty).
+    sa.Column("body", sa.Text(), nullable=False, default=""),
+    sa.Column("summary_hash", sa.String(16), nullable=False, default=""),
+    # Turn ids covered, oldest first, JSON list (audit, never shown).
+    sa.Column("covered_turns", sa.Text(), nullable=False, default="[]"),
+    sa.Column("generation", sa.Integer(), nullable=False, default=0),
+    sa.Column("tokens_before", sa.Integer(), nullable=False, default=0),
+    sa.Column("tokens_after", sa.Integer(), nullable=False, default=0),
+    # Due epoch seconds for the pending timer (version 0 only).
+    sa.Column("due_ts", sa.Float(), nullable=False, default=0.0),
+    sa.Column("created_at", sa.String(40), nullable=False, default=""),
+    sa.PrimaryKeyConstraint("tenant_id", "thread_id", "version"),
+)
+
 artifacts = sa.Table(
     "artifacts", metadata,
     sa.Column("path", sa.String(300), primary_key=True),
     _tenant(),
     sa.Column("content", sa.Text(), nullable=False),
+)
+
+# When to speak (RAI-300): the owner's digest queue (the daily note, RAI-289,
+# reads what it has not consumed) and one row per unprompted message, so the
+# per-audience daily cap counts across restarts and workers.
+digest_queue = sa.Table(
+    "digest_queue", metadata,
+    sa.Column("item_id", sa.Integer(), primary_key=True, autoincrement=True),
+    _tenant(),
+    sa.Column("shop_id", sa.String(64), nullable=False, default=""),
+    sa.Column("body", sa.Text(), nullable=False, default=""),
+    sa.Column("kind", sa.String(32), nullable=False, default="reply"),
+    sa.Column("day", sa.String(10), nullable=False),  # Africa/Lagos
+    sa.Column("reason", sa.Text(), nullable=False, default=""),
+    sa.Column("consumed", sa.Boolean(), nullable=False, default=False),
+    sa.Column("created_at", sa.String(40), nullable=False, default=""),
+    sa.Index("ix_digest_queue_tenant_day", "tenant_id", "day", "consumed"),
+)
+
+speak_counts = sa.Table(
+    "speak_counts", metadata,
+    sa.Column("count_id", sa.Integer(), primary_key=True, autoincrement=True),
+    _tenant(),
+    sa.Column("audience", sa.String(16), nullable=False),  # owner | shop | rep
+    sa.Column("shop_id", sa.String(64), nullable=False, default=""),
+    sa.Column("day", sa.String(10), nullable=False),  # Africa/Lagos
+    sa.Column("created_at", sa.String(40), nullable=False, default=""),
+    sa.Index("ix_speak_counts_tenant_day", "tenant_id", "audience", "shop_id", "day"),
 )
 
 # ------------------------------------------------------------- demo mode
@@ -499,8 +597,117 @@ demo_usage = sa.Table(
     sa.PrimaryKeyConstraint("day", "ip_hash"),
 )
 
+# ------------------------------------------------------------- connectors (RAI-277)
+# connector_accounts holds no tokens: Composio holds them. connector_writes
+# is the audit of every outside write (proposal id, idempotency key, the
+# external id, the approval, applied and undone times). consent_grants sits
+# next to consent_withheld: one row per shop, receiver, scope and grant time.
+
+connector_accounts = sa.Table(
+    "connector_accounts", metadata,
+    _tenant(),
+    sa.Column("connection_id", sa.String(64), nullable=False),
+    sa.Column("toolkit", sa.String(32), nullable=False),  # ZOHO_BOOKS | ZOHO | GOOGLESHEETS
+    sa.Column("connected_account_id", sa.String(100), nullable=False, default=""),
+    sa.Column("region", sa.String(8), nullable=False, default="com"),
+    # active | revoked
+    sa.Column("status", sa.String(16), nullable=False, default="active"),
+    sa.Column("connected_at", sa.String(40), nullable=False),
+    sa.Column("revoked_at", sa.String(40), nullable=True),
+    sa.PrimaryKeyConstraint("tenant_id", "connection_id"),
+)
+
+connector_sync_runs = sa.Table(
+    "connector_sync_runs", metadata,
+    _tenant(),
+    sa.Column("run_id", sa.String(64), nullable=False),
+    sa.Column("connection_id", sa.String(64), nullable=False),
+    sa.Column("shop_id", sa.String(64), nullable=False, default=""),
+    sa.Column("scope", sa.String(32), nullable=False, default="stock"),
+    sa.Column("rows_read", sa.Integer(), nullable=False, default=0),
+    sa.Column("rows_mapped", sa.Integer(), nullable=False, default=0),
+    sa.Column("errors", sa.Text(), nullable=False, default="[]"),
+    sa.Column("started_at", sa.String(40), nullable=False),
+    sa.Column("finished_at", sa.String(40), nullable=True),
+    sa.PrimaryKeyConstraint("tenant_id", "run_id"),
+    sa.Index("ix_connector_sync_runs_conn", "tenant_id", "connection_id"),
+)
+
+connector_writes = sa.Table(
+    "connector_writes", metadata,
+    _tenant(),
+    sa.Column("write_id", sa.String(64), nullable=False),
+    sa.Column("proposal_id", sa.String(64), nullable=False),
+    sa.Column("idempotency_key", sa.String(100), nullable=False),
+    sa.Column("action", sa.String(100), nullable=False),
+    sa.Column("payload_hash", sa.String(64), nullable=False, default=""),
+    sa.Column("before", sa.Text(), nullable=False, default="{}"),
+    sa.Column("after", sa.Text(), nullable=False, default="{}"),
+    sa.Column("external_id", sa.String(100), nullable=False, default=""),
+    sa.Column("approval_id", sa.String(64), nullable=False, default=""),
+    sa.Column("applied_at", sa.String(40), nullable=False),
+    sa.Column("undone_at", sa.String(40), nullable=True),
+    sa.PrimaryKeyConstraint("tenant_id", "write_id"),
+    sa.UniqueConstraint("tenant_id", "idempotency_key", name="uq_connector_writes_tenant_key"),
+)
+
+consent_grants = sa.Table(
+    "consent_grants", metadata,
+    _tenant(),
+    sa.Column("shop_id", sa.String(64), nullable=False),
+    sa.Column("receiver", sa.String(64), nullable=False),
+    sa.Column("scope", sa.String(32), nullable=False),
+    sa.Column("granted_at", sa.String(40), nullable=False),
+    sa.Column("revoked_at", sa.String(40), nullable=True),
+    sa.PrimaryKeyConstraint("tenant_id", "shop_id", "receiver", "scope", "granted_at"),
+    sa.Index("ix_consent_grants_shop", "tenant_id", "shop_id", "scope"),
+)
+
+# Connector rows read into the book (RAI-277): one row per shop, item and
+# count day, with the source that produced it (connector | checkin).
+stock_counts = sa.Table(
+    "stock_counts", metadata,
+    _tenant(),
+    sa.Column("shop_id", sa.String(64), nullable=False),
+    sa.Column("sku", sa.String(64), nullable=False),
+    sa.Column("item", sa.String(200), nullable=False, default=""),
+    sa.Column("quantity", sa.Integer(), nullable=False),
+    sa.Column("counted_on", sa.String(10), nullable=False),  # Africa/Lagos day
+    sa.Column("source", sa.String(16), nullable=False, default="connector"),
+    sa.PrimaryKeyConstraint("tenant_id", "shop_id", "sku", "counted_on", "source"),
+)
+
+# The distributor's rulebook (RAI-323, alembic 0014): one behaviour per action
+# type the owner changed; no row means the default. Built-in stops never have
+# a row. Only the API (owner key) writes here; nothing a helper or a message
+# says can.
+policy_rules = sa.Table(
+    "policy_rules", metadata,
+    _tenant(),
+    sa.Column("action_type", sa.String(64), nullable=False),
+    sa.Column("behaviour", sa.String(24), nullable=False),
+    sa.Column("updated_by", sa.String(100), nullable=False, default=""),
+    sa.Column("updated_at", sa.String(40), nullable=False),
+    sa.PrimaryKeyConstraint("tenant_id", "action_type"),
+)
+
+# Every rule change: who, when, from what to what.
+policy_changes = sa.Table(
+    "policy_changes", metadata,
+    sa.Column("change_id", sa.String(64), primary_key=True),
+    _tenant(),
+    sa.Column("action_type", sa.String(64), nullable=False),
+    sa.Column("old_behaviour", sa.String(24), nullable=False),
+    sa.Column("new_behaviour", sa.String(24), nullable=False),
+    sa.Column("changed_by", sa.String(100), nullable=False),
+    sa.Column("key_digest", sa.String(64), nullable=False, default=""),
+    sa.Column("created_at", sa.String(40), nullable=False),
+    sa.Column("created_ts", sa.Float(), nullable=False),
+    sa.Index("ix_policy_changes_tenant", "tenant_id", "created_ts"),
+)
+
 BOOK_TABLES = (reps, shops, consent_withheld, skus, deliveries, delivery_lines, receivables,
-               payments, bank_feed, promises, disputes)
+               payments, bank_feed, promises, disputes, proof_events, proof_asks)
 AGENT_TABLES = (threads, inbound_messages, turns, turn_attempts, messages, thread_events,
                 intents, approvals, credit_requests, spend, asked_once, kill_switches, history,
-                prefixes, artifacts)
+                prefixes, artifacts, compactions)

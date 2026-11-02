@@ -1,0 +1,33 @@
+[
+ {
+  "match": {},
+  "reply": {
+   "valueRanges": [
+    {
+     "values": [
+      [
+       "Item",
+       "Qty left",
+       "Date"
+      ],
+      [
+       "Sunrise Instant Noodles 70g",
+       "5",
+       "2026-10-28"
+      ],
+      [
+       "Peak Milk Sachet 12g",
+       "12",
+       "2026-10-28"
+      ],
+      [
+       "Mama Gold Rice 50kg",
+       "2",
+       "2026-10-28"
+      ]
+     ]
+    }
+   ]
+  }
+ }
+]

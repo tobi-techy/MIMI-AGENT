@@ -26,6 +26,7 @@ from typing import Any
 
 import httpx
 
+from mimi.models import metering
 from mimi.voice.audio import to_wav16k
 from mimi.voice.base import (
     AudioClip,
@@ -81,6 +82,7 @@ class MuseTranscriber:
         return req
 
     def transcribe(self, clip: AudioClip, ctx: VoiceContext) -> Transcript:
+        metering.guard(getattr(self, "name", "stt"))
         try:
             wav = to_wav16k(clip)
         except AudioError as exc:

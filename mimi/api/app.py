@@ -13,6 +13,9 @@ Endpoints (all under ``/v1``, all but health need ``Authorization: Bearer``):
 * ``GET /v1/approvals``; ``POST /v1/approvals/{id}/approve`` and ``/reject``
   (owner key only).
 * ``GET /v1/credit``: limits and credit requests.
+* ``GET /v1/policy``, ``PUT /v1/policy``: the owner's rulebook (RAI-323);
+  built-in stops are listed locked. Only an owner key changes it; a demo
+  session, or demo mode, gets 403.
 * ``GET /v1/health``; ``GET /`` (liveness only: no database, no auth).
 * ``GET /v1/me``: the caller's tenant, role and mode.
 * ``POST /v1/demo/sessions``, ``POST /v1/demo/reset``: demo mode only
@@ -43,6 +46,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
+from mimi.api import connectors as cx
 from mimi.api import reads
 from mimi.api.agent import Agent, Conflict, NotFound
 from mimi.api.config import LOCALHOST_REGEX, ApiKey, Settings
@@ -52,34 +56,48 @@ from mimi.api.demo import (
     DemoStore,
     SessionExpired,
     client_address,
+    client_ip,
     refuses_approval,
 )
 from mimi.api.media import MAX_BYTES
 from mimi.api.schemas import (
     ApprovalList,
+    ConnectorConnectIn,
+    ConnectorConnectOut,
+    ConnectorDetail,
+    ConnectorList,
     CreditOut,
     DecisionIn,
     DecisionOut,
+    DemoLimitError,
     DemoSessionOut,
     ErrorOut,
     EventIn,
     Health,
     Liveness,
     MediaOut,
+    MentionList,
     MeOut,
+    PolicyIn,
+    PolicyOut,
     ShopDetail,
     ShopList,
+    TaskList,
     ThreadDetail,
     ThreadList,
     TurnIn,
     TurnOut,
 )
 from mimi.api.uploads import ConsoleUploads, UploadRefused
-from mimi.clock import wall_utc
+from mimi.clock import wall, wall_utc
+from mimi.connectors.base import ConnectorError
 from mimi.harness.go import CrossTenant
 from mimi.harness.inbound import Inbound, Media, Payload
+from mimi.harness.policy import PolicyLocked, owner_rules_on
 from mimi.store import schema as s
 from mimi.store.db import make_engine
+from mimi.store.policy_rules import SqlPolicyRules
+from mimi.store.util import now_iso
 from mimi.tz import assume_lagos
 
 log = logging.getLogger(__name__)
@@ -89,7 +107,7 @@ _ERRORS: dict[int | str, dict[str, Any]] = {
     401: {"model": ErrorOut}, 403: {"model": ErrorOut}, 404: {"model": ErrorOut},
     409: {"model": ErrorOut}}
 _DEMO_ERRORS: dict[int | str, dict[str, Any]] = {
-    **_ERRORS, 429: {"model": ErrorOut}, 503: {"model": ErrorOut}}
+    **_ERRORS, 429: {"model": DemoLimitError}, 503: {"model": DemoLimitError}}
 
 
 def create_app(settings: Settings | None = None, agent: Agent | None = None, *,
@@ -160,8 +178,11 @@ def create_app(settings: Settings | None = None, agent: Agent | None = None, *,
             if sess is not None:
                 return sess.ip_hash
         peer = request.client.host if request.client else ""
-        return demo.ip_hash(client_address(peer, request.headers.get("x-forwarded-for", ""),
-                                           trust=settings.demo.trust_forwarded))
+        return demo.ip_hash(client_address(peer, request.headers, settings.demo))
+
+    def ip_source(request: Request) -> str:
+        peer = request.client.host if request.client else ""
+        return client_ip(peer, request.headers, settings.demo)[1]
 
     def demo_gate(request: Request, key: ApiKey) -> None:
         """Demo caps and kill switch, checked before anything is queued."""
@@ -186,7 +207,7 @@ def create_app(settings: Settings | None = None, agent: Agent | None = None, *,
 
     @app.exception_handler(DemoRefused)
     async def _dr(_: Request, exc: DemoRefused) -> JSONResponse:
-        return JSONResponse({"detail": str(exc)}, status_code=exc.status)
+        return JSONResponse(exc.payload(), status_code=exc.status)
 
     @app.exception_handler(UploadRefused)
     async def _ur(_: Request, exc: UploadRefused) -> JSONResponse:
@@ -223,6 +244,8 @@ def create_app(settings: Settings | None = None, agent: Agent | None = None, *,
                           transcript=m.transcript, transcript_lang=m.transcript_lang)
         if not (body.text.strip() or body.button_id or media.kind != "none"):
             raise HTTPException(422, "a turn needs text, a button or media")
+        if body.assign_to and body.source != "owner_message":
+            raise HTTPException(422, "only the owner can assign a helper")
         at = body.received_at or wall_utc()
         if at.tzinfo is None:
             # A channel time without a zone is a Lagos wall-clock time
@@ -232,7 +255,7 @@ def create_app(settings: Settings | None = None, agent: Agent | None = None, *,
             source=body.source, org_id=key.tenant_id, external_id=body.message_id,
             received_at=at,
             payload=Payload(text=body.text, from_phone=body.phone, media=media,
-                            button_id=body.button_id))
+                            button_id=body.button_id, assign_to=body.assign_to))
         view = agent.submit(key.tenant_id, inbound, media_ref=ref, simulated=body.simulated)
         if wait and not view.finished:
             agent.process(view.turn_id)
@@ -355,6 +378,15 @@ def create_app(settings: Settings | None = None, agent: Agent | None = None, *,
     def get_thread(thread_id: str, key: Owner) -> dict[str, Any]:
         return reads.get_thread(engine, key.tenant_id, thread_id, uploads=uploads is not None)
 
+    @app.get("/v1/tasks", response_model=TaskList, responses=_ERRORS,
+             summary="Helper tasks and their status (working, needs_you, done)")
+    def get_tasks(key: Owner, thread_id: str = "", helper: str = "",
+                  status: Annotated[str, Query(pattern=r"^(|working|needs_you|done|handed_back"
+                                                       r"|failed)$")] = "",
+                  limit: Annotated[int, Query(ge=1, le=200)] = 50) -> dict[str, Any]:
+        return reads.list_tasks(engine, key.tenant_id, thread_id=thread_id, helper=helper,
+                                status=status, limit=limit)
+
     @app.get("/v1/shops", response_model=ShopList, responses=_ERRORS)
     def get_shops(key: Owner) -> dict[str, Any]:
         return reads.list_shops(engine, key.tenant_id)
@@ -402,6 +434,123 @@ def create_app(settings: Settings | None = None, agent: Agent | None = None, *,
     def get_credit(key: Owner) -> dict[str, Any]:
         return reads.credit(engine, key.tenant_id)
 
+    @app.get("/v1/mentions", response_model=MentionList, responses=_ERRORS,
+             summary="The owner's @ picker: helpers, shops and reps")
+    def get_mentions(key: Owner, q: Annotated[str, Query(max_length=80)] = "",
+                     kinds: Annotated[str, Query(
+                         pattern=r"^$|^(?:helper|shop|rep)(?:,(?:helper|shop|rep))*$")] = "",
+                     limit: Annotated[int, Query(ge=1, le=200)] = 50) -> dict[str, Any]:
+        """``q`` matches the start of a name or of any word in it (a leading
+        ``@`` is ignored); ``kinds`` is a comma list, empty for all three.
+        Helper rows carry ``assign_to`` for ``POST /v1/turns``."""
+        return reads.mentions(engine, key.tenant_id, q=q, kinds=kinds, limit=limit)
+
+    # ------------------------------------------------------- connectors (RAI-277)
+
+    @app.get("/v1/connectors", response_model=ConnectorList, responses=_ERRORS,
+             summary="Connector toolkits and their status")
+    def get_connectors(key: Owner) -> dict[str, Any]:
+        return cx.list_connectors(engine, key.tenant_id)
+
+    @app.post("/v1/connectors/{toolkit}/connect", response_model=ConnectorConnectOut,
+              responses=_ERRORS, summary="Start the connect flow for a toolkit")
+    def post_connector_connect(toolkit: str, key: Owner,
+                               body: ConnectorConnectIn | None = None) -> dict[str, Any]:
+        from mimi.connectors.env import ZOHO_REGIONS
+
+        upper = toolkit.upper()
+        if upper not in ("ZOHO_BOOKS", "ZOHO", "GOOGLESHEETS"):
+            raise HTTPException(404, "unknown toolkit")
+        region = ((body.region if body else "") or "").strip().lower()
+        if upper in ("ZOHO_BOOKS", "ZOHO") and region and region not in ZOHO_REGIONS:
+            raise HTTPException(422, f"region is {region!r}: use com, eu, in, cn or au")
+        transport = _connector_transport()
+        try:
+            return transport.initiate(upper, user_id=key.tenant_id)
+        except ConnectorError as exc:
+            raise HTTPException(502, str(exc)) from exc
+
+    @app.get("/v1/connectors/callback", responses=_ERRORS,
+             summary="Composio returns here after consent")
+    def get_connector_callback(request: Request, key: Owner) -> dict[str, Any]:
+        """Check the state, read the connected account, send the owner back
+        to Settings > Connectors."""
+        from mimi.connectors.env import ConnectorSettings
+        from mimi.connectors.state import check_state
+
+        params = dict(request.query_params)
+        state = params.get("state", "")
+        settings_c = ConnectorSettings.from_env()
+        try:
+            payload = check_state(settings_c.state_secret, state)
+        except ValueError as exc:
+            raise HTTPException(422, str(exc)) from exc
+        if str(payload.get("tenant") or "") != key.tenant_id:
+            # A link signed for another distributor never binds here.
+            raise HTTPException(422, "that link is not valid; start a new connect")
+        if _connector_state_used(engine, key.tenant_id, state):
+            raise HTTPException(422, "that link was already used; start a new connect")
+        connected_id = params.get("connected_account_id", "")
+        if not connected_id:
+            raise HTTPException(422, "Composio gave no connected account; start a new connect")
+        transport = _connector_transport()
+        try:
+            info = transport.account(connected_id)
+        except ConnectorError as exc:
+            raise HTTPException(502, str(exc)) from exc
+        connection_id = f"conn-{connected_id[-12:]}"
+        cx.save_account(engine, key.tenant_id, connection_id=connection_id,
+                        toolkit=str(payload.get("toolkit") or ""),
+                        connected_account_id=connected_id,
+                        region=settings_c.zoho_region, connected_at=now_iso(wall()))
+        _connector_state_mark(engine, key.tenant_id, state)
+        status = str(info.get("status") or "ACTIVE")
+        return {"connection_id": connection_id, "status": status,
+                "next": "Settings > Connectors"}
+
+    @app.get("/v1/connectors/{connection_id}", response_model=ConnectorDetail,
+             responses=_ERRORS, summary="A connection's status and sync preview")
+    def get_connector(connection_id: str, key: Owner) -> dict[str, Any]:
+        return cx.get_connection(engine, key.tenant_id, connection_id)
+
+    @app.delete("/v1/connectors/{connection_id}", responses=_ERRORS,
+                summary="Disconnect: revoke before the next sync")
+    def delete_connector(connection_id: str, key: Owner) -> dict[str, Any]:
+        with engine.connect() as conn:
+            row = conn.execute(sa.select(s.connector_accounts).where(
+                s.connector_accounts.c.tenant_id == key.tenant_id,
+                s.connector_accounts.c.connection_id == connection_id)).first()
+        if row is None:
+            raise HTTPException(404, "not found")
+        transport = _connector_transport()
+        try:
+            transport.disconnect(str(row.connected_account_id or connection_id))
+        except ConnectorError as exc:
+            raise HTTPException(502, str(exc)) from exc
+        cx.revoke_account(engine, key.tenant_id, connection_id, now_iso(wall()))
+        return {"connection_id": connection_id, "status": "revoked"}
+
+    rules = SqlPolicyRules(engine)
+
+    @app.get("/v1/policy", response_model=PolicyOut, responses=_ERRORS,
+             summary="The owner's rulebook: what Mimi does on her own, asks, or hands off")
+    def get_policy(key: Owner) -> dict[str, Any]:
+        return rules.view(key.tenant_id, editable=not (settings.demo_mode or key.session))
+
+    @app.put("/v1/policy", response_model=PolicyOut, responses=_ERRORS,
+             summary="Change rules (owner key only; built-in stops stay locked)")
+    def put_policy(body: PolicyIn, key: Owner) -> dict[str, Any]:
+        if settings.demo_mode or key.session:
+            raise HTTPException(403, "the demo's rules are read-only")
+        if not owner_rules_on():
+            raise HTTPException(409, "owner rules are switched off (MIMI_POLICY_RULES=0)")
+        try:
+            rules.update(key.tenant_id, [(r.action_type, r.behaviour) for r in body.rules],
+                         by=body.by, key_digest=key.digest)
+        except PolicyLocked as exc:
+            raise HTTPException(409, str(exc)) from None
+        return rules.view(key.tenant_id, editable=True)
+
     @app.get("/v1/health", response_model=Health)
     def health(response: Response) -> dict[str, Any]:
         db = "ok"
@@ -429,7 +578,7 @@ def create_app(settings: Settings | None = None, agent: Agent | None = None, *,
         status = None
         if demo is not None:
             status = demo.status(demo.session(key.digest) if key.session else None,
-                                 visitor(request, key))
+                                 visitor(request, key), ip_source(request))
         return {"tenant_id": key.tenant_id, "role": key.role, "mode": settings.mode,
                 "demo": status}
 
@@ -454,11 +603,49 @@ def create_app(settings: Settings | None = None, agent: Agent | None = None, *,
         store = _demo_on()
         if not key.session:
             raise HTTPException(403, "only a demo session can be reset")
+        # Paused: refuse before ending the session, so the caller keeps it.
+        store.refuse_if_paused()
         ip = visitor(request, key)
         store.end(key.digest)
         return store.start(ip)
 
     return app
+
+
+def _connector_transport() -> Any:
+    """FakeComposio in demo and offline runs; the real transport only when
+    the key is set and the mode says so. Demo sessions never start OAuth."""
+    from mimi.connectors.composio import ComposioTransport, FakeComposio
+    from mimi.connectors.env import ConnectorSettings
+
+    settings = ConnectorSettings.from_env()
+    if settings.live:
+        return ComposioTransport(settings)
+    return FakeComposio(settings)
+
+
+def _connector_state_used(engine: Any, tenant: str, state: str) -> bool:
+    import hashlib
+
+    digest = hashlib.sha256(state.encode()).hexdigest()
+    with engine.connect() as conn:
+        sub = (sa.select(sa.literal(1)).select_from(s.artifacts).where(
+            s.artifacts.c.tenant_id == tenant,
+            s.artifacts.c.path == f"connector-state:{digest}"))
+        hit = conn.execute(sa.select(sub.exists())).scalar()
+        return bool(hit)
+
+
+def _connector_state_mark(engine: Any, tenant: str, state: str) -> None:
+    import hashlib
+
+    from mimi.store.util import insert_ignore
+
+    digest = hashlib.sha256(state.encode()).hexdigest()
+    with engine.begin() as conn:
+        insert_ignore(conn, s.artifacts, {
+            "path": f"connector-state:{digest}", "tenant_id": tenant,
+            "content": now_iso(wall())})
 
 
 def _turn_out(v: Any) -> dict[str, Any]:

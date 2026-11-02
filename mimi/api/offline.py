@@ -15,6 +15,7 @@ from collections.abc import Sequence
 from typing import Any
 
 from mimi.harness.gateway import ModelTurn, ToolCall
+from mimi.models import metering
 
 OFFLINE_REPLY = ("Thanks, I have your message. I'm running in offline demo mode, "
                  "so a person will follow up.")
@@ -31,6 +32,7 @@ class OfflineModel:
 
     def chat(self, messages: Sequence[dict[str, Any]], tools: Sequence[dict[str, Any]], *,
              max_tokens: int) -> ModelTurn:
+        metering.guard(self.name)
         self.calls += 1
         if messages and messages[-1].get("role") == "tool":
             return ModelTurn("done", (), self.name, fake=True)

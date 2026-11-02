@@ -12,6 +12,8 @@ from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from mimi.harness.handoff import Card, Chip, Handback, Handoff
+
 RECEIVED_AT = ("When the message was received, with its zone. Defaults to now. A time "
                "without a zone is read as Africa/Lagos (WAT, UTC+1).")
 
@@ -56,6 +58,11 @@ class TurnIn(BaseModel):
     media: MediaIn | None = None
     received_at: datetime | None = Field(None, description=RECEIVED_AT)
     simulated: bool = Field(False, description="Simulator traffic: tagged everywhere.")
+    assign_to: Literal["", "order", "collector", "credit", "stock", "brand", "proof",
+                       "mimi"] = Field(
+        "", description="The owner names the helper (docs/HANDOFFS.md): overrides routing to "
+                        "that helper's owner skills, still under every policy tier. Owner "
+                        "messages only (422 otherwise). Same as '@Collector ...' at the start.")
 
 
 class EventIn(BaseModel):
@@ -116,6 +123,15 @@ class TurnOut(_Out):
     replies: list[Reply]
     route: dict[str, Any]
     error: str
+    handoff: Handoff | None = Field(None, description="Who Mimi asked and how it went "
+                                    "(docs/HANDOFFS.md). Present on every routed turn; "
+                                    "status 'working' while it runs.")
+    handback: Handback | None = Field(None, description="A helper returned the message to "
+                                      "Mimi instead of answering; she re-routed it once.")
+    card: Card | None = Field(None, description="The answer card (owner console): figures "
+                              "read from the book by code.")
+    chips: list[Chip] = Field(default_factory=list, description="2 or 3 safe next steps.")
+    task_status: Literal["", "working", "needs_you", "done", "handed_back", "failed"] = ""
 
 
 class Health(_Out):
@@ -220,6 +236,33 @@ class ThreadDetail(_Out):
     messages: list[Message]
     steps: list[Step]
     turns: list[TurnSummary]
+    handoffs: list[Handoff] = Field(default_factory=list, description="Each turn's handoff, "
+                                    "oldest first (docs/HANDOFFS.md).")
+
+
+class TaskOut(_Out):
+    """One helper task: a turn Mimi handed to a helper (docs/HANDOFFS.md)."""
+
+    task_id: str
+    turn_id: str
+    thread_id: str
+    helper: str
+    helper_name: str
+    skill: str
+    status: Literal["working", "needs_you", "done", "handed_back", "failed"]
+    reason: str
+    handoff: Handoff | None
+    handback: Handback | None = None
+    card: Card | None = None
+    chips: list[Chip] = Field(default_factory=list)
+    created_at: str
+    finished_at: str | None
+
+
+class TaskList(_Out):
+    tasks: list[TaskOut]
+    total: int
+    by_status: dict[str, int]
 
 
 class ShopSummary(_Out):
@@ -244,6 +287,11 @@ class ShopSummary(_Out):
 class ShopList(_Out):
     shops: list[ShopSummary]
     total: int
+    # Summed once in code (mimi.owed): the same figures Collector and the cards use.
+    owed_total_kobo: int = 0
+    owed_total_naira: str = ""
+    overdue_total_kobo: int = 0
+    overdue_total_naira: str = ""
 
 
 class DeliveryLineOut(_Out):
@@ -262,6 +310,10 @@ class DeliveryOut(_Out):
     total_kobo: int
     total_naira: str
     status: str
+    # RAI-295: verified | likely | estimated, and the word shown beside it.
+    proof_level: Literal["verified", "likely", "estimated"]
+    proof: str
+    proof_policy_version: str
     lines: list[DeliveryLineOut]
 
 
@@ -291,7 +343,14 @@ class ApprovalOut(_Out):
     turn_id: str
     tool: str
     intent_kind: str
-    preview: str
+    preview: str = Field(description="As the owner reads it: shop and rep names for ids, "
+                                     "money as ₦1,234,500 (mimi.api.display)")
+    preview_raw: str = Field("", description="The preview as the helper's dry run wrote it")
+    shop_name: str = ""
+    flags: list[Literal["over_credit_limit"]] = Field(
+        default_factory=list, description="over_credit_limit: approving this order would put "
+                                          "the shop past its credit limit (checked in code)")
+    over_limit_by_kobo: int = 0
     payload: dict[str, Any]
     draft: Draft | None
     created_at: str
@@ -302,6 +361,9 @@ class ApprovalOut(_Out):
     # and that replaced it. A superseded or withdrawn item cannot be decided.
     supersedes: str | None = None
     superseded_by: str | None = None
+    # approve: Mimi carries it out once approved. hand_off: the owner's rule
+    # says the owner does this step by hand; approving records it was done.
+    handling: str = "approve"
 
 
 class ApprovalList(_Out):
@@ -331,6 +393,9 @@ class CreditLimit(_Out):
     available_kobo: int
     available_naira: str
     used_pct: int
+    over_limit: bool = False
+    over_limit_by_kobo: int = 0
+    over_limit_by_naira: str = ""
 
 
 class CreditRequest(_Out):
@@ -353,6 +418,83 @@ class ErrorOut(_Out):
     detail: str
 
 
+class DemoLimit(_Out):
+    """Why a demo request was refused, in one fixed shape the console shows."""
+
+    code: Literal["visitor_daily_cap", "global_daily_cap", "paused", "too_many_sessions", ""]
+    scope: Literal["visitor", "global", "demo"]
+    title: str
+    message: str
+    spent_kobo: int | None
+    cap_kobo: int | None
+    spent_naira: str | None
+    cap_naira: str | None
+    resets_at: str
+    retry: Literal["tomorrow", "later"]
+
+
+class DemoLimitError(_Out):
+    detail: str
+    demo_limit: DemoLimit
+class ConnectorConnection(_Out):
+    connection_id: str
+    status: str
+    region: str
+    connected_at: str
+    revoked_at: str | None
+
+
+class ConnectorToolkit(_Out):
+    toolkit: str
+    label: str
+    blurb: str
+    reads: list[str]
+    writes: list[str]
+    connections: list[ConnectorConnection]
+
+
+class ConnectorList(_Out):
+    connectors: list[ConnectorToolkit]
+
+
+class ConnectorConnectIn(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    region: str = Field("", max_length=8,
+                        description="The Zoho account region (com, eu, in, cn or au).")
+
+
+class ConnectorConnectOut(_Out):
+    redirect_url: str
+    state: str
+
+
+class ConnectorSyncPreview(_Out):
+    rows_read: int
+    rows_mapped: int
+    errors: list[str]
+    finished_at: str | None
+
+
+class ConnectorPreviewRow(_Out):
+    shop_id: str
+    sku: str
+    item: str
+    quantity: int
+    counted_on: str
+
+
+class ConnectorDetail(_Out):
+    connection_id: str
+    toolkit: str
+    status: str
+    region: str
+    connected_at: str
+    revoked_at: str | None
+    last_sync: ConnectorSyncPreview | None
+    preview: list[ConnectorPreviewRow]
+
+
 class Liveness(_Out):
     status: Literal["ok"]
 
@@ -361,6 +503,8 @@ class DemoStatus(_Out):
     """A demo caller's session and today's spend against the caps (kobo)."""
 
     expires_at: str | None
+    ip_source: str = ""
+    resets_at: str = ""
     ip_spent_kobo: int
     ip_cap_kobo: int
     global_spent_kobo: int
@@ -389,3 +533,73 @@ class DemoSessionOut(_Out):
     expires_at: str
     ttl_s: float
     caps: DemoCaps
+
+
+# ------------------------------------------------------------------ mentions
+
+
+class Mention(_Out):
+    """One row of the console's @ picker: a helper, a shop or a rep."""
+
+    kind: Literal["helper", "shop", "rep"]
+    id: str = Field(description="helper name, shop_id or rep_id")
+    name: str
+    subtitle: str = Field("", description="shop: area and rep; rep: areas; helper: what it does")
+    mention: str = Field(description="What the console inserts into the message: '@Collector', "
+                                     "or the shop's or rep's name as written in the book")
+    assign_to: str = Field("", description="helper rows only: the value for assign_to on "
+                                           "POST /v1/turns")
+
+
+class MentionList(_Out):
+    mentions: list[Mention]
+    total: int
+
+
+# --------------------------------------------------------------- the rulebook
+
+
+class PolicyRuleOut(_Out):
+    """One step in the owner's rulebook (RAI-323)."""
+
+    action_type: str
+    helper: str
+    label: str
+    # act | act_if_preapproved | ask | hand_off; never for a built-in stop.
+    behaviour: str
+    default: str
+    # A built-in stop: no rule, API call or message can change it.
+    locked: bool
+    allowed: list[str]
+    changed_by: str
+    changed_at: str
+
+
+class PolicyChangeOut(_Out):
+    action_type: str
+    from_: str = Field(alias="from")
+    to: str
+    by: str
+    at: str
+
+
+class PolicyOut(_Out):
+    rules: list[PolicyRuleOut]
+    # False in demo mode or with MIMI_POLICY_RULES=0: the list is read-only.
+    editable: bool
+    changes: list[PolicyChangeOut]
+
+
+class PolicyRuleIn(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    action_type: str = Field(max_length=64)
+    behaviour: Literal["act", "act_if_preapproved", "ask", "hand_off"]
+
+
+class PolicyIn(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    rules: list[PolicyRuleIn] = Field(min_length=1, max_length=50)
+    # Who changed it, for the log (the console sends the owner's name).
+    by: str = Field(default="owner", max_length=100)

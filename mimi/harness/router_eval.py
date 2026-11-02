@@ -55,6 +55,11 @@ from mimi.world.model import World
 ROOT = Path(__file__).resolve().parents[2]
 EVAL_DIR = ROOT / "eval" / "router"
 CASES = EVAL_DIR / "messages.jsonl"
+# Handoff cases (docs/HANDOFFS.md): owner order and stock questions, shop
+# availability, @mentions and assign_to. Every one must route by rule or
+# phrase (never the model, so they need no recorded answer) and never to
+# Brand unless Brand is the gold.
+HANDOFF_CASES = EVAL_DIR / "handoffs.jsonl"
 CACHE = EVAL_DIR / "router.live.cache.json"
 REPORT = EVAL_DIR / "router.report.json"
 MODEL = "muse-spark-1.3"
@@ -234,6 +239,33 @@ def pass_marks(c: dict[str, Any], *, latency_measured: bool) -> dict[str, Any]:
     }
 
 
+def handoff_slice(world: World, router: Router) -> dict[str, Any]:
+    """The handoff cases on ``router``: accuracy, Brand dead ends, model calls."""
+    cases = load_cases(HANDOFF_CASES)
+    rows = run(world, cases, router)
+    ok = brand = model = miss = 0
+    fails = []
+    for c, d, err in rows:
+        if d is None:
+            miss += 1
+            fails.append({"id": c["id"], "text": c["payload"].get("text", ""), "error": err})
+            continue
+        good = correct(c, d)
+        ok += good
+        to_brand = d.status == "routed" and d.helper == "brand" and not c["gold"].startswith(
+            "brand/")
+        brand += to_brand
+        model += bool(d.model_called)
+        if not good or to_brand or d.model_called:
+            fails.append({"id": c["id"], "text": c["payload"].get("text", ""),
+                          "gold": c["gold"], "got": d.skill, "status": d.status,
+                          "layer": d.layer, "rule": d.rule})
+    n = len(cases)
+    return {"cases": n, "correct": ok, "accuracy": round(ok / n, 4) if n else 0.0,
+            "misrouted_to_brand": brand, "model_calls": model, "cache_misses": miss,
+            "failures": fails}
+
+
 def make_model(live: bool) -> CachedModel:
     inner = None
     if live:
@@ -283,10 +315,17 @@ def main(argv: list[str] | None = None) -> int:
         return exit_code({})
     c["stale_cache_misses"] = model.stale  # recorded under other versions (RAI-309)
     latency_measured = bool(args.live) and model.cached_calls == 0
+    ho = handoff_slice(world, routers["cascade"])
+    results["handoffs"] = ho
     marks = pass_marks(c, latency_measured=latency_measured)
+    marks["handoff_cases_all_correct"] = ho["cases"] > 0 and ho["correct"] == ho["cases"]
+    marks["handoff_cases_never_brand"] = ho["misrouted_to_brand"] == 0
+    marks["handoff_cases_never_call_the_model"] = (ho["model_calls"] == 0
+                                                   and ho["cache_misses"] == 0)
     report = {
         "generated_by": "python -m mimi.harness.router_eval" + (" --live" if args.live else ""),
         "cases_file": str(CASES.relative_to(ROOT)),
+        "handoff_cases_file": str(HANDOFF_CASES.relative_to(ROOT)),
         "model": MODEL,
         "reasoning_effort": "minimal",
         "results": results,
@@ -303,6 +342,12 @@ def main(argv: list[str] | None = None) -> int:
                           encoding="utf-8")
     print(json.dumps({"pass_marks": marks, "passed": report["passed"]}, indent=1))
     for k, r in results.items():
+        if k == "handoffs":
+            print(k, {x: r[x] for x in ("cases", "correct", "accuracy", "misrouted_to_brand",
+                                         "model_calls", "cache_misses")})
+            for f in r["failures"]:
+                print("  handoff miss", json.dumps(f, ensure_ascii=False))
+            continue
         print(k, {x: r[x] for x in ("accuracy", "clarify_rate", "money_misroutes",
                                      "model_share", "latency_ms", "model_spend_kobo",
                                      "cache_misses")})

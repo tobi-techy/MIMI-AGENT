@@ -1,0 +1,33 @@
+{
+ "id": "s18",
+ "grid": [
+  [
+   "Item",
+   "Remaining cartons",
+   "Count date",
+   "Supplier",
+   "Brand"
+  ],
+  [
+   "Peak Milk Sachet",
+   "8",
+   "2026-10-28",
+   "Coral Lane",
+   "Peak"
+  ]
+ ],
+ "mapping": {
+  "Item": "item",
+  "Remaining cartons": "qty_left",
+  "Count date": "date",
+  "Supplier": "skip",
+  "Brand": "skip"
+ },
+ "want_rows": [
+  {
+   "item": "Peak Milk Sachet",
+   "qty_left": 8,
+   "date": "2026-10-28"
+  }
+ ]
+}

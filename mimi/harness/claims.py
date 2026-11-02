@@ -860,6 +860,44 @@ def never_claims(text: str) -> list[str]:
     return out
 
 
+# ------------------------------------------------------------- deflections
+
+# A reply that sends the person somewhere else instead of answering: "the
+# orders helper or your rep will help you with that", "ask your rep", "the
+# right helper will handle it". A dead end for the person; the helper should
+# answer from its tools, or end the turn quietly so Mimi hands the message to
+# the right helper (``mimi.harness.handoff``). Not a deflection: telling a
+# shop to ask its rep to do a named thing ("ask your rep to add it to the
+# order"), or a commitment ("your rep will confirm X with you").
+_HELPER_WORD = (r"(?:orders?|collector|collections?|credit|stock|brand|proof|payments?|"
+                r"delivery|deliveries|promo|right|other|another|relevant|correct|appropriate|"
+                r"responsible)")
+_HELP_VERB = r"(?:help|handle|assist|answer|sort|take care of|deal with|look into|attend to)"
+_DEFLECT: tuple[re.Pattern[str], ...] = (
+    re.compile(rf"\b(?:the |your |our |a |an )?{_HELPER_WORD} helper\b[^.!?\n]{{0,60}}?"
+               rf"\b(?:will|can|should|would|could|is able to|go)\s+(?:be able to\s+)?"
+               rf"{_HELP_VERB}\b", re.I),
+    re.compile(rf"\b(?:your|the|a|our)\s+(?:sales\s+)?(?:rep|reps|representative|marketer)"
+               rf"\b(?:\s+or\s+[^.!?\n]{{1,40}}?)?\s+(?:will|can|should|would|could|go)\s+"
+               rf"(?:be able to\s+)?{_HELP_VERB}\b", re.I),
+    re.compile(r"\b(?:please\s+)?(?:ask|contact|call|check with|speak to|speak with|talk to|"
+               r"reach out to|reach)\s+(?:your|the)\s+(?:sales\s+)?(?:rep|representative|"
+               r"marketer)\b(?!\s+to\s+(?:add|bring|deliver|include|put|carry|drop|send))",
+               re.I),
+    re.compile(rf"\b(?:that|this|it|orders?|those)\s+(?:is|are)\s+(?:handled|done|managed|"
+               rf"covered)\s+by\s+(?:the\s+)?{_HELPER_WORD}\s+helper\b", re.I),
+)
+
+
+def deflections(text: str) -> list[str]:
+    """Spans of ``text`` that hand the person off instead of answering."""
+    t = _QUOTED.sub(" ", text)
+    return [m.group(0).strip() for rx in _DEFLECT for m in rx.finditer(t)]
+
+
+DEFLECTION_CHECKED = frozenset({"send_to_user", "ask_question"})
+
+
 # -------------------------------------------------------------------- gate
 
 PERSON_FACING = frozenset({"send_to_user", "ask_question", "notify_rep", "notify_owner"})
@@ -916,6 +954,10 @@ def check(tool: str, text: str, *, messages: Sequence[dict[str, Any]], intents: 
     nv = never_claims(text)
     if nv:
         out["never"] = nv
+    if tool in DEFLECTION_CHECKED:
+        df = deflections(text)
+        if df:
+            out["deflection"] = df
     return out
 
 
@@ -940,6 +982,11 @@ def repair_text(problems: dict[str, list[str]]) -> tuple[str, str]:
     if "never" in problems:
         parts.append("it says money moved or an approved record changed, which Mimi never "
                      "does")
+    if "deflection" in problems:
+        parts.append("it sends the person to another helper or the rep instead of answering ("
+                     + "; ".join(problems["deflection"]) + "); answer from your own tools, or "
+                     "if this is not your job, end the turn with no message and Mimi hands it "
+                     "to the right helper")
     why = "This message was held back: " + "; ".join(parts) + "."
     nxt = ("Copy figures, dates and names exactly from tool results. Only say something is "
            "done after its tool ran in this turn; to promise a later check, call "

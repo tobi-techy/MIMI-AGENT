@@ -16,6 +16,7 @@ import sqlalchemy as sa
 from sqlalchemy.engine import Engine
 
 from mimi.clock import wall
+from mimi.provenance import delivery_stamp, payment_stamp
 from mimi.store import schema as s
 from mimi.store.util import dumps, now_iso
 from mimi.world.catalogue import COLLECTION_ACCOUNT
@@ -99,7 +100,9 @@ def seed_world(engine: Engine, world: World, *, tenant_id: str | None = None,
                               "shop_id": d.shop_id, "rep_id": d.rep_id, "day": d.day,
                               "delivered_on": d.delivered_on, "minute": d.minute,
                               "total_kobo": total, "status": "delivered",
-                              "witnessed_at": None, "live": live})
+                              "witnessed_at": None, "live": live,
+                              # The distributor's record only, until the shop says YES.
+                              **delivery_stamp(d.delivery_id).columns()})
         put(s.deliveries, drows)
         put(s.delivery_lines, lrows)
         put(s.receivables, [{
@@ -107,12 +110,16 @@ def seed_world(engine: Engine, world: World, *, tenant_id: str | None = None,
             "due_day": r.due_day, "due_on": r.due_on, "total_kobo": r.total_kobo,
             "paid_kobo": r.paid_kobo, "outstanding_kobo": r.outstanding_kobo,
             "status": r.status, "position": i} for i, r in enumerate(world.receivables)])
+        credit_of = {c.payment_id: c.credit_id for c in world.bank_feed}
         put(s.payments, [{
             "tenant_id": tid, "payment_id": p.payment_id, "shop_id": p.shop_id,
             "delivery_id": p.delivery_id, "day": p.day, "paid_on": p.paid_on,
             "amount_kobo": p.amount_kobo, "method": p.method, "reference": p.reference,
             "status": p.status, "partial": p.partial, "split_of": p.split_of,
-            "fake_alert": p.fake_alert} for p in world.payments])
+            "fake_alert": p.fake_alert,
+            **payment_stamp(p.payment_id, p.method, fake_alert=p.fake_alert,
+                            bank_credit_id=credit_of.get(p.payment_id, "")).columns()}
+            for p in world.payments])
         put(s.bank_feed, [{
             "tenant_id": tid, "credit_id": c.credit_id, "payment_id": c.payment_id,
             # As the world writes it (WAT, no offset), so tools read it as FakeGo gives it.

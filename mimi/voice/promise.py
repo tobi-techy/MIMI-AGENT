@@ -132,8 +132,10 @@ _PAY = re.compile(
     # Heard in the live eval: "zan biya" transcribed as "Zambia".
     r"zambia|zambiya|"
     # Pidgin as it is written and transcribed: "I go pe", "ago pe", "mek ai pe".
-    # Bare "pe" is Yoruba "complete", so it needs the Pidgin verb before it.
-    r"(?:a?go|mek (?:ai|i)|make i) pe|balans)\b"
+    # Spitch merges the verb ("agope", "agopedi", "mekai pe"), so the merged
+    # forms count too. Bare "pe" is Yoruba "complete", so it needs the
+    # Pidgin verb before it.
+    r"(?:a?go\s?pe(?:di)?|mek\s?(?:ai|i)\s?pe|make i pe)|balans)\b"
 )
 _PAID = re.compile(
     r"\b(paid|don pay|done pay|don send|don transfer|have paid|i've paid|already pay|"
@@ -216,6 +218,11 @@ def _english_number(words: Words, i: int) -> tuple[int, int] | None:
         w = words[j][2]
         if j > i and words[j][0] - words[j - 1][1] > 2:
             break
+        if j > i and w == words[j - 1][2] and (w in _EN_UNITS or w in _EN_TENS):
+            # A transcriber's stutter ("twenty five five thousand"): a word
+            # repeated inside one number phrase is never a second amount.
+            j += 1
+            continue
         if w in _EN_UNITS:
             v = _EN_UNITS[w]
             if w == "a" and not _next_is(words, j, ("hundred", "thousand", "million")):

@@ -25,6 +25,7 @@ from typing import Any, Protocol
 
 from mimi.credit.looks import item_name, pieces_per_unit
 from mimi.harness.go import BookAPI, FakeGo
+from mimi.provenance import payment_stamp
 
 
 class CreditBook(BookAPI, Protocol):
@@ -49,7 +50,7 @@ class CreditGo(FakeGo):
         self.reads += 1
         self.credit_reads += 1
         w = self.world
-        feed = {c.payment_id for c in w.bank_feed}
+        feed = {c.payment_id: c.credit_id for c in w.bank_feed}
         due = {r.delivery_id: r for r in w.receivables}
         deliveries = []
         for d in sorted((d for d in w.deliveries if d.shop_id == shop_id), key=lambda d: d.day):
@@ -68,6 +69,8 @@ class CreditGo(FakeGo):
                 "paid_on": p.paid_on, "amount_kobo": 0 if p.fake_alert else p.amount_kobo,
                 "claimed_kobo": p.amount_kobo, "method": p.method,
                 "bank_confirmed": p.payment_id in feed, "status": p.status,
+                **payment_stamp(p.payment_id, p.method, fake_alert=p.fake_alert,
+                                bank_credit_id=feed.get(p.payment_id, "")).columns(),
             })
         return {
             "live_day": w.live_day,

@@ -59,6 +59,20 @@
               }
             ]
           },
+          "flags": {
+            "description": "over_credit_limit: approving this order would put the shop past its credit limit (checked in code)",
+            "items": {
+              "const": "over_credit_limit",
+              "type": "string"
+            },
+            "title": "Flags",
+            "type": "array"
+          },
+          "handling": {
+            "default": "approve",
+            "title": "Handling",
+            "type": "string"
+          },
           "helper": {
             "title": "Helper",
             "type": "string"
@@ -71,17 +85,34 @@
             "title": "Note",
             "type": "string"
           },
+          "over_limit_by_kobo": {
+            "default": 0,
+            "title": "Over Limit By Kobo",
+            "type": "integer"
+          },
           "payload": {
             "additionalProperties": true,
             "title": "Payload",
             "type": "object"
           },
           "preview": {
+            "description": "As the owner reads it: shop and rep names for ids, money as ₦1,234,500 (mimi.api.display)",
             "title": "Preview",
+            "type": "string"
+          },
+          "preview_raw": {
+            "default": "",
+            "description": "The preview as the helper's dry run wrote it",
+            "title": "Preview Raw",
             "type": "string"
           },
           "shop_id": {
             "title": "Shop Id",
+            "type": "string"
+          },
+          "shop_name": {
+            "default": "",
+            "title": "Shop Name",
             "type": "string"
           },
           "skill": {
@@ -148,6 +179,477 @@
         "title": "ApprovalOut",
         "type": "object"
       },
+      "Card": {
+        "additionalProperties": false,
+        "properties": {
+          "actions": {
+            "items": {
+              "$ref": "#/components/schemas/CardAction"
+            },
+            "title": "Actions",
+            "type": "array"
+          },
+          "as_of": {
+            "default": "",
+            "title": "As Of",
+            "type": "string"
+          },
+          "empty_text": {
+            "default": "",
+            "title": "Empty Text",
+            "type": "string"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ListItem"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "kind": {
+            "enum": [
+              "shop_row",
+              "list"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "limit_change": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/LimitChange"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "shop_row": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ShopRow"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "skill": {
+            "title": "Skill",
+            "type": "string"
+          },
+          "source": {
+            "const": "book",
+            "default": "book",
+            "title": "Source",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "total": {
+            "default": 0,
+            "title": "Total",
+            "type": "integer"
+          },
+          "total_kobo": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Total Kobo"
+          },
+          "total_naira": {
+            "default": "",
+            "title": "Total Naira",
+            "type": "string"
+          }
+        },
+        "required": [
+          "kind",
+          "title",
+          "skill"
+        ],
+        "title": "Card",
+        "type": "object"
+      },
+      "CardAction": {
+        "additionalProperties": false,
+        "properties": {
+          "action": {
+            "enum": [
+              "remind",
+              "open_shop",
+              "open_order",
+              "open_approvals",
+              "ask",
+              "set_limit"
+            ],
+            "title": "Action",
+            "type": "string"
+          },
+          "intent": {
+            "$ref": "#/components/schemas/ChipIntent"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "tier": {
+            "const": "safe",
+            "default": "safe",
+            "title": "Tier",
+            "type": "string"
+          }
+        },
+        "required": [
+          "action",
+          "label",
+          "intent"
+        ],
+        "title": "CardAction",
+        "type": "object"
+      },
+      "Chip": {
+        "additionalProperties": false,
+        "properties": {
+          "intent": {
+            "$ref": "#/components/schemas/ChipIntent"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "tier": {
+            "const": "safe",
+            "default": "safe",
+            "title": "Tier",
+            "type": "string"
+          }
+        },
+        "required": [
+          "label",
+          "intent"
+        ],
+        "title": "Chip",
+        "type": "object"
+      },
+      "ChipIntent": {
+        "additionalProperties": false,
+        "description": "What the console sends when the chip is tapped.\n\n``turn``: POST /v1/turns with ``text`` (and ``assign_to`` when set).\n``open``: navigate to ``target`` (a shop, an order, the approvals list);\nno turn, nothing changes.",
+        "properties": {
+          "assign_to": {
+            "default": "",
+            "title": "Assign To",
+            "type": "string"
+          },
+          "kind": {
+            "enum": [
+              "turn",
+              "open"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "target": {
+            "default": "",
+            "title": "Target",
+            "type": "string"
+          },
+          "text": {
+            "default": "",
+            "title": "Text",
+            "type": "string"
+          }
+        },
+        "required": [
+          "kind"
+        ],
+        "title": "ChipIntent",
+        "type": "object"
+      },
+      "ConnectorConnectIn": {
+        "additionalProperties": false,
+        "properties": {
+          "region": {
+            "default": "",
+            "description": "The Zoho account region (com, eu, in, cn or au).",
+            "maxLength": 8,
+            "title": "Region",
+            "type": "string"
+          }
+        },
+        "title": "ConnectorConnectIn",
+        "type": "object"
+      },
+      "ConnectorConnectOut": {
+        "additionalProperties": false,
+        "properties": {
+          "redirect_url": {
+            "title": "Redirect Url",
+            "type": "string"
+          },
+          "state": {
+            "title": "State",
+            "type": "string"
+          }
+        },
+        "required": [
+          "redirect_url",
+          "state"
+        ],
+        "title": "ConnectorConnectOut",
+        "type": "object"
+      },
+      "ConnectorConnection": {
+        "additionalProperties": false,
+        "properties": {
+          "connected_at": {
+            "title": "Connected At",
+            "type": "string"
+          },
+          "connection_id": {
+            "title": "Connection Id",
+            "type": "string"
+          },
+          "region": {
+            "title": "Region",
+            "type": "string"
+          },
+          "revoked_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Revoked At"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "connection_id",
+          "status",
+          "region",
+          "connected_at",
+          "revoked_at"
+        ],
+        "title": "ConnectorConnection",
+        "type": "object"
+      },
+      "ConnectorDetail": {
+        "additionalProperties": false,
+        "properties": {
+          "connected_at": {
+            "title": "Connected At",
+            "type": "string"
+          },
+          "connection_id": {
+            "title": "Connection Id",
+            "type": "string"
+          },
+          "last_sync": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ConnectorSyncPreview"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "preview": {
+            "items": {
+              "$ref": "#/components/schemas/ConnectorPreviewRow"
+            },
+            "title": "Preview",
+            "type": "array"
+          },
+          "region": {
+            "title": "Region",
+            "type": "string"
+          },
+          "revoked_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Revoked At"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "toolkit": {
+            "title": "Toolkit",
+            "type": "string"
+          }
+        },
+        "required": [
+          "connection_id",
+          "toolkit",
+          "status",
+          "region",
+          "connected_at",
+          "revoked_at",
+          "last_sync",
+          "preview"
+        ],
+        "title": "ConnectorDetail",
+        "type": "object"
+      },
+      "ConnectorList": {
+        "additionalProperties": false,
+        "properties": {
+          "connectors": {
+            "items": {
+              "$ref": "#/components/schemas/ConnectorToolkit"
+            },
+            "title": "Connectors",
+            "type": "array"
+          }
+        },
+        "required": [
+          "connectors"
+        ],
+        "title": "ConnectorList",
+        "type": "object"
+      },
+      "ConnectorPreviewRow": {
+        "additionalProperties": false,
+        "properties": {
+          "counted_on": {
+            "title": "Counted On",
+            "type": "string"
+          },
+          "item": {
+            "title": "Item",
+            "type": "string"
+          },
+          "quantity": {
+            "title": "Quantity",
+            "type": "integer"
+          },
+          "shop_id": {
+            "title": "Shop Id",
+            "type": "string"
+          },
+          "sku": {
+            "title": "Sku",
+            "type": "string"
+          }
+        },
+        "required": [
+          "shop_id",
+          "sku",
+          "item",
+          "quantity",
+          "counted_on"
+        ],
+        "title": "ConnectorPreviewRow",
+        "type": "object"
+      },
+      "ConnectorSyncPreview": {
+        "additionalProperties": false,
+        "properties": {
+          "errors": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Errors",
+            "type": "array"
+          },
+          "finished_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Finished At"
+          },
+          "rows_mapped": {
+            "title": "Rows Mapped",
+            "type": "integer"
+          },
+          "rows_read": {
+            "title": "Rows Read",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "rows_read",
+          "rows_mapped",
+          "errors",
+          "finished_at"
+        ],
+        "title": "ConnectorSyncPreview",
+        "type": "object"
+      },
+      "ConnectorToolkit": {
+        "additionalProperties": false,
+        "properties": {
+          "blurb": {
+            "title": "Blurb",
+            "type": "string"
+          },
+          "connections": {
+            "items": {
+              "$ref": "#/components/schemas/ConnectorConnection"
+            },
+            "title": "Connections",
+            "type": "array"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "reads": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Reads",
+            "type": "array"
+          },
+          "toolkit": {
+            "title": "Toolkit",
+            "type": "string"
+          },
+          "writes": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Writes",
+            "type": "array"
+          }
+        },
+        "required": [
+          "toolkit",
+          "label",
+          "blurb",
+          "reads",
+          "writes",
+          "connections"
+        ],
+        "title": "ConnectorToolkit",
+        "type": "object"
+      },
       "CreditLimit": {
         "additionalProperties": false,
         "properties": {
@@ -177,6 +679,21 @@
           },
           "outstanding_naira": {
             "title": "Outstanding Naira",
+            "type": "string"
+          },
+          "over_limit": {
+            "default": false,
+            "title": "Over Limit",
+            "type": "boolean"
+          },
+          "over_limit_by_kobo": {
+            "default": 0,
+            "title": "Over Limit By Kobo",
+            "type": "integer"
+          },
+          "over_limit_by_naira": {
+            "default": "",
+            "title": "Over Limit By Naira",
             "type": "string"
           },
           "shop_id": {
@@ -384,6 +901,23 @@
             "title": "Lines",
             "type": "array"
           },
+          "proof": {
+            "title": "Proof",
+            "type": "string"
+          },
+          "proof_level": {
+            "enum": [
+              "verified",
+              "likely",
+              "estimated"
+            ],
+            "title": "Proof Level",
+            "type": "string"
+          },
+          "proof_policy_version": {
+            "title": "Proof Policy Version",
+            "type": "string"
+          },
           "rep_id": {
             "title": "Rep Id",
             "type": "string"
@@ -408,6 +942,9 @@
           "total_kobo",
           "total_naira",
           "status",
+          "proof_level",
+          "proof",
+          "proof_policy_version",
           "lines"
         ],
         "title": "DeliveryOut",
@@ -430,6 +967,128 @@
           "global_daily_cap_kobo"
         ],
         "title": "DemoCaps",
+        "type": "object"
+      },
+      "DemoLimit": {
+        "additionalProperties": false,
+        "description": "Why a demo request was refused, in one fixed shape the console shows.",
+        "properties": {
+          "cap_kobo": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cap Kobo"
+          },
+          "cap_naira": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cap Naira"
+          },
+          "code": {
+            "enum": [
+              "visitor_daily_cap",
+              "global_daily_cap",
+              "paused",
+              "too_many_sessions",
+              ""
+            ],
+            "title": "Code",
+            "type": "string"
+          },
+          "message": {
+            "title": "Message",
+            "type": "string"
+          },
+          "resets_at": {
+            "title": "Resets At",
+            "type": "string"
+          },
+          "retry": {
+            "enum": [
+              "tomorrow",
+              "later"
+            ],
+            "title": "Retry",
+            "type": "string"
+          },
+          "scope": {
+            "enum": [
+              "visitor",
+              "global",
+              "demo"
+            ],
+            "title": "Scope",
+            "type": "string"
+          },
+          "spent_kobo": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Spent Kobo"
+          },
+          "spent_naira": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Spent Naira"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "scope",
+          "title",
+          "message",
+          "spent_kobo",
+          "cap_kobo",
+          "spent_naira",
+          "cap_naira",
+          "resets_at",
+          "retry"
+        ],
+        "title": "DemoLimit",
+        "type": "object"
+      },
+      "DemoLimitError": {
+        "additionalProperties": false,
+        "properties": {
+          "demo_limit": {
+            "$ref": "#/components/schemas/DemoLimit"
+          },
+          "detail": {
+            "title": "Detail",
+            "type": "string"
+          }
+        },
+        "required": [
+          "detail",
+          "demo_limit"
+        ],
+        "title": "DemoLimitError",
         "type": "object"
       },
       "DemoSessionOut": {
@@ -499,6 +1158,11 @@
             "title": "Ip Cap Kobo",
             "type": "integer"
           },
+          "ip_source": {
+            "default": "",
+            "title": "Ip Source",
+            "type": "string"
+          },
           "ip_spent_kobo": {
             "title": "Ip Spent Kobo",
             "type": "integer"
@@ -506,6 +1170,11 @@
           "paused": {
             "title": "Paused",
             "type": "boolean"
+          },
+          "resets_at": {
+            "default": "",
+            "title": "Resets At",
+            "type": "string"
           }
         },
         "required": [
@@ -632,6 +1301,218 @@
         "title": "HTTPValidationError",
         "type": "object"
       },
+      "Handback": {
+        "additionalProperties": false,
+        "description": "A helper returned the message to Mimi instead of answering it.",
+        "properties": {
+          "code": {
+            "enum": [
+              "deflected",
+              "no_tools",
+              "no_helper",
+              "failed"
+            ],
+            "title": "Code",
+            "type": "string"
+          },
+          "first_run_id": {
+            "default": "",
+            "title": "First Run Id",
+            "type": "string"
+          },
+          "from_helper": {
+            "title": "From Helper",
+            "type": "string"
+          },
+          "from_skill": {
+            "title": "From Skill",
+            "type": "string"
+          },
+          "reason": {
+            "title": "Reason",
+            "type": "string"
+          },
+          "resolved": {
+            "enum": [
+              "rerouted",
+              "mimi_answered",
+              "asked_owner",
+              "asked_sender"
+            ],
+            "title": "Resolved",
+            "type": "string"
+          },
+          "spans": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Spans",
+            "type": "array"
+          },
+          "to_helper": {
+            "default": "",
+            "title": "To Helper",
+            "type": "string"
+          },
+          "to_skill": {
+            "default": "",
+            "title": "To Skill",
+            "type": "string"
+          }
+        },
+        "required": [
+          "from_helper",
+          "from_skill",
+          "code",
+          "reason",
+          "resolved"
+        ],
+        "title": "Handback",
+        "type": "object"
+      },
+      "Handoff": {
+        "additionalProperties": false,
+        "properties": {
+          "contract": {
+            "default": "handoffs-2026-10-30.1",
+            "title": "Contract",
+            "type": "string"
+          },
+          "finished_at": {
+            "default": "",
+            "title": "Finished At",
+            "type": "string"
+          },
+          "from_helper": {
+            "const": "mimi",
+            "default": "mimi",
+            "title": "From Helper",
+            "type": "string"
+          },
+          "handoff_id": {
+            "title": "Handoff Id",
+            "type": "string"
+          },
+          "hop": {
+            "default": 0,
+            "title": "Hop",
+            "type": "integer"
+          },
+          "reason": {
+            "title": "Reason",
+            "type": "string"
+          },
+          "skill": {
+            "title": "Skill",
+            "type": "string"
+          },
+          "started_at": {
+            "default": "",
+            "title": "Started At",
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "working",
+              "needs_you",
+              "done",
+              "handed_back",
+              "failed"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "steps": {
+            "items": {
+              "$ref": "#/components/schemas/HandoffStep"
+            },
+            "title": "Steps",
+            "type": "array"
+          },
+          "to_helper": {
+            "title": "To Helper",
+            "type": "string"
+          },
+          "to_title": {
+            "title": "To Title",
+            "type": "string"
+          },
+          "via": {
+            "enum": [
+              "rule",
+              "lexical",
+              "fast",
+              "model",
+              "mention",
+              "assign",
+              "handback",
+              "binding"
+            ],
+            "title": "Via",
+            "type": "string"
+          }
+        },
+        "required": [
+          "handoff_id",
+          "to_helper",
+          "to_title",
+          "skill",
+          "reason",
+          "via",
+          "status"
+        ],
+        "title": "Handoff",
+        "type": "object"
+      },
+      "HandoffStep": {
+        "additionalProperties": false,
+        "description": "One step of the helper's work, written by code from the run's events.",
+        "properties": {
+          "at": {
+            "default": "",
+            "title": "At",
+            "type": "string"
+          },
+          "kind": {
+            "enum": [
+              "route",
+              "tool",
+              "model",
+              "reply",
+              "handback",
+              "code"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "ms": {
+            "default": 0.0,
+            "title": "Ms",
+            "type": "number"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "status": {
+            "default": "ok",
+            "enum": [
+              "ok",
+              "refused",
+              "held",
+              "failed"
+            ],
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "kind"
+        ],
+        "title": "HandoffStep",
+        "type": "object"
+      },
       "Health": {
         "additionalProperties": false,
         "properties": {
@@ -668,6 +1549,128 @@
           "version"
         ],
         "title": "Health",
+        "type": "object"
+      },
+      "LimitChange": {
+        "additionalProperties": false,
+        "description": "A credit-limit change the owner asked for in words, worked out by code.\n\nMimi never sets a limit: the console shows this beside the shop row and\nthe owner confirms it with Set credit limit (``POST\n/v1/shops/{shop_id}/credit-limit``), or leaves it.",
+        "properties": {
+          "asked": {
+            "default": "",
+            "title": "Asked",
+            "type": "string"
+          },
+          "change_kobo": {
+            "title": "Change Kobo",
+            "type": "integer"
+          },
+          "change_naira": {
+            "title": "Change Naira",
+            "type": "string"
+          },
+          "current_limit_kobo": {
+            "title": "Current Limit Kobo",
+            "type": "integer"
+          },
+          "current_limit_naira": {
+            "title": "Current Limit Naira",
+            "type": "string"
+          },
+          "needs": {
+            "const": "owner_confirm",
+            "default": "owner_confirm",
+            "title": "Needs",
+            "type": "string"
+          },
+          "proposed_limit_kobo": {
+            "title": "Proposed Limit Kobo",
+            "type": "integer"
+          },
+          "proposed_limit_naira": {
+            "title": "Proposed Limit Naira",
+            "type": "string"
+          },
+          "shop_id": {
+            "title": "Shop Id",
+            "type": "string"
+          },
+          "would_be_over_limit": {
+            "default": false,
+            "title": "Would Be Over Limit",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "shop_id",
+          "current_limit_kobo",
+          "current_limit_naira",
+          "proposed_limit_kobo",
+          "proposed_limit_naira",
+          "change_kobo",
+          "change_naira"
+        ],
+        "title": "LimitChange",
+        "type": "object"
+      },
+      "ListItem": {
+        "additionalProperties": false,
+        "properties": {
+          "amount_kobo": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Amount Kobo"
+          },
+          "amount_naira": {
+            "default": "",
+            "title": "Amount Naira",
+            "type": "string"
+          },
+          "item_id": {
+            "title": "Item Id",
+            "type": "string"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "qty": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Qty"
+          },
+          "shop_id": {
+            "default": "",
+            "title": "Shop Id",
+            "type": "string"
+          },
+          "status": {
+            "default": "",
+            "title": "Status",
+            "type": "string"
+          },
+          "unit": {
+            "default": "",
+            "title": "Unit",
+            "type": "string"
+          }
+        },
+        "required": [
+          "item_id",
+          "label"
+        ],
+        "title": "ListItem",
         "type": "object"
       },
       "Liveness": {
@@ -834,6 +1837,77 @@
         "title": "MediaOut",
         "type": "object"
       },
+      "Mention": {
+        "additionalProperties": false,
+        "description": "One row of the console's @ picker: a helper, a shop or a rep.",
+        "properties": {
+          "assign_to": {
+            "default": "",
+            "description": "helper rows only: the value for assign_to on POST /v1/turns",
+            "title": "Assign To",
+            "type": "string"
+          },
+          "id": {
+            "description": "helper name, shop_id or rep_id",
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "enum": [
+              "helper",
+              "shop",
+              "rep"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "mention": {
+            "description": "What the console inserts into the message: '@Collector', or the shop's or rep's name as written in the book",
+            "title": "Mention",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "subtitle": {
+            "default": "",
+            "description": "shop: area and rep; rep: areas; helper: what it does",
+            "title": "Subtitle",
+            "type": "string"
+          }
+        },
+        "required": [
+          "kind",
+          "id",
+          "name",
+          "mention"
+        ],
+        "title": "Mention",
+        "type": "object"
+      },
+      "MentionList": {
+        "additionalProperties": false,
+        "properties": {
+          "mentions": {
+            "items": {
+              "$ref": "#/components/schemas/Mention"
+            },
+            "title": "Mentions",
+            "type": "array"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "mentions",
+          "total"
+        ],
+        "title": "MentionList",
+        "type": "object"
+      },
       "Message": {
         "additionalProperties": false,
         "properties": {
@@ -906,6 +1980,179 @@
           "at"
         ],
         "title": "Message",
+        "type": "object"
+      },
+      "PolicyChangeOut": {
+        "additionalProperties": false,
+        "properties": {
+          "action_type": {
+            "title": "Action Type",
+            "type": "string"
+          },
+          "at": {
+            "title": "At",
+            "type": "string"
+          },
+          "by": {
+            "title": "By",
+            "type": "string"
+          },
+          "from": {
+            "title": "From",
+            "type": "string"
+          },
+          "to": {
+            "title": "To",
+            "type": "string"
+          }
+        },
+        "required": [
+          "action_type",
+          "from",
+          "to",
+          "by",
+          "at"
+        ],
+        "title": "PolicyChangeOut",
+        "type": "object"
+      },
+      "PolicyIn": {
+        "additionalProperties": false,
+        "properties": {
+          "by": {
+            "default": "owner",
+            "maxLength": 100,
+            "title": "By",
+            "type": "string"
+          },
+          "rules": {
+            "items": {
+              "$ref": "#/components/schemas/PolicyRuleIn"
+            },
+            "maxItems": 50,
+            "minItems": 1,
+            "title": "Rules",
+            "type": "array"
+          }
+        },
+        "required": [
+          "rules"
+        ],
+        "title": "PolicyIn",
+        "type": "object"
+      },
+      "PolicyOut": {
+        "additionalProperties": false,
+        "properties": {
+          "changes": {
+            "items": {
+              "$ref": "#/components/schemas/PolicyChangeOut"
+            },
+            "title": "Changes",
+            "type": "array"
+          },
+          "editable": {
+            "title": "Editable",
+            "type": "boolean"
+          },
+          "rules": {
+            "items": {
+              "$ref": "#/components/schemas/PolicyRuleOut"
+            },
+            "title": "Rules",
+            "type": "array"
+          }
+        },
+        "required": [
+          "rules",
+          "editable",
+          "changes"
+        ],
+        "title": "PolicyOut",
+        "type": "object"
+      },
+      "PolicyRuleIn": {
+        "additionalProperties": false,
+        "properties": {
+          "action_type": {
+            "maxLength": 64,
+            "title": "Action Type",
+            "type": "string"
+          },
+          "behaviour": {
+            "enum": [
+              "act",
+              "act_if_preapproved",
+              "ask",
+              "hand_off"
+            ],
+            "title": "Behaviour",
+            "type": "string"
+          }
+        },
+        "required": [
+          "action_type",
+          "behaviour"
+        ],
+        "title": "PolicyRuleIn",
+        "type": "object"
+      },
+      "PolicyRuleOut": {
+        "additionalProperties": false,
+        "description": "One step in the owner's rulebook (RAI-323).",
+        "properties": {
+          "action_type": {
+            "title": "Action Type",
+            "type": "string"
+          },
+          "allowed": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Allowed",
+            "type": "array"
+          },
+          "behaviour": {
+            "title": "Behaviour",
+            "type": "string"
+          },
+          "changed_at": {
+            "title": "Changed At",
+            "type": "string"
+          },
+          "changed_by": {
+            "title": "Changed By",
+            "type": "string"
+          },
+          "default": {
+            "title": "Default",
+            "type": "string"
+          },
+          "helper": {
+            "title": "Helper",
+            "type": "string"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "locked": {
+            "title": "Locked",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "action_type",
+          "helper",
+          "label",
+          "behaviour",
+          "default",
+          "locked",
+          "allowed",
+          "changed_by",
+          "changed_at"
+        ],
+        "title": "PolicyRuleOut",
         "type": "object"
       },
       "Reply": {
@@ -1027,6 +2274,26 @@
       "ShopList": {
         "additionalProperties": false,
         "properties": {
+          "overdue_total_kobo": {
+            "default": 0,
+            "title": "Overdue Total Kobo",
+            "type": "integer"
+          },
+          "overdue_total_naira": {
+            "default": "",
+            "title": "Overdue Total Naira",
+            "type": "string"
+          },
+          "owed_total_kobo": {
+            "default": 0,
+            "title": "Owed Total Kobo",
+            "type": "integer"
+          },
+          "owed_total_naira": {
+            "default": "",
+            "title": "Owed Total Naira",
+            "type": "string"
+          },
           "shops": {
             "items": {
               "$ref": "#/components/schemas/ShopSummary"
@@ -1044,6 +2311,80 @@
           "total"
         ],
         "title": "ShopList",
+        "type": "object"
+      },
+      "ShopRow": {
+        "additionalProperties": false,
+        "properties": {
+          "credit_limit_kobo": {
+            "title": "Credit Limit Kobo",
+            "type": "integer"
+          },
+          "credit_limit_naira": {
+            "title": "Credit Limit Naira",
+            "type": "string"
+          },
+          "days_late": {
+            "title": "Days Late",
+            "type": "integer"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "open_invoices": {
+            "default": 0,
+            "title": "Open Invoices",
+            "type": "integer"
+          },
+          "over_limit": {
+            "default": false,
+            "title": "Over Limit",
+            "type": "boolean"
+          },
+          "over_limit_by_kobo": {
+            "default": 0,
+            "title": "Over Limit By Kobo",
+            "type": "integer"
+          },
+          "over_limit_by_naira": {
+            "default": "",
+            "title": "Over Limit By Naira",
+            "type": "string"
+          },
+          "overdue_kobo": {
+            "title": "Overdue Kobo",
+            "type": "integer"
+          },
+          "overdue_naira": {
+            "title": "Overdue Naira",
+            "type": "string"
+          },
+          "owed_kobo": {
+            "title": "Owed Kobo",
+            "type": "integer"
+          },
+          "owed_naira": {
+            "title": "Owed Naira",
+            "type": "string"
+          },
+          "shop_id": {
+            "title": "Shop Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "shop_id",
+          "name",
+          "owed_kobo",
+          "owed_naira",
+          "overdue_kobo",
+          "overdue_naira",
+          "days_late",
+          "credit_limit_kobo",
+          "credit_limit_naira"
+        ],
+        "title": "ShopRow",
         "type": "object"
       },
       "ShopSummary": {
@@ -1205,9 +2546,159 @@
         "title": "Step",
         "type": "object"
       },
+      "TaskList": {
+        "additionalProperties": false,
+        "properties": {
+          "by_status": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "title": "By Status",
+            "type": "object"
+          },
+          "tasks": {
+            "items": {
+              "$ref": "#/components/schemas/TaskOut"
+            },
+            "title": "Tasks",
+            "type": "array"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "tasks",
+          "total",
+          "by_status"
+        ],
+        "title": "TaskList",
+        "type": "object"
+      },
+      "TaskOut": {
+        "additionalProperties": false,
+        "description": "One helper task: a turn Mimi handed to a helper (docs/HANDOFFS.md).",
+        "properties": {
+          "card": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Card"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "chips": {
+            "items": {
+              "$ref": "#/components/schemas/Chip"
+            },
+            "title": "Chips",
+            "type": "array"
+          },
+          "created_at": {
+            "title": "Created At",
+            "type": "string"
+          },
+          "finished_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Finished At"
+          },
+          "handback": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Handback"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "handoff": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Handoff"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "helper": {
+            "title": "Helper",
+            "type": "string"
+          },
+          "helper_name": {
+            "title": "Helper Name",
+            "type": "string"
+          },
+          "reason": {
+            "title": "Reason",
+            "type": "string"
+          },
+          "skill": {
+            "title": "Skill",
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "working",
+              "needs_you",
+              "done",
+              "handed_back",
+              "failed"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "task_id": {
+            "title": "Task Id",
+            "type": "string"
+          },
+          "thread_id": {
+            "title": "Thread Id",
+            "type": "string"
+          },
+          "turn_id": {
+            "title": "Turn Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "task_id",
+          "turn_id",
+          "thread_id",
+          "helper",
+          "helper_name",
+          "skill",
+          "status",
+          "reason",
+          "handoff",
+          "created_at",
+          "finished_at"
+        ],
+        "title": "TaskOut",
+        "type": "object"
+      },
       "ThreadDetail": {
         "additionalProperties": false,
         "properties": {
+          "handoffs": {
+            "description": "Each turn's handoff, oldest first (docs/HANDOFFS.md).",
+            "items": {
+              "$ref": "#/components/schemas/Handoff"
+            },
+            "title": "Handoffs",
+            "type": "array"
+          },
           "messages": {
             "items": {
               "$ref": "#/components/schemas/Message"
@@ -1357,6 +2848,22 @@
         "additionalProperties": false,
         "description": "One inbound message from a shop, a rep or the owner.",
         "properties": {
+          "assign_to": {
+            "default": "",
+            "description": "The owner names the helper (docs/HANDOFFS.md): overrides routing to that helper's owner skills, still under every policy tier. Owner messages only (422 otherwise). Same as '@Collector ...' at the start.",
+            "enum": [
+              "",
+              "order",
+              "collector",
+              "credit",
+              "stock",
+              "brand",
+              "proof",
+              "mimi"
+            ],
+            "title": "Assign To",
+            "type": "string"
+          },
           "button_id": {
             "default": "",
             "maxLength": 200,
@@ -1443,6 +2950,25 @@
             "title": "Attempts",
             "type": "integer"
           },
+          "card": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Card"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The answer card (owner console): figures read from the book by code."
+          },
+          "chips": {
+            "description": "2 or 3 safe next steps.",
+            "items": {
+              "$ref": "#/components/schemas/Chip"
+            },
+            "title": "Chips",
+            "type": "array"
+          },
           "duplicate": {
             "title": "Duplicate",
             "type": "boolean"
@@ -1450,6 +2976,28 @@
           "error": {
             "title": "Error",
             "type": "string"
+          },
+          "handback": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Handback"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "A helper returned the message to Mimi instead of answering; she re-routed it once."
+          },
+          "handoff": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Handoff"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Who Mimi asked and how it went (docs/HANDOFFS.md). Present on every routed turn; status 'working' while it runs."
           },
           "helper": {
             "title": "Helper",
@@ -1486,6 +3034,19 @@
           },
           "status": {
             "title": "Status",
+            "type": "string"
+          },
+          "task_status": {
+            "default": "",
+            "enum": [
+              "",
+              "working",
+              "needs_you",
+              "done",
+              "handed_back",
+              "failed"
+            ],
+            "title": "Task Status",
             "type": "string"
           },
           "thread_id": {
@@ -2004,6 +3565,404 @@
         "summary": "Owner rejects: nothing is sent"
       }
     },
+    "/v1/connectors": {
+      "get": {
+        "operationId": "get_connectors_v1_connectors_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConnectorList"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Conflict"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Connector toolkits and their status"
+      }
+    },
+    "/v1/connectors/callback": {
+      "get": {
+        "description": "Check the state, read the connected account, send the owner back\nto Settings > Connectors.",
+        "operationId": "get_connector_callback_v1_connectors_callback_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Get Connector Callback V1 Connectors Callback Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Conflict"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Composio returns here after consent"
+      }
+    },
+    "/v1/connectors/{connection_id}": {
+      "delete": {
+        "operationId": "delete_connector_v1_connectors__connection_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "connection_id",
+            "required": true,
+            "schema": {
+              "title": "Connection Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Delete Connector V1 Connectors  Connection Id  Delete",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Disconnect: revoke before the next sync"
+      },
+      "get": {
+        "operationId": "get_connector_v1_connectors__connection_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "connection_id",
+            "required": true,
+            "schema": {
+              "title": "Connection Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConnectorDetail"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "A connection's status and sync preview"
+      }
+    },
+    "/v1/connectors/{toolkit}/connect": {
+      "post": {
+        "operationId": "post_connector_connect_v1_connectors__toolkit__connect_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "toolkit",
+            "required": true,
+            "schema": {
+              "title": "Toolkit",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/ConnectorConnectIn"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Body"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConnectorConnectOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Start the connect flow for a toolkit"
+      }
+    },
     "/v1/credit": {
       "get": {
         "operationId": "get_credit_v1_credit_get",
@@ -2125,7 +4084,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ErrorOut"
+                  "$ref": "#/components/schemas/DemoLimitError"
                 }
               }
             },
@@ -2135,7 +4094,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ErrorOut"
+                  "$ref": "#/components/schemas/DemoLimitError"
                 }
               }
             },
@@ -2209,7 +4168,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ErrorOut"
+                  "$ref": "#/components/schemas/DemoLimitError"
                 }
               }
             },
@@ -2219,7 +4178,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ErrorOut"
+                  "$ref": "#/components/schemas/DemoLimitError"
                 }
               }
             },
@@ -2308,7 +4267,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ErrorOut"
+                  "$ref": "#/components/schemas/DemoLimitError"
                 }
               }
             },
@@ -2318,7 +4277,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ErrorOut"
+                  "$ref": "#/components/schemas/DemoLimitError"
                 }
               }
             },
@@ -2552,7 +4511,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ErrorOut"
+                  "$ref": "#/components/schemas/DemoLimitError"
                 }
               }
             },
@@ -2562,7 +4521,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ErrorOut"
+                  "$ref": "#/components/schemas/DemoLimitError"
                 }
               }
             },
@@ -2575,6 +4534,116 @@
           }
         ],
         "summary": "Demo mode: keep one console attachment for a turn"
+      }
+    },
+    "/v1/mentions": {
+      "get": {
+        "description": "``q`` matches the start of a name or of any word in it (a leading\n``@`` is ignored); ``kinds`` is a comma list, empty for all three.\nHelper rows carry ``assign_to`` for ``POST /v1/turns``.",
+        "operationId": "get_mentions_v1_mentions_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "q",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 80,
+              "title": "Q",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "kinds",
+            "required": false,
+            "schema": {
+              "default": "",
+              "pattern": "^$|^(?:helper|shop|rep)(?:,(?:helper|shop|rep))*$",
+              "title": "Kinds",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 200,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MentionList"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "The owner's @ picker: helpers, shops and reps"
       }
     },
     "/v1/messages/{message_id}/media": {
@@ -2740,6 +4809,150 @@
         "summary": "A reply's voice note (RAI-290)"
       }
     },
+    "/v1/policy": {
+      "get": {
+        "operationId": "get_policy_v1_policy_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PolicyOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Conflict"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "The owner's rulebook: what Mimi does on her own, asks, or hands off"
+      },
+      "put": {
+        "operationId": "put_policy_v1_policy_put",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PolicyIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PolicyOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Change rules (owner key only; built-in stops stay locked)"
+      }
+    },
     "/v1/shops": {
       "get": {
         "operationId": "get_shops_v1_shops_get",
@@ -2885,6 +5098,124 @@
           }
         ],
         "summary": "Get Shop"
+      }
+    },
+    "/v1/tasks": {
+      "get": {
+        "operationId": "get_tasks_v1_tasks_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "thread_id",
+            "required": false,
+            "schema": {
+              "default": "",
+              "title": "Thread Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "helper",
+            "required": false,
+            "schema": {
+              "default": "",
+              "title": "Helper",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "default": "",
+              "pattern": "^(|working|needs_you|done|handed_back|failed)$",
+              "title": "Status",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 200,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskList"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Helper tasks and their status (working, needs_you, done)"
       }
     },
     "/v1/threads": {
@@ -3182,7 +5513,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ErrorOut"
+                  "$ref": "#/components/schemas/DemoLimitError"
                 }
               }
             },
@@ -3192,7 +5523,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ErrorOut"
+                  "$ref": "#/components/schemas/DemoLimitError"
                 }
               }
             },

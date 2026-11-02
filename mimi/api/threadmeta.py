@@ -22,6 +22,7 @@ SKILL_TITLES: dict[str, str] = {
     "order/order-intake": "New order",
     "order/drop-confirmation": "Delivery received",
     "order/delivery-status": "Delivery not arrived",
+    "order/open-orders": "Open orders",
     "collector/collections": "Balance question",
     "collector/payment-check": "Payment check",
     "collector/promise-to-pay": "Promise to pay",

@@ -103,6 +103,7 @@ ROUTINES: dict[str, str] = {
     "collector.promise_check": "collector/promise-to-pay",
     "mimi.morning_brief": "mimi/owner-brief",
     "stock.weekly_check": "stock/stock-count",
+    "checkin.weekly": "stock/stock-count",
     "stock.low_stock_report": "stock/low-stock-report",
     "proof.feed_reconcile": "proof/bank-credit",
     "credit.weekly_review": "credit/credit-review",
@@ -123,6 +124,107 @@ _YES = re.compile(r"^(?:y|yes|yes o|yes sir|yes ma|yeah|yep|ok|okay|confirm(?:ed
                   r"toh|ee|ehh|ihe a|o di mma)[.! ]*$", re.I)
 _NO = re.compile(r"^(?:n|no|no o|nope|not yet|reject|decline|don't|dont|cancel|rara|"
                  r"a'a|aa|mba|no be so)[.! ]*$", re.I)
+# Owner questions about what is open now (RAI handoffs, docs/HANDOFFS.md).
+# No skill the model can pick covers them, so a rule picks them before the
+# phrase layer: "any orders available now" once reached Brand on the model's
+# word and got a dead end back. Rules only; the model's catalogue is unchanged.
+OWNER_RULES: tuple[tuple[str, re.Pattern[str]], ...] = (
+    # The morning brief first: it names debts, orders and stock in one ask
+    # ("who owes, what came in yesterday, what needs me today").
+    ("mimi/owner-brief", re.compile(
+        r"\b(?:morning|daily|today'?s|day'?s)\s+(?:brief|briefing|summary|rundown|report)\b"
+        r"|\bbrief me\b|\bmy brief\b"
+        r"|\bwhat (?:needs|requires|wants) (?:me|my attention|my eye|attention)\b"
+        r"|\bwhat came in yesterday\b", re.I)),
+    ("order/open-orders", re.compile(
+        r"\b(?:any|new|open|pending|waiting|latest|recent|today'?s)\s+(?:shop\s+)?orders?\b"
+        r"|\borders?\s+(?:available|waiting|pending|open|today|now|came in|that came|so far)\b"
+        r"|\b(?:show|list|see|check)\s+(?:me\s+)?(?:the\s+|all\s+|my\s+)?(?:open\s+|new\s+)?"
+        r"orders\b|\bwho (?:has |have )?(?:placed an? )?order(?:ed|s)?\b(?! .{0,20}\bvan\b)"
+        r"|\bhow many orders\b|\bwhat orders\b", re.I)),
+    ("stock/low-stock-report", re.compile(
+        r"\bwhat(?:'s| is| do we have)?\s+(?:in|on)\s+stock\b|(?<!out of )\bin stock\b"
+        r"|\bstock (?:levels?|position|situation|left|status)\b"
+        r"|\b(?:what|which) (?:products?|items?|goods) (?:are |is )?(?:available|left|low)\b"
+        r"|\bwhat (?:can|do) (?:shops|they) (?:order|buy)\b|\bstock (?:available|now)\b"
+        r"|\b(?:running|getting|going|run)\s+(?:out|low)\b(?!\s+of\s+(?:time|patience|money|cash))"
+        r"|\b(?:low|out of) stock\b",
+        re.I)),
+)
+
+
+# Owner asks the phrase layer cannot veto (30 Oct 2026 run 2): a payment-proof
+# question names "owe" too ("check it against what they owe"), and an
+# assignment names a shop, so the money words must not pull either of them
+# to the model, which answered "is this about just saying hello?" in a loop.
+# Rules only; the model's catalogue is unchanged.
+OWNER_FIRST_RULES: tuple[tuple[str, re.Pattern[str]], ...] = (
+    ("proof/proofs-today", re.compile(
+        r"\bpayment (?:proofs?|screenshots?|alerts?)\b|\bproofs? of payment\b"
+        r"|\bfake (?:payment )?alerts?\b"
+        r"|\b(?:send|sent|upload(?:ed)?|share[d]?|post(?:ed)?)\b.{0,40}\b(?:proof|proofs|"
+        r"screenshot|screenshots)\b"
+        r"|\b(?:any|which|what) (?:payment )?(?:proofs?|screenshots?)\b", re.I)),
+    ("collector/rep-visit", re.compile(
+        r"\bassign\b.{0,80}\b(?:to|for)\b.{0,60}\b(?:visit|go|check|collect|see)\b"
+        r"|\b(?:send|ask|tell|get)\s+(?:the\s+rep\s+|my\s+rep\s+|rep\s+)?[a-z]+\s+to\s+"
+        r"(?:visit|go to|check on|see)\b"
+        r"|\b(?:rep|reps)\b.{0,40}\bvisit\b|\bvisit\b.{0,60}\b(?:today|tomorrow)\b.{0,30}"
+        r"\b(?:rep|assign)\b", re.I)),
+    ("order/reorder", re.compile(
+        r"\bre-?order(?:s|ing)?\b|\bre-?stock(?:s|ing)?\b(?! (?:report|levels?))"
+        r"|\bsame (?:order |thing )?as last (?:time|week|order)\b"
+        r"|\brepeat (?:the |their |her |his |its )?(?:last |previous )?order\b", re.I)),
+)
+
+
+def owner_first_rule(text: str) -> str:
+    """The skill an owner rule picks before the phrase layer, or ""."""
+    t = lexicon.normalise(text)
+    for key, rx in OWNER_FIRST_RULES:
+        if rx.search(t):
+            return key
+    return ""
+
+
+# An owner credit-limit ask about a named shop (30 Oct 2026 run 2: "What's
+# Funke & Sons Mini Mart's credit limit? Raise it by N100,000." reached the
+# model and the raise was dropped). Credit words plus a shop name, written as
+# a capitalised name or a possessive, go to Credit review, which answers the
+# read in code and turns a change into a limit_change card the owner confirms.
+# Mimi never sets a limit herself.
+_CREDIT_WORDS = re.compile(
+    r"\bcredit[ -]?limits?\b|\b(?:raise|increase|lift|bump|cut|lower|reduce|drop|set|change)\b"
+    r".{0,40}\blimit\b|\blimit\b.{0,20}\b(?:raise|increase|cut|lower|reduce|to|by)\b", re.I)
+_NAMED_SHOP = re.compile(
+    r"[A-Za-z0-9&.\-]+(?:'s|\u2019s)\s+(?:credit\s+)?limit\b"
+    r"|\b(?:for|of|on)\s+[A-Z][\w&.\-]*"
+    r"|(?:[A-Z][\w&.\-]*\s+)+(?:Mini Mart|Stores?|Provisions|Supermarket|Shop|Ventures|"
+    r"Enterprises?|Mart)\b")
+
+
+def owner_credit_rule(text: str) -> str:
+    """credit/credit-review when the owner names a shop's credit limit, else ""."""
+    if _CREDIT_WORDS.search(text) and _NAMED_SHOP.search(text):
+        return "credit/credit-review"
+    return ""
+
+
+def owner_rule(text: str) -> str:
+    """The skill an owner rule picks for ``text``, or "" (never a money skill)."""
+    t = lexicon.normalise(text)
+    for key, rx in OWNER_RULES:
+        if rx.search(t):
+            return key
+    return ""
+
+
+# A clarify answer that says what it is NOT ("Not hello. I want to know ...")
+# never picks the option it negates.
+_NEGATED = re.compile(r"\b(?:not|no|nope|isn'?t|is not|never|no be|ko|ba)\s+(?:a\s+|just\s+|about\s+)?$",
+                      re.I)
+
+
 _TAP = re.compile(r"^(?:0 ?- ?2|3 ?- ?5|6 ?\+|zero|none|\d{1,3})(?: (?:left|remain|cartons?))?$",
                   re.I)
 
@@ -376,21 +478,50 @@ class Router:
             if _STOP.match(folded):
                 return rule("mimi/stop", "owner_stop", lane="fast")
             m = lexicon.MENTION.search(text)
-            if m:
-                helper = m.group(1).lower()
+            assigned = p.assign_to.strip().lower()
+            if assigned or m:
+                # The owner named the helper: ``assign_to`` on the turn, else an
+                # @mention. Still only the owner's own skills of that helper,
+                # still every policy tier (docs/HANDOFFS.md).
+                helper = assigned or (m.group(1).lower() if m else "")
+                helper = "order" if helper == "orders" else helper
                 rest = lexicon.MENTION.sub("", text)
                 own = frozenset(s.key for s in allowed_for("owner") if s.helper == helper)
                 lx = lexicon.score(rest, own)
                 tagged = lexicon.score(text, own)  # rules that read the @tag itself
                 if tagged.top_score > lx.top_score:
                     lx = tagged
-                key = lx.top if lx.top_score > 0 else default_skill(helper, "owner")
+                ruled = owner_rule(rest)
+                if lx.top_score > 0:
+                    key = lx.top
+                elif ruled and ruled.split("/")[0] == helper:
+                    key = ruled
+                else:
+                    key = default_skill(helper, "owner")
                 if key not in BY_KEY:
                     key = default_skill(helper, "owner")
-                return rule(key, f"owner_mention:@{helper}")
+                how = "owner_assign" if assigned else "owner_mention"
+                return rule(key, f"{how}:@{helper}")
             if thread.approval_skill and (_YES.match(folded) or _NO.match(folded)):
                 return rule(thread.approval_skill, "approval_reply")
-            return self._classify(lead, text, "owner", thread, base, lang)
+            if thread.clarify_options:
+                # The owner answered Mimi's question: resolve it before
+                # anything else, never ask the same question again.
+                picked = self._resolve_clarify(folded, thread)
+                if picked:
+                    return rule(picked, "clarify_answer", language=lang)
+            first = owner_first_rule(text) or owner_credit_rule(text)
+            if first:
+                return rule(first, f"owner_rule:{first.split('/')[1]}", language=lang)
+            ruled = owner_rule(text)
+            if ruled:
+                own_lx = lexicon.score(text, frozenset(s.key for s in allowed_for("owner")))
+                if not own_lx.settled or own_lx.top.split("/")[0] == ruled.split("/")[0]:
+                    # What is open now: a rule, never the model (a money word
+                    # the phrase rules settle on keeps its own route).
+                    return rule(ruled, f"owner_rule:{ruled.split('/')[1]}", language=lang)
+            return self._owner_no_loop(
+                self._classify(lead, text, "owner", thread, base, lang), text, thread)
 
         # shop or rep
         if sender == "shop" and not directory.shop_for(p.from_phone):
@@ -515,6 +646,34 @@ class Router:
                 "confidence": 1.0})
         return dec
 
+    @staticmethod
+    def _owner_no_loop(dec: RouteDecision, text: str, thread: ThreadState) -> RouteDecision:
+        """The owner is never asked "is this about just saying hello?" about a
+        real question, and never asked the same clarifying question twice
+        (30 Oct 2026 run 2: three asks in a row, each answered with the same
+        fallback). A message of four words or more is not a greeting; after
+        one question Mimi goes with her best guess, or answers herself."""
+        if dec.status != "clarify":
+            return dec
+        words = len(re.findall(r"[^\W_]+", text))
+        opts = tuple(o for o in dec.options if not (o == "mimi/chat" and words >= 4))
+        if opts and not thread.clarify_options and opts != dec.options:
+            return dec.model_copy(update={
+                "options": opts, "skill": opts[0],
+                "clarify_question": clarify_question(opts, "en")})
+        if opts and not thread.clarify_options:
+            return dec
+        if opts:
+            pick, why = opts[0], "owner_clarify_once_best_guess"
+        else:
+            pick, why = "mimi/chat", "owner_not_a_greeting"
+        return dec.model_copy(update={
+            "status": "routed", "helper": pick.split("/")[0], "skill": pick,
+            "clarify_question": "", "options": (), "rule": why,
+            "thread_note": ("the owner's question matched no helper; say in one line what you "
+                            "can look up (who owes, orders, stock, credit, payment proofs) and "
+                            "ask which they want") if pick == "mimi/chat" else dec.thread_note})
+
     def _can_look(self, lead: Inbound, sender: str, shape: str) -> bool:
         """A camera photo from a shop or rep, with no injected text, and a look wired."""
         m = lead.payload.media
@@ -553,8 +712,9 @@ class Router:
             return lx.top
         for key in opts:
             for word in _LABEL_WORDS.get(key, ()):
-                if re.search(rf"\b{re.escape(word)}\b", folded):
-                    return key
+                for m in re.finditer(rf"\b{re.escape(word)}\b", folded):
+                    if not _NEGATED.search(folded[:m.start()]):
+                        return key
         return ""
 
     @staticmethod
