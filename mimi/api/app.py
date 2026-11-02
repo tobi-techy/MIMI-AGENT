@@ -43,6 +43,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
+from mimi.api import connectors as cx
 from mimi.api import reads
 from mimi.api.agent import Agent, Conflict, NotFound
 from mimi.api.config import LOCALHOST_REGEX, ApiKey, Settings
@@ -58,6 +59,10 @@ from mimi.api.demo import (
 from mimi.api.media import MAX_BYTES
 from mimi.api.schemas import (
     ApprovalList,
+    ConnectorConnectIn,
+    ConnectorConnectOut,
+    ConnectorDetail,
+    ConnectorList,
     CreditOut,
     DecisionIn,
     DecisionOut,
@@ -79,11 +84,13 @@ from mimi.api.schemas import (
     TurnOut,
 )
 from mimi.api.uploads import ConsoleUploads, UploadRefused
-from mimi.clock import wall_utc
+from mimi.clock import wall, wall_utc
+from mimi.connectors.base import ConnectorError
 from mimi.harness.go import CrossTenant
 from mimi.harness.inbound import Inbound, Media, Payload
 from mimi.store import schema as s
 from mimi.store.db import make_engine
+from mimi.store.util import now_iso
 from mimi.tz import assume_lagos
 
 log = logging.getLogger(__name__)
@@ -430,6 +437,87 @@ def create_app(settings: Settings | None = None, agent: Agent | None = None, *,
         ``@`` is ignored); ``kinds`` is a comma list, empty for all three.
         Helper rows carry ``assign_to`` for ``POST /v1/turns``."""
         return reads.mentions(engine, key.tenant_id, q=q, kinds=kinds, limit=limit)
+    # ------------------------------------------------------- connectors (RAI-277)
+
+    @app.get("/v1/connectors", response_model=ConnectorList, responses=_ERRORS,
+             summary="Connector toolkits and their status")
+    def get_connectors(key: Owner) -> dict[str, Any]:
+        return cx.list_connectors(engine, key.tenant_id)
+
+    @app.post("/v1/connectors/{toolkit}/connect", response_model=ConnectorConnectOut,
+              responses=_ERRORS, summary="Start the connect flow for a toolkit")
+    def post_connector_connect(toolkit: str, key: Owner,
+                               body: ConnectorConnectIn | None = None) -> dict[str, Any]:
+        from mimi.connectors.env import ZOHO_REGIONS
+
+        upper = toolkit.upper()
+        if upper not in ("ZOHO_BOOKS", "ZOHO", "GOOGLESHEETS"):
+            raise HTTPException(404, "unknown toolkit")
+        region = ((body.region if body else "") or "").strip().lower()
+        if upper in ("ZOHO_BOOKS", "ZOHO") and region and region not in ZOHO_REGIONS:
+            raise HTTPException(422, f"region is {region!r}: use com, eu, in, cn or au")
+        transport = _connector_transport()
+        try:
+            return transport.initiate(upper, user_id=key.tenant_id)
+        except ConnectorError as exc:
+            raise HTTPException(502, str(exc)) from exc
+
+    @app.get("/v1/connectors/callback", responses=_ERRORS,
+             summary="Composio returns here after consent")
+    def get_connector_callback(request: Request, key: Owner) -> dict[str, Any]:
+        """Check the state, read the connected account, send the owner back
+        to Settings > Connectors."""
+        from mimi.connectors.env import ConnectorSettings
+        from mimi.connectors.state import check_state
+
+        params = dict(request.query_params)
+        state = params.get("state", "")
+        settings_c = ConnectorSettings.from_env()
+        try:
+            payload = check_state(settings_c.state_secret, state)
+        except ValueError as exc:
+            raise HTTPException(422, str(exc)) from exc
+        if _connector_state_used(engine, key.tenant_id, state):
+            raise HTTPException(422, "that link was already used; start a new connect")
+        connected_id = params.get("connected_account_id", "")
+        if not connected_id:
+            raise HTTPException(422, "Composio gave no connected account; start a new connect")
+        transport = _connector_transport()
+        try:
+            info = transport.account(connected_id)
+        except ConnectorError as exc:
+            raise HTTPException(502, str(exc)) from exc
+        connection_id = f"conn-{connected_id[-12:]}"
+        cx.save_account(engine, key.tenant_id, connection_id=connection_id,
+                        toolkit=str(payload.get("toolkit") or ""),
+                        connected_account_id=connected_id,
+                        region=settings_c.zoho_region, connected_at=now_iso(wall()))
+        _connector_state_mark(engine, key.tenant_id, state)
+        status = str(info.get("status") or "ACTIVE")
+        return {"connection_id": connection_id, "status": status,
+                "next": "Settings > Connectors"}
+
+    @app.get("/v1/connectors/{connection_id}", response_model=ConnectorDetail,
+             responses=_ERRORS, summary="A connection's status and sync preview")
+    def get_connector(connection_id: str, key: Owner) -> dict[str, Any]:
+        return cx.get_connection(engine, key.tenant_id, connection_id)
+
+    @app.delete("/v1/connectors/{connection_id}", responses=_ERRORS,
+                summary="Disconnect: revoke before the next sync")
+    def delete_connector(connection_id: str, key: Owner) -> dict[str, Any]:
+        with engine.connect() as conn:
+            row = conn.execute(sa.select(s.connector_accounts).where(
+                s.connector_accounts.c.tenant_id == key.tenant_id,
+                s.connector_accounts.c.connection_id == connection_id)).first()
+        if row is None:
+            raise HTTPException(404, "not found")
+        transport = _connector_transport()
+        try:
+            transport.disconnect(str(row.connected_account_id or connection_id))
+        except ConnectorError as exc:
+            raise HTTPException(502, str(exc)) from exc
+        cx.revoke_account(engine, key.tenant_id, connection_id, now_iso(wall()))
+        return {"connection_id": connection_id, "status": "revoked"}
 
     @app.get("/v1/health", response_model=Health)
     def health(response: Response) -> dict[str, Any]:
@@ -490,6 +578,42 @@ def create_app(settings: Settings | None = None, agent: Agent | None = None, *,
         return store.start(ip)
 
     return app
+
+
+def _connector_transport() -> Any:
+    """FakeComposio in demo and offline runs; the real transport only when
+    the key is set and the mode says so. Demo sessions never start OAuth."""
+    from mimi.connectors.composio import ComposioTransport, FakeComposio
+    from mimi.connectors.env import ConnectorSettings
+
+    settings = ConnectorSettings.from_env()
+    if settings.live:
+        return ComposioTransport(settings)
+    return FakeComposio(settings)
+
+
+def _connector_state_used(engine: Any, tenant: str, state: str) -> bool:
+    import hashlib
+
+    digest = hashlib.sha256(state.encode()).hexdigest()
+    with engine.connect() as conn:
+        sub = (sa.select(sa.literal(1)).select_from(s.artifacts).where(
+            s.artifacts.c.tenant_id == tenant,
+            s.artifacts.c.path == f"connector-state:{digest}"))
+        hit = conn.execute(sa.select(sub.exists())).scalar()
+        return bool(hit)
+
+
+def _connector_state_mark(engine: Any, tenant: str, state: str) -> None:
+    import hashlib
+
+    from mimi.store.util import insert_ignore
+
+    digest = hashlib.sha256(state.encode()).hexdigest()
+    with engine.begin() as conn:
+        insert_ignore(conn, s.artifacts, {
+            "path": f"connector-state:{digest}", "tenant_id": tenant,
+            "content": now_iso(wall())})
 
 
 def _turn_out(v: Any) -> dict[str, Any]:

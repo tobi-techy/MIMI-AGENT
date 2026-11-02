@@ -1,0 +1,27 @@
+{
+ "id": "s11",
+ "grid": [
+  [
+   "Item",
+   "Qty left (ctn)",
+   "Date"
+  ],
+  [
+   "Sunrise Noodles 70g",
+   "1,200",
+   "2026-10-28"
+  ]
+ ],
+ "mapping": {
+  "Item": "item",
+  "Qty left (ctn)": "qty_left",
+  "Date": "date"
+ },
+ "want_rows": [
+  {
+   "item": "Sunrise Noodles 70g",
+   "qty_left": 1200,
+   "date": "2026-10-28"
+  }
+ ]
+}

@@ -1,0 +1,16 @@
+[
+ {
+  "match": {
+   "phone": "+2340000000100"
+  },
+  "reply": {
+   "contact_id": "zoho-shop-001"
+  }
+ },
+ {
+  "match": {},
+  "reply": {
+   "contact_id": "zoho-shop-001"
+  }
+ }
+]

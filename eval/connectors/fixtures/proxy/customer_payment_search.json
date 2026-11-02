@@ -1,0 +1,21 @@
+[
+ {
+  "match": {
+   "reference_number": "mimi-zoho-books-abc123"
+  },
+  "reply": {
+   "customer_payments": [
+    {
+     "payment_id": "zp-001",
+     "reference_number": "mimi-zoho-books-abc123"
+    }
+   ]
+  }
+ },
+ {
+  "match": {},
+  "reply": {
+   "customer_payments": []
+  }
+ }
+]

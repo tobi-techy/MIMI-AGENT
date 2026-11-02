@@ -433,6 +433,63 @@ class DemoLimit(_Out):
 class DemoLimitError(_Out):
     detail: str
     demo_limit: DemoLimit
+class ConnectorConnection(_Out):
+    connection_id: str
+    status: str
+    region: str
+    connected_at: str
+    revoked_at: str | None
+
+
+class ConnectorToolkit(_Out):
+    toolkit: str
+    label: str
+    blurb: str
+    reads: list[str]
+    writes: list[str]
+    connections: list[ConnectorConnection]
+
+
+class ConnectorList(_Out):
+    connectors: list[ConnectorToolkit]
+
+
+class ConnectorConnectIn(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    region: str = Field("", max_length=8,
+                        description="The Zoho account region (com, eu, in, cn or au).")
+
+
+class ConnectorConnectOut(_Out):
+    redirect_url: str
+    state: str
+
+
+class ConnectorSyncPreview(_Out):
+    rows_read: int
+    rows_mapped: int
+    errors: list[str]
+    finished_at: str | None
+
+
+class ConnectorPreviewRow(_Out):
+    shop_id: str
+    sku: str
+    item: str
+    quantity: int
+    counted_on: str
+
+
+class ConnectorDetail(_Out):
+    connection_id: str
+    toolkit: str
+    status: str
+    region: str
+    connected_at: str
+    revoked_at: str | None
+    last_sync: ConnectorSyncPreview | None
+    preview: list[ConnectorPreviewRow]
 
 
 class Liveness(_Out):

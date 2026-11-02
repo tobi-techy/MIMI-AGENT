@@ -231,6 +231,11 @@ approval reads as 404. Keys are compared by SHA-256 in constant time; give
 | `POST /v1/approvals/{id}/reject` | owner | Nothing is sent; the helper is told |
 | `GET /v1/credit` | owner | Per-shop limit, outstanding, available, and credit requests from helpers' credit intents (Credit, RAI-271). Each limit row also has `over_limit`, `over_limit_by_kobo`, `over_limit_by_naira` (owes more than its limit, from code) |
 | `GET /v1/mentions` | owner | The console's @ picker: `{mentions: [{kind, id, name, subtitle, mention, assign_to}], total}`. `kind` is `helper`, `shop` or `rep`. `q` matches the start of a name or of any word in it (a leading `@` is ignored); `kinds` is a comma list (`shop`, `helper,rep`), empty for all; `limit` 1 to 200 (50). Helper rows carry `mention` (`@Collector`) and `assign_to` for `POST /v1/turns`; shop rows' `subtitle` is area and rep, rep rows' is their areas. A channel key is 403 |
+| `GET /v1/connectors` | owner | Connector toolkits (Zoho Books, Zoho CRM, Google Sheets, CSV/Excel, Mono soon) with their reads, writes and connections (RAI-277; `docs/CONNECTORS.md`) |
+| `POST /v1/connectors/{toolkit}/connect` | owner | Start the connect flow: body `{region}` for Zoho (`com`, `eu`, `in`, `cn`, `au`); returns `redirect_url` and a single-use `state`. Demo and offline runs return a fake redirect, never real OAuth |
+| `GET /v1/connectors/callback` | owner | Composio returns here: checks the state (expired or reused links get 422 and a WhatsApp nudge for a new link), reads the connected account, sends the owner back to Settings > Connectors |
+| `GET /v1/connectors/{connection_id}` | owner | Status plus a sync preview (counts and the first 3 mapped rows) |
+| `DELETE /v1/connectors/{connection_id}` | owner | Deletes the Composio connected account and writes a revoke row before the next sync |
 | `GET /v1/messages/{message_id}/voice` | any | The reply's voice note (RAI-290): its own text read aloud, made now and never stored (`audio/ogg`, or `audio/wav` from the offline speaker). 404 when the reply has no `voice` block |
 | `GET /v1/health` | none | Database, model mode (`live` or `offline`), queue depth, version |
 | `GET /` | none | Liveness for the platform probe: `{"status": "ok"}`, no database |

@@ -368,6 +368,283 @@
         "title": "ChipIntent",
         "type": "object"
       },
+      "ConnectorConnectIn": {
+        "additionalProperties": false,
+        "properties": {
+          "region": {
+            "default": "",
+            "description": "The Zoho account region (com, eu, in, cn or au).",
+            "maxLength": 8,
+            "title": "Region",
+            "type": "string"
+          }
+        },
+        "title": "ConnectorConnectIn",
+        "type": "object"
+      },
+      "ConnectorConnectOut": {
+        "additionalProperties": false,
+        "properties": {
+          "redirect_url": {
+            "title": "Redirect Url",
+            "type": "string"
+          },
+          "state": {
+            "title": "State",
+            "type": "string"
+          }
+        },
+        "required": [
+          "redirect_url",
+          "state"
+        ],
+        "title": "ConnectorConnectOut",
+        "type": "object"
+      },
+      "ConnectorConnection": {
+        "additionalProperties": false,
+        "properties": {
+          "connected_at": {
+            "title": "Connected At",
+            "type": "string"
+          },
+          "connection_id": {
+            "title": "Connection Id",
+            "type": "string"
+          },
+          "region": {
+            "title": "Region",
+            "type": "string"
+          },
+          "revoked_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Revoked At"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "connection_id",
+          "status",
+          "region",
+          "connected_at",
+          "revoked_at"
+        ],
+        "title": "ConnectorConnection",
+        "type": "object"
+      },
+      "ConnectorDetail": {
+        "additionalProperties": false,
+        "properties": {
+          "connected_at": {
+            "title": "Connected At",
+            "type": "string"
+          },
+          "connection_id": {
+            "title": "Connection Id",
+            "type": "string"
+          },
+          "last_sync": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ConnectorSyncPreview"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "preview": {
+            "items": {
+              "$ref": "#/components/schemas/ConnectorPreviewRow"
+            },
+            "title": "Preview",
+            "type": "array"
+          },
+          "region": {
+            "title": "Region",
+            "type": "string"
+          },
+          "revoked_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Revoked At"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "toolkit": {
+            "title": "Toolkit",
+            "type": "string"
+          }
+        },
+        "required": [
+          "connection_id",
+          "toolkit",
+          "status",
+          "region",
+          "connected_at",
+          "revoked_at",
+          "last_sync",
+          "preview"
+        ],
+        "title": "ConnectorDetail",
+        "type": "object"
+      },
+      "ConnectorList": {
+        "additionalProperties": false,
+        "properties": {
+          "connectors": {
+            "items": {
+              "$ref": "#/components/schemas/ConnectorToolkit"
+            },
+            "title": "Connectors",
+            "type": "array"
+          }
+        },
+        "required": [
+          "connectors"
+        ],
+        "title": "ConnectorList",
+        "type": "object"
+      },
+      "ConnectorPreviewRow": {
+        "additionalProperties": false,
+        "properties": {
+          "counted_on": {
+            "title": "Counted On",
+            "type": "string"
+          },
+          "item": {
+            "title": "Item",
+            "type": "string"
+          },
+          "quantity": {
+            "title": "Quantity",
+            "type": "integer"
+          },
+          "shop_id": {
+            "title": "Shop Id",
+            "type": "string"
+          },
+          "sku": {
+            "title": "Sku",
+            "type": "string"
+          }
+        },
+        "required": [
+          "shop_id",
+          "sku",
+          "item",
+          "quantity",
+          "counted_on"
+        ],
+        "title": "ConnectorPreviewRow",
+        "type": "object"
+      },
+      "ConnectorSyncPreview": {
+        "additionalProperties": false,
+        "properties": {
+          "errors": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Errors",
+            "type": "array"
+          },
+          "finished_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Finished At"
+          },
+          "rows_mapped": {
+            "title": "Rows Mapped",
+            "type": "integer"
+          },
+          "rows_read": {
+            "title": "Rows Read",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "rows_read",
+          "rows_mapped",
+          "errors",
+          "finished_at"
+        ],
+        "title": "ConnectorSyncPreview",
+        "type": "object"
+      },
+      "ConnectorToolkit": {
+        "additionalProperties": false,
+        "properties": {
+          "blurb": {
+            "title": "Blurb",
+            "type": "string"
+          },
+          "connections": {
+            "items": {
+              "$ref": "#/components/schemas/ConnectorConnection"
+            },
+            "title": "Connections",
+            "type": "array"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "reads": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Reads",
+            "type": "array"
+          },
+          "toolkit": {
+            "title": "Toolkit",
+            "type": "string"
+          },
+          "writes": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Writes",
+            "type": "array"
+          }
+        },
+        "required": [
+          "toolkit",
+          "label",
+          "blurb",
+          "reads",
+          "writes",
+          "connections"
+        ],
+        "title": "ConnectorToolkit",
+        "type": "object"
+      },
       "CreditLimit": {
         "additionalProperties": false,
         "properties": {
@@ -3108,6 +3385,404 @@
           }
         ],
         "summary": "Owner rejects: nothing is sent"
+      }
+    },
+    "/v1/connectors": {
+      "get": {
+        "operationId": "get_connectors_v1_connectors_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConnectorList"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Conflict"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Connector toolkits and their status"
+      }
+    },
+    "/v1/connectors/callback": {
+      "get": {
+        "description": "Check the state, read the connected account, send the owner back\nto Settings > Connectors.",
+        "operationId": "get_connector_callback_v1_connectors_callback_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Get Connector Callback V1 Connectors Callback Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Conflict"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Composio returns here after consent"
+      }
+    },
+    "/v1/connectors/{connection_id}": {
+      "delete": {
+        "operationId": "delete_connector_v1_connectors__connection_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "connection_id",
+            "required": true,
+            "schema": {
+              "title": "Connection Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Delete Connector V1 Connectors  Connection Id  Delete",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Disconnect: revoke before the next sync"
+      },
+      "get": {
+        "operationId": "get_connector_v1_connectors__connection_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "connection_id",
+            "required": true,
+            "schema": {
+              "title": "Connection Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConnectorDetail"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "A connection's status and sync preview"
+      }
+    },
+    "/v1/connectors/{toolkit}/connect": {
+      "post": {
+        "operationId": "post_connector_connect_v1_connectors__toolkit__connect_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "toolkit",
+            "required": true,
+            "schema": {
+              "title": "Toolkit",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/ConnectorConnectIn"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Body"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConnectorConnectOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Start the connect flow for a toolkit"
       }
     },
     "/v1/credit": {

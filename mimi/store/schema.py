@@ -540,6 +540,86 @@ demo_usage = sa.Table(
     sa.PrimaryKeyConstraint("day", "ip_hash"),
 )
 
+# ------------------------------------------------------------- connectors (RAI-277)
+# connector_accounts holds no tokens: Composio holds them. connector_writes
+# is the audit of every outside write (proposal id, idempotency key, the
+# external id, the approval, applied and undone times). consent_grants sits
+# next to consent_withheld: one row per shop, receiver, scope and grant time.
+
+connector_accounts = sa.Table(
+    "connector_accounts", metadata,
+    _tenant(),
+    sa.Column("connection_id", sa.String(64), nullable=False),
+    sa.Column("toolkit", sa.String(32), nullable=False),  # ZOHO_BOOKS | ZOHO | GOOGLESHEETS
+    sa.Column("connected_account_id", sa.String(100), nullable=False, default=""),
+    sa.Column("region", sa.String(8), nullable=False, default="com"),
+    # active | revoked
+    sa.Column("status", sa.String(16), nullable=False, default="active"),
+    sa.Column("connected_at", sa.String(40), nullable=False),
+    sa.Column("revoked_at", sa.String(40), nullable=True),
+    sa.PrimaryKeyConstraint("tenant_id", "connection_id"),
+)
+
+connector_sync_runs = sa.Table(
+    "connector_sync_runs", metadata,
+    _tenant(),
+    sa.Column("run_id", sa.String(64), nullable=False),
+    sa.Column("connection_id", sa.String(64), nullable=False),
+    sa.Column("shop_id", sa.String(64), nullable=False, default=""),
+    sa.Column("scope", sa.String(32), nullable=False, default="stock"),
+    sa.Column("rows_read", sa.Integer(), nullable=False, default=0),
+    sa.Column("rows_mapped", sa.Integer(), nullable=False, default=0),
+    sa.Column("errors", sa.Text(), nullable=False, default="[]"),
+    sa.Column("started_at", sa.String(40), nullable=False),
+    sa.Column("finished_at", sa.String(40), nullable=True),
+    sa.PrimaryKeyConstraint("tenant_id", "run_id"),
+    sa.Index("ix_connector_sync_runs_conn", "tenant_id", "connection_id"),
+)
+
+connector_writes = sa.Table(
+    "connector_writes", metadata,
+    _tenant(),
+    sa.Column("write_id", sa.String(64), nullable=False),
+    sa.Column("proposal_id", sa.String(64), nullable=False),
+    sa.Column("idempotency_key", sa.String(100), nullable=False),
+    sa.Column("action", sa.String(100), nullable=False),
+    sa.Column("payload_hash", sa.String(64), nullable=False, default=""),
+    sa.Column("before", sa.Text(), nullable=False, default="{}"),
+    sa.Column("after", sa.Text(), nullable=False, default="{}"),
+    sa.Column("external_id", sa.String(100), nullable=False, default=""),
+    sa.Column("approval_id", sa.String(64), nullable=False, default=""),
+    sa.Column("applied_at", sa.String(40), nullable=False),
+    sa.Column("undone_at", sa.String(40), nullable=True),
+    sa.PrimaryKeyConstraint("tenant_id", "write_id"),
+    sa.UniqueConstraint("tenant_id", "idempotency_key", name="uq_connector_writes_tenant_key"),
+)
+
+consent_grants = sa.Table(
+    "consent_grants", metadata,
+    _tenant(),
+    sa.Column("shop_id", sa.String(64), nullable=False),
+    sa.Column("receiver", sa.String(64), nullable=False),
+    sa.Column("scope", sa.String(32), nullable=False),
+    sa.Column("granted_at", sa.String(40), nullable=False),
+    sa.Column("revoked_at", sa.String(40), nullable=True),
+    sa.PrimaryKeyConstraint("tenant_id", "shop_id", "receiver", "scope", "granted_at"),
+    sa.Index("ix_consent_grants_shop", "tenant_id", "shop_id", "scope"),
+)
+
+# Connector rows read into the book (RAI-277): one row per shop, item and
+# count day, with the source that produced it (connector | checkin).
+stock_counts = sa.Table(
+    "stock_counts", metadata,
+    _tenant(),
+    sa.Column("shop_id", sa.String(64), nullable=False),
+    sa.Column("sku", sa.String(64), nullable=False),
+    sa.Column("item", sa.String(200), nullable=False, default=""),
+    sa.Column("quantity", sa.Integer(), nullable=False),
+    sa.Column("counted_on", sa.String(10), nullable=False),  # Africa/Lagos day
+    sa.Column("source", sa.String(16), nullable=False, default="connector"),
+    sa.PrimaryKeyConstraint("tenant_id", "shop_id", "sku", "counted_on", "source"),
+)
+
 BOOK_TABLES = (reps, shops, consent_withheld, skus, deliveries, delivery_lines, receivables,
                payments, bank_feed, promises, disputes, proof_events, proof_asks)
 AGENT_TABLES = (threads, inbound_messages, turns, turn_attempts, messages, thread_events,

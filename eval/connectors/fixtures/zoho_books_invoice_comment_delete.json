@@ -1,0 +1,16 @@
+[
+ {
+  "match": {
+   "comment_id": "comment-001"
+  },
+  "reply": {
+   "success": true
+  }
+ },
+ {
+  "match": {},
+  "reply": {
+   "success": true
+  }
+ }
+]

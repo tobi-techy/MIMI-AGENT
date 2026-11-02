@@ -1,0 +1,126 @@
+[
+ {
+  "match": {},
+  "reply": {
+   "contacts": [
+    {
+     "contact_id": "zoho-shop-001",
+     "contact_name": "Mama Sola Provisions",
+     "phone": "+2340000000100",
+     "city": "Oja Oba",
+     "street": "5 Oja Oba Market Road",
+     "outstanding_receivable_amount": 0.0,
+     "credit_limit": 1700000.0
+    },
+    {
+     "contact_id": "zoho-shop-002",
+     "contact_name": "Iya Tolu Foodstuff",
+     "phone": "+2340000000101",
+     "city": "Ajilosun",
+     "street": "2 Ajilosun Road",
+     "outstanding_receivable_amount": 0.0,
+     "credit_limit": 1580000.0
+    },
+    {
+     "contact_id": "zoho-shop-003",
+     "contact_name": "Blessed Funke Mini Mart",
+     "phone": "+2340000000102",
+     "city": "Okesa",
+     "street": "48 Okesa Street",
+     "outstanding_receivable_amount": 0.0,
+     "credit_limit": 1790000.0
+    },
+    {
+     "contact_id": "zoho-shop-004",
+     "contact_name": "Divine Favour Provisions",
+     "phone": "+2340000000103",
+     "city": "Basiri",
+     "street": "32 Ebenezer Avenue",
+     "outstanding_receivable_amount": 0.0,
+     "credit_limit": 2410000.0
+    },
+    {
+     "contact_id": "zoho-shop-005",
+     "contact_name": "Funke & Sons Mini Mart",
+     "phone": "+2340000000104",
+     "city": "Adebayo",
+     "street": "12 Adebayo Road",
+     "outstanding_receivable_amount": 0.0,
+     "credit_limit": 2480000.0
+    },
+    {
+     "contact_id": "zoho-shop-006",
+     "contact_name": "Mama Folake Provisions",
+     "phone": "+2340000000105",
+     "city": "Fajuyi",
+     "street": "40 Fajuyi Park Road",
+     "outstanding_receivable_amount": 0.0,
+     "credit_limit": 490000.0
+    }
+   ]
+  }
+ },
+ {
+  "match": {
+   "organization_id": "org-coral-lane"
+  },
+  "reply": {
+   "contacts": [
+    {
+     "contact_id": "zoho-shop-001",
+     "contact_name": "Mama Sola Provisions",
+     "phone": "+2340000000100",
+     "city": "Oja Oba",
+     "street": "5 Oja Oba Market Road",
+     "outstanding_receivable_amount": 0.0,
+     "credit_limit": 1700000.0
+    },
+    {
+     "contact_id": "zoho-shop-002",
+     "contact_name": "Iya Tolu Foodstuff",
+     "phone": "+2340000000101",
+     "city": "Ajilosun",
+     "street": "2 Ajilosun Road",
+     "outstanding_receivable_amount": 0.0,
+     "credit_limit": 1580000.0
+    },
+    {
+     "contact_id": "zoho-shop-003",
+     "contact_name": "Blessed Funke Mini Mart",
+     "phone": "+2340000000102",
+     "city": "Okesa",
+     "street": "48 Okesa Street",
+     "outstanding_receivable_amount": 0.0,
+     "credit_limit": 1790000.0
+    },
+    {
+     "contact_id": "zoho-shop-004",
+     "contact_name": "Divine Favour Provisions",
+     "phone": "+2340000000103",
+     "city": "Basiri",
+     "street": "32 Ebenezer Avenue",
+     "outstanding_receivable_amount": 0.0,
+     "credit_limit": 2410000.0
+    },
+    {
+     "contact_id": "zoho-shop-005",
+     "contact_name": "Funke & Sons Mini Mart",
+     "phone": "+2340000000104",
+     "city": "Adebayo",
+     "street": "12 Adebayo Road",
+     "outstanding_receivable_amount": 0.0,
+     "credit_limit": 2480000.0
+    },
+    {
+     "contact_id": "zoho-shop-006",
+     "contact_name": "Mama Folake Provisions",
+     "phone": "+2340000000105",
+     "city": "Fajuyi",
+     "street": "40 Fajuyi Park Road",
+     "outstanding_receivable_amount": 0.0,
+     "credit_limit": 490000.0
+    }
+   ]
+  }
+ }
+]

@@ -1,0 +1,13 @@
+[
+ {
+  "match": {},
+  "reply": {
+   "organizations": [
+    {
+     "organization_id": "org-coral-lane",
+     "name": "Coral Lane Trading"
+    }
+   ]
+  }
+ }
+]

@@ -1,0 +1,47 @@
+{
+ "id": "s26",
+ "grid": [
+  [
+   "Item",
+   "Qty left",
+   "Date"
+  ],
+  [
+   "Sunrise Noodles 70g",
+   "5",
+   "2026-10-28"
+  ],
+  [
+   "Peak Milk Sachet",
+   "12",
+   "2026-10-28"
+  ],
+  [
+   "Mama Gold Rice 50kg",
+   "2",
+   "2026-10-28"
+  ]
+ ],
+ "mapping": {
+  "Item": "item",
+  "Qty left": "qty_left",
+  "Date": "date"
+ },
+ "want_rows": [
+  {
+   "item": "Sunrise Noodles 70g",
+   "qty_left": 5,
+   "date": "2026-10-28"
+  },
+  {
+   "item": "Peak Milk Sachet",
+   "qty_left": 12,
+   "date": "2026-10-28"
+  },
+  {
+   "item": "Mama Gold Rice 50kg",
+   "qty_left": 2,
+   "date": "2026-10-28"
+  }
+ ]
+}

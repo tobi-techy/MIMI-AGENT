@@ -1,0 +1,27 @@
+{
+ "id": "s17",
+ "grid": [
+  [
+   "SKU",
+   "Balance",
+   "When"
+  ],
+  [
+   "SKU-001",
+   "9",
+   "2026-10-28"
+  ]
+ ],
+ "mapping": {
+  "SKU": "sku",
+  "Balance": "qty_left",
+  "When": "date"
+ },
+ "want_rows": [
+  {
+   "item": "SKU-001",
+   "qty_left": 9,
+   "date": "2026-10-28"
+  }
+ ]
+}

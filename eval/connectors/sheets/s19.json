@@ -1,0 +1,27 @@
+{
+ "id": "s19",
+ "grid": [
+  [
+   "item name",
+   "how many pcs",
+   "date checked"
+  ],
+  [
+   "Mama Gold Rice 50kg",
+   "3",
+   "2026-10-28"
+  ]
+ ],
+ "mapping": {
+  "item name": "item",
+  "how many pcs": "qty_left",
+  "date checked": "date"
+ },
+ "want_rows": [
+  {
+   "item": "Mama Gold Rice 50kg",
+   "qty_left": 3,
+   "date": "2026-10-28"
+  }
+ ]
+}

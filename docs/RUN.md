@@ -314,6 +314,34 @@ the repo variable `LANGFUSE_MONITOR=true` and the `LANGFUSE_*` secrets) and
    `fake_ended_likely` score true, one on any `dispute_ended_in_consent`
    score true. The other checks run in `make langfuse-monitor`.
 
+## 3g. Connectors: shop tools with consent (RAI-277)
+
+```bash
+pip install -e '.[connectors]'   # composio==0.15.0 (transport) + openpyxl==3.1.5 (Excel)
+export COMPOSIO_API_KEY=...      # Composio key; never commit it
+export MIMI_CONNECTORS=composio  # fake (default, recorded fixtures) | composio | off
+export MIMI_COMPOSIO_AUTH_ZOHO_BOOKS=...    # our own Zoho Books OAuth app auth config
+export MIMI_COMPOSIO_AUTH_ZOHO=...          # our own Zoho CRM OAuth app auth config
+export MIMI_COMPOSIO_AUTH_GOOGLESHEETS=...  # our own Google OAuth app auth config
+export MIMI_COMPOSIO_CALLBACK_URL=https://<api>/v1/connectors/callback
+export MIMI_ZOHO_REGION=com                 # the Zoho account region (com, eu, in, cn, au)
+# optional version pins (defaults: 20261026_00 everywhere)
+export MIMI_COMPOSIO_VERSION_ZOHO_BOOKS=20261026_00
+export MIMI_COMPOSIO_VERSION_ZOHO=20261026_00
+export MIMI_COMPOSIO_VERSION_GOOGLESHEETS=20261026_00
+export MIMI_CONNECTOR_STATE_SECRET=...      # signs the OAuth state; dev default
+# Mono stub (unused until the direct Mono connector lands)
+export MONO_SECRET_KEY=... MONO_API_BASE=...
+
+make connectors-fixtures  # recorded Composio replies + 30 messy sheets from Coral Lane
+make connectors-eval      # replay (CI, no key): 30/30 mapping, 31/31 SKU, 0 invented
+make connectors-eval-live # Zoho Books trial org check (needs the keys above; optional)
+```
+
+Without `COMPOSIO_API_KEY` (or with `MIMI_CONNECTORS=fake`) every read
+replays `eval/connectors/fixtures/` and the endpoints use FakeComposio:
+demo sessions never start real OAuth. Full design: [`docs/CONNECTORS.md`](CONNECTORS.md).
+
 ## 4. Clock modes and persistence
 
 ```bash
