@@ -246,8 +246,15 @@ class Harness:
         # API passes the durable ones.
         self.speak = speak or S.SpeakConfig()
         self.speak_counts = speak_counts or S.InMemorySpeakStore()
-        self.speak_digest = speak_digest or self.speak_counts \
-            if isinstance(self.speak_counts, S.InMemorySpeakStore) else S.InMemorySpeakStore()
+        # The durable digest when one is passed; else the in-memory store
+        # doubles as the digest (tests, the sim).
+        self.speak_digest: S.DigestQueue
+        if speak_digest is not None:
+            self.speak_digest = speak_digest
+        elif isinstance(self.speak_counts, S.InMemorySpeakStore):
+            self.speak_digest = self.speak_counts
+        else:
+            self.speak_digest = S.InMemorySpeakStore()
 
     # ================================================================== API
 
@@ -1018,6 +1025,9 @@ class Harness:
         the reason; enforce mode ends the turn ``done_quiet`` once nothing
         else can speak. Shadow mode logs the decision and still sends, so
         ``off`` and ``shadow`` always return None (nothing held)."""
+        if self.speak.mode == "off":
+            # ``off`` skips the decision: nothing logged, counted or queued.
+            return None
         args = parsed.model_dump(mode="json")
         channel = str(args.get("channel") or "")
         body = str(args.get("body") or "")
@@ -1057,8 +1067,12 @@ class Harness:
             return decision, ms
         facts = self._speak_facts(state, channel=channel, shop_id=shop_id, body=body,
                                   kind=kind)
+        # Shadow mode still sends the draft, so it must never also land in
+        # the owner's daily note: only enforce mode writes the real digest.
+        digest: S.DigestQueue = (self.speak_digest if self.speak.mode == "enforce"
+                                 else S.InMemorySpeakStore())
         decision = S.decide(facts, tenant_id=state.tenant_id, day=day,
-                            counts=self.speak_counts, digest=self.speak_digest,
+                            counts=self.speak_counts, digest=digest,
                             limits=self.speak.limits)
         self._log_speak(state, name, decision, channel=channel, shop_id=shop_id)
         return decision, ms
