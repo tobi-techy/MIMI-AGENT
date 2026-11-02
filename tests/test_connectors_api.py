@@ -83,3 +83,13 @@ def test_connect_rejects_unknown_toolkit_and_bad_region(tmp_path) -> None:
     r = c.post("/v1/connectors/ZOHO_BOOKS/connect",
                headers=_auth(), json={"region": "xx"})
     assert r.status_code == 422
+
+
+def test_callback_rejects_a_state_signed_for_another_tenant(tmp_path) -> None:
+    c = _client(tmp_path)
+    other = sign_state("local-connector-state-secret",
+                       {"tenant": "another-distributor", "toolkit": "ZOHO_BOOKS"})
+    r = c.get("/v1/connectors/callback",
+              params={"state": other, "connected_account_id": "ca-other-000001"},
+              headers=_auth())
+    assert r.status_code == 422

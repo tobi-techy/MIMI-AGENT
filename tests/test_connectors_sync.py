@@ -113,3 +113,18 @@ def test_sync_needs_consent_writes_counts_and_stale(tmp_path) -> None:
         n = conn.execute(sa.select(sa.func.count()).select_from(
             s.stock_counts).where(s.stock_counts.c.tenant_id == "t")).scalar()
     assert n == 3
+
+
+def test_a_second_sync_the_same_day_replaces_the_counts(tmp_path) -> None:
+    e = _engine(tmp_path)
+    sheets = SheetsConnector(FakeComposio(ConnectorSettings.from_env({})),
+                             tenant_id="t", connection_id="conn-1")
+    ct.grant(e, "t", "shop-1", "distributor", "stock")
+    for _ in range(2):
+        run = sync(engine=e, tenant_id="t", connection_id="conn-1",
+                   connector=sheets, shop_id="shop-1", today="2026-10-28")
+        assert run["rows_mapped"] == 3
+    with e.connect() as conn:
+        n = conn.execute(sa.select(sa.func.count()).select_from(
+            s.stock_counts).where(s.stock_counts.c.tenant_id == "t")).scalar()
+    assert n == 3

@@ -21,7 +21,7 @@ def _fake() -> FakeComposio:
 
 def test_preview_names_amount_and_shop() -> None:
     assert pay.preview_payment(PAYLOAD) == \
-        "Record Mama Sola's N500,000 transfer in Zoho Books."
+        "Record Mama Sola's \u20a6500,000 transfer in Zoho Books."
 
 
 def test_create_body_splits_kobo_to_naira() -> None:
@@ -62,3 +62,48 @@ def test_create_search_delete_exactly_three_proxy_calls() -> None:
     proxy = [c for c in fake.calls if c["action"].startswith("proxy:")]
     assert len(proxy) == 3
     assert [c["method"] for c in proxy] == ["POST", "GET", "DELETE"]
+
+
+def test_record_reads_back_first_and_never_creates_twice() -> None:
+    fake = _fake()
+    # An earlier attempt already landed under this reference: no create.
+    out = pay.record_payment(transport=fake, tenant_id=TENANT, connection_id=CONN,
+                             organization_id=ORG, payload=PAYLOAD,
+                             idempotency_key="zoho-books-abc123", approval_id="appr-3")
+    assert out["payment_id"] == "zp-001" and out["already_recorded"] is True
+    assert [c["method"] for c in fake.calls] == ["GET"]
+    # A new reference: one read back, then exactly one create.
+    fake = _fake()
+    out = pay.record_payment(transport=fake, tenant_id=TENANT, connection_id=CONN,
+                             organization_id=ORG, payload=PAYLOAD,
+                             idempotency_key="zoho-books-new1", approval_id="appr-4")
+    assert out["payment_id"] == "zp-001" and out["already_recorded"] is False
+    assert [c["method"] for c in fake.calls] == ["GET", "POST"]
+    with pytest.raises(ConnectorError, match="approval"):
+        pay.record_payment(transport=fake, tenant_id=TENANT, connection_id=CONN,
+                           organization_id=ORG, payload=PAYLOAD,
+                           idempotency_key="zoho-books-new2")
+
+
+def test_a_failed_create_reads_back_and_is_not_retried() -> None:
+    class Flaky(FakeComposio):
+        def proxy(self, name: str, **kw: object) -> dict:  # type: ignore[override]
+            out = super().proxy(name, **kw)  # type: ignore[arg-type]
+            if name == "customer_payment_create":
+                return {"code": 1002, "message": "timeout"}
+            return out
+
+    fake = Flaky(ConnectorSettings.from_env({}))
+    with pytest.raises(ConnectorError, match="refused"):
+        pay.record_payment(transport=fake, tenant_id=TENANT, connection_id=CONN,
+                           organization_id=ORG, payload=PAYLOAD,
+                           idempotency_key="zoho-books-new3", approval_id="appr-5")
+    assert [c["method"] for c in fake.calls] == ["GET", "POST", "GET"]
+
+
+def test_zoho_create_reply_shape_and_error_codes() -> None:
+    assert pay._checked({"code": 0, "payment": {"payment_id": "p1"}}, status=201)
+    with pytest.raises(ConnectorError):
+        pay._checked({"code": 0}, status=500)
+    with pytest.raises(ConnectorError):
+        pay._checked({"code": 57, "message": "not authorised"}, status=200)
