@@ -255,3 +255,68 @@ def clean_reply(text: str, *, where: str = "") -> str:
                  f" ({where})" if where else "", c.dashes, len(c.phrases),
                  ", figures kept by keeping the original" if c.kept_original else "")
     return c.text
+
+
+# ------------------------------------------------------------ shop-facing text
+
+# What a shop reads (demo wiring, 2 Nov 2026): money as ``₦64,250`` and no
+# internal record ids. Applied where shop text leaves the API (turn replies
+# on ``shop_whatsapp`` and shop messages in a thread read), never to the
+# stored record or anything a model reads, so recorded requests are unchanged.
+_MONTHS = ("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec")
+_SHOP_N = re.compile(
+    r"(?<![A-Za-z0-9\u20a6])N\s?(\d{1,3}(?:,\d{3})+|\d+)(?:\.(\d{1,2}))?(?![\d,]*[A-Za-z])")
+_SHOP_NAIRA_BARE = re.compile(r"\u20a6(\d{4,})(?:\.(\d{1,2}))?\b")
+# Delivery, order and proof ids (dlv-56-9039, ord-012-a1b2c3-v2), approvals,
+# turns, runs, messages and intents (apr_..., turn_...), shops and reps.
+_REC_ID = r"(?:dlv-\d{2}-\d{4}|ord-\d{3}-[0-9a-f]{4,}(?:-v\d+)?)"
+_REF_LINE = re.compile(rf"^Ref {_REC_ID},\s*(\d{{4}})-(\d{{2}})-(\d{{2}})\s*$", re.M)
+_REF_BARE = re.compile(rf"^Ref {_REC_ID}\s*$\n?", re.M)
+_DELIVERY_ID = re.compile(rf"\b(your |the |this )?(delivery|order) {_REC_ID}\b", re.I)
+_ON_ID = re.compile(rf"\s?\(?\b(?:on|for|ref\.?|reference)\s+{_REC_ID}\b\)?", re.I)
+_ANY_ID = re.compile(rf"\s?\(?\b{_REC_ID}\b\)?"
+                     r"|\s?\(?\b(?:apr|turn|run|msg|ik|od|ho|crq|lch)_[0-9a-z]{8,}\b\)?"
+                     r"|\s?\(?\b(?:shop|rep)-\d{2,3}\b\)?", re.I)
+
+
+def _shop_money(whole: str, frac: str | None) -> str:
+    n = int(whole.replace(",", ""))
+    k = int((frac or "0").ljust(2, "0")) if frac else 0
+    return f"\u20a6{n:,}" + (f".{k:02d}" if k else "")
+
+
+def shop_money(text: str) -> str:
+    """``N64,250`` and ``₦64250`` as ``₦64,250`` (figures unchanged)."""
+    out = _SHOP_N.sub(lambda m: _shop_money(m.group(1), m.group(2)), text)
+    return _SHOP_NAIRA_BARE.sub(lambda m: _shop_money(m.group(1), m.group(2)), out)
+
+
+def shop_text(text: str) -> str:
+    """A message as the shop reads it: ₦ with commas, no internal ids.
+
+    "Thank you. Delivery dlv-56-9039 is confirmed." reads "Thank you. Your
+    delivery is confirmed."; a receipt's "Ref dlv-56-9039, 2026-10-26" line
+    reads "Delivered 26 Oct 2026". Deterministic, no model."""
+    if not text:
+        return text
+    out = _REF_LINE.sub(lambda m: f"Delivered {int(m.group(3))} "
+                        f"{_MONTHS[int(m.group(2)) - 1]} {m.group(1)}", text)
+    out = _REF_BARE.sub("", out)
+
+    def own(m: re.Match[str]) -> str:
+        # "Delivery dlv-.. is confirmed" at a sentence start reads "Your
+        # delivery"; mid-sentence "this delivery" (as the voice note says it);
+        # "your order ord-.." keeps its own word.
+        word = m.group(2).lower()
+        if m.group(1):
+            return m.group(1) + word
+        before = m.string[max(0, m.start() - 2):m.start()]
+        start = m.start() == 0 or before.endswith((". ", "\n", "! ", "? "))
+        return ("Your " if start else "this ") + word
+
+    out = _DELIVERY_ID.sub(own, out)
+    out = _ON_ID.sub("", out)
+    out = _ANY_ID.sub("", out)
+    out = shop_money(out)
+    out = re.sub(r"[ \t]{2,}", " ", out)
+    return re.sub(r" ([.,!?;:])", r"\1", out).replace("()", "").strip()

@@ -16,7 +16,9 @@ from mimi.api import display, threadmeta
 from mimi.api import voice as vx
 from mimi.api.agent import NotFound, approval_dict, turn_handoff
 from mimi.api.uploads import PREFIX as UPLOAD_PREFIX
+from mimi.flags import demo_wiring
 from mimi.harness import handoff as hx
+from mimi.harness.style import shop_text
 from mimi.provenance import POLICY_VERSION, parse_witnesses, proof_word
 from mimi.store import schema as s
 from mimi.store.book import SqlGo
@@ -25,6 +27,17 @@ from mimi.store.util import loads, mask_phone
 
 def naira(kobo: int) -> str:
     return owed.naira(kobo)
+
+
+def ngn(kobo: int) -> int:
+    """Whole naira (the demo's ``*_ngn`` fields)."""
+    return int((int(kobo) + 50) // 100)
+
+
+def payment_extras(p: dict[str, Any], shop: Any) -> dict[str, Any]:
+    from mimi.api.demo_wiring import payment_extras as extras
+
+    return extras(p, shop)
 
 
 # ------------------------------------------------------------------ shops
@@ -66,6 +79,9 @@ def _shop_summary(row: Any, book: owed.ShopOwed | None = None) -> dict[str, Any]
         "outstanding_kobo": out, "outstanding_naira": naira(out),
         "overdue_kobo": over, "overdue_naira": naira(over),
         "open_invoices": n_open, "simulated": bool(row.simulated),
+        "credit_limit_ngn": ngn(int(row.credit_limit_kobo)), "outstanding_ngn": ngn(out),
+        "overdue_ngn": ngn(over),
+        "overdue_days": int(book.oldest_days_overdue) if book is not None and over > 0 else 0,
     }
 
 
@@ -124,10 +140,11 @@ def get_shop(engine: Engine, tenant: str, shop_id: str) -> dict[str, Any]:
                       s.payments.c.witnesses, s.payments.c.proof_policy_version)
             .where(s.payments.c.tenant_id == tenant,
                    s.payments.c.payment_id.in_([p["payment_id"] for p in pays])))}
-    for p in pays:
-        p.update(proof.get(p["payment_id"], _UNLABELLED))
     receivables = go.receivables(tenant, shop_id)
     one = owed.totals(receivables).shops.get(shop_id)
+    for p in pays:
+        p.update(proof.get(p["payment_id"], _UNLABELLED))
+        p.update(payment_extras(p, one))
     for x in receivables:
         x["outstanding_naira"] = naira(x["outstanding_kobo"])
     return {
@@ -226,6 +243,9 @@ def get_thread(engine: Engine, tenant: str, thread_id: str, *,
             # Names for ids and ₦ money (``mimi.api.display``); the record keeps
             # what was written.
             "text": (display.decided_line(m.text, names) if m.sender == "system"
+                     else shop_text(display.humanize(m.text, names)) if (
+                         m.direction == "out" and m.channel == "shop_whatsapp"
+                         and demo_wiring())
                      else display.humanize(m.text, names)), "kind": m.kind,
             "status": m.status, "turn_id": m.turn_id, "simulated": bool(m.simulated),
             "at": m.at,
@@ -331,6 +351,9 @@ def list_approvals(engine: Engine, tenant: str, *, status: str) -> dict[str, Any
 
 
 def credit(engine: Engine, tenant: str) -> dict[str, Any]:
+    from mimi.api.demo_wiring import overdue_by_shop, overdue_fields, recent_payments
+
+    book = overdue_by_shop(engine, tenant)
     with engine.connect() as conn:
         rows = _shop_rows(conn, tenant)
         reqs = conn.execute(sa.select(s.credit_requests).where(
@@ -350,11 +373,14 @@ def credit(engine: Engine, tenant: str) -> dict[str, Any]:
             # Owes more than its limit (30 Oct 2026 run 2: Mama Sola owed
             # ₦3,497,300 on a ₦1,700,000 limit and nothing said so).
             "over_limit": over > 0, "over_limit_by_kobo": over,
-            "over_limit_by_naira": naira(over) if over else ""})
+            "over_limit_by_naira": naira(over) if over else "",
+            "credit_limit_ngn": ngn(lim), "outstanding_ngn": ngn(out),
+            **overdue_fields(book.get(r.shop_id))})
     return {"limits": limits, "requests": [{
         "request_id": q.request_id, "shop_id": q.shop_id, "amount_kobo": int(q.amount_kobo),
         "amount_naira": naira(int(q.amount_kobo)), "reason": q.reason, "status": q.status,
-        "approval_id": q.approval_id, "created_at": q.created_at} for q in reqs]}
+        "approval_id": q.approval_id, "created_at": q.created_at} for q in reqs],
+        "payments": recent_payments(engine, tenant)}
 
 
 
