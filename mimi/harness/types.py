@@ -173,6 +173,15 @@ class Spend(BaseModel):
     kobo: int = 0
     prompt_tokens: int = 0
     completion_tokens: int = 0
+    # Model spend outside the loop's own calls (router, steer, binding, the
+    # readers its tools call, SAM, speech to text), folded in from the turn's
+    # metering scope (``mimi.models.metering``); it counts toward the run budget.
+    side_kobo: int = 0
+    side_calls: int = 0
+
+    @property
+    def total_kobo(self) -> int:
+        return self.kobo + self.side_kobo
 
 
 class RunResult(_Frozen):

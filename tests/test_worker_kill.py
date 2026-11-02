@@ -65,7 +65,10 @@ agent.run_worker(threading.Event(), idle_s=0.05)
 
 
 def _spawn(script: Path, url: str, name: str) -> subprocess.Popen[bytes]:
-    env = {**os.environ, "META_API_KEY": ""}
+    # MIMI_PLAIN_CODE=0: the scripted model must drive every step. With the
+    # default plain-code paths a balance question is answered by code, not by
+    # the script this test counts steps and replies against.
+    env = {**os.environ, "META_API_KEY": "", "MIMI_PLAIN_CODE": "0"}
     return subprocess.Popen([sys.executable, str(script), url, name], cwd=ROOT, env=env,
                             stdout=subprocess.DEVNULL, stderr=subprocess.PIPE)
 

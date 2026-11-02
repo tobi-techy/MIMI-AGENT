@@ -115,6 +115,16 @@ def test_a_shop_message_gets_a_reply_through_router_and_harness(env: dict[str, A
 def test_money_question_goes_to_collector(env: dict[str, Any]) -> None:
     r = shop_turn(env["c"], "wamid.owe", "abeg wetin I owe now?").json()
     assert r["helper"] == "collector" and r["skill"] == "collector/collections"
+    # A balance-only question is answered by the plain-code path (on by
+    # default, ``mimi.harness.plain``): the book's figures, no model call.
+    assert r["replies"][0]["text"].startswith("Hello ") and "you owe N" in r["replies"][0]["text"]
+
+
+def test_money_question_goes_to_the_model_with_plain_code_off(
+        env: dict[str, Any], monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("MIMI_PLAIN_CODE", "0")
+    r = shop_turn(env["c"], "wamid.owe0", "abeg wetin I owe now?").json()
+    assert r["helper"] == "collector" and r["skill"] == "collector/collections"
     assert r["replies"][0]["text"].startswith("Got it")
 
 

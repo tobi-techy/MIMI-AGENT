@@ -42,6 +42,7 @@ from collections.abc import Mapping, Sequence
 from pathlib import Path
 from typing import Any, Literal
 
+from mimi.models import metering
 from mimi.models.base import ChatMessage, ChatModel, ChatResult
 
 CacheMode = Literal["through", "replay"]
@@ -186,6 +187,7 @@ class CachedModel:
         meta: Mapping[str, str] | None = None,
         response_format: Mapping[str, object] | None = None,
     ) -> ChatResult:
+        metering.guard(self.name)
         base = cache_key(self.name, messages, max_tokens, response_format)
         key = versioned_key(base, self.versions)
         with self._lock:

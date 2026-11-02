@@ -12,6 +12,7 @@ from __future__ import annotations
 import hashlib
 from collections.abc import Mapping
 
+from mimi.models import metering
 from mimi.voice.base import AudioClip, Transcript, VoiceContext, failed
 from mimi.voice.quality import assess
 
@@ -31,6 +32,7 @@ class FakeTranscriber:
         self.calls = 0
 
     def transcribe(self, clip: AudioClip, ctx: VoiceContext) -> Transcript:
+        metering.guard(getattr(self, "name", "stt"))
         self.calls += 1
         text = self._script.get(audio_sha256(clip.data))
         if text is None:

@@ -53,7 +53,7 @@ from mimi.api.media import checked_media
 from mimi.api.photo_label import media_pointer
 from mimi.clock import wall, wall_utc
 from mimi.flags import fixes_2026_10_30
-from mimi.harness import fastclass
+from mimi.harness import fastclass, plain
 from mimi.harness import handoff as hx
 from mimi.harness import lexicon as lx
 from mimi.harness import steer as st
@@ -79,6 +79,7 @@ from mimi.harness.skills import allowed_for
 from mimi.harness.style import clean_reply
 from mimi.harness.tracing import trace_job
 from mimi.harness.types import RunEvent
+from mimi.models import metering
 from mimi.models.base import ChatModel
 from mimi.observe.langfuse_export import exporter_from_env
 from mimi.orders.catalogue import family_of
@@ -356,12 +357,15 @@ class Agent:
         clock: Any = None,
         exporter: Any = None,
     ) -> None:
-        from mimi.api.helpers import build_helpers
+        from mimi.api.helpers import build_helpers, metered_deps
 
         self.engine = engine
         self.go = SqlGo(engine)
         self.policy = policy or GoPolicy()
-        self.deps = deps or HelperDeps()
+        # Every model the agent reaches goes through the metering seam
+        # (``mimi.models.metering``): charged to the turn, the daily cap and
+        # the run budget. The harness gateway meters the loop's own calls.
+        self.deps = metered_deps(deps or HelperDeps())
         self.helpers: dict[str, Helper] = dict(helpers or build_helpers(
             self.policy, go=self.go, deps=self.deps))
         # A shop's camera photo with a vague caption is looked at once
@@ -371,13 +375,16 @@ class Agent:
         see_on = os.environ.get("MIMI_ROUTER_SEE", "1").strip() != "0"
         # A pending ask binds the shop's next reply to the helper that asked
         # (``mimi.harness.binding``); the router model only classifies it.
-        self.router = Router(model=router_model, fast=fastclass.model(), price=kobo_cost,
-                             binder=AnswerBinder(model=router_model),
+        def meter(role: str) -> ChatModel | None:
+            return metering.Metered(router_model, role) if router_model is not None else None
+
+        self.router = Router(model=meter(metering.ROUTER), fast=fastclass.model(),
+                             price=kobo_cost, binder=AnswerBinder(model=meter(metering.BINDING)),
                              see=self.see_photo if see_on else None)
         self.clock = clock or wall_utc
         # Parts, mid-task messages and corrections (``mimi.harness.steer``);
         # MIMI_STEER=0 turns the stage off (today's behaviour).
-        self.steerer = st.Steerer(model=router_model)
+        self.steerer = st.Steerer(model=meter(metering.STEER))
         self.steer_on = os.environ.get("MIMI_STEER", "1").strip() != "0"
         self.artifacts = SqlArtifactStore(engine)
         vx.ensure_schema(engine)  # shop_voice_consent (alembic 0004 in production)
@@ -556,8 +563,14 @@ class Agent:
         lease = _Lease(self.queue, claim, max(0.2, self.lease_s / 3))
         lease.start()
         holder = [claim]
+        # One metering scope per turn: every model call in it is booked to the
+        # distributor's spend (the daily cap) and folded into the run budget.
+        day = self.clock().astimezone(LAGOS).date()
         try:
-            self._run(holder)
+            with metering.scope(control=self.go, tenant_id=claim.tenant_id, day=day,
+                                strict=metering.strict_default(),
+                                book_all=metering.meter_all()):
+                self._run(holder)
         except LeaseLost:
             log.warning("lease lost on %s; another worker carries it on", claim.turn_id)
         except Exception as exc:
@@ -718,6 +731,18 @@ class Agent:
                                      extra_notes=list(sv.get("notes") or []))
             state = self.harness.start(event, helper, context=ctx, route=route)
             ck.update(event=event.model_dump(mode="json"), loop=state.model_dump(mode="json"))
+            if plain.enabled():
+                p = plain.choose(skill=d.skill, source=event.wake_source,
+                                 sender=lead.sender, text=event.text,
+                                 button=lead.payload.button_id or "", shop_id=event.shop_id,
+                                 n_events=len(events), media=lead.payload.media.kind,
+                                 steered=bool(sv.get("parts") or sv.get("primary_text")
+                                              or sv.get("followups") or sv.get("join")))
+                if p is not None:
+                    # Code runs this turn's loop (``mimi.harness.plain``); any
+                    # surprise hands the step to the model.
+                    ck["plain"] = {**asdict(p),
+                                   "start": state.prefix_len + state.history_len}
             self._checkpoint(holder, ck)
         while state.finished is None:
             if self._stop_requested(claim.turn_id):
@@ -730,9 +755,12 @@ class Agent:
                 self._complete(holder, d, events, prior, status="cancelled_by_sender",
                                state=state, event=event, apply=False, steer=sv)
                 return
-            res = self.harness.step(state, helper)
+            code = self._plain_gateway(ck)
+            res = self.harness.step(state, helper, gateway=code[0] if code else None)
             state = LoopState.model_validate(res.state)
             ck["loop"] = res.state
+            if code and code[1].fallbacks:
+                ck["plain"] = {**ck["plain"], "active": False}  # the model has it now
             self._checkpoint(holder, ck)
         if (state.finished.status == "stopped_budget"
                 and state.finished.reason == DAILY_CAP_REASON):
@@ -818,7 +846,9 @@ class Agent:
         if first:
             # The second helper could not answer either: no third hop.
             rec = rec.model_copy(update={"first_run_id": str(first.get("first_run_id", ""))})
-        ck = {k: v for k, v in ck.items() if k not in ("loop", "event", "parked")}
+        # "plain" too: a code plan made for the first helper's skill must not
+        # drive the re-routed run (integration 2026-11-02, #40 x #36).
+        ck = {k: v for k, v in ck.items() if k not in ("loop", "event", "parked", "plain")}
         hbs = list(ck.get("handbacks") or []) + [rec.model_dump(mode="json")]
         ck["handbacks"] = hbs
         thread_id = holder[0].thread_id
@@ -864,6 +894,17 @@ class Agent:
         self._checkpoint(holder, ck)
         self._complete(holder, dc, events, prior, status="asked_to_clarify", steer=sv)
         return True
+
+    def _plain_gateway(self, ck: dict[str, Any]) -> tuple[Gateway, plain.PlainModel] | None:
+        """The plain-code path's gateway for this step: code first, the real
+        models behind it (a fallback is the same step, same run)."""
+        pc = ck.get("plain") or {}
+        if not pc or pc.get("active") is False:
+            return None
+        pm = plain.PlainModel(plain.PlanInput(pc["plan"], pc["shop_id"], pc.get("text", "")),
+                              int(pc["start"]))
+        gw = self.harness.gateway
+        return Gateway([pm, *gw.models], max_tokens=gw.max_tokens), pm
 
     # ============================================================ budget park
 
@@ -1388,6 +1429,10 @@ class Agent:
                                             "language": d.language, "lane": d.lane,
                                             "model_called": d.model_called,
                                             "cost_kobo": d.cost_kobo}}
+        sc = metering.current()
+        if sc is not None:
+            # Every model call this attempt made, by role (``mimi.models.metering``).
+            result["metered"] = sc.tally()
         run_id = ""
         fin = state.finished if state is not None else None
         # The answer card (owner console only, figures from the book by code)

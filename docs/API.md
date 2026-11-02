@@ -101,7 +101,7 @@ queue. Its default database is SQLite in `/data` (mount a volume); set
 | `MIMI_DEMO_GLOBAL_DAILY_CAP_NAIRA` | 2000 | demo: model spend across every demo session per day |
 | `MIMI_DEMO_SESSION_TTL_S` | 3600 | demo: how long a session token lasts |
 | `MIMI_DEMO_SESSIONS_PER_IP` | 20 | demo: new sessions per visitor address per day |
-| `MIMI_DEMO_KILL` | off | demo: `1` refuses every new turn (503); reads keep working |
+| `MIMI_DEMO_KILL` | off | demo: `1` refuses every new turn and every new or reset session (503, same body as a refused turn); reads keep working |
 | `MIMI_DEMO_CLIENT_IP_HEADER` | `cf-connecting-ip` | demo: the one header the edge sets to the visitor's address (Cloudflare, in front of Atlasflow, writes `CF-Connecting-IP` and overwrites a client's own); read only from a trusted peer; `none` turns it off. `X-Forwarded-For` is refused here |
 | `MIMI_DEMO_TRUSTED_PROXIES` | private, loopback and CGNAT ranges | demo: comma-separated CIDRs (the platform edge) whose requests may carry that header; `*` trusts any peer, only when the app is reachable through the edge alone |
 | `MIMI_DEMO_TRUST_FORWARDED` | ignored | removed 30 Oct 2026: `X-Forwarded-For` is never read (a made-up one bought a fresh allowance) |
@@ -130,6 +130,9 @@ A public console on synthetic data (`mimi/api/demo.py`):
   digest of the visitor address, never either in plain. No key is ever
   baked into the console's JavaScript.
 * `POST /v1/demo/reset` ends the caller's session and starts a fresh copy.
+* While `MIMI_DEMO_KILL=1`, both answer 503 `{"detail": "the demo is paused right now; you can
+  still look around"}` (the body a refused turn gets) and seed nothing; a
+  refused reset leaves the caller's session as it was.
 * A token past its TTL is 401 (`demo session expired`). Expired copies are
   deleted when a new session starts (after a 10 minute grace); their spend
   is kept per address and day so the caps still count it.
