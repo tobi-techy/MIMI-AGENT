@@ -117,7 +117,9 @@ def test_money_question_goes_to_collector(env: dict[str, Any]) -> None:
     assert r["helper"] == "collector" and r["skill"] == "collector/collections"
     # A balance-only question is answered by the plain-code path (on by
     # default, ``mimi.harness.plain``): the book's figures, no model call.
-    assert r["replies"][0]["text"].startswith("Hello ") and "you owe N" in r["replies"][0]["text"]
+    # #45's display layer writes naira as ₦ in what people read.
+    text = r["replies"][0]["text"]
+    assert text.startswith("Hello ") and ("you owe ₦" in text or "you owe N" in text)
 
 
 def test_money_question_goes_to_the_model_with_plain_code_off(
