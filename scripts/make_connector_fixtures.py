@@ -135,18 +135,20 @@ def main() -> int:
     ])
     PROXY.mkdir(parents=True, exist_ok=True)
     ref = "mimi-zoho-books-abc123"
+    # Zoho Books' documented reply shapes: create answers {"code": 0,
+    # "payment": {...}}; list answers {"code": 0, "customer_payments": [...]}.
+    created = {"code": 0, "message": "The payment has been created.",
+               "payment": {"payment_id": "zp-001", "reference_number": ref}}
     (PROXY / "customer_payment_create.json").write_text(json.dumps([
-        {"match": {"reference_number": ref},
-         "reply": {"customerpayment": {"payment_id": "zp-001",
-                                       "reference_number": ref}}},
-        {"match": {}, "reply": {"customerpayment": {"payment_id": "zp-001",
-                                                    "reference_number": ref}}},
+        {"match": {"reference_number": ref}, "reply": created},
+        {"match": {}, "reply": created},
     ], indent=1) + "\n", encoding="utf-8")
     (PROXY / "customer_payment_search.json").write_text(json.dumps([
         {"match": {"reference_number": ref},
-         "reply": {"customer_payments": [{"payment_id": "zp-001",
+         "reply": {"code": 0, "message": "success",
+                   "customer_payments": [{"payment_id": "zp-001",
                                           "reference_number": ref}]}},
-        {"match": {}, "reply": {"customer_payments": []}},
+        {"match": {}, "reply": {"code": 0, "message": "success", "customer_payments": []}},
     ], indent=1) + "\n", encoding="utf-8")
     (PROXY / "customer_payment_delete.json").write_text(json.dumps([
         {"match": {"payment_id": "zp-001"}, "reply": {"success": True}},

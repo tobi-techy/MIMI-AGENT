@@ -449,6 +449,9 @@ def create_app(settings: Settings | None = None, agent: Agent | None = None, *,
             payload = check_state(settings_c.state_secret, state)
         except ValueError as exc:
             raise HTTPException(422, str(exc)) from exc
+        if str(payload.get("tenant") or "") != key.tenant_id:
+            # A link signed for another distributor never binds here.
+            raise HTTPException(422, "that link is not valid; start a new connect")
         if _connector_state_used(engine, key.tenant_id, state):
             raise HTTPException(422, "that link was already used; start a new connect")
         connected_id = params.get("connected_account_id", "")

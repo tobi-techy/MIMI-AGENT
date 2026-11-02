@@ -107,10 +107,15 @@ def _apply(engine: Engine, tenant_id: str, rows: Any, *,
             qty = values.get("qty_left", values.get("quantity"))
             if not item or not isinstance(qty, int):
                 continue
-            conn.execute(sa.insert(s.stock_counts).values(
-                tenant_id=tenant_id, shop_id=shop_id or str(values.get("shop_id") or ""),
-                sku=str(values.get("sku") or item), item=item, quantity=qty,
-                counted_on=day, source="connector"))
+            key = {"tenant_id": tenant_id,
+                   "shop_id": shop_id or str(values.get("shop_id") or ""),
+                   "sku": str(values.get("sku") or item), "counted_on": day,
+                   "source": "connector"}
+            # A re-sync the same day (or a repeated row) replaces the count:
+            # the fresh read wins, never a unique-key crash.
+            conn.execute(s.stock_counts.delete().where(
+                *(s.stock_counts.c[k] == v for k, v in key.items())))
+            conn.execute(sa.insert(s.stock_counts).values(**key, item=item, quantity=qty))
             mapped += 1
     return len(rows), mapped, errors
 
