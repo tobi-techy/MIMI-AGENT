@@ -150,7 +150,10 @@ class LimitChange(_Rec):
 
     Mimi never sets a limit: the console shows this beside the shop row and
     the owner confirms it with Set credit limit (``POST
-    /v1/shops/{shop_id}/credit-limit``), or leaves it."""
+    /v1/credit/{shop_id}/limit`` with ``{"amount_ngn": proposed_limit_kobo //
+    100}``, which answers ``{shop_id, old_limit_ngn, new_limit_ngn,
+    change_id}`` and is undone with ``POST /v1/credit/changes/{change_id}/undo``),
+    or leaves it."""
 
     shop_id: str
     current_limit_kobo: int

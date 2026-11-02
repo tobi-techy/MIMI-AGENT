@@ -80,6 +80,9 @@ class EventIn(BaseModel):
                          description="The shop the event is about; empty for the distributor.")
     received_at: datetime | None = Field(None, description=RECEIVED_AT)
     simulated: bool = False
+    amount_ngn: int | None = Field(None, ge=1, le=1_000_000_000,
+                                   description="bank_credit only: the credited amount, whole "
+                                               "naira (matches the screenshot payment)")
 
 
 class VoiceReply(_Out):
@@ -282,6 +285,12 @@ class ShopSummary(_Out):
     overdue_naira: str
     open_invoices: int
     simulated: bool
+    # Whole naira and days (demo wiring, 2 Nov 2026): days since the oldest
+    # overdue invoice fell due, 0 when nothing is overdue.
+    credit_limit_ngn: int = 0
+    outstanding_ngn: int = 0
+    overdue_ngn: int = 0
+    overdue_days: int = 0
 
 
 class ShopList(_Out):
@@ -364,6 +373,13 @@ class ApprovalOut(_Out):
     # approve: Mimi carries it out once approved. hand_off: the owner's rule
     # says the owner does this step by hand; approving records it was done.
     handling: str = "approve"
+    # Demo wiring (2 Nov 2026): zoho_payment, credit_over_limit, or the tool name.
+    kind: str = ""
+    blocked: bool = Field(False, description="credit_over_limit while pending: the order is "
+                                             "held over the shop's limit")
+    result: dict[str, Any] | None = Field(None, description="What code did once approved "
+                                                            "(zoho_payment_id, change_id, "
+                                                            "undo_available)")
 
 
 class ApprovalList(_Out):
@@ -396,6 +412,27 @@ class CreditLimit(_Out):
     over_limit: bool = False
     over_limit_by_kobo: int = 0
     over_limit_by_naira: str = ""
+    credit_limit_ngn: int = 0
+    outstanding_ngn: int = 0
+    overdue_ngn: int = 0
+    overdue_days: int = 0
+
+
+class CreditPayment(_Out):
+    """A recent payment with its proof (stored level and the demo's grade) and
+    its shop's overdue figures at read time."""
+
+    payment_id: str
+    shop_id: str
+    shop_name: str
+    amount_ngn: int
+    paid_on: str
+    method: str
+    proof_level: Literal["verified", "likely", "estimated"]
+    proof_grade: Literal["verified", "estimated", "unverified"]
+    proof: str
+    overdue_days: int
+    overdue_ngn: int
 
 
 class CreditRequest(_Out):
@@ -412,6 +449,22 @@ class CreditRequest(_Out):
 class CreditOut(_Out):
     limits: list[CreditLimit]
     requests: list[CreditRequest]
+    payments: list[CreditPayment] = Field(default_factory=list)
+
+
+class CreditLimitIn(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    amount_ngn: int = Field(..., ge=0, le=1_000_000_000, description="The new limit, whole naira.")
+    reason: str = Field("", max_length=500)
+
+
+class CreditLimitOut(_Out):
+    shop_id: str
+    old_limit_ngn: int
+    new_limit_ngn: int
+    change_id: str
+    undone: bool = False
 
 
 class ErrorOut(_Out):

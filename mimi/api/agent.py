@@ -52,7 +52,7 @@ from mimi.api.helpers import HelperDeps
 from mimi.api.media import checked_media
 from mimi.api.photo_label import media_pointer
 from mimi.clock import wall, wall_utc
-from mimi.flags import fixes_2026_10_30
+from mimi.flags import demo_wiring, fixes_2026_10_30
 from mimi.harness import fastclass, plain
 from mimi.harness import handoff as hx
 from mimi.harness import lexicon as lx
@@ -76,7 +76,7 @@ from mimi.harness.router import (
 )
 from mimi.harness.router import label as skill_label
 from mimi.harness.skills import allowed_for
-from mimi.harness.style import clean_reply
+from mimi.harness.style import clean_reply, shop_text
 from mimi.harness.tracing import trace_job
 from mimi.harness.types import RunEvent
 from mimi.models import metering
@@ -534,8 +534,13 @@ class Agent:
                 # Owner console text is rewritten for the owner (names, ₦); a
                 # reply to a shop or rep is handed to its channel as written
                 # (docs/API.md), so its text stays exactly what was gated.
+                # With MIMI_DEMO_WIRING on, a shop's text is handed over as the
+                # shop reads it: names, ₦ with commas, no internal ids
+                # (``style.shop_text``); the record keeps what was gated. Off,
+                # as written, so the recorded shop personas replay as recorded.
                 text = (display.humanize(m.text, names) if m.channel == "owner_console"
-                        else m.text)
+                        else shop_text(display.humanize(m.text, names))
+                        if m.channel == "shop_whatsapp" and demo_wiring() else m.text)
                 reply = {"message_id": m.message_id, "channel": m.channel,
                          "shop_id": m.shop_id, "text": text,
                          "kind": m.kind,
@@ -753,6 +758,11 @@ class Agent:
             # answers with a card; no model, no spend (docs/HANDOFFS.md).
             self._complete(holder, d, events, prior, status="done", steer=sv, lookup=True)
             return
+        if demo_wiring() and self._wired_event(claim, lead):
+            # The demo scenes' system events, answered by code (no model):
+            # the routine morning brief and a bank credit (mimi.api.demo_wiring).
+            self._complete(holder, d, events, prior, status="done", steer=sv)
+            return
         # A skill can have its own helper config (Order intake, RAI-302).
         helper = self.helpers.get(d.skill) or self.helpers.get(d.helper)
         if helper is None:
@@ -822,6 +832,29 @@ class Agent:
             return
         self._complete(holder, d, events, prior, status=state.finished.status,
                        state=state, event=event, steer=sv)
+
+    def _wired_event(self, claim: Claim, lead: Inbound) -> bool:
+        from mimi.api import demo_wiring as dw
+
+        p = lead.payload
+        now = wall()
+        if lead.source == "routine" and p.name in dw.BRIEF_ROUTINES:
+            text = dw.brief_text(self.engine, claim.tenant_id)  # read before the write
+            with self.engine.begin() as conn:
+                owner = dw._owner_thread(conn, claim.tenant_id)
+                dw._say(conn, claim.tenant_id, owner, key=f"brief:{claim.turn_id}",
+                        channel="owner_console", shop_id="", turn_id=claim.turn_id,
+                        kind="morning_brief", now=now,
+                        text=text)
+            return True
+        if lead.source == "webhook" and p.name == "bank_credit" and p.shop_id:
+            m = re.search(r"Amount (\d+) naira\.", p.text or "")
+            with self.engine.begin() as conn:
+                dw.bank_credit(conn, claim.tenant_id, p.shop_id, event_id=lead.external_id,
+                               amount_ngn=int(m.group(1)) if m else None, now=now,
+                               turn_id=claim.turn_id)
+            return True
+        return False
 
     def _code_read(self, tenant: str, d: RouteDecision, events: Sequence[Inbound]) -> bool:
         """An owner read on Collector or Credit that code answers from the book
@@ -1557,6 +1590,7 @@ class Agent:
                     noticed: set[str] = set()
                     dropped = _replaced_in_turn(r.intents)
                     queued: dict[str, str] = {}
+                    outcomes: dict[str, str] = {}
                     for rec in r.intents:
                         if rec.tool in ("send_to_user", "ask_question"):
                             continue  # recorded below with their draft
@@ -1565,6 +1599,7 @@ class Agent:
                         outcome, apr = self.go.apply_intent(
                             conn, tenant, rec.model_dump(mode="json"), turn_id=turn_id,
                             thread_id=thread, helper=d.helper, skill=d.skill)
+                        outcomes[rec.idempotency_key] = outcome
                         if outcome == "queued_for_approval" and apr:
                             queued[rec.idempotency_key] = apr
                         msg = MESSAGE_INTENTS.get(rec.tool)
@@ -1584,6 +1619,15 @@ class Agent:
                                       shop_id=rec.shop_id, text=notice, kind=f"{rec.tool}_notice",
                                       status="ready", ts=now)
                             noticed.add(" ".join(clean_reply(notice).split()))
+                    if demo_wiring():
+                        from mimi.api import demo_wiring as dw
+
+                        opened = dw.after_intents(
+                            conn, tenant, [i.model_dump(mode="json") for i in r.intents
+                                           if i.idempotency_key not in dropped],
+                            outcomes, now)
+                        if opened:
+                            result["wiring_approvals"] = opened
                     superseded = self._supersede(conn, tenant, r.intents, queued, sv)
                     if superseded:
                         result["superseded"] = superseded
@@ -2052,7 +2096,8 @@ class Agent:
     # ============================================================ approvals
 
     def decide(self, tenant_id: str, approval_id: str, *, approve: bool, by: str,
-               note: str = "") -> tuple[dict[str, Any], TurnView | None]:
+               note: str = "", demo_mode: bool = False
+               ) -> tuple[dict[str, Any], TurnView | None]:
         """The owner approves or rejects one pending approval.
 
         Approving releases exactly what the helper drafted (its message goes
@@ -2100,6 +2145,11 @@ class Agent:
                     s.tenants.c.tenant_id == tenant_id,
                     s.tenants.c.daily_cap_kobo < new_cap).values(daily_cap_kobo=new_cap))
                 resumed = self.resume_parked(conn, tenant_id)
+        if approve and a.tool in ("zoho_payment", "credit_over_limit"):
+            from mimi.api import demo_wiring as dw
+
+            dw.on_approved(self.engine, tenant_id, self.approval(tenant_id, approval_id),
+                           demo_mode=demo_mode)
         row = self.approval(tenant_id, approval_id)
         if resumed:
             log.info("owner raised the daily allowance; resumed %d parked job(s)", len(resumed))
@@ -2157,4 +2207,9 @@ def approval_dict(a: Any, draft: Any | None,
         "note": a.note, "supersedes": getattr(a, "supersedes", None),
         "superseded_by": getattr(a, "superseded_by", None),
         "handling": getattr(a, "handling", "") or "approve",
+        # Demo wiring (2 Nov 2026): what the item is, whether it holds an
+        # order, and what code did once it was approved (docs/API.md).
+        "kind": str(payload.get("kind") or a.tool),
+        "blocked": a.tool == "credit_over_limit" and a.status == "pending",
+        "result": payload.get("result"),
     }

@@ -232,6 +232,9 @@ approval reads as 404. Keys are compared by SHA-256 in constant time; give
 | `GET /v1/policy` | owner | The rulebook (RAI-323, docs/POLICY.md): each step with its behaviour (`act`, `act_if_preapproved`, `ask`, `hand_off`), default, allowed behaviours and who changed it; built-in stops listed `locked`; `editable` false in demo mode |
 | `PUT /v1/policy` | owner | Change rules: `{"rules": [{"action_type", "behaviour"}], "by"}`. 409 for a built-in stop, floor or unknown type (nothing changes); 403 for a demo session or demo mode. Logged with who; in force on the next turn |
 | `GET /v1/credit` | owner | Per-shop limit, outstanding, available, and credit requests from helpers' credit intents (Credit, RAI-271). Each limit row also has `over_limit`, `over_limit_by_kobo`, `over_limit_by_naira` (owes more than its limit, from code) |
+| `POST /v1/credit/{shop_id}/limit` | owner | The owner sets a shop's limit: `{amount_ngn, reason?}` (whole naira) answers `{shop_id, old_limit_ngn, new_limit_ngn, change_id}`. Recorded as a `limit_change` step on the shop's thread. 404 for another distributor's shop |
+| `POST /v1/credit/changes/{change_id}/undo` | owner | Puts the limit back: `{shop_id, old_limit_ngn, new_limit_ngn, change_id, undone: true}`; a second undo is 409 |
+| `POST /v1/approvals/{id}/undo` | owner | An approved `zoho_payment`: Zoho Books' delete path (`result.undo_available` turns false). An approved `credit_over_limit`: the old limit back. 409 for anything else or a second undo |
 | `GET /v1/mentions` | owner | The console's @ picker: `{mentions: [{kind, id, name, subtitle, mention, assign_to}], total}`. `kind` is `helper`, `shop` or `rep`. `q` matches the start of a name or of any word in it (a leading `@` is ignored); `kinds` is a comma list (`shop`, `helper,rep`), empty for all; `limit` 1 to 200 (50). Helper rows carry `mention` (`@Collector`) and `assign_to` for `POST /v1/turns`; shop rows' `subtitle` is area and rep, rep rows' is their areas. A channel key is 403 |
 | `GET /v1/connectors` | owner | Connector toolkits (Zoho Books, Zoho CRM, Google Sheets, CSV/Excel, Mono soon) with their reads, writes and connections (RAI-277; `docs/CONNECTORS.md`) |
 | `POST /v1/connectors/{toolkit}/connect` | owner | Start the connect flow: body `{region}` for Zoho (`com`, `eu`, `in`, `cn`, `au`); returns `redirect_url` and a single-use `state`. Demo and offline runs return a fake redirect, never real OAuth |
@@ -244,6 +247,51 @@ approval reads as 404. Keys are compared by SHA-256 in constant time; give
 | `GET /v1/me` | any | The caller's tenant, role and mode (`live` or `demo`); in demo, the session's expiry and today's spend against the caps |
 | `POST /v1/demo/sessions`, `POST /v1/demo/reset` | none, demo session | Demo mode only (404 in live mode) |
 | `POST /v1/media`, `GET /v1/messages/{message_id}/media` | owner (demo session) | Demo mode only: keep one console attachment for a turn, and read it back (404 in live mode) |
+
+### Demo wiring (2 Nov 2026, `mimi/api/demo_wiring.py`)
+
+The five demo scenes run end to end in code. The read fields and the new
+endpoints are always on; the paths that change what a recorded run does are
+behind `MIMI_DEMO_WIRING=1` (set in the Dockerfile, off in CI and `make check`).
+
+* **Reads.** `GET /v1/credit` limit rows and `GET /v1/shops/{id}` `shop` carry
+  `credit_limit_ngn`, `outstanding_ngn`, `overdue_ngn` and `overdue_days` (days
+  since the oldest overdue invoice fell due). `GET /v1/credit` adds `payments`
+  (the newest 50) and each payment row in both carries `amount_ngn`,
+  `proof_level` (stored: `verified`, `likely`, `estimated`), `proof_grade` (the
+  demo's words: `verified`, `estimated`, `unverified`) and its shop's
+  `overdue_days` / `overdue_ngn`.
+* **Approvals** carry `kind` (`zoho_payment`, `credit_over_limit`, or the tool
+  name), `blocked` (a pending `credit_over_limit`) and `result` (what code did on
+  approve).
+* **Morning brief.** `POST /v1/events {kind: routine, name: morning_brief}` (or
+  `mimi.morning_brief`): code writes the top three overdue shops by name and ₦
+  on the owner's thread. No model call.
+* **Screenshot to verified.** A screenshot Proof records as likely is kept as a
+  payment at level `likely`. `POST /v1/events {kind: webhook, name: bank_credit,
+  shop_id, amount_ngn?}` matches the newest likely payment (same amount when
+  given), stamps it `verified` with a bank witness, takes it off the invoice,
+  thanks the shop, tells the owner and opens a `zoho_payment` approval
+  (`payload`: `shop_name`, `amount_ngn`, `invoice_number`, `reference_number`).
+  No match: the owner is told and nothing changes. No model call.
+* **Zoho write.** Approving a `zoho_payment` records it through
+  `mimi/connectors/zoho/payments.py` (read back by reference, then one create);
+  `result` is `{zoho_payment_id, undo_available: true, demo}`. In demo mode, or
+  without an active Zoho Books connection and `ZOHO_BOOKS_ORGANIZATION_ID`, the
+  transport is `StoreZoho`: a deterministic fake that keeps its payments in
+  `artifacts` and never calls Zoho. Mimi never moves money.
+* **Over the limit.** A shop order queued over its limit also opens a
+  `credit_over_limit` approval with `order_ngn`, `limit_ngn`, `owed_ngn`,
+  `suggested_limit_ngn` (the shop's owed plus the order, rounded up to ₦50,000)
+  and code-written `reasons` (owed against the limit, bank-verified payments
+  and amount paid over 90 days, what is overdue). Approving sets the suggested
+  limit (undoable); the order's own approval is still the owner's call.
+* **Shop text** (behind the switch: the e2e's recorded shop personas read
+  Mimi's replies as recorded). What a shop reads (turn `replies` on `shop_whatsapp`, shop
+  messages in a thread read) passes `style.shop_text`: `₦` with commas and no
+  internal ids ("Thank you. Your delivery is confirmed."; the receipt's
+  `Ref dlv-..., 2026-10-26` line reads `Delivered 26 Oct 2026`). The stored
+  record, and everything a model reads, keeps what was gated.
 
 Owner-facing text is rewritten by `mimi.api.display` (30 Oct 2026 run 2):
 `shop-001` and `rep-03` become the shop's and rep's names from the book, an

@@ -47,6 +47,7 @@ from fastapi.responses import JSONResponse
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
 from mimi.api import connectors as cx
+from mimi.api import demo_wiring as dw
 from mimi.api import reads
 from mimi.api.agent import Agent, Conflict, NotFound
 from mimi.api.config import LOCALHOST_REGEX, ApiKey, Settings
@@ -66,6 +67,8 @@ from mimi.api.schemas import (
     ConnectorConnectOut,
     ConnectorDetail,
     ConnectorList,
+    CreditLimitIn,
+    CreditLimitOut,
     CreditOut,
     DecisionIn,
     DecisionOut,
@@ -283,9 +286,12 @@ def create_app(settings: Settings | None = None, agent: Agent | None = None, *,
             what = f"{body.name.replace('_', ' ').replace('.', ' ')} for {key_shop['shop_id']}"
         else:
             what = body.name.replace("_", " ").replace(".", " ")
+        words = f"System event: {what}."
+        if body.amount_ngn and body.name == "bank_credit":
+            words += f" Amount {int(body.amount_ngn)} naira."  # an int, written by code
         inbound = Inbound(
             source=body.kind, org_id=key.tenant_id, external_id=f"{body.kind}:{body.event_id}",
-            received_at=at, payload=Payload(text=f"System event: {what}.", name=body.name,
+            received_at=at, payload=Payload(text=words, name=body.name,
                                             shop_id=body.shop_id))
         view = agent.submit(key.tenant_id, inbound, simulated=body.simulated)
         return _turn_out(view)
@@ -411,7 +417,7 @@ def create_app(settings: Settings | None = None, agent: Agent | None = None, *,
                 raise HTTPException(403, "the demo never raises a credit limit or the "
                                          "daily allowance; you can decline it")
         row, follow = agent.decide(key.tenant_id, approval_id, approve=approve, by=b.by,
-                                   note=b.note)
+                                   note=b.note, demo_mode=settings.demo_mode)
         if follow is not None and wait and not follow.finished:
             agent.process(follow.turn_id)
             follow = agent.wait(key.tenant_id, follow.turn_id, settings.wait_s)
@@ -428,6 +434,30 @@ def create_app(settings: Settings | None = None, agent: Agent | None = None, *,
     def reject(approval_id: str, key: Owner, body: DecisionIn | None = None,
                wait: bool = True) -> dict[str, Any]:
         return _decide(approval_id, key, body, False, wait)
+
+    @app.post("/v1/approvals/{approval_id}/undo", response_model=DecisionOut,
+              responses=_ERRORS, summary="Owner undoes an approved Zoho payment write "
+                                         "(or a limit Credit suggested)")
+    def undo_approval(approval_id: str, key: Owner) -> dict[str, Any]:
+        """A ``zoho_payment`` approval: calls Zoho Books' delete path (a fake Zoho
+        kept in the store in demo mode). A ``credit_over_limit`` approval: puts
+        the old limit back. 409 for anything else or a second undo."""
+        dw.undo_approval(engine, key.tenant_id, approval_id, demo_mode=settings.demo_mode)
+        return {"approval": agent.approval(key.tenant_id, approval_id), "follow_up": None}
+
+    @app.post("/v1/credit/{shop_id}/limit", response_model=CreditLimitOut,
+              responses=_ERRORS, summary="Owner sets a shop's credit limit (recorded, undoable)")
+    def post_credit_limit(shop_id: str, body: CreditLimitIn, key: Owner) -> dict[str, Any]:
+        """Recorded as a ``limit_change`` step on the shop's thread. Mimi never
+        sets a limit on its own: only the owner, here or by approving Credit's
+        suggestion."""
+        return dw.set_limit(engine, key.tenant_id, shop_id, body.amount_ngn,
+                            reason=body.reason)
+
+    @app.post("/v1/credit/changes/{change_id}/undo", response_model=CreditLimitOut,
+              responses=_ERRORS, summary="Owner undoes a credit-limit change")
+    def post_credit_undo(change_id: str, key: Owner) -> dict[str, Any]:
+        return dw.undo_limit(engine, key.tenant_id, change_id)
 
     @app.get("/v1/credit", response_model=CreditOut, responses=_ERRORS,
              summary="Credit limits per shop and credit requests")
