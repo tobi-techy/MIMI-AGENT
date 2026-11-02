@@ -1744,7 +1744,11 @@ class Agent:
             insert_ignore(conn, s.thread_events, {
                 "tenant_id": tenant, "event_id": f"card_{turn_id}", "thread_id": thread,
                 "run_id": "", "turn_id": turn_id, "seq": -1, "step": 0, "type": "card_read",
-                "tool": f"card:{ans.card.kind}", "tier": "auto", "short": ans.card.title[:300],
+                "tool": f"card:{ans.card.kind}",
+                # A code read of the book: its tier through the rulebook
+                # (internal.read is always act/auto), never a literal (RAI-323).
+                "tier": self.policy.decide(tenant, "internal.read", {"conn": conn}).tier,
+                "short": ans.card.title[:300],
                 "cost_kobo": 0, "model": "", "duration_ms": 0.0, "data": dumps(result["card"]),
                 "at": now_iso(now - 1e-3), "ts": now - 1e-3})
         for key, typ, short, ts, data in (

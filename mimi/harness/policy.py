@@ -246,10 +246,14 @@ ACTION_TYPES: Mapping[str, ActionType] = {
            ("ask_receipt_again",)),
         _a("order.flag_delivery", "order", "Flag a delivery problem to you", "act",
            ("flag_delivery_to_owner",)),
+        # The weekly check-in (RAI-276) is the same ask and the same count.
         _a("stock.ask_count", "stock", "Ask a shop to count its stock", "act",
-           ("ask_stock_count",)),
+           ("ask_stock_count", "send_weekly_checkin")),
         _a("stock.record_count", "stock", "Record a shop's stock count", "act",
-           ("record_stock_count",)),
+           ("record_stock_count", "submit_checkin_count")),
+        _a("stock.record_supplier_lines", "stock",
+           "Record stock a shop bought from another supplier", "act",
+           ("record_supplier_lines",)),
         _a("stock.draft_restock", "stock", "Draft a restock order", "act_if_preapproved",
            ("draft_restock", "revise_restock"), "act_if_preapproved"),
         _a("credit.ask_shelf_photo", "credit", "Ask a shop for a shelf photo", "act",
@@ -292,7 +296,7 @@ READ_TOOLS: frozenset[str] = frozenset({
     "get_credit_file", "count_shelf_photo", "prepare_credit_review",
     "find_credit_candidates", "find_shop", "check_payment_screenshot",
     "get_open_deliveries", "read_receipt_reply", "get_stock_estimates",
-    "read_stock_answer", "read_order_photo", "price_order",
+    "read_stock_answer", "read_order_photo", "price_order", "read_checkin_reply",
 })
 INTERNAL_ACTIONS = {**INTERNAL_ACTIONS, "internal.read": _a(
     "internal.read", "all", "Read the book", "act", tuple(sorted(READ_TOOLS)))}

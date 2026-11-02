@@ -399,12 +399,12 @@ def test_demo_mode_policy_is_read_only(store_url: str) -> None:
     ensure_schema(engine)
     agent = Agent(engine, models=[ScriptedModel(script)], worker_id="test-worker")
     conf = DemoConfig(ip_daily_cap_kobo=10_000, global_daily_cap_kobo=30_000,
-                      session_ttl_s=3600.0, sessions_per_ip=5, trust_forwarded=True,
-                      ip_salt="test-salt")
+                      session_ttl_s=3600.0, sessions_per_ip=5, ip_salt="test-salt")
     with TestClient(create_app(Settings(mode="demo", demo=conf, wait_s=5), agent,
                                workers=0)) as c:
-        sess = c.post("/v1/demo/sessions", headers={"X-Forwarded-For": "198.51.100.9"}).json()
-        hd = {"Authorization": f"Bearer {sess['token']}", "X-Forwarded-For": "198.51.100.9"}
+        # X-Forwarded-For is never read since #45; the visitor is the CF header.
+        sess = c.post("/v1/demo/sessions", headers={"CF-Connecting-IP": "198.51.100.9"}).json()
+        hd = {"Authorization": f"Bearer {sess['token']}", "CF-Connecting-IP": "198.51.100.9"}
         got = c.get("/v1/policy", headers=hd)
         assert got.status_code == 200 and got.json()["editable"] is False
         r = c.put("/v1/policy", json={"rules": [{"action_type": "shop.send_message",
