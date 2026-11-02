@@ -1,7 +1,7 @@
 PY ?= python
 
 .PHONY: week week-day week-soak credit-eval credit-eval-live credit-fixtures sim-credit e2e e2e-live e2e-postgres demo-check e2e-traced binding-eval binding-eval-live steer-eval steer-eval-live which-eval order-eval order-eval-live photo-route-eval photo-route-eval-live
-.PHONY: loop-safety-eval claims-eval review-pocs install test eval eval-live eval-fake voice-eval voice-eval-live voice-fixtures voice-values-eval voice-values-eval-live voice-values-fixtures proof-eval proof-eval-live proof-fixtures stock-backtest stock-eval stock-eval-live stock-eval-fake sim-stock trace-stock sim sim-live sim-voice sim-voice-v2 sim-screens trace-smoke langfuse-setup langfuse-monitor langfuse-datasets proof-experiment voice-experiment receipts-experiment judge-calibration world-check lint typecheck secrets provenance migrate check harness-eval harness-eval-live trace-harness router-eval router-eval-live context-eval context-eval-live router-train trace-router api api-worker api-seed api-openapi api-openapi-check connectors-eval connectors-eval-live connectors-fixtures
+.PHONY: loop-safety-eval claims-eval review-pocs install test eval eval-live eval-fake voice-eval voice-eval-live voice-fixtures voice-values-eval voice-values-eval-live voice-values-fixtures proof-eval proof-eval-live proof-fixtures stock-backtest stock-eval stock-eval-live stock-eval-fake sim-stock trace-stock sim sim-live sim-voice sim-voice-v2 sim-screens trace-smoke langfuse-setup langfuse-monitor langfuse-datasets proof-experiment voice-experiment receipts-experiment judge-calibration world-check lint typecheck secrets provenance migrate check harness-eval harness-eval-live trace-harness router-eval router-eval-live context-eval context-eval-live router-train trace-router api api-worker api-seed api-openapi api-openapi-check connectors-eval connectors-eval-live connectors-fixtures checkin-eval checkin-eval-live
 
 install:            ## editable install with dev tools
 	$(PY) -m pip install -e '.[dev,otel,langfuse]'
@@ -57,6 +57,12 @@ stock-eval-fake:    ## keyword FakeModel run of the same 30 cases (plumbing)
 stock-eval-live:    ## call Muse Spark (needs META_API_KEY); resumes from the cache
 	$(PY) -m mimi.stock.eval --live
 
+checkin-eval:       ## check-in reply eval, 50 replies + 20 supplier answers, replaying recorded Muse Spark
+	META_API_KEY= $(PY) -m mimi.checkin.eval
+
+checkin-eval-live:  ## call Muse Spark (needs META_API_KEY); resumes from the cache
+	$(PY) -m mimi.checkin.eval --live
+
 sim-stock:          ## offline low-stock scene: Monday stock check, one-tap counts, restock drafts
 	META_API_KEY= $(PY) -m mimi.sim --stock --transcript
 
@@ -87,7 +93,7 @@ provenance:         ## every commit was made in the hackathon window
 migrate:            ## create Mimi's tables; set MIMI_DB_URL first
 	alembic upgrade head
 
-check: lint typecheck test review-pocs loop-safety-eval claims-eval api-openapi-check eval voice-eval voice-values-eval proof-eval stock-backtest stock-eval harness-eval router-eval context-eval credit-eval e2e binding-eval which-eval steer-eval order-eval photo-route-eval world-check secrets provenance
+check: lint typecheck test review-pocs loop-safety-eval claims-eval api-openapi-check eval voice-eval voice-values-eval proof-eval stock-backtest stock-eval checkin-eval harness-eval router-eval context-eval credit-eval e2e binding-eval which-eval steer-eval order-eval photo-route-eval world-check secrets provenance
 
 sim-voice-v2:       ## offline sim: voice notes, payment promises, voice replies
 	META_API_KEY= SPITCH_API_KEY= $(PY) -m mimi.sim --shops 3 --transcript --voice 1 --promises 1 --voice-replies

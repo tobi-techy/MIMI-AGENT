@@ -45,6 +45,8 @@ from mimi.brand.tools import (
     BrandPorts,
     register_brand_tools,
 )
+from mimi.checkin.other import SupplierReader
+from mimi.checkin.tools import CHECKIN_TOOLS, CheckinPorts, register_checkin_tools
 from mimi.credit.sam import SamError, Segmentation, Segmenter
 from mimi.credit.tools import CreditPorts, credit_helper, register_credit
 from mimi.flags import fixes_2026_10_30
@@ -176,6 +178,12 @@ def build_helpers(policy: RiskPolicy | None = None, *, go: SqlGo | None = None,
                                          distributor=dist))
     register_receipt_tools(reg, ReceiptPorts(judge=ReceiptJudge(deps.judge), distributor=dist))
     register_stock_tools(reg, StockPorts(reader=StockAnswerReader(deps.stock), distributor=dist))
+    # Weekly check-in (RAI-276) rides on the stock helper's toolset: the same
+    # Monday wake, the same counts, the same drafts. Words by Muse Spark, all
+    # else in code.
+    register_checkin_tools(reg, CheckinPorts(
+        supplier_reader=SupplierReader(deps.stock), stock_reader=StockAnswerReader(deps.stock),
+        distributor=dist))
     register_credit(reg, CreditPorts(photos=StorePhotos(go, deps.media),  # type: ignore[arg-type]
                                      segmenter=deps.segmenter, distributor=dist))
     register_order_tools(reg, OrderPorts(reader=deps.list_reader(),
@@ -196,7 +204,7 @@ def build_helpers(policy: RiskPolicy | None = None, *, go: SqlGo | None = None,
         build_toolset(reg, "order", ORDER_TOOLS + ("send_to_user", "ask_question"), policy),
         skill_version="order-intake-v0.1")
     helpers["stock"] = Helper(
-        "stock", STOCK_SKILL, build_toolset(reg, "stock", STOCK_TOOLS + BUILTIN_TOOLS, policy),
+        "stock", STOCK_SKILL, build_toolset(reg, "stock", STOCK_TOOLS + CHECKIN_TOOLS + BUILTIN_TOOLS, policy),
         skill_version="stock-v0.1")
     register_brand_tools(reg, BrandPorts(distributor=dist))
     helpers["brand"] = Helper(
