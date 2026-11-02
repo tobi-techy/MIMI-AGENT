@@ -215,6 +215,23 @@ that keeps every printed figure consistent is caught by the bank witness,
 which is why a screenshot alone only ever means "likely". Failures, fixes
 and limits: [`docs/PROOF.md`](docs/PROOF.md).
 
+### Eval sets: source and frozen hashes (RAI-261, RAI-262)
+
+Every label line in both image sets carries `"source": "synthetic"`: each
+file is drawn by code from the seed world, with no real account, name or
+face. A real file, if one is ever added, is tagged `real-with-consent`,
+redacted, and scored separately. Each label line also holds its image's
+SHA-256, so one hash of the label file pins every label and every image.
+`tests/test_eval_provenance.py` recomputes both and fails if either set
+changes without this table changing too.
+
+| Eval set | Label file | Files | Source | Set SHA-256 (of the label file) |
+|---|---|---|---|---|
+| Payment screenshots | `eval/proof/screens.jsonl` | 40 | synthetic | `566666af77baed1311cc9881e6523eb227aa4ada84ad8d45d071c9f917c1f4e1` |
+| Shelf photos | `eval/credit/shelves.jsonl` | 31 | synthetic | `f059df42437f28e6afbe2db8e38a37dae2e3f05f61731ebc64d2866f32213f25` |
+
+Check by hand: `sha256sum eval/proof/screens.jsonl eval/credit/shelves.jsonl`.
+
 ## The agent harness
 
 Every helper runs on one in-house loop (`mimi/harness/`): think, call typed

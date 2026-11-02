@@ -211,6 +211,8 @@ def main(argv: list[str] | None = None) -> int:
             "label": label, "twist": twist,
             "label_why": LABEL_WHY.get((label, twist), LABEL_WHY.get((label, ""), "")),
             "borrowed_sku": borrowed, "synthetic": True,
+            # Provenance (RAI-261): drawn by code, never a real shop photo.
+            "source": "synthetic",
         })
         print(cid, shop_id, split, label, twist, counted, "other", lines[-1]["other_pieces"])
     (OUT / "shelves.jsonl").write_text(
