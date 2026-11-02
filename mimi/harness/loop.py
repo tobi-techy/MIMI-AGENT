@@ -617,6 +617,7 @@ class Harness:
         b = self.run_budget(state, helper)
         hit = ""
         q = ""
+        reserve = 0
         if state.spend.steps >= b.max_steps:
             hit = "steps"
         elif state.spend.seconds >= b.max_seconds:
@@ -640,7 +641,9 @@ class Harness:
                        cost_kobo=state.spend.total_kobo,
                        data={"dimension": hit, "steps": state.spend.steps,
                              "seconds": round(state.spend.seconds, 3),
-                             "kobo": state.spend.total_kobo})
+                             "kobo": state.spend.total_kobo, "max_kobo": b.max_kobo,
+                             # Every figure behind the pause is in the trace (RAI-273).
+                             "reserve_kobo": reserve})
             self._owner_draft(state, q)
             self._finish(state, "stopped_budget", f"{hit} budget reached", question=q)
             return True
