@@ -68,6 +68,11 @@
             "title": "Flags",
             "type": "array"
           },
+          "handling": {
+            "default": "approve",
+            "title": "Handling",
+            "type": "string"
+          },
           "helper": {
             "title": "Helper",
             "type": "string"
@@ -1975,6 +1980,179 @@
           "at"
         ],
         "title": "Message",
+        "type": "object"
+      },
+      "PolicyChangeOut": {
+        "additionalProperties": false,
+        "properties": {
+          "action_type": {
+            "title": "Action Type",
+            "type": "string"
+          },
+          "at": {
+            "title": "At",
+            "type": "string"
+          },
+          "by": {
+            "title": "By",
+            "type": "string"
+          },
+          "from": {
+            "title": "From",
+            "type": "string"
+          },
+          "to": {
+            "title": "To",
+            "type": "string"
+          }
+        },
+        "required": [
+          "action_type",
+          "from",
+          "to",
+          "by",
+          "at"
+        ],
+        "title": "PolicyChangeOut",
+        "type": "object"
+      },
+      "PolicyIn": {
+        "additionalProperties": false,
+        "properties": {
+          "by": {
+            "default": "owner",
+            "maxLength": 100,
+            "title": "By",
+            "type": "string"
+          },
+          "rules": {
+            "items": {
+              "$ref": "#/components/schemas/PolicyRuleIn"
+            },
+            "maxItems": 50,
+            "minItems": 1,
+            "title": "Rules",
+            "type": "array"
+          }
+        },
+        "required": [
+          "rules"
+        ],
+        "title": "PolicyIn",
+        "type": "object"
+      },
+      "PolicyOut": {
+        "additionalProperties": false,
+        "properties": {
+          "changes": {
+            "items": {
+              "$ref": "#/components/schemas/PolicyChangeOut"
+            },
+            "title": "Changes",
+            "type": "array"
+          },
+          "editable": {
+            "title": "Editable",
+            "type": "boolean"
+          },
+          "rules": {
+            "items": {
+              "$ref": "#/components/schemas/PolicyRuleOut"
+            },
+            "title": "Rules",
+            "type": "array"
+          }
+        },
+        "required": [
+          "rules",
+          "editable",
+          "changes"
+        ],
+        "title": "PolicyOut",
+        "type": "object"
+      },
+      "PolicyRuleIn": {
+        "additionalProperties": false,
+        "properties": {
+          "action_type": {
+            "maxLength": 64,
+            "title": "Action Type",
+            "type": "string"
+          },
+          "behaviour": {
+            "enum": [
+              "act",
+              "act_if_preapproved",
+              "ask",
+              "hand_off"
+            ],
+            "title": "Behaviour",
+            "type": "string"
+          }
+        },
+        "required": [
+          "action_type",
+          "behaviour"
+        ],
+        "title": "PolicyRuleIn",
+        "type": "object"
+      },
+      "PolicyRuleOut": {
+        "additionalProperties": false,
+        "description": "One step in the owner's rulebook (RAI-323).",
+        "properties": {
+          "action_type": {
+            "title": "Action Type",
+            "type": "string"
+          },
+          "allowed": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Allowed",
+            "type": "array"
+          },
+          "behaviour": {
+            "title": "Behaviour",
+            "type": "string"
+          },
+          "changed_at": {
+            "title": "Changed At",
+            "type": "string"
+          },
+          "changed_by": {
+            "title": "Changed By",
+            "type": "string"
+          },
+          "default": {
+            "title": "Default",
+            "type": "string"
+          },
+          "helper": {
+            "title": "Helper",
+            "type": "string"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "locked": {
+            "title": "Locked",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "action_type",
+          "helper",
+          "label",
+          "behaviour",
+          "default",
+          "locked",
+          "allowed",
+          "changed_by",
+          "changed_at"
+        ],
+        "title": "PolicyRuleOut",
         "type": "object"
       },
       "Reply": {
@@ -4629,6 +4807,150 @@
           }
         ],
         "summary": "A reply's voice note (RAI-290)"
+      }
+    },
+    "/v1/policy": {
+      "get": {
+        "operationId": "get_policy_v1_policy_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PolicyOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Conflict"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "The owner's rulebook: what Mimi does on her own, asks, or hands off"
+      },
+      "put": {
+        "operationId": "put_policy_v1_policy_put",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PolicyIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PolicyOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Change rules (owner key only; built-in stops stay locked)"
       }
     },
     "/v1/shops": {

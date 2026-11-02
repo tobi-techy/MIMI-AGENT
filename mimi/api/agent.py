@@ -93,6 +93,7 @@ from mimi.store.context_stores import (
     SqlPrefixStore,
     append_history,
 )
+from mimi.store.policy_rules import SqlPolicyRules
 from mimi.store.queue import Claim, LeaseLost, TurnQueue, turn_id_for
 from mimi.store.util import dumps, insert_ignore, loads, now_iso
 
@@ -361,7 +362,8 @@ class Agent:
 
         self.engine = engine
         self.go = SqlGo(engine)
-        self.policy = policy or GoPolicy()
+        # The owner's rulebook (RAI-323), read fresh on every decision.
+        self.policy = policy or GoPolicy(rules=SqlPolicyRules(engine))
         # Every model the agent reaches goes through the metering seam
         # (``mimi.models.metering``): charged to the turn, the daily cap and
         # the run budget. The harness gateway meters the loop's own calls.
@@ -1005,7 +1007,7 @@ class Agent:
                        "new_cap_kobo": new_cap}
             record = {
                 "tool": "raise_daily_allowance", "intent_kind": "raise_daily_allowance",
-                "tier": self.policy.tier(tenant, "raise_daily_allowance", payload),
+                "tier": self.policy.tier(tenant, "raise_daily_allowance", payload, conn=conn),
                 "scope": "org:plan", "tenant_id": tenant, "shop_id": "",
                 "idempotency_key": business_key(tenant, "raise_daily_allowance",
                                                 {"day": day.isoformat(), "cap_kobo": cap}),
@@ -1921,7 +1923,7 @@ class Agent:
         payload = {"message": note, "shop_id": shop_id, "about": task.key}
         record = {
             "tool": "notify_owner", "intent_kind": "notify_owner",
-            "tier": self.policy.tier(tenant, "notify_owner", payload), "scope": "org:plan",
+            "tier": self.policy.tier(tenant, "notify_owner", payload, conn=conn), "scope": "org:plan",
             "tenant_id": tenant, "shop_id": shop_id,
             "idempotency_key": business_key(tenant, "notify_owner",
                                             {"shop_id": shop_id, "about": task.key,
@@ -1945,7 +1947,7 @@ class Agent:
                    "delivery_id": str(code.get("delivery_id", ""))}
         record = {
             "tool": "notify_owner", "intent_kind": "notify_owner",
-            "tier": self.policy.tier(tenant, "notify_owner", payload), "scope": "org:plan",
+            "tier": self.policy.tier(tenant, "notify_owner", payload, conn=conn), "scope": "org:plan",
             "tenant_id": tenant, "shop_id": shop_id,
             "idempotency_key": business_key(tenant, "notify_owner",
                                             {"shop_id": shop_id, "about": "two_open_asks",
@@ -2002,7 +2004,9 @@ class Agent:
                                    f"\"{words}\"")}
             record = {
                 "tool": "flag_delivery_to_owner", "intent_kind": "flag_delivery_to_owner",
-                "tier": "notify", "scope": "shop:invoices", "tenant_id": tenant,
+                "tier": self.policy.tier(tenant, "flag_delivery_to_owner", {"shop_id": shop_id},
+                                         conn=conn),
+                "scope": "shop:invoices", "tenant_id": tenant,
                 "shop_id": shop_id,
                 "idempotency_key": business_key(tenant, "flag_delivery_to_owner",
                                                 {"shop_id": shop_id, "delivery_id": dlv}),
@@ -2068,11 +2072,14 @@ class Agent:
             conn.execute(s.intents.update().where(
                 s.intents.c.tenant_id == tenant_id,
                 s.intents.c.idempotency_key == a.idempotency_key).values(outcome=decision))
+            # A hand-off (RAI-323) is done by the owner: approving records it,
+            # and Mimi's draft never goes out.
+            by_hand = getattr(a, "handling", "") == "hand_off"
             conn.execute(s.messages.update().where(
                 s.messages.c.tenant_id == tenant_id,
                 s.messages.c.idempotency_key == a.idempotency_key,
                 s.messages.c.status == "pending_approval")
-                .values(status="ready" if approve else "rejected"))
+                .values(status="ready" if approve and not by_hand else "rejected"))
             conn.execute(s.credit_requests.update().where(
                 s.credit_requests.c.tenant_id == tenant_id,
                 s.credit_requests.c.approval_id == approval_id).values(status=decision))
@@ -2140,4 +2147,5 @@ def approval_dict(a: Any, draft: Any | None,
         "created_at": a.created_at, "decided_at": a.decided_at, "decided_by": a.decided_by,
         "note": a.note, "supersedes": getattr(a, "supersedes", None),
         "superseded_by": getattr(a, "superseded_by", None),
+        "handling": getattr(a, "handling", "") or "approve",
     }

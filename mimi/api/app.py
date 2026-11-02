@@ -13,6 +13,9 @@ Endpoints (all under ``/v1``, all but health need ``Authorization: Bearer``):
 * ``GET /v1/approvals``; ``POST /v1/approvals/{id}/approve`` and ``/reject``
   (owner key only).
 * ``GET /v1/credit``: limits and credit requests.
+* ``GET /v1/policy``, ``PUT /v1/policy``: the owner's rulebook (RAI-323);
+  built-in stops are listed locked. Only an owner key changes it; a demo
+  session, or demo mode, gets 403.
 * ``GET /v1/health``; ``GET /`` (liveness only: no database, no auth).
 * ``GET /v1/me``: the caller's tenant, role and mode.
 * ``POST /v1/demo/sessions``, ``POST /v1/demo/reset``: demo mode only
@@ -75,6 +78,8 @@ from mimi.api.schemas import (
     MediaOut,
     MentionList,
     MeOut,
+    PolicyIn,
+    PolicyOut,
     ShopDetail,
     ShopList,
     TaskList,
@@ -88,8 +93,10 @@ from mimi.clock import wall, wall_utc
 from mimi.connectors.base import ConnectorError
 from mimi.harness.go import CrossTenant
 from mimi.harness.inbound import Inbound, Media, Payload
+from mimi.harness.policy import PolicyLocked, owner_rules_on
 from mimi.store import schema as s
 from mimi.store.db import make_engine
+from mimi.store.policy_rules import SqlPolicyRules
 from mimi.store.util import now_iso
 from mimi.tz import assume_lagos
 
@@ -437,6 +444,7 @@ def create_app(settings: Settings | None = None, agent: Agent | None = None, *,
         ``@`` is ignored); ``kinds`` is a comma list, empty for all three.
         Helper rows carry ``assign_to`` for ``POST /v1/turns``."""
         return reads.mentions(engine, key.tenant_id, q=q, kinds=kinds, limit=limit)
+
     # ------------------------------------------------------- connectors (RAI-277)
 
     @app.get("/v1/connectors", response_model=ConnectorList, responses=_ERRORS,
@@ -518,6 +526,27 @@ def create_app(settings: Settings | None = None, agent: Agent | None = None, *,
             raise HTTPException(502, str(exc)) from exc
         cx.revoke_account(engine, key.tenant_id, connection_id, now_iso(wall()))
         return {"connection_id": connection_id, "status": "revoked"}
+
+    rules = SqlPolicyRules(engine)
+
+    @app.get("/v1/policy", response_model=PolicyOut, responses=_ERRORS,
+             summary="The owner's rulebook: what Mimi does on her own, asks, or hands off")
+    def get_policy(key: Owner) -> dict[str, Any]:
+        return rules.view(key.tenant_id, editable=not (settings.demo_mode or key.session))
+
+    @app.put("/v1/policy", response_model=PolicyOut, responses=_ERRORS,
+             summary="Change rules (owner key only; built-in stops stay locked)")
+    def put_policy(body: PolicyIn, key: Owner) -> dict[str, Any]:
+        if settings.demo_mode or key.session:
+            raise HTTPException(403, "the demo's rules are read-only")
+        if not owner_rules_on():
+            raise HTTPException(409, "owner rules are switched off (MIMI_POLICY_RULES=0)")
+        try:
+            rules.update(key.tenant_id, [(r.action_type, r.behaviour) for r in body.rules],
+                         by=body.by, key_digest=key.digest)
+        except PolicyLocked as exc:
+            raise HTTPException(409, str(exc)) from None
+        return rules.view(key.tenant_id, editable=True)
 
     @app.get("/v1/health", response_model=Health)
     def health(response: Response) -> dict[str, Any]:
