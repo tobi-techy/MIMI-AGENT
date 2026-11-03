@@ -775,3 +775,100 @@ class PolicyIn(BaseModel):
     rules: list[PolicyRuleIn] = Field(min_length=1, max_length=50)
     # Who changed it, for the log (the console sends the owner's name).
     by: str = Field(default="owner", max_length=100)
+
+
+# ----------------------------------------------------------- computer tasks
+# A computer task is a goal, an approved domain and a plan code built from the
+# task's own fields. The owner approves the plan once; code runs it under the
+# guardrails. Nothing here is a model choice and nothing here moves money.
+
+_COMPUTER_KINDS = "price_check | order_list | bank_statement | gov_form | generic"
+
+
+class ComputerTaskIn(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    goal: str = Field(..., min_length=1, max_length=600,
+                      description="What the distributor wants done, in their own words.")
+    url: str = Field(..., min_length=1, max_length=2000,
+                     description="The page to start on. It must be on the approved domain.")
+    domain: str = Field(..., min_length=1, max_length=255,
+                        description="The only domain the task may use, with its subdomains.")
+    kind: Literal["price_check", "order_list", "bank_statement", "gov_form", "generic"] = Field(
+        "generic", description=f"The task kind: {_COMPUTER_KINDS}.")
+    inputs: dict[str, str] = Field(
+        default_factory=dict, max_length=20,
+        description="Values the owner typed for a form task (a gov_form fills only these, "
+                    "never a password or a code).")
+
+
+class ComputerPlanStep(_Out):
+    action: str
+    note: str = ""
+    url: str = ""
+    target: str = ""
+    field: str = ""
+    value_key: str = ""
+    direction: str = ""
+    amount: int = 0
+
+
+class ComputerTask(_Out):
+    task_id: str
+    status: Literal["proposed", "running", "awaiting_owner", "done", "stopped",
+                    "stopped_runaway", "failed"]
+    kind: str
+    goal: str
+    url: str
+    domain: str
+    stop_reason: str = ""
+    note: str = ""
+    created_at: str
+    started_at: str = ""
+    finished_at: str = ""
+    plan: list[ComputerPlanStep] = Field(default_factory=list)
+    inputs: dict[str, str] = Field(default_factory=dict)
+
+
+class ComputerStep(_Out):
+    index: int
+    action: str
+    url: str = ""
+    note: str = ""
+    screenshot: str = Field("", description="An artifact name. Its bytes are at "
+                                            "GET /v1/computer/tasks/{task_id}/artifacts/{name}")
+
+
+class ComputerArtifact(_Out):
+    name: str
+    kind: Literal["screenshot", "text", "file"]
+    mime: str = ""
+    size: int = 0
+    sha256: str = ""
+
+
+class ComputerTaskDetail(ComputerTask):
+    steps: list[ComputerStep] = Field(default_factory=list)
+    artifacts: list[ComputerArtifact] = Field(default_factory=list)
+
+
+class ComputerTaskSummary(_Out):
+    task_id: str
+    goal: str
+    domain: str
+    status: str
+    created_at: str
+    step_count: int = 0
+    stop_reason: str = ""
+
+
+class ComputerTaskList(_Out):
+    tasks: list[ComputerTaskSummary] = Field(default_factory=list)
+
+
+class ComputerProposal(_Out):
+    """The proposal the owner approves. ``plan`` is what will run, step by step."""
+
+    task_id: str
+    status: Literal["proposed"]
+    plan: list[ComputerPlanStep] = Field(default_factory=list)

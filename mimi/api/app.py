@@ -16,6 +16,12 @@ Endpoints (all under ``/v1``, all but health need ``Authorization: Bearer``):
 * ``GET /v1/policy``, ``PUT /v1/policy``: the owner's rulebook (RAI-323);
   built-in stops are listed locked. Only an owner key changes it; a demo
   session, or demo mode, gets 403.
+* ``POST /v1/computer/tasks``, ``GET /v1/computer/tasks``,
+  ``GET /v1/computer/tasks/{id}``, ``POST /v1/computer/tasks/{id}/approve``
+  and ``/stop``, and ``GET /v1/computer/tasks/{id}/artifacts/{name}``: a task
+  for the browser container. Code builds the plan, the owner approves it once,
+  and the guardrails (domain allowlist, no credentials, no purchase or
+  messaging, budgets, immediate stop) are enforced in code (``mimi.computer``).
 * ``GET /v1/health``; ``GET /`` (liveness only: no database, no auth).
 * ``GET /v1/me``: the caller's tenant, role and mode.
 * ``POST /v1/demo/sessions``, ``POST /v1/demo/reset``: demo mode only
@@ -64,6 +70,10 @@ from mimi.api.media import MAX_BYTES
 from mimi.api.schemas import (
     ActivityList,
     ApprovalList,
+    ComputerProposal,
+    ComputerTaskDetail,
+    ComputerTaskIn,
+    ComputerTaskList,
     ConnectorConnectIn,
     ConnectorConnectOut,
     ConnectorDetail,
@@ -97,6 +107,8 @@ from mimi.api.schemas import (
 )
 from mimi.api.uploads import ConsoleUploads, UploadRefused
 from mimi.clock import wall, wall_utc
+from mimi.computer.service import ComputerService, Refused
+from mimi.computer.store import ComputerStore
 from mimi.connectors.base import ConnectorError
 from mimi.harness.go import CrossTenant
 from mimi.harness.inbound import Inbound, Media, Payload
@@ -118,7 +130,8 @@ _DEMO_ERRORS: dict[int | str, dict[str, Any]] = {
 
 
 def create_app(settings: Settings | None = None, agent: Agent | None = None, *,
-               workers: int | None = None) -> FastAPI:
+               workers: int | None = None,
+               computer: ComputerService | None = None) -> FastAPI:
     settings = settings or Settings.from_env()
     settings.check()
     if agent is None:
@@ -159,6 +172,12 @@ def create_app(settings: Settings | None = None, agent: Agent | None = None, *,
             if settings.demo_mode else None)
     app.state.demo = demo
     app.state.uploads = uploads
+    # Computer tasks: code-built plans run on a browser container under code
+    # guardrails. With no container configured a task is still proposed and
+    # approving it says so plainly, rather than pretending to run.
+    if computer is None:
+        computer = ComputerService(ComputerStore(engine))
+    app.state.computer = computer
 
     def auth(creds: Annotated[HTTPAuthorizationCredentials | None, Depends(_bearer)]
              ) -> ApiKey:
@@ -641,6 +660,75 @@ def create_app(settings: Settings | None = None, agent: Agent | None = None, *,
         except PolicyLocked as exc:
             raise HTTPException(409, str(exc)) from None
         return rules.view(key.tenant_id, editable=True)
+
+    # --------------------------------------------------- computer tasks
+
+    @app.post("/v1/computer/tasks", response_model=ComputerProposal, status_code=201,
+              responses=_ERRORS, summary="Propose a task for the browser container")
+    def post_computer_task(body: ComputerTaskIn, key: Owner) -> dict[str, Any]:
+        """Build the plan in code from the goal, the url and the approved
+        domain, and return it for the owner to approve. Nothing runs yet and
+        nothing is charged. The plan is what will run: it never holds a step
+        that buys, pays, sends or changes settings, and never a credential."""
+        try:
+            return computer.propose(key.tenant_id, body.goal, body.url, body.domain,
+                                    body.kind, body.inputs)
+        except Refused as exc:
+            raise HTTPException(exc.status, exc.message) from None
+
+    @app.get("/v1/computer/tasks", response_model=ComputerTaskList, responses=_ERRORS,
+             summary="This distributor's computer tasks, newest first")
+    def get_computer_tasks(key: Owner) -> dict[str, Any]:
+        """An empty list is a valid answer: nothing is seeded."""
+        return {"tasks": computer.list(key.tenant_id)}
+
+    @app.get("/v1/computer/tasks/{task_id}", response_model=ComputerTaskDetail,
+             responses=_ERRORS,
+             summary="One task with its step log and artifacts")
+    def get_computer_task(task_id: str, key: Owner) -> dict[str, Any]:
+        view = computer.get(key.tenant_id, task_id)
+        if view is None:
+            raise HTTPException(404, "not found")
+        return view
+
+    @app.post("/v1/computer/tasks/{task_id}/approve", response_model=ComputerTaskDetail,
+              responses=_ERRORS, summary="Approve the plan once; it runs under the guardrails")
+    def post_computer_approve(task_id: str, key: Owner) -> dict[str, Any]:
+        """The owner approves the whole task once. The run continues in the
+        background; poll this task for its steps. Approving a paused task
+        (a login wall) resumes it. The guardrails and the budgets are code."""
+        try:
+            computer.approve(key.tenant_id, task_id)
+        except Refused as exc:
+            raise HTTPException(exc.status, exc.message) from None
+        view = computer.get(key.tenant_id, task_id)
+        if view is None:
+            raise HTTPException(404, "not found")
+        return view
+
+    @app.post("/v1/computer/tasks/{task_id}/stop", response_model=ComputerTaskDetail,
+              responses=_ERRORS, summary="Stop the task now, and record why")
+    def post_computer_stop(task_id: str, key: Owner) -> dict[str, Any]:
+        try:
+            return computer.stop(key.tenant_id, task_id)
+        except Refused as exc:
+            raise HTTPException(exc.status, exc.message) from None
+
+    @app.get("/v1/computer/tasks/{task_id}/artifacts/{name}",
+             summary="The bytes of one step screenshot or extracted text",
+             responses={**_ERRORS, 200: {"content": {"image/png": {}},
+                                         "description": "The artifact"}},
+             response_class=Response)
+    def get_computer_artifact(task_id: str, name: str, key: Owner) -> Response:
+        row = computer.artifact(key.tenant_id, task_id, name)
+        if row is None:
+            raise HTTPException(404, "not found")
+        try:
+            data = Path(row["path"]).read_bytes()
+        except OSError:
+            raise HTTPException(404, "not found") from None
+        return Response(content=data, media_type=row["mime"] or "application/octet-stream",
+                        headers={"Cache-Control": "no-store"})
 
     @app.get("/v1/health", response_model=Health)
     def health(response: Response) -> dict[str, Any]:
