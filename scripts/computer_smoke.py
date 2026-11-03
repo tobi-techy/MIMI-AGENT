@@ -79,7 +79,11 @@ def main() -> int:
             or "https://api.browserbase.com")
 
     workdir = args.dir or tempfile.mkdtemp(prefix="mimi-computer-smoke-")
-    db = make_engine("sqlite://")
+    Path(workdir).mkdir(parents=True, exist_ok=True)
+    # A file-backed store, like a deployment: the run happens on a background
+    # thread while this script polls, and an in-memory SQLite hands both threads
+    # the same connection, which is not what a real deployment uses.
+    db = make_engine(f"sqlite:///{workdir}/smoke.sqlite3")
     ensure_schema(db)
     store = ComputerStore(db, artifact_dir=workdir)
     service = ComputerService(store, CloudBrowserEngine(CloudConfig(key=key, base=base)))
