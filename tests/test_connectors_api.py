@@ -131,7 +131,7 @@ def test_initiate_puts_the_state_on_the_callback_url() -> None:
             return type("R", (), {"redirect_url": "https://backend.composio.dev/s/abc"})()
 
     t = ComposioTransport(ConnectorSettings(
-        mode="composio", composio_api_key="ck", auth_zoho_books="ac_1",
+        mode="composio", composio_api_key="ck", auth_zoho_books="ac_1",  # pragma: allowlist secret
         callback_url="https://demo.userail.money/settings/connectors"))
     t._client = type("C", (), {"connected_accounts": _Accounts()})()
     out = t.initiate("ZOHO_BOOKS", user_id=TENANT)
