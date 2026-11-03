@@ -10,6 +10,10 @@
   approvals. ``status`` is fixed to ``draft`` and ``places_order`` to False:
   nothing is ordered until the distributor approves, and the distributor
   decides any credit.
+* ``SlowStockSignal`` and ``SlowStockDraftForApproval`` (sales tracking,
+  ``slow.py`` and ``swap.py``): stock piling up or near expiry, and the move,
+  promo or early pickup draft. ``moves_stock`` and ``moves_money`` are fixed
+  to False: the distributor approves and the rep acts.
 """
 
 from __future__ import annotations
@@ -93,6 +97,68 @@ class RestockDraftForApproval:
     kind: Literal["restock_draft_for_approval"] = field(default="restock_draft_for_approval")
 
 
+SlowKindName = Literal["near_expiry", "overstock"]
+SwapAction = Literal["move", "promo", "pickup"]
+
+
+@dataclass(frozen=True)
+class SlowStockSignal:
+    """What the distributor sees about slow stock or stock near expiry: the
+    kind, bands and a confidence, never the shop's counts or exact units."""
+
+    scope: ShopScope
+    sku: str
+    item: str
+    slow_kind: SlowKindName
+    expiry_band: str  # under_14_days | 14_to_30_days | over_30_days | unknown
+    cover_band: str  # under_2_weeks | 2_to_4_weeks | 4_to_8_weeks | over_8_weeks | no_sales
+    confidence: Confidence
+    as_of: str  # ISO date, Africa/Lagos
+    policy_version: str
+    kind: Literal["slow_stock_signal"] = field(default="slow_stock_signal")
+
+
+@dataclass(frozen=True)
+class SwapOption:
+    """One way to deal with slow stock: move it to a shop that sells it
+    faster, push it where it is, or collect it while it can still be resold.
+    Quantities in whole units, values in integer kobo, all from code."""
+
+    action: SwapAction
+    quantity: int
+    unit_price_kobo: int
+    value_kobo: int
+    to_shop_id: str = ""
+    to_shop_name: str = ""
+    why: str = ""
+
+
+@dataclass(frozen=True)
+class SlowStockDraftForApproval:
+    """A swap, promo or pickup draft in the distributor's approvals. Nothing
+    moves until the distributor approves; Mimi never moves stock or money, the
+    rep does the move or pickup and the distributor settles any credit."""
+
+    scope: ShopScope
+    draft_id: str
+    sku: str
+    item: str
+    unit: str
+    slow_kind: SlowKindName
+    options: tuple[SwapOption, ...]
+    recommended: SwapAction
+    expires_on: str  # ISO date of the earliest batch at risk, or ""
+    confidence: Confidence
+    policy_version: str
+    status: Literal["draft"] = "draft"
+    needs: Literal["distributor_approval"] = "distributor_approval"
+    moves_stock: Literal[False] = False
+    moves_money: Literal[False] = False
+    kind: Literal["slow_stock_draft_for_approval"] = field(
+        default="slow_stock_draft_for_approval")
+
+
 STOCK_INTENTS: tuple[type, ...] = intent_types(
-    LowStockSignal, SendStockMessage, RecordStockCount, RestockDraftForApproval
+    LowStockSignal, SendStockMessage, RecordStockCount, RestockDraftForApproval,
+    SlowStockSignal, SlowStockDraftForApproval,
 )

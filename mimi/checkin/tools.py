@@ -30,6 +30,7 @@ from typing import Any, Literal, cast
 from pydantic import BaseModel, ConfigDict, Field
 
 from mimi.checkin import copy
+from mimi.checkin.durable import SqlCheckinStore, SqlSkipLedger, SqlStreaks
 from mimi.checkin.other import decide as supplier_decide
 from mimi.checkin.replies import read_reply
 from mimi.checkin.state import CheckinStore, SkipLedger, Streaks
@@ -62,6 +63,9 @@ class CheckinPorts:
     stores: dict[str, CheckinStore] = field(default_factory=dict)
     skips: dict[str, SkipLedger] = field(default_factory=dict)
     streaks: dict[str, Streaks] = field(default_factory=dict)
+    # With the SQL store's engine, state lives in checkin_weeks and
+    # checkin_shops (``durable.py``, alembic 0015); without it, in memory.
+    engine: Any | None = None
 
 
 class SendIn(_In):
@@ -126,15 +130,21 @@ def _week(ctx: ToolContext) -> str:
     )
 
 
-def _store(ports: CheckinPorts, tenant: str) -> CheckinStore:
+def _store(ports: CheckinPorts, tenant: str) -> CheckinStore | SqlCheckinStore:
+    if ports.engine is not None:
+        return SqlCheckinStore(ports.engine, tenant)
     return ports.stores.setdefault(tenant, CheckinStore())
 
 
-def _skips(ports: CheckinPorts, tenant: str) -> SkipLedger:
+def _skips(ports: CheckinPorts, tenant: str) -> SkipLedger | SqlSkipLedger:
+    if ports.engine is not None:
+        return SqlSkipLedger(ports.engine, tenant)
     return ports.skips.setdefault(tenant, SkipLedger())
 
 
-def _streaks(ports: CheckinPorts, tenant: str) -> Streaks:
+def _streaks(ports: CheckinPorts, tenant: str) -> Streaks | SqlStreaks:
+    if ports.engine is not None:
+        return SqlStreaks(ports.engine, tenant)
     return ports.streaks.setdefault(tenant, Streaks())
 
 
@@ -174,7 +184,7 @@ def register_checkin_tools(registry: ToolRegistry, ports: CheckinPorts) -> None:
                 low_stock_sku="",
                 next_step="Check-ins are off; end the turn with no message.",
             )
-        if args.event_id in store.seen_events:
+        if store.seen(args.event_id):
             return SendOut(
                 shop_id=args.shop_id,
                 week=week,
@@ -210,24 +220,28 @@ def register_checkin_tools(registry: ToolRegistry, ports: CheckinPorts) -> None:
                 low_stock_sku="",
                 next_step="No check-in this week; end the turn with no message.",
             )
-        key = (args.shop_id, week)
-        if key in store.records:
-            return SendOut(
-                shop_id=args.shop_id,
-                week=week,
-                sent=False,
-                duplicate=True,
-                text="",
-                buttons=[],
-                low_stock_sku="",
-                next_step="Already asked this week: end the turn with no message.",
-            )
+        already = SendOut(
+            shop_id=args.shop_id,
+            week=week,
+            sent=False,
+            duplicate=True,
+            text="",
+            buttons=[],
+            low_stock_sku="",
+            next_step="Already asked this week: end the turn with no message.",
+        )
+        if store.has(args.shop_id, week):
+            return already
         try:
             shop = ctx.book.shop(ctx.tenant_id, args.shop_id)
             name = str(shop.get("name", "")).split()[0] if shop.get("name") else ""
         except (KeyError, AttributeError):
             name = ""
-        store.start(args.shop_id, week, args.event_id)
+        # The start is the claim: a second worker that got here too gets the
+        # existing row back (not new) and sends nothing.
+        _rec, fresh = store.start(args.shop_id, week, args.event_id)
+        if not fresh:
+            return already
         text = copy.checkin_text(name)
         return SendOut(
             shop_id=args.shop_id,

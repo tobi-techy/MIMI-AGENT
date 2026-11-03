@@ -20,6 +20,7 @@ from mimi.provenance import delivery_stamp, payment_stamp
 from mimi.store import schema as s
 from mimi.store.util import dumps, now_iso
 from mimi.world.catalogue import COLLECTION_ACCOUNT
+from mimi.world.expiry import LineExpiry, demo_counts, expiry_map
 from mimi.world.model import World
 
 # The fictional owner's number (the same one the router eval uses).
@@ -35,8 +36,10 @@ def delete_tenant(conn: sa.Connection, tid: str) -> None:
     for t in (*s.BOOK_TABLES, s.threads, s.inbound_messages, s.messages,
               s.thread_events, s.intents, s.approvals, s.credit_requests, s.spend,
               s.asked_once, s.kill_switches, s.history, s.prefixes, s.artifacts,
-              s.thread_inbox):
+              s.thread_inbox, s.checkin_weeks, s.checkin_shops):
         conn.execute(t.delete().where(t.c.tenant_id == tid))
+    conn.execute(s.stock_counts.delete().where(s.stock_counts.c.tenant_id == tid,
+                                               s.stock_counts.c.source == "checkin"))
     ids = sa.select(s.turns.c.turn_id).where(s.turns.c.tenant_id == tid)
     conn.execute(s.turn_attempts.delete().where(s.turn_attempts.c.turn_id.in_(ids)))
     conn.execute(s.turns.delete().where(s.turns.c.tenant_id == tid))
@@ -45,8 +48,15 @@ def delete_tenant(conn: sa.Connection, tid: str) -> None:
 
 def seed_world(engine: Engine, world: World, *, tenant_id: str | None = None,
                name: str | None = None, owner_phones: tuple[str, ...] = (DEMO_OWNER_PHONE,),
-               reset: bool = False, daily_cap_kobo: int = 50_000) -> dict[str, int]:
-    """Write the world under ``tenant_id`` (default: the world's own). Returns row counts."""
+               reset: bool = False, daily_cap_kobo: int = 50_000,
+               stock_demo: bool = False) -> dict[str, int]:
+    """Write the world under ``tenant_id`` (default: the world's own). Returns row counts.
+
+    Every delivery line carries its batch and expiry (``mimi.world.expiry``).
+    ``stock_demo`` also writes the shops' check-in counts for the demo's
+    seeded slow lines (``demo_counts``), so the slow-stock scene has counts to
+    stand on; the CLI and demo sessions turn it on, the evals leave it off."""
+    expiries = expiry_map(world)
     tid = tenant_id or world.tenant_id
     counts: dict[str, int] = {}
     with engine.begin() as conn:
@@ -89,7 +99,8 @@ def seed_world(engine: Engine, world: World, *, tenant_id: str | None = None,
                 lines: list[dict[str, Any]] = [{"tenant_id": tid, "delivery_id": d.delivery_id, "line_no": i,
                           "sku": ln.sku, "name": ln.name, "unit": ln.unit,
                           "quantity": ln.quantity, "unit_price_kobo": ln.unit_price_kobo,
-                          "line_total_kobo": ln.quantity * ln.unit_price_kobo}
+                          "line_total_kobo": ln.quantity * ln.unit_price_kobo,
+                          **_expiry_cols(world, expiries.get((d.delivery_id, ln.sku)))}
                          for i, ln in enumerate(d.lines)]
                 total = sum(ln.quantity * ln.unit_price_kobo for ln in d.lines)
                 if total != d.total_kobo:
@@ -135,9 +146,17 @@ def seed_world(engine: Engine, world: World, *, tenant_id: str | None = None,
             "tenant_id": tid, "dispute_id": f"dsp-{i:04d}", "shop_id": d.shop_id,
             "delivery_id": d.delivery_id, "day": d.day, "sku": d.sku, "missing": d.missing,
             "text": d.text, "status": d.status} for i, d in enumerate(world.disputes)])
+        if stock_demo:
+            put(s.stock_counts, [{"tenant_id": tid, **row} for row in demo_counts(world)])
         ts = wall()
         put(s.threads, [{
             "tenant_id": tid, "thread_id": f"{tid}:owner", "kind": "owner", "shop_id": "",
             "state": "{}", "summary": "", "claim_seq": 0, "last_at": now_iso(ts),
             "last_ts": ts, "created_at": now_iso(ts)}])
     return counts
+
+
+def _expiry_cols(world: World, e: LineExpiry | None) -> dict[str, Any]:
+    if e is None:
+        return {"expires_on": None, "batch": None}
+    return {"expires_on": world.date_of(e.expires_day).isoformat(), "batch": e.batch}

@@ -341,6 +341,117 @@ Shop names are filled per shop; figures always come from code. No money
 moves, no order is placed, nothing is sent to the van until the distributor
 approves.
 
+## Slow stock and near expiry (sales tracking, 3 Nov 2026)
+
+Why: distributors told us returns logistics cost them most. Goods are picked
+back up when they are expiring or not selling, so the distributor pays twice
+(deliver, then collect); what is still good is resold, the rest is thrown
+away. Orders were the solved part; the pain is after delivery. Low stock
+(above) only watches a shelf running out. This watches the other way: stock
+piling up or sitting until it expires. All of it is code: no model call.
+
+**Expiry on delivery lines** (`mimi/world/expiry.py`, alembic `0015`).
+Every delivered line carries a batch code and an expiry day
+(`delivery_lines.expires_on`, `batch`; `StockIn.expires_day`, `batch`). A real
+distributor has these on the delivery note; the synthetic world gets them as
+a deterministic overlay (shelf life per SKU times 35% to 90% left, about 5%
+short-dated batches), so the committed world fixture and every recorded eval
+are unchanged. For the demo, `seeded_short_dated` gives the 8 slowest lines
+(one per shop, from the estimator) a batch expiring 9 to 20 days (or 26 to 40,
+so an early pickup is still possible) after the live day, and
+`seed_world(stock_demo=True)` (the seed CLI and demo sessions, never the
+evals) adds each of those shops' check-in count two days before.
+
+**The alert** (`mimi/stock/slow.py`). The units left are the newest
+deliveries (shops sell oldest first). Walking those batches oldest first at
+the sell rate, a unit that will not sell before 3 days ahead of its expiry
+(`SAFETY_DAYS`) is at risk: **near expiry** when at least one is and the
+batch expires within 60 days. **Overstock** when days of cover are over 2.5
+times the shop's normal cover (van cadence plus a day) and at least 14 days
+more. The reorder rhythm says what a shop *used* to sell; a shop that stopped
+selling a line simply stops reordering, so a fresh count after the last
+delivery can lower the rate (`count_implied_rate`: blended 50/50 like the
+estimator's count rate, or taken whole when the shop also let a usual reorder
+pass), never raise it. Confidence is never above the estimate's, at most
+medium without a count from the last 14 days, and low on a one-delivery rate.
+**Gate**: only medium or high confidence becomes a status, a signal or a
+draft (`selling.alerts`); a low one is a `watch` hint ("a count from the shop
+would tell"). `SlowStockSignal` carries bands (expiry, cover) and a
+confidence, never a count. Caps as low stock: one per item per ISO week, one
+per shop per week, near expiry and most value first.
+
+**The draft** (`mimi/stock/swap.py`, `SlowStockDraftForApproval`). Up to three
+options, figures in code: **move** to a nearby shop (same area, else the same
+rep's round) that stocks the line, sells it at least 1.5 times faster and can
+sell the extra before it expires; **pickup** while it can still be resold
+(21 or more days before it must leave a shelf; not offered after); **promo**
+at the shop (the distributor decides any discount). Values are units times
+the catalogue price on the day, integer kobo. `verify` checks quantities
+(whole, at least 1, at most what is left), prices, values, that the receiving
+shop is nearby, that a pickup is still resellable, and that nothing moves
+stock or money. The approval key is fixed per shop, item and week
+(idempotent). On the API (`mimi/api/sales.py`) it is a `slow_stock`
+approval; approving carries out the chosen option (`option`, default the
+recommended one): the shop gets one plain message ("Coral Lane Trading will
+collect 2 packs of Royal Malt 33cl can early, while it is still good to sell.
+They will confirm the day with you."), the owner thread one line, and the
+approval `result` says what happened; undo tells the shop the plan is off.
+Mimi never moves stock or money: the rep does the move or pickup, the
+distributor settles any credit. A rejected draft tells the shop nothing.
+
+**Sell-through** (`mimi/stock/selling.py`, `GET /v1/stock/sell-through`).
+Per shop and product: sold over the period from two shop counts when there
+are two (count + delivered - later count, over the days between), else the
+estimator's rate times the period, with its proof level from
+`mimi.provenance` (`sell_through`: a POS feed is verified; a shop count or the
+estimate is estimated, and the word says which); days of cover, days to
+expiry, status `near_expiry | slow | low | ok`.
+
+**Rewards for sharing counts** (`mimi/credit/review.py`). A shop that answered
+3 or more of the last 8 weekly check-ins gets the reason "Shares stock counts
+regularly: answered N of the last 8 weekly check-ins (supporting evidence
+only)." It changes no outcome, flag or confidence: bank-verified payments
+still decide.
+
+**Durable check-in** (`mimi/checkin/durable.py`, alembic `0015`). Check-in
+records, skips, streaks and the Connect offer live in `checkin_weeks` and
+`checkin_shops` whenever the helper has the store (the API always does), so
+a restart or a second worker never sends a week's question twice (the insert
+is the claim). `MIMI_CHECKIN` stays off by default.
+
+### Eval (`python -m mimi.stock.slow_eval`, no model)
+
+A shelf-truth world for this eval on the 40 Coral Lane shops: day-by-day
+demand by shop size with drift, day factors and noise; reorders at each van
+visit from the shop's own sense of sales; a **slump** on 30% of lines (demand
+falls to 10% to 50% from a day between 28 and 50); a **push** on 10% (one van
+drops 2 to 3 times what was asked); every batch with an expiry (15%
+short-dated); a unit still on the shelf 3 days before its batch expires is
+lost. Mimi sees the deliveries with expiry and, like the check-in, a count the
+day before on half the lines (40% typed, the rest a tap) and one a week
+earlier on 30%. Truth on day 56: units on the shelf that day lost to expiry
+in the next 60 days, or more than 2.5 times the line's true normal cover.
+Prediction: the gated alert. Rules were written before the eval and adjusted
+on the dev seed only (the count-implied rate, after reading dev misses; two
+truth-bookkeeping bugs in the eval itself were fixed). The held-out seed's
+row was printed alongside during those runs and not used to choose anything.
+
+| Seed | Lines | Positives | Alerts | Precision | Recall | Recall with a count | Recall without | Ungated P / R |
+|---|---|---|---|---|---|---|---|---|
+| dev (2610) | 202 | 35 | 12 | 67% | 23% | 30% | 0% | 69% / 26% |
+| held_out (7) | 202 | 40 | 8 | 88% | 18% | 26% | 0% | 89% / 20% |
+| extra (11) | 202 | 27 | 5 | 60% | 11% | 11% | 11% | 60% / 11% |
+| extra (23) | 202 | 29 | 17 | 53% | 31% | 47% | 0% | 53% / 31% |
+| extra (31) | 202 | 44 | 12 | 67% | 18% | 27% | 0% | 67% / 18% |
+
+Read it plainly: when Mimi alerts it is usually right (precision 67% dev, 88%
+held-out), but it catches only about one slow line in five (recall 23% dev,
+18% held-out), and almost none without a count. A line that stopped selling
+looks, from deliveries alone, like a line that sold out: the shop just does
+not reorder. So counts are what make this work, which is why sharing counts
+now earns a reason in credit review and why the check-in should be on. The
+report is `eval/stock/slow.report.json`; a test fails if a rerun differs.
+
 ## Limits
 
 * Synthetic history only. The reorder model is our assumption about how
@@ -350,3 +461,6 @@ approves.
 * The weekly check-in (RAI-276) stores other-supplier lines as Mimi-only
   stock-in; the estimator reads them once the RAI-294 submit lands.
 * No SAM 3.1 shelf count yet; no learned forecasting (out of scope).
+* Slow stock: expiry in the demo world is an overlay, not real delivery notes;
+  recall without a count is near zero (above). No POS or BeatRoute connector
+  yet, which would give sell-through at `verified`.
