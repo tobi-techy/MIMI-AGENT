@@ -394,6 +394,13 @@ def on_approved(engine: Engine, tenant: str, approval_id: str, option: str) -> N
         p["result"] = {"option": option, "shop_told": True, "undo_available": True,
                        "decided_at": now_iso(now)}
         _set(conn, tenant, approval_id, p)
+    if option == "pickup":
+        # A pickup opens a returns draft (the ledger), so the collected goods
+        # have somewhere to land. Mimi moves nothing; the rep collects.
+        from mimi.api import returns as returns_ledger
+
+        with engine.begin() as conn:
+            returns_ledger.draft_from_pickup(conn, tenant, approval_id, now)
 
 
 def undo(engine: Engine, tenant: str, approval_id: str) -> None:

@@ -570,6 +570,48 @@
         "title": "ChipIntent",
         "type": "object"
       },
+      "CollectIn": {
+        "additionalProperties": false,
+        "properties": {
+          "by": {
+            "default": "rep",
+            "maxLength": 100,
+            "title": "By",
+            "type": "string"
+          },
+          "lines": {
+            "description": "Omit to take what was drafted",
+            "items": {
+              "$ref": "#/components/schemas/CollectLine"
+            },
+            "title": "Lines",
+            "type": "array"
+          }
+        },
+        "title": "CollectIn",
+        "type": "object"
+      },
+      "CollectLine": {
+        "additionalProperties": false,
+        "properties": {
+          "line_no": {
+            "minimum": 1.0,
+            "title": "Line No",
+            "type": "integer"
+          },
+          "quantity": {
+            "minimum": 0.0,
+            "title": "Quantity",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "line_no",
+          "quantity"
+        ],
+        "title": "CollectLine",
+        "type": "object"
+      },
       "ComputerArtifact": {
         "additionalProperties": false,
         "properties": {
@@ -2127,6 +2169,198 @@
         "title": "EventIn",
         "type": "object"
       },
+      "ExposureBucket": {
+        "additionalProperties": false,
+        "properties": {
+          "from_days": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "From Days"
+          },
+          "key": {
+            "title": "Key",
+            "type": "string"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "to_days": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "To Days"
+          },
+          "weight_pct": {
+            "title": "Weight Pct",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "key",
+          "label",
+          "from_days",
+          "to_days",
+          "weight_pct"
+        ],
+        "title": "ExposureBucket",
+        "type": "object"
+      },
+      "ExposureOut": {
+        "additionalProperties": false,
+        "properties": {
+          "as_of": {
+            "title": "As Of",
+            "type": "string"
+          },
+          "buckets": {
+            "items": {
+              "$ref": "#/components/schemas/ExposureBucket"
+            },
+            "title": "Buckets",
+            "type": "array"
+          },
+          "note": {
+            "description": "The weights, stated plainly",
+            "title": "Note",
+            "type": "string"
+          },
+          "policy_version": {
+            "title": "Policy Version",
+            "type": "string"
+          },
+          "shops": {
+            "items": {
+              "$ref": "#/components/schemas/ExposureRow"
+            },
+            "title": "Shops",
+            "type": "array"
+          },
+          "total": {
+            "$ref": "#/components/schemas/ExposureRow",
+            "description": "Every shop summed; confidence is the weakest shop's with exposure"
+          }
+        },
+        "required": [
+          "as_of",
+          "policy_version",
+          "buckets",
+          "note",
+          "shops",
+          "total"
+        ],
+        "title": "ExposureOut",
+        "type": "object"
+      },
+      "ExposureRow": {
+        "additionalProperties": false,
+        "properties": {
+          "buckets": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "description": "Outstanding per ageing band, in kobo",
+            "title": "Buckets",
+            "type": "object"
+          },
+          "confidence": {
+            "description": "From the count of bank-verified payments in the last 8 weeks: 8 or more high, 4 to 7 medium, fewer than 4 low",
+            "enum": [
+              "low",
+              "medium",
+              "high"
+            ],
+            "title": "Confidence",
+            "type": "string"
+          },
+          "exposure_kobo": {
+            "description": "Risk-weighted: outstanding scaled by each band's weight. An assumption, not money owed",
+            "title": "Exposure Kobo",
+            "type": "integer"
+          },
+          "exposure_naira": {
+            "title": "Exposure Naira",
+            "type": "string"
+          },
+          "note": {
+            "title": "Note",
+            "type": "string"
+          },
+          "oldest_days_overdue": {
+            "title": "Oldest Days Overdue",
+            "type": "integer"
+          },
+          "open_invoices": {
+            "title": "Open Invoices",
+            "type": "integer"
+          },
+          "outstanding_kobo": {
+            "description": "What the shop owes; the money figure",
+            "title": "Outstanding Kobo",
+            "type": "integer"
+          },
+          "outstanding_naira": {
+            "title": "Outstanding Naira",
+            "type": "string"
+          },
+          "overdue_kobo": {
+            "title": "Overdue Kobo",
+            "type": "integer"
+          },
+          "overdue_naira": {
+            "title": "Overdue Naira",
+            "type": "string"
+          },
+          "shop_id": {
+            "title": "Shop Id",
+            "type": "string"
+          },
+          "shop_name": {
+            "title": "Shop Name",
+            "type": "string"
+          },
+          "shown_not_counted_kobo": {
+            "description": "Reported payments, not in the bank feed",
+            "title": "Shown Not Counted Kobo",
+            "type": "integer"
+          },
+          "verified_paid_kobo": {
+            "description": "Bank-verified payments only",
+            "title": "Verified Paid Kobo",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "shop_id",
+          "shop_name",
+          "outstanding_kobo",
+          "outstanding_naira",
+          "overdue_kobo",
+          "overdue_naira",
+          "oldest_days_overdue",
+          "buckets",
+          "exposure_kobo",
+          "exposure_naira",
+          "verified_paid_kobo",
+          "shown_not_counted_kobo",
+          "open_invoices",
+          "confidence",
+          "note"
+        ],
+        "title": "ExposureRow",
+        "type": "object"
+      },
       "HTTPValidationError": {
         "properties": {
           "detail": {
@@ -2388,6 +2622,71 @@
           "version"
         ],
         "title": "Health",
+        "type": "object"
+      },
+      "InspectIn": {
+        "additionalProperties": false,
+        "properties": {
+          "by": {
+            "default": "owner",
+            "maxLength": 100,
+            "title": "By",
+            "type": "string"
+          },
+          "lines": {
+            "description": "Every line must be named",
+            "items": {
+              "$ref": "#/components/schemas/InspectLine"
+            },
+            "title": "Lines",
+            "type": "array"
+          }
+        },
+        "title": "InspectIn",
+        "type": "object"
+      },
+      "InspectLine": {
+        "additionalProperties": false,
+        "properties": {
+          "condition": {
+            "default": "",
+            "enum": [
+              "",
+              "resellable",
+              "damaged",
+              "expired"
+            ],
+            "title": "Condition",
+            "type": "string"
+          },
+          "disposition": {
+            "default": "",
+            "enum": [
+              "",
+              "resell",
+              "write_off",
+              "return_to_supplier"
+            ],
+            "title": "Disposition",
+            "type": "string"
+          },
+          "line_no": {
+            "minimum": 1.0,
+            "title": "Line No",
+            "type": "integer"
+          },
+          "quantity_returned": {
+            "description": "What came back; never above what was collected",
+            "minimum": 0.0,
+            "title": "Quantity Returned",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "line_no",
+          "quantity_returned"
+        ],
+        "title": "InspectLine",
         "type": "object"
       },
       "LimitChange": {
@@ -3046,6 +3345,526 @@
           "at"
         ],
         "title": "Reply",
+        "type": "object"
+      },
+      "ReturnDecisionIn": {
+        "additionalProperties": false,
+        "properties": {
+          "by": {
+            "default": "owner",
+            "maxLength": 100,
+            "title": "By",
+            "type": "string"
+          },
+          "note": {
+            "default": "",
+            "maxLength": 2000,
+            "title": "Note",
+            "type": "string"
+          }
+        },
+        "title": "ReturnDecisionIn",
+        "type": "object"
+      },
+      "ReturnLineOut": {
+        "additionalProperties": false,
+        "description": "One line of a return. The console maps: product=item, quantity=\nquantity_drafted, unit=unit, collected=quantity_collected, came back=\nquantity_returned, disposition=disposition.",
+        "properties": {
+          "batch": {
+            "default": "",
+            "title": "Batch",
+            "type": "string"
+          },
+          "condition": {
+            "default": "",
+            "enum": [
+              "",
+              "resellable",
+              "damaged",
+              "expired"
+            ],
+            "title": "Condition",
+            "type": "string"
+          },
+          "disposition": {
+            "default": "",
+            "enum": [
+              "",
+              "resell",
+              "write_off",
+              "return_to_supplier"
+            ],
+            "title": "Disposition",
+            "type": "string"
+          },
+          "expires_on": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "From the distributor's own invoice line when the note carried one",
+            "title": "Expires On"
+          },
+          "expiry_source": {
+            "default": "estimated",
+            "description": "invoice: the delivery note carried it. estimated: it did not, so nothing is claimed off a shop count",
+            "enum": [
+              "invoice",
+              "estimated"
+            ],
+            "title": "Expiry Source",
+            "type": "string"
+          },
+          "item": {
+            "title": "Item",
+            "type": "string"
+          },
+          "line_no": {
+            "title": "Line No",
+            "type": "integer"
+          },
+          "quantity_collected": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Quantity Collected"
+          },
+          "quantity_drafted": {
+            "title": "Quantity Drafted",
+            "type": "integer"
+          },
+          "quantity_returned": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Quantity Returned"
+          },
+          "reason": {
+            "title": "Reason",
+            "type": "string"
+          },
+          "sku": {
+            "title": "Sku",
+            "type": "string"
+          },
+          "unit": {
+            "title": "Unit",
+            "type": "string"
+          },
+          "unit_price_kobo": {
+            "title": "Unit Price Kobo",
+            "type": "integer"
+          },
+          "value_drafted_kobo": {
+            "title": "Value Drafted Kobo",
+            "type": "integer"
+          },
+          "value_returned_kobo": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value Returned Kobo"
+          }
+        },
+        "required": [
+          "line_no",
+          "sku",
+          "item",
+          "unit",
+          "reason",
+          "quantity_drafted",
+          "unit_price_kobo",
+          "value_drafted_kobo"
+        ],
+        "title": "ReturnLineOut",
+        "type": "object"
+      },
+      "ReturnList": {
+        "additionalProperties": false,
+        "properties": {
+          "returns": {
+            "items": {
+              "$ref": "#/components/schemas/ReturnOut"
+            },
+            "title": "Returns",
+            "type": "array"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "returns",
+          "total"
+        ],
+        "title": "ReturnList",
+        "type": "object"
+      },
+      "ReturnOpenIn": {
+        "additionalProperties": false,
+        "properties": {
+          "approval_id": {
+            "default": "",
+            "description": "An approved slow-stock pickup option; opens the return from it",
+            "maxLength": 64,
+            "title": "Approval Id",
+            "type": "string"
+          },
+          "lines": {
+            "items": {
+              "$ref": "#/components/schemas/ReturnOpenLine"
+            },
+            "title": "Lines",
+            "type": "array"
+          },
+          "reason": {
+            "default": "",
+            "maxLength": 500,
+            "title": "Reason",
+            "type": "string"
+          },
+          "shop_id": {
+            "default": "",
+            "maxLength": 64,
+            "title": "Shop Id",
+            "type": "string"
+          }
+        },
+        "title": "ReturnOpenIn",
+        "type": "object"
+      },
+      "ReturnOpenLine": {
+        "additionalProperties": false,
+        "properties": {
+          "quantity": {
+            "maximum": 1000000.0,
+            "minimum": 1.0,
+            "title": "Quantity",
+            "type": "integer"
+          },
+          "reason": {
+            "default": "",
+            "maxLength": 300,
+            "title": "Reason",
+            "type": "string"
+          },
+          "sku": {
+            "maxLength": 64,
+            "title": "Sku",
+            "type": "string"
+          }
+        },
+        "required": [
+          "sku",
+          "quantity"
+        ],
+        "title": "ReturnOpenLine",
+        "type": "object"
+      },
+      "ReturnOut": {
+        "additionalProperties": false,
+        "properties": {
+          "approval_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The approved pickup it opened from",
+            "title": "Approval Id"
+          },
+          "created_at": {
+            "title": "Created At",
+            "type": "string"
+          },
+          "credit_applied_kobo": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Off the shop's open invoices",
+            "title": "Credit Applied Kobo"
+          },
+          "credit_approval_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Credit Approval Id"
+          },
+          "credit_kobo": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Credit Kobo"
+          },
+          "credit_on_account_kobo": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Held on the shop's account because it owed nothing",
+            "title": "Credit On Account Kobo"
+          },
+          "lines": {
+            "items": {
+              "$ref": "#/components/schemas/ReturnLineOut"
+            },
+            "title": "Lines",
+            "type": "array"
+          },
+          "pickup_cost_kobo": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The owner's configured pickup cost, or null when not set",
+            "title": "Pickup Cost Kobo"
+          },
+          "reason": {
+            "title": "Reason",
+            "type": "string"
+          },
+          "recovered_kobo": {
+            "description": "Value off the lines that sell again or go back to the supplier; a write-off recovers 0",
+            "title": "Recovered Kobo",
+            "type": "integer"
+          },
+          "return_id": {
+            "title": "Return Id",
+            "type": "string"
+          },
+          "saving_basis": {
+            "default": "",
+            "title": "Saving Basis",
+            "type": "string"
+          },
+          "saving_kobo": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "recovered less the pickup cost, or null when no pickup cost is set",
+            "title": "Saving Kobo"
+          },
+          "shop_id": {
+            "title": "Shop Id",
+            "type": "string"
+          },
+          "shop_name": {
+            "title": "Shop Name",
+            "type": "string"
+          },
+          "source": {
+            "enum": [
+              "slow_stock",
+              "manual"
+            ],
+            "title": "Source",
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "drafted",
+              "approved",
+              "collected",
+              "inspected",
+              "settled",
+              "cancelled"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "transitions": {
+            "items": {
+              "$ref": "#/components/schemas/ReturnTransition"
+            },
+            "title": "Transitions",
+            "type": "array"
+          },
+          "updated_at": {
+            "title": "Updated At",
+            "type": "string"
+          },
+          "value_collected_kobo": {
+            "title": "Value Collected Kobo",
+            "type": "integer"
+          },
+          "value_drafted_kobo": {
+            "title": "Value Drafted Kobo",
+            "type": "integer"
+          },
+          "value_returned_kobo": {
+            "description": "Value of what came back at inspection",
+            "title": "Value Returned Kobo",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "return_id",
+          "shop_id",
+          "shop_name",
+          "source",
+          "reason",
+          "status",
+          "lines",
+          "value_drafted_kobo",
+          "value_collected_kobo",
+          "value_returned_kobo",
+          "recovered_kobo",
+          "transitions",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "ReturnOut",
+        "type": "object"
+      },
+      "ReturnSettingsIn": {
+        "additionalProperties": false,
+        "properties": {
+          "pickup_cost_kobo": {
+            "description": "What a collection trip costs, in kobo",
+            "maximum": 100000000000.0,
+            "minimum": 0.0,
+            "title": "Pickup Cost Kobo",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "pickup_cost_kobo"
+        ],
+        "title": "ReturnSettingsIn",
+        "type": "object"
+      },
+      "ReturnSettingsOut": {
+        "additionalProperties": false,
+        "properties": {
+          "note": {
+            "default": "",
+            "title": "Note",
+            "type": "string"
+          },
+          "pickup_cost_kobo": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pickup Cost Kobo"
+          },
+          "pickup_cost_naira": {
+            "default": "",
+            "title": "Pickup Cost Naira",
+            "type": "string"
+          }
+        },
+        "title": "ReturnSettingsOut",
+        "type": "object"
+      },
+      "ReturnSettleIn": {
+        "additionalProperties": false,
+        "properties": {
+          "amount_kobo": {
+            "anyOf": [
+              {
+                "minimum": 1.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The credit; default is what came back, never more",
+            "title": "Amount Kobo"
+          },
+          "by": {
+            "default": "owner",
+            "maxLength": 100,
+            "title": "By",
+            "type": "string"
+          }
+        },
+        "title": "ReturnSettleIn",
+        "type": "object"
+      },
+      "ReturnTransition": {
+        "additionalProperties": false,
+        "properties": {
+          "at": {
+            "title": "At",
+            "type": "string"
+          },
+          "by": {
+            "title": "By",
+            "type": "string"
+          },
+          "note": {
+            "title": "Note",
+            "type": "string"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "status",
+          "at",
+          "by",
+          "note"
+        ],
+        "title": "ReturnTransition",
         "type": "object"
       },
       "SellThroughOut": {
@@ -6045,6 +6864,70 @@
         "summary": "Owner undoes a credit-limit change"
       }
     },
+    "/v1/credit/exposure": {
+      "get": {
+        "description": "What each shop owes and what it could cost, code only. The ageing bands\n(current, 1 to 30, 31 to 60, over 60 days) and their weights are defined\nonce here and returned with the figures, so no surface keeps its own copy.\n``outstanding_kobo`` and ``overdue_kobo`` are the money owed;\n``exposure_kobo`` is the same money weighted up by age. Only bank-verified\npayments count: a payment the shop reported is shown, not counted.",
+        "operationId": "get_credit_exposure_v1_credit_exposure_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExposureOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Conflict"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Credit exposure per shop and in total, aged and risk-weighted"
+      }
+    },
     "/v1/credit/{shop_id}/limit": {
       "post": {
         "description": "Recorded as a ``limit_change`` step on the shop's thread. Mimi never\nsets a limit on its own: only the owner, here or by approving Credit's\nsuggestion.",
@@ -7065,6 +7948,919 @@
           }
         ],
         "summary": "Change rules (owner key only; built-in stops stay locked)"
+      }
+    },
+    "/v1/returns": {
+      "get": {
+        "operationId": "get_returns_v1_returns_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "default": "",
+              "pattern": "^(|drafted|approved|collected|inspected|settled|cancelled)$",
+              "title": "Status",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "shop_id",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 64,
+              "title": "Shop Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReturnList"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Returns, newest first (status and shop filters)"
+      },
+      "post": {
+        "description": "Opens a return draft and computes its quantities and naira in code. From\n``approval_id`` it must be an approved slow-stock pickup option; it is\nidempotent, so opening twice returns the same draft. Otherwise name a shop\nand its lines. Nothing moves: the rep collects, and every later step is\nrecorded.",
+        "operationId": "post_return_v1_returns_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReturnOpenIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReturnOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Open a return from an approved pickup, or with named lines"
+      }
+    },
+    "/v1/returns/settings": {
+      "get": {
+        "operationId": "get_return_settings_v1_returns_settings_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReturnSettingsOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Conflict"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "The owner's pickup cost, so a return can report its outcome"
+      },
+      "put": {
+        "operationId": "put_return_settings_v1_returns_settings_put",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReturnSettingsIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReturnSettingsOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Set what a collection trip costs (recorded)"
+      }
+    },
+    "/v1/returns/{return_id}": {
+      "get": {
+        "operationId": "get_return_v1_returns__return_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "return_id",
+            "required": true,
+            "schema": {
+              "title": "Return Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReturnOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "One return: lines, transitions and its credit"
+      }
+    },
+    "/v1/returns/{return_id}/approve": {
+      "post": {
+        "operationId": "post_return_approve_v1_returns__return_id__approve_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "return_id",
+            "required": true,
+            "schema": {
+              "title": "Return Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/ReturnDecisionIn"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Body"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReturnOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Owner approves the pickup: a return is approved"
+      }
+    },
+    "/v1/returns/{return_id}/cancel": {
+      "post": {
+        "operationId": "post_return_cancel_v1_returns__return_id__cancel_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "return_id",
+            "required": true,
+            "schema": {
+              "title": "Return Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/ReturnDecisionIn"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Body"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReturnOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Owner cancels a drafted return: nothing moves"
+      }
+    },
+    "/v1/returns/{return_id}/collect": {
+      "post": {
+        "operationId": "post_return_collect_v1_returns__return_id__collect_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "return_id",
+            "required": true,
+            "schema": {
+              "title": "Return Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/CollectIn"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Body"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReturnOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "The rep collected the goods (quantities recorded)"
+      }
+    },
+    "/v1/returns/{return_id}/inspect": {
+      "post": {
+        "operationId": "post_return_inspect_v1_returns__return_id__inspect_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "return_id",
+            "required": true,
+            "schema": {
+              "title": "Return Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/InspectIn"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Body"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReturnOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Inspection: what came back, its condition and the disposition per line"
+      }
+    },
+    "/v1/returns/{return_id}/settle": {
+      "post": {
+        "description": "Opens a pending ``return_credit`` approval carrying what would come off\nthe shop's open invoices and what would sit on its account. Nothing changes\nuntil the owner approves it (``POST /v1/approvals/{id}/approve``), exactly\nlike a Zoho payment, and it can be undone the same way.",
+        "operationId": "post_return_settle_v1_returns__return_id__settle_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "return_id",
+            "required": true,
+            "schema": {
+              "title": "Return Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/ReturnSettleIn"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Body"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReturnOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Draft the settlement credit for the owner"
       }
     },
     "/v1/shops": {

@@ -13,6 +13,13 @@ Endpoints (all under ``/v1``, all but health need ``Authorization: Bearer``):
 * ``GET /v1/approvals``; ``POST /v1/approvals/{id}/approve`` and ``/reject``
   (owner key only).
 * ``GET /v1/credit``: limits and credit requests.
+* ``GET /v1/credit/exposure``: credit exposure per shop and in total, aged and
+  risk-weighted (the bands and weights come back with the figures).
+* ``GET /v1/returns``, ``GET /v1/returns/{id}``, ``POST /v1/returns`` and its
+  ``/approve``, ``/collect``, ``/inspect``, ``/settle`` and ``/cancel`` moves:
+  the returns ledger (drafted, approved, collected, inspected, settled,
+  cancelled). Settlement drafts a ``return_credit`` approval the owner
+  approves or undoes like a Zoho payment.
 * ``GET /v1/policy``, ``PUT /v1/policy``: the owner's rulebook (RAI-323);
   built-in stops are listed locked. Only an owner key changes it; a demo
   session, or demo mode, gets 403.
@@ -56,7 +63,7 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
 from mimi.api import connectors as cx
 from mimi.api import demo_wiring as dw
-from mimi.api import reads, sales
+from mimi.api import reads, returns, sales
 from mimi.api.agent import Agent, Conflict, NotFound
 from mimi.api.config import LOCALHOST_REGEX, ApiKey, Settings
 from mimi.api.demo import (
@@ -72,6 +79,7 @@ from mimi.api.media import MAX_BYTES
 from mimi.api.schemas import (
     ActivityList,
     ApprovalList,
+    CollectIn,
     ComputerKindList,
     ComputerProposal,
     ComputerTaskDetail,
@@ -90,13 +98,22 @@ from mimi.api.schemas import (
     DemoSessionOut,
     ErrorOut,
     EventIn,
+    ExposureOut,
     Health,
+    InspectIn,
     Liveness,
     MediaOut,
     MentionList,
     MeOut,
     PolicyIn,
     PolicyOut,
+    ReturnDecisionIn,
+    ReturnList,
+    ReturnOpenIn,
+    ReturnOut,
+    ReturnSettingsIn,
+    ReturnSettingsOut,
+    ReturnSettleIn,
     SellThroughOut,
     ShopDetail,
     ShopList,
@@ -534,6 +551,17 @@ def create_app(settings: Settings | None = None, agent: Agent | None = None, *,
     def get_credit(key: Owner) -> dict[str, Any]:
         return reads.credit(engine, key.tenant_id)
 
+    @app.get("/v1/credit/exposure", response_model=ExposureOut, responses=_ERRORS,
+             summary="Credit exposure per shop and in total, aged and risk-weighted")
+    def get_credit_exposure(key: Owner) -> dict[str, Any]:
+        """What each shop owes and what it could cost, code only. The ageing bands
+        (current, 1 to 30, 31 to 60, over 60 days) and their weights are defined
+        once here and returned with the figures, so no surface keeps its own copy.
+        ``outstanding_kobo`` and ``overdue_kobo`` are the money owed;
+        ``exposure_kobo`` is the same money weighted up by age. Only bank-verified
+        payments count: a payment the shop reported is shown, not counted."""
+        return reads.exposure(engine, key.tenant_id)
+
     @app.get("/v1/stock/sell-through", response_model=SellThroughOut, responses=_ERRORS,
              summary="Sell-through per shop and product: sold, days of cover, days to "
                      "expiry, status")
@@ -558,6 +586,86 @@ def create_app(settings: Settings | None = None, agent: Agent | None = None, *,
         same week opens nothing new. Nothing moves until the owner approves; Mimi
         never moves stock or money."""
         return sales.run_slow_check(engine, key.tenant_id)
+
+    # --------------------------------------------------- returns and exposure
+
+    @app.get("/v1/returns/settings", response_model=ReturnSettingsOut, responses=_ERRORS,
+             summary="The owner's pickup cost, so a return can report its outcome")
+    def get_return_settings(key: Owner) -> dict[str, Any]:
+        return returns.settings(engine, key.tenant_id)
+
+    @app.put("/v1/returns/settings", response_model=ReturnSettingsOut, responses=_ERRORS,
+             summary="Set what a collection trip costs (recorded)")
+    def put_return_settings(body: ReturnSettingsIn, key: Owner) -> dict[str, Any]:
+        return returns.set_settings(engine, key.tenant_id, body.pickup_cost_kobo)
+
+    @app.get("/v1/returns", response_model=ReturnList, responses=_ERRORS,
+             summary="Returns, newest first (status and shop filters)")
+    def get_returns(key: Owner,
+                    status: Annotated[str, Query(pattern=(
+                        "^(|drafted|approved|collected|inspected|settled|cancelled)$"))] = "",
+                    shop_id: Annotated[str, Query(max_length=64)] = "") -> dict[str, Any]:
+        return returns.list_returns(engine, key.tenant_id, status=status, shop_id=shop_id)
+
+    @app.post("/v1/returns", response_model=ReturnOut, status_code=201, responses=_ERRORS,
+              summary="Open a return from an approved pickup, or with named lines")
+    def post_return(body: ReturnOpenIn, key: Owner) -> dict[str, Any]:
+        """Opens a return draft and computes its quantities and naira in code. From
+        ``approval_id`` it must be an approved slow-stock pickup option; it is
+        idempotent, so opening twice returns the same draft. Otherwise name a shop
+        and its lines. Nothing moves: the rep collects, and every later step is
+        recorded."""
+        return returns.open_return(engine, key.tenant_id, approval_id=body.approval_id,
+                                   shop_id=body.shop_id, reason=body.reason,
+                                   lines=[ln.model_dump() for ln in body.lines])
+
+    @app.get("/v1/returns/{return_id}", response_model=ReturnOut, responses=_ERRORS,
+             summary="One return: lines, transitions and its credit")
+    def get_return(return_id: str, key: Owner) -> dict[str, Any]:
+        return returns.get_return(engine, key.tenant_id, return_id)
+
+    @app.post("/v1/returns/{return_id}/approve", response_model=ReturnOut,
+              responses=_ERRORS, summary="Owner approves the pickup: a return is approved")
+    def post_return_approve(return_id: str, key: Owner,
+                            body: ReturnDecisionIn | None = None) -> dict[str, Any]:
+        b = body or ReturnDecisionIn(by="owner", note="")
+        return returns.approve(engine, key.tenant_id, return_id, by=b.by, note=b.note)
+
+    @app.post("/v1/returns/{return_id}/collect", response_model=ReturnOut,
+              responses=_ERRORS, summary="The rep collected the goods (quantities recorded)")
+    def post_return_collect(return_id: str, key: Owner,
+                            body: CollectIn | None = None) -> dict[str, Any]:
+        b = body or CollectIn(by="rep", lines=[])
+        return returns.collect(engine, key.tenant_id, return_id, by=b.by,
+                               lines=[ln.model_dump() for ln in b.lines])
+
+    @app.post("/v1/returns/{return_id}/inspect", response_model=ReturnOut,
+              responses=_ERRORS, summary="Inspection: what came back, its condition "
+                                         "and the disposition per line")
+    def post_return_inspect(return_id: str, key: Owner,
+                            body: InspectIn | None = None) -> dict[str, Any]:
+        b = body or InspectIn(by="owner", lines=[])
+        return returns.inspect(engine, key.tenant_id, return_id, by=b.by,
+                               lines=[ln.model_dump() for ln in b.lines])
+
+    @app.post("/v1/returns/{return_id}/settle", response_model=ReturnOut,
+              responses=_ERRORS, summary="Draft the settlement credit for the owner")
+    def post_return_settle(return_id: str, key: Owner,
+                           body: ReturnSettleIn | None = None) -> dict[str, Any]:
+        """Opens a pending ``return_credit`` approval carrying what would come off
+        the shop's open invoices and what would sit on its account. Nothing changes
+        until the owner approves it (``POST /v1/approvals/{id}/approve``), exactly
+        like a Zoho payment, and it can be undone the same way."""
+        b = body or ReturnSettleIn(by="owner", amount_kobo=None)
+        return returns.settle(engine, key.tenant_id, return_id, amount_kobo=b.amount_kobo,
+                              by=b.by)
+
+    @app.post("/v1/returns/{return_id}/cancel", response_model=ReturnOut,
+              responses=_ERRORS, summary="Owner cancels a drafted return: nothing moves")
+    def post_return_cancel(return_id: str, key: Owner,
+                           body: ReturnDecisionIn | None = None) -> dict[str, Any]:
+        b = body or ReturnDecisionIn(by="owner", note="")
+        return returns.cancel(engine, key.tenant_id, return_id, by=b.by, note=b.note)
 
     @app.get("/v1/mentions", response_model=MentionList, responses=_ERRORS,
              summary="The owner's @ picker: helpers, shops and reps")

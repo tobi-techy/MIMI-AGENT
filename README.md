@@ -641,6 +641,7 @@ Hobby plan has no alerts API). Details: [`docs/RUN.md`](docs/RUN.md#3e-langfuse-
 | `mimi/voice` | Voice notes: a transcription port with Spitch and Muse Voice Transcribe adapters, a router, audio checks and ffmpeg conversion, money and date reading, voice-reply consent and text to speech, fakes, record and replay, the voice eval |
 | `mimi/proof` | Payment screenshots: the `read_payment_image` tool (Muse Spark vision), code checks, verdicts and invoice match, the bank witness, the proof ledger, the synthetic screenshot renderer, the eval |
 | `mimi/stock` | Stock: estimator v0.2 (stock in minus estimated sales, with confidence), trigger and weekly caps, one-tap question and answer reading (code for taps, Muse Spark for words), restock draft and verifier, the backtest and the answer eval |
+| `mimi/returns` | Returns (3 Nov 2026): the ledger behind an approved pickup (drafted, approved, collected, inspected, settled, cancelled), the line arithmetic, the disposal per line and the settlement credit that comes off the shop's balance (`docs/RETURNS.md`) |
 | `mimi/observe` | Optional Langfuse tracing: turn traces, redaction, the evals as datasets and experiments (off without keys) |
 | `mimi/sim` | Shop personas and a one-day simulator (shops can pay by screenshot), and the low-stock scene |
 | `mimi/api` | The HTTP API (FastAPI) for the console and the WhatsApp webhook: turns, threads, shops, approvals, credit, health; bearer keys per distributor; the durable agent (front door, router, harness over the store) and its workers |
@@ -653,6 +654,7 @@ Docs: [`docs/HACKATHON.md`](docs/HACKATHON.md) (what was built when),
 [`docs/WORLD.md`](docs/WORLD.md),
 [`docs/RUN.md`](docs/RUN.md), [`docs/VOICE.md`](docs/VOICE.md),
 [`docs/PROOF.md`](docs/PROOF.md), [`docs/STOCK.md`](docs/STOCK.md),
+[`docs/RETURNS.md`](docs/RETURNS.md),
 [`docs/COMPLIANCE.md`](docs/COMPLIANCE.md),
 [`docs/DEPENDENCIES.md`](docs/DEPENDENCIES.md).
 
