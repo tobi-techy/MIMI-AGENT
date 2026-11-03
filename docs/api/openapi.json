@@ -603,6 +603,25 @@
         "title": "ConnectorConnectOut",
         "type": "object"
       },
+      "ConnectorConnectStatus": {
+        "additionalProperties": false,
+        "properties": {
+          "available": {
+            "title": "Available",
+            "type": "boolean"
+          },
+          "reason": {
+            "title": "Reason",
+            "type": "string"
+          }
+        },
+        "required": [
+          "available",
+          "reason"
+        ],
+        "title": "ConnectorConnectStatus",
+        "type": "object"
+      },
       "ConnectorConnection": {
         "additionalProperties": false,
         "properties": {
@@ -760,6 +779,62 @@
         "title": "ConnectorPreviewRow",
         "type": "object"
       },
+      "ConnectorRead": {
+        "additionalProperties": false,
+        "properties": {
+          "connection_id": {
+            "title": "Connection Id",
+            "type": "string"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ConnectorReadItem"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "read_at": {
+            "title": "Read At",
+            "type": "string"
+          },
+          "summary": {
+            "title": "Summary",
+            "type": "string"
+          },
+          "toolkit": {
+            "title": "Toolkit",
+            "type": "string"
+          }
+        },
+        "required": [
+          "connection_id",
+          "toolkit",
+          "read_at",
+          "summary",
+          "items"
+        ],
+        "title": "ConnectorRead",
+        "type": "object"
+      },
+      "ConnectorReadItem": {
+        "additionalProperties": false,
+        "properties": {
+          "detail": {
+            "default": "",
+            "title": "Detail",
+            "type": "string"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          }
+        },
+        "required": [
+          "label"
+        ],
+        "title": "ConnectorReadItem",
+        "type": "object"
+      },
       "ConnectorSyncPreview": {
         "additionalProperties": false,
         "properties": {
@@ -806,6 +881,9 @@
             "title": "Blurb",
             "type": "string"
           },
+          "connect": {
+            "$ref": "#/components/schemas/ConnectorConnectStatus"
+          },
           "connections": {
             "items": {
               "$ref": "#/components/schemas/ConnectorConnection"
@@ -842,7 +920,8 @@
           "blurb",
           "reads",
           "writes",
-          "connections"
+          "connections",
+          "connect"
         ],
         "title": "ConnectorToolkit",
         "type": "object"
@@ -4806,6 +4885,91 @@
           }
         ],
         "summary": "A connection's status and sync preview"
+      }
+    },
+    "/v1/connectors/{connection_id}/read": {
+      "get": {
+        "description": "Read-only, on the same transport every helper uses: proves Mimi can\nsee the account right after connecting.",
+        "operationId": "get_connector_read_v1_connectors__connection_id__read_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "connection_id",
+            "required": true,
+            "schema": {
+              "title": "Connection Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConnectorRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "A live read from a connected account"
       }
     },
     "/v1/connectors/{toolkit}/connect": {

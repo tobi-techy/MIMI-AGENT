@@ -43,9 +43,12 @@ class ComposioTransport:
                 "ZOHO": self.settings.version_zoho,
                 "GOOGLESHEETS": self.settings.version_googlesheets,
             }
+            kwargs: dict[str, Any] = {}
+            if self.settings.composio_api_key:
+                kwargs["api_key"] = self.settings.composio_api_key
             self._client = Composio(
-                api_key=self.settings.composio_api_key or None,
                 toolkit_versions=versions,  # type: ignore[arg-type]
+                **kwargs,  # type: ignore[arg-type]
             )
         return self._client
 
