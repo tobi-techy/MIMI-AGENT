@@ -53,7 +53,7 @@ TOOLSET_BUDGETS: dict[str, int] = {
     "order": 6_500,        # 4,799 (delivery receipts)
     "order/order-intake": 7_000,  # 5,284
     "stock": 7_200,        # 5,496
-    "brand": 3_700,        # 2,795
+    "brand": 4_400,        # 2,795; 4,262 with the browser tool (MIMI_COMPUTER_TOOLS)
     "credit": 7_700,       # 5,884
 }
 # Argument names the model may not use to steer the harness. They are

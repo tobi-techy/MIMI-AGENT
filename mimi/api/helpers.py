@@ -33,7 +33,7 @@ from __future__ import annotations
 
 import os
 from collections.abc import Mapping
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from functools import partial
 from pathlib import Path
 from typing import Any
@@ -59,6 +59,13 @@ from mimi.harness.collector import (
     PROOF_TOOLS,
     collector_helper,
     default_registry,
+)
+from mimi.harness.computer import (
+    BROWSER_HELPERS,
+    COMPUTER_TOOLS,
+    ComputerPorts,
+    computer_tools_mode,
+    register_computer_tools,
 )
 from mimi.harness.loop import Helper
 from mimi.harness.policy import GoPolicy, RiskPolicy
@@ -174,7 +181,9 @@ def build_helpers(policy: RiskPolicy | None = None, *, go: SqlGo | None = None,
         from mimi.harness.collector import proof_helper
 
         helpers["proof"] = proof_helper(reg, policy)
-        return _with_skills(helpers, reg, policy, deps.distributor)
+        register_computer_tools(reg, ComputerPorts())
+        return _with_skills(_with_browser(helpers, reg, policy), reg, policy,
+                            deps.distributor)
     dist = deps.distributor
     register_proof_tools(reg, ProofPorts(images=StoreScreens(go, deps.media),
                                          reader=ScreenshotReader(deps.vision),
@@ -224,7 +233,43 @@ def build_helpers(policy: RiskPolicy | None = None, *, go: SqlGo | None = None,
     credit = credit_helper(reg, policy, distributor=dist)
     helpers["credit"] = Helper(credit.name, credit.skill + APPROVAL_LINE, credit.toolset,
                                credit.budget, skill_version=credit.skill_version)
-    return _with_skills(helpers, reg, policy, dist)
+    register_computer_tools(reg, _browser_ports(getattr(go, "engine", None)))
+    return _with_skills(_with_browser(helpers, reg, policy), reg, policy, dist)
+
+
+def _browser_ports(engine: Any) -> ComputerPorts:
+    """The browser behind the read tool: the API's own store and the configured
+    container. With no container (or no store) the tool is still registered and
+    refuses with a plain message rather than pretending to have read a page."""
+    from mimi.computer.service import engine_from_env
+    from mimi.computer.store import ComputerStore
+
+    container = engine_from_env()
+    ready = container.name != "unconfigured" and engine is not None
+    return ComputerPorts(store=ComputerStore(engine) if ready else None,
+                         engine=container if ready else None)
+
+
+def _with_browser(helpers: dict[str, Helper], reg: ToolRegistry,
+                  policy: RiskPolicy) -> dict[str, Helper]:
+    """The browser, offered to the working helpers (``MIMI_COMPUTER_TOOLS``,
+    default off). Off, the toolsets are byte-identical to before, so no recorded
+    answer is invalidated and no helper's prompt prefix changes. On, each of the
+    six named helpers gains the one read tool and its recordings must be
+    re-recorded. The plain chat helper is left as it is: it is the fallback, and
+    its toolset has the smallest budget."""
+    if not computer_tools_mode():
+        return helpers
+    out: dict[str, Helper] = {}
+    for key, helper in helpers.items():
+        if helper.name not in BROWSER_HELPERS:
+            # The plain chat helper keeps its small toolset (and its budget).
+            out[key] = helper
+            continue
+        names = list(helper.toolset.names)
+        names.extend(n for n in COMPUTER_TOOLS if n not in names)
+        out[key] = replace(helper, toolset=build_toolset(reg, helper.name, names, policy))
+    return out
 
 
 def _with_skills(helpers: dict[str, Helper], reg: ToolRegistry, policy: RiskPolicy,
