@@ -5,10 +5,12 @@ built on Zoho Books' own API, called through Composio's proxy execute on
 the distributor's existing ZOHO_BOOKS connected account: no second OAuth
 app, no raw token in our code. Only this module makes these calls.
 
-* Create: ``POST /customerpayments?organization_id=<org>`` with
-  customer_id, payment_mode, amount, date, reference_number and
+* Create: ``POST https://<region-host>/books/v3/customerpayments?organization_id=<org>``
+  with customer_id, payment_mode, amount, date, reference_number and
   invoices [{invoice_id, amount_applied}].
-* Undo: ``DELETE /customerpayments/{payment_id}?organization_id=<org>``.
+* Undo: ``DELETE https://<region-host>/books/v3/customerpayments/{payment_id}?organization_id=<org>``.
+  The proxy resolves nothing from a relative endpoint, so every call
+  carries an absolute URL (host from ``MIMI_ZOHO_REGION``).
 * Scopes: ZohoBooks.customerpayments.CREATE and .DELETE on our Zoho auth
   config.
 
@@ -33,6 +35,24 @@ from mimi.connectors.base import ConnectorError
 from mimi.connectors.composio import ComposioTransport, FakeComposio
 from mimi.connectors.types import WriteRecord
 from mimi.store.util import now_iso
+
+# Zoho data-centre API hosts, keyed by the MIMI_ZOHO_REGION code: the
+# Composio proxy has no server-side base for this toolkit, so a relative
+# endpoint resolves to nothing (Zoho answers code 5, "Invalid URL Passed").
+# Every proxy call therefore carries an absolute URL on the region's host.
+REGION_HOSTS = {
+    "com": "https://www.zohoapis.com",
+    "eu": "https://www.zohoapis.eu",
+    "in": "https://www.zohoapis.in",
+    "cn": "https://www.zohoapis.com.cn",
+    "au": "https://www.zohoapis.com.au",
+}
+
+
+def books_url(region: str, path: str, query: str) -> str:
+    """Absolute Zoho Books API URL: host from the region, then /books/v3."""
+    host = REGION_HOSTS.get((region or "").lower(), REGION_HOSTS["com"])
+    return f"{host}/books/v3{path}?{query}" if query else f"{host}/books/v3{path}"
 
 
 def reference_for(idempotency_key: str) -> str:
@@ -92,7 +112,8 @@ def create_payment(*, transport: ComposioTransport | FakeComposio, tenant_id: st
         raise ConnectorError("A customer payment needs the owner's approval.",
                              next_step="Wait for the owner to approve it.")
     body = create_body(payload, idempotency_key)
-    endpoint = f"/customerpayments?organization_id={organization_id}"
+    endpoint = _endpoint(transport,
+                         "/customerpayments", f"organization_id={organization_id}")
     reply = _proxy(transport, "customer_payment_create", method="POST",
                    endpoint=endpoint, connected_account_id=connection_id, body=body)
     # Zoho Books answers a create with ``{"code": 0, "payment": {...}}``.
@@ -112,8 +133,9 @@ def find_by_reference(*, transport: ComposioTransport | FakeComposio,
                       connection_id: str, organization_id: str,
                       reference: str) -> dict[str, Any] | None:
     """Read back a payment by its reference (the idempotency check)."""
-    endpoint = (f"/customerpayments?organization_id={organization_id}"
-                f"&reference_number={quote(reference, safe='')}")
+    endpoint = _endpoint(transport, "/customerpayments",
+                         f"organization_id={organization_id}"
+                         f"&reference_number={quote(reference, safe='')}")
     reply = _proxy(transport, "customer_payment_search", method="GET",
                    endpoint=endpoint, connected_account_id=connection_id,
                    body={"reference_number": reference})
@@ -162,10 +184,18 @@ def delete_payment(*, transport: ComposioTransport | FakeComposio,
                    connection_id: str, organization_id: str,
                    payment_id: str) -> None:
     """Undo a created payment: delete it by its Zoho payment id."""
-    endpoint = f"/customerpayments/{payment_id}?organization_id={organization_id}"
+    endpoint = _endpoint(transport, f"/customerpayments/{payment_id}",
+                         f"organization_id={organization_id}")
     _proxy(transport, "customer_payment_delete", method="DELETE",
            endpoint=endpoint, connected_account_id=connection_id,
            body={"payment_id": payment_id})
+
+
+def _endpoint(transport: ComposioTransport | FakeComposio, path: str,
+              query: str) -> str:
+    """Absolute Books URL on the transport's region: the proxy resolves
+    nothing from a relative endpoint, so it never sees a leading slash."""
+    return books_url(transport.settings.zoho_region, path, query)
 
 
 def _proxy(transport: ComposioTransport | FakeComposio, name: str, *, method: str,
@@ -179,7 +209,7 @@ def _proxy(transport: ComposioTransport | FakeComposio, name: str, *, method: st
 
     client = transport._sdk()
     try:
-        res = client.tools.proxy(endpoint=f"zoho_books{endpoint}", method=method,  # type: ignore[arg-type]
+        res = client.tools.proxy(endpoint=endpoint, method=method,  # type: ignore[arg-type]
                                  body=body, connected_account_id=connected_account_id)
     except Exception as exc:
         raise ConnectorError(f"The Zoho Books payment call failed: {exc}",
