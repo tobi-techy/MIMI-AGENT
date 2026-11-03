@@ -150,6 +150,7 @@ class CloudBrowserEngine:
         page = sess.page
         try:
             download_bytes = b""
+            filename = ""
             if action == "goto":
                 page.goto(url, wait_until="domcontentloaded")
             elif action == "click":
@@ -163,6 +164,7 @@ class CloudBrowserEngine:
                 with page.expect_download() as info:
                     page.get_by_text(target, exact=False).first.click()
                 download = info.value
+                filename = download.suggested_filename or ""
                 import tempfile
                 from pathlib import Path
 
@@ -176,7 +178,7 @@ class CloudBrowserEngine:
             html = page.content()[:20000]
             text = page.inner_text("body")[:4000] if action in ("extract", "download") else ""
             return Page(url=page.url, title=page.title(), html=html, text=text,
-                        screenshot=download_bytes or png)
+                        screenshot=download_bytes or png, filename=filename)
         except EngineError:
             raise
         except Exception as exc:

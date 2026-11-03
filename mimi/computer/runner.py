@@ -10,7 +10,9 @@ Everything the brief fixes in code lives here:
 * a step outside the kind's profile is refused ``unsupported_step``;
 * the budgets (10 minutes, 40 steps by default) end it ``stopped_runaway``;
 * a form is filled only from the owner's own inputs, never a credential;
-* every step is logged with a redacted note and a screenshot artifact.
+* every step is logged with a redacted note and a screenshot artifact, and what
+  a step produced (the text a read gave, the file a download gave) is kept as
+  its own artifact for the owner to review.
 
 The runner never calls a model and never chooses an action: it runs the plan
 the owner approved.
@@ -61,17 +63,35 @@ def _slug(name: str) -> str:
     return re.sub(r"[^a-z0-9._-]+", "-", name.strip().lower())[:60] or "item"
 
 
+_DOWNLOAD_MIME = {
+    "pdf": "application/pdf", "csv": "text/csv", "txt": "text/plain",
+    "xlsx": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    "xls": "application/vnd.ms-excel", "zip": "application/zip",
+    "png": "image/png", "jpg": "image/jpeg", "jpeg": "image/jpeg",
+}
+
+
+def mime_for(name: str) -> str:
+    """The mime type of a downloaded file, from the name the site gave it."""
+    ext = name.rsplit(".", 1)[-1].lower() if "." in name else ""
+    return _DOWNLOAD_MIME.get(ext, "application/octet-stream")
+
+
 class Runner:
     """Runs one plan. ``on_step`` is called after each recorded step so a caller
-    can persist and let the console poll."""
+    can persist and let the console poll; ``on_artifact`` is called with every
+    result blob (a screenshot, the text a step read, a downloaded file) so the
+    caller persists that too."""
 
     def __init__(self, port: ComputerPort, limits: GuardLimits | None = None,
                  clock: Callable[[], float] = wall,
-                 on_step: Callable[[StepRecord, Blob | None], None] | None = None):
+                 on_step: Callable[[StepRecord, Blob | None], None] | None = None,
+                 on_artifact: Callable[[Blob], None] | None = None):
         self.port = port
         self.limits = limits or GuardLimits()
         self.clock = clock
         self.on_step = on_step
+        self.on_artifact = on_artifact
 
     def run(self, task_id: str, domain: str, kind: str, steps: list[Step],
             inputs: dict[str, str] | None = None) -> Outcome:
@@ -165,18 +185,32 @@ class Runner:
             return None
         blob = Blob(name=f"step-{index:02d}.png", kind="screenshot",
                     mime="image/png", data=data)
-        out.artifacts.append(blob)
+        out.artifacts.append(blob)  # handed to the caller with its step record
         return blob
+
+    def _keep(self, out: Outcome, blob: Blob) -> None:
+        """Keep a result blob that is not the step's screenshot (the text a read
+        gave, the file a download gave) and hand it to the caller to persist."""
+        out.artifacts.append(blob)
+        if self.on_artifact is not None:
+            self.on_artifact(blob)
 
     def _body_artifact(self, out: Outcome, index: int, step: Step,
                        page: g.Page) -> Blob | None:
+        """The result of one step: the file a download gave, the text a read
+        gave, and the screenshot that goes with the step."""
+        if step.action == "download":
+            if not page.screenshot:
+                return None
+            name = _slug(page.filename or step.target or f"download-{index:02d}")
+            self._keep(out, Blob(name=name, kind="file",
+                                 mime=mime_for(name), data=page.screenshot))
+            return None
         shot = self._screenshot(out, index, page.screenshot)
-        if step.action in ("extract", "download") and (page.text or step.action == "download"):
-            name = f"{_slug(step.target or step.action)}-{index:02d}.txt"
-            data = page.text.encode() if page.text else b""
-            if data:
-                out.artifacts.append(Blob(name=name, kind="text", mime="text/plain",
-                                          data=data))
+        if step.action == "extract" and page.text:
+            name = f"{_slug(step.target or 'page')}-{index:02d}.txt"
+            self._keep(out, Blob(name=name, kind="text", mime="text/plain",
+                                 data=page.text.encode()))
         return shot
 
     def _record(self, out: Outcome, index: int, step: Step, page: g.Page,

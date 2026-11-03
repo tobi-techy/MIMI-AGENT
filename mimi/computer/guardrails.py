@@ -124,6 +124,8 @@ class Page:
     html: str = ""
     text: str = ""
     screenshot: bytes = b""
+    # The provider's own name for a downloaded file, when a step downloaded one.
+    filename: str = ""
 
 
 @dataclass(frozen=True)

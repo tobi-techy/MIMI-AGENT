@@ -2,7 +2,7 @@
 
 Everything runs offline against ``FakeComputer``, which is a small scripted site
 in memory. The live browser container is exercised by ``scripts/computer_smoke.py``
-against a real Maritime Agent box, not here.
+against a real cloud browser session, not here.
 """
 
 from __future__ import annotations
@@ -224,6 +224,34 @@ def test_propose_builds_a_plan_and_approve_runs_it(service: ComputerService) -> 
     name = done["steps"][0]["screenshot"]
     row = service.artifact(T, view["task_id"], name)
     assert row is not None and row["mime"] == "image/png"
+    # what the read found is kept as its own artifact, not only the screenshot
+    texts = [a for a in done["artifacts"] if a["kind"] == "text"]
+    assert len(texts) == 1 and texts[0]["size"] > 0
+    served = service.artifact(T, view["task_id"], texts[0]["name"])
+    assert served is not None and served["mime"] == "text/plain"
+    body = (service.store.dir / T / view["task_id"] / texts[0]["name"]).read_text()
+    assert "Sugar 42000" in body
+
+
+def test_a_download_is_kept_under_the_name_the_site_gave() -> None:
+    fake = FakeComputer(
+        pages={PAGE: {"title": "Statements", "text": "October", "png": b"\x89PNG-real"}},
+        downloads={PAGE: "statement-october.pdf"})
+    engine = make_engine("sqlite://")
+    ensure_schema(engine)
+    service = ComputerService(ComputerStore(engine), fake)
+    view = service.propose(T, "pull the statement", PAGE, "supplier.example",
+                           "bank_statement")
+    done = service.approve(T, view["task_id"], inline=True)
+    assert done["status"] == "done"
+    files = [a for a in done["artifacts"] if a["kind"] == "file"]
+    assert [a["name"] for a in files] == ["statement-october.pdf"]
+    assert files[0]["mime"] == "application/pdf"
+    # the download step holds the file, never a mislabelled screenshot
+    dl = [s for s in done["steps"] if s["action"] == "download"][0]
+    assert dl["screenshot"] == ""
+    assert not [a for a in done["artifacts"] if a["name"].startswith("statement-")
+                and a["kind"] == "screenshot"]
 
 
 def test_a_url_off_the_approved_domain_is_refused_at_proposal(service: ComputerService) -> None:

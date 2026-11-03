@@ -43,6 +43,10 @@ postgres = ["psycopg2-binary>=2.9.9"]
 # import. Pinned like langfuse: only mimi/connectors/composio.py imports the
 # SDK, and Excel needs openpyxl (CSV itself is the standard library).
 connectors = ["composio==0.15.0", "openpyxl==3.1.5"]
+# Computer tasks (mimi/computer/cloud_browser.py) only: drives the browser
+# container over its CDP endpoint. Nothing else in mimi imports it, and no
+# local browser binary is needed for a remote session.
+computer = ["playwright>=1.44"]
 dev = [
     "pytest>=7.4.3",
     "ruff>=0.4.0",

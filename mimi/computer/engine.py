@@ -126,7 +126,7 @@ class FakeComputer:
         if action == "download":
             name = self.downloads.get(current_url, "")
             return Page(url=current_url, title="Download", html="", text="",
-                        screenshot=name.encode() if name else b"")
+                        filename=name, screenshot=name.encode() if name else b"")
         return self._page(current_url)
 
     def sign_in_link(self, task: TaskRef) -> str:

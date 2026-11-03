@@ -190,8 +190,11 @@ class ComputerService:
             if blob is not None:
                 self.store.add_artifact(tenant, task_id, blob)
 
+        def on_artifact(blob: Any) -> None:
+            self.store.add_artifact(tenant, task_id, blob)
+
         runner = Runner(self.engine, limits=limits, clock=self.clock,
-                        on_step=on_step)
+                        on_step=on_step, on_artifact=on_artifact)
         with self._lock:
             self._runs[(tenant, task_id)] = runner
         try:
