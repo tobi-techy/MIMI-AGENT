@@ -62,6 +62,7 @@ from mimi.api.demo import (
 )
 from mimi.api.media import MAX_BYTES
 from mimi.api.schemas import (
+    ActivityList,
     ApprovalList,
     ConnectorConnectIn,
     ConnectorConnectOut,
@@ -85,6 +86,7 @@ from mimi.api.schemas import (
     PolicyOut,
     ShopDetail,
     ShopList,
+    StopOut,
     TaskList,
     ThreadDetail,
     ThreadList,
@@ -392,6 +394,28 @@ def create_app(settings: Settings | None = None, agent: Agent | None = None, *,
                   limit: Annotated[int, Query(ge=1, le=200)] = 50) -> dict[str, Any]:
         return reads.list_tasks(engine, key.tenant_id, thread_id=thread_id, helper=helper,
                                 status=status, limit=limit)
+
+    @app.get("/v1/activity", response_model=ActivityList, responses=_ERRORS,
+             summary="Activity: every helper task with per-task steps (RAI-325)")
+    def get_activity(key: Owner,
+                     tab: Annotated[str, Query(pattern="^(|running|waiting|done)$")] = "",
+                     limit: Annotated[int, Query(ge=1, le=200)] = 50,
+                     offset: Annotated[int, Query(ge=0)] = 0) -> dict[str, Any]:
+        """The console's Activity view (RAI-325): one row per helper task,
+        newest first, with what it is doing in plain words, its tab (running,
+        waiting, done), its start time in Africa/Lagos and its step lines.
+        Stopping a running row never undoes what it already did."""
+        return reads.list_activity(engine, key.tenant_id, tab=tab, limit=limit,
+                                   offset=offset)
+
+    @app.post("/v1/turns/{turn_id}/stop", response_model=StopOut, responses=_ERRORS,
+              summary="Stop one task: it ends at its next step (RAI-325)")
+    def post_turn_stop(turn_id: str, key: Owner) -> dict[str, Any]:
+        """Flag one running turn of this distributor to stop (idempotent).
+        The worker ends the turn at its next step boundary: no further tool
+        call runs and no further message goes out. Stopping never undoes what
+        the turn already did. A finished turn reports itself, changed or not."""
+        return agent.stop_turn(key.tenant_id, turn_id)
 
     @app.get("/v1/shops", response_model=ShopList, responses=_ERRORS)
     def get_shops(key: Owner) -> dict[str, Any]:

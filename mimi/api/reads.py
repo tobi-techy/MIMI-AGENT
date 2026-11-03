@@ -23,6 +23,7 @@ from mimi.provenance import POLICY_VERSION, parse_witnesses, proof_word
 from mimi.store import schema as s
 from mimi.store.book import SqlGo
 from mimi.store.util import loads, mask_phone
+from mimi.tz import LAGOS
 
 
 def naira(kobo: int) -> str:
@@ -324,6 +325,125 @@ def list_tasks(engine: Engine, tenant: str, *, thread_id: str = "", helper: str 
                 "chips": list(res.get("chips") or []), "created_at": r.created_at,
                 "finished_at": r.finished_at})
     return {"tasks": tasks, "total": sum(counts.values()), "by_status": counts}
+
+
+# --------------------------------------------------------------- activity
+
+
+# The Event types a row's step lines keep: the route, every tool and model
+# call, and each reply draft. Everything else (budgets, claims, policy) is
+# the worker's own business, not the row.
+_ACTIVITY_STEP_TYPES = {
+    "handoff": "route", "handback": "handback", "route": "route",
+    "tool_called": "tool", "tool_result": "tool", "tool_refused": "tool",
+    "model_called": "model", "draft_proposed": "reply", "card_read": "code",
+    "step_finished": "tool",
+}
+
+
+def _activity_steps(conn: sa.Connection, tenant: str, turn_id: str) -> list[dict[str, Any]]:
+    """The turn's step lines, oldest first, in plain words (no model text)."""
+    rows = conn.execute(sa.select(s.thread_events).where(
+        s.thread_events.c.tenant_id == tenant,
+        s.thread_events.c.turn_id == turn_id,
+        s.thread_events.c.type.in_(list(_ACTIVITY_STEP_TYPES)))
+        .order_by(s.thread_events.c.ts, s.thread_events.c.seq,
+                  s.thread_events.c.event_id)).all()
+    names = display.names_for(conn, tenant)
+    out: list[dict[str, Any]] = []
+    for e in rows:
+        kind = _ACTIVITY_STEP_TYPES[str(e.type)]
+        if kind == "route":
+            name, short = "route", str(e.short or "")
+        elif kind == "handback":
+            name, short = "handback", str(e.short or "")
+        elif kind == "model":
+            name = "model"
+            calls = str(e.short or "")
+            short = f"model call: {calls}" if calls and calls != "final" else "model call"
+        elif kind == "reply":
+            name, short = "reply", display.humanize(str(e.short or ""), names)
+        else:
+            name = str(e.tool or "step")
+            short = display.humanize(str(e.short or ""), names) or name.replace("_", " ")
+        st = "failed" if str(e.type) in ("tool_refused", "claim_blocked") else "ok"
+        out.append({"name": name, "kind": kind, "status": st, "short": short[:300],
+                    "ms": round(float(e.duration_ms or 0.0), 3), "at": str(e.at)})
+    return out
+
+
+def _activity_at(created_at: str, created_ts: float) -> str:
+    """When the turn started, on the Lagos clock with its zone."""
+    from datetime import UTC, datetime
+
+    try:
+        dt = datetime.fromisoformat(str(created_at))
+    except ValueError:
+        dt = datetime.fromtimestamp(float(created_ts or 0.0), UTC)
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=UTC)
+    return dt.astimezone(LAGOS).isoformat()
+
+
+def list_activity(engine: Engine, tenant: str, *,
+                  tab: str = "", limit: int = 50, offset: int = 0) -> dict[str, Any]:
+    """The console's Activity view, newest first: every turn Mimi handed to a
+    helper, with what it is doing in plain words, who it is for, when it
+    started (Africa/Lagos) and its step lines. ``tab`` is one of ``running``
+    (working), ``waiting`` (needs_you) or ``done`` (done, handed_back,
+    failed); empty means every row. Merged turns are left out (their lead
+    carries them)."""
+    with engine.connect() as conn:
+        q = sa.select(s.turns).where(s.turns.c.tenant_id == tenant,
+                                     s.turns.c.state != "merged")
+        rows = list(conn.execute(q.order_by(s.turns.c.created_ts.desc(),
+                                            s.turns.c.turn_id.desc()).limit(500)))
+        pending = {r.turn_id: int(r.n) for r in conn.execute(
+            sa.select(s.approvals.c.turn_id, sa.func.count().label("n")).where(
+                s.approvals.c.tenant_id == tenant, s.approvals.c.status == "pending")
+            .group_by(s.approvals.c.turn_id))}
+        names = display.names_for(conn, tenant)
+        shop_of = dict(conn.execute(sa.select(
+            s.threads.c.thread_id, s.threads.c.shop_id).where(
+                s.threads.c.tenant_id == tenant)).all())
+        out: list[dict[str, Any]] = []
+        counts = {"running": 0, "waiting": 0, "done": 0}
+        for r in rows:
+            ho = turn_handoff(r)
+            if ho is None:
+                continue
+            st = ho["status"]
+            if st == "done" and pending.get(r.turn_id):
+                st = "needs_you"  # its approval still waits
+            elif st == "needs_you" and r.state == "done" and not pending.get(
+                    r.turn_id) and r.status == "parked_for_approval":
+                st = "done"  # the owner decided it since
+            atab = "running" if st == "working" else "waiting" if st == "needs_you" else "done"
+            counts[atab] += 1
+            if tab and atab != tab:
+                continue
+            if len(out) >= offset + limit:
+                continue
+            shop_id = str(shop_of.get(r.thread_id, "") or "")
+            desc = display.humanize(str(ho.get("reason") or ""), names)
+            skill = str(ho.get("skill") or "")
+            if skill:
+                about = threadmeta.skill_title(skill)
+                shop_name = names.shops.get(shop_id.lower(), "")
+                who = shop_name or (shop_id if shop_id.startswith("shop-") else "A shop")
+                desc = f"{hx.title(str(ho['to_helper']))} is working on {about} for {who}"
+            steps = _activity_steps(conn, tenant, r.turn_id)
+            out.append({
+                "task_id": ho["handoff_id"], "turn_id": r.turn_id, "thread_id": r.thread_id,
+                "helper": ho["to_helper"], "helper_name": hx.title(ho["to_helper"]),
+                "skill": skill, "status": st, "tab": atab,
+                "what": (desc or f"{hx.title(str(ho['to_helper']))} is working")[:200],
+                "shop_name": names.shops.get(shop_id.lower(), ""),
+                "started_at": _activity_at(str(r.created_at), float(r.created_ts or 0.0)),
+                "finished_at": r.finished_at, "steps": steps,
+                "pending_approvals": int(pending.get(r.turn_id) or 0)})
+        total = sum(counts.values())
+        return {"rows": out[offset:offset + limit], "total": total, "by_tab": counts}
 
 
 # -------------------------------------------------------------- approvals

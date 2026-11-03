@@ -138,6 +138,9 @@ review-pocs:        ## the outside review's proofs of concept (each reproduced o
 loop-safety-eval:   ## scripted adversarial runs (looping model, flapping tool, ping-pong helpers, self-scheduling routine, poison jobs); every attack stopped within limits (docs/LOOP-SAFETY.md)
 	META_API_KEY= $(PY) -m mimi.api.loop_safety_eval --no-write
 
+stop-eval:          ## owner stop (RAI-325): 15 scripted stops at different steps; 100% no action after the stop
+	META_API_KEY= SPITCH_API_KEY= $(PY) -m mimi.api.stop_eval --no-write
+
 claims-eval:        ## the verification gate: 16 unbacked figures, dates, names, done claims, promises and money claims held, 13 look-alike controls sent (docs/LOOP-SAFETY.md)
 	META_API_KEY= $(PY) -m mimi.harness.claims_eval --no-write
 
