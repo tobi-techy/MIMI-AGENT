@@ -267,7 +267,10 @@ def steps_from_events(events: Iterable[Any], *, route_ms: float = 0.0,
         elif typ == "claim_blocked":
             status = "held"
         elif typ == "breaker_tripped":
-            # The trip is a stop, not a success: the trip event reads "held".
+            # A stop is not a success: the trip event reads "held".
+            status = "held"
+        elif typ == "owner_stop":
+            # The owner's stop reads the same way.
             status = "held"
         name = getattr(e, "tool", "") or ("model" if kind == "model" else kind)
         at: Any = getattr(e, "at", None)

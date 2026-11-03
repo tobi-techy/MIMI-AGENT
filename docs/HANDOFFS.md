@@ -85,7 +85,7 @@ to Brand and never through the model.
 | `via` | string | how the helper was picked: `rule`, `lexical`, `fast`, `model`, `mention`, `assign`, `handback`, `binding` |
 | `hop` | int | 0, or 1 after a hand-back |
 | `status` | string | `working`, `needs_you`, `done`, `handed_back`, `failed` |
-| `steps` | list | `{name, kind, status, ms, at}`; `kind` is `route`, `tool`, `model`, `reply`, `handback` or `code`; `status` is `ok`, `refused`, `held` (claims gate) or `failed`; `ms` is the step's own time |
+| `steps` | list | `{name, kind, status, ms, at}`; `kind` is `route`, `tool`, `model`, `reply`, `handback` or `code`; `status` is `ok`, `refused`, `held` (the claims gate, a breaker trip or the owner's stop) or `failed`; `ms` is the step's own time |
 | `started_at`, `finished_at` | string | ISO 8601 with zone |
 
 ```json
