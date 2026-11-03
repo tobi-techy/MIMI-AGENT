@@ -18,6 +18,10 @@ and short reasons, all written by code:
   the distributor delivered in four weeks (stock may be borrowed or from
   elsewhere: RAI-271's gaming risk).
 
+A shop that answers its weekly stock check-in regularly (``CountSharing``,
+at least ``SHARING_MIN_WEEKS`` of the last 8 weeks) gets that as one more
+reason, supporting evidence only: it changes no outcome, flag or confidence.
+
 The shelf count is supporting evidence only: it can turn a ``support`` into
 a ``hold`` and lower the confidence, never raise anything. It never suggests
 a limit: the owner sets credit (RAI-271 non-goal "setting or changing
@@ -126,6 +130,26 @@ def credit_file(history: Mapping[str, Any], shop: Mapping[str, Any],
 
 
 @dataclass(frozen=True)
+class CountSharing:
+    """How often the shop answered its weekly stock check-in (sales tracking).
+    Supporting evidence only: a reason line, never an outcome, flag or
+    confidence change, so it can never override the bank-verified rules."""
+
+    answered_weeks: int
+    window_weeks: int = 8
+
+
+SHARING_MIN_WEEKS = 3
+
+
+def sharing_line(sharing: CountSharing | None) -> str | None:
+    if sharing is None or sharing.answered_weeks < SHARING_MIN_WEEKS:
+        return None
+    return (f"Answers the weekly check-in regularly: {sharing.answered_weeks} of the last "
+            f"{sharing.window_weeks} weekly check-ins (supporting evidence only).")
+
+
+@dataclass(frozen=True)
 class Recommendation:
     outcome: Outcome
     confidence: Confidence
@@ -160,7 +184,8 @@ def about_kobo(kobo: int) -> int:
     return ((kobo + 5_000) // 10_000) * 10_000
 
 
-def recommend(f: CreditFile, shelf: ShelfCount | None) -> Recommendation:
+def recommend(f: CreditFile, shelf: ShelfCount | None,
+              sharing: CountSharing | None = None) -> Recommendation:
     reasons: list[str] = []
     flags: list[str] = []
     days = f.window_days // 7
@@ -215,6 +240,9 @@ def recommend(f: CreditFile, shelf: ShelfCount | None) -> Recommendation:
         reasons.append("No shelf count: the photo could not be used.")
     else:
         reasons.append("No shelf photo: history only.")
+    shared = sharing_line(sharing)
+    if shared:
+        reasons.append(shared)
 
     strong = f.verified_payments >= 8
     count_ok = shelf is not None and shelf.usable and shelf.confidence != "low"

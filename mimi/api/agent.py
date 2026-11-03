@@ -98,6 +98,9 @@ from mimi.store.policy_rules import SqlPolicyRules
 from mimi.store.queue import Claim, LeaseLost, TurnQueue, turn_id_for
 from mimi.store.util import dumps, insert_ignore, loads, now_iso
 
+# The weekly slow-stock check (sales tracking): answered by code, no model,
+# with MIMI_DEMO_WIRING on (``sales.run_slow_check``).
+SLOW_ROUTINES = frozenset({"slow_stock_check"})
 log = logging.getLogger(__name__)
 
 PERSON_SOURCES = ("shop_message", "owner_message", "rep_message")
@@ -894,6 +897,11 @@ class Agent:
                         channel="owner_console", shop_id="", turn_id=claim.turn_id,
                         kind="morning_brief", now=now,
                         text=text)
+            return True
+        if lead.source == "routine" and p.name in SLOW_ROUTINES:
+            from mimi.api import sales
+
+            sales.run_slow_check(self.engine, claim.tenant_id, turn_id=claim.turn_id, now=now)
             return True
         if lead.source == "webhook" and p.name == "bank_credit" and p.shop_id:
             m = re.search(r"Amount (\d+) naira\.", p.text or "")

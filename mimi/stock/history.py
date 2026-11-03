@@ -10,9 +10,11 @@ the world's start date; day ``weeks * 7`` is the live day).
 from __future__ import annotations
 
 from collections import defaultdict
+from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import Literal
 
+from mimi.world.expiry import LineExpiry
 from mimi.world.model import Delivery, World
 
 Bucket = Literal["0-2", "3-5", "6+"]
@@ -37,6 +39,10 @@ class StockIn:
     delivery_id: str
     source: StockSource = "van"
     ordered_day: int | None = None
+    # The batch's expiry day (world day) and batch code, when the delivery
+    # note gives them (``mimi.world.expiry``). None: not known.
+    expires_day: int | None = None
+    batch: str = ""
 
 
 @dataclass(frozen=True)
@@ -92,10 +98,12 @@ class ItemHistory:
 
 
 def item_histories(
-    world: World, *, upto_day: int | None = None, include_live: bool = False
+    world: World, *, upto_day: int | None = None, include_live: bool = False,
+    expiries: Mapping[tuple[str, str], LineExpiry] | None = None,
 ) -> dict[tuple[str, str], ItemHistory]:
     """Every (shop, SKU) the shop has been delivered, with its stock-in
-    events before ``upto_day`` (all of history when None)."""
+    events before ``upto_day`` (all of history when None). With ``expiries``
+    (``mimi.world.expiry.expiry_map``) each line carries its batch and expiry."""
     deliveries: list[Delivery] = list(world.deliveries)
     if include_live:
         deliveries += list(world.live_deliveries)
@@ -105,7 +113,10 @@ def item_histories(
         if upto_day is not None and d.day >= upto_day:
             continue
         for line in d.lines:
-            rows[(d.shop_id, line.sku)].append(StockIn(d.day, line.quantity, d.delivery_id))
+            ex = expiries.get((d.delivery_id, line.sku)) if expiries else None
+            rows[(d.shop_id, line.sku)].append(StockIn(
+                d.day, line.quantity, d.delivery_id,
+                expires_day=ex.expires_day if ex else None, batch=ex.batch if ex else ""))
             names[line.sku] = (line.name, line.unit)
     return {
         key: ItemHistory(key[0], key[1], *names[key[1]],

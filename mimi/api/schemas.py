@@ -368,6 +368,10 @@ class DeliveryLineOut(_Out):
     quantity: int
     unit_price_kobo: int
     line_total_kobo: int
+    # The batch's expiry day (Africa/Lagos) and batch code from the delivery
+    # note, when it gave them (sales tracking).
+    expires_on: str | None = None
+    batch: str = ""
 
 
 class DeliveryOut(_Out):
@@ -450,6 +454,63 @@ class DecisionIn(BaseModel):
 
     note: str = Field("", max_length=2000)
     by: str = Field("owner", max_length=100, description="Who decided, for the audit line.")
+    option: Literal["move", "promo", "pickup"] | None = Field(
+        None, description="slow_stock approvals only: the option to carry out (default the "
+                          "draft's recommended one). 409 when it is not one of its options.")
+
+
+class SellThroughRow(_Out):
+    """One shop and product (sales tracking, 3 Nov 2026). Figures by code;
+    display strings carry names and ₦ only, never internal ids."""
+
+    shop_id: str
+    shop_name: str
+    area: str
+    sku: str
+    item: str
+    unit: str
+    period_days: int
+    sold_units: int = Field(description="Sold over sold_over_days: from two shop counts "
+                                        "(count + delivered - later count) when there are two, "
+                                        "else the estimate")
+    sold_over_days: int
+    sold_method: Literal["counts", "estimate"]
+    sold_value_ngn: int
+    proof_level: Literal["verified", "likely", "estimated"]
+    proof_grade: Literal["verified", "estimated", "unverified"]
+    proof: str = Field(description="The word shown beside the figure, e.g. 'estimated (shop count)'")
+    units_left: int = Field(description="Estimated units on the shelf (never a shop's count "
+                                        "shown as fact)")
+    days_of_cover: int | None
+    days_to_expiry: int | None
+    expires_on: str | None
+    status: Literal["low", "ok", "slow", "near_expiry"]
+    status_word: str
+    watch: Literal["", "near_expiry", "overstock"] = Field(
+        "", description="A low-confidence slow reading: a hint, no alert")
+    confidence: Literal["low", "medium", "high"]
+    at_risk_units: int
+    at_risk_ngn: int
+    last_count_on: str | None
+    note: str
+
+
+class SellThroughOut(_Out):
+    as_of: str
+    period_days: int
+    rows: list[SellThroughRow]
+    total: int
+    counts: dict[str, int] = Field(description="Rows per status, before any status filter")
+    at_risk_ngn: int
+    at_risk_text: str
+
+
+class SlowCheckOut(_Out):
+    week: str
+    opened: list[str] = Field(description="slow_stock approval ids opened by this run "
+                                          "(empty when this week's were already opened)")
+    skipped: list[dict[str, str]]
+    checked: int
 
 
 class DecisionOut(_Out):

@@ -31,7 +31,8 @@ def main(argv: list[str] | None = None) -> int:
         ensure_schema(engine)
     world = load_world()
     try:
-        counts = seed_world(engine, world, tenant_id=args.tenant_id or None, reset=args.reset)
+        counts = seed_world(engine, world, tenant_id=args.tenant_id or None, reset=args.reset,
+                            stock_demo=True)
     except SeedError as exc:
         if args.if_empty and "already seeded" in str(exc):
             print(f"{exc}; nothing to do")

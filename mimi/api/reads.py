@@ -127,7 +127,8 @@ def get_shop(engine: Engine, tenant: str, shop_id: str) -> dict[str, Any]:
             lines.setdefault(ln.delivery_id, []).append({
                 "sku": ln.sku, "name": ln.name, "unit": ln.unit, "quantity": ln.quantity,
                 "unit_price_kobo": int(ln.unit_price_kobo),
-                "line_total_kobo": int(ln.line_total_kobo)})
+                "line_total_kobo": int(ln.line_total_kobo),
+                "expires_on": ln.expires_on, "batch": ln.batch or ""})
         disputes = [{"dispute_id": d.dispute_id, "delivery_id": d.delivery_id, "sku": d.sku,
                      "missing": d.missing, "text": d.text, "status": d.status}
                     for d in conn.execute(sa.select(s.disputes).where(

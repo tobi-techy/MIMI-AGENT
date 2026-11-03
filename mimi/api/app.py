@@ -48,7 +48,7 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
 from mimi.api import connectors as cx
 from mimi.api import demo_wiring as dw
-from mimi.api import reads
+from mimi.api import reads, sales
 from mimi.api.agent import Agent, Conflict, NotFound
 from mimi.api.config import LOCALHOST_REGEX, ApiKey, Settings
 from mimi.api.demo import (
@@ -84,8 +84,10 @@ from mimi.api.schemas import (
     MeOut,
     PolicyIn,
     PolicyOut,
+    SellThroughOut,
     ShopDetail,
     ShopList,
+    SlowCheckOut,
     StopOut,
     TaskList,
     ThreadDetail,
@@ -434,7 +436,14 @@ def create_app(settings: Settings | None = None, agent: Agent | None = None, *,
 
     def _decide(approval_id: str, key: ApiKey, body: DecisionIn | None, approve: bool,
                 wait: bool) -> dict[str, Any]:
-        b = body or DecisionIn(note="", by="owner")
+        b = body or DecisionIn(note="", by="owner", option=None)
+        slow = sales.is_slow(engine, key.tenant_id, approval_id)
+        if slow and approve:
+            option = sales.check_option(engine, key.tenant_id, approval_id, b.option)
+            row, _ = agent.decide(key.tenant_id, approval_id, approve=True, by=b.by,
+                                  note=b.note, demo_mode=settings.demo_mode)
+            sales.on_approved(engine, key.tenant_id, approval_id, option)
+            return {"approval": agent.approval(key.tenant_id, approval_id), "follow_up": None}
         if approve and settings.demo_mode:
             a = agent.approval(key.tenant_id, approval_id)
             if refuses_approval(a["tool"], a["intent_kind"]):
@@ -466,7 +475,10 @@ def create_app(settings: Settings | None = None, agent: Agent | None = None, *,
         """A ``zoho_payment`` approval: calls Zoho Books' delete path (a fake Zoho
         kept in the store in demo mode). A ``credit_over_limit`` approval: puts
         the old limit back. 409 for anything else or a second undo."""
-        dw.undo_approval(engine, key.tenant_id, approval_id, demo_mode=settings.demo_mode)
+        if sales.is_slow(engine, key.tenant_id, approval_id):
+            sales.undo(engine, key.tenant_id, approval_id)
+        else:
+            dw.undo_approval(engine, key.tenant_id, approval_id, demo_mode=settings.demo_mode)
         return {"approval": agent.approval(key.tenant_id, approval_id), "follow_up": None}
 
     @app.post("/v1/credit/{shop_id}/limit", response_model=CreditLimitOut,
@@ -487,6 +499,31 @@ def create_app(settings: Settings | None = None, agent: Agent | None = None, *,
              summary="Credit limits per shop and credit requests")
     def get_credit(key: Owner) -> dict[str, Any]:
         return reads.credit(engine, key.tenant_id)
+
+    @app.get("/v1/stock/sell-through", response_model=SellThroughOut, responses=_ERRORS,
+             summary="Sell-through per shop and product: sold, days of cover, days to "
+                     "expiry, status")
+    def get_sell_through(key: Owner, days: Annotated[int, Query(ge=7, le=90)] = 28,
+                         shop_id: Annotated[str, Query(max_length=64,
+                                                       pattern=r"^[A-Za-z0-9_.-]*$")] = "",
+                         status: Annotated[str, Query(
+                             pattern="^(|low|ok|slow|near_expiry)$")] = "") -> dict[str, Any]:
+        """Code only, no model. ``sold_units`` comes from two shop counts when there
+        are two (with ``proof`` saying so), else from the estimate. A low-confidence
+        slow reading is a ``watch`` hint, not a status. Sorted near expiry, slow,
+        low, ok, then by value at risk."""
+        return sales.sell_through(engine, key.tenant_id, days=days, shop_id=shop_id,
+                                  status=status)
+
+    @app.post("/v1/stock/slow-check", response_model=SlowCheckOut, responses=_ERRORS,
+              summary="Run the weekly slow-stock check: opens slow_stock approvals")
+    def post_slow_check(key: Owner) -> dict[str, Any]:
+        """Each slow or near-expiry line (medium or high confidence), at most one per
+        shop and one per item a week, becomes a ``slow_stock`` approval with move,
+        promo or pickup options (quantities and ₦ by code). Running it again in the
+        same week opens nothing new. Nothing moves until the owner approves; Mimi
+        never moves stock or money."""
+        return sales.run_slow_check(engine, key.tenant_id)
 
     @app.get("/v1/mentions", response_model=MentionList, responses=_ERRORS,
              summary="The owner's @ picker: helpers, shops and reps")

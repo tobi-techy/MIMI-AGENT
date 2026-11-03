@@ -1,0 +1,120 @@
+{
+  "live_day": 56,
+  "policy": "slow-stock-v0.1",
+  "seeds": {
+    "dev": {
+      "alerts": 12,
+      "fn": 27,
+      "fp": 4,
+      "lines": 202,
+      "near_expiry_positives": 7,
+      "overstock_positives": 28,
+      "positives": 35,
+      "precision": 0.6667,
+      "recall": 0.2286,
+      "seed": 2610,
+      "tp": 8,
+      "ungated": {
+        "precision": 0.6923,
+        "recall": 0.2571
+      },
+      "with_a_count": {
+        "lines": 137,
+        "precision": 0.6667,
+        "recall": 0.2963
+      },
+      "without_a_count_recall": 0.0
+    },
+    "held_out": {
+      "alerts": 8,
+      "fn": 33,
+      "fp": 1,
+      "lines": 202,
+      "near_expiry_positives": 9,
+      "overstock_positives": 31,
+      "positives": 40,
+      "precision": 0.875,
+      "recall": 0.175,
+      "seed": 7,
+      "tp": 7,
+      "ungated": {
+        "precision": 0.8889,
+        "recall": 0.2
+      },
+      "with_a_count": {
+        "lines": 130,
+        "precision": 0.875,
+        "recall": 0.2593
+      },
+      "without_a_count_recall": 0.0
+    }
+  },
+  "spread": {
+    "11": {
+      "alerts": 5,
+      "fn": 24,
+      "fp": 2,
+      "lines": 202,
+      "near_expiry_positives": 3,
+      "overstock_positives": 24,
+      "positives": 27,
+      "precision": 0.6,
+      "recall": 0.1111,
+      "tp": 3,
+      "ungated": {
+        "precision": 0.6,
+        "recall": 0.1111
+      },
+      "with_a_count": {
+        "lines": 137,
+        "precision": 0.5,
+        "recall": 0.1111
+      },
+      "without_a_count_recall": 0.1111
+    },
+    "23": {
+      "alerts": 17,
+      "fn": 20,
+      "fp": 8,
+      "lines": 202,
+      "near_expiry_positives": 10,
+      "overstock_positives": 19,
+      "positives": 29,
+      "precision": 0.5294,
+      "recall": 0.3103,
+      "tp": 9,
+      "ungated": {
+        "precision": 0.5294,
+        "recall": 0.3103
+      },
+      "with_a_count": {
+        "lines": 133,
+        "precision": 0.5625,
+        "recall": 0.4737
+      },
+      "without_a_count_recall": 0.0
+    },
+    "31": {
+      "alerts": 12,
+      "fn": 36,
+      "fp": 4,
+      "lines": 202,
+      "near_expiry_positives": 9,
+      "overstock_positives": 35,
+      "positives": 44,
+      "precision": 0.6667,
+      "recall": 0.1818,
+      "tp": 8,
+      "ungated": {
+        "precision": 0.6667,
+        "recall": 0.1818
+      },
+      "with_a_count": {
+        "lines": 124,
+        "precision": 0.6667,
+        "recall": 0.2667
+      },
+      "without_a_count_recall": 0.0
+    }
+  }
+}

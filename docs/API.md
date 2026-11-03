@@ -234,7 +234,9 @@ approval reads as 404. Keys are compared by SHA-256 in constant time; give
 | `GET /v1/credit` | owner | Per-shop limit, outstanding, available, and credit requests from helpers' credit intents (Credit, RAI-271). Each limit row also has `over_limit`, `over_limit_by_kobo`, `over_limit_by_naira` (owes more than its limit, from code) |
 | `POST /v1/credit/{shop_id}/limit` | owner | The owner sets a shop's limit: `{amount_ngn, reason?}` (whole naira) answers `{shop_id, old_limit_ngn, new_limit_ngn, change_id}`. Recorded as a `limit_change` step on the shop's thread. 404 for another distributor's shop |
 | `POST /v1/credit/changes/{change_id}/undo` | owner | Puts the limit back: `{shop_id, old_limit_ngn, new_limit_ngn, change_id, undone: true}`; a second undo is 409 |
-| `POST /v1/approvals/{id}/undo` | owner | An approved `zoho_payment`: Zoho Books' delete path (`result.undo_available` turns false). An approved `credit_over_limit`: the old limit back. 409 for anything else or a second undo |
+| `POST /v1/approvals/{id}/undo` | owner | An approved `zoho_payment`: Zoho Books' delete path (`result.undo_available` turns false). An approved `credit_over_limit`: the old limit back. An approved `slow_stock`: the plan is off and the shop is told. 409 for anything else or a second undo |
+| `GET /v1/stock/sell-through` | owner | Sales tracking (3 Nov 2026): per shop and product `sold_units` over `sold_over_days` (`sold_method` `counts`: two shop counts, count + delivered - later count; else `estimate`), `sold_value_ngn`, `proof_level` / `proof_grade` / `proof` ("estimated (shop count)"), `units_left` (estimate), `days_of_cover`, `days_to_expiry`, `expires_on`, `status` (`near_expiry`, `slow`, `low`, `ok`) and `status_word`, `watch` (a low-confidence slow reading: hint only), `confidence`, `at_risk_units` / `at_risk_ngn`, `last_count_on`, a plain `note` (names and ₦, no ids). `days` 7 to 90 (28), `shop_id`, `status` filters; top-level `counts` per status, `at_risk_ngn`, `at_risk_text`. Code only |
+| `POST /v1/stock/slow-check` | owner | Runs the weekly slow-stock check (also the `slow_stock_check` routine with `MIMI_DEMO_WIRING=1`): opens `slow_stock` approvals, one per shop and per item a week (a rerun opens nothing). `{week, opened, skipped, checked}` |
 | `GET /v1/mentions` | owner | The console's @ picker: `{mentions: [{kind, id, name, subtitle, mention, assign_to}], total}`. `kind` is `helper`, `shop` or `rep`. `q` matches the start of a name or of any word in it (a leading `@` is ignored); `kinds` is a comma list (`shop`, `helper,rep`), empty for all; `limit` 1 to 200 (50). Helper rows carry `mention` (`@Collector`) and `assign_to` for `POST /v1/turns`; shop rows' `subtitle` is area and rep, rep rows' is their areas. A channel key is 403 |
 | `GET /v1/connectors` | owner | Connector toolkits (Zoho Books, Zoho CRM, Google Sheets, CSV/Excel, Mono soon) with their reads, writes and connections (RAI-277; `docs/CONNECTORS.md`) |
 | `POST /v1/connectors/{toolkit}/connect` | owner | Start the connect flow: body `{region}` for Zoho (`com`, `eu`, `in`, `cn`, `au`); returns `redirect_url` and a single-use `state`. Demo and offline runs return a fake redirect, never real OAuth |
@@ -292,6 +294,28 @@ behind `MIMI_DEMO_WIRING=1` (set in the Dockerfile, off in CI and `make check`).
   internal ids ("Thank you. Your delivery is confirmed."; the receipt's
   `Ref dlv-..., 2026-10-26` line reads `Delivered 26 Oct 2026`). The stored
   record, and everything a model reads, keeps what was gated.
+
+### Slow stock and sell-through (3 Nov 2026, `mimi/api/sales.py`)
+
+Code only; see [STOCK.md](STOCK.md#slow-stock-and-near-expiry-sales-tracking-3-nov-2026).
+
+* **`slow_stock` approvals** (`kind: "slow_stock"`). `payload`: `shop_name`,
+  `item`, `slow_kind` (`near_expiry` or `overstock`), `expires_on`,
+  `confidence`, `expiry_band`, `cover_band`, `reason` (plain, "about 2 kegs of
+  Palmside Vegetable Oil 5L may not sell before they expire on 5 Nov."),
+  `options` (each `action` `move` / `pickup` / `promo`, `quantity`, `unit`,
+  `unit_price_kobo`, `value_kobo`, `value_ngn`, `to_shop_name` for a move,
+  `why`, `text` for the owner, `shop_message` the shop gets on approval),
+  `recommended`, `chosen`, `moves_stock: false`, `moves_money: false`,
+  `result`.
+* **Approve** with `{"option": "pickup"}` (default the recommended option; 409
+  when not one of its options): the shop gets `shop_message` once on its
+  thread, the owner thread a line, and `result` is
+  `{option, shop_told: true, undo_available: true, decided_at}`. No follow-up
+  turn, no model. **Reject**: nothing is sent. **Undo**
+  (`POST /v1/approvals/{id}/undo`): the shop is told to ignore it,
+  `result.undo_available` turns false; a second undo is 409.
+* **`GET /v1/shops/{id}`** delivery lines carry `expires_on` and `batch`.
 
 Owner-facing text is rewritten by `mimi.api.display` (30 Oct 2026 run 2):
 `shop-001` and `rep-03` become the shop's and rep's names from the book, an
