@@ -650,9 +650,39 @@ def _negated(text: str, at: int) -> bool:
     return bool(_NEGATION.search(text[start:at]))
 
 
+# "read" is a noun too ("the read was refused"): only a verb use counts as
+# a success claim, i.e. read with a subject or auxiliary in front of it
+# ("I read", "have read", "was read"). A bare "read" after a determiner or
+# another noun is the failure being named, never a claim (RAI-324 review).
+_READ_VERB = re.compile(
+    r"\b(?:i|we|you|they|he|she|it|have|has|had|'ve|’ve|was|were|is|are|am|"
+    r"been|being|already|just|not|never|n't|can|could|to|will|would|"
+    r"should|shall|must|may|might|did|do|does)\s+(?:\w+\s+){0,2}?read\s*$", re.I)
+
+
+def _verb_read(text: str, at: int, end: int) -> bool:
+    """Whether the "read" ending at ``end`` is used as a verb: a subject or
+    an auxiliary stands just before it in the same clause."""
+    start = 0
+    for m in _CLAUSE_BREAK.finditer(text, 0, at):
+        start = m.end()
+    return bool(_READ_VERB.search(text[start:end]))
+
+
 def _affirmative(text: str, pattern: re.Pattern[str]) -> bool:
     """A match for ``pattern`` that its own clause does not negate."""
     return any(not _negated(text, m.start()) for m in pattern.finditer(text))
+
+
+def _affirmative_success(text: str) -> bool:
+    """An unnegated success word, where a bare noun "read" never counts."""
+    for m in _HONEST_SUCCESS.finditer(text):
+        if _negated(text, m.start()):
+            continue
+        if m.group(0).lower() == "read" and not _verb_read(text, m.start(), m.end()):
+            continue
+        return True
+    return False
 
 
 def _tool_texts(messages: Sequence[Any]) -> list[str]:
@@ -700,16 +730,19 @@ def tool_refused(messages: Sequence[Any]) -> bool:
 
 
 def dishonest_success(text: str, *, messages: Sequence[dict[str, Any]],
-                      intents: Sequence[Any] = ()) -> list[str]:
-    """Success claims in ``text`` after this step's own tools said no.
+                      intents: Sequence[Any] = (),
+                      refused: bool = False) -> list[str]:
+    """Success claims in ``text`` after this step's own tools said no, or
+    after a denial in an earlier step of the same run that no progress has
+    reset yet (``refused``: the breaker's own streak notion).
 
-    Only the step's own tools count: an earlier step's results are history,
-    and a success claim with no refusal behind it is the outcomes check's job
-    (``unbacked_claims``), not this one. A success word the reply negates in
-    its own clause ("I could not read it") reports the failure honestly and is
-    never held.
+    Only this run counts: thread history from earlier turns never holds a
+    reply (pass ``refused=False`` for that). A success claim with no refusal
+    behind it is the outcomes check's job (``unbacked_claims``), not this
+    one. A success word the reply negates in its own clause ("I could not
+    read it") reports the failure honestly and is never held.
     """
-    if not any(_refused_text(t) for t in _step_tool_texts(messages)):
+    if not refused and not any(_refused_text(t) for t in _step_tool_texts(messages)):
         return []
     plain = _QUOTED.sub(" ", text)
     hits = [m.group(1).lower() for m in _CLAIM.finditer(plain)]
@@ -720,7 +753,7 @@ def dishonest_success(text: str, *, messages: Sequence[dict[str, Any]],
         hits.append(head.group(1).lower())
     if _DONE_START.search(plain):
         hits.append("done")
-    if not hits and _affirmative(plain, _HONEST_SUCCESS):
+    if not hits and _affirmative_success(plain):
         hits.append("refused tool reported as success")
     if not hits and _affirmative(plain, _HONEST_DONE) and _HONEST_OK_NOUNS.search(plain):
         hits.append("refused tool reported as success")
@@ -1019,7 +1052,8 @@ def check_outcomes(tool: str, text: str, *, messages: Sequence[dict[str, Any]],
                    intents: Sequence[Any], wake_source: str,
                    other_drafts: int = 0, history_end: int = 0, names: Iterable[str] = (),
                    shops: Mapping[str, str] | None = None, channel: str | None = None,
-                   to_shop: str = "", exclude: str = "") -> dict[str, list[str]]:
+                   to_shop: str = "", exclude: str = "",
+                   refused: bool = False) -> dict[str, list[str]]:
     """Done claims and promises, checked once the whole step has run, so a
     send_to_user next to the tool that does the work in the same model turn is
     judged on what that tool actually did. A failed tool behind a success
@@ -1034,7 +1068,7 @@ def check_outcomes(tool: str, text: str, *, messages: Sequence[dict[str, Any]],
                         to_shop=to_shop, exclude=exclude)
     if c:
         out["claims"] = c
-    bad = dishonest_success(text, messages=messages, intents=intents)
+    bad = dishonest_success(text, messages=messages, intents=intents, refused=refused)
     if bad and "claims" not in out:
         # A claim the outcomes already hold needs no second verdict; the
         # honesty check catches a "success" the evidence cannot back at all
@@ -1050,7 +1084,8 @@ def check(tool: str, text: str, *, messages: Sequence[dict[str, Any]], intents: 
           today: date, wake_source: str, names: Iterable[str] = (),
           other_drafts: int = 0, outcomes: bool = True,
           history_end: int = 0, shops: Mapping[str, str] | None = None,
-          channel: str | None = None, to_shop: str = "") -> dict[str, list[str]]:
+          channel: str | None = None, to_shop: str = "",
+          refused: bool = False) -> dict[str, list[str]]:
     """Every problem with ``text`` by kind; empty when it may be sent.
     ``outcomes=False`` leaves done claims and promises to ``check_outcomes``."""
     names = list(names)
@@ -1066,14 +1101,14 @@ def check(tool: str, text: str, *, messages: Sequence[dict[str, Any]], intents: 
         n = unknown_names(src, text, names, shops)
         if n:
             out["names"] = n
-        bad = dishonest_success(text, messages=messages, intents=intents)
+        bad = dishonest_success(text, messages=messages, intents=intents, refused=refused)
         if bad:
             out["honesty"] = bad
     if outcomes:
         out.update(check_outcomes(tool, text, messages=messages, intents=intents,
                                   wake_source=wake_source, other_drafts=other_drafts,
                                   history_end=history_end, names=names, shops=shops,
-                                  channel=channel, to_shop=to_shop))
+                                  channel=channel, to_shop=to_shop, refused=refused))
     nv = never_claims(text)
     if nv:
         out["never"] = nv

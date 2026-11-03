@@ -1305,6 +1305,10 @@ class Harness:
         tools actually did. A held message is withdrawn (it never leaves) and
         the model gets the run's one repair; a second miss fails safe."""
         held: list[tuple[IntentRecord, dict[str, list[str]]]] = []
+        # A denial in an earlier step of this run still counts until progress
+        # resets the streak: the honesty gate uses the breaker's own notion,
+        # not just the current step's tool answers (RAI-324 review).
+        refused = state.denials_in_a_row > 0
         for rec in state.intents[n_int:]:
             if rec.tool not in FIGURE_CHECKED or rec.tool not in C.PERSON_FACING:
                 continue
@@ -1318,7 +1322,8 @@ class Harness:
                                         other_drafts=other, history_end=self._history_end(state),
                                         names=self._names(state.tenant_id),
                                         shops=self._shops(state.tenant_id), channel=channel,
-                                        to_shop=to_shop, exclude=rec.idempotency_key)
+                                        to_shop=to_shop, exclude=rec.idempotency_key,
+                                        refused=refused)
             if problems:
                 held.append((rec, problems))
         if not held:

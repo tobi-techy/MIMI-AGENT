@@ -82,12 +82,15 @@ def test_three_consecutive_denials_park_with_an_owner_question() -> None:
 
 
 def test_progress_resets_the_streak() -> None:
+    # Two denials, then a progress step that does NOT end the run, then one
+    # more denial: without the reset the third denial would trip the breaker.
+    # The progress step must not end the turn, or the run would stop before
+    # the final denial and the test would pass even with no reset.
     r = _run(
         say("", ("get_balance", {"shop_id": "shop-001"})),
-        say("", ("get_invoices", {"shop_id": "shop-002"}),
-            ("send_to_user", {"channel": "owner_console",
-                              "body": "Iya Tolu Foodstuff owes N1,056,450.",
-                              "ends_turn": True})),
+        say("", ("get_payment_history", {"shop_id": "shop-001"})),
+        say("", ("get_invoices", {"shop_id": "shop-002"})),
+        say("", ("get_balance", {"shop_id": "shop-001"})),
         withheld=("shop-001",))
     assert r.status != "stopped_denied"
 
@@ -216,9 +219,43 @@ def test_an_honest_failure_report_is_never_held() -> None:
         "I could not read the balance; what should I do?", messages=msgs) == []
     assert C.dishonest_success(
         "The balance check failed, so nothing was read.", messages=msgs) == []
+    # Naming the failure with the bare noun is honest too: "the read was
+    # refused" never claims the work got done (review follow-up).
+    assert C.dishonest_success(
+        "I could not check that yet; the read was refused, "
+        "and I need someone to look at it.", messages=msgs) == []
+    assert C.dishonest_success(
+        "The invoice read was refused, so I could not check it.",
+        messages=msgs) == []
     # A question form does not excuse a claim that is still affirmative.
     assert C.dishonest_success("I read the balance; what next?", messages=msgs)
     assert C.dishonest_success("I have sent the reminder.", messages=msgs)
+
+
+def test_a_refusal_since_last_progress_still_holds() -> None:
+    """The breaker's own notion: a refusal in an earlier step of the same run
+    holds a later affirmative claim until progress resets the streak, while a
+    bare noun naming the failure still passes (review follow-up)."""
+    denied = '{"denied": true, "reason": "consent", "next_step": "ask the owner"}'
+    ok = '{"ok": true, "data": {"a": 1}}'
+    history: list[dict[str, Any]] = [
+        {"role": "assistant", "content": "", "tool_calls": [{"id": "0"}]},
+        {"role": "tool", "tool_call_id": "0", "content": denied},
+        {"role": "assistant", "content": "", "tool_calls": [{"id": "1"}]},
+        {"role": "tool", "tool_call_id": "1", "content": ok},
+    ]
+    # Step scope alone stays quiet (thread history is never a denial)...
+    assert C.dishonest_success("I have read and checked the balance.",
+                               messages=history) == []
+    # ...but the loop tells the gate a denial is on the streak, so the same
+    # reply is held until progress resets it.
+    assert C.dishonest_success("I have read and checked the balance.",
+                               messages=history, refused=True)
+    # ...and the honest report of that same earlier refusal still goes out.
+    assert C.dishonest_success(
+        "I could not check that yet; the read was refused, "
+        "and I need someone to look at it.",
+        messages=history, refused=True) == []
 
 
 # ------------------------------------------------------------ loop safety
