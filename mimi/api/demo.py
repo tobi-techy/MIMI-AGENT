@@ -329,7 +329,7 @@ class DemoStore:
         world = _world()
         seed_world(self.engine, world, tenant_id=tenant,
                    name=f"{world.distributor} (demo copy)",
-                   daily_cap_kobo=self.conf.ip_daily_cap_kobo)
+                   daily_cap_kobo=self.conf.ip_daily_cap_kobo, stock_demo=True)
         token = TOKEN_PREFIX + secrets.token_urlsafe(32)
         expires = now + self.conf.session_ttl_s
         with self.engine.begin() as conn:

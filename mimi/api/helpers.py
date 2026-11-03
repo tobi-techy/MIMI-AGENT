@@ -34,6 +34,7 @@ from __future__ import annotations
 import os
 from collections.abc import Mapping
 from dataclasses import dataclass, field
+from functools import partial
 from pathlib import Path
 from typing import Any
 
@@ -45,6 +46,7 @@ from mimi.brand.tools import (
     BrandPorts,
     register_brand_tools,
 )
+from mimi.checkin.durable import answered_in_window
 from mimi.checkin.env import checkin_mode
 from mimi.checkin.other import SupplierReader
 from mimi.checkin.tools import CHECKIN_TOOLS, CheckinPorts, register_checkin_tools
@@ -187,10 +189,12 @@ def build_helpers(policy: RiskPolicy | None = None, *, go: SqlGo | None = None,
     if checkin_mode() != "off":
         register_checkin_tools(reg, CheckinPorts(
             supplier_reader=SupplierReader(deps.stock),
-            stock_reader=StockAnswerReader(deps.stock), distributor=dist))
+            stock_reader=StockAnswerReader(deps.stock), distributor=dist,
+            engine=getattr(go, "engine", None)))
         checkin_tools = CHECKIN_TOOLS
     register_credit(reg, CreditPorts(photos=StorePhotos(go, deps.media),  # type: ignore[arg-type]
-                                     segmenter=deps.segmenter, distributor=dist))
+                                     segmenter=deps.segmenter, distributor=dist,
+                                     sharing=partial(answered_in_window, go.engine)))
     register_order_tools(reg, OrderPorts(reader=deps.list_reader(),
                                          images=StorePhotos(go, deps.media), distributor=dist))
     helpers["proof"] = Helper(

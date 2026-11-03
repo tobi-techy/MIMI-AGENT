@@ -62,6 +62,7 @@ from mimi.harness.binding import AnswerBinder, ask_is_live, delivery_ids_in
 from mimi.harness.context import ContextBuilder
 from mimi.harness.frontdoor import FrontDoor
 from mimi.harness.gateway import Gateway, ToolModel, kobo_cost
+from mimi.harness.go import CrossTenant
 from mimi.harness.inbound import Directory, Inbound, Payload
 from mimi.harness.loop import LAGOS, Harness, Helper, LoopState, _naira, business_key
 from mimi.harness.policy import GoPolicy, RiskPolicy
@@ -97,6 +98,9 @@ from mimi.store.policy_rules import SqlPolicyRules
 from mimi.store.queue import Claim, LeaseLost, TurnQueue, turn_id_for
 from mimi.store.util import dumps, insert_ignore, loads, now_iso
 
+# The weekly slow-stock check (sales tracking): answered by code, no model,
+# with MIMI_DEMO_WIRING on (``sales.run_slow_check``).
+SLOW_ROUTINES = frozenset({"slow_stock_check"})
 log = logging.getLogger(__name__)
 
 PERSON_SOURCES = ("shop_message", "owner_message", "rep_message")
@@ -679,6 +683,53 @@ class Agent:
             return bool(conn.execute(sa.select(s.turns.c.stop).where(
                 s.turns.c.turn_id == turn_id)).scalar())
 
+    def stop_turn(self, tenant_id: str, turn_id: str) -> dict[str, Any]:
+        """Flag one turn to stop at its next step boundary (``POST
+        /v1/turns/{id}/stop``). Idempotent: a turn that already stopped, or
+        finished before the flag landed, reports what it is, changed or not.
+        A turn id of another distributor reads as not found."""
+        now = wall()
+        with self.engine.begin() as conn:
+            row = conn.execute(sa.select(s.turns).where(
+                s.turns.c.turn_id == turn_id, s.turns.c.tenant_id == tenant_id)).first()
+            if row is None:
+                if conn.execute(sa.select(sa.literal(1)).where(
+                        sa.exists(sa.select(s.turns.c.turn_id).where(
+                            s.turns.c.turn_id == turn_id)))).scalar():
+                    raise CrossTenant(turn_id)
+                raise NotFound(turn_id)
+            helper = str(row.helper or "")
+            if row.state in ("queued", "leased"):
+                conn.execute(s.turns.update().where(
+                    s.turns.c.turn_id == turn_id, s.turns.c.tenant_id == tenant_id,
+                    s.turns.c.state.in_(("queued", "leased"))).values(stop=True))
+                insert_ignore(conn, s.thread_events, {
+                    "tenant_id": tenant_id, "event_id": f"stop_{turn_id}",
+                    "thread_id": row.thread_id, "run_id": str(row.run_id or ""),
+                    "turn_id": turn_id, "seq": -1, "step": 0, "type": "owner_stop",
+                    "tool": "", "tier": "",
+                    "short": ("The owner stopped this task; it ends at its next step "
+                              "and sends nothing more"),
+                    "cost_kobo": 0, "model": "", "duration_ms": 0.0,
+                    "data": dumps({"by": "owner", "stopped_at": now}),
+                    "at": now_iso(now), "ts": now})
+                stopped = True
+            elif str(row.status) in ("stopped_by_owner", "stopped_running_turns"):
+                stopped = True
+            else:
+                stopped = False
+            message = {
+                (True, True): "Stopping it now: it sends nothing more.",
+                (True, False): "Already stopped: it sends nothing more.",
+                (False, False): "Already finished: stopping changes nothing.",
+            }[(stopped, row.state in ("queued", "leased"))]
+            if helper and helper != "mimi":
+                message = f"{hx.title(helper)}: {message[:1].lower() + message[1:]}"
+            return {"turn_id": turn_id, "state": str(row.state),
+                    "status": ("stopping" if stopped and row.state in (
+                        "queued", "leased") else str(row.status)),
+                    "stopped": stopped, "message": message}
+
     def _load_batch(self, tenant_id: str, ids: Sequence[str]) -> list[Inbound]:
         with self.engine.connect() as conn:
             rows = conn.execute(sa.select(s.inbound_messages.c.external_id,
@@ -846,6 +897,11 @@ class Agent:
                         channel="owner_console", shop_id="", turn_id=claim.turn_id,
                         kind="morning_brief", now=now,
                         text=text)
+            return True
+        if lead.source == "routine" and p.name in SLOW_ROUTINES:
+            from mimi.api import sales
+
+            sales.run_slow_check(self.engine, claim.tenant_id, turn_id=claim.turn_id, now=now)
             return True
         if lead.source == "webhook" and p.name == "bank_credit" and p.shop_id:
             m = re.search(r"Amount (\d+) naira\.", p.text or "")

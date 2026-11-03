@@ -136,6 +136,10 @@ delivery_lines = sa.Table(
     sa.Column("quantity", sa.Integer(), nullable=False),
     sa.Column("unit_price_kobo", sa.BigInteger(), nullable=False),
     sa.Column("line_total_kobo", sa.BigInteger(), nullable=False),
+    # Batch and expiry from the delivery note (sales tracking, alembic 0015);
+    # NULL when the note gave none. Africa/Lagos day.
+    sa.Column("expires_on", sa.String(10), nullable=True),
+    sa.Column("batch", sa.String(64), nullable=True),
     sa.PrimaryKeyConstraint("tenant_id", "delivery_id", "line_no"),
 )
 
@@ -704,6 +708,37 @@ policy_changes = sa.Table(
     sa.Column("created_at", sa.String(40), nullable=False),
     sa.Column("created_ts", sa.Float(), nullable=False),
     sa.Index("ix_policy_changes_tenant", "tenant_id", "created_ts"),
+)
+
+# Weekly check-in state (RAI-276), durable (sales tracking, alembic 0015):
+# one row per shop and ISO week (idempotent on the scheduler's event id), and
+# one row per shop for its consecutive skips, answered streak, Connect offer
+# and stop. Before this it lived in process memory, so MIMI_CHECKIN could not
+# safely be on with more than one worker or across a restart.
+checkin_weeks = sa.Table(
+    "checkin_weeks", metadata,
+    _tenant(),
+    sa.Column("shop_id", sa.String(64), nullable=False),
+    sa.Column("week", sa.String(8), nullable=False),
+    sa.Column("event_id", sa.String(200), nullable=False),
+    # asked | answered | skipped | stopped | connected_offered
+    sa.Column("status", sa.String(24), nullable=False),
+    sa.Column("low_stock_sku", sa.String(64), nullable=False, default=""),
+    sa.Column("answered_at", sa.String(40), nullable=False, default=""),
+    sa.Column("updated_at", sa.String(40), nullable=False),
+    sa.PrimaryKeyConstraint("tenant_id", "shop_id", "week"),
+    sa.Index("ix_checkin_weeks_event", "tenant_id", "event_id"),
+)
+
+checkin_shops = sa.Table(
+    "checkin_shops", metadata,
+    _tenant(),
+    sa.Column("shop_id", sa.String(64), nullable=False),
+    sa.Column("skips", sa.Integer(), nullable=False, default=0),
+    sa.Column("streak", sa.Integer(), nullable=False, default=0),
+    sa.Column("connect_offered", sa.Boolean(), nullable=False, default=False),
+    sa.Column("updated_at", sa.String(40), nullable=False),
+    sa.PrimaryKeyConstraint("tenant_id", "shop_id"),
 )
 
 BOOK_TABLES = (reps, shops, consent_withheld, skus, deliveries, delivery_lines, receivables,

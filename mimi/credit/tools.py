@@ -40,6 +40,7 @@ from pydantic import BaseModel, ConfigDict, Field
 from mimi.credit import copy
 from mimi.credit.review import (
     RECOMMENDER_VERSION,
+    CountSharing,
     CreditFile,
     Recommendation,
     about_kobo,
@@ -115,6 +116,10 @@ class CreditPorts:
     counts: dict[tuple[str, str], ShelfCount] = field(default_factory=dict)
     sam_images: int = 0
     on_count: Callable[[ShelfCount], None] | None = None
+    # (tenant, shop, today ISO) -> weekly check-ins the shop answered in the
+    # last 8 ISO weeks (sales tracking). Wired to the store by the API; None
+    # (tests, the sim): no sharing evidence.
+    sharing: Callable[[str, str, str], int] | None = None
 
 
 # ------------------------------------------------------------------ models
@@ -364,7 +369,8 @@ def register_credit(registry: ToolRegistry, ports: CreditPorts) -> None:
                ) -> tuple[CreditFile, ShelfCount | None, Recommendation]:
         f, _ = _file(ctx, shop_id)
         shelf = shelf_for(ctx, shop_id, photo_id) if photo_id else None
-        return f, shelf, recommend(f, shelf)
+        n = ports.sharing(ctx.tenant_id, shop_id, lagos_day(ctx)) if ports.sharing else 0
+        return f, shelf, recommend(f, shelf, CountSharing(n) if n else None)
 
     def get_credit_file(ctx: ToolContext, args: ShopIn) -> CreditFileOut:
         """A shop's credit file from the book: limit, what it owes and how late, bank-verified payments (only these count), payments not in the bank feed (shown, not counted), deliveries, broken promises, any credit request already waiting for the owner, and photo asks sent today."""

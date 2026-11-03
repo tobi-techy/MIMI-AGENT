@@ -1,0 +1,28 @@
+{
+  "name": "mimi-imessage-bridge",
+  "version": "0.1.0",
+  "private": true,
+  "description": "iMessage bridge for the Mimi demo: Spectrum Cloud iMessage in, Mimi /v1/turns as a demo shop, ready replies out.",
+  "type": "module",
+  "license": "MIT",
+  "engines": {
+    "node": ">=22.18"
+  },
+  "scripts": {
+    "start": "node --env-file-if-exists=.env src/main-cloud.ts",
+    "start:local": "node --env-file-if-exists=.env src/main-local.ts",
+    "typecheck": "tsc -p tsconfig.json",
+    "lint": "biome check src test",
+    "test": "node --test --test-timeout=60000 test/*.test.ts",
+    "check": "npm run lint && npm run typecheck && npm test",
+    "smoke": "node --env-file-if-exists=.env src/smoke.ts"
+  },
+  "dependencies": {
+    "spectrum-ts": "12.14.0"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "1.9.4",
+    "@types/node": "22.15.3",
+    "typescript": "5.8.3"
+  }
+}

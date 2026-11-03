@@ -1,6 +1,179 @@
 {
   "components": {
     "schemas": {
+      "ActivityList": {
+        "additionalProperties": false,
+        "properties": {
+          "by_tab": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "title": "By Tab",
+            "type": "object"
+          },
+          "rows": {
+            "items": {
+              "$ref": "#/components/schemas/ActivityRow"
+            },
+            "title": "Rows",
+            "type": "array"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "rows",
+          "total",
+          "by_tab"
+        ],
+        "title": "ActivityList",
+        "type": "object"
+      },
+      "ActivityRow": {
+        "additionalProperties": false,
+        "description": "One row of the console's Activity view: a turn Mimi handed to a helper.",
+        "properties": {
+          "finished_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Finished At"
+          },
+          "helper": {
+            "title": "Helper",
+            "type": "string"
+          },
+          "helper_name": {
+            "title": "Helper Name",
+            "type": "string"
+          },
+          "pending_approvals": {
+            "default": 0,
+            "title": "Pending Approvals",
+            "type": "integer"
+          },
+          "shop_name": {
+            "default": "",
+            "title": "Shop Name",
+            "type": "string"
+          },
+          "skill": {
+            "title": "Skill",
+            "type": "string"
+          },
+          "started_at": {
+            "title": "Started At",
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "working",
+              "needs_you",
+              "done",
+              "handed_back",
+              "failed"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "steps": {
+            "items": {
+              "$ref": "#/components/schemas/ActivityStep"
+            },
+            "title": "Steps",
+            "type": "array"
+          },
+          "tab": {
+            "description": "The Activity tab: running (working), waiting (needs_you), done (done, handed_back, failed).",
+            "enum": [
+              "running",
+              "waiting",
+              "done"
+            ],
+            "title": "Tab",
+            "type": "string"
+          },
+          "task_id": {
+            "title": "Task Id",
+            "type": "string"
+          },
+          "thread_id": {
+            "title": "Thread Id",
+            "type": "string"
+          },
+          "turn_id": {
+            "title": "Turn Id",
+            "type": "string"
+          },
+          "what": {
+            "description": "What the helper is doing, in plain words written by code, never shop text.",
+            "title": "What",
+            "type": "string"
+          }
+        },
+        "required": [
+          "task_id",
+          "turn_id",
+          "thread_id",
+          "helper",
+          "helper_name",
+          "skill",
+          "status",
+          "tab",
+          "what",
+          "started_at",
+          "finished_at"
+        ],
+        "title": "ActivityRow",
+        "type": "object"
+      },
+      "ActivityStep": {
+        "additionalProperties": false,
+        "description": "One step of the helper's work, in plain words for the Activity row.\n\n``short`` is the one line the console shows (tool names in plain words,\nnames for ids, naira for money); ``name`` is the tool or event behind it.",
+        "properties": {
+          "at": {
+            "default": "",
+            "title": "At",
+            "type": "string"
+          },
+          "kind": {
+            "title": "Kind",
+            "type": "string"
+          },
+          "ms": {
+            "default": 0.0,
+            "title": "Ms",
+            "type": "number"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "short": {
+            "title": "Short",
+            "type": "string"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "kind",
+          "status",
+          "short"
+        ],
+        "title": "ActivityStep",
+        "type": "object"
+      },
       "ApprovalList": {
         "additionalProperties": false,
         "properties": {
@@ -998,6 +1171,23 @@
             "maxLength": 2000,
             "title": "Note",
             "type": "string"
+          },
+          "option": {
+            "anyOf": [
+              {
+                "enum": [
+                  "move",
+                  "promo",
+                  "pickup"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "slow_stock approvals only: the option to carry out (default the draft's recommended one). 409 when it is not one of its options.",
+            "title": "Option"
           }
         },
         "title": "DecisionIn",
@@ -1030,6 +1220,22 @@
       "DeliveryLineOut": {
         "additionalProperties": false,
         "properties": {
+          "batch": {
+            "default": "",
+            "title": "Batch",
+            "type": "string"
+          },
+          "expires_on": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expires On"
+          },
           "line_total_kobo": {
             "title": "Line Total Kobo",
             "type": "integer"
@@ -2406,6 +2612,259 @@
         "title": "Reply",
         "type": "object"
       },
+      "SellThroughOut": {
+        "additionalProperties": false,
+        "properties": {
+          "as_of": {
+            "title": "As Of",
+            "type": "string"
+          },
+          "at_risk_ngn": {
+            "title": "At Risk Ngn",
+            "type": "integer"
+          },
+          "at_risk_text": {
+            "title": "At Risk Text",
+            "type": "string"
+          },
+          "counts": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "description": "Rows per status, before any status filter",
+            "title": "Counts",
+            "type": "object"
+          },
+          "period_days": {
+            "title": "Period Days",
+            "type": "integer"
+          },
+          "rows": {
+            "items": {
+              "$ref": "#/components/schemas/SellThroughRow"
+            },
+            "title": "Rows",
+            "type": "array"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "as_of",
+          "period_days",
+          "rows",
+          "total",
+          "counts",
+          "at_risk_ngn",
+          "at_risk_text"
+        ],
+        "title": "SellThroughOut",
+        "type": "object"
+      },
+      "SellThroughRow": {
+        "additionalProperties": false,
+        "description": "One shop and product (sales tracking, 3 Nov 2026). Figures by code;\ndisplay strings carry names and ₦ only, never internal ids.",
+        "properties": {
+          "area": {
+            "title": "Area",
+            "type": "string"
+          },
+          "at_risk_ngn": {
+            "title": "At Risk Ngn",
+            "type": "integer"
+          },
+          "at_risk_units": {
+            "title": "At Risk Units",
+            "type": "integer"
+          },
+          "confidence": {
+            "enum": [
+              "low",
+              "medium",
+              "high"
+            ],
+            "title": "Confidence",
+            "type": "string"
+          },
+          "days_of_cover": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Days Of Cover"
+          },
+          "days_to_expiry": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Days To Expiry"
+          },
+          "expires_on": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expires On"
+          },
+          "item": {
+            "title": "Item",
+            "type": "string"
+          },
+          "last_count_on": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Count On"
+          },
+          "note": {
+            "title": "Note",
+            "type": "string"
+          },
+          "period_days": {
+            "title": "Period Days",
+            "type": "integer"
+          },
+          "proof": {
+            "description": "The word shown beside the figure, e.g. 'estimated (shop count)'",
+            "title": "Proof",
+            "type": "string"
+          },
+          "proof_grade": {
+            "enum": [
+              "verified",
+              "estimated",
+              "unverified"
+            ],
+            "title": "Proof Grade",
+            "type": "string"
+          },
+          "proof_level": {
+            "enum": [
+              "verified",
+              "likely",
+              "estimated"
+            ],
+            "title": "Proof Level",
+            "type": "string"
+          },
+          "shop_id": {
+            "title": "Shop Id",
+            "type": "string"
+          },
+          "shop_name": {
+            "title": "Shop Name",
+            "type": "string"
+          },
+          "sku": {
+            "title": "Sku",
+            "type": "string"
+          },
+          "sold_method": {
+            "enum": [
+              "counts",
+              "estimate"
+            ],
+            "title": "Sold Method",
+            "type": "string"
+          },
+          "sold_over_days": {
+            "title": "Sold Over Days",
+            "type": "integer"
+          },
+          "sold_units": {
+            "description": "Sold over sold_over_days: from two shop counts (count + delivered - later count) when there are two, else the estimate",
+            "title": "Sold Units",
+            "type": "integer"
+          },
+          "sold_value_ngn": {
+            "title": "Sold Value Ngn",
+            "type": "integer"
+          },
+          "status": {
+            "enum": [
+              "low",
+              "ok",
+              "slow",
+              "near_expiry"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "status_word": {
+            "title": "Status Word",
+            "type": "string"
+          },
+          "unit": {
+            "title": "Unit",
+            "type": "string"
+          },
+          "units_left": {
+            "description": "Estimated units on the shelf (never a shop's count shown as fact)",
+            "title": "Units Left",
+            "type": "integer"
+          },
+          "watch": {
+            "default": "",
+            "description": "A low-confidence slow reading: a hint, no alert",
+            "enum": [
+              "",
+              "near_expiry",
+              "overstock"
+            ],
+            "title": "Watch",
+            "type": "string"
+          }
+        },
+        "required": [
+          "shop_id",
+          "shop_name",
+          "area",
+          "sku",
+          "item",
+          "unit",
+          "period_days",
+          "sold_units",
+          "sold_over_days",
+          "sold_method",
+          "sold_value_ngn",
+          "proof_level",
+          "proof_grade",
+          "proof",
+          "units_left",
+          "days_of_cover",
+          "days_to_expiry",
+          "expires_on",
+          "status",
+          "status_word",
+          "confidence",
+          "at_risk_units",
+          "at_risk_ngn",
+          "last_count_on",
+          "note"
+        ],
+        "title": "SellThroughRow",
+        "type": "object"
+      },
       "ShopDetail": {
         "additionalProperties": false,
         "properties": {
@@ -2693,6 +3152,45 @@
         "title": "ShopSummary",
         "type": "object"
       },
+      "SlowCheckOut": {
+        "additionalProperties": false,
+        "properties": {
+          "checked": {
+            "title": "Checked",
+            "type": "integer"
+          },
+          "opened": {
+            "description": "slow_stock approval ids opened by this run (empty when this week's were already opened)",
+            "items": {
+              "type": "string"
+            },
+            "title": "Opened",
+            "type": "array"
+          },
+          "skipped": {
+            "items": {
+              "additionalProperties": {
+                "type": "string"
+              },
+              "type": "object"
+            },
+            "title": "Skipped",
+            "type": "array"
+          },
+          "week": {
+            "title": "Week",
+            "type": "string"
+          }
+        },
+        "required": [
+          "week",
+          "opened",
+          "skipped",
+          "checked"
+        ],
+        "title": "SlowCheckOut",
+        "type": "object"
+      },
       "Step": {
         "additionalProperties": false,
         "description": "One line of reasoning on the thread: a routing decision or a harness step.\n\nThe model's private text is never included; ``short`` is written by code.",
@@ -2761,6 +3259,42 @@
           "at"
         ],
         "title": "Step",
+        "type": "object"
+      },
+      "StopOut": {
+        "additionalProperties": false,
+        "description": "The answer to stopping one turn: the turn's state after the stop.",
+        "properties": {
+          "message": {
+            "description": "One plain line for the console, written by code.",
+            "title": "Message",
+            "type": "string"
+          },
+          "state": {
+            "title": "State",
+            "type": "string"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "stopped": {
+            "title": "Stopped",
+            "type": "boolean"
+          },
+          "turn_id": {
+            "title": "Turn Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "turn_id",
+          "state",
+          "status",
+          "stopped",
+          "message"
+        ],
+        "title": "StopOut",
         "type": "object"
       },
       "TaskList": {
@@ -3472,6 +4006,116 @@
           }
         },
         "summary": "Liveness (no database, no auth)"
+      }
+    },
+    "/v1/activity": {
+      "get": {
+        "description": "The console's Activity view (RAI-325): one row per helper task,\nnewest first, with what it is doing in plain words, its tab (running,\nwaiting, done), its start time in Africa/Lagos and its step lines.\nStopping a running row never undoes what it already did.",
+        "operationId": "get_activity_v1_activity_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "tab",
+            "required": false,
+            "schema": {
+              "default": "",
+              "pattern": "^(|running|waiting|done)$",
+              "title": "Tab",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 200,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "minimum": 0,
+              "title": "Offset",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ActivityList"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Activity: every helper task with per-task steps (RAI-325)"
       }
     },
     "/v1/approvals": {
@@ -5581,6 +6225,181 @@
         "summary": "Get Shop"
       }
     },
+    "/v1/stock/sell-through": {
+      "get": {
+        "description": "Code only, no model. ``sold_units`` comes from two shop counts when there\nare two (with ``proof`` saying so), else from the estimate. A low-confidence\nslow reading is a ``watch`` hint, not a status. Sorted near expiry, slow,\nlow, ok, then by value at risk.",
+        "operationId": "get_sell_through_v1_stock_sell_through_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "days",
+            "required": false,
+            "schema": {
+              "default": 28,
+              "maximum": 90,
+              "minimum": 7,
+              "title": "Days",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "shop_id",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 64,
+              "pattern": "^[A-Za-z0-9_.-]*$",
+              "title": "Shop Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "default": "",
+              "pattern": "^(|low|ok|slow|near_expiry)$",
+              "title": "Status",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SellThroughOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Sell-through per shop and product: sold, days of cover, days to expiry, status"
+      }
+    },
+    "/v1/stock/slow-check": {
+      "post": {
+        "description": "Each slow or near-expiry line (medium or high confidence), at most one per\nshop and one per item a week, becomes a ``slow_stock`` approval with move,\npromo or pickup options (quantities and ₦ by code). Running it again in the\nsame week opens nothing new. Nothing moves until the owner approves; Mimi\nnever moves stock or money.",
+        "operationId": "post_slow_check_v1_stock_slow_check_post",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SlowCheckOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Conflict"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Run the weekly slow-stock check: opens slow_stock approvals"
+      }
+    },
     "/v1/tasks": {
       "get": {
         "operationId": "get_tasks_v1_tasks_get",
@@ -6101,6 +6920,91 @@
           }
         ],
         "summary": "A turn's state and replies"
+      }
+    },
+    "/v1/turns/{turn_id}/stop": {
+      "post": {
+        "description": "Flag one running turn of this distributor to stop (idempotent).\nThe worker ends the turn at its next step boundary: no further tool\ncall runs and no further message goes out. Stopping never undoes what\nthe turn already did. A finished turn reports itself, changed or not.",
+        "operationId": "post_turn_stop_v1_turns__turn_id__stop_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "turn_id",
+            "required": true,
+            "schema": {
+              "title": "Turn Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StopOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Stop one task: it ends at its next step (RAI-325)"
       }
     }
   }

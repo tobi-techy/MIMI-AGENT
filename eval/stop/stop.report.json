@@ -1,0 +1,213 @@
+{
+ "generated_by": "python -m mimi.api.stop_eval",
+ "cases": [
+  {
+   "case": "stop_before_run_01",
+   "group": "queued",
+   "ok": true,
+   "detail": {
+    "status": "stopped_by_owner",
+    "after": {
+     "tools": 0,
+     "models": 0,
+     "messages": 0
+    }
+   }
+  },
+  {
+   "case": "stop_before_run_02",
+   "group": "queued",
+   "ok": true,
+   "detail": {
+    "status": "stopped_by_owner",
+    "after": {
+     "tools": 0,
+     "models": 0,
+     "messages": 0
+    }
+   }
+  },
+  {
+   "case": "stop_before_run_03",
+   "group": "queued",
+   "ok": true,
+   "detail": {
+    "status": "stopped_by_owner",
+    "after": {
+     "tools": 0,
+     "models": 0,
+     "messages": 0
+    }
+   }
+  },
+  {
+   "case": "stop_before_run_04",
+   "group": "queued",
+   "ok": true,
+   "detail": {
+    "status": "stopped_by_owner",
+    "after": {
+     "tools": 0,
+     "models": 0,
+     "messages": 0
+    }
+   }
+  },
+  {
+   "case": "stop_before_run_05",
+   "group": "queued",
+   "ok": true,
+   "detail": {
+    "status": "stopped_by_owner",
+    "after": {
+     "tools": 0,
+     "models": 0,
+     "messages": 0
+    }
+   }
+  },
+  {
+   "case": "stop_mid_run_01",
+   "group": "mid-run",
+   "ok": true,
+   "detail": {
+    "status": "stopped_by_owner",
+    "after": {
+     "tools": 2,
+     "models": 1,
+     "messages": 0
+    }
+   }
+  },
+  {
+   "case": "stop_mid_run_02",
+   "group": "mid-run",
+   "ok": true,
+   "detail": {
+    "status": "stopped_by_owner",
+    "after": {
+     "tools": 2,
+     "models": 1,
+     "messages": 0
+    }
+   }
+  },
+  {
+   "case": "stop_mid_run_03",
+   "group": "mid-run",
+   "ok": true,
+   "detail": {
+    "status": "stopped_by_owner",
+    "after": {
+     "tools": 0,
+     "models": 1,
+     "messages": 0
+    }
+   }
+  },
+  {
+   "case": "stop_mid_run_04",
+   "group": "mid-run",
+   "ok": true,
+   "detail": {
+    "status": "stopped_by_owner",
+    "after": {
+     "tools": 2,
+     "models": 1,
+     "messages": 0
+    }
+   }
+  },
+  {
+   "case": "stop_mid_run_05",
+   "group": "mid-run",
+   "ok": true,
+   "detail": {
+    "status": "stopped_by_owner",
+    "after": {
+     "tools": 0,
+     "models": 1,
+     "messages": 0
+    }
+   }
+  },
+  {
+   "case": "stop_after_done_01",
+   "group": "finished",
+   "ok": true,
+   "detail": {
+    "status": "done",
+    "stop": {
+     "turn_id": "turn_42252a4d4afdea9c38f8",
+     "state": "done",
+     "status": "done",
+     "stopped": false,
+     "message": "Collector: already finished: stopping changes nothing."
+    }
+   }
+  },
+  {
+   "case": "stop_after_done_02",
+   "group": "finished",
+   "ok": true,
+   "detail": {
+    "status": "done",
+    "stop": {
+     "turn_id": "turn_e721415b66aa7bd0c457",
+     "state": "done",
+     "status": "done",
+     "stopped": false,
+     "message": "Collector: already finished: stopping changes nothing."
+    }
+   }
+  },
+  {
+   "case": "stop_after_done_03",
+   "group": "finished",
+   "ok": true,
+   "detail": {
+    "status": "done",
+    "stop": {
+     "turn_id": "turn_bcb9b79bd2eaf862fc11",
+     "state": "done",
+     "status": "done",
+     "stopped": false,
+     "message": "Collector: already finished: stopping changes nothing."
+    }
+   }
+  },
+  {
+   "case": "stop_twice_01",
+   "group": "repeat",
+   "ok": true,
+   "detail": {
+    "status": "stopped_by_owner",
+    "after": {
+     "tools": 0,
+     "models": 0,
+     "messages": 0
+    }
+   }
+  },
+  {
+   "case": "stop_twice_02",
+   "group": "repeat",
+   "ok": true,
+   "detail": {
+    "status": "stopped_by_owner",
+    "after": {
+     "tools": 0,
+     "models": 0,
+     "messages": 0
+    }
+   }
+  }
+ ],
+ "pass_marks": {
+  "queued: no action after stop": true,
+  "mid-run: no action after stop": true,
+  "finished: no action after stop": true,
+  "repeat: no action after stop": true
+ },
+ "passed": true
+}

@@ -53,6 +53,12 @@ class CheckinStore:
         self.seen_events.add(event_id)
         return rec, True
 
+    def seen(self, event_id: str) -> bool:
+        return event_id in self.seen_events
+
+    def has(self, shop_id: str, week: str) -> bool:
+        return (shop_id, week) in self.records
+
     def answer(self, shop_id: str, week: str, at: str = "") -> CheckinRecord | None:
         key = (shop_id, week)
         rec = self.records.get(key)
