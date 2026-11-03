@@ -107,6 +107,7 @@ class ComputerService:
         self.limits = limits or GuardLimits()
         self.clock = clock
         self._runs: dict[tuple[str, str], Runner] = {}
+        self._live: dict[tuple[str, str], str] = {}
         self._lock = threading.Lock()
 
     # -- propose -----------------------------------------------------------
@@ -137,9 +138,9 @@ class ComputerService:
                 "plan": plan_dicts(plan.steps)}
 
     # -- read --------------------------------------------------------------
-    def list(self, tenant: str) -> list[dict[str, Any]]:
+    def tasks(self, tenant: str) -> list[dict[str, Any]]:
         out = []
-        for task in self.store.list(tenant):
+        for task in self.store.tasks(tenant):
             out.append({
                 "task_id": task["task_id"],
                 "goal": task["goal"],
@@ -156,7 +157,18 @@ class ComputerService:
         if task is None:
             return None
         return task_view(task, self.store.steps(tenant, task_id),
-                         self.store.artifacts(tenant, task_id))
+                         self.store.artifacts(tenant, task_id),
+                         self.live_link(tenant, task_id))
+
+    def live_link(self, tenant: str, task_id: str) -> str:
+        """The signed link to watch this task's session, while one is open."""
+        with self._lock:
+            return self._live.get((tenant, task_id), "")
+
+    def kinds(self) -> list[dict[str, str]]:
+        """The task kinds, exactly as the code names them, for the console."""
+        return [{"kind": kind, "label": plans.KIND_LABEL.get(kind, "")}
+                for kind in plans.PROFILES]
 
     def artifact(self, tenant: str, task_id: str, name: str) -> dict[str, Any] | None:
         return self.store.artifact(tenant, task_id, name)
@@ -186,6 +198,7 @@ class ComputerService:
         steps = [Step(**s) for s in loads(task.get("plan"), [])]
 
         def on_step(record: Any, blob: Any) -> None:
+            self._read_live(tenant, task_id, task)
             self.store.add_step(tenant, task_id, record)
             if blob is not None:
                 self.store.add_artifact(tenant, task_id, blob)
@@ -201,13 +214,48 @@ class ComputerService:
             outcome = runner.run(task_id, task["domain"], task["kind"], steps, inputs)
         except Exception as exc:  # never lose the task: report, do not crash
             log.warning("computer task %s failed: %s", task_id, exc)
+            self._release(tenant, task_id, task)
             self.store.set_status(tenant, task_id, "failed", stop_reason="engine_error",
                                   note="The browser could not finish this task.",
                                   finished=True)
             return
+        if outcome.status != "awaiting_owner":
+            # The session's work is done. A task paused at a sign-in wall keeps
+            # its session and its live view link: that is where the owner signs
+            # in, and the session dies of its own accord if they do not.
+            self._release(tenant, task_id, task)
         self.store.set_status(tenant, task_id, outcome.status,
                               stop_reason=outcome.stop_reason, note=outcome.note,
                               finished=outcome.status != "awaiting_owner")
+
+    def _read_live(self, tenant: str, task_id: str, task: dict[str, Any]) -> None:
+        """Read the session's signed live view link once, while it is open, so
+        the console can show the owner the real screen. Never stored."""
+        if self.live_link(tenant, task_id):
+            return
+        from mimi.computer.engine import TaskRef
+
+        try:
+            link = self.engine.sign_in_link(
+                TaskRef(task_id=task_id, domain=task.get("domain", "")))
+        except EngineError:
+            return
+        if link:
+            with self._lock:
+                self._live[(tenant, task_id)] = link
+
+    def _release(self, tenant: str, task_id: str, task: dict[str, Any],
+                 reason: str = "task_finished") -> None:
+        """Close the browser session, if one is still open, and forget its link."""
+        from mimi.computer.engine import TaskRef
+
+        try:
+            self.engine.stop(TaskRef(task_id=task_id, domain=task.get("domain", "")),
+                             reason)
+        except EngineError:
+            pass
+        with self._lock:
+            self._live.pop((tenant, task_id), None)
 
     # -- stop --------------------------------------------------------------
     def stop(self, tenant: str, task_id: str) -> dict[str, Any]:
@@ -215,15 +263,9 @@ class ComputerService:
         if task is None:
             raise Refused("no such task", 404)
         if task["status"] in ("done", "stopped", "stopped_runaway", "failed"):
-            return task_view(task, self.store.steps(tenant, task_id),
-                             self.store.artifacts(tenant, task_id))
-        from mimi.computer.engine import TaskRef
+            return self.get(tenant, task_id) or {}
 
-        try:
-            self.engine.stop(TaskRef(task_id=task_id, domain=task["domain"]),
-                             "stopped_by_owner")
-        except EngineError:
-            pass
+        self._release(tenant, task_id, task, "stopped_by_owner")
         self.store.set_status(tenant, task_id, "stopped", stop_reason="stopped_by_owner",
                               note="Stopped by the owner.", finished=True)
         return self.get(tenant, task_id) or {}
@@ -235,9 +277,9 @@ def fake_service(engine: FakeComputer | None = None, store: ComputerStore | None
     if store is None:
         from mimi.store.db import ensure_schema, make_engine
 
-        engine = make_engine("sqlite://")
-        ensure_schema(engine)
-        store = ComputerStore(engine, artifact_dir=_tmp())
+        db = make_engine("sqlite://")
+        ensure_schema(db)
+        store = ComputerStore(db, artifact_dir=_tmp())
     return ComputerService(store, engine or FakeComputer(), limits)
 
 

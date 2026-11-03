@@ -125,8 +125,11 @@ class CloudBrowserEngine:
         pw = sync_playwright().start()
         try:
             browser = pw.chromium.connect_over_cdp(connect)
+            # typed loosely on purpose: importing playwright's ViewportSize would
+            # pull the driver in at import time
+            viewport: Any = VIEWPORT
             context = browser.contexts[0] if browser.contexts else browser.new_context(
-                viewport=VIEWPORT)
+                viewport=viewport)
             page = context.pages[0] if context.pages else context.new_page()
             page.set_default_timeout(20000)
         except Exception as exc:  # the provider's endpoint refused us

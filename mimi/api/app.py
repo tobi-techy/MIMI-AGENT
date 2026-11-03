@@ -18,10 +18,12 @@ Endpoints (all under ``/v1``, all but health need ``Authorization: Bearer``):
   session, or demo mode, gets 403.
 * ``POST /v1/computer/tasks``, ``GET /v1/computer/tasks``,
   ``GET /v1/computer/tasks/{id}``, ``POST /v1/computer/tasks/{id}/approve``
-  and ``/stop``, and ``GET /v1/computer/tasks/{id}/artifacts/{name}``: a task
+  and ``/stop``, ``GET /v1/computer/tasks/{id}/artifacts/{name}`` and
+  ``GET /v1/computer/kinds``: a task
   for the browser container. Code builds the plan, the owner approves it once,
   and the guardrails (domain allowlist, no credentials, no purchase or
   messaging, budgets, immediate stop) are enforced in code (``mimi.computer``).
+  A running task carries a signed ``live_view_url`` to watch its session.
 * ``GET /v1/health``; ``GET /`` (liveness only: no database, no auth).
 * ``GET /v1/me``: the caller's tenant, role and mode.
 * ``POST /v1/demo/sessions``, ``POST /v1/demo/reset``: demo mode only
@@ -70,6 +72,7 @@ from mimi.api.media import MAX_BYTES
 from mimi.api.schemas import (
     ActivityList,
     ApprovalList,
+    ComputerKindList,
     ComputerProposal,
     ComputerTaskDetail,
     ComputerTaskIn,
@@ -663,6 +666,14 @@ def create_app(settings: Settings | None = None, agent: Agent | None = None, *,
 
     # --------------------------------------------------- computer tasks
 
+    @app.get("/v1/computer/kinds", response_model=ComputerKindList, responses=_ERRORS,
+             summary="The task kinds, exactly as the code names them")
+    def get_computer_kinds(key: Owner) -> dict[str, Any]:
+        """The one place the kind strings are published, so the console and the
+        API never disagree: the value of ``kind`` is what goes in a proposal.
+        An empty list is never right here: the plans are code, not data."""
+        return {"kinds": computer.kinds()}
+
     @app.post("/v1/computer/tasks", response_model=ComputerProposal, status_code=201,
               responses=_ERRORS, summary="Propose a task for the browser container")
     def post_computer_task(body: ComputerTaskIn, key: Owner) -> dict[str, Any]:
@@ -680,7 +691,7 @@ def create_app(settings: Settings | None = None, agent: Agent | None = None, *,
              summary="This distributor's computer tasks, newest first")
     def get_computer_tasks(key: Owner) -> dict[str, Any]:
         """An empty list is a valid answer: nothing is seeded."""
-        return {"tasks": computer.list(key.tenant_id)}
+        return {"tasks": computer.tasks(key.tenant_id)}
 
     @app.get("/v1/computer/tasks/{task_id}", response_model=ComputerTaskDetail,
              responses=_ERRORS,

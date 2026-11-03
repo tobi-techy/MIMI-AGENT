@@ -609,6 +609,41 @@
         "title": "ComputerArtifact",
         "type": "object"
       },
+      "ComputerKind": {
+        "additionalProperties": false,
+        "properties": {
+          "kind": {
+            "description": "The kind string to send in a task's kind field.",
+            "title": "Kind",
+            "type": "string"
+          },
+          "label": {
+            "default": "",
+            "description": "What that kind of task does, in plain words.",
+            "title": "Label",
+            "type": "string"
+          }
+        },
+        "required": [
+          "kind"
+        ],
+        "title": "ComputerKind",
+        "type": "object"
+      },
+      "ComputerKindList": {
+        "additionalProperties": false,
+        "properties": {
+          "kinds": {
+            "items": {
+              "$ref": "#/components/schemas/ComputerKind"
+            },
+            "title": "Kinds",
+            "type": "array"
+          }
+        },
+        "title": "ComputerKindList",
+        "type": "object"
+      },
       "ComputerPlanStep": {
         "additionalProperties": false,
         "properties": {
@@ -758,6 +793,18 @@
           "kind": {
             "title": "Kind",
             "type": "string"
+          },
+          "live_view_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "A signed link to watch this task's session while one is open: the real screen, polled by the console in a new tab. It is per session, it dies with the session, and it holds no key of ours. Null once the task ends.",
+            "title": "Live View Url"
           },
           "note": {
             "default": "",
@@ -4874,6 +4921,70 @@
           }
         ],
         "summary": "Owner undoes an approved Zoho payment write (or a limit Credit suggested)"
+      }
+    },
+    "/v1/computer/kinds": {
+      "get": {
+        "description": "The one place the kind strings are published, so the console and the\nAPI never disagree: the value of ``kind`` is what goes in a proposal.\nAn empty list is never right here: the plans are code, not data.",
+        "operationId": "get_computer_kinds_v1_computer_kinds_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ComputerKindList"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Conflict"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "The task kinds, exactly as the code names them"
       }
     },
     "/v1/computer/tasks": {

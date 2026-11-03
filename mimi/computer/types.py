@@ -9,9 +9,15 @@ Money never appears in a step. Times come from ``mimi.clock``.
 
 from __future__ import annotations
 
-from typing import Literal
+from typing import Annotated, Literal
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, StringConstraints
+
+# The step's own limits, so a plan built in code cannot carry a runaway value.
+Short = Annotated[str, StringConstraints(max_length=300)]
+Long = Annotated[str, StringConstraints(max_length=2000)]
+Name = Annotated[str, StringConstraints(max_length=120)]
+Small = Annotated[str, StringConstraints(max_length=16)]
 
 TaskKind = Literal["price_check", "order_list", "bank_statement", "gov_form", "generic"]
 TaskStatus = Literal["proposed", "running", "awaiting_owner", "done", "stopped",
@@ -34,12 +40,12 @@ class Step(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     action: StepAction
-    note: str = Field("", max_length=300)
-    url: str = Field("", max_length=2000)
-    target: str = Field("", max_length=300)  # the text to click or read
-    field: str = Field("", max_length=120)  # the form field, by its label
-    value_key: str = Field("", max_length=120)  # a key into the task's own inputs
-    direction: str = Field("", max_length=16)
+    note: Short = ""
+    url: Long = ""
+    target: Short = ""  # the text to click or read
+    field: Name = ""  # the form field, by its label
+    value_key: Name = ""  # a key into the task's own inputs
+    direction: Small = ""
     amount: int = 0
 
 

@@ -850,6 +850,20 @@ class ComputerArtifact(_Out):
 class ComputerTaskDetail(ComputerTask):
     steps: list[ComputerStep] = Field(default_factory=list)
     artifacts: list[ComputerArtifact] = Field(default_factory=list)
+    live_view_url: str | None = Field(
+        None, description="A signed link to watch this task's session while one "
+                          "is open: the real screen, polled by the console in a "
+                          "new tab. It is per session, it dies with the session, "
+                          "and it holds no key of ours. Null once the task ends.")
+
+
+class ComputerKind(_Out):
+    kind: str = Field(..., description="The kind string to send in a task's kind field.")
+    label: str = Field("", description="What that kind of task does, in plain words.")
+
+
+class ComputerKindList(_Out):
+    kinds: list[ComputerKind] = Field(default_factory=list)
 
 
 class ComputerTaskSummary(_Out):

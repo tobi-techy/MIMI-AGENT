@@ -24,6 +24,7 @@ import hashlib
 import re
 from collections.abc import Callable
 from dataclasses import dataclass, field
+from typing import Literal
 
 from mimi.clock import wall
 from mimi.computer import guardrails as g
@@ -37,7 +38,7 @@ MAX_NOTE = 300
 @dataclass
 class Blob:
     name: str
-    kind: str
+    kind: Literal["screenshot", "text", "file"]
     mime: str
     data: bytes
 
@@ -103,7 +104,7 @@ class Runner:
         try:
             self.port.start(ref)
         except EngineError as exc:
-            return self._fail(out, "engine_error", f"The browser did not start: {exc}")
+            return self._fail(out, "failed", f"The browser did not start: {exc}")
 
         started = self.clock()
         index = 0
@@ -128,7 +129,7 @@ class Runner:
                                     direction=step.direction, amount=step.amount,
                                     current_url=current_url)
             except EngineError as exc:
-                return self._fail(out, "engine_error",
+                return self._fail(out, "failed",
                                   f"The browser could not do that step: {exc}")
             if page.url:
                 current_url = page.url
@@ -152,14 +153,14 @@ class Runner:
             self._record(out, index, step, page, blob, "")
             index += 1
         else:
-            return self._fail(out, "engine_error", "the plan had no finish step")
+            return self._fail(out, "failed", "the plan had no finish step")
         out.status = "done"
         out.note = "Done. The results are artifacts you can review."
         return out
 
     # -- helpers -----------------------------------------------------------
     def _precheck(self, profile: plans.Profile, step: Step, domain: str,
-                  inputs: dict[str, str]) -> tuple[str, str] | None:
+                  inputs: dict[str, str]) -> tuple[TaskStatus, str] | None:
         action = step.action
         if action not in profile.actions:
             if action == "fill" and not profile.may_fill:

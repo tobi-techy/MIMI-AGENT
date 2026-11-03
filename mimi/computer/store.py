@@ -68,16 +68,17 @@ class ComputerStore:
                 s.computer_tasks.c.task_id == task_id)).first()
         return _row(row) if row is not None else None
 
-    def list(self, tenant: str) -> list[dict[str, Any]]:
+    def tasks(self, tenant: str) -> list[dict[str, Any]]:
         with self._conn() as conn:
             rows = conn.execute(sa.select(s.computer_tasks).where(
                 s.computer_tasks.c.tenant_id == tenant).order_by(
                 s.computer_tasks.c.created_ts.desc(), s.computer_tasks.c.created_at.desc())
             ).all()
-            counts = dict(conn.execute(
+            counted = conn.execute(
                 sa.select(s.computer_steps.c.task_id, sa.func.count()).where(
                     s.computer_steps.c.tenant_id == tenant).group_by(
-                    s.computer_steps.c.task_id)).all())
+                    s.computer_steps.c.task_id)).all()
+        counts: dict[str, int] = {str(row[0]): int(row[1]) for row in counted}
         out = []
         for row in rows:
             d = _row(row)
@@ -149,7 +150,7 @@ def plan_dicts(steps: list[Any]) -> list[dict[str, Any]]:
 
 
 def task_view(task: dict[str, Any], steps: list[dict[str, Any]],
-              artifacts: list[dict[str, Any]]) -> dict[str, Any]:
+              artifacts: list[dict[str, Any]], live_view_url: str = "") -> dict[str, Any]:
     return {
         "task_id": task["task_id"],
         "status": task["status"],
@@ -162,6 +163,9 @@ def task_view(task: dict[str, Any], steps: list[dict[str, Any]],
         "created_at": task["created_at"],
         "started_at": task.get("started_at", ""),
         "finished_at": task.get("finished_at", ""),
+        # A signed link to watch this task's session, while one is open. It is
+        # per session and dies with it, so it is never stored.
+        "live_view_url": live_view_url or None,
         "plan": loads(task.get("plan"), []),
         "inputs": loads(task.get("inputs"), {}),
         "steps": [{"index": st["idx"], "action": st["action"], "url": st["url"],

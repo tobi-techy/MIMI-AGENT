@@ -254,6 +254,61 @@ def test_a_download_is_kept_under_the_name_the_site_gave() -> None:
                 and a["kind"] == "screenshot"]
 
 
+def test_a_browser_that_cannot_start_fails_the_task_plainly() -> None:
+    engine = make_engine("sqlite://")
+    ensure_schema(engine)
+    fake = FakeComputer(pages={PAGE: {"title": "Price list", "png": b"\x89PNG-real"}},
+                        fail=(PAGE,))
+    service = ComputerService(ComputerStore(engine), fake)
+    view = service.propose(T, "check prices", PAGE, "supplier.example", "price_check")
+    done = service.approve(T, view["task_id"], inline=True)
+    # a status the API can serve, never a bare engine string
+    assert done["status"] == "failed"
+    assert done["stop_reason"] == "engine_error"
+    assert done["note"].startswith("The browser could not do that step")
+    assert done["steps"] == []
+
+
+class _LiveFake(FakeComputer):
+    """A fake whose session has a live view, the way the real engine has one."""
+
+    def sign_in_link(self, task: TaskRef) -> str:
+        return f"https://live.example/{task.task_id}"
+
+
+def test_a_finished_task_carries_no_live_view_and_closes_its_session() -> None:
+    engine = make_engine("sqlite://")
+    ensure_schema(engine)
+    fake = _LiveFake(pages={PAGE: {"title": "Price list", "text": "Sugar 42000",
+                                   "png": b"\x89PNG-real"}})
+    service = ComputerService(ComputerStore(engine), fake)
+    view = service.propose(T, "check prices", PAGE, "supplier.example", "price_check")
+    done = service.approve(T, view["task_id"], inline=True)
+    assert done["status"] == "done"
+    # the signed link dies with the session, so it is not handed out after a run
+    assert done["live_view_url"] is None
+    assert fake.stopped  # the session was released
+
+
+def test_a_task_paused_at_a_sign_in_wall_keeps_its_session_and_its_live_view() -> None:
+    engine = make_engine("sqlite://")
+    ensure_schema(engine)
+    fake = _LiveFake(pages={PAGE: {"html": "<h1>Prices</h1>", "png": b"\x89PNG-real"}},
+                     login=(PAGE,))
+    service = ComputerService(ComputerStore(engine), fake)
+    view = service.propose(T, "check prices", PAGE, "supplier.example", "price_check")
+    paused = service.approve(T, view["task_id"], inline=True)
+    assert paused["status"] == "awaiting_owner"
+    assert paused["live_view_url"] == f"https://live.example/{view['task_id']}"
+    assert fake.stopped is None  # kept open: that is where the owner signs in
+    assert fake.filled == {}  # nothing was typed at the wall
+
+    stopped = service.stop(T, view["task_id"])
+    assert stopped["status"] == "stopped"
+    assert stopped["live_view_url"] is None
+    assert fake.stopped == "stopped_by_owner"
+
+
 def test_a_url_off_the_approved_domain_is_refused_at_proposal(service: ComputerService) -> None:
     with pytest.raises(Refused):
         service.propose(T, "read it", "https://evil.example/x", "supplier.example")
@@ -267,9 +322,9 @@ def test_stop_records_the_owner_reason(service: ComputerService) -> None:
 
 def test_tasks_are_filtered_by_tenant(service: ComputerService) -> None:
     service.propose(T, "mine", PAGE, "supplier.example")
-    assert len(service.list(T)) == 1
-    assert service.list("tenant-b") == []
-    assert service.get("tenant-b", service.list(T)[0]["task_id"]) is None
+    assert len(service.tasks(T)) == 1
+    assert service.tasks("tenant-b") == []
+    assert service.get("tenant-b", service.tasks(T)[0]["task_id"]) is None
 
 
 # ------------------------------------------------------------------------ API
@@ -332,6 +387,15 @@ def test_the_five_endpoints_and_the_list_endpoint(client: TestClient) -> None:
 def test_the_list_is_an_honest_empty_list_at_first(client: TestClient) -> None:
     r = client.get("/v1/computer/tasks", headers=H)
     assert r.status_code == 200 and r.json() == {"tasks": []}
+
+
+def test_the_kinds_endpoint_publishes_the_kind_strings(client: TestClient) -> None:
+    r = client.get("/v1/computer/kinds", headers=H)
+    assert r.status_code == 200
+    kinds = r.json()["kinds"]
+    assert [k["kind"] for k in kinds] == list(plans.PROFILES)
+    assert kinds == [{"kind": k, "label": plans.KIND_LABEL[k]} for k in plans.PROFILES]
+    assert all(k["label"] for k in kinds)
 
 
 def test_a_channel_key_cannot_reach_computer_tasks(client: TestClient) -> None:
