@@ -17,6 +17,7 @@ Every write is its own transaction; reads open their own connection.
 
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass
 from typing import Any
 
@@ -27,6 +28,8 @@ from mimi.checkin.state import CONNECT_AFTER_SKIPS, STREAK_CREDIT_LINE_AFTER, Ch
 from mimi.clock import wall
 from mimi.store import schema as s
 from mimi.store.util import insert_ignore, now_iso
+
+log = logging.getLogger(__name__)
 
 
 def _rec(r: Any) -> CheckinRecord:
@@ -190,7 +193,10 @@ def answered_in_window(engine: Engine, tenant_id: str, shop_id: str, today_iso: 
         window.add(f"{y}W{w:02d}")
     try:
         got = SqlCheckinStore(engine, tenant_id).answered_weeks(shop_id)
-    except sa.exc.SQLAlchemyError:
+    except (sa.exc.OperationalError, sa.exc.ProgrammingError) as exc:
+        # The table is not there yet (before alembic 0015): no evidence. Any
+        # other store failure is raised, not read as "never answered".
+        log.warning("checkin_weeks unreadable, no sharing evidence: %s", exc.__class__.__name__)
         return 0
     return sum(1 for w in got if w in window)
 

@@ -408,8 +408,8 @@ estimate is estimated, and the word says which); days of cover, days to
 expiry, status `near_expiry | slow | low | ok`.
 
 **Rewards for sharing counts** (`mimi/credit/review.py`). A shop that answered
-3 or more of the last 8 weekly check-ins gets the reason "Shares stock counts
-regularly: answered N of the last 8 weekly check-ins (supporting evidence
+3 or more of the last 8 weekly check-ins gets the reason "Answers the weekly check-in
+regularly: N of the last 8 weekly check-ins (supporting evidence
 only)." It changes no outcome, flag or confidence: bank-verified payments
 still decide.
 

@@ -98,7 +98,7 @@ def load_book(engine: Engine, tenant: str) -> Book:
             s.stock_counts.c.tenant_id == tenant)).all()
         count_intents = conn.execute(sa.select(s.intents.c.shop_id, s.intents.c.payload).where(
             s.intents.c.tenant_id == tenant, s.intents.c.tool == "record_stock_count",
-            s.intents.c.outcome != "refused")).all()
+            s.intents.c.outcome.not_in(("refused", "shadowed")))).all()
     book = Book(live, start, int(t.price_rise_day if t.price_rise_day is not None else 10**6),
                 str(t.name).removesuffix(" (demo copy)"), shops, skus, {}, {})
     ins: dict[tuple[str, str], list[StockIn]] = defaultdict(list)

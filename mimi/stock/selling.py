@@ -85,6 +85,9 @@ def sold_from_counts(history: ItemHistory, counts: Sequence[StockCount], as_of_d
         return None
     last = usable[-1]
     start = as_of_day - period_days
+    if last.day < start:
+        # The newest count is older than the period: the caller uses its estimate.
+        return None
     first = None
     for c in reversed(usable[:-1]):
         if last.day - c.day < MIN_COUNT_GAP:

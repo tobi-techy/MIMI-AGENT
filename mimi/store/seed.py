@@ -38,8 +38,7 @@ def delete_tenant(conn: sa.Connection, tid: str) -> None:
               s.asked_once, s.kill_switches, s.history, s.prefixes, s.artifacts,
               s.thread_inbox, s.checkin_weeks, s.checkin_shops):
         conn.execute(t.delete().where(t.c.tenant_id == tid))
-    conn.execute(s.stock_counts.delete().where(s.stock_counts.c.tenant_id == tid,
-                                               s.stock_counts.c.source == "checkin"))
+    conn.execute(s.stock_counts.delete().where(s.stock_counts.c.tenant_id == tid))
     ids = sa.select(s.turns.c.turn_id).where(s.turns.c.tenant_id == tid)
     conn.execute(s.turn_attempts.delete().where(s.turn_attempts.c.turn_id.in_(ids)))
     conn.execute(s.turns.delete().where(s.turns.c.tenant_id == tid))

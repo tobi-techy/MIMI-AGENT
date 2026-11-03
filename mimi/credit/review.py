@@ -145,7 +145,7 @@ SHARING_MIN_WEEKS = 3
 def sharing_line(sharing: CountSharing | None) -> str | None:
     if sharing is None or sharing.answered_weeks < SHARING_MIN_WEEKS:
         return None
-    return (f"Shares stock counts regularly: answered {sharing.answered_weeks} of the last "
+    return (f"Answers the weekly check-in regularly: {sharing.answered_weeks} of the last "
             f"{sharing.window_weeks} weekly check-ins (supporting evidence only).")
 
 

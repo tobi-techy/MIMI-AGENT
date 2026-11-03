@@ -325,7 +325,7 @@ def test_sharing_counts_is_a_reason_never_an_outcome() -> None:
         shared = recommend(f, None, CountSharing(5))
         assert shared.outcome == plain.outcome and shared.confidence == plain.confidence
         assert shared.flags == plain.flags
-        assert any("answered 5 of the last 8 weekly check-ins" in r for r in shared.reasons)
+        assert any("regularly: 5 of the last 8 weekly check-ins" in r for r in shared.reasons)
     assert recommend(_file(), None, CountSharing(2)).reasons == recommend(_file(), None).reasons
 
 
