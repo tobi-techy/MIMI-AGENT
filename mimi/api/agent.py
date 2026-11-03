@@ -53,6 +53,7 @@ from mimi.api.media import checked_media
 from mimi.api.photo_label import media_pointer
 from mimi.clock import wall, wall_utc
 from mimi.flags import demo_wiring, fixes_2026_10_30
+from mimi.harness import denials as D
 from mimi.harness import fastclass, plain
 from mimi.harness import handoff as hx
 from mimi.harness import lexicon as lx
@@ -866,6 +867,9 @@ class Agent:
                                state=state, event=event, apply=False, steer=sv)
                 return
             code = self._plain_gateway(ck)
+            if state.denial_window_size == 0:
+                state.denial_window_denials, state.denial_window_size = (
+                    D.count_window(self.denial_reviews(claim.tenant_id, claim.thread_id)))
             res = self.harness.step(state, helper, gateway=code[0] if code else None)
             state = LoopState.model_validate(res.state)
             ck["loop"] = res.state
@@ -876,6 +880,9 @@ class Agent:
                 and state.finished.reason == DAILY_CAP_REASON):
             self._park(holder, ck, d, events, state)
             return
+        if state.finished.status == "stopped_denied":
+            self._park_denied(holder, ck, d, events, state)
+            return
         back = self._needs_hand_back(d, lead, state.finished)
         if back is not None and self._hand_back(
                 holder, ck, d, events, prior, sv, code=back[0], spans=back[1],
@@ -883,6 +890,25 @@ class Agent:
             return
         self._complete(holder, d, events, prior, status=state.finished.status,
                        state=state, event=event, steer=sv)
+
+    def denial_reviews(self, tenant_id: str, thread_id: str) -> tuple[int, int]:
+        """The thread's recent denial reviews for the breaker's window rule.
+
+        Reads the thread's last 50 finished-turn reviews (a turn that ended
+        ``stopped_denied`` counts as denied); unreadable means fail closed.
+        """
+        try:
+            with self.engine.connect() as conn:
+                rows = conn.execute(sa.select(s.turns.c.status).where(
+                    s.turns.c.tenant_id == tenant_id,
+                    s.turns.c.thread_id == thread_id,
+                    s.turns.c.state == "done")
+                    .order_by(s.turns.c.created_ts.desc(), s.turns.c.turn_id.desc())
+                    .limit(D.window())).all()
+        except Exception:
+            log.warning("denial reviews unreadable", exc_info=True)
+            return 1, 1  # fail closed: a consequential step is treated as denied
+        return D.count_window([r.status == "stopped_denied" for r in rows])
 
     def _wired_event(self, claim: Claim, lead: Inbound) -> bool:
         from mimi.api import demo_wiring as dw
@@ -1118,6 +1144,103 @@ class Agent:
                 "short": f"paused: daily allowance {_naira(cap)} reached", "cost_kobo": 0,
                 "model": "", "duration_ms": 0.0,
                 "data": dumps(ck["parked"]), "at": now_iso(now), "ts": now})
+
+    # ============================================================ denied park
+
+    def _park_denied(self, holder: list[Claim], ck: dict[str, Any], d: RouteDecision,
+                     events: Sequence[Inbound], state: LoopState) -> None:
+        """The denial breaker tripped (RAI-324): park the job and ask the
+        owner, never drop it.
+
+        One compare-and-set (lost lease: nothing written) parks the turn with
+        its loop state, posts the loop's owner note and puts one "look at
+        this job" item in the owner's approvals. Approving it re-queues the
+        job; it carries on from its next step with a clear streak. The
+        denied steps are kept on the thread's events; nothing after the trip
+        was dispatched. The thread reads ``needs_you`` like any parked turn.
+        """
+        from mimi.harness import denials as D
+
+        claim = holder[0]
+        tenant, thread, turn_id = claim.tenant_id, claim.thread_id, claim.turn_id
+        r = state.finished
+        assert r is not None
+        _, shop_id = thread_kind(tenant, thread)
+        now = wall()
+        counts = D.count_window(self.denial_reviews(tenant, thread))
+        state.denial_window_denials, state.denial_window_size = (
+            counts if state.denial_window_size == 0 else
+            (state.denial_window_denials, state.denial_window_size))
+        reasons = [D.denial_reason(e) for e in state.events if D.is_denial_event(e)][-3:]
+        ck = {**ck, "denied": {"in_a_row": state.denials_in_a_row,
+                               "reasons": reasons, "at": now_iso(now)}}
+        with self.engine.begin() as conn:
+            res = conn.execute(s.turns.update().where(
+                s.turns.c.turn_id == turn_id, s.turns.c.version == claim.version,
+                s.turns.c.lease_owner == claim.worker_id, s.turns.c.state == "leased")
+                .values(state="parked", status="stopped_denied", helper=d.helper,
+                        skill=d.skill, run_id=r.run_id, checkpoint=dumps(ck),
+                        lease_owner=None, lease_expires_ts=None, version=claim.version + 1,
+                        result=dumps({"route": {"helper": d.helper, "skill": d.skill,
+                                                "layer": d.layer, "rule": d.rule,
+                                                "cost_kobo": d.cost_kobo},
+                                      "run_status": r.status, "reason": r.reason,
+                                      "denied": ck["denied"]})))
+            if res.rowcount != 1:
+                raise LeaseLost(turn_id)
+            for n, dr in enumerate(r.outbound_drafts):
+                if dr.channel == "owner_console":
+                    self._out(conn, tenant, thread, turn_id, key=dr.idempotency_key,
+                              channel=dr.channel, shop_id="", text=dr.body, kind="denied_note",
+                              status="ready", ts=now + (n + 1) * 1e-3)
+            record = {
+                "tool": "review_denied_job", "intent_kind": "review_denied_job",
+                "tier": str(self.policy.decide(
+                    tenant, "plan.review_denied",
+                    {"tool": "review_denied_job",
+                     "payload": {"turn_id": turn_id}}).tier),
+                "scope": "org:plan", "tenant_id": tenant,
+                "shop_id": shop_id,
+                "idempotency_key": business_key(tenant, "review_denied_job",
+                                                {"turn_id": turn_id}),
+                "attempt_key": f"denied:{turn_id}",
+                "payload": {"turn_id": turn_id, "thread_id": thread,
+                            "in_a_row": state.denials_in_a_row, "reasons": reasons},
+                "preview": (f"Look at this job: {d.helper} was told no "
+                            f"{state.denials_in_a_row} times in a row. "
+                            "Approve to let it carry on.")}
+            self.go.apply_intent(conn, tenant, record, turn_id=turn_id, thread_id="",
+                                 helper="", skill="mimi/denials")
+            insert_ignore(conn, s.thread_events, {
+                "tenant_id": tenant, "event_id": f"denied_{turn_id}_{claim.version}",
+                "thread_id": thread, "run_id": r.run_id, "turn_id": turn_id, "seq": -1,
+                "step": r.spend.steps, "type": "breaker_tripped", "tool": "", "tier": "",
+                "short": f"breaker tripped: denied {state.denials_in_a_row} in a row",
+                "cost_kobo": 0, "model": "", "duration_ms": 0.0,
+                "data": dumps(ck["denied"]), "at": now_iso(now), "ts": now})
+
+    def resume_denied(self, conn: sa.Connection, turn_id: str) -> list[str]:
+        """Re-queue one breaker-parked turn with a clear denial streak (RAI-324)."""
+        import json as _json
+
+        row = conn.execute(sa.select(s.turns).where(
+            s.turns.c.turn_id == turn_id, s.turns.c.state == "parked",
+            s.turns.c.status == "stopped_denied")).first()
+        if row is None:
+            return []
+        ck = loads(row.checkpoint, {})
+        loop = dict(ck.get("loop") or {})
+        loop["denials_in_a_row"] = 0
+        loop["finished"] = None
+        ck["loop"] = loop
+        ck.pop("denied", None)
+        conn.execute(s.turns.update().where(
+            s.turns.c.turn_id == turn_id, s.turns.c.state == "parked",
+            s.turns.c.status == "stopped_denied")
+            .values(state="queued", status="", checkpoint=_json.dumps(ck),
+                    lease_owner=None, lease_expires_ts=0.0,
+                    version=s.turns.c.version + 1))
+        return [turn_id]
 
     def resume_parked(self, conn: sa.Connection, tenant_id: str) -> list[str]:
         """Re-queue every job the daily cap parked (the owner raised it)."""
@@ -2201,6 +2324,10 @@ class Agent:
                     s.tenants.c.tenant_id == tenant_id,
                     s.tenants.c.daily_cap_kobo < new_cap).values(daily_cap_kobo=new_cap))
                 resumed = self.resume_parked(conn, tenant_id)
+            if a.tool == "review_denied_job" and approve:
+                # The owner looked at the parked job: re-queue it from its
+                # last step with a clear denial streak (RAI-324).
+                resumed = self.resume_denied(conn, a.turn_id)
         if approve and a.tool in ("zoho_payment", "credit_over_limit", "return_credit"):
             from mimi.api import demo_wiring as dw
 

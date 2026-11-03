@@ -234,7 +234,8 @@ def task_status(state: str, status: str, *, pending_approvals: int = 0) -> TaskS
     if state == "failed" or status in ("failed",):
         return "failed"
     if state == "parked" or pending_approvals > 0 or status in (
-            "parked_for_approval", "asked_to_clarify", "parked_budget", "steer_which_owner"):
+            "parked_for_approval", "asked_to_clarify", "parked_budget", "steer_which_owner",
+            "stopped_denied"):
         return "needs_you"
     if status.startswith("handed_back"):
         return "handed_back"
@@ -245,7 +246,8 @@ def task_status(state: str, status: str, *, pending_approvals: int = 0) -> TaskS
 
 
 _STEP_TYPES = {"tool_result": "tool", "tool_refused": "tool", "model_called": "model",
-               "claim_blocked": "tool", "draft_proposed": "reply"}
+               "claim_blocked": "tool", "draft_proposed": "reply", "breaker_tripped": "tool",
+               "owner_stop": "tool"}
 
 
 def steps_from_events(events: Iterable[Any], *, route_ms: float = 0.0,

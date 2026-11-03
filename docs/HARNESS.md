@@ -49,6 +49,7 @@ helper flag), `failed`.
 | `builtins.py` | `send_to_user`, `ask_question`, `update_plan` |
 | `collector.py` | The 13 Collector tools, the Collector skill, a minimal Proof helper |
 | `durable.py` | `harness_steps(...)`: the loop as a step of the always-on `JobRunner` |
+| `denials.py`, `denials_eval.py` | The denial circuit breaker (RAI-324): 3-in-a-row and 10-in-50 rules, honest-failure replies, the 30-case eval with its pass marks |
 | `tracing.py` | One Langfuse trace per run, a span per step |
 | `scenarios.py`, `eval.py` | The 50 Collector scenarios and every suite with its pass mark |
 | `inbound.py`, `frontdoor.py` | The front-door envelope, the directory, dedupe, threads, lanes, batching, run rows (RAI-280) |

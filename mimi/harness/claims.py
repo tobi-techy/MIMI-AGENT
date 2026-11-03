@@ -623,6 +623,97 @@ _MONEY_MOVE = re.compile(
 _EDIT_APPROVED = re.compile(r"\b(?:changed|edited|updated|amended|modified)\s+(?:the|your)?\s*"
                             r"approved\b", re.I)
 
+# A refusal that reached the model as plain text (a scope check, a Go
+# refusal, a plain error line) carries one of these short noes. Typed
+# denials (``denied: true`` JSON) are checked structurally, never by pattern.
+_REFUSED_TOOL = re.compile(r"\b(denied|refused|not available|no access|not shared)\b", re.I)
+_HONEST_SUCCESS = re.compile(
+    r"\b(recorded|logged|saved|noted|read|checked|looked(?:\s+up|\s+into)?|found|verified|"
+    r"sent|forwarded|approved|confirmed|received|"
+    r"scheduled|booked|done|updated|added|placed|cancelled|cleared)\b", re.I)
+_HONEST_DONE = re.compile(r"\b(done|ok|okay|sure|all set|taken care of)\b", re.I)
+_HONEST_OK_NOUNS = re.compile(r"\b(update|reminder|payment|order|receipt|request|"
+                              r"message|report)\b", re.I)
+
+
+def _tool_texts(messages: Sequence[Any]) -> list[str]:
+    """What this turn's tools actually said, newest first."""
+    out = []
+    for m in reversed(list(messages or [])):
+        if isinstance(m, dict) and m.get("role") == "tool":
+            out.append(str(m.get("content") or ""))
+    return out
+
+
+def _step_tool_texts(messages: Sequence[dict[str, Any]]) -> list[str]:
+    """The current step's tool answers: everything after the last assistant
+    turn that proposed tools (repair turns are new steps, so the held
+    message's own failure stays in scope)."""
+    texts: list[str] = []
+    for m in reversed(list(messages or [])):
+        if not isinstance(m, dict):
+            continue
+        if m.get("role") == "tool":
+            texts.append(str(m.get("content") or ""))
+            continue
+        if m.get("role") == "assistant" and m.get("tool_calls"):
+            break
+    return texts
+
+
+def tool_refused(messages: Sequence[Any]) -> bool:
+    """Whether a step in this turn was refused (a consent, scope, Go, policy
+    or built-in no): the reply must ask the owner for a next step instead of
+    claiming it did the work (RAI-324)."""
+    for text in _tool_texts(messages):
+        try:
+            node = json.loads(text)
+        except ValueError:
+            node = None
+        if isinstance(node, dict):
+            if node.get("denied") is True:
+                return True
+            continue
+        if _REFUSED_TOOL.search(text):
+            return True
+    return False
+
+
+def dishonest_success(text: str, *, messages: Sequence[dict[str, Any]],
+                      intents: Sequence[Any] = ()) -> list[str]:
+    """Success claims in ``text`` after this step's own tools said no.
+
+    Only the step's own tools count: an earlier step's results are history,
+    and a success claim with no refusal behind it is the outcomes check's job
+    (``unbacked_claims``), not this one.
+    """
+    step_tools = _step_tool_texts(messages) or _tool_texts(messages)
+    if not tool_refused(step_tools) and not tool_refused(messages):
+        return []
+    plain = _QUOTED.sub(" ", text)
+    hits = [m.group(1).lower() for m in _CLAIM.finditer(plain)]
+    hits += [m.group(1).lower() for m in _PASSIVE.finditer(plain)
+             if not _CONDITION.search(plain[:m.start()])]
+    head = _HEADLINE.match(plain)
+    if head and not _CONDITION.search(plain):
+        hits.append(head.group(1).lower())
+    if _DONE_START.search(plain):
+        hits.append("done")
+    if not hits and _HONEST_SUCCESS.search(plain):
+        hits.append("refused tool reported as success")
+    if not hits and _HONEST_DONE.search(plain) and _HONEST_OK_NOUNS.search(plain):
+        hits.append("refused tool reported as success")
+    if not hits and _PROMISE.search(plain) and not tool_refused(messages):
+        hits.append("refused tool with a promise")
+    return list(dict.fromkeys(hits))
+
+
+def honesty_note(problems: list[str]) -> str:
+    """The repair line for an honesty hold: name the refusal, not a lecture."""
+    return ("the checks said no this step (" + ", ".join(problems) +
+            "); say what was refused and ask the owner for a next step instead "
+            "of claiming success")
+
 SPEAKING = frozenset({"send_to_user", "ask_question"})
 _INTERNAL = frozenset({"update_plan"})
 
@@ -910,7 +1001,9 @@ def check_outcomes(tool: str, text: str, *, messages: Sequence[dict[str, Any]],
                    to_shop: str = "", exclude: str = "") -> dict[str, list[str]]:
     """Done claims and promises, checked once the whole step has run, so a
     send_to_user next to the tool that does the work in the same model turn is
-    judged on what that tool actually did."""
+    judged on what that tool actually did. A failed tool behind a success
+    claim is held too (RAI-324): the reply must report the failure.
+    """
     if tool not in PERSON_FACING:
         return {}
     src = sources(messages, intents, history_end=history_end)
@@ -920,6 +1013,12 @@ def check_outcomes(tool: str, text: str, *, messages: Sequence[dict[str, Any]],
                         to_shop=to_shop, exclude=exclude)
     if c:
         out["claims"] = c
+    bad = dishonest_success(text, messages=messages, intents=intents)
+    if bad and "claims" not in out:
+        # A claim the outcomes already hold needs no second verdict; the
+        # honesty check catches a "success" the evidence cannot back at all
+        # (a failed tool, or no usable result behind the words).
+        out["honesty"] = bad
     p = unbacked_promises(text, intents=intents)
     if p:
         out["promises"] = p
@@ -946,6 +1045,9 @@ def check(tool: str, text: str, *, messages: Sequence[dict[str, Any]], intents: 
         n = unknown_names(src, text, names, shops)
         if n:
             out["names"] = n
+        bad = dishonest_success(text, messages=messages, intents=intents)
+        if bad:
+            out["honesty"] = bad
     if outcomes:
         out.update(check_outcomes(tool, text, messages=messages, intents=intents,
                                   wake_source=wake_source, other_drafts=other_drafts,
@@ -982,6 +1084,8 @@ def repair_text(problems: dict[str, list[str]]) -> tuple[str, str]:
     if "never" in problems:
         parts.append("it says money moved or an approved record changed, which Mimi never "
                      "does")
+    if "honesty" in problems:
+        parts.append(honesty_note(problems["honesty"]))
     if "deflection" in problems:
         parts.append("it sends the person to another helper or the rep instead of answering ("
                      + "; ".join(problems["deflection"]) + "); answer from your own tools, or "
