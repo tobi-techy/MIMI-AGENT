@@ -268,6 +268,64 @@ class TaskList(_Out):
     by_status: dict[str, int]
 
 
+class ActivityStep(_Out):
+    """One step of the helper's work, in plain words for the Activity row.
+
+    ``short`` is the one line the console shows (tool names in plain words,
+    names for ids, naira for money); ``name`` is the tool or event behind it.
+    """
+
+    name: str
+    kind: str
+    status: str
+    short: str
+    ms: float = 0.0
+    at: str = ""
+
+
+class ActivityRow(_Out):
+    """One row of the console's Activity view: a turn Mimi handed to a helper."""
+
+    task_id: str
+    turn_id: str
+    thread_id: str
+    helper: str
+    helper_name: str
+    skill: str
+    status: Literal["working", "needs_you", "done", "handed_back", "failed"]
+    tab: Literal["running", "waiting", "done"] = Field(
+        ..., description="The Activity tab: running (working), waiting (needs_you), "
+        "done (done, handed_back, failed).")
+    what: str = Field(..., description="What the helper is doing, in plain words "
+                      "written by code, never shop text.")
+    shop_name: str = ""
+    # When the turn started, Africa/Lagos with its zone.
+    started_at: str
+    finished_at: str | None
+    steps: list[ActivityStep] = Field(default_factory=list)
+    pending_approvals: int = 0
+
+
+class ActivityList(_Out):
+    rows: list[ActivityRow]
+    total: int
+    by_tab: dict[str, int]
+
+
+class StopOut(_Out):
+    """The answer to stopping one turn: the turn's state after the stop."""
+
+    turn_id: str
+    # queued | leased | done | failed (merged turns report their lead's state)
+    state: str
+    # The turn's status (stopping while the worker parks it, stopped_by_owner
+    # once it has, its old status when it already finished).
+    status: str
+    # True when the stop flagged a turn that had not finished yet.
+    stopped: bool
+    message: str = Field(..., description="One plain line for the console, written by code.")
+
+
 class ShopSummary(_Out):
     shop_id: str
     name: str

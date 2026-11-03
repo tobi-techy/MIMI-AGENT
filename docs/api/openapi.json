@@ -1,6 +1,179 @@
 {
   "components": {
     "schemas": {
+      "ActivityList": {
+        "additionalProperties": false,
+        "properties": {
+          "by_tab": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "title": "By Tab",
+            "type": "object"
+          },
+          "rows": {
+            "items": {
+              "$ref": "#/components/schemas/ActivityRow"
+            },
+            "title": "Rows",
+            "type": "array"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "rows",
+          "total",
+          "by_tab"
+        ],
+        "title": "ActivityList",
+        "type": "object"
+      },
+      "ActivityRow": {
+        "additionalProperties": false,
+        "description": "One row of the console's Activity view: a turn Mimi handed to a helper.",
+        "properties": {
+          "finished_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Finished At"
+          },
+          "helper": {
+            "title": "Helper",
+            "type": "string"
+          },
+          "helper_name": {
+            "title": "Helper Name",
+            "type": "string"
+          },
+          "pending_approvals": {
+            "default": 0,
+            "title": "Pending Approvals",
+            "type": "integer"
+          },
+          "shop_name": {
+            "default": "",
+            "title": "Shop Name",
+            "type": "string"
+          },
+          "skill": {
+            "title": "Skill",
+            "type": "string"
+          },
+          "started_at": {
+            "title": "Started At",
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "working",
+              "needs_you",
+              "done",
+              "handed_back",
+              "failed"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "steps": {
+            "items": {
+              "$ref": "#/components/schemas/ActivityStep"
+            },
+            "title": "Steps",
+            "type": "array"
+          },
+          "tab": {
+            "description": "The Activity tab: running (working), waiting (needs_you), done (done, handed_back, failed).",
+            "enum": [
+              "running",
+              "waiting",
+              "done"
+            ],
+            "title": "Tab",
+            "type": "string"
+          },
+          "task_id": {
+            "title": "Task Id",
+            "type": "string"
+          },
+          "thread_id": {
+            "title": "Thread Id",
+            "type": "string"
+          },
+          "turn_id": {
+            "title": "Turn Id",
+            "type": "string"
+          },
+          "what": {
+            "description": "What the helper is doing, in plain words written by code, never shop text.",
+            "title": "What",
+            "type": "string"
+          }
+        },
+        "required": [
+          "task_id",
+          "turn_id",
+          "thread_id",
+          "helper",
+          "helper_name",
+          "skill",
+          "status",
+          "tab",
+          "what",
+          "started_at",
+          "finished_at"
+        ],
+        "title": "ActivityRow",
+        "type": "object"
+      },
+      "ActivityStep": {
+        "additionalProperties": false,
+        "description": "One step of the helper's work, in plain words for the Activity row.\n\n``short`` is the one line the console shows (tool names in plain words,\nnames for ids, naira for money); ``name`` is the tool or event behind it.",
+        "properties": {
+          "at": {
+            "default": "",
+            "title": "At",
+            "type": "string"
+          },
+          "kind": {
+            "title": "Kind",
+            "type": "string"
+          },
+          "ms": {
+            "default": 0.0,
+            "title": "Ms",
+            "type": "number"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "short": {
+            "title": "Short",
+            "type": "string"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "kind",
+          "status",
+          "short"
+        ],
+        "title": "ActivityStep",
+        "type": "object"
+      },
       "ApprovalList": {
         "additionalProperties": false,
         "properties": {
@@ -2763,6 +2936,42 @@
         "title": "Step",
         "type": "object"
       },
+      "StopOut": {
+        "additionalProperties": false,
+        "description": "The answer to stopping one turn: the turn's state after the stop.",
+        "properties": {
+          "message": {
+            "description": "One plain line for the console, written by code.",
+            "title": "Message",
+            "type": "string"
+          },
+          "state": {
+            "title": "State",
+            "type": "string"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "stopped": {
+            "title": "Stopped",
+            "type": "boolean"
+          },
+          "turn_id": {
+            "title": "Turn Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "turn_id",
+          "state",
+          "status",
+          "stopped",
+          "message"
+        ],
+        "title": "StopOut",
+        "type": "object"
+      },
       "TaskList": {
         "additionalProperties": false,
         "properties": {
@@ -3472,6 +3681,116 @@
           }
         },
         "summary": "Liveness (no database, no auth)"
+      }
+    },
+    "/v1/activity": {
+      "get": {
+        "description": "The console's Activity view (RAI-325): one row per helper task,\nnewest first, with what it is doing in plain words, its tab (running,\nwaiting, done), its start time in Africa/Lagos and its step lines.\nStopping a running row never undoes what it already did.",
+        "operationId": "get_activity_v1_activity_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "tab",
+            "required": false,
+            "schema": {
+              "default": "",
+              "pattern": "^(|running|waiting|done)$",
+              "title": "Tab",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 200,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "minimum": 0,
+              "title": "Offset",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ActivityList"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Activity: every helper task with per-task steps (RAI-325)"
       }
     },
     "/v1/approvals": {
@@ -6101,6 +6420,91 @@
           }
         ],
         "summary": "A turn's state and replies"
+      }
+    },
+    "/v1/turns/{turn_id}/stop": {
+      "post": {
+        "description": "Flag one running turn of this distributor to stop (idempotent).\nThe worker ends the turn at its next step boundary: no further tool\ncall runs and no further message goes out. Stopping never undoes what\nthe turn already did. A finished turn reports itself, changed or not.",
+        "operationId": "post_turn_stop_v1_turns__turn_id__stop_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "turn_id",
+            "required": true,
+            "schema": {
+              "title": "Turn Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StopOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Stop one task: it ends at its next step (RAI-325)"
       }
     }
   }
