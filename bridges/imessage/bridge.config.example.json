@@ -1,0 +1,6 @@
+{
+  "senders": [
+    { "handle": "+15550102000", "shop_id": "shop-001", "label": "Demo phone 1 plays Mama Sola Provisions" },
+    { "handle": "teammate@example.com", "shop_id": "shop-035", "label": "Demo phone 2 plays Mama Chidi Kiosk" }
+  ]
+}

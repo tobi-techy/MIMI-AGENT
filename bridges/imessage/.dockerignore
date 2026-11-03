@@ -1,0 +1,6 @@
+node_modules
+state
+.env
+.env.*
+bridge.config.json
+test
