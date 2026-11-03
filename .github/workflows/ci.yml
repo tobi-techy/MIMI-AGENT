@@ -131,6 +131,27 @@ jobs:
           MIMI_DB_URL: sqlite:///${{ runner.temp }}/mimi-ci.db
         run: alembic upgrade head && alembic downgrade base
 
+  imessage-bridge:
+    name: iMessage bridge (lint, typecheck, tests on fakes)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: bridges/imessage
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: bridges/imessage/package-lock.json
+      - run: npm ci --no-audit --no-fund
+      - name: Lint
+        run: npm run lint
+      - name: Type check
+        run: npm run typecheck
+      - name: Tests (fake transport and scripted API; no Photon call; ffmpeg tests skip when ffmpeg is missing)
+        run: npm test
+
   postgres:
     name: store, API, worker-kill tests and the e2e eval on Postgres
     runs-on: ubuntu-latest

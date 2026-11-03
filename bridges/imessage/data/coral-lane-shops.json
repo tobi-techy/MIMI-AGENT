@@ -1,0 +1,206 @@
+{
+ "source": "mimi/world/fixtures/coral_lane_seed2610.json",
+ "note": "Fictional Coral Lane Trading shops (synthetic). Regenerate with: npm run shops",
+ "shops": [
+  {
+   "shop_id": "shop-001",
+   "name": "Mama Sola Provisions",
+   "phone": "+2340000000100"
+  },
+  {
+   "shop_id": "shop-002",
+   "name": "Iya Tolu Foodstuff",
+   "phone": "+2340000000101"
+  },
+  {
+   "shop_id": "shop-003",
+   "name": "Blessed Funke Mini Mart",
+   "phone": "+2340000000102"
+  },
+  {
+   "shop_id": "shop-004",
+   "name": "Divine Favour Provisions",
+   "phone": "+2340000000103"
+  },
+  {
+   "shop_id": "shop-005",
+   "name": "Funke & Sons Mini Mart",
+   "phone": "+2340000000104"
+  },
+  {
+   "shop_id": "shop-006",
+   "name": "Mama Folake Provisions",
+   "phone": "+2340000000105"
+  },
+  {
+   "shop_id": "shop-007",
+   "name": "Emeka & Sons Mini Mart",
+   "phone": "+2340000000106"
+  },
+  {
+   "shop_id": "shop-008",
+   "name": "Yinka Provision Store",
+   "phone": "+2340000000107"
+  },
+  {
+   "shop_id": "shop-009",
+   "name": "Grace Point POS & Stores",
+   "phone": "+2340000000108"
+  },
+  {
+   "shop_id": "shop-010",
+   "name": "Blessed Tolu Mini Mart",
+   "phone": "+2340000000109"
+  },
+  {
+   "shop_id": "shop-011",
+   "name": "His Mercy Mini Mart",
+   "phone": "+2340000000110"
+  },
+  {
+   "shop_id": "shop-012",
+   "name": "Yemisi & Sons Mini Mart",
+   "phone": "+2340000000111"
+  },
+  {
+   "shop_id": "shop-013",
+   "name": "Ronke Foodstuff & Provisions",
+   "phone": "+2340000000112"
+  },
+  {
+   "shop_id": "shop-014",
+   "name": "Folake Foodstuff & Provisions",
+   "phone": "+2340000000113"
+  },
+  {
+   "shop_id": "shop-015",
+   "name": "Femi POS & Provisions",
+   "phone": "+2340000000114"
+  },
+  {
+   "shop_id": "shop-016",
+   "name": "Emeka POS & Provisions",
+   "phone": "+2340000000115"
+  },
+  {
+   "shop_id": "shop-017",
+   "name": "Kehinde POS & Provisions",
+   "phone": "+2340000000116"
+  },
+  {
+   "shop_id": "shop-018",
+   "name": "Sade Kiosk",
+   "phone": "+2340000000117"
+  },
+  {
+   "shop_id": "shop-019",
+   "name": "Moji Kiosk",
+   "phone": "+2340000000118"
+  },
+  {
+   "shop_id": "shop-020",
+   "name": "Bisi POS & Provisions",
+   "phone": "+2340000000119"
+  },
+  {
+   "shop_id": "shop-021",
+   "name": "Iya Sola Provisions",
+   "phone": "+2340000000120"
+  },
+  {
+   "shop_id": "shop-022",
+   "name": "Olorun Ni Oba Kiosk",
+   "phone": "+2340000000121"
+  },
+  {
+   "shop_id": "shop-023",
+   "name": "Mama Emeka Kiosk",
+   "phone": "+2340000000122"
+  },
+  {
+   "shop_id": "shop-024",
+   "name": "Toyin Provision Store",
+   "phone": "+2340000000123"
+  },
+  {
+   "shop_id": "shop-025",
+   "name": "Kunle POS & Provisions",
+   "phone": "+2340000000124"
+  },
+  {
+   "shop_id": "shop-026",
+   "name": "Bisi Provision Store",
+   "phone": "+2340000000125"
+  },
+  {
+   "shop_id": "shop-027",
+   "name": "Ifeoma Kiosk",
+   "phone": "+2340000000126"
+  },
+  {
+   "shop_id": "shop-028",
+   "name": "God's Grace Stores",
+   "phone": "+2340000000127"
+  },
+  {
+   "shop_id": "shop-029",
+   "name": "Mama Wale Kiosk",
+   "phone": "+2340000000128"
+  },
+  {
+   "shop_id": "shop-030",
+   "name": "Segun Kiosk",
+   "phone": "+2340000000129"
+  },
+  {
+   "shop_id": "shop-031",
+   "name": "Iya Halima Provisions",
+   "phone": "+2340000000130"
+  },
+  {
+   "shop_id": "shop-032",
+   "name": "Mama Taiwo Kiosk",
+   "phone": "+2340000000131"
+  },
+  {
+   "shop_id": "shop-033",
+   "name": "Mama Lanre Provisions",
+   "phone": "+2340000000132"
+  },
+  {
+   "shop_id": "shop-034",
+   "name": "Abiodun Kiosk",
+   "phone": "+2340000000133"
+  },
+  {
+   "shop_id": "shop-035",
+   "name": "Mama Chidi Kiosk",
+   "phone": "+2340000000134"
+  },
+  {
+   "shop_id": "shop-036",
+   "name": "Iya Yinka Provisions",
+   "phone": "+2340000000135"
+  },
+  {
+   "shop_id": "shop-037",
+   "name": "Titi POS & Provisions",
+   "phone": "+2340000000136"
+  },
+  {
+   "shop_id": "shop-038",
+   "name": "Bukola POS & Provisions",
+   "phone": "+2340000000137"
+  },
+  {
+   "shop_id": "shop-039",
+   "name": "Mama Funke Kiosk",
+   "phone": "+2340000000138"
+  },
+  {
+   "shop_id": "shop-040",
+   "name": "Kunle Kiosk",
+   "phone": "+2340000000139"
+  }
+ ]
+}
