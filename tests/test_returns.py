@@ -414,3 +414,129 @@ def test_return_credit_carries_no_money_verb(api: dict[str, Any]) -> None:
 
     assert ledger.CREDIT_KIND == "return_credit"
     assert not any(v in ledger.CREDIT_KIND for v in MONEY_VERBS)
+
+
+# ------------------------------------------------------------- review fixes
+
+
+def test_a_rejected_credit_card_does_not_block_a_fresh_settle(
+        api: dict[str, Any]) -> None:
+    """The owner rejecting the card is a normal move. It must leave the return
+    settleable, with a live card of its own and no stale one behind it."""
+    c = api["c"]
+    body = _open_manual(c, _no_balance_shop(c), quantity=2)
+    _walk(c, body)
+    rid = body["return_id"]
+    first = c.post(f"/v1/returns/{rid}/settle", headers=h(), json={})
+    assert first.status_code == 200, first.text
+    rejected = first.json()["credit_approval_id"]
+    assert rejected
+    assert c.post(f"/v1/approvals/{rejected}/reject", headers=h(), json={}).status_code == 200
+    # The read does not keep pointing at a card that is dead.
+    gone = c.get(f"/v1/returns/{rid}", headers=h()).json()
+    assert gone["credit_approval_id"] is None and gone["credit_kobo"] is None
+    assert gone["status"] == "inspected"
+    # A fresh settle drafts a new card for the amount asked for, and it is one
+    # the owner can actually approve.
+    again = c.post(f"/v1/returns/{rid}/settle", headers=h(), json={"amount_kobo": PRICE})
+    assert again.status_code == 200, again.text
+    fresh = again.json()
+    assert fresh["credit_approval_id"] and fresh["credit_approval_id"] != rejected
+    assert fresh["credit_kobo"] == PRICE
+    pending = c.get("/v1/approvals", headers=h()).json()["approvals"]
+    card = next(x for x in pending if x["approval_id"] == fresh["credit_approval_id"])
+    assert card["status"] == "pending" and card["payload"]["amount_kobo"] == PRICE
+    ok = c.post(f"/v1/approvals/{fresh['credit_approval_id']}/approve", headers=h(), json={})
+    assert ok.status_code == 200, ok.text
+    settled = c.get(f"/v1/returns/{rid}", headers=h()).json()
+    assert settled["status"] == "settled" and settled["credit_applied_kobo"] == 0
+    assert settled["credit_on_account_kobo"] == PRICE
+
+
+def test_settle_again_with_a_different_amount_replaces_the_waiting_card(
+        api: dict[str, Any]) -> None:
+    """The card and the return must not disagree: a second settle with a new
+    amount supersedes the waiting card instead of leaving the old payload on
+    an approval the return no longer matches."""
+    c = api["c"]
+    body = _open_manual(c, _no_balance_shop(c), quantity=3)
+    _walk(c, body)
+    rid = body["return_id"]
+    first = c.post(f"/v1/returns/{rid}/settle", headers=h(), json={}).json()
+    same = c.post(f"/v1/returns/{rid}/settle", headers=h(), json={}).json()
+    assert same["credit_approval_id"] == first["credit_approval_id"]  # idempotent
+    smaller = c.post(f"/v1/returns/{rid}/settle", headers=h(),
+                     json={"amount_kobo": PRICE}).json()
+    assert smaller["credit_approval_id"] != first["credit_approval_id"]
+    assert smaller["credit_kobo"] == PRICE
+    cards = c.get("/v1/approvals", headers=h(), params={"status": "all"}).json()["approvals"]
+    old = next(x for x in cards if x["approval_id"] == first["credit_approval_id"])
+    new = next(x for x in cards if x["approval_id"] == smaller["credit_approval_id"])
+    assert old["status"] == "superseded" and old["superseded_by"] == new["approval_id"]
+    assert new["status"] == "pending" and new["payload"]["amount_kobo"] == PRICE
+
+
+def test_an_out_of_order_undo_is_refused_and_the_book_is_left_alone(
+        api: dict[str, Any], monkeypatch: pytest.MonkeyPatch) -> None:
+    """Two returns credit one invoice (one shop, two returns: the normal case).
+    The older credit's undo would put the invoice back past the newer credit,
+    so it is refused with the one to undo first."""
+    c, engine = api["c"], api["engine"]
+    ticks = iter([1_000.0 + i for i in range(50)])
+    monkeypatch.setattr(returns_api, "wall", lambda: next(ticks))
+    owes = max(c.get("/v1/shops", headers=h()).json()["shops"],
+               key=lambda x: x["outstanding_kobo"])
+    shop_id = owes["shop_id"]
+    assert owes["outstanding_kobo"] > 3 * PRICE  # both credits land on one invoice
+    before = {x["delivery_id"]: x["outstanding_kobo"]
+              for x in SqlGo(engine).receivables(A, shop_id)}
+    first = _walk(c, _open_manual(c, shop_id, quantity=1))
+    second = _walk(c, _open_manual(c, shop_id, quantity=1))
+    a1 = c.post(f"/v1/returns/{first['return_id']}/settle", headers=h(),
+                json={}).json()["credit_approval_id"]
+    assert c.post(f"/v1/approvals/{a1}/approve", headers=h(), json={}).status_code == 200
+    a2 = c.post(f"/v1/returns/{second['return_id']}/settle", headers=h(),
+                json={}).json()["credit_approval_id"]
+    assert c.post(f"/v1/approvals/{a2}/approve", headers=h(), json={}).status_code == 200
+    after = {x["delivery_id"]: x["outstanding_kobo"]
+             for x in SqlGo(engine).receivables(A, shop_id)}
+    assert sum(before.values()) - sum(after.values()) == 2 * PRICE
+    older = c.post(f"/v1/approvals/{a1}/undo", headers=h())
+    assert older.status_code == 409, older.text
+    assert "Undo the" in older.json()["detail"]
+    assert not ID_RE.search(older.json()["detail"])
+    assert {x["delivery_id"]: x["outstanding_kobo"]
+            for x in SqlGo(engine).receivables(A, shop_id)} == after
+    assert c.get(f"/v1/returns/{first['return_id']}",
+                 headers=h()).json()["status"] == "settled"
+    # Newest first works, and then the older one goes back cleanly.
+    assert c.post(f"/v1/approvals/{a2}/undo", headers=h()).status_code == 200
+    assert c.post(f"/v1/approvals/{a1}/undo", headers=h()).status_code == 200
+    assert {x["delivery_id"]: x["outstanding_kobo"]
+            for x in SqlGo(engine).receivables(A, shop_id)} == before
+
+
+def test_undoing_the_pickup_calls_the_return_off(api: dict[str, Any]) -> None:
+    """The pickup's undo has to reach the ledger: goods may not be collected,
+    inspected and credited against a pickup the shop was told to ignore."""
+    c = api["c"]
+    pickup = _pickup(c)
+    approved = c.post(f"/v1/approvals/{pickup['approval_id']}/approve",
+                      headers=h(), json={"option": "pickup"})
+    assert approved.status_code == 200, approved.text
+    draft = next(x for x in c.get("/v1/returns", headers=h()).json()["returns"]
+                 if x["approval_id"] == pickup["approval_id"])
+    rid = draft["return_id"]
+    assert draft["status"] == "drafted"
+    undone = c.post(f"/v1/approvals/{pickup['approval_id']}/undo", headers=h())
+    assert undone.status_code == 200, undone.text
+    off = c.get(f"/v1/returns/{rid}", headers=h()).json()
+    assert off["status"] == "cancelled"
+    assert any("pickup off" in t["note"] for t in off["transitions"])
+    # Nothing can be opened or walked from a pickup the owner called off.
+    again = c.post("/v1/returns", headers=h(),
+                   json={"approval_id": pickup["approval_id"]})
+    assert again.status_code == 409, again.text
+    assert "called" in again.json()["detail"]
+    assert c.post(f"/v1/returns/{rid}/approve", headers=h(), json={}).status_code == 409
+    assert c.post(f"/v1/returns/{rid}/collect", headers=h(), json={}).status_code == 409

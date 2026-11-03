@@ -134,6 +134,36 @@ def _saving(conn: sa.Connection, tenant: str, rows: Sequence[Any]) -> tuple[int 
     return ledger.saving_kobo(recovered, _pickup_cost(conn, tenant)), recovered
 
 
+def _credit_approval(conn: sa.Connection, tenant: str, r: Any) -> Any | None:
+    """The return's credit card when it is still live: waiting for the owner
+    (``pending``) or approved and applied. A rejected, withdrawn or superseded
+    card is not the return's credit any more, so the read says nothing is
+    waiting and a fresh settle is allowed."""
+    if not r.credit_approval_id:
+        return None
+    a = conn.execute(sa.select(s.approvals).where(
+        s.approvals.c.tenant_id == tenant,
+        s.approvals.c.approval_id == r.credit_approval_id)).first()
+    if a is None or a.status not in ("pending", "approved"):
+        return None
+    return a
+
+
+def _settle_attempts(conn: sa.Connection, tenant: str, return_id: str) -> int:
+    """How many credit cards this return has drafted, whatever became of them.
+
+    Counted from the cards themselves, not from applied credits: a card the
+    owner rejected never wrote a credit note, and reusing its key would hand
+    back the rejected card and settle nothing (see ``settle``)."""
+    n = 0
+    for row in conn.execute(sa.select(s.approvals.c.payload).where(
+            s.approvals.c.tenant_id == tenant,
+            s.approvals.c.tool == RETURN_CREDIT_KIND)):
+        if str(loads(row.payload, {}).get("return_id") or "") == return_id:
+            n += 1
+    return n
+
+
 # ------------------------------------------------------------- the read
 
 
@@ -161,6 +191,7 @@ def return_dict(conn: sa.Connection, tenant: str, r: Any) -> dict[str, Any]:
     credit = conn.execute(sa.select(s.credit_notes).where(
         s.credit_notes.c.tenant_id == tenant, s.credit_notes.c.return_id == r.return_id,
         s.credit_notes.c.undone_at.is_(None))).first()
+    card = _credit_approval(conn, tenant, r)
     return {
         "return_id": r.return_id, "shop_id": r.shop_id,
         "shop_name": _shop_name(conn, tenant, str(r.shop_id)),
@@ -176,8 +207,9 @@ def return_dict(conn: sa.Connection, tenant: str, r: Any) -> dict[str, Any]:
         "saving_basis": ledger.saving_basis(int(r.recovered_kobo),
                                             None if r.pickup_cost_kobo is None
                                             else int(r.pickup_cost_kobo)),
-        "credit_kobo": None if r.credit_kobo is None else int(r.credit_kobo),
-        "credit_approval_id": r.credit_approval_id,
+        "credit_kobo": (None if card is None or r.credit_kobo is None
+                        else int(r.credit_kobo)),
+        "credit_approval_id": None if card is None else str(r.credit_approval_id),
         "credit_applied_kobo": (int(credit.applied_kobo) if credit is not None else None),
         "credit_on_account_kobo": (int(credit.on_account_kobo) if credit is not None
                                    else None),
@@ -286,6 +318,8 @@ def _from_pickup(conn: sa.Connection, tenant: str, approval_id: str, now: float,
     if a.status != "approved":
         raise Conflict("approve the pickup before opening a return")
     payload = loads(a.payload, {})
+    if (payload.get("result") or {}).get("undo_available") is False:
+        raise Conflict("the owner called this pickup off, so there is nothing to collect")
     option = _pickup_option(payload)
     if option is None:
         raise Conflict("this plan's approved option is not a pickup")
@@ -322,6 +356,26 @@ def _from_pickup(conn: sa.Connection, tenant: str, approval_id: str, now: float,
     _record(conn, tenant, rid, ledger.DRAFTED, by=by,
             note=f"Opened from the approved pickup for {shop_name}.", now=now)
     return rid
+
+
+def cancel_from_pickup(conn: sa.Connection, tenant: str, approval_id: str, now: float,
+                       by: str = "owner") -> list[str]:
+    """Call the pickup off in the ledger, inside the caller's transaction.
+
+    The owner can undo a pickup. A return opened from it that has collected
+    nothing (``drafted`` or ``approved``) is cancelled with it, so the ledger
+    never keeps a plan the shop was told to ignore. A return that has already
+    collected goods is left alone: something moved, and that record is real."""
+    stopped: list[str] = []
+    for r in conn.execute(sa.select(s.returns).where(
+            s.returns.c.tenant_id == tenant,
+            s.returns.c.approval_id == approval_id)).all():
+        if not ledger.can_move(str(r.status), ledger.CANCELLED):
+            continue
+        _move(conn, tenant, r, ledger.CANCELLED, by=by,
+              note="The owner called the pickup off, so nothing is coming back.", now=now)
+        stopped.append(str(r.return_id))
+    return stopped
 
 
 def _from_lines(conn: sa.Connection, tenant: str, shop_id: str, reason: str,
@@ -490,9 +544,18 @@ def settle(engine: Engine, tenant: str, return_id: str, *,
                 s.receivables.c.shop_id == r.shop_id,
                 s.receivables.c.outstanding_kobo > 0))]
         applications, applied, on_account = ledger.credit_plan(amount, receivables)
-        attempt = 1 + len(conn.execute(sa.select(sa.literal(1)).select_from(s.credit_notes).where(
-            s.credit_notes.c.tenant_id == tenant,
-            s.credit_notes.c.return_id == return_id)).all())
+        # A card that is already waiting for the owner: hand it back untouched
+        # when it asks for the same money, and replace it when the owner
+        # settled a different amount. A card the owner rejected, withdrew or
+        # that was superseded is not live, so this drafts a fresh one for it.
+        stale_id = ""
+        waiting = _credit_approval(conn, tenant, r)
+        if waiting is not None and waiting.status == "pending":
+            held = int(loads(waiting.payload, {}).get("amount_kobo") or 0)
+            if held == amount:
+                return return_dict(conn, tenant, r)
+            stale_id = str(waiting.approval_id)
+        attempt = 1 + _settle_attempts(conn, tenant, return_id)
         key = f"{RETURN_CREDIT_KIND}:{return_id}:{attempt}"
         apr = approval_id_for(tenant, key)
         payload = {
@@ -519,6 +582,10 @@ def settle(engine: Engine, tenant: str, return_id: str, *,
             "skill": "returns/settle", "shop_id": r.shop_id, "tool": RETURN_CREDIT_KIND,
             "intent_kind": RETURN_CREDIT_KIND, "preview": preview, "payload": dumps(payload),
             "status": "pending", "created_at": now_iso(now), "created_ts": now, "handling": ""})
+        if stale_id:
+            from mimi.api import steering
+
+            steering.supersede(conn, tenant, stale_id, apr)
         _touch(conn, tenant, return_id, now, credit_kobo=amount, credit_approval_id=apr)
         return return_dict(conn, tenant, _load(conn, tenant, return_id))
 
@@ -634,6 +701,40 @@ def _attempt(conn: sa.Connection, tenant: str, return_id: str) -> int:
         s.credit_notes.c.return_id == return_id)).all())
 
 
+def _refuse_unless_newest(conn: sa.Connection, tenant: str, note: Any) -> None:
+    """An applied credit is undone by putting each invoice back to what it was
+    just before *that* credit came off it. That snapshot is only valid while no
+    later credit has since touched the same invoice, so an older one is refused
+    and told which one to undo first (last in, first out).
+
+    Two credits can share an invoice whenever one shop has two returns, which
+    is the normal case, so this is a rule, not an edge case: undoing out of
+    order would leave the invoice owing more than the shop really owes, with a
+    live credit still on it and nothing left to recompute it from.
+
+    Order is the applied time, with the credit id as the tie-break so the rule
+    stays a total order when two credits landed in the same instant."""
+    mine = (str(note.applied_at), str(note.credit_id))
+    shared = {str(app.get("delivery_id")) for app in loads(note.applications, [])}
+    if not shared:
+        return
+    for other in conn.execute(sa.select(s.credit_notes).where(
+            s.credit_notes.c.tenant_id == tenant,
+            s.credit_notes.c.shop_id == note.shop_id,
+            s.credit_notes.c.undone_at.is_(None))):
+        if str(other.credit_id) == str(note.credit_id):
+            continue
+        if not shared.intersection(
+                {str(app.get("delivery_id")) for app in loads(other.applications, [])}):
+            continue
+        if (str(other.applied_at), str(other.credit_id)) > mine:
+            shop_name = _shop_name(conn, tenant, str(note.shop_id))
+            raise Conflict(
+                f"a later credit for {shop_name} came off the same invoice. "
+                f"Undo the {owed.naira(int(other.amount_kobo))} credit first, "
+                "then this one.")
+
+
 def undo_credit(engine: Engine, tenant: str, approval: Mapping[str, Any]) -> None:
     """Reverse an applied credit: the invoices go back to what they were and
     the credit note is marked undone. The return goes back to ``inspected``."""
@@ -656,6 +757,7 @@ def undo_credit(engine: Engine, tenant: str, approval: Mapping[str, Any]) -> Non
             s.credit_notes.c.credit_id == credit_id)).first()
         if note is None:
             raise Conflict("this credit is no longer on the books")
+        _refuse_unless_newest(conn, tenant, note)
         for app in loads(note.applications, []):
             conn.execute(s.receivables.update().where(
                 s.receivables.c.tenant_id == tenant,

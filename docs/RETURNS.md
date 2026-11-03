@@ -79,6 +79,26 @@ When the shop owes nothing, `applied_kobo` is zero and the rest is
 payment. The return becomes `settled`; an undo puts it back to `inspected`
 so it can be settled afresh.
 
+Three rules keep the card and the return honest:
+
+* Settling again with the same amount hands back the card that is already
+  waiting. Settling with a different amount replaces it (the old card reads
+  `superseded`), so the card's amount and the return's never disagree.
+* A card the owner rejected, withdrew or superseded is not the return's
+  credit any more: the return reads no credit waiting, and the next settle
+  drafts a fresh one. A rejection never blocks settling.
+* An undo is last in, first out per invoice. One shop with two returns shares
+  an invoice, and each credit is undone by putting the invoice back to what it
+  was just before that credit came off, so the older credit is refused while a
+  newer one is still applied, with a plain message saying to undo the later
+  one first. Undoing out of order would leave the invoice owing more than the
+  shop really owes with a live credit still on it.
+
+Undoing the **pickup** itself also reaches the ledger: a return opened from it
+that has collected nothing is cancelled with it, and no return can be opened
+or walked from a pickup the owner called off. A return that already collected
+goods keeps its own record, because something moved.
+
 ## Credit exposure (`mimi/credit/exposure.py`, `GET /v1/credit/exposure`)
 
 What one shop could cost, aged and risk-weighted, per shop and in total.
@@ -114,10 +134,14 @@ What one shop could cost, aged and risk-weighted, per shop and in total.
 
 * the lifecycle, the three quantities, the settlement against a balance and
   its undo, and the credit-on-account case for a shop that owes nothing;
+* the settlement rules: a rejected card leaves the return settleable, a second
+  settle with a new amount replaces the waiting card, two credits on one
+  invoice refuse an out-of-order undo, and undoing the pickup cancels the
+  draft;
 * the unhappy paths: a pickup with no approval, a non-pickup plan, an
   inspection that disagrees with what was collected, a settlement above the
   return value, a transition out of order, settling with no shop and no
-  lines;
+  lines, a double settle and a double undo;
 * the exposure bands and weights, the confidence rule, verified versus
   reported payments, and the tenant filter;
 * two person-read-string checks: no internal id anywhere a person reads, and

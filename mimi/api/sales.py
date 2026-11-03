@@ -423,6 +423,14 @@ def undo(engine: Engine, tenant: str, approval_id: str) -> None:
              text=f"Undone: the plan for {p['shop_name']}'s {p['item']} is off. The shop has been told.")
         p["result"] = {**res, "undo_available": False, "undone_at": now_iso(now)}
         _set(conn, tenant, approval_id, p)
+        if p.get("chosen") == "pickup":
+            # The pickup is off, so the return it opened is off with it: the
+            # shop has just been told to ignore the plan and nothing has been
+            # collected yet. A return that already collected goods keeps its
+            # own record (returns.cancel_from_pickup leaves it alone).
+            from mimi.api import returns as returns_ledger
+
+            returns_ledger.cancel_from_pickup(conn, tenant, approval_id, now)
 
 
 def book_name(conn: sa.Connection, tenant: str) -> str:
