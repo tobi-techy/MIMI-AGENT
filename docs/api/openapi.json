@@ -5233,7 +5233,7 @@
     },
     "/v1/computer/tasks/{task_id}/approve": {
       "post": {
-        "description": "The owner approves the whole task once. The run continues in the\nbackground; poll this task for its steps. Approving a paused task\n(a login wall) resumes it. The guardrails and the budgets are code.",
+        "description": "The owner approves the whole task once. The run continues in the\nbackground; poll this task for its steps. Approving a paused task\n(a sign-in wall) resumes it in the session it paused in, so a sign-in\nthe owner did through the live view is still there; if that session has\nended, the task ends failed and the owner proposes it again. One\napproval starts the run and a second one in flight gets 409. The\nguardrails and the budgets are code.",
         "operationId": "post_computer_approve_v1_computer_tasks__task_id__approve_post",
         "parameters": [
           {

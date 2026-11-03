@@ -29,6 +29,8 @@ class Profile:
 
 
 READ_ONLY = frozenset({"goto", "scroll", "extract", "screenshot", "click"})
+# At most this many fill steps in one form plan, whatever the owner names.
+MAX_FILL = 12
 DOWNLOAD = READ_ONLY | {"download"}
 FORM = frozenset({"goto", "screenshot", "fill", "click", "extract"})
 
@@ -72,8 +74,10 @@ def profile_for(kind: str) -> Profile:
     return PROFILES.get(kind, PROFILES["generic"])
 
 
-def plan_for(kind: str, goal: str, url: str, domain: str) -> list[Step]:
+def plan_for(kind: str, goal: str, url: str, domain: str,
+             inputs: dict[str, str] | None = None) -> list[Step]:
     """The plan the owner approves, built in code from the task's own fields."""
+    fields = dict(inputs or {})
     open_step = Step(action="goto", url=url, note=f"Open {domain}")
     shot = Step(action="screenshot", note="Take a screenshot of the page")
     if kind == "price_check":
@@ -98,10 +102,14 @@ def plan_for(kind: str, goal: str, url: str, domain: str) -> list[Step]:
             Step(action="finish", note="Save the statement as an artifact"),
         ]
     if kind == "gov_form":
-        return [
-            open_step, shot,
-            Step(action="fill", target="form",
-                 note="Fill the form from the values the owner gave"),
+        # One fill step per value the owner named, so the field and the value
+        # come from them and never from a model. A form task with no values
+        # named has nothing to fill and is refused at proposal.
+        steps = [open_step, shot]
+        for name in sorted(fields)[:MAX_FILL]:
+            steps.append(Step(action="fill", field=name, value_key=name,
+                              note=f"Fill {name} with the value you gave"))
+        return steps + [
             Step(action="screenshot", note="Capture the filled form for the owner"),
             Step(action="finish",
                  note="Hand the filled form back. The owner submits it."),
@@ -122,7 +130,8 @@ class Plan:
     steps: list[Step] = field(default_factory=list)
 
 
-def build(kind: str, goal: str, url: str, domain: str) -> Plan:
+def build(kind: str, goal: str, url: str, domain: str,
+          inputs: dict[str, str] | None = None) -> Plan:
     k: TaskKind = kind if kind in PROFILES else "generic"  # type: ignore[assignment]
     return Plan(kind=k, goal=goal, url=url, domain=domain,
-                steps=plan_for(k, goal, url, domain))
+                steps=plan_for(k, goal, url, domain, inputs))

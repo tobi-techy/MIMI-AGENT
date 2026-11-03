@@ -28,6 +28,11 @@ def _row(row: Any) -> dict[str, Any]:
     return dict(row._mapping)
 
 
+# The newest tasks the list endpoint serves. A task row is small, but the list
+# is not a log: the console shows the recent ones.
+MAX_TASKS = 200
+
+
 class ComputerStore:
     """The persistence for computer tasks, over the API store's engine."""
 
@@ -48,19 +53,50 @@ class ComputerStore:
                 created_at=now_iso(), created_ts=wall()))
         return self.get(tenant, task_id) or {}
 
-    def set_status(self, tenant: str, task_id: str, status: str, *, stop_reason: str = "",
-                   note: str = "", finished: bool = False) -> None:
+    def set_status(self, tenant: str, task_id: str, status: str,
+                   *, stop_reason: str | None = None, note: str | None = None,
+                   finished: bool = False,
+                   only_from: tuple[str, ...] | None = None) -> bool:
+        """Move a task to ``status`` and say whether the row moved.
+
+        ``stop_reason`` and ``note``: ``None`` leaves the stored value alone,
+        the empty string clears it, anything else writes it. ``only_from``
+        makes the write conditional on the status the row still has, so a
+        finished or stopped task can never be overwritten by a late write.
+        """
         values: dict[str, Any] = {"status": status}
-        if stop_reason:
+        if stop_reason is not None:
             values["stop_reason"] = stop_reason
-        if note:
+        if note is not None:
             values["note"] = note
         if finished:
             values["finished_at"] = now_iso()
+        where = [s.computer_tasks.c.tenant_id == tenant,
+                 s.computer_tasks.c.task_id == task_id]
+        if only_from is not None:
+            where.append(s.computer_tasks.c.status.in_(list(only_from)))
         with self._conn() as conn:
-            conn.execute(sa.update(s.computer_tasks).where(
+            res = conn.execute(sa.update(s.computer_tasks).where(*where).values(**values))
+            return bool(res.rowcount == 1)
+
+    def claim(self, tenant: str, task_id: str,
+              statuses: tuple[str, ...] = ("proposed",)) -> bool:
+        """Start a task, but only from one of ``statuses``.
+
+        One conditional UPDATE, so two approvals in flight cannot both start a
+        run: the loser gets False. ``started_at`` is stamped the first time the
+        task runs and kept after that. The reason and the note of an earlier
+        run are cleared here.
+        """
+        with self._conn() as conn:
+            res = conn.execute(sa.update(s.computer_tasks).where(
                 s.computer_tasks.c.tenant_id == tenant,
-                s.computer_tasks.c.task_id == task_id).values(**values))
+                s.computer_tasks.c.task_id == task_id,
+                s.computer_tasks.c.status.in_(list(statuses))).values(
+                status="running", stop_reason="", note="",
+                started_at=sa.case((s.computer_tasks.c.started_at == "", now_iso()),
+                                   else_=s.computer_tasks.c.started_at)))
+            return bool(res.rowcount == 1)
 
     def get(self, tenant: str, task_id: str) -> dict[str, Any] | None:
         with self._conn() as conn:
@@ -69,11 +105,12 @@ class ComputerStore:
                 s.computer_tasks.c.task_id == task_id)).first()
         return _row(row) if row is not None else None
 
-    def tasks(self, tenant: str) -> list[dict[str, Any]]:
+    def tasks(self, tenant: str, limit: int = MAX_TASKS) -> list[dict[str, Any]]:
         with self._conn() as conn:
             rows = conn.execute(sa.select(s.computer_tasks).where(
                 s.computer_tasks.c.tenant_id == tenant).order_by(
-                s.computer_tasks.c.created_ts.desc(), s.computer_tasks.c.created_at.desc())
+                s.computer_tasks.c.created_ts.desc(), s.computer_tasks.c.created_at.desc()
+            ).limit(limit)
             ).all()
             counted = conn.execute(
                 sa.select(s.computer_steps.c.task_id, sa.func.count()).where(
@@ -94,6 +131,15 @@ class ComputerStore:
                 tenant_id=tenant, task_id=task_id, idx=record.index,
                 action=record.action, url=record.url, note=record.note,
                 screenshot=record.screenshot, created_at=now_iso()))
+
+    def next_index(self, tenant: str, task_id: str) -> int:
+        """The next step-log index for a task, so a resumed run continues its
+        own log rather than writing rows the paused run already wrote."""
+        with self._conn() as conn:
+            top = conn.execute(sa.select(sa.func.max(s.computer_steps.c.idx)).where(
+                s.computer_steps.c.tenant_id == tenant,
+                s.computer_steps.c.task_id == task_id)).scalar()
+        return int(top) + 1 if top is not None else 0
 
     def steps(self, tenant: str, task_id: str) -> list[dict[str, Any]]:
         with self._conn() as conn:

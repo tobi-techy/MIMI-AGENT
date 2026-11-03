@@ -9,6 +9,8 @@ Everything the brief fixes in code lives here:
   ``forbidden_page``;
 * a step outside the kind's profile is refused ``unsupported_step``;
 * the budgets (10 minutes, 40 steps by default) end it ``stopped_runaway``;
+* the owner's stop is read between steps and ends it ``stopped_by_owner``, and
+  nothing the in-flight step produced is kept;
 * a form is filled only from the owner's own inputs, never a credential;
 * every step is logged with a redacted note and a screenshot artifact, and what
   a step produced (the text a read gave, the file a download gave) is kept as
@@ -33,6 +35,10 @@ from mimi.computer.engine import ComputerPort, EngineError, TaskRef
 from mimi.computer.types import Artifact, GuardLimits, Step, StepRecord, TaskStatus
 
 MAX_NOTE = 300
+
+
+def _never() -> bool:
+    return False
 
 
 @dataclass
@@ -87,15 +93,26 @@ class Runner:
     def __init__(self, port: ComputerPort, limits: GuardLimits | None = None,
                  clock: Callable[[], float] = wall,
                  on_step: Callable[[StepRecord, Blob | None], None] | None = None,
-                 on_artifact: Callable[[Blob], None] | None = None):
+                 on_artifact: Callable[[Blob], None] | None = None,
+                 should_stop: Callable[[], bool] | None = None):
         self.port = port
         self.limits = limits or GuardLimits()
         self.clock = clock
         self.on_step = on_step
         self.on_artifact = on_artifact
+        # The owner's stop, read between steps: the caller sets its own flag
+        # when ``/stop`` arrives, so a stopped task stops doing things.
+        self.should_stop = should_stop or _never
+
+    def stopped(self) -> bool:
+        """Whether the owner asked to stop, this instant."""
+        try:
+            return bool(self.should_stop())
+        except Exception:  # a broken flag never runs a task on: stop instead
+            return True
 
     def run(self, task_id: str, domain: str, kind: str, steps: list[Step],
-            inputs: dict[str, str] | None = None) -> Outcome:
+            inputs: dict[str, str] | None = None, start_index: int = 0) -> Outcome:
         inputs = dict(inputs or {})
         profile = plans.profile_for(kind)
         ref = TaskRef(task_id=task_id, domain=domain)
@@ -107,8 +124,14 @@ class Runner:
             return self._fail(out, "failed", f"The browser did not start: {exc}")
 
         started = self.clock()
-        index = 0
+        # A resumed task carries on the step log it already has, so its rows can
+        # never collide with the rows the paused run wrote. The step budget
+        # counts the task's whole log, so no number of resumes can push a task
+        # past it.
+        index = start_index
         for step in steps:
+            if self.stopped():
+                return self._stop(out, "stopped", "stopped_by_owner")
             if step.action == "finish":
                 rec = StepRecord(index=index, action="finish", url=current_url,
                                  note=g.redact(step.note))
@@ -131,8 +154,19 @@ class Runner:
             except EngineError as exc:
                 return self._fail(out, "failed",
                                   f"The browser could not do that step: {exc}")
+            if self.stopped():
+                # The stop landed while that step was in flight: nothing it
+                # produced is recorded or kept, and the caller's own record of
+                # the stop stands.
+                return self._stop(out, "stopped", "stopped_by_owner")
             if page.url:
                 current_url = page.url
+            # The allowlist is the first verdict on the observed URL, before
+            # the page is judged at all: a redirect, or a page that moves
+            # itself, to a domain the owner never approved ends the task
+            # without reading or keeping anything from it.
+            if page.url and not g.host_allowed(page.url, domain):
+                return self._stop(out, "stopped", "off_domain")
             verdict = g.classify(page)
             if verdict.kind == "forbidden":
                 blob = self._screenshot(out, index, page.screenshot)
@@ -146,9 +180,6 @@ class Runner:
                 out.note = ("This page asks for a sign-in. Mimi never types a "
                             "password or a code, so the task is paused here.")
                 return out
-            if page.url and step.action in ("goto", "click") and not g.host_allowed(
-                    page.url, domain):
-                return self._stop(out, "stopped", "off_domain")
             blob = self._body_artifact(out, index, step, page)
             self._record(out, index, step, page, blob, "")
             index += 1

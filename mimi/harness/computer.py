@@ -173,17 +173,29 @@ def register_computer_tools(reg: ToolRegistry, ports: ComputerPorts) -> None:
 
 
 def _found(service: Any, tenant: str, task_id: str, view: dict[str, Any]) -> str:
-    """The text a read kept, defanged and inside its wrapper, or ""."""
+    """The text a read kept, defanged and inside its wrapper, or "".
+
+    A read that kept no text at all is "" (the page showed nothing readable).
+    A read that kept text which is no longer on disk is not an empty page: it
+    fails, so the helper says so instead of reporting a page that showed
+    nothing.
+    """
     for art in view.get("artifacts", []):
         if art.get("kind") != "text":
             continue
         row = service.artifact(tenant, task_id, str(art.get("name", "")))
         path = str(row.get("path", "")) if row else ""
         if not path:
-            continue
+            raise ToolError(
+                "The text this read kept is no longer stored, so I cannot tell "
+                "you what the page showed.",
+                "Ask me to read the page again.", code="artifact_missing")
         try:
             text = Path(path).read_text(errors="replace")[:MAX_FOUND]
         except OSError:
-            return ""
+            raise ToolError(
+                "The text this read kept is no longer on disk, so I cannot tell "
+                "you what the page showed.",
+                "Ask me to read the page again.", code="artifact_missing") from None
         return f'<{WRAPPER} untrusted="true">{defang(text)}</{WRAPPER}>'
     return ""

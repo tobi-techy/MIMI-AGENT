@@ -110,10 +110,18 @@ cannot disagree:
 | `price_check` | Check a brand or supplier page for prices and promos | open, screenshot, read, finish | no | no |
 | `order_list` | Pull the order list from a supplier page | open, screenshot, read, finish | no | yes |
 | `bank_statement` | Download a statement from a bank page | open, screenshot, download, finish | no | yes |
-| `gov_form` | Fill a form on a government or tax page and hand it back | open, screenshot, fill, screenshot, finish | yes | no |
+| `gov_form` | Fill a form on a government or tax page and hand it back | open, screenshot, one fill per value the owner named, screenshot, finish | yes | no |
 | `generic` | Read a page on the approved domain | open, screenshot, read, finish | no | no |
 
 An unknown `kind` falls back to `generic`.
+
+`gov_form` fills only what the owner spells out: the proposal carries their
+named values in `inputs`, and the plan gets **one fill step per name**, with
+that name as the field label and the value read from the task's own inputs. A
+form task with no values named is refused at proposal, and a name or a value
+the code refuses to type (a credential field, a long number) is refused there
+too, rather than stopping halfway through a run. The plan above is the plan that
+runs: a test builds it for `gov_form`, runs it, and checks the values land.
 
 ## 5. The contract
 
@@ -131,12 +139,14 @@ GET  /v1/computer/kinds              -> {kinds:[{kind, label}]}
 ```
 
 Tasks are filtered by the caller's tenant, and every route needs an owner key.
-The list is an honest empty list when there are none: nothing is seeded.
+The list is an honest empty list when there are none: nothing is seeded, and it
+serves the newest 200 tasks of that tenant (`store.MAX_TASKS`).
 `live_view_url` is a `string | null`, populated while a session is open and
 `null` once the task ends. It is deliberately **not** keyed to `status`: a task
 paused at a sign-in wall is `awaiting_owner`, not `running`, and it keeps its
 session and its link, because that is the state in which the owner signs in. So
-the console's rule is "open it if it is not null".
+the console's rule is "open it if it is not null". Approving a task that is
+already being started, or that has ended, is `409` and changes nothing.
 
 ### `action` is plain words, and `code` is ours
 
@@ -153,12 +163,13 @@ rendered step and plan string and fails on anything shaped like a code
 
 | Requirement | Enforced in code |
 |---|---|
-| Domain allowlist, abort off-domain | `guardrails.host_allowed` before every navigation and against the observed URL after it; a mismatch ends the task `off_domain` |
-| Never type credentials or a code | a password field, a sign-in form or an MFA prompt pauses the task `awaiting_owner`. Nothing is typed, and the step vocabulary has no action that could type one |
+| Domain allowlist, abort off-domain | `guardrails.host_allowed` before every navigation **and against the observed URL of every step**, checked before the page is judged at all: a redirect, or a page that moves itself, to an unapproved domain ends the task `off_domain` without reading or keeping anything from it |
+| Never type credentials or a code | a password field, a sign-in form or an MFA prompt pauses the task `awaiting_owner` (after the allowlist check, so an unapproved page is never a page to pause on). Nothing is typed, and the step vocabulary has no action that could type one |
 | Never buy, message, or change settings; never enter card data | a page scan ends the task `forbidden_page` on a checkout, a card field, a message box or a settings page. Those actions are not in the vocabulary at all |
-| 10 minutes and 40 steps, then `stopped_runaway` | `GuardLimits(max_seconds=600, max_steps=40)`, wall clock from `mimi.clock.wall()`, checked before each step, consistent with `docs/LOOP-SAFETY.md` |
-| Immediate stop, with the reason recorded | `/stop` calls `engine.stop` synchronously and writes `stopped_by_owner`; a task that ends on its own releases its session |
-| Every step logged | one row per step: action, URL, a code-written note, and the name of a screenshot artifact |
+| 10 minutes and 40 steps, then `stopped_runaway` | `GuardLimits(max_seconds=600, max_steps=40)`, wall clock from `mimi.clock.wall()`, checked before each step, consistent with `docs/LOOP-SAFETY.md`. The count is the task's whole step log, so no number of resumes can push a task past it |
+| Immediate stop, with the reason recorded | `/stop` writes `stopped_by_owner` first, then closes the session. The runner reads the stop between steps and keeps nothing the in-flight step produced, and the run's own writes are conditional on the row still being `running`: a stop can never be recorded as a browser failure, and a finished run cannot overwrite it |
+| One approval starts one run | the move to `running` is a single conditional `UPDATE` (`store.claim`). Two approvals in flight: one starts the run, the other gets `409` |
+| Every step logged | one row per step: action, URL, a code-written note, and the name of a screenshot artifact. A resumed task continues its own log, so a resume never rewrites the steps the paused run wrote |
 | Redaction | `guardrails.redact` removes emails, phone numbers and long digit runs from a note. Prices stay readable |
 | Nothing applied to the book | a task produces artifacts only. No book or Go write path is reachable from `mimi/computer` |
 
@@ -189,6 +200,16 @@ alembic/versions/0016_computer_tasks.py   computer_tasks, computer_steps, comput
 * **`computer_artifacts`**: the name, kind, mime type, size and `sha256` of each
   artifact. The bytes live on disk, under `MIMI_COMPUTER_DIR` (a temporary
   directory if that is unset), as `<dir>/<tenant>/<task_id>/<name>`.
+* **`MIMI_COMPUTER_DIR` must be a durable path in a deployment** (it is in the
+  `docs/DEPLOY-DEMO.md` checklist). Unset, it is a fresh temporary directory
+  per process: after a restart, every artifact of every finished task is gone,
+  `GET /v1/computer/tasks/{id}/artifacts/{name}` answers `404`, and a helper
+  asked to re-read a finished task is told the text is no longer on disk rather
+  than being handed an empty page.
+* **Retention**: nothing prunes these rows or the files yet. Cost per task is
+  bounded by the budgets (at most 40 step rows and one screenshot artifact per
+  step), and the list endpoint serves the newest 200, but a long-lived
+  deployment needs a retention policy of its own. That is named in section 9.
 * **Never stored**: a credential, a card number, a password, a code, or page
   text other than the artifact a read produced. **The signed live view link is
   never stored either**: it is held in memory while a session is open, because
@@ -201,12 +222,22 @@ A page that asks for a sign-in pauses the task and keeps its session open, and
 themselves, in their own browser, through that link.** Mimi does not type a
 password or a code, ever, and stores neither.
 
-Reuse across tasks is designed but **not built**: the provider keeps a browser
-context (cookies and login state) that a later session can attach to, which is
-how "sign in once, then reuse it" would work. Today every task gets a fresh
-session, so a portal behind a login needs the owner to sign in again, in that
-task's own live view. That is the honest state, and it is called out again in
-section 9.
+Approving the paused task then **resumes it in that same session**
+(`cloud_browser.start` reuses the session it already opened for the task), so
+the sign-in the owner just did is still there and the run carries on from the
+plan's first step, which now lands on the real page. The resumed run continues
+the task's own step log, and the console is handed that session's link, read
+again, never the paused run's link from memory. If that session has ended in the
+meantime, the run ends `failed` with a plain note and the owner proposes the
+task again: a resumed run never quietly opens a second session to leak, and it
+never pretends a fresh session is the signed-in one.
+
+Reuse **across tasks** is designed but **not built**: the provider keeps a
+browser context (cookies and login state) that a later session can attach to,
+which is how "sign in once, then reuse it" would work for every task. Today a
+new task gets a fresh session, so a portal behind a login needs the owner to
+sign in again, in that task's own live view. That is the honest state, and it is
+called out again in section 9.
 
 ## 8. How a helper reaches for the browser
 
@@ -272,6 +303,10 @@ offline); the signed live view link, proven reachable with no provider login.
   unused, behind the seam.
 * **Model-chosen steps.** The plan is code, and it stays code. Nothing here
   lets a model choose a click.
+* **A retention policy for task rows and artifact files.** Nothing prunes
+  either today. The budgets bound one task (at most 40 step rows, a screenshot
+  per step) and the list serves the newest 200, but a long-lived deployment
+  wants an age-based sweep, and a durable `MIMI_COMPUTER_DIR`.
 
 ## 10. Open decisions
 

@@ -707,7 +707,11 @@ def create_app(settings: Settings | None = None, agent: Agent | None = None, *,
     def post_computer_approve(task_id: str, key: Owner) -> dict[str, Any]:
         """The owner approves the whole task once. The run continues in the
         background; poll this task for its steps. Approving a paused task
-        (a login wall) resumes it. The guardrails and the budgets are code."""
+        (a sign-in wall) resumes it in the session it paused in, so a sign-in
+        the owner did through the live view is still there; if that session has
+        ended, the task ends failed and the owner proposes it again. One
+        approval starts the run and a second one in flight gets 409. The
+        guardrails and the budgets are code."""
         try:
             computer.approve(key.tenant_id, task_id)
         except Refused as exc:

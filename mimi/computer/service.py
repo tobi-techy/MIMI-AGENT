@@ -15,6 +15,7 @@ import logging
 import threading
 import uuid
 from collections.abc import Callable
+from dataclasses import dataclass
 from typing import Any
 
 from mimi.clock import wall
@@ -26,13 +27,17 @@ from mimi.computer.engine import (
 )
 from mimi.computer.runner import Runner
 from mimi.computer.store import ComputerStore, plan_dicts, plan_view, task_view
-from mimi.computer.types import GuardLimits, Step
+from mimi.computer.types import OPEN_STATUSES, GuardLimits, Step
 from mimi.store.util import loads, now_iso
 
 log = logging.getLogger(__name__)
 
 MAX_GOAL = 600
 MAX_INPUTS = 20
+
+# The statuses a task is started from, and the ones it never moves out of.
+RUNNABLE: tuple[str, ...] = ("proposed", "awaiting_owner")
+CLOSED_STATUSES: tuple[str, ...] = ("done", "stopped", "stopped_runaway", "failed")
 
 
 class Refused(Exception):
@@ -42,6 +47,14 @@ class Refused(Exception):
         super().__init__(message)
         self.message = message
         self.status = status
+
+
+@dataclass
+class _Run:
+    """One task's run in flight: the runner and the owner's stop flag."""
+
+    runner: Runner
+    stop: threading.Event
 
 
 def engine_from_env() -> ComputerPort:
@@ -106,7 +119,7 @@ class ComputerService:
         self.engine = engine if engine is not None else engine_from_env()
         self.limits = limits or GuardLimits()
         self.clock = clock
-        self._runs: dict[tuple[str, str], Runner] = {}
+        self._runs: dict[tuple[str, str], _Run] = {}
         self._live: dict[tuple[str, str], str] = {}
         self._lock = threading.Lock()
 
@@ -129,13 +142,34 @@ class ComputerService:
             raise Refused("the url is not on the domain you approved")
         clean_inputs = {str(k)[:120]: str(v)[:500]
                         for k, v in list((inputs or {}).items())[:MAX_INPUTS]}
-        plan = plans.build(kind, goal, url, domain)
+        plan = plans.build(kind, goal, url, domain, clean_inputs)
+        if plan.kind == "gov_form":
+            self._check_form(clean_inputs)
         task_id = f"ct_{uuid.uuid4().hex[:20]}"
         self.store.create(tenant, task_id, goal, url, domain, plan.kind,
                           plan_dicts(plan.steps), clean_inputs,
                           self.limits.model_dump(), self.engine.name)
         return {"task_id": task_id, "status": "proposed",
                 "plan": plan_view(plan_dicts(plan.steps))}
+
+    def _check_form(self, inputs: dict[str, str]) -> None:
+        """A form task is filled from the owner's own named values, or refused.
+
+        The labels and the values are the owner's words; nothing here is typed
+        on the owner's behalf that the code refuses to type at all.
+        """
+        from mimi.computer.guardrails import credential_field, looks_like_secret
+
+        if not inputs:
+            raise Refused("a form task needs the values to fill: name each field "
+                          "and give its value")
+        for name, value in inputs.items():
+            if credential_field(name):
+                raise Refused(f"a form task never types a credential, and {name} "
+                              "is a field a credential goes in")
+            if looks_like_secret(value):
+                raise Refused(f"a form task never types a long number, and the "
+                              f"value for {name} looks like one")
 
     # -- read --------------------------------------------------------------
     def tasks(self, tenant: str) -> list[dict[str, Any]]:
@@ -179,11 +213,18 @@ class ComputerService:
         task = self.store.get(tenant, task_id)
         if task is None:
             raise Refused("no such task", 404)
-        if task["status"] not in ("proposed", "awaiting_owner"):
+        if task["status"] not in RUNNABLE:
             raise Refused(f"this task is {task['status']} and cannot be started")
         if self.engine.name == "unconfigured":
             raise Refused("no browser container is configured on this server", 503)
-        self.store.set_status(tenant, task_id, "running")
+        # One conditional update, so two approvals in flight cannot both start
+        # a run: the loser is told, not silently ignored.
+        if not self.store.claim(tenant, task_id, RUNNABLE):
+            raise Refused("this task has already been started", 409)
+        # A resumed task runs in the session it paused in, so any link the
+        # console already holds is read again from that session, never assumed.
+        with self._lock:
+            self._live.pop((tenant, task_id), None)
         if inline:
             self._run(tenant, task)
         else:
@@ -193,40 +234,53 @@ class ComputerService:
 
     def _run(self, tenant: str, task: dict[str, Any]) -> None:
         task_id = task["task_id"]
-        limits = GuardLimits(**loads(task.get("limits"), {}))
-        inputs = loads(task.get("inputs"), {})
-        steps = [Step(**s) for s in loads(task.get("plan"), [])]
+        stop = threading.Event()
+        try:
+            limits = GuardLimits(**loads(task.get("limits"), {}))
+            inputs = loads(task.get("inputs"), {})
+            steps = [Step(**s) for s in loads(task.get("plan"), [])]
 
-        def on_step(record: Any, blob: Any) -> None:
-            self._read_live(tenant, task_id, task)
-            self.store.add_step(tenant, task_id, record)
-            if blob is not None:
+            def on_step(record: Any, blob: Any) -> None:
+                self._read_live(tenant, task_id, task)
+                self.store.add_step(tenant, task_id, record)
+                if blob is not None:
+                    self.store.add_artifact(tenant, task_id, blob)
+
+            def on_artifact(blob: Any) -> None:
                 self.store.add_artifact(tenant, task_id, blob)
 
-        def on_artifact(blob: Any) -> None:
-            self.store.add_artifact(tenant, task_id, blob)
-
-        runner = Runner(self.engine, limits=limits, clock=self.clock,
-                        on_step=on_step, on_artifact=on_artifact)
-        with self._lock:
-            self._runs[(tenant, task_id)] = runner
-        try:
-            outcome = runner.run(task_id, task["domain"], task["kind"], steps, inputs)
+            runner = Runner(self.engine, limits=limits, clock=self.clock,
+                            on_step=on_step, on_artifact=on_artifact,
+                            should_stop=stop.is_set)
+            with self._lock:
+                self._runs[(tenant, task_id)] = _Run(runner=runner, stop=stop)
+            # A resumed task continues the step log it paused with.
+            outcome = runner.run(task_id, task["domain"], task["kind"], steps, inputs,
+                                 start_index=self.store.next_index(tenant, task_id))
         except Exception as exc:  # never lose the task: report, do not crash
             log.warning("computer task %s failed: %s", task_id, exc)
             self._release(tenant, task_id, task)
             self.store.set_status(tenant, task_id, "failed", stop_reason="engine_error",
                                   note="The browser could not finish this task.",
-                                  finished=True)
+                                  finished=True, only_from=("running",))
             return
+        finally:
+            with self._lock:
+                self._runs.pop((tenant, task_id), None)
         if outcome.status != "awaiting_owner":
             # The session's work is done. A task paused at a sign-in wall keeps
             # its session and its live view link: that is where the owner signs
             # in, and the session dies of its own accord if they do not.
-            self._release(tenant, task_id, task)
+            self._release(tenant, task_id, task,
+                          "stopped_by_owner"
+                          if outcome.stop_reason == "stopped_by_owner" else "task_finished")
+        # Only from "running": a stop that landed first wrote its own row, and
+        # this run must not overwrite what the owner decided.
         self.store.set_status(tenant, task_id, outcome.status,
-                              stop_reason=outcome.stop_reason, note=outcome.note,
-                              finished=outcome.status != "awaiting_owner")
+                              stop_reason=outcome.stop_reason or "",
+                              note=outcome.note or "",
+                              finished=outcome.status != "awaiting_owner",
+                              only_from=("running",))
 
     def _read_live(self, tenant: str, task_id: str, task: dict[str, Any]) -> None:
         """Read the session's signed live view link once, while it is open, so
@@ -262,12 +316,21 @@ class ComputerService:
         task = self.store.get(tenant, task_id)
         if task is None:
             raise Refused("no such task", 404)
-        if task["status"] in ("done", "stopped", "stopped_runaway", "failed"):
+        if task["status"] in CLOSED_STATUSES:
             return self.get(tenant, task_id) or {}
 
+        with self._lock:
+            run = self._runs.get((tenant, task_id))
+        if run is not None:
+            run.stop.set()  # the runner stops at its next step, keeping nothing
+        # The status is written before the session is closed: the run's own or
+        # failure writes are conditional on "running", so the owner's stop is
+        # the row that stands.
+        self.store.set_status(tenant, task_id, "stopped",
+                              stop_reason="stopped_by_owner",
+                              note="Stopped by the owner.", finished=True,
+                              only_from=OPEN_STATUSES)
         self._release(tenant, task_id, task, "stopped_by_owner")
-        self.store.set_status(tenant, task_id, "stopped", stop_reason="stopped_by_owner",
-                              note="Stopped by the owner.", finished=True)
         return self.get(tenant, task_id) or {}
 
 

@@ -114,6 +114,17 @@ class CloudBrowserEngine:
 
     # -- the ComputerPort --------------------------------------------------
     def start(self, task: TaskRef) -> None:
+        open_session = self._state.sessions.get(task.task_id)
+        if open_session is not None:
+            if _alive(open_session):
+                # A task paused at a sign-in wall keeps its session: resuming
+                # drives the same browser, so a sign-in the owner did through
+                # the live view is still there, and no second session is
+                # created to be left open.
+                return
+            # The session we opened has gone: close it out before opening a new
+            # one, or the old one stays open until the provider times it out.
+            self.stop(task, "session_gone")
         session_id, connect = self._create()
         if not connect:
             raise EngineError("the browser session had no CDP endpoint")
@@ -207,6 +218,18 @@ class CloudBrowserEngine:
 
 def _clean(text: str) -> str:
     return re.sub(r"\s+", " ", text).strip()
+
+
+def _alive(sess: _Session) -> bool:
+    """Whether a session we already opened can still be driven.
+
+    A page that is closed, or a connection that has gone, means the provider
+    released the session: nothing to reuse, and it must not be left open.
+    """
+    try:
+        return sess.page is not None and not sess.page.is_closed()
+    except Exception:
+        return False
 
 
 def engine_from_env() -> Any:

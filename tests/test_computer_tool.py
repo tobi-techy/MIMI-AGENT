@@ -126,6 +126,44 @@ def test_a_checkout_page_stops_the_read() -> None:
     assert "checkout" in str(err.value).lower() or "card" in str(err.value).lower()
 
 
+def test_a_read_whose_kept_text_is_gone_fails_instead_of_reporting_nothing(
+        monkeypatch: Any) -> None:
+    """The kept text lives on disk: if the file is gone the read fails and says
+    so, rather than telling the owner the page showed nothing."""
+    import tempfile
+    from pathlib import Path
+
+    ports = _ports()
+    real = ComputerStore.artifact
+    gone = str(Path(tempfile.gettempdir()) / "mimi-artifact-not-here.txt")
+
+    def artifact(self: Any, tenant: str, task_id: str, name: str) -> Any:
+        row = real(self, tenant, task_id, name)
+        if row is None or not name.endswith(".txt"):
+            return row
+        return dict(row, path=gone)
+
+    monkeypatch.setattr(ComputerStore, "artifact", artifact)
+    with pytest.raises(ToolError) as err:
+        _call(ports)
+    assert "Next step:" in str(err.value)
+    assert "read the page again" in str(err.value)
+
+
+def test_a_read_whose_text_row_is_gone_fails_too(monkeypatch: Any) -> None:
+    ports = _ports()
+    real = ComputerStore.artifact
+
+    def artifact(self: Any, tenant: str, task_id: str, name: str) -> Any:
+        row = real(self, tenant, task_id, name)
+        return None if row is not None and name.endswith(".txt") else row
+
+    monkeypatch.setattr(ComputerStore, "artifact", artifact)
+    with pytest.raises(ToolError) as err:
+        _call(ports)
+    assert "Next step:" in str(err.value)
+
+
 # ----------------------------------------------------------------- the switch
 
 
@@ -167,7 +205,9 @@ def test_with_the_switch_on_the_working_helpers_have_it_and_fit_their_budget(
 def test_the_args_are_bounded_and_forbid_extras() -> None:
     assert ReadPortalPageIn.model_config["extra"] == "forbid"
     with pytest.raises(ValueError):
-        ReadPortalPageIn(url=PAGE, domain="supplier.example", max_seconds=9_999)
+        ReadPortalPageIn(url=PAGE, domain="supplier.example", what="page",
+                         max_seconds=9_999)
     with pytest.raises(ValueError):
-        ReadPortalPageIn(url=PAGE, domain="supplier.example", tier="auto")  # type: ignore[call-arg]
+        ReadPortalPageIn(url=PAGE, domain="supplier.example", what="page",
+                         tier="auto")  # type: ignore[call-arg]
     assert ReadPortalPageOut.model_config["extra"] == "forbid"

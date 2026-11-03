@@ -8,6 +8,7 @@ against a real cloud browser session, not here.
 from __future__ import annotations
 
 import re
+import threading
 from typing import Any
 
 import pytest
@@ -132,6 +133,77 @@ def test_a_redirect_off_the_approved_domain_stops_the_task() -> None:
     assert out.status == "stopped" and out.stop_reason == "off_domain"
 
 
+def test_a_redirect_off_the_domain_that_looks_like_a_sign_in_still_stops() -> None:
+    """The allowlist is the first verdict on the observed URL: an unapproved
+    page is never a page to pause on, whatever it shows."""
+    elsewhere = "https://evil.example/login"
+    fake = FakeComputer(
+        pages={PAGE: {"title": "welcome", "html": "<h1>hi</h1>"},
+               elsewhere: {"title": "Sign in", "html": "<h1>Sign in</h1>"}},
+        redirect={PAGE: elsewhere}, login=(elsewhere,))
+    steps = plans.build("order_list", "get orders", PAGE, "supplier.example").steps
+    out = _run("order_list", steps, fake)
+    assert out.status == "stopped" and out.stop_reason == "off_domain"
+    # nothing of the unapproved page was kept, not even a screenshot
+    assert out.steps == [] and out.artifacts == []
+
+
+class _MovesAway(FakeComputer):
+    """A page that moves itself off the approved domain between steps."""
+
+    def do(self, task: TaskRef, action: str, **kw: Any) -> Any:
+        if action == "extract":
+            return self._page("https://evil.example/away")
+        return super().do(task, action, **kw)
+
+
+def test_a_page_that_moves_itself_off_the_domain_is_not_read() -> None:
+    """Every step's observed URL is checked, not only the one that navigated."""
+    fake = _MovesAway(pages={PAGE: {"title": "welcome", "html": "<h1>hi</h1>",
+                                   "text": "Sugar 42000", "png": b"\x89PNG-real"},
+                            "https://evil.example/away": {"html": "<h1>x</h1>",
+                                                          "text": "elsewhere"}})
+    steps = plans.build("price_check", "check prices", PAGE, "supplier.example").steps
+    out = _run("price_check", steps, fake)
+    assert out.status == "stopped" and out.stop_reason == "off_domain"
+    assert not [b for b in out.artifacts if b.kind == "text"]
+    assert [a for a, _ in fake.calls][:2] == ["goto", "screenshot"]
+
+
+def test_the_owner_stop_keeps_a_step_from_running_and_from_being_kept() -> None:
+    """A stop that lands between steps ends the task, records no step for it and
+    keeps nothing it produced."""
+    fake = FakeComputer(pages={PAGE: {"title": "p", "html": "<h1>p</h1>",
+                                     "text": "Sugar 42000", "png": b"\x89PNG-real"}})
+    steps = plans.build("price_check", "check prices", PAGE, "supplier.example").steps
+    asked = {"n": 0}
+
+    def should_stop() -> bool:
+        # the owner hits stop while the first step is in flight
+        asked["n"] += 1
+        return asked["n"] > 1
+
+    out = Runner(fake, should_stop=should_stop).run(
+        "ct_test", "supplier.example", "price_check", steps, {})
+    assert out.status == "stopped" and out.stop_reason == "stopped_by_owner"
+    assert out.steps == [] and out.artifacts == []
+    # the second step never reached the browser
+    assert [a for a, _ in fake.calls] == ["goto"]
+
+
+def test_a_stop_signal_that_raises_stops_the_run_rather_than_running_on() -> None:
+    fake = FakeComputer(pages={PAGE: {"title": "p", "html": "<h1>p</h1>"}})
+
+    def broken() -> bool:
+        raise RuntimeError("the flag is gone")
+
+    steps = plans.build("generic", "read it", PAGE, "supplier.example").steps
+    out = Runner(fake, should_stop=broken).run(
+        "ct_test", "supplier.example", "generic", steps, {})
+    assert out.status == "stopped" and out.stop_reason == "stopped_by_owner"
+    assert fake.calls == []
+
+
 def test_a_login_wall_pauses_the_task_and_types_nothing() -> None:
     fake = FakeComputer(pages={PAGE: {"title": "Sign in", "html": "<h1>Sign in</h1>"}},
                         login=(PAGE,))
@@ -168,6 +240,26 @@ def test_the_time_budget_ends_the_task_stopped_runaway() -> None:
     steps = plans.build("generic", "read", PAGE, "supplier.example").steps
     out = Runner(fake, clock=clock).run("ct_test", "supplier.example", "generic", steps, {})
     assert out.status == "stopped_runaway" and out.stop_reason == "budget_seconds"
+
+
+def test_a_form_plan_fills_one_step_for_each_value_the_owner_named() -> None:
+    """The kind is published, so the code has to be able to build it: every
+    fill step carries the owner's own field and the key its value lives under."""
+    inputs = {"TIN": "0123456789", "Business name": "Coral Lane Ltd"}
+    plan = plans.build("gov_form", "fill my TIN form", PAGE, "supplier.example", inputs)
+    fills = [s for s in plan.steps if s.action == "fill"]
+    assert [s.field for s in fills] == ["Business name", "TIN"]
+    assert [s.value_key for s in fills] == ["Business name", "TIN"]
+    assert all(s.note and s.field in s.note for s in fills)
+    assert plan.steps[-1].action == "finish"
+    assert all(s.action in plans.profile_for("gov_form").actions or s.action == "finish"
+               for s in plan.steps)
+
+    # the plan the owner approves is the plan that runs: it fills and finishes
+    fake = FakeComputer(pages={PAGE: {"title": "TIN form", "html": "<form></form>"}})
+    out = _run("gov_form", plan.steps, fake, inputs=inputs)
+    assert out.status == "done" and out.stop_reason == ""
+    assert fake.filled == {"Business name": "Coral Lane Ltd", "TIN": "0123456789"}
 
 
 def test_a_step_outside_the_kinds_profile_never_runs() -> None:
@@ -216,7 +308,8 @@ def test_propose_builds_a_plan_and_approve_runs_it(service: ComputerService) -> 
     view = service.propose(T, "check prices", PAGE, "supplier.example", "price_check")
     assert view["status"] == "proposed" and view["plan"][0]["code"] == "goto"
     assert view["plan"][0]["action"] == "Open the page"
-    assert service.get(T, view["task_id"])["steps"] == []
+    before = service.get(T, view["task_id"])
+    assert before is not None and before["steps"] == []
 
     done = service.approve(T, view["task_id"], inline=True)
     assert done["status"] == "done"
@@ -278,6 +371,25 @@ class _LiveFake(FakeComputer):
         return f"https://live.example/{task.task_id}"
 
 
+class _CountsSessions(_LiveFake):
+    """A fake that opens a session per start, as the cloud engine does, and
+    hands back that session's own link."""
+
+    def __init__(self, *args: Any, **kw: Any) -> None:
+        super().__init__(*args, **kw)
+        self.sessions = 0
+        self.links: list[str] = []
+
+    def start(self, task: TaskRef) -> None:
+        self.sessions += 1
+        super().start(task)
+
+    def sign_in_link(self, task: TaskRef) -> str:
+        link = f"https://live.example/s{self.sessions}/{task.task_id}"
+        self.links.append(link)
+        return link
+
+
 def test_a_finished_task_carries_no_live_view_and_closes_its_session() -> None:
     engine = make_engine("sqlite://")
     ensure_schema(engine)
@@ -320,6 +432,143 @@ def test_stop_records_the_owner_reason(service: ComputerService) -> None:
     view = service.propose(T, "check prices", PAGE, "supplier.example", "price_check")
     stopped = service.stop(T, view["task_id"])
     assert stopped["status"] == "stopped" and stopped["stop_reason"] == "stopped_by_owner"
+
+
+def test_a_form_task_with_nothing_to_fill_is_refused(service: ComputerService) -> None:
+    with pytest.raises(Refused) as exc:
+        service.propose(T, "fill my TIN form", PAGE, "supplier.example", "gov_form")
+    assert "values" in exc.value.message
+
+
+def test_a_form_task_never_accepts_a_credential_field_or_a_long_number(
+        service: ComputerService) -> None:
+    with pytest.raises(Refused):
+        service.propose(T, "fill it", PAGE, "supplier.example", "gov_form",
+                        {"Password": "hunter2"})
+    with pytest.raises(Refused):
+        service.propose(T, "fill it", PAGE, "supplier.example", "gov_form",
+                        {"TIN": "4111111111111111"})
+    # a plain value is fine, and it is the one the run types
+    view = service.propose(T, "fill it", PAGE, "supplier.example", "gov_form",
+                           {"TIN": "0123456789"})
+    assert view["status"] == "proposed"
+    assert [s["code"] for s in view["plan"]].count("fill") == 1
+
+
+def test_a_form_task_fills_the_owners_values_end_to_end() -> None:
+    engine = make_engine("sqlite://")
+    ensure_schema(engine)
+    fake = FakeComputer(pages={PAGE: {"title": "TIN form", "html": "<form></form>"}})
+    service = ComputerService(ComputerStore(engine), fake)
+    view = service.propose(T, "fill my TIN form", PAGE, "supplier.example", "gov_form",
+                           {"TIN": "0123456789"})
+    done = service.approve(T, view["task_id"], inline=True)
+    assert done["status"] == "done" and done["stop_reason"] == ""
+    assert fake.filled == {"TIN": "0123456789"}
+
+
+class _StopsItself(FakeComputer):
+    """A fake that asks the service to stop while the run is in flight."""
+
+    def __init__(self, *args: Any, **kw: Any) -> None:
+        super().__init__(*args, **kw)
+        self.service: Any = None
+        self.task_id = ""
+        self.paused = threading.Event()
+
+    def do(self, task: TaskRef, action: str, **kw: Any) -> Any:
+        page = super().do(task, action, **kw)
+        if action == "screenshot":
+            self.paused.set()
+            self.service.stop(T, self.task_id)  # the owner hits stop mid-run
+        return page
+
+
+def test_a_stop_during_a_run_stops_it_and_its_record_is_the_one_that_stands() -> None:
+    engine = make_engine("sqlite://")
+    ensure_schema(engine)
+    fake = _StopsItself(pages={PAGE: {"title": "Price list", "text": "Sugar 42000",
+                                      "png": b"\x89PNG-real"}})
+    service = ComputerService(ComputerStore(engine), fake)
+    view = service.propose(T, "check prices", PAGE, "supplier.example", "price_check")
+    fake.service, fake.task_id = service, view["task_id"]
+    done = service.approve(T, view["task_id"], inline=True)
+    assert fake.paused.is_set()
+    # the owner's stop is the record that stands, not a browser failure
+    assert done["status"] == "stopped" and done["stop_reason"] == "stopped_by_owner"
+    # the step in flight when the stop landed is not kept, and nothing after ran
+    assert [s["code"] for s in done["steps"]] == ["goto"]
+    assert fake.stopped == "stopped_by_owner"
+    assert done["finished_at"] and done["live_view_url"] is None
+
+
+def test_two_approvals_in_flight_one_starts_the_run_and_the_other_is_told(
+        service: ComputerService, monkeypatch: pytest.MonkeyPatch) -> None:
+    view = service.propose(T, "check prices", PAGE, "supplier.example", "price_check")
+    task_id = view["task_id"]
+    stale = service.store.get(T, task_id)
+    assert stale is not None
+    real_get = service.store.get
+    # both callers read the same "proposed" row before either moves it
+    monkeypatch.setattr(service.store, "get", lambda tenant, tid: dict(stale))
+    service.approve(T, task_id, inline=True)
+    with pytest.raises(Refused) as exc:
+        service.approve(T, task_id, inline=True)
+    assert exc.value.status == 409
+    monkeypatch.setattr(service.store, "get", real_get)
+    after = service.get(T, task_id)
+    assert after is not None and after["status"] == "done"
+    # the plan ran once: one row per step, no primary-key collision
+    assert [r["idx"] for r in service.store.steps(T, task_id)] == [0, 1, 2, 3]
+
+
+def test_a_run_stamps_started_at_and_clears_the_earlier_reason() -> None:
+    engine = make_engine("sqlite://")
+    ensure_schema(engine)
+    fake = FakeComputer(pages={PAGE: {"html": "<h1>Prices</h1>",
+                                      "text": "Sugar 42000", "png": b"\x89PNG-real"}},
+                        login=(PAGE,))
+    service = ComputerService(ComputerStore(engine), fake)
+    view = service.propose(T, "check prices", PAGE, "supplier.example", "price_check")
+    paused = service.approve(T, view["task_id"], inline=True)
+    assert paused["status"] == "awaiting_owner" and paused["stop_reason"] == "login_wall"
+    assert paused["started_at"] and not paused["finished_at"]
+    # the wall is gone: the resumed run ends done, with no stale reason or note
+    fake.login = ()
+    resumed = service.approve(T, view["task_id"], inline=True)
+    assert resumed["status"] == "done" and resumed["stop_reason"] == ""
+    assert resumed["note"].startswith("Done.")
+    assert resumed["finished_at"] and resumed["started_at"] == paused["started_at"]
+
+
+def test_a_resumed_task_reads_its_live_link_again_instead_of_reusing_a_stale_one() -> None:
+    engine = make_engine("sqlite://")
+    ensure_schema(engine)
+    fake = _CountsSessions(pages={PAGE: {"html": "<h1>Prices</h1>",
+                                         "png": b"\x89PNG-real"}}, login=(PAGE,))
+    service = ComputerService(ComputerStore(engine), fake)
+    view = service.propose(T, "check prices", PAGE, "supplier.example", "price_check")
+    paused = service.approve(T, view["task_id"], inline=True)
+    assert paused["status"] == "awaiting_owner"
+    assert paused["live_view_url"].endswith("/s1/" + view["task_id"])
+    fake.login = ()  # the owner signed in through the live view
+    resumed = service.approve(T, view["task_id"], inline=True)
+    assert resumed["status"] == "done"
+    # the link handed out while the resumed run was live came from the session
+    # that run opened, never from the paused one
+    assert fake.links == ["https://live.example/s1/" + view["task_id"],
+                          "https://live.example/s2/" + view["task_id"]]
+    assert resumed["live_view_url"] is None
+
+
+def test_the_task_list_is_capped_at_the_newest_rows(service: ComputerService) -> None:
+    from mimi.computer import store as computer_store
+
+    for i in range(3):
+        service.propose(T, f"task {i}", PAGE, "supplier.example")
+    assert len(service.tasks(T)) == 3
+    assert len(service.store.tasks(T, limit=2)) == 2
+    assert computer_store.MAX_TASKS >= 100
 
 
 def test_tasks_are_filtered_by_tenant(service: ComputerService) -> None:
@@ -462,3 +711,106 @@ def test_the_fake_engine_reports_what_it_did() -> None:
     assert fake.started == "ct_1"
     fake.stop(TaskRef(task_id="ct_1", domain="supplier.example"), "stopped_by_owner")
     assert fake.stopped == "stopped_by_owner"
+
+
+# ------------------------------------------------------- the cloud engine
+
+
+class _PageStub:
+    def __init__(self) -> None:
+        self.closed = False
+
+    def is_closed(self) -> bool:
+        return self.closed
+
+    def set_default_timeout(self, seconds: float) -> None:
+        pass
+
+
+class _ContextStub:
+    def __init__(self, page: _PageStub) -> None:
+        self.pages = [page]
+        self.closed = False
+
+    def close(self) -> None:
+        self.closed = True
+
+
+class _BrowserStub:
+    def __init__(self, page: _PageStub) -> None:
+        self.contexts = [_ContextStub(page)]
+
+    def close(self) -> None:
+        pass
+
+
+class _PlaywrightStub:
+    """The shape of ``sync_playwright()``'s handle, without the driver."""
+
+    def __init__(self, page: _PageStub) -> None:
+        self.page = page
+        self.chromium = self
+        self.stopped = False
+
+    def start(self) -> _PlaywrightStub:
+        return self
+
+    def connect_over_cdp(self, connect: str) -> _BrowserStub:
+        return _BrowserStub(self.page)
+
+    def stop(self) -> None:
+        self.stopped = True
+
+
+def _cloud_engine(monkeypatch: pytest.MonkeyPatch, page: _PageStub) -> Any:
+    """A cloud engine with a stubbed driver and provider, for its own session
+    handling. Nothing here reaches the network."""
+    import sys
+    import types
+
+    from mimi.computer.cloud_browser import CloudBrowserEngine, CloudConfig
+
+    pw = _PlaywrightStub(page)
+    sub = types.ModuleType("playwright.sync_api")
+    sub.sync_playwright = lambda: pw  # type: ignore[attr-defined]
+    parent = types.ModuleType("playwright")
+    parent.sync_api = sub  # type: ignore[attr-defined]
+    monkeypatch.setitem(sys.modules, "playwright", parent)
+    monkeypatch.setitem(sys.modules, "playwright.sync_api", sub)
+
+    engine = CloudBrowserEngine(CloudConfig(key="test-key-not-a-secret"))
+    made: list[str] = []
+    released: list[str] = []
+
+    def create() -> tuple[str, str]:
+        made.append(f"sess-{len(made) + 1}")
+        return made[-1], "wss://connect.example"
+
+    monkeypatch.setattr(engine, "_create", create)
+    monkeypatch.setattr(engine, "_release", released.append)
+    engine.made = made  # type: ignore[attr-defined]
+    engine.released = released  # type: ignore[attr-defined]
+    return engine
+
+
+def test_resuming_a_paused_task_reuses_its_session_instead_of_leaking_it(
+        monkeypatch: pytest.MonkeyPatch) -> None:
+    engine = _cloud_engine(monkeypatch, _PageStub())
+    ref = TaskRef(task_id="ct_1", domain="supplier.example")
+    engine.start(ref)
+    assert engine.made == ["sess-1"]
+    engine.start(ref)  # a resume of the same task, its session still open
+    assert engine.made == ["sess-1"]  # no second session was opened
+    assert engine.released == []  # and none was left open to time out
+
+
+def test_a_session_that_has_gone_is_closed_before_a_new_one_is_opened(
+        monkeypatch: pytest.MonkeyPatch) -> None:
+    page = _PageStub()
+    engine = _cloud_engine(monkeypatch, page)
+    ref = TaskRef(task_id="ct_1", domain="supplier.example")
+    engine.start(ref)
+    page.closed = True  # the provider released the session
+    engine.start(ref)
+    assert engine.made == ["sess-1", "sess-2"]
+    assert engine.released == ["sess-1"]
