@@ -724,6 +724,10 @@ def create_app(settings: Settings | None = None, agent: Agent | None = None, *,
     @app.post("/v1/computer/tasks/{task_id}/stop", response_model=ComputerTaskDetail,
               responses=_ERRORS, summary="Stop the task now, and record why")
     def post_computer_stop(task_id: str, key: Owner) -> dict[str, Any]:
+        """Accepts a task in any open state, including ``proposed``: that is how
+        the owner discards a task they decided not to run. It is recorded
+        ``stopped`` with ``stopped_by_owner``. A task that has already ended is
+        returned unchanged, rather than having its history rewritten."""
         try:
             return computer.stop(key.tenant_id, task_id)
         except Refused as exc:

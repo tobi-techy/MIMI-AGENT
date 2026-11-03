@@ -820,13 +820,22 @@ class ComputerPlanStep(_Out):
 class ComputerTask(_Out):
     task_id: str
     status: Literal["proposed", "running", "awaiting_owner", "done", "stopped",
-                    "stopped_runaway", "failed"]
+                    "stopped_runaway", "failed"] = Field(
+        ..., description="One of exactly these seven. A task is never 'queued': "
+                         "that is an internal queue word, not a task status.")
     kind: str
     goal: str
     url: str
     domain: str
-    stop_reason: str = ""
-    note: str = ""
+    stop_reason: str = Field(
+        "", description="A machine code for the log: off_domain, forbidden_page, "
+                        "budget_steps, budget_seconds, login_wall, "
+                        "stopped_by_owner, unsupported_step, engine_error, empty "
+                        "while the task has not stopped. Never render this.")
+    note: str = Field(
+        "", description="The sentence for a person, and the one to render. It is "
+                        "always plain words when the task has stopped, whatever "
+                        "the stop_reason says.")
     created_at: str
     started_at: str = ""
     finished_at: str = ""
@@ -881,7 +890,9 @@ class ComputerTaskSummary(_Out):
     status: str
     created_at: str
     step_count: int = 0
-    stop_reason: str = ""
+    stop_reason: str = Field(
+        "", description="A machine code, as on the task detail. Never render "
+                        "this: the detail's note is the sentence for a person.")
 
 
 class ComputerTaskList(_Out):

@@ -227,6 +227,22 @@ def plan_view(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
     return out
 
 
+def _note(task: dict[str, Any]) -> str:
+    """The sentence for a person, which is the field the console renders.
+
+    A task that has stopped always carries one: if a row somehow holds a stop
+    reason with no note beside it, the code writes the sentence now rather than
+    leaving the console to invent words or show the code.
+    """
+    note = str(task.get("note", "") or "")
+    reason = str(task.get("stop_reason", "") or "")
+    if note or not reason:
+        return note
+    from mimi.computer.runner import stop_note
+
+    return stop_note(reason)
+
+
 def task_view(task: dict[str, Any], steps: list[dict[str, Any]],
               artifacts: list[dict[str, Any]], live_view_url: str = "") -> dict[str, Any]:
     return {
@@ -236,8 +252,9 @@ def task_view(task: dict[str, Any], steps: list[dict[str, Any]],
         "goal": task["goal"],
         "url": task["url"],
         "domain": task["domain"],
+        # A machine code, never rendered on screen, and the sentence beside it.
         "stop_reason": task.get("stop_reason", ""),
-        "note": task.get("note", ""),
+        "note": _note(task),
         "created_at": task["created_at"],
         "started_at": task.get("started_at", ""),
         "finished_at": task.get("finished_at", ""),

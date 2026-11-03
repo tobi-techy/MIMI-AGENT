@@ -822,6 +822,7 @@
           },
           "note": {
             "default": "",
+            "description": "The sentence for a person, and the one to render. It is always plain words when the task has stopped, whatever the stop_reason says.",
             "title": "Note",
             "type": "string"
           },
@@ -838,6 +839,7 @@
             "type": "string"
           },
           "status": {
+            "description": "One of exactly these seven. A task is never 'queued': that is an internal queue word, not a task status.",
             "enum": [
               "proposed",
               "running",
@@ -859,6 +861,7 @@
           },
           "stop_reason": {
             "default": "",
+            "description": "A machine code for the log: off_domain, forbidden_page, budget_steps, budget_seconds, login_wall, stopped_by_owner, unsupported_step, engine_error, empty while the task has not stopped. Never render this.",
             "title": "Stop Reason",
             "type": "string"
           },
@@ -978,6 +981,7 @@
           },
           "stop_reason": {
             "default": "",
+            "description": "A machine code, as on the task detail. Never render this: the detail's note is the sentence for a person.",
             "title": "Stop Reason",
             "type": "string"
           },
@@ -5407,6 +5411,7 @@
     },
     "/v1/computer/tasks/{task_id}/stop": {
       "post": {
+        "description": "Accepts a task in any open state, including ``proposed``: that is how\nthe owner discards a task they decided not to run. It is recorded\n``stopped`` with ``stopped_by_owner``. A task that has already ended is\nreturned unchanged, rather than having its history rewritten.",
         "operationId": "post_computer_stop_v1_computer_tasks__task_id__stop_post",
         "parameters": [
           {

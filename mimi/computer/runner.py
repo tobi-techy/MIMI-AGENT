@@ -259,7 +259,9 @@ class Runner:
     def _stop(self, out: Outcome, status: TaskStatus, reason: str) -> Outcome:
         out.status = status
         out.stop_reason = reason
-        out.note = STOP_NOTES.get(reason, out.note)
+        # ``stop_reason`` is the machine code; the sentence is always here, so
+        # the console never has to invent words for it or show a code.
+        out.note = stop_note(reason)
         return out
 
     def _fail(self, out: Outcome, status: TaskStatus, note: str) -> Outcome:
@@ -281,4 +283,15 @@ STOP_NOTES: dict[str, str] = {
                          "run."),
     "stopped_by_owner": "Stopped by the owner.",
     "engine_error": "Stopped: the browser could not do that step.",
+    "login_wall": ("Stopped: this page asks for a sign-in. Mimi never types a "
+                   "password or a code."),
 }
+
+# For a stop reason with no entry of its own. The console renders ``note``, so
+# it must never be empty and never be a machine code, whatever reason arrives.
+DEFAULT_STOP_NOTE = "Stopped. Nothing more was done after that."
+
+
+def stop_note(reason: str) -> str:
+    """The sentence a person reads for one stop reason. Never a code."""
+    return STOP_NOTES.get(reason, DEFAULT_STOP_NOTE)

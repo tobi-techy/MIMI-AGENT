@@ -148,6 +148,36 @@ session and its link, because that is the state in which the owner signs in. So
 the console's rule is "open it if it is not null". Approving a task that is
 already being started, or that has ended, is `409` and changes nothing.
 
+### `status`, `stop_reason` and `note`
+
+**`stop_reason` is a code for machines; `note` is the sentence for people, and
+it is the one to render.** The codes are `off_domain`, `forbidden_page`,
+`budget_steps`, `budget_seconds`, `login_wall`, `stopped_by_owner`,
+`unsupported_step` and `engine_error`, and it is empty while the task has not
+stopped. `note` is always plain words when a task has stopped: the sentence
+comes from `runner.STOP_NOTES` for that code, with `runner.stop_note` supplying
+a plain default for any code that has no entry, so a renderer never has to
+invent words and never has to fall back to a code.
+
+**`status` is exactly one of seven, and `queued` is not one of them** (`queued`
+is an internal queue and turn word, and no task response ever carries it):
+
+`proposed` (built, waiting for the owner), `running` (approved, or resumed, and
+work is happening), `awaiting_owner` (paused at a sign-in wall, session and live
+view kept), `done`, `stopped`, `stopped_runaway` (a budget was spent, per
+`docs/LOOP-SAFETY.md`) and `failed`. `stopped_runaway` is deliberately part of
+this vocabulary: a task that spends the 10-minute or 40-step budget ends there,
+with a code-written note, and the console should say so rather than show it as
+a generic stop.
+
+### Stopping
+
+`POST /v1/computer/tasks/{id}/stop` accepts a task in any open state, including
+`proposed`: that is how an owner discards a task they have decided not to run,
+and it is recorded `stopped` with `stopped_by_owner` like any other stop. For a
+task that has already ended (`done`, `stopped`, `stopped_runaway`, `failed`) it
+returns that task **unchanged** rather than rewriting its history.
+
 ### `action` is plain words, and `code` is ours
 
 The console renders a step's `action` verbatim, so **`action` is always the

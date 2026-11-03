@@ -432,6 +432,64 @@ def test_stop_records_the_owner_reason(service: ComputerService) -> None:
     view = service.propose(T, "check prices", PAGE, "supplier.example", "price_check")
     stopped = service.stop(T, view["task_id"])
     assert stopped["status"] == "stopped" and stopped["stop_reason"] == "stopped_by_owner"
+    # stop is also how an owner discards a task they decided not to run
+    assert stopped["steps"] == [] and stopped["note"]
+
+
+def test_stopping_a_finished_task_gives_it_back_unchanged(service: ComputerService) -> None:
+    view = service.propose(T, "check prices", PAGE, "supplier.example", "price_check")
+    done = service.approve(T, view["task_id"], inline=True)
+    assert done["status"] == "done"
+    again = service.stop(T, view["task_id"])
+    assert again["status"] == "done" and again["stop_reason"] == ""
+    assert again["finished_at"] == done["finished_at"]
+
+
+# ------------------------------------------- the words the console renders
+
+
+def test_every_stop_reason_has_a_plain_sentence_and_no_code_ever_reaches_it() -> None:
+    """``stop_reason`` is for machines; ``note`` is what a person reads, so it is
+    a sentence for every reason, including one this code has never seen."""
+    from typing import get_args
+
+    from mimi.computer.runner import DEFAULT_STOP_NOTE, stop_note
+    from mimi.computer.types import StopReason
+
+    reasons = [r for r in get_args(StopReason) if r]
+    assert "stopped_by_owner" in reasons
+    for reason in reasons:
+        note = stop_note(reason)
+        assert note and " " in note, (reason, note)
+        assert not CODE_SHAPE.match(note), (reason, note)
+        assert reason not in note, (reason, note)
+    # a code with no entry of its own still gets a sentence, never an empty one
+    assert stop_note("something_new") == DEFAULT_STOP_NOTE
+    assert stop_note("") == DEFAULT_STOP_NOTE
+
+
+def test_a_stopped_task_always_carries_the_sentence_and_never_only_the_code() -> None:
+    from mimi.computer.store import task_view
+
+    row = {"task_id": "ct_1", "status": "stopped", "goal": "g", "url": PAGE,
+           "domain": "supplier.example", "stop_reason": "off_domain", "note": "",
+           "created_at": "2026-01-01T00:00:00+01:00"}
+    view = task_view(row, [], [])
+    assert view["stop_reason"] == "off_domain"  # the code, for machines
+    assert view["note"].startswith("Stopped: the browser left the domain")
+    assert "off_domain" not in view["note"]
+    # a task with nothing to say is left alone
+    assert task_view(dict(row, status="proposed", stop_reason=""), [], [])["note"] == ""
+
+
+def test_the_status_vocabulary_is_the_seven_documented_and_never_queued() -> None:
+    from typing import get_args
+
+    from mimi.computer.types import TaskStatus
+
+    assert get_args(TaskStatus) == ("proposed", "running", "awaiting_owner", "done",
+                                    "stopped", "stopped_runaway", "failed")
+    assert "queued" not in get_args(TaskStatus)
 
 
 def test_a_form_task_with_nothing_to_fill_is_refused(service: ComputerService) -> None:
