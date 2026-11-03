@@ -68,6 +68,7 @@ from mimi.api.schemas import (
     ConnectorConnectOut,
     ConnectorDetail,
     ConnectorList,
+    ConnectorRead,
     CreditLimitIn,
     CreditLimitOut,
     CreditOut,
@@ -149,7 +150,8 @@ def create_app(settings: Settings | None = None, agent: Agent | None = None, *,
     app.add_middleware(
         CORSMiddleware, allow_origins=list(settings.cors_origins),
         allow_origin_regex=LOCALHOST_REGEX, allow_credentials=False,
-        allow_methods=["GET", "POST", "OPTIONS"],
+        # DELETE: the console disconnects a tool (DELETE /v1/connectors/{id}).
+        allow_methods=["GET", "POST", "DELETE", "OPTIONS"],
         allow_headers=["Authorization", "Content-Type"])
     engine = agent.engine
     uploads: ConsoleUploads | None = None
@@ -581,7 +583,10 @@ def create_app(settings: Settings | None = None, agent: Agent | None = None, *,
             raise HTTPException(422, "that link is not valid; start a new connect")
         if _connector_state_used(engine, key.tenant_id, state):
             raise HTTPException(422, "that link was already used; start a new connect")
-        connected_id = params.get("connected_account_id", "")
+        if params.get("status") and params["status"].lower() not in ("success", "active"):
+            raise HTTPException(422, "the tool did not finish connecting; start a new connect")
+        # Composio has used both spellings for the account id on the way back.
+        connected_id = params.get("connected_account_id", "") or params.get("connectedAccountId", "")
         if not connected_id:
             raise HTTPException(422, "Composio gave no connected account; start a new connect")
         transport = _connector_transport()
@@ -603,6 +608,17 @@ def create_app(settings: Settings | None = None, agent: Agent | None = None, *,
              responses=_ERRORS, summary="A connection's status and sync preview")
     def get_connector(connection_id: str, key: Owner) -> dict[str, Any]:
         return cx.get_connection(engine, key.tenant_id, connection_id)
+
+    @app.get("/v1/connectors/{connection_id}/read", response_model=ConnectorRead,
+             responses=_ERRORS, summary="A live read from a connected account")
+    def get_connector_read(connection_id: str, key: Owner) -> dict[str, Any]:
+        """Read-only, on the same transport every helper uses: proves Mimi can
+        see the account right after connecting."""
+        try:
+            return cx.read_connection(engine, key.tenant_id, connection_id,
+                                      _connector_transport())
+        except ConnectorError as exc:
+            raise HTTPException(502, str(exc)) from exc
 
     @app.delete("/v1/connectors/{connection_id}", responses=_ERRORS,
                 summary="Disconnect: revoke before the next sync")

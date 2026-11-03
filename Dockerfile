@@ -20,7 +20,8 @@ COPY mimi ./mimi
 # Skills (RAI-314, used when MIMI_SKILLS=1): vetted folders, locked by hash.
 COPY skills ./skills
 COPY alembic ./alembic
-RUN pip install '.[postgres]' \
+# connectors: the Composio SDK, so a real connect flow can run once COMPOSIO_API_KEY is set
+RUN pip install '.[postgres,connectors]' \
     && useradd --system --uid 10001 mimi \
     && mkdir -p /data && chown mimi /data
 

@@ -125,10 +125,16 @@ class ComposioTransport:
         client = self._sdk()
         state = sign_state(settings.state_secret,
                            {"tenant": user_id, "toolkit": toolkit})
+        # The signed state rides on the callback url: Composio sends the
+        # owner back there (adding its connected account id), so the state
+        # comes back with them. Appending it to the consent link instead
+        # would never return.
+        sep_cb = "&" if "?" in settings.callback_url else "?"
+        callback = f"{settings.callback_url}{sep_cb}state={state}"
         try:
             req = client.connected_accounts.initiate(
                 user_id=user_id, auth_config_id=auth_config,
-                callback_url=settings.callback_url)
+                callback_url=callback)
         except Exception as exc:
             raise ConnectorError(f"Could not start the {toolkit} connect flow: {exc}",
                                  next_step="Retry the connect from Settings.") from exc
@@ -136,8 +142,7 @@ class ComposioTransport:
         if not url:
             raise ConnectorError(f"The {toolkit} connect flow gave no redirect.",
                                  next_step="Retry the connect from Settings.")
-        sep = "&state=" if "?" in url else "?state="
-        return {"redirect_url": f"{url}{sep}{state}", "state": state}
+        return {"redirect_url": url, "state": state}
 
     def account(self, connected_account_id: str) -> dict[str, Any]:
         """Status of one connected account. Raises when it is gone."""

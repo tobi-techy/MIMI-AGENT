@@ -93,3 +93,84 @@ def test_callback_rejects_a_state_signed_for_another_tenant(tmp_path) -> None:
               params={"state": other, "connected_account_id": "ca-other-000001"},
               headers=_auth())
     assert r.status_code == 422
+
+
+def test_list_says_connect_is_not_available_without_a_composio_key(tmp_path, monkeypatch) -> None:
+    for var in ("MIMI_CONNECTORS", "COMPOSIO_API_KEY", "MIMI_COMPOSIO_AUTH_ZOHO_BOOKS",
+                "MIMI_COMPOSIO_CALLBACK_URL"):
+        monkeypatch.delenv(var, raising=False)
+    rows = {c["toolkit"]: c for c in _client(tmp_path).get(
+        "/v1/connectors", headers=_auth()).json()["connectors"]}
+    assert rows["ZOHO_BOOKS"]["connect"] == {
+        "available": False, "reason": "Connecting tools isn't switched on for this server yet."}
+    assert rows["CSV"]["connect"]["available"] is False
+
+
+def test_list_says_connect_is_available_when_composio_is_fully_set(tmp_path, monkeypatch) -> None:
+    monkeypatch.setenv("MIMI_CONNECTORS", "composio")
+    monkeypatch.setenv("COMPOSIO_API_KEY", "ck_test")
+    monkeypatch.setenv("MIMI_COMPOSIO_AUTH_ZOHO_BOOKS", "ac_zoho_books")
+    monkeypatch.setenv("MIMI_COMPOSIO_CALLBACK_URL", "https://demo.userail.money/settings/connectors")
+    rows = {c["toolkit"]: c for c in _client(tmp_path).get(
+        "/v1/connectors", headers=_auth()).json()["connectors"]}
+    assert rows["ZOHO_BOOKS"]["connect"] == {"available": True, "reason": ""}
+    # Sheets has no auth config set: it says so, plainly.
+    assert rows["GOOGLESHEETS"]["connect"]["available"] is False
+    assert "sign-in app" in rows["GOOGLESHEETS"]["connect"]["reason"]
+
+
+def test_initiate_puts_the_state_on_the_callback_url() -> None:
+    from mimi.connectors.composio import ComposioTransport
+    from mimi.connectors.env import ConnectorSettings
+
+    seen: dict[str, str] = {}
+
+    class _Accounts:
+        def initiate(self, *, user_id: str, auth_config_id: str, callback_url: str):
+            seen.update(user_id=user_id, auth=auth_config_id, callback=callback_url)
+            return type("R", (), {"redirect_url": "https://backend.composio.dev/s/abc"})()
+
+    t = ComposioTransport(ConnectorSettings(
+        mode="composio", composio_api_key="ck", auth_zoho_books="ac_1",
+        callback_url="https://demo.userail.money/settings/connectors"))
+    t._client = type("C", (), {"connected_accounts": _Accounts()})()
+    out = t.initiate("ZOHO_BOOKS", user_id=TENANT)
+    assert out["redirect_url"] == "https://backend.composio.dev/s/abc"
+    assert seen["callback"].startswith("https://demo.userail.money/settings/connectors?state=")
+    assert seen["callback"].endswith(out["state"])
+
+
+def test_callback_refuses_a_failed_consent_and_reads_either_id_spelling(tmp_path) -> None:
+    c = _client(tmp_path)
+    state = c.post("/v1/connectors/ZOHO_BOOKS/connect", headers=_auth(), json={}).json()["state"]
+    r = c.get("/v1/connectors/callback",
+              params={"state": state, "status": "failed", "connectedAccountId": "ca-1"},
+              headers=_auth())
+    assert r.status_code == 422
+    r = c.get("/v1/connectors/callback",
+              params={"state": state, "status": "success", "connectedAccountId": "ca-test-000002"},
+              headers=_auth())
+    assert r.status_code == 200
+
+
+def test_read_reads_live_from_the_connected_account(tmp_path) -> None:
+    c = _client(tmp_path)
+    state = c.post("/v1/connectors/ZOHO_BOOKS/connect", headers=_auth(), json={}).json()["state"]
+    connection_id = c.get("/v1/connectors/callback",
+                          params={"state": state, "connected_account_id": "ca-test-000003"},
+                          headers=_auth()).json()["connection_id"]
+    r = c.get(f"/v1/connectors/{connection_id}/read", headers=_auth())
+    assert r.status_code == 200, r.text
+    body = r.json()
+    assert body["toolkit"] == "ZOHO_BOOKS"
+    assert body["summary"].startswith("Read ")
+    assert isinstance(body["items"], list)
+    # A revoked connection is not read.
+    c.delete(f"/v1/connectors/{connection_id}", headers=_auth())
+    assert c.get(f"/v1/connectors/{connection_id}/read", headers=_auth()).status_code == 404
+
+
+def test_cors_allows_delete_for_disconnect(tmp_path) -> None:
+    r = _client(tmp_path).options("/v1/connectors/conn-x", headers={
+        "Origin": "http://localhost:8787", "Access-Control-Request-Method": "DELETE"})
+    assert "DELETE" in r.headers.get("access-control-allow-methods", "")

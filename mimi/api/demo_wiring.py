@@ -446,20 +446,44 @@ class StoreZoho(FakeComposio):
 
 
 def _zoho(engine: Engine, tenant: str, demo_mode: bool) -> tuple[Any, str, str, bool]:
-    """(transport, connection id, organization id, is_fake). Live only with an
-    active Zoho Books connection, an organization id and outside demo mode."""
-    if not demo_mode:
-        with engine.connect() as conn:
-            acct = conn.execute(sa.select(s.connector_accounts).where(
-                s.connector_accounts.c.tenant_id == tenant,
-                s.connector_accounts.c.toolkit == "ZOHO_BOOKS",
-                s.connector_accounts.c.status == "active")).first()
-        org = os.environ.get("ZOHO_BOOKS_ORGANIZATION_ID", "").strip()
-        if acct is not None and org:
-            from mimi.connectors.composio import ComposioTransport
+    """(transport, connected account id, organization id, is_fake).
 
-            return ComposioTransport(), str(acct.connection_id), org, False
+    Same path for a sandbox (demo) tenant and a production one: with an
+    active Zoho Books connection, the real Composio transport and the
+    organization id, the write goes to that Zoho account. Only a tenant
+    with no real connection uses the in-store Zoho (sample data).
+    ``demo_mode`` is kept for callers; it no longer changes the path."""
+    del demo_mode
+    from mimi.connectors.env import ConnectorSettings
+
+    with engine.connect() as conn:
+        acct = conn.execute(sa.select(s.connector_accounts).where(
+            s.connector_accounts.c.tenant_id == tenant,
+            s.connector_accounts.c.toolkit == "ZOHO_BOOKS",
+            s.connector_accounts.c.status == "active")).first()
+    if acct is not None and ConnectorSettings.from_env().live:
+        from mimi.connectors.composio import ComposioTransport
+
+        transport = ComposioTransport()
+        # Composio addresses the account by its own id, not our connection id.
+        account = str(acct.connected_account_id or acct.connection_id)
+        org = os.environ.get("ZOHO_BOOKS_ORGANIZATION_ID", "").strip() or _zoho_org(transport, tenant, account)
+        if org:
+            return transport, account, org, False
     return StoreZoho(engine, tenant), "demo-zoho", "demo-org", True
+
+
+def _zoho_org(transport: Any, tenant: str, account: str) -> str:
+    """The connected Zoho Books account's first organization id ('' when it
+    has none or the read fails), so each distributor writes to its own books."""
+    from mimi.connectors.zoho.books import ZohoBooksConnector
+
+    try:
+        rows = ZohoBooksConnector(transport, tenant_id=tenant, connection_id=account).read(
+            "zoho_books_organizations").rows
+    except ConnectorError:
+        return ""
+    return str(rows[0].values.get("organization_id") or "") if rows else ""
 
 
 def _set_payload(conn: sa.Connection, tenant: str, approval_id: str,
