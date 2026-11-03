@@ -71,6 +71,16 @@ def test_redaction_rules() -> None:
     assert redact_text("no secrets here") == "no secrets here"
 
 
+def test_a_long_digit_run_glued_to_text_is_masked() -> None:
+    """A run of 10+ digits leaks whatever sits next to it (AGENTS.md): an
+    account number after a label is the same identifier as one after a space."""
+    assert redact_text("acct1234567890") == "acct******7890"
+    assert redact_text("ref:abc9876543210xyz") == "ref:abc******3210" + "xyz"
+    assert redact_text("id 0123456789 and 1234567890") == "id ******6789 and ******7890"
+    # Short runs are names and dates, not identifiers: left alone.
+    assert redact_text("dlv-00-0055 on 2026-10-26") == "dlv-00-0055 on 2026-10-26"
+
+
 def test_redaction_never_raises() -> None:
     class Weird:
         def __str__(self) -> str:

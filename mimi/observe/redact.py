@@ -37,8 +37,10 @@ REDACTED = "[redacted]"
 _PHONE_INTL = re.compile(r"\+?\b234[\s-]?(?:\d[\s-]?){9}\d\b")
 # Nigerian local mobile numbers: 0 then 7/8/9 then 9 more digits.
 _PHONE_LOCAL = re.compile(r"(?<![\w+])0[789](?:[\s-]?\d){9}(?!\w)")
-# Any run of 10 or more digits (account numbers, NIP session ids, ...).
-_LONG_DIGITS = re.compile(r"(?<![\w])\d{10,}(?![\w])")
+# Any run of 10 or more digits (account numbers, NIP session ids, ...),
+# whatever surrounds it: a run glued to a letter ("acct1234567890") is the same
+# identifier and must not leak (AGENTS.md: no long digit run in a trace).
+_LONG_DIGITS = re.compile(r"(?<!\d)\d{10,}(?!\d)")
 _DATA_URL = re.compile(r"data:(?P<mime>[\w/+.-]+);base64,(?P<b64>[A-Za-z0-9+/=]+)")
 _KEYS = (
     re.compile(r"(?i)\bbearer\s+[A-Za-z0-9._~+/=-]+"),
