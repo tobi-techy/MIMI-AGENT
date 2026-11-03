@@ -48,6 +48,25 @@ KIND_LABEL: dict[str, str] = {
     "generic": "Read a page on the approved domain",
 }
 
+# The words a person reads for one step action. The machine verb stays in code
+# (``code`` in a rendered step), because the console prints ``action`` verbatim:
+# a token like ``goto`` must never be able to reach a distributor's screen.
+PLAIN: dict[str, str] = {
+    "goto": "Open the page",
+    "screenshot": "Take a screenshot",
+    "extract": "Read what the page shows",
+    "scroll": "Scroll the page",
+    "click": "Open the link the page shows",
+    "fill": "Fill the form from your values",
+    "download": "Download the file",
+    "finish": "Save what was found",
+}
+
+
+def plain(action: str) -> str:
+    """The plain words for one step action, never a code."""
+    return PLAIN.get(action, "Read the page")
+
 
 def profile_for(kind: str) -> Profile:
     return PROFILES.get(kind, PROFILES["generic"])

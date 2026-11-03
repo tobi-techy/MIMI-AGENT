@@ -45,6 +45,8 @@ dashboard.
 | `MIMI_VOICE_REPLIES` | `all` | voice replies on the demo copies |
 | `MIMI_TTS` | `fake`, or unset with `SPITCH_API_KEY` | `fake` plays a quiet tone and costs nothing. Real Spitch speech is billed per second and is **not counted in the naira caps**, so only with the owner's yes |
 | `MIMI_RELEASE` | the deployed commit SHA | shown by `/v1/health` |
+| `MIMI_CLOUD_BROWSER_API_KEY` | the browser container's key, from the shell | computer tasks (RAI-326): a real browser session per task. Unset, a task can still be proposed and approving it says no container is configured |
+| `MIMI_COMPUTER_TOOLS` | `on` | the helpers may read one page of an approved portal with that browser. Off by default in the repo, because offering a new tool to a helper invalidates its recorded loop answers; this sandbox runs a live model and never replays recordings, so it is on here |
 
 Leave `MIMI_ENV` unset (`dev`). `MIMI_ENV=production` refuses SQLite
 (`mimi/api/config.py`, `Settings.check`), so the approved SQLite-in-`/tmp`

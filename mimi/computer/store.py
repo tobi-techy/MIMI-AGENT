@@ -17,6 +17,7 @@ import sqlalchemy as sa
 from sqlalchemy.engine import Engine
 
 from mimi.clock import wall
+from mimi.computer import plans
 from mimi.computer.runner import Blob
 from mimi.computer.types import Artifact, StepRecord
 from mimi.store import schema as s
@@ -146,7 +147,38 @@ def _default_dir() -> str:
 
 
 def plan_dicts(steps: list[Any]) -> list[dict[str, Any]]:
+    """The plan as it is stored and run: the machine verb is ``action``."""
     return [step.model_dump() for step in steps]
+
+
+def step_view(row: dict[str, Any], index_key: str = "idx") -> dict[str, Any]:
+    """One step as the console reads it.
+
+    ``action`` is the plain words and the machine verb moves to ``code``, which
+    the console does not render: a token like ``goto`` must never be able to
+    reach a distributor's screen.
+    """
+    verb = str(row.get("action", ""))
+    return {
+        "index": row.get(index_key, row.get("index")),
+        "action": plans.plain(verb),
+        "code": verb,
+        "url": row.get("url", ""),
+        "note": row.get("note", ""),
+        "screenshot": row.get("screenshot", ""),
+    }
+
+
+def plan_view(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """A stored or freshly built plan, rendered the same way as a logged step."""
+    out: list[dict[str, Any]] = []
+    for step in rows:
+        row = dict(step)
+        verb = str(row.get("action", ""))
+        row["action"] = plans.plain(verb)
+        row["code"] = verb
+        out.append(row)
+    return out
 
 
 def task_view(task: dict[str, Any], steps: list[dict[str, Any]],
@@ -166,11 +198,9 @@ def task_view(task: dict[str, Any], steps: list[dict[str, Any]],
         # A signed link to watch this task's session, while one is open. It is
         # per session and dies with it, so it is never stored.
         "live_view_url": live_view_url or None,
-        "plan": loads(task.get("plan"), []),
+        "plan": plan_view(loads(task.get("plan"), [])),
         "inputs": loads(task.get("inputs"), {}),
-        "steps": [{"index": st["idx"], "action": st["action"], "url": st["url"],
-                   "note": st["note"], "screenshot": st["screenshot"]}
-                  for st in steps],
+        "steps": [step_view(st) for st in steps],
         "artifacts": [{"name": a["name"], "kind": a["kind"], "mime": a["mime"],
                        "size": a["size"], "sha256": a["sha256"]} for a in artifacts],
     }

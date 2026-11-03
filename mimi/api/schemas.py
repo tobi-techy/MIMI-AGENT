@@ -803,7 +803,11 @@ class ComputerTaskIn(BaseModel):
 
 
 class ComputerPlanStep(_Out):
-    action: str
+    action: str = Field(..., description="The step in plain words. This is what "
+                                         "the console renders: never a code.")
+    code: str = Field("", description="Our own name for the step (a machine verb, "
+                                      "for example 'goto'). The console does not "
+                                      "render this field.")
     note: str = ""
     url: str = ""
     target: str = ""
@@ -832,7 +836,11 @@ class ComputerTask(_Out):
 
 class ComputerStep(_Out):
     index: int
-    action: str
+    action: str = Field(..., description="What the step did, in plain words. This "
+                                         "is what the console renders: never a code.")
+    code: str = Field("", description="Our own name for the step (a machine verb, "
+                                      "for example 'goto'). The console does not "
+                                      "render this field.")
     url: str = ""
     note: str = ""
     screenshot: str = Field("", description="An artifact name. Its bytes are at "

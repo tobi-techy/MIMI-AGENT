@@ -25,7 +25,7 @@ from mimi.computer.engine import (
     FakeComputer,
 )
 from mimi.computer.runner import Runner
-from mimi.computer.store import ComputerStore, plan_dicts, task_view
+from mimi.computer.store import ComputerStore, plan_dicts, plan_view, task_view
 from mimi.computer.types import GuardLimits, Step
 from mimi.store.util import loads, now_iso
 
@@ -135,7 +135,7 @@ class ComputerService:
                           plan_dicts(plan.steps), clean_inputs,
                           self.limits.model_dump(), self.engine.name)
         return {"task_id": task_id, "status": "proposed",
-                "plan": plan_dicts(plan.steps)}
+                "plan": plan_view(plan_dicts(plan.steps))}
 
     # -- read --------------------------------------------------------------
     def tasks(self, tenant: str) -> list[dict[str, Any]]:

@@ -7,6 +7,7 @@ against a real cloud browser session, not here.
 
 from __future__ import annotations
 
+import re
 from typing import Any
 
 import pytest
@@ -213,12 +214,13 @@ def service() -> Any:
 
 def test_propose_builds_a_plan_and_approve_runs_it(service: ComputerService) -> None:
     view = service.propose(T, "check prices", PAGE, "supplier.example", "price_check")
-    assert view["status"] == "proposed" and view["plan"][0]["action"] == "goto"
+    assert view["status"] == "proposed" and view["plan"][0]["code"] == "goto"
+    assert view["plan"][0]["action"] == "Open the page"
     assert service.get(T, view["task_id"])["steps"] == []
 
     done = service.approve(T, view["task_id"], inline=True)
     assert done["status"] == "done"
-    assert [s["action"] for s in done["steps"]][-1] == "finish"
+    assert [s["code"] for s in done["steps"]][-1] == "finish"
     assert any(a["kind"] == "screenshot" for a in done["artifacts"])
     # the artifact bytes are on disk and served by name
     name = done["steps"][0]["screenshot"]
@@ -248,7 +250,7 @@ def test_a_download_is_kept_under_the_name_the_site_gave() -> None:
     assert [a["name"] for a in files] == ["statement-october.pdf"]
     assert files[0]["mime"] == "application/pdf"
     # the download step holds the file, never a mislabelled screenshot
-    dl = [s for s in done["steps"] if s["action"] == "download"][0]
+    dl = [s for s in done["steps"] if s["code"] == "download"][0]
     assert dl["screenshot"] == ""
     assert not [a for a in done["artifacts"] if a["name"].startswith("statement-")
                 and a["kind"] == "screenshot"]
@@ -359,7 +361,7 @@ def test_the_five_endpoints_and_the_list_endpoint(client: TestClient) -> None:
         "kind": "price_check"})
     assert r.status_code == 201
     body = r.json()
-    assert body["status"] == "proposed" and body["plan"][0]["action"] == "goto"
+    assert body["status"] == "proposed" and body["plan"][0]["code"] == "goto"
     task_id = body["task_id"]
 
     r = client.get("/v1/computer/tasks", headers=H)
@@ -396,6 +398,41 @@ def test_the_kinds_endpoint_publishes_the_kind_strings(client: TestClient) -> No
     assert [k["kind"] for k in kinds] == list(plans.PROFILES)
     assert kinds == [{"kind": k, "label": plans.KIND_LABEL[k]} for k in plans.PROFILES]
     assert all(k["label"] for k in kinds)
+
+
+# A machine token: an underscore-joined lowercase word, like "goto_url".
+CODE_SHAPE = re.compile(r"^[a-z][a-z0-9]*(?:_[a-z0-9]+)+$")
+# An internal id or a token: a long hex or base32 run, or our task prefix.
+ID_SHAPE = re.compile(r"\b(?:ct_|[0-9a-f]{16,}|[A-Za-z0-9_-]{24,}\b)")
+
+
+def test_no_rendered_step_text_is_a_code_or_an_internal_id(client: TestClient) -> None:
+    """The console prints a step's ``action`` verbatim, so no machine token and
+    no internal id may ever appear in the text a person reads."""
+    r = client.post("/v1/computer/tasks", headers=H, json={
+        "goal": "check the price list", "url": PAGE, "domain": "supplier.example",
+        "kind": "order_list"})
+    task_id = r.json()["task_id"]
+    client.post(f"/v1/computer/tasks/{task_id}/approve", headers=H)
+    done = _wait(client, task_id)
+    assert done["status"] == "done" and done["steps"]
+
+    for step in list(done["steps"]) + list(done["plan"]):
+        # the machine verb is kept, in its own field, which the console ignores
+        assert step["code"], step
+        for field in ("action", "note"):
+            text = str(step[field])
+            assert text, (field, step)
+            assert not CODE_SHAPE.match(text.strip()), (field, text)
+            assert " " in text, (field, text)  # a sentence, never a bare token
+            assert not ID_SHAPE.search(text), (field, text)
+            assert task_id not in text, (field, text)
+    # the plan the owner approves reads the same way before anything runs
+    assert [s["code"] for s in done["plan"]] == ["goto", "screenshot", "extract",
+                                                "finish"]
+    assert [s["action"] for s in done["plan"]] == [
+        "Open the page", "Take a screenshot", "Read what the page shows",
+        "Save what was found"]
 
 
 def test_a_channel_key_cannot_reach_computer_tasks(client: TestClient) -> None:
