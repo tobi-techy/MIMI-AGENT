@@ -196,6 +196,9 @@ class LoopState(BaseModel):
     denials_in_a_row: int = 0
     denial_window_denials: int = 0
     denial_window_size: int = 0
+    # The thread's review store could not be read: the breaker fails closed
+    # (``denials.DenialCounter.tripped``).
+    denial_store_unknown: bool = False
     # The helpers above this one in the job tree, root first, this one last:
     # ask_helper may not hand work back up it or past the depth cap.
     lineage: list[str] = Field(default_factory=list)
@@ -428,6 +431,13 @@ class Harness:
         s.ends_turn = False
         s.question = ""
         s.approval_pending = False
+        # A reopened run starts a fresh denial streak and re-reads its
+        # thread's window on its next step: the streak and snapshot a park
+        # left behind are stale, and one stale step would re-park at once.
+        s.denials_in_a_row = 0
+        s.denial_window_denials = 0
+        s.denial_window_size = 0
+        s.denial_store_unknown = False
         return s
 
     def step(
@@ -538,9 +548,13 @@ class Harness:
             if new_denials and not state.finished and not state.fail_reason:
                 tripped, kind = self._breaker_tripped(state)
                 if tripped:
-                    state.messages.append(self._tool_msg(call.id, error_text(
-                        "The run stopped: Mimi was told no too often.",
-                        "Nothing; the owner was told.")))
+                    # ``_dispatch`` already answered this call; answer only
+                    # the calls after it, so the parked transcript keeps one
+                    # reply per tool_call_id for the resumed turn.
+                    for later in turn.tool_calls[position + 1:]:
+                        state.messages.append(self._tool_msg(later.id, error_text(
+                            "Skipped because the run stopped.",
+                            "Nothing; the owner was told.")))
                     state.fail_reason = ""
                     state.repairs_used = 0
                     self._trip_breaker(state, kind)
@@ -766,15 +780,19 @@ class Harness:
         state.denials_in_a_row = 0
 
     def _breaker_tripped(self, state: LoopState) -> tuple[bool, str]:
-        """The 3-in-a-row turn rule, or the 10-in-50 thread rule (RAI-324)."""
+        """The 3-in-a-row turn rule, the 10-in-50 thread rule, or an unreadable
+        review store, which fails closed (RAI-324)."""
         counter = D.DenialCounter(
             in_a_row=state.denials_in_a_row,
             window_denials=state.denial_window_denials,
-            window_size=state.denial_window_size)
-        if counter.tripped():
-            return True, ("in_a_row" if state.denials_in_a_row >= D.in_a_row_limit()
-                          else "window")
-        return False, ""
+            window_size=state.denial_window_size,
+            unknown=state.denial_store_unknown)
+        if not counter.tripped():
+            return False, ""
+        if state.denial_store_unknown:
+            return True, "unknown"
+        return True, ("in_a_row" if state.denials_in_a_row >= D.in_a_row_limit()
+                      else "window")
 
     def _trip_breaker(self, state: LoopState, kind: str) -> None:
         """Park the turn and ask the owner (RAI-324): nothing more is
@@ -784,7 +802,8 @@ class Harness:
 
         who = HELPER_TITLE.get(state.helper, state.helper.title() if state.helper else "Mimi")
         note = D.trip_note(state.helper, state.denials_in_a_row,
-                           state.denial_window_denials)
+                           state.denial_window_denials,
+                           unknown=state.denial_store_unknown)
         G.record_trip("breaker_tripped", guard=kind, helper=state.helper,
                       run_id=state.run_id, in_a_row=state.denials_in_a_row,
                       window_denials=state.denial_window_denials)
@@ -795,9 +814,12 @@ class Harness:
                          "reasons": [D.denial_reason(e) for e in state.events
                                      if D.is_denial_event(e)][-3:]})
         self._owner_draft(state, note)
-        self._finish(state, "stopped_denied",
-                     f"denial breaker: {kind} ({who} told no "
-                     f"{state.denials_in_a_row} in a row)", question=note)
+        told = (f"{state.denials_in_a_row} in a row" if kind == "in_a_row"
+                else f"{state.denial_window_denials} recently on the thread")
+        reason = (f"denial breaker: {kind} (the review store was unreadable)"
+                  if kind == "unknown"
+                  else f"denial breaker: {kind} ({who} told no {told})")
+        self._finish(state, "stopped_denied", reason, question=note)
 
     def _guard_refusal(self, state: LoopState, call_id: str, name: str, reason: str,
                        why: str, next_step: str, t: float) -> tuple[str, float]:
@@ -1316,6 +1338,7 @@ class Harness:
                        data={"problems": problems, "withdrawn": rec.idempotency_key})
             G.record_trip("claim_blocked", tool=rec.tool, problems=problems, text=text[:240],
                           helper=state.helper, run_id=state.run_id)
+            self._deny(state, rec.tool)  # the claims gate told this step no
         _, nxt = C.repair_text(held[0][1])
         if state.repair_step == state.step:
             # A tool call in this same step is already being repaired (say the
@@ -1331,9 +1354,15 @@ class Harness:
             state.messages.append({"role": "user", "content": (
                 "[Mimi harness] " + " ".join(why_all) + " It was not sent. " + nxt)})
         else:
-            self._emit(state, "model_output_invalid", tool=held[0][0].tool,
-                       short=why_all[0][:200])
-            state.fail_reason = f"unbacked claim after one repair: {why_all[0]}"[:300]
+            tripped, kind = self._breaker_tripped(state)
+            if tripped:
+                # The claims gate told this step no and its repair is spent:
+                # the breaker parks the turn instead of failing the run.
+                self._trip_breaker(state, kind)
+            else:
+                self._emit(state, "model_output_invalid", tool=held[0][0].tool,
+                           short=why_all[0][:200])
+                state.fail_reason = f"unbacked claim after one repair: {why_all[0]}"[:300]
 
     def _shops(self, tenant_id: str) -> dict[str, str]:
         """This distributor's shop names and their ids (claims bind to a shop)."""

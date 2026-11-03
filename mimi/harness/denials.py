@@ -4,11 +4,15 @@ told no stops trying and asks the owner.
 A denial is any refusal on a consequential path: a claims-gate hold, a policy
 ``refuse`` (a built-in stop, a ``never`` tool, or a rule the store cannot
 read), a consent or Go refusal, or a tool that errors instead of answering.
-Three denials in a row in one turn, or 10 denials in the last 50 reviews of
-a thread, trip the breaker. The turn parks with a plain owner message that
-names the helper and how many times it was told no.
+Three denials in a row in one turn, or a turn refused on a thread already
+heavy with denials (10 denied reviews in the last 50), trip the breaker. The
+turn parks with a plain owner message that names the helper and how many
+times it was told no. The thread's last 50 reviews are the thread's landed
+turns (``done`` or ``parked``), each read as denied from its own event log
+(``Agent.denial_reviews``), so a resumed park never erases a denial that
+happened and a clean turn after an approval still carries on.
 
-The counter never breaks a turn: when its store cannot be read it fails
+The counter never breaks a turn: when the store cannot be read it fails
 closed (a consequential step is treated as denied). Env knobs
 (``MIMI_DENIALS_*``): ``IN_A_ROW`` (3), ``WINDOW`` (50),
 ``MAX_IN_WINDOW`` (10).
@@ -17,7 +21,7 @@ closed (a consequential step is treated as denied). Env knobs
 from __future__ import annotations
 
 import os
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Any
 
 
@@ -65,15 +69,25 @@ def denial_kind(ev: Any) -> str:
     return {"consent": "consent", "go_refused": "go", "never": "policy"}.get(reason, reason)
 
 
-def is_denial_event(ev: Any) -> bool:
-    """Whether one loop event counts as the breaker being told no."""
-    if getattr(ev, "type", "") not in DENIAL_EVENT_TYPES:
+def is_denial(kind: str, data: Any) -> bool:
+    """Whether one refusal (its type and data) counts as being told no.
+
+    The same rule the loop applies live (``is_denial_event``) and the API
+    applies when it counts a thread's landed reviews from the event log
+    (``Agent.denial_reviews``), so the two can never drift apart.
+    """
+    if kind not in DENIAL_EVENT_TYPES:
         return False
-    if getattr(ev, "type", "") == "tool_refused":
-        reason = str((getattr(ev, "data", None) or {}).get("reason") or "")
+    if kind == "tool_refused":
+        reason = str((data or {}).get("reason") or "")
         if reason in NON_DENIAL_REASONS:
             return False
     return True
+
+
+def is_denial_event(ev: Any) -> bool:
+    """Whether one loop event counts as the breaker being told no."""
+    return is_denial(str(getattr(ev, "type", "")), getattr(ev, "data", None))
 
 
 def denial_reason(ev: Any) -> str:
@@ -86,10 +100,10 @@ def denial_reason(ev: Any) -> str:
 class DenialCounter:
     """The per-turn streak plus the thread's recent reviews.
 
-    Both live on the loop state (in-run streak) and on the thread store
-    (recent reviews, written by the API when the turn finishes); this record
-    is the pure rule that reads them. A store that cannot be read fails
-    closed: ``unknown`` trips for consequential steps.
+    Both live on the loop state (in-run streak) and in the store (the
+    thread's landed turns, read by the API from each turn's event log); this
+    record is the pure rule that reads them. A store that cannot be read
+    fails closed: ``unknown`` trips for consequential steps.
     """
 
     in_a_row: int = 0
@@ -98,12 +112,20 @@ class DenialCounter:
     unknown: bool = False
 
     def tripped(self) -> bool:
+        """Whether the breaker stops this run right now.
+
+        The turn's own streak (3 in a row), or a thread already heavy with
+        denial reviews when this turn was refused too: the window arms the
+        breaker, a fresh denial fires it. Without that the window would be a
+        one way door, since every denied turn parks and stays in the window.
+        An unreadable store trips for every step (fail closed).
+        """
         if self.unknown:
             return True
         if self.in_a_row >= in_a_row_limit():
             return True
         sized = self.window_size or window()
-        return self.window_denials >= max_in_window() and sized >= 1
+        return self.in_a_row >= 1 and self.window_denials >= max_in_window() and sized >= 1
 
 
 def streak_of(events: Any) -> int:
@@ -129,32 +151,19 @@ def count_window(reviews: Any) -> tuple[int, int]:
     return sum(1 for r in rows if bool(r)), len(rows)
 
 
-def trip_note(helper: str, in_a_row: int, window_denials: int) -> str:
+def trip_note(helper: str, in_a_row: int, window_denials: int, *,
+              unknown: bool = False) -> str:
     """The plain owner message for a tripped breaker. No em dashes."""
     from mimi.harness.skills import HELPER_TITLE
 
     who = HELPER_TITLE.get(helper, helper.title() if helper else "Mimi")
+    if unknown:
+        return (f"I stopped {who} on this job. I could not read the record of "
+                "earlier refusals, so I stopped rather than guess. "
+                "Nothing more was sent.")
     if in_a_row >= in_a_row_limit():
         return (f"I stopped {who} on this job. My checks said no {in_a_row} times "
                 "in a row, so I need you to look at it. Nothing more was sent.")
     return (f"I stopped {who} on this job. My checks said no {window_denials} times "
             "recently on this thread, so I need you to look at it. "
             "Nothing more was sent.")
-
-
-@dataclass
-class BreakerStore:
-    """The thread's recent reviews. The API writes one row per finished turn;
-    the loop reads the tail before a step."""
-
-    rows: dict[str, list[bool]] = field(default_factory=dict)
-
-    def reviews(self, thread_id: str) -> list[bool]:
-        try:
-            return list(self.rows.get(thread_id, []))
-        except Exception as exc:
-            raise OSError("denial reviews unreadable") from exc
-
-    def record(self, thread_id: str, denied: bool) -> None:
-        self.rows.setdefault(thread_id, []).append(bool(denied))
-        self.rows[thread_id] = self.rows[thread_id][-window():]
