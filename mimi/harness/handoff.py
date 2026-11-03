@@ -266,6 +266,9 @@ def steps_from_events(events: Iterable[Any], *, route_ms: float = 0.0,
             status = "refused"
         elif typ == "claim_blocked":
             status = "held"
+        elif typ == "breaker_tripped":
+            # The trip is a stop, not a success: the trip event reads "held".
+            status = "held"
         name = getattr(e, "tool", "") or ("model" if kind == "model" else kind)
         at: Any = getattr(e, "at", None)
         stamp = at.isoformat() if at is not None and hasattr(at, "isoformat") else str(at or "")

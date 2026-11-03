@@ -368,7 +368,9 @@ def _activity_steps(conn: sa.Connection, tenant: str, turn_id: str) -> list[dict
         else:
             name = str(e.tool or "step")
             short = display.humanize(str(e.short or ""), names) or name.replace("_", " ")
-        st = "failed" if str(e.type) in ("tool_refused", "claim_blocked") else "ok"
+        st = "failed" if str(e.type) in ("tool_refused", "claim_blocked") else (
+            # The trip is a stop, not a success: the breaker line reads "held".
+            "held" if str(e.type) == "breaker_tripped" else "ok")
         out.append({"name": name, "kind": kind, "status": st, "short": short[:300],
                     "ms": round(float(e.duration_ms or 0.0), 3), "at": str(e.at)})
     return out

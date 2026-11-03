@@ -894,15 +894,18 @@ class Agent:
     def denial_reviews(self, tenant_id: str, thread_id: str) -> tuple[int, int]:
         """The thread's recent denial reviews for the breaker's window rule.
 
-        Reads the thread's last 50 finished-turn reviews (a turn that ended
-        ``stopped_denied`` counts as denied); unreadable means fail closed.
+        Reads the thread's last 50 finished-turn reviews. A denied trip only
+        ever parks its turn (``stopped_denied``, which ``finish_in`` and
+        ``_park_denied`` both record under state ``done`` or ``parked``),
+        so the query matches those two landed states, never ``leased``
+        (nobody else reads mid-run streaks from the store).
         """
         try:
             with self.engine.connect() as conn:
                 rows = conn.execute(sa.select(s.turns.c.status).where(
                     s.turns.c.tenant_id == tenant_id,
                     s.turns.c.thread_id == thread_id,
-                    s.turns.c.state == "done")
+                    s.turns.c.state.in_(("done", "parked")))
                     .order_by(s.turns.c.created_ts.desc(), s.turns.c.turn_id.desc())
                     .limit(D.window())).all()
         except Exception:
@@ -1158,6 +1161,9 @@ class Agent:
         job; it carries on from its next step with a clear streak. The
         denied steps are kept on the thread's events; nothing after the trip
         was dispatched. The thread reads ``needs_you`` like any parked turn.
+        A second trip on the same turn queues no second approval: the
+        intent's idempotency key is per ``turn_id``, so a resumed run that
+        parks again lands as a duplicate of the decided row.
         """
         from mimi.harness import denials as D
 
@@ -1220,7 +1226,13 @@ class Agent:
                 "data": dumps(ck["denied"]), "at": now_iso(now), "ts": now})
 
     def resume_denied(self, conn: sa.Connection, turn_id: str) -> list[str]:
-        """Re-queue one breaker-parked turn with a clear denial streak (RAI-324)."""
+        """Re-queue one breaker-parked turn with a clear denial streak (RAI-324).
+
+        Belt and braces against an immediate re-park: the streak, the repair
+        allowance and the thread-window snapshot all reset (the fresh run
+        re-reads the window itself on its first step), so the resumed job
+        carries on from its next step instead of parking on the old count.
+        """
         import json as _json
 
         row = conn.execute(sa.select(s.turns).where(
@@ -1231,7 +1243,12 @@ class Agent:
         ck = loads(row.checkpoint, {})
         loop = dict(ck.get("loop") or {})
         loop["denials_in_a_row"] = 0
+        loop["denial_window_denials"] = 0
+        loop["denial_window_size"] = 0
         loop["finished"] = None
+        loop["fail_reason"] = ""
+        loop["repairs_used"] = 0
+        loop["repair_step"] = -1
         ck["loop"] = loop
         ck.pop("denied", None)
         conn.execute(s.turns.update().where(
