@@ -34,6 +34,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import re
 from typing import Any
 from urllib.parse import quote
 
@@ -62,6 +63,26 @@ REGION_HOSTS = {
 # here, in code, not by convention.
 PAYMENT_LEDGER_TOOLKIT = "ZOHO_BOOKS"
 
+# Composio has issued connection ids as ``ca-...``, ``conn-...``, ``demo-...``
+# and ``zp-...``, and since 2026 it issues ``ca_...`` with an underscore. The
+# separator is not part of the contract, so both are accepted, and an id that
+# is not one of those prefixes is refused: accepting anything would let a
+# payment be addressed to a ledger that is not Zoho Books.
+PAYMENT_CONNECTION_PREFIXES = ("ca", "conn", "demo", "zp")
+_PAYMENT_CONNECTION_ID = re.compile(
+    r"(?:ca|conn|demo|zp)[-_][A-Za-z0-9][A-Za-z0-9_-]*")
+
+
+def _is_payment_connection_id(connection_id: str) -> bool:
+    """True for an empty id (nothing to check) or a Zoho Books connection.
+
+    An id is judged by its prefix and separator only, never by its length or
+    its provider, because Composio changes both. Measured live on 4 Nov 2026:
+    the real account was ``ca_M3aPpWNfL_p7`` and the hyphen-only check refused
+    it, which read to everyone as a broken Zoho connection."""
+    cid = str(connection_id or "")
+    return not cid or _PAYMENT_CONNECTION_ID.fullmatch(cid) is not None
+
 
 def _refuse_foreign_ledger(transport: ComposioTransport | FakeComposio,
                            connection_id: str) -> None:
@@ -70,9 +91,7 @@ def _refuse_foreign_ledger(transport: ComposioTransport | FakeComposio,
         raise ConnectorError(
             f"Payments are recorded in Zoho Books only, not in {toolkit}.",
             next_step="Record it in Zoho Books; read the other system instead.")
-    cid = str(connection_id or "")
-    if cid and not (cid.startswith("ca-") or cid.startswith("conn-")
-                    or cid.startswith("demo-") or cid.startswith("zp-")):
+    if not _is_payment_connection_id(str(connection_id or "")):
         raise ConnectorError(
             "That is not a Zoho Books connection, so no payment goes there.",
             next_step="Use the tenant's Zoho Books connection.")
