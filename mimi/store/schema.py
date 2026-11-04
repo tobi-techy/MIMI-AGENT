@@ -801,7 +801,7 @@ computer_artifacts = sa.Table(
 # inspected, settled (or cancelled). Quantities and naira are computed in
 # code; the rep collects, because Mimi never moves stock. A settlement is a
 # ``return_credit`` approval the owner approves, applied to the shop's open
-# invoices, undoable (``credit_notes``). Alembic ``0016_returns_exposure``.
+# invoices, undoable (``credit_notes``). Alembic ``0017_returns_exposure``.
 
 returns = sa.Table(
     "returns", metadata,

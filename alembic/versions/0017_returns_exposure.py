@@ -1,14 +1,16 @@
 """Returns ledger and exposure (feat/returns-and-exposure).
 
-Revision ID: 0016
-Revises: 0015
+Revision ID: 0017
+Revises: 0016
 
 A return opens from an approved slow-stock pickup option, then drafted,
 approved, collected, inspected, settled (or cancelled); its settlement is a
 ``return_credit`` approval applied to the shop's open invoices (undoable),
-and ``returns_settings`` holds the owner's configured pickup cost. Alembic
-``0015`` (sales tracking) is the head on main; ``0016`` was also claimed by
-the computer-tasks branch, so whichever lands second rebases its revision.
+and ``returns_settings`` holds the owner's configured pickup cost.
+
+Renumbered from 0016 to 0017 when the computer-tasks branch (RAI-326) landed
+on main first with its own ``0016`` on ``0015``, so the chain is
+``0015`` -> ``0016`` (computer tasks) -> ``0017`` (returns) with one head.
 Create Date: 2026-11-03
 """
 
@@ -18,8 +20,8 @@ import sqlalchemy as sa
 
 from alembic import op
 
-revision = "0016"
-down_revision = "0015"
+revision = "0017"
+down_revision = "0016"
 branch_labels = None
 depends_on = None
 
