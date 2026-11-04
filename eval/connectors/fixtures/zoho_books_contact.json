@@ -4,6 +4,8 @@
    "contact_id": "zoho-shop-001"
   },
   "reply": {
+   "code": 0,
+   "message": "success",
    "contact": {
     "contact_id": "zoho-shop-001",
     "contact_name": "Mama Sola Provisions",
@@ -18,6 +20,8 @@
  {
   "match": {},
   "reply": {
+   "code": 0,
+   "message": "success",
    "contact": {
     "contact_id": "zoho-shop-001",
     "contact_name": "Mama Sola Provisions",

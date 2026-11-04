@@ -11,6 +11,7 @@ from mimi.connectors.base import Connector, ConnectorError
 from mimi.connectors.composio import ComposioTransport, FakeComposio
 from mimi.connectors.types import Proposal, ReadResult, Row, WriteRecord
 from mimi.connectors.zoho import mapping as m
+from mimi.connectors.zoho.replies import check_reply
 from mimi.store.util import now_iso
 
 _MAPPERS = {
@@ -52,6 +53,7 @@ class ZohoBooksConnector(Connector):
         raw = self.transport.execute(resource, user_id=self.tenant_id,
                                      connected_account_id=self.connection_id,
                                      arguments=dict(filters or {}))
+        raw = check_reply(resource, raw)
         items = _items(raw)
         rows = [Row(values=mapper(i), source=resource) for i in items]
         if resource == "zoho_books_organizations":

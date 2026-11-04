@@ -4,12 +4,16 @@
    "invoice_id": "zoho-dlv-04-0001"
   },
   "reply": {
+   "code": 0,
+   "message": "success",
    "comment_id": "comment-001"
   }
  },
  {
   "match": {},
   "reply": {
+   "code": 0,
+   "message": "success",
    "comment_id": "comment-001"
   }
  }

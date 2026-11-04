@@ -26,6 +26,12 @@ live grant every read. `sync.py` pulls rows into `stock_counts` with
   `LIST_CUSTOMER_PAYMENTS`, `LIST_INVOICE_PAYMENTS`, `LIST_ITEMS` into
   shops, receivables, payments and SKUs (`zoho/mapping.py`: figures from
   the response only, naira to integer kobo in code, nothing invented).
+  Every books read carries `organization_id`: Zoho refuses a books read
+  without it, and Composio answers that refusal with an error payload
+  rather than an exception. So `zoho/replies.py` checks every reply for
+  `code: 0` before a row is mapped; anything else raises with what Zoho
+  said. A read that returns nothing means the book holds nothing, never
+  that the request was malformed.
   Writes, owner-approved only: `ADD_INVOICE_COMMENT` (undo
   `DELETE_INVOICE_COMMENT`), `UPDATE_CONTACT` (phone or note fields only;
   undo is the same action with the saved before values).
