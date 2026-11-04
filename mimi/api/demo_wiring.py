@@ -63,12 +63,50 @@ WIRING_KINDS = (ZOHO_KIND, OVER_LIMIT_KIND, RETURN_CREDIT_KIND)
 # else changes. The switch never auto-approves, never retries, and never
 # widens what may be written: it only chooses where an approved write lands.
 ZOHO_LIVE_WRITE_ENV = "MIMI_ZOHO_LIVE_WRITE"
+ZOHO_LIVE_WRITE_MAX_ENV = "MIMI_ZOHO_LIVE_WRITE_MAX"
 
 
 def zoho_live_write() -> bool:
     """True only when the owner switched on real Zoho Books writes."""
     return os.environ.get(ZOHO_LIVE_WRITE_ENV, "").strip().lower() in (
         "1", "true", "yes", "on")
+
+
+def zoho_live_write_max() -> int:
+    """How many real Zoho writes this tenant may make per Lagos day.
+
+    Default 1 when live writing is on: unset never means unlimited,
+    because an unlimited switch is the danger being guarded against.
+    Raise it by setting the env var to 2 and retaking the shot the same
+    day; the count below resets at Lagos midnight."""
+    try:
+        return max(1, int(os.environ.get(ZOHO_LIVE_WRITE_MAX_ENV, "").strip() or "1"))
+    except ValueError:
+        return 1
+
+
+def zoho_live_writes_today(conn: sa.Connection, tenant: str, now: float) -> int:
+    """Real Zoho writes recorded for this tenant since Lagos midnight.
+
+    Real means the stored result says ``demo`` false and carries a
+    payment id: fake and demo writes never count against the cap."""
+    from datetime import datetime, timezone
+
+    from mimi.tz import LAGOS, lagos_day
+
+    today = lagos_day(datetime.fromtimestamp(now, tz=timezone.utc))
+    start = datetime(today.year, today.month, today.day, tzinfo=LAGOS).timestamp()
+    n = 0
+    for row in conn.execute(sa.select(s.approvals.c.payload).where(
+            s.approvals.c.tenant_id == tenant,
+            s.approvals.c.tool == ZOHO_KIND,
+            s.approvals.c.status == "approved",
+            s.approvals.c.created_ts >= start,
+            s.approvals.c.created_ts < start + 86400)):
+        res = loads(row.payload, {}).get("result") or {}
+        if res.get("zoho_payment_id") and res.get("demo") is False:
+            n += 1
+    return n
 
 # The demo's words for the stored proof levels.
 PROOF_GRADE = {"verified": "verified", "likely": "estimated", "estimated": "unverified"}
@@ -559,28 +597,18 @@ def _zoho(engine: Engine, tenant: str, demo_mode: bool,
         transport = transport or ComposioTransport()
         # Composio addresses the account by its own id, not our connection id.
         account = str(acct.connected_account_id or acct.connection_id)
-        org = os.environ.get("ZOHO_BOOKS_ORGANIZATION_ID", "").strip() or _zoho_org(transport, tenant, account)
+        org = os.environ.get("ZOHO_BOOKS_ORGANIZATION_ID", "").strip()
         if not org:
+            # Now that writing is real, an unnamed org refuses rather than
+            # guessing: the first org off the connection could be any org
+            # the owner connected, and a real payment into the wrong org is
+            # the worst outcome available to us.
             raise ConnectorError(
-                "Zoho Books is connected but gave no organization, so the "
+                "Zoho Books is connected but no organization was named, so the "
                 "payment was not recorded anywhere.",
-                next_step="Reconnect Zoho Books from Settings, then approve again.")
+                next_step="Set ZOHO_BOOKS_ORGANIZATION_ID to the org id, then approve again.")
         return transport, account, org, False
     return StoreZoho(engine, tenant), "demo-zoho", "demo-org", True
-    return StoreZoho(engine, tenant), "demo-zoho", "demo-org", True
-
-
-def _zoho_org(transport: Any, tenant: str, account: str) -> str:
-    """The connected Zoho Books account's first organization id ('' when it
-    has none or the read fails), so each distributor writes to its own books."""
-    from mimi.connectors.zoho.books import ZohoBooksConnector
-
-    try:
-        rows = ZohoBooksConnector(transport, tenant_id=tenant, connection_id=account).read(
-            "zoho_books_organizations").rows
-    except ConnectorError:
-        return ""
-    return str(rows[0].values.get("organization_id") or "") if rows else ""
 
 
 def _set_payload(conn: sa.Connection, tenant: str, approval_id: str,
@@ -608,6 +636,23 @@ def on_approved(engine: Engine, tenant: str, a: dict[str, Any], *,
             with engine.begin() as conn:
                 _set_payload(conn, tenant, a["approval_id"], payload)
             return
+        if not fake:
+            # The day's real-write cap, counted per tenant since Lagos
+            # midnight. Fake and demo writes never count. At the cap the
+            # approval records the refusal and stays visible: nothing was
+            # written, and the owner reads where to raise the limit.
+            with engine.connect() as conn:
+                made = zoho_live_writes_today(conn, tenant, now)
+            limit = zoho_live_write_max()
+            if made >= limit:
+                payload["result"] = {
+                    "error": ("Today's real Zoho write has already been made, "
+                              "so nothing was written. To make another one, raise "
+                              "MIMI_ZOHO_LIVE_WRITE_MAX to 2 and approve again."),
+                    "undo_available": False, "demo": False}
+                with engine.begin() as conn:
+                    _set_payload(conn, tenant, a["approval_id"], payload)
+                return
         try:
             res = zp.record_payment(transport=transport, tenant_id=tenant,
                                     connection_id=conn_id, organization_id=org,
@@ -755,6 +800,7 @@ def _zoho_connected(engine: Engine, tenant: str) -> bool:
 def _zoho_account_org(engine: Engine, tenant: str,
                       transport: Any | None = None) -> tuple[str, str]:
     """The live account and org for a read; raises rather than guessing."""
+    del transport
     with engine.connect() as conn:
         acct = conn.execute(sa.select(s.connector_accounts).where(
             s.connector_accounts.c.tenant_id == tenant,
@@ -764,11 +810,10 @@ def _zoho_account_org(engine: Engine, tenant: str,
         raise ConnectorError("Zoho Books is not connected.",
                              next_step="Connect it from Settings first.")
     account = str(acct.connected_account_id or acct.connection_id)
-    org = os.environ.get("ZOHO_BOOKS_ORGANIZATION_ID", "").strip() or _zoho_org(
-        transport or ComposioTransport(), tenant, account)
+    org = os.environ.get("ZOHO_BOOKS_ORGANIZATION_ID", "").strip()
     if not org:
         raise ConnectorError("Zoho Books gave no organization.",
-                             next_step="Reconnect Zoho Books from Settings.")
+                             next_step="Set ZOHO_BOOKS_ORGANIZATION_ID to the org id.")
     return account, org
 
 
