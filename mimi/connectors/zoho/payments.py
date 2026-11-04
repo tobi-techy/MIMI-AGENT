@@ -84,8 +84,15 @@ def books_url(region: str, path: str, query: str) -> str:
     return f"{host}/books/v3{path}?{query}" if query else f"{host}/books/v3{path}"
 
 
-def reference_for(idempotency_key: str) -> str:
-    """The idempotency key, safe for Zoho's reference_number field."""
+def reference_for(idempotency_key: str, approval_id: str = "") -> str:
+    """The idempotency key, safe for Zoho's reference_number field.
+
+    An owner-approved write carries the approval id (``mimi-apr_<digest>``),
+    so a payment in Zoho can be traced back to the approval that made it and
+    taken out again by ``scripts/seed_demo_zoho.py --reset``. A call without
+    an approval keeps the older ``mimi-<idempotency key>`` shape."""
+    if approval_id:
+        return f"mimi-{approval_id}"[:100]
     return f"mimi-{idempotency_key}"[:100]
 
 
@@ -121,7 +128,8 @@ def _naira(kobo: int) -> str:
     return f"\u20a6{whole:,}" + (f".{part:02d}" if part else "")
 
 
-def create_body(payload: dict[str, Any], idempotency_key: str) -> dict[str, Any]:
+def create_body(payload: dict[str, Any], idempotency_key: str,
+                approval_id: str = "") -> dict[str, Any]:
     """The Zoho create-customer-payment body. Amounts leave here in naira,
     computed from integer kobo in code.
 
@@ -170,7 +178,7 @@ def create_body(payload: dict[str, Any], idempotency_key: str) -> dict[str, Any]
         "payment_mode": payload.get("payment_mode") or "Bank Transfer",
         "amount": round(amount_kobo / 100, 2),
         "date": payload.get("date"),
-        "reference_number": reference_for(idempotency_key),
+        "reference_number": reference_for(idempotency_key, approval_id),
         "invoices": lines,
     }
 
@@ -185,7 +193,7 @@ def create_payment(*, transport: ComposioTransport | FakeComposio, tenant_id: st
         raise ConnectorError("A customer payment needs the owner's approval.",
                              next_step="Wait for the owner to approve it.")
     _refuse_foreign_ledger(transport, connection_id)
-    body = create_body(payload, idempotency_key)
+    body = create_body(payload, idempotency_key, approval_id)
     endpoint = books_url(transport.settings.zoho_region,
                          "/customerpayments", f"organization_id={organization_id}")
     reply = _proxy(transport, "customer_payment_create", method="POST",
@@ -232,7 +240,7 @@ def record_payment(*, transport: ComposioTransport | FakeComposio, tenant_id: st
     if not approval_id:
         raise ConnectorError("A customer payment needs the owner's approval.",
                              next_step="Wait for the owner to approve it.")
-    body = create_body(payload, idempotency_key)
+    body = create_body(payload, idempotency_key, approval_id)
     reference = body["reference_number"]
     payload_hash = hashlib.sha256(json.dumps(body, sort_keys=True).encode()).hexdigest()
     existing = find_by_reference(transport=transport, connection_id=connection_id,

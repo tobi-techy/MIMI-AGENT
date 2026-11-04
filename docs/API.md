@@ -301,7 +301,14 @@ behind `MIMI_DEMO_WIRING=1` (set in the Dockerfile, off in CI and `make check`).
   No match: the owner is told and nothing changes. No model call.
 * **Zoho write.** Approving a `zoho_payment` records it through
   `mimi/connectors/zoho/payments.py` (read back by reference, then one create);
-  `result` is `{zoho_payment_id, undo_available: true, demo}`. In demo mode, or
+  `result` is `{zoho_payment_id, undo_available: true, demo}`. A real write
+  first resolves the shop to its Zoho contact and to the seeded invoice
+  `MZ-<shop_id>` (`mimi.api.zoho_match`), and refuses with its reason when
+  either is missing or the invoice owes less than the payment applies. The
+  `reference_number` carries the approval id (`mimi-apr_<digest>`), so a
+  payment can be traced to the approval that made it and taken back out by
+  `scripts/seed_demo_zoho.py --reset`, which deletes only those and only
+  invoices the seed wrote. In demo mode, or
   without an active Zoho Books connection and `ZOHO_BOOKS_ORGANIZATION_ID`, the
   transport is `StoreZoho`: a deterministic fake that keeps its payments in
   `artifacts` and never calls Zoho. Mimi never moves money.

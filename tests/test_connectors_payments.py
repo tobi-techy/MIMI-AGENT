@@ -31,6 +31,13 @@ def test_create_body_splits_kobo_to_naira() -> None:
     assert body["invoices"] == [{"invoice_id": "zoho-d1", "amount_applied": 500000.0}]
 
 
+def test_an_approved_payment_reference_carries_the_approval_id() -> None:
+    """A real write is attributable: the approval id rides in the reference,
+    so the seed's --reset can find and prove the demo's own payments."""
+    body = pay.create_body(PAYLOAD, "zoho-books-abc123", "apr_0123456789abcdef0123")
+    assert body["reference_number"] == "mimi-apr_0123456789abcdef0123"
+
+
 def test_create_needs_approval_amount_customer_date() -> None:
     fake = _fake()
     with pytest.raises(ConnectorError, match="approval"):
