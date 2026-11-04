@@ -48,10 +48,18 @@ def preview_payment(payload: dict[str, Any]) -> str:
         text = "the amount"
     shop = payload.get("shop_name") or payload.get("customer_id") or "the shop"
     on_account = payload.get("on_account_kobo")
+    waiting = payload.get("waiting_for_roll_kobo")
     held = (_naira(int(on_account)) if isinstance(on_account, int) and on_account > 0 else "")
+    later = (_naira(int(waiting)) if isinstance(waiting, int) and waiting > 0 else "")
+    said = []
+    if later:
+        said.append(f"{later} of it goes on the delivery it was sent for once that "
+                    "delivery is billed")
     if held:
-        return (f"Record {shop}'s {text} transfer in Zoho Books. {held} of it stays on "
-                "the shop's account: it owed less than that.")
+        said.append(f"{held} of it stays on the shop's account: it owed less than that")
+    if said:
+        return (f"Record {shop}'s {text} transfer in Zoho Books. "
+                + ", and ".join(said) + ".")
     return f"Record {shop}'s {text} transfer in Zoho Books."
 
 

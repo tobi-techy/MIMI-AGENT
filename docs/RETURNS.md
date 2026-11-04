@@ -207,8 +207,9 @@ and the simulated week behave the same way:
 
 * the amount applied to each invoice is capped at that invoice's open balance.
   `_apply_to_invoices` returns what the invoices could absorb
-  (`{"first", "applied_kobo", "on_account_kobo", "applications"}`) and the card
-  is built from that, invoice by invoice, never from the payment amount;
+  (`{"first", "applied_kobo", "waiting_for_roll_kobo", "on_account_kobo",
+  "applications"}`) and the card is built from that, invoice by invoice, never
+  from the payment amount;
 * `payments.create_body` now accepts an invoice list that adds up to less than
   the payment (Zoho holds the difference as an unapplied amount on the customer
   payment) and refuses one that adds up to more;
@@ -218,15 +219,45 @@ and the simulated week behave the same way:
   is built from the payment id (`crn_` plus a hash, the same shape as a return
   credit, so the scrub catches it too). The row keeps the applications as well,
   so the payment row and the receivables add up:
-  `payments.amount_kobo == applied_kobo + on_account_kobo`;
+  `payments.amount_kobo == applied_kobo + waiting_for_roll_kobo +
+  on_account_kobo`;
 * `GET /v1/shops` and `GET /v1/shops/{shop_id}` carry `on_account_kobo` and
   `on_account_naira`, so the owner sees what the shop holds on its account, and
   the card's preview says in words how much of the payment stays there.
+
+**A payment for a delivery that has not been billed yet.** The screenshot book
+offers the day's live delivery, so a same-day payment names a delivery with no
+receivable row: there is no invoice for it to come off. The morning roll is what
+closes that delivery into one, and it credits every payment that names it
+(`GoSim.open_day` sums them into the new invoice's `paid_kobo`). So the part that
+delivery will take is neither applied to an older invoice nor held on the
+account, or one payment would be counted twice: `on_account.roll_will_take_kobo`
+returns it (the delivery's total less the payments already on it, capped at the
+payment) and the card carries it as `waiting_for_roll_kobo`. What the delivery
+cannot take is dealt with as usual, off the older invoices first and then on the
+account. The card names the first invoice that actually took money, or names
+none when none did, so neither the Zoho write nor the owner's message ever names
+an invoice that got nothing.
 
 Allocating that credit onto a later invoice is not built. It wants its own
 approval and its own undo, and this change only has to make the money visible
 and the two tables agree. Until it exists, an over-payment sits on the shop's
 account and an invoice it could have paid stays open.
+
+`tests/test_payment_on_account.py` covers the payment bigger than the balance:
+a payment bigger than every invoice (capped invoice by invoice, the excess
+recorded, the payment row keeping what the bank sent, the shop read showing what
+is held), a payment bigger than one invoice spreading over the next, Go's own
+writer recording its excess the same way, a payment that fits recording nothing,
+a payment for a delivery that has not been billed yet (nothing applied, nothing
+on the account, and the roll crediting it once when it closes the delivery),
+a payment bigger than that delivery (the delivery's part waits, the older
+invoices take theirs, only the rest is on the account), the card naming the first
+invoice that took money and nothing when none did, and the preview wording.
+Measured, not asserted: with `roll_will_take_kobo` forced to zero the two
+delivery-not-billed tests fail, one of them on the older invoices taking money
+that the roll then credits again:
+`META_API_KEY= python -m pytest tests/test_payment_on_account.py -q`.
 
 ## Not built (stated plainly)
 

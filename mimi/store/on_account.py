@@ -21,6 +21,13 @@ credit and the simulated week behave the same:
   is built from the payment id. ``for_shop_kobo`` is what the shop holds on
   account (every credit note on it that has not been undone, returns included).
 
+The exception is a payment sent for a delivery that has not been billed yet.
+That delivery has no receivable to come off, and the day roll is what closes it
+and credits every payment that names it, so the part that delivery will take is
+neither applied to an older invoice nor held on the account:
+``roll_will_take_kobo`` says how much that is, and it is what keeps one payment
+from being counted twice.
+
 Allocating that credit onto a later invoice is deliberately not built: it wants
 its own approval and its own undo, and tonight it only has to be visible and to
 add up.
@@ -54,15 +61,51 @@ def amount_kobo(amount: int, applied_kobo: int) -> int:
     return max(0, int(amount) - max(0, int(applied_kobo)))
 
 
+def roll_will_take_kobo(conn: sa.Connection, *, tenant: str, delivery_id: str,
+                        payment_id: str = "", amount: int = 0) -> int:
+    """How much of a payment the day roll will put against its own delivery.
+
+    A delivery that has not closed into an invoice yet (``deliveries.live``) has
+    no receivable for a payment to come off, but the roll is what closes it:
+    ``GoSim.open_day`` sums every payment that names the delivery into the new
+    invoice's ``paid_kobo``. So the part of a payment that delivery can still
+    take is already spoken for and must not be applied to another invoice or
+    held on the account, which would count the same money twice. The rest of the
+    payment (beyond what the delivery will owe) is dealt with as usual.
+
+    ``payment_id`` is this payment's own row, so it is not counted as one of the
+    payments already on the delivery; pass an empty string for a caller that has
+    not written its payment row yet. Returns zero for a delivery that is not
+    live, which is every payment whose delivery has already been billed."""
+    if not delivery_id:
+        return 0
+    total = conn.execute(sa.select(s.deliveries.c.total_kobo).where(
+        s.deliveries.c.tenant_id == tenant,
+        s.deliveries.c.delivery_id == delivery_id,
+        s.deliveries.c.live.is_(True))).first()
+    if total is None:
+        return 0
+    others = int(conn.execute(sa.select(sa.func.coalesce(
+        sa.func.sum(s.payments.c.amount_kobo), 0)).where(
+        s.payments.c.tenant_id == tenant,
+        s.payments.c.delivery_id == delivery_id,
+        s.payments.c.payment_id != payment_id,
+        s.payments.c.fake_alert.is_(False))).scalar() or 0)
+    return max(0, min(int(amount), int(total.total_kobo) - others))
+
+
 def record(conn: sa.Connection, *, tenant: str, shop_id: str, payment_id: str,
            amount: int, applied_kobo: int, applications: Sequence[Mapping[str, Any]],
-           approval_id: str = "", now: float | None = None) -> str:
+           waiting_kobo: int = 0, approval_id: str = "", now: float | None = None) -> str:
     """Record a payment's on-account part, and nothing when there is none.
 
-    Returns the credit note id, or an empty string when the payment came off
-    the invoices in full. Idempotent on the payment: the id is derived from it,
-    so a repeated call writes the one row."""
-    on_account = amount_kobo(amount, applied_kobo)
+    Returns the credit note id, or an empty string when the payment came off the
+    invoices in full. Idempotent on the payment: the id is derived from it, so a
+    repeated call writes the one row. ``waiting_kobo`` is the part the day roll
+    will take for the payment's own delivery (``roll_will_take_kobo``); it is
+    not applied to an invoice yet, so it is not on the account either, and the
+    row records what did come off the invoices."""
+    on_account = amount_kobo(amount, int(applied_kobo) + int(waiting_kobo))
     if on_account <= 0:
         return ""
     credit_id = credit_id_for(tenant, payment_id)

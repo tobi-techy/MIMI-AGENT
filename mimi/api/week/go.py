@@ -175,8 +175,14 @@ class GoSim:
         # Paid more than it owed: the excess is the shop's money on its account,
         # not a silently dropped remainder. The payments row keeps what the bank
         # sent, so the two tables add up: sent = after the invoices + on account.
+        # A payment whose delivery has not been billed yet is the exception: the
+        # day roll closes that delivery and credits the payment to it, so the
+        # part it will take is neither applied here nor held on the account.
+        waiting = on_account.roll_will_take_kobo(
+            conn, tenant=self.tenant, delivery_id=did, payment_id=pid, amount=amount)
         on_account.record(conn, tenant=self.tenant, shop_id=shop_id, payment_id=pid,
-                          amount=amount, applied_kobo=paid, applications=applications)
+                          amount=amount, applied_kobo=paid, applications=applications,
+                          waiting_kobo=waiting)
         self.ledger.payments.append(pid)
         return pid
 
