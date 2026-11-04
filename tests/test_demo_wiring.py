@@ -302,12 +302,25 @@ class LiveLikeZoho(FakeComposio):
 
     def execute(self, action: str, **kw: Any) -> dict[str, Any]:
         self.calls.append({"action": action, **kw})
+        arguments = dict(kw.get("arguments") or {})
+        if action in ("zoho_books_contacts", "zoho_books_invoices") and not (
+                arguments.get("organization_id")):
+            # Real Zoho Books refuses a books read with no organization id,
+            # and Composio answers that refusal with this payload, not an
+            # exception. Returning it here is what lets a missing org fail
+            # offline instead of reading as an empty book.
+            return {"code": None, "message": (
+                "Invalid request data provided - Following fields are missing: "
+                "{'organization_id'}")}
         if action == "zoho_books_organizations":
-            return {"organizations": [dict(r) for r in self.org_rows]}
+            return {"code": 0, "message": "success",
+                    "organizations": [dict(r) for r in self.org_rows]}
         if action == "zoho_books_contacts":
-            return {"contacts": [dict(r) for r in self.contact_rows]}
+            return {"code": 0, "message": "success",
+                    "contacts": [dict(r) for r in self.contact_rows]}
         if action == "zoho_books_invoices":
-            return {"invoices": [dict(r) for r in self.invoice_rows]}
+            return {"code": 0, "message": "success",
+                    "invoices": [dict(r) for r in self.invoice_rows]}
         raise ConnectorError(f"No fixture for {action}.")
 
     def proxy(self, name: str, **kw: Any) -> dict[str, Any]:
@@ -758,6 +771,47 @@ def test_agreement_matches_a_real_shaped_zoho_by_name(
     assert body["total"]["zoho_outstanding_kobo"] == 2_000_000
     assert body["total"]["difference_kobo"] == (
         body["total"]["mimi_outstanding_kobo"] - 2_000_000)
+
+
+def test_agreement_sends_the_organization_id_on_every_zoho_books_read(
+        env: dict[str, Any], monkeypatch: pytest.MonkeyPatch) -> None:
+    """Real Zoho Books refuses a books read with no organization id, so the
+    screen passes it on every read it makes."""
+    _live_env(monkeypatch)
+    _seed_live_connection(env["engine"])
+    live = LiveLikeZoho(contacts=[
+        {"contact_id": "5139000000001", "contact_name": "Mama Sola Provisions"}],
+        invoices=[{"invoice_id": "zh-1", "customer_id": "5139000000001",
+                   "balance": 12050.0}])
+    _live_transport(monkeypatch, live)
+    body = env["c"].get("/v1/books/agreement", headers=h()).json()
+    assert body["shops"], "the screen still returns its rows"
+    reads = [c for c in live.calls
+             if c["action"] in ("zoho_books_contacts", "zoho_books_invoices")]
+    assert {c["action"] for c in reads} == {"zoho_books_contacts", "zoho_books_invoices"}
+    assert all(c["arguments"].get("organization_id") == "org-live-1" for c in reads)
+
+
+def test_agreement_that_forgets_the_organization_reads_as_could_not_read(
+        env: dict[str, Any], monkeypatch: pytest.MonkeyPatch) -> None:
+    """The bug behind three wrong zeroes: a read Zoho refused came back as an
+    empty list. It must read as "could not be read", with no figure at all,
+    never as a shop that owes nothing."""
+
+    class NoOrgZoho(LiveLikeZoho):
+        def execute(self, action: str, **kw: Any) -> dict[str, Any]:
+            return super().execute(action, **{**kw, "arguments": {}})
+
+    _live_env(monkeypatch)
+    _seed_live_connection(env["engine"])
+    live = NoOrgZoho(contacts=[
+        {"contact_id": "5139000000001", "contact_name": "Mama Sola Provisions"}])
+    _live_transport(monkeypatch, live)
+    body = env["c"].get("/v1/books/agreement", headers=h()).json()
+    assert body["zoho_connected"] is False
+    assert "could not be read" in body["note"] and "organization_id" in body["note"]
+    assert body["total"]["zoho_outstanding_kobo"] is None
+    assert all(x["zoho_outstanding_kobo"] is None for x in body["shops"])
 
 
 def test_agreement_two_customers_with_one_name_match_nobody(

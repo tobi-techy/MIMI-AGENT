@@ -848,14 +848,14 @@ def books_agreement(engine: Engine, tenant: str,
         return _agreement(False, shops, names, {}, "Zoho Books is not connected, "
                          "so the comparison cannot be made.")
     try:
-        account, _org = _zoho_account_org(engine, tenant, transport)
+        account, org = _zoho_account_org(engine, tenant, transport)
     except ConnectorError as exc:
         # The named org is not on this token's list, or the list itself
         # refused: could-not-read, never a false agreement on nothing.
         return _agreement(False, shops, names, {},
                           f"Zoho Books could not be read ({exc}); no comparison was made.")
     try:
-        customers = _zoho_customers(tenant, account, transport)
+        customers = _zoho_customers(tenant, account, org, transport)
     except ConnectorError as exc:
         return _agreement(False, shops, names, {},
                           f"Zoho Books could not be read ({exc}); no comparison was made.")
@@ -921,7 +921,7 @@ def _zoho_account_org(engine: Engine, tenant: str,
     return account, org
 
 
-def _zoho_customers(tenant: str, account: str,
+def _zoho_customers(tenant: str, account: str, org: str,
                     transport: Any | None = None) -> list[ZohoCustomer]:
     """Every Zoho Books customer the connection returns, and what it owes.
 
@@ -937,16 +937,18 @@ def _zoho_customers(tenant: str, account: str,
     invoice and a negative balance is a credit Zoho holds for the customer,
     not money the customer owes.
 
-    The organization is not passed here because the transport addresses the
-    connected account, as it did before this read; ``_zoho_account_org``
-    has already proved the named org is reachable on that account."""
+    The organization id rides on every read: real Zoho Books refuses a
+    books read without it, and Composio answers that refusal with an error
+    payload rather than an exception, so an unaddressed read used to come
+    back as an empty book and a confident zero. ``_zoho_account_org`` has
+    already proved the named org is reachable on this account."""
     from mimi.connectors.zoho.books import ZohoBooksConnector
 
     books = ZohoBooksConnector(transport or ComposioTransport(),
                                tenant_id=_zoho_user(tenant, account),
                                connection_id=account)
-    contacts = books.read("zoho_books_contacts").rows
-    invoices = books.read("zoho_books_invoices").rows
+    contacts = books.read("zoho_books_contacts", {"organization_id": org}).rows
+    invoices = books.read("zoho_books_invoices", {"organization_id": org}).rows
 
     balances: dict[str, int] = {}
     billed: set[str] = set()

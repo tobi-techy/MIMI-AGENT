@@ -2,6 +2,8 @@
  {
   "match": {},
   "reply": {
+   "code": 0,
+   "message": "success",
    "items": [
     {
      "item_id": "NDL-70-CTN",
@@ -67,6 +69,8 @@
    "organization_id": "org-coral-lane"
   },
   "reply": {
+   "code": 0,
+   "message": "success",
    "items": [
     {
      "item_id": "NDL-70-CTN",

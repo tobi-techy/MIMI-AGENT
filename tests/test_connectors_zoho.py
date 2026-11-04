@@ -64,6 +64,64 @@ def test_books_unknown_read_is_refused() -> None:
         books.read("zoho_books_delete_everything")
 
 
+class _Reply(FakeComposio):
+    """A transport that answers one canned payload, for the failure shapes."""
+
+    def __init__(self, reply: dict) -> None:
+        super().__init__(ConnectorSettings.from_env({}))
+        self.reply, self.calls = reply, []
+
+    def execute(self, action: str, **kw) -> dict:  # type: ignore[override]
+        self.calls.append({"action": action, **kw})
+        return dict(self.reply)
+
+
+def test_a_reply_with_no_result_code_raises_instead_of_reading_zero() -> None:
+    """The exact payload a books read with no organization id comes back as.
+
+    It used to map to zero rows, so a malformed call read as an empty book
+    and the owner saw a confident zero. It must raise, naming what Zoho
+    said and what to do next."""
+    reply = {"code": None, "message": (
+        "Invalid request data provided - Following fields are missing: "
+        "{'organization_id'}")}
+    books = ZohoBooksConnector(_Reply(reply), tenant_id=TENANT, connection_id=CONN)
+    with pytest.raises(ConnectorError) as caught:
+        books.read("zoho_books_invoices")
+    said = str(caught.value)
+    assert "organization_id" in said, "the sentence names what Zoho said"
+    assert "no result code" in said or "without a result code" in said
+    assert "organization_id" in caught.value.next_step
+
+
+def test_a_refused_reply_raises_instead_of_reading_zero() -> None:
+    books = ZohoBooksConnector(
+        _Reply({"code": 57, "message": "You are not authorized to perform this operation"}),
+        tenant_id=TENANT, connection_id=CONN)
+    with pytest.raises(ConnectorError) as caught:
+        books.read("zoho_books_invoices")
+    assert "code 57" in str(caught.value)
+    assert "not authorized" in str(caught.value)
+    assert "Reconnect" in caught.value.next_step
+
+
+def test_an_empty_answer_with_no_code_is_not_an_empty_book() -> None:
+    books = ZohoBooksConnector(_Reply({}), tenant_id=TENANT, connection_id=CONN)
+    with pytest.raises(ConnectorError, match="nothing readable"):
+        books.read("zoho_books_contacts")
+
+
+def test_a_successful_reply_still_maps_its_rows() -> None:
+    reply = {"code": 0, "message": "success", "invoices": [
+        {"invoice_id": "zi-1", "invoice_number": "MZ-shop-001",
+         "customer_id": "zc-1", "customer_name": "Mama Sola Provisions",
+         "total": 1000.0, "balance": 250.0, "status": "sent"}]}
+    books = ZohoBooksConnector(_Reply(reply), tenant_id=TENANT, connection_id=CONN)
+    out = books.read("zoho_books_invoices")
+    assert out.rows_read == 1
+    assert out.rows[0].values["outstanding_kobo"] == 25_000
+
+
 def test_invoice_comment_needs_approval_then_undoes() -> None:
     books, fake = _books()
     prop = books.propose_write("zoho_books_invoice_comment",

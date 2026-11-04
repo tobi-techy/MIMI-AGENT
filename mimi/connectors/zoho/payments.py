@@ -40,6 +40,7 @@ from urllib.parse import quote
 from mimi.connectors.base import ConnectorError
 from mimi.connectors.composio import ComposioTransport, FakeComposio
 from mimi.connectors.types import WriteRecord
+from mimi.connectors.zoho.replies import check_reply
 from mimi.store.util import now_iso
 
 # Zoho data-centre API hosts, keyed by the MIMI_ZOHO_REGION code: the
@@ -213,6 +214,9 @@ def find_by_reference(*, transport: ComposioTransport | FakeComposio,
     reply = _proxy(transport, "customer_payment_search", method="GET",
                    endpoint=endpoint, connected_account_id=connection_id,
                    body={"reference_number": reference})
+    # A search that failed must never read as "no payment exists": that is
+    # the one answer this module acts on by creating a second payment.
+    check_reply("customer_payment_search", reply)
     payments = [p for p in (reply.get("customer_payments") or [])
                 if isinstance(p, dict) and p.get("reference_number") == reference]
     return dict(payments[0]) if payments else None
