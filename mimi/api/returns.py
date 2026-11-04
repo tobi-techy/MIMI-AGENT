@@ -29,6 +29,7 @@ from mimi.api.agent import Conflict, NotFound
 from mimi.clock import wall
 from mimi.returns import ledger
 from mimi.stock.items import display_name, unit_word
+from mimi.store import invoices as invoice_reads
 from mimi.store import schema as s
 from mimi.store.book import approval_id_for
 from mimi.store.util import dumps, insert_ignore, loads, now_iso
@@ -585,12 +586,11 @@ def settle(engine: Engine, tenant: str, return_id: str, *,
             raise Conflict(f"the credit cannot be more than {owed.naira(value)}")
         rows = _line_rows(conn, tenant, return_id)
         shop_name = _shop_name(conn, tenant, str(r.shop_id))
+        # The plan the owner is shown, read without a lock: it is a preview.
+        # Applying the credit plans again, from the book, under the lock.
         receivables = [{"delivery_id": x.delivery_id, "outstanding_kobo": int(x.outstanding_kobo),
-                        "position": int(x.position)} for x in conn.execute(
-            sa.select(s.receivables).where(
-                s.receivables.c.tenant_id == tenant,
-                s.receivables.c.shop_id == r.shop_id,
-                s.receivables.c.outstanding_kobo > 0))]
+                        "position": int(x.position)} for x in invoice_reads.open_invoices(
+            conn, tenant, str(r.shop_id), lock=False)]
         applications, applied, on_account = ledger.credit_plan(amount, receivables)
         # A card that is already waiting for the owner: hand it back untouched
         # when it asks for the same money, and replace it when the owner
@@ -693,77 +693,89 @@ def apply_credit(engine: Engine, tenant: str, approval: Mapping[str, Any]) -> No
     invoices (oldest first) and hold the rest on its account. Recorded in
     ``credit_notes``; the return becomes ``settled``. Nothing is applied
     twice."""
+    with engine.begin() as conn:
+        _apply_credit_in(conn, tenant, approval)
+
+
+def _apply_credit_in(conn: sa.Connection, tenant: str,
+                     approval: Mapping[str, Any]) -> None:
+    """``apply_credit`` inside the caller's transaction.
+
+    Its own entry point so the invoices are read and written in one
+    transaction the caller owns: the API runs it in one of its own, and the
+    tests hold that transaction open to prove a second writer waits (the lock
+    is held until the transaction ends)."""
     from mimi.api.demo_wiring import _say
 
     now = wall()
-    with engine.begin() as conn:
-        a = conn.execute(sa.select(s.approvals).where(
-            s.approvals.c.tenant_id == tenant,
-            s.approvals.c.approval_id == approval["approval_id"])).first()
-        if a is None:
-            raise NotFound(str(approval["approval_id"]))
-        payload = loads(a.payload, {})
-        res = dict(payload.get("result") or {})
-        if res.get("credit_id"):
-            return
-        return_id = str(payload["return_id"])
-        r = _load(conn, tenant, return_id)
-        amount = int(payload["amount_kobo"])
-        receivables = [{"delivery_id": x.delivery_id, "outstanding_kobo": int(x.outstanding_kobo),
-                        "position": int(x.position), "status": x.status,
-                        "paid_kobo": int(x.paid_kobo)} for x in conn.execute(
-            sa.select(s.receivables).where(
-                s.receivables.c.tenant_id == tenant,
-                s.receivables.c.shop_id == r.shop_id,
-                s.receivables.c.outstanding_kobo > 0))]
-        applications, applied, on_account = ledger.credit_plan(amount, receivables)
-        by_id = {x["delivery_id"]: x for x in receivables}
-        for app in applications:
-            src = by_id.get(str(app["delivery_id"]))
-            if src is None:
-                continue
-            out = int(src["outstanding_kobo"]) - int(app["amount_kobo"])
-            conn.execute(s.receivables.update().where(
-                s.receivables.c.tenant_id == tenant,
-                s.receivables.c.delivery_id == app["delivery_id"]).values(
-                paid_kobo=int(src["paid_kobo"]) + int(app["amount_kobo"]),
-                outstanding_kobo=max(0, out),
-                status="settled" if out <= 0 else src["status"]))
-            app["was_status"] = str(src["status"])
-            app["was_paid_kobo"] = int(src["paid_kobo"])
-            app["was_outstanding_kobo"] = int(src["outstanding_kobo"])
-            # The invoice's figures before this credit came off it, and after:
-            # the audit trail of the application. The undo does not restore
-            # these (it subtracts what the credit put on, see
-            # ``_reverse_applications``), so they are what a person reads to
-            # see what the credit did.
-            app["after_paid_kobo"] = int(src["paid_kobo"]) + int(app["amount_kobo"])
-            app["after_outstanding_kobo"] = max(0, out)
-            app["after_status"] = "settled" if out <= 0 else str(src["status"])
-        credit_id = ledger.credit_id_for(tenant, return_id, _attempt(conn, tenant, return_id))
-        insert_ignore(conn, s.credit_notes, {
-            "tenant_id": tenant, "credit_id": credit_id, "return_id": return_id,
-            "shop_id": r.shop_id, "approval_id": approval["approval_id"],
-            "amount_kobo": amount, "applied_kobo": applied, "on_account_kobo": on_account,
-            "applications": dumps(applications), "applied_at": now_iso(now)})
-        _move(conn, tenant, r, ledger.SETTLED, by="owner",
-              note=(f"Credit {owed.naira(amount)} recorded: {owed.naira(applied)} off the "
-                    "invoices" + (f", {owed.naira(on_account)} on the shop's account."
-                                  if on_account else ".")), now=now)
-        payload["result"] = {"credit_id": credit_id, "applied_kobo": applied,
-                             "on_account_kobo": on_account, "undo_available": True,
-                             "applied_at": now_iso(now)}
-        conn.execute(s.approvals.update().where(
-            s.approvals.c.tenant_id == tenant,
-            s.approvals.c.approval_id == approval["approval_id"]
-        ).values(payload=dumps(payload)))
-        _say(conn, tenant, _owner_thread(conn, tenant),
-             key=f"return-credit:{approval['approval_id']}:done", channel="owner_console",
-             shop_id="", kind="return_credit_recorded", now=now,
-             text=(f"Recorded the {owed.naira(amount)} credit for {payload['shop_name']}'s "
-                   f"return. {owed.naira(applied)} came off the invoices"
-                   + (f", {owed.naira(on_account)} sits on the shop's account" if on_account
-                      else "") + ". You can undo it."))
+    a = conn.execute(sa.select(s.approvals).where(
+        s.approvals.c.tenant_id == tenant,
+        s.approvals.c.approval_id == approval["approval_id"])).first()
+    if a is None:
+        raise NotFound(str(approval["approval_id"]))
+    payload = loads(a.payload, {})
+    res = dict(payload.get("result") or {})
+    if res.get("credit_id"):
+        return
+    return_id = str(payload["return_id"])
+    r = _load(conn, tenant, return_id)
+    amount = int(payload["amount_kobo"])
+    # Read the invoices, holding them, in the one order every writer takes
+    # them in (``mimi.store.invoices``). The plan below is built from this
+    # read and written from it, so without the lock a bank payment landing
+    # between the two would be overwritten with figures read before it.
+    receivables = [{"delivery_id": x.delivery_id, "outstanding_kobo": int(x.outstanding_kobo),
+                    "position": int(x.position), "status": x.status,
+                    "paid_kobo": int(x.paid_kobo)} for x in invoice_reads.open_invoices(
+        conn, tenant, str(r.shop_id), lock=True)]
+    applications, applied, on_account = ledger.credit_plan(amount, receivables)
+    by_id = {x["delivery_id"]: x for x in receivables}
+    for app in applications:
+        src = by_id.get(str(app["delivery_id"]))
+        if src is None:
+            continue
+        out = int(src["outstanding_kobo"]) - int(app["amount_kobo"])
+        conn.execute(s.receivables.update().where(
+            s.receivables.c.tenant_id == tenant,
+            s.receivables.c.delivery_id == app["delivery_id"]).values(
+            paid_kobo=int(src["paid_kobo"]) + int(app["amount_kobo"]),
+            outstanding_kobo=max(0, out),
+            status="settled" if out <= 0 else src["status"]))
+        app["was_status"] = str(src["status"])
+        app["was_paid_kobo"] = int(src["paid_kobo"])
+        app["was_outstanding_kobo"] = int(src["outstanding_kobo"])
+        # The invoice's figures before this credit came off it, and after:
+        # the audit trail of the application. The undo does not restore
+        # these (it subtracts what the credit put on, see
+        # ``_reverse_applications``), so they are what a person reads to
+        # see what the credit did.
+        app["after_paid_kobo"] = int(src["paid_kobo"]) + int(app["amount_kobo"])
+        app["after_outstanding_kobo"] = max(0, out)
+        app["after_status"] = "settled" if out <= 0 else str(src["status"])
+    credit_id = ledger.credit_id_for(tenant, return_id, _attempt(conn, tenant, return_id))
+    insert_ignore(conn, s.credit_notes, {
+        "tenant_id": tenant, "credit_id": credit_id, "return_id": return_id,
+        "shop_id": r.shop_id, "approval_id": approval["approval_id"],
+        "amount_kobo": amount, "applied_kobo": applied, "on_account_kobo": on_account,
+        "applications": dumps(applications), "applied_at": now_iso(now)})
+    _move(conn, tenant, r, ledger.SETTLED, by="owner",
+          note=(f"Credit {owed.naira(amount)} recorded: {owed.naira(applied)} off the "
+                "invoices" + (f", {owed.naira(on_account)} on the shop's account."
+                              if on_account else ".")), now=now)
+    payload["result"] = {"credit_id": credit_id, "applied_kobo": applied,
+                         "on_account_kobo": on_account, "undo_available": True,
+                         "applied_at": now_iso(now)}
+    conn.execute(s.approvals.update().where(
+        s.approvals.c.tenant_id == tenant,
+        s.approvals.c.approval_id == approval["approval_id"]
+    ).values(payload=dumps(payload)))
+    _say(conn, tenant, _owner_thread(conn, tenant),
+         key=f"return-credit:{approval['approval_id']}:done", channel="owner_console",
+         shop_id="", kind="return_credit_recorded", now=now,
+         text=(f"Recorded the {owed.naira(amount)} credit for {payload['shop_name']}'s "
+               f"return. {owed.naira(applied)} came off the invoices"
+               + (f", {owed.naira(on_account)} sits on the shop's account" if on_account
+                  else "") + ". You can undo it."))
 
 
 def _attempt(conn: sa.Connection, tenant: str, return_id: str) -> int:
@@ -787,14 +799,20 @@ def _reverse_applications(conn: sa.Connection, tenant: str, note: Any) -> None:
     ``status`` is derived from the balance the invoice is left with and its due
     day, the same rule Go's morning roll uses, so an invoice that went overdue
     while the credit was on it keeps that word instead of getting a stale one
-    back. Only the money is written from the arithmetic; nothing is guessed."""
+    back. Only the money is written from the arithmetic; nothing is guessed.
+
+    The invoices are read and held before any of them is written, in the same
+    order the apply took them (``mimi.store.invoices``), so an undo cannot
+    interleave with a credit or a bank payment on a second invoice, and two
+    undos cannot take the same two invoices in opposite orders."""
     live_day = conn.execute(sa.select(s.tenants.c.live_day).where(
         s.tenants.c.tenant_id == tenant)).scalar()
     live_day = int(live_day or 0)
-    for app in loads(note.applications, []):
-        row = conn.execute(sa.select(s.receivables).where(
-            s.receivables.c.tenant_id == tenant,
-            s.receivables.c.delivery_id == app["delivery_id"])).first()
+    applications = loads(note.applications, [])
+    rows = invoice_reads.invoices_by_id(
+        conn, tenant, [str(a.get("delivery_id") or "") for a in applications], lock=True)
+    for app in applications:
+        row = rows.get(str(app.get("delivery_id") or ""))
         if row is None:
             raise Conflict(
                 "an invoice this credit came off is not on the book any more, "

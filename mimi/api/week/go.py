@@ -23,6 +23,7 @@ from typing import Any
 import sqlalchemy as sa
 from sqlalchemy.engine import Engine
 
+from mimi.store import invoices as invoice_reads
 from mimi.store import schema as s
 from mimi.world.model import World
 
@@ -82,9 +83,20 @@ class GoSim:
                 conn.execute(s.deliveries.update().where(
                     s.deliveries.c.tenant_id == self.tenant,
                     s.deliveries.c.delivery_id == d.delivery_id).values(live=False))
-            conn.execute(s.receivables.update().where(
-                s.receivables.c.tenant_id == self.tenant, s.receivables.c.outstanding_kobo > 0,
-                s.receivables.c.due_day < day_no).values(status="overdue"))
+            # The mark-overdue below is one bulk UPDATE, which takes the rows it
+            # touches itself, in whatever order the planner picks. Read them
+            # first through the store's invoice reads, in the house order and
+            # holding them, and mark exactly the rows that read returned: each
+            # statement takes its own snapshot, so a row that starts matching
+            # between the read and the write would otherwise be taken unheld, in
+            # an order of the planner's choosing. The rows that read returned are
+            # the past-due rows still owing, and it holds them until this
+            # transaction ends, so that set cannot have changed underneath it.
+            overdue = invoice_reads.overdue_ids(conn, self.tenant, day_no, lock=True)
+            if overdue:
+                conn.execute(s.receivables.update().where(
+                    s.receivables.c.tenant_id == self.tenant,
+                    s.receivables.c.delivery_id.in_(overdue)).values(status="overdue"))
         return today
 
     # ------------------------------------------------------------- deliveries
@@ -130,11 +142,13 @@ class GoSim:
              ref: str) -> str:
         self._n += 1
         pid = f"wk-pay-{self.tenant}-{self._n:04d}"
-        # Pay the oldest open receivable first (Go's matching).
-        rec = conn.execute(sa.select(s.receivables).where(
-            s.receivables.c.tenant_id == self.tenant, s.receivables.c.shop_id == shop_id,
-            s.receivables.c.outstanding_kobo > 0).order_by(s.receivables.c.due_day,
-                                                           s.receivables.c.delivery_id)).first()
+        # Pay the oldest open receivable first (Go's matching). The rows are
+        # read holding them, in the one order every writer takes them in
+        # (``mimi.store.invoices``), so Go's own payment cannot be computed from
+        # figures a return credit commits over, and vice versa.
+        open_rows = invoice_reads.open_invoices(conn, self.tenant, shop_id, lock=True)
+        rec = min(open_rows, key=lambda r: (int(r.due_day), str(r.delivery_id)),
+                  default=None)
         did = rec.delivery_id if rec is not None else ""
         if not did:
             live = conn.execute(sa.select(s.deliveries.c.delivery_id).where(
