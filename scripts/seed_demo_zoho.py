@@ -217,6 +217,13 @@ class LiveZoho:
     def payments(self) -> list[dict[str, Any]]:
         return self._paged("ZOHO_BOOKS_LIST_CUSTOMER_PAYMENTS", "customer_payments")
 
+    def payment_detail(self, payment_id: str) -> dict[str, Any]:
+        """One payment with its applications, so the reset can prove which
+        invoices it touches before deleting it."""
+        reply = self._proxy("GET", f"/customerpayments/{payment_id}")
+        payment = reply.get("payment") or reply.get("customerpayment") or reply
+        return dict(payment) if isinstance(payment, dict) else {}
+
     def _paged(self, slug: str, key: str) -> list[dict[str, Any]]:
         rows: list[dict[str, Any]] = []
         page = 1
@@ -308,6 +315,10 @@ class FakeZoho:
 
     def payments(self) -> list[dict[str, Any]]:
         return [dict(p) for p in self._payments]
+
+    def payment_detail(self, payment_id: str) -> dict[str, Any]:
+        return next((dict(p) for p in self._payments
+                     if str(p.get("payment_id")) == payment_id), {})
 
     def _id(self, prefix: str) -> str:
         self._seq += 1
@@ -481,7 +492,10 @@ def plan_reset(snap: Any) -> ResetPlan:
         if not APPROVAL_REFERENCE.match(ref):
             refuse.append(f"{ref} (not an approval reference)")
             continue
-        attributed.append(p)
+        # The list reply need not carry the applications; the payment's own
+        # record does, and that is what has to be proved before a delete.
+        detail = snap.payment_detail(str(p.get("payment_id") or ""))
+        attributed.append({**p, **detail, "reference_number": ref})
     before: dict[str, float] = {}
     for p in attributed:
         for applied in p.get("invoices") or []:

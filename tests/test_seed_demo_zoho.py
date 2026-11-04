@@ -193,6 +193,24 @@ def test_reset_refuses_a_payment_it_cannot_attribute() -> None:
     assert writes(fake) == []
 
 
+def test_reset_reads_each_payment_s_own_record_for_its_applications() -> None:
+    """A list reply that carries no applications cannot prove anything: the
+    reset reads the payment's own record before it decides."""
+    class ListOnly(seed.FakeZoho):
+        def payments(self) -> list[dict[str, Any]]:
+            return [{k: v for k, v in p.items() if k != "invoices"}
+                    for p in self._payments]
+
+    invoice = {"invoice_id": "zi-1", "invoice_number": "INV-000003",
+               "customer_id": "zc-1", "balance": 100.0, "status": "sent"}
+    payment = {"payment_id": "zp-1", "reference_number": APPROVAL_REF,
+               "amount": 1.0, "invoices": [{"invoice_id": "zi-1"}]}
+    fake = ListOnly(invoices=[invoice], payments=[payment])
+    with pytest.raises(seed.SeedRefused, match="did not seed"):
+        seed.run_reset(fake, yes=True)
+    assert writes(fake) == []
+
+
 def test_reset_refuses_a_payment_touching_an_invoice_it_did_not_seed() -> None:
     invoice = {"invoice_id": "zi-old", "invoice_number": "INV-000003",
                "customer_id": "zc-1", "balance": 100.0, "status": "draft"}
