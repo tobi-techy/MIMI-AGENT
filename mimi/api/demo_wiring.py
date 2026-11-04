@@ -42,6 +42,7 @@ from mimi.connectors.base import ConnectorError
 from mimi.connectors.composio import FakeComposio
 from mimi.connectors.zoho import payments as zp
 from mimi.provenance import parse_witnesses, payment_stamp, proof_word
+from mimi.store import invoices as invoice_reads
 from mimi.store import schema as s
 from mimi.store.book import SqlGo, approval_id_for
 from mimi.store.util import dumps, insert_ignore, loads, now_iso
@@ -344,11 +345,15 @@ def bank_credit(conn: sa.Connection, tenant: str, shop_id: str, *, event_id: str
 def _apply_to_invoices(conn: sa.Connection, tenant: str, shop_id: str, amount: int,
                        first: str) -> str:
     """Take a verified payment off the shop's open invoices (the matched one
-    first, then oldest first). Returns the first invoice it paid."""
-    rows = list(conn.execute(sa.select(s.receivables).where(
-        s.receivables.c.tenant_id == tenant, s.receivables.c.shop_id == shop_id,
-        s.receivables.c.outstanding_kobo > 0)
-        .order_by(s.receivables.c.position, s.receivables.c.delivery_id)))
+    first, then oldest first). Returns the first invoice it paid.
+
+    The invoices are read holding them (``mimi.store.invoices``), in the one
+    order every writer takes them in: a return credit and the routine read the
+    same rows the same way, so this payment cannot be computed from figures a
+    credit commits over, and no two writers cycle on each other's locks. Sorting
+    the rows below for the allocation (matched invoice first) happens after the
+    lock is held, so it cannot change the order the locks were taken in."""
+    rows = list(invoice_reads.open_invoices(conn, tenant, shop_id, lock=True))
     rows.sort(key=lambda r: 0 if r.delivery_id == first else 1)
     left, paid_first = amount, ""
     for r in rows:
