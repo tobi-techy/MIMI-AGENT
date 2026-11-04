@@ -77,8 +77,23 @@ def test_a_long_digit_run_glued_to_text_is_masked() -> None:
     assert redact_text("acct1234567890") == "acct******7890"
     assert redact_text("ref:abc9876543210xyz") == "ref:abc******3210" + "xyz"
     assert redact_text("id 0123456789 and 1234567890") == "id ******6789 and ******7890"
+    # An all-hex identifier is still a run of digits, not a digest.
+    assert redact_text("key 1234567890abcdef") == "key ******7890abcdef"
     # Short runs are names and dates, not identifiers: left alone.
     assert redact_text("dlv-00-0055 on 2026-10-26") == "dlv-00-0055 on 2026-10-26"
+
+
+def test_a_digest_the_exporter_wrote_keeps_its_digits() -> None:
+    """A 64-character hex digest is a redaction output, not data of record: its
+    digits stay (``test_redaction_rules`` pins one without a long run; this is
+    the same promise for one that holds a run)."""
+    digest = "ab" * 26 + "123456789012"  # 64 hex characters, 12 digits in a row
+    assert len(digest) == 64
+    assert redact_text(f"[image sha256={digest} bytes=15]") == \
+        f"[image sha256={digest} bytes=15]"
+    assert redact({"sha256": digest, "bytes": 15}) == {"sha256": digest, "bytes": 15}
+    # Anything but a whole digest is masked as usual.
+    assert redact_text(f"sha {digest[:-1]}") == "sha " + "ab" * 26 + "*******8901"
 
 
 def test_redaction_never_raises() -> None:

@@ -460,3 +460,52 @@ def test_each_denial_park_queues_its_own_approval(store_url: str) -> None:
             s.approvals.c.turn_id == "d1",
             s.approvals.c.tool == "review_denied_job")).scalar()
     assert approvals == 2
+
+
+def test_one_breaker_row_per_trip(store_url: str) -> None:
+    """The loop's own trip event is the console's row: the park writes its row
+    under that event's id, so ``insert_ignore`` leaves exactly one line per
+    trip, and a park with no such event still records one."""
+    import sqlalchemy as sa
+
+    from mimi.harness.router import RouteDecision
+    from mimi.harness.types import Event, RunResult
+    from mimi.store import schema as s
+    from mimi.store.queue import Claim
+
+    engine = _denial_engine(store_url)
+    agent = _denial_agent(engine)
+    thread = f"{TENANT}:owner"
+    d = RouteDecision(status="routed", helper="collector", skill="collector/balance",
+                      confidence=1.0, layer="rule")
+    with engine.begin() as conn:
+        for i in range(2):
+            conn.execute(s.turns.insert().values(
+                turn_id=f"b{i}", tenant_id=TENANT, thread_id=thread, state="leased",
+                lease_owner="w", version=0,
+                created_at="2026-10-26T08:00:00+00:00", created_ts=float(i)))
+        # b0's trip already reached the thread's log, as the loop's own append
+        # does in production.
+        conn.execute(s.thread_events.insert().values(
+            tenant_id=TENANT, event_id="ev_trip_b0", thread_id=thread, run_id="run0",
+            turn_id="b0", seq=3, step=2, type="breaker_tripped", tool="", tier="",
+            short="breaker: in_a_row", cost_kobo=0, model="", duration_ms=0.0,
+            data="{}", at="2026-10-26T08:00:00+00:00", ts=0.0))
+    for i, event in enumerate((Event(event_id="ev_trip_b0", run_id="run0", thread_id=thread,
+                                     job_id="b0", seq=3, step=2, type="breaker_tripped", at=AT),
+                               None)):
+        state = LoopState(run_id=f"run{i}", job_id=f"b{i}", thread_id=thread,
+                          tenant_id=TENANT, helper="collector", wake_source="owner_message",
+                          started_at=AT, messages=[], denials_in_a_row=3)
+        state.events = [] if event is None else [event]
+        state.finished = RunResult(run_id=f"run{i}", job_id=f"b{i}", thread_id=thread,
+                                   helper="collector", wake_source="owner_message",
+                                   status="stopped_denied", reason="breaker")
+        agent._park_denied([Claim(turn_id=f"b{i}", tenant_id=TENANT, thread_id=thread,
+                                  worker_id="w", version=0, attempts=1, batch=(),
+                                  checkpoint={}, takeover=False)], {}, d, [], state)
+    with engine.connect() as conn:
+        rows = conn.execute(sa.select(s.thread_events.c.turn_id)
+                            .where(s.thread_events.c.type == "breaker_tripped")
+                            .order_by(s.thread_events.c.turn_id)).all()
+    assert [r.turn_id for r in rows] == ["b0", "b1"]

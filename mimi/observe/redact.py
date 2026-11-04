@@ -7,11 +7,13 @@ rules are the ones a real shop's data would need:
 * phone numbers: ``+234 803 123 4567`` -> ``+234******4567``; local
   ``0803 123 4567`` -> ``0*******4567`` (the last 4 digits stay);
 * account numbers and any other run of 10 or more digits: only the last 4
-  digits stay (``******6789``);
+  digits stay (``******6789``), wherever the run sits, except inside a digest
+  the exporter itself wrote (see below);
 * keys and tokens: ``Bearer ...``, ``sk-...``, ``pk-lf-...``/``sk-lf-...``,
   ``key=...`` / ``secret: ...`` / ``password=...`` -> ``[redacted]``;
 * images and audio: raw bytes and ``data:...;base64,...`` URLs never leave;
-  they become ``{"sha256": ..., "bytes": n}`` / ``[image sha256=...]``;
+  they become ``{"sha256": ..., "bytes": n}`` / ``[image sha256=...]``, and a
+  64-character hex digest is kept digit for digit;
 * fields named like ``account``, ``phone``, ``msisdn``, ``sender_phone``:
   digits masked to the last 4 whatever their shape;
 * integers of 10 or more digits (a phone or account number stored as a
@@ -41,6 +43,26 @@ _PHONE_LOCAL = re.compile(r"(?<![\w+])0[789](?:[\s-]?\d){9}(?!\w)")
 # whatever surrounds it: a run glued to a letter ("acct1234567890") is the same
 # identifier and must not leak (AGENTS.md: no long digit run in a trace).
 _LONG_DIGITS = re.compile(r"(?<!\d)\d{10,}(?!\d)")
+# A digest the exporter itself wrote (``blob``, ``_data_url``): a redaction
+# output, not data of record, so the run inside it is left alone and a trace's
+# hash still matches the record it came from. Exactly 64 hex characters, so no
+# identifier can pass as one ("1234567890" is one 10-digit run, not a digest).
+_HEX_DIGEST = re.compile(r"(?<![\w])[0-9a-f]{64}(?!\w)", re.I)
+
+
+def _long_digits(text: str) -> str:
+    """Mask every run of 10 or more digits, except inside a hex digest."""
+    spans = [m.span() for m in _HEX_DIGEST.finditer(text)]
+    if not spans:
+        return _LONG_DIGITS.sub(lambda m: mask_digits(m.group(0)), text)
+
+    def one(m: re.Match[str]) -> str:
+        s, e = m.span()
+        if any(a <= s and e <= b for a, b in spans):
+            return m.group(0)
+        return mask_digits(m.group(0))
+
+    return _LONG_DIGITS.sub(one, text)
 _DATA_URL = re.compile(r"data:(?P<mime>[\w/+.-]+);base64,(?P<b64>[A-Za-z0-9+/=]+)")
 _KEYS = (
     re.compile(r"(?i)\bbearer\s+[A-Za-z0-9._~+/=-]+"),
@@ -105,7 +127,7 @@ def redact_text(text: str) -> str:
         )
     out = _PHONE_INTL.sub(lambda m: mask_phone(m.group(0)), out)
     out = _PHONE_LOCAL.sub(lambda m: mask_phone(m.group(0)), out)
-    out = _LONG_DIGITS.sub(lambda m: mask_digits(m.group(0)), out)
+    out = _long_digits(out)
     return out
 
 

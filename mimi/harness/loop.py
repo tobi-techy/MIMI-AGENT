@@ -807,7 +807,7 @@ class Harness:
         G.record_trip("breaker_tripped", guard=kind, helper=state.helper,
                       run_id=state.run_id, in_a_row=state.denials_in_a_row,
                       window_denials=state.denial_window_denials)
-        self._emit(state, "breaker_tripped", short=f"breaker: {kind}"[:200],
+        self._emit(state, "breaker_tripped", short=f"breaker tripped: {kind}"[:200],
                    data={"kind": kind, "in_a_row": state.denials_in_a_row,
                          "window_denials": state.denial_window_denials,
                          "window_size": state.denial_window_size,

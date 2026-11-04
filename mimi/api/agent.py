@@ -1267,12 +1267,25 @@ class Agent:
             self.go.apply_intent(conn, tenant, record, turn_id=turn_id, thread_id="",
                                  helper="", skill="mimi/denials")
             insert_ignore(conn, s.thread_events, {
-                "tenant_id": tenant, "event_id": f"denied_{turn_id}_{claim.version}",
+                "tenant_id": tenant,
+                "event_id": self._trip_event_id(state, turn_id, claim.version),
                 "thread_id": thread, "run_id": r.run_id, "turn_id": turn_id, "seq": -1,
                 "step": r.spend.steps, "type": "breaker_tripped", "tool": "", "tier": "",
                 "short": f"breaker tripped: {kind}",
                 "cost_kobo": 0, "model": "", "duration_ms": 0.0,
                 "data": dumps(ck["denied"]), "at": now_iso(now), "ts": now})
+
+    @staticmethod
+    def _trip_event_id(state: LoopState, turn_id: str, version: int) -> str:
+        """One breaker row per trip: the loop's own ``breaker_tripped`` event is
+        the row the console reads (it reaches the thread's log under its own
+        id), so the park's row takes that id and ``insert_ignore`` keeps exactly
+        one line per trip. A park with no such event, or a trip whose log
+        append failed, falls back to the park's own id so the row is never
+        lost."""
+        trip = next((e for e in reversed(state.events)
+                     if str(e.type) == "breaker_tripped"), None)
+        return str(trip.event_id) if trip is not None else f"denied_{turn_id}_{version}"
 
     def resume_denied(self, conn: sa.Connection, turn_id: str) -> list[str]:
         """Re-queue one breaker-parked turn with a clear denial streak (RAI-324).
