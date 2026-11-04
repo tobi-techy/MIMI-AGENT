@@ -177,6 +177,26 @@ def _plain(res: Any) -> dict[str, Any]:
     return plain(res)
 
 
+def _list_from(reply: dict[str, Any], keys: Sequence[str], *,
+               what: str) -> list[dict[str, Any]]:
+    """The rows in a Zoho list reply, or a loud stop.
+
+    Zoho answers a different key per module: ``contacts`` and ``invoices``,
+    but ``customerpayments`` for a payments list. Reading one hardcoded key
+    meant a payments read that answered ``customerpayments`` looked like an
+    org holding no payments, and --reset reported success over a take's
+    payment. A reply with none of the keys is now a read that failed, never
+    an empty book."""
+    for key in keys:
+        val = reply.get(key)
+        if isinstance(val, list):
+            return [r for r in val if isinstance(r, dict)]
+    seen = ", ".join(sorted(str(k) for k in reply)) or "none"
+    raise SeedRefused(
+        f"Zoho answered {what} with no {keys[0]} list (keys were {seen}), so "
+        "nothing was read and nothing was written.")
+
+
 def _ok(what: str, reply: dict[str, Any]) -> dict[str, Any]:
     """Zoho's own rule: a successful call carries ``code: 0``.
 
@@ -224,7 +244,12 @@ class LiveZoho:
         return self._paged("ZOHO_BOOKS_LIST_INVOICES", "invoices")
 
     def payments(self) -> list[dict[str, Any]]:
-        return self._paged("ZOHO_BOOKS_LIST_CUSTOMER_PAYMENTS", "customer_payments")
+        # Zoho names this list ``customerpayments``, with no underscore. The
+        # reset read ``customer_payments`` and saw an empty list against an org
+        # that held the take's payment, which is the one answer --reset must
+        # never invent: it would leave the payment behind and report done.
+        return self._paged("ZOHO_BOOKS_LIST_CUSTOMER_PAYMENTS",
+                           "customerpayments", "customer_payments", "payments")
 
     def payment_detail(self, payment_id: str) -> dict[str, Any]:
         """One payment with its applications, so the reset can prove which
@@ -233,12 +258,12 @@ class LiveZoho:
         payment = reply.get("payment") or reply.get("customerpayment") or reply
         return dict(payment) if isinstance(payment, dict) else {}
 
-    def _paged(self, slug: str, key: str) -> list[dict[str, Any]]:
+    def _paged(self, slug: str, *keys: str) -> list[dict[str, Any]]:
         rows: list[dict[str, Any]] = []
         page = 1
         while True:
             reply = self._call(slug, {"page": page, "per_page": 200})
-            batch = [r for r in (reply.get(key) or []) if isinstance(r, dict)]
+            batch = _list_from(reply, keys, what=slug)
             rows.extend(batch)
             ctx = reply.get("page_context") or {}
             if not batch or not ctx.get("has_more_page"):
@@ -502,8 +527,10 @@ def plan_reset(snap: Any) -> ResetPlan:
     attributed: list[dict[str, Any]] = []
     refuse: list[str] = []
     ignored = 0
+    seen_refs: list[str] = []
     for p in snap.payments():
         ref = str(p.get("reference_number") or "")
+        seen_refs.append(ref or "(no reference)")
         if not ref.startswith(REFERENCE_PREFIX):
             ignored += 1
             continue
@@ -514,6 +541,18 @@ def plan_reset(snap: Any) -> ResetPlan:
         # record does, and that is what has to be proved before a delete.
         detail = snap.payment_detail(str(p.get("payment_id") or ""))
         attributed.append({**p, **detail, "reference_number": ref})
+    if not attributed and ignored:
+        # A reset that sees payments and attributes none of them is the state
+        # that ruins a take: it deletes nothing, reports done, and the next
+        # take opens with Mimi above Zoho by whatever it left behind.
+        shown = ", ".join(sorted(seen_refs)[:3])
+        more = f" and {len(seen_refs) - 3} more" if len(seen_refs) > 3 else ""
+        raise SeedRefused(
+            f"Zoho holds {ignored} payment{'s' if ignored != 1 else ''} and none "
+            "carries an approval reference, so nothing was deleted and this "
+            "script cannot prove which payment is Mimi's. References seen: "
+            f"{shown}{more}. Check the list is this org's, then delete the "
+            "take's payment by hand.")
     before: dict[str, float] = {}
     for p in attributed:
         for applied in p.get("invoices") or []:
