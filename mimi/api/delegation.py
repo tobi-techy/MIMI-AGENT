@@ -58,6 +58,12 @@ def receiver_thread(tenant_id: str, helper: str) -> str:
     return f"{tenant_id}:helper:{helper}"
 
 
+def thread_helper(tenant_id: str, thread_id: str) -> str:
+    """The helper whose own thread ``thread_id`` is, or ``""`` for any other."""
+    prefix = f"{tenant_id}:helper:"
+    return thread_id[len(prefix):] if thread_id.startswith(prefix) else ""
+
+
 def skill_for(helper: str) -> str:
     key = DELEGATE_SKILLS.get(helper, "")
     return key if key in BY_KEY else ""

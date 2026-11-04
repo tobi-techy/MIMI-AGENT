@@ -3642,6 +3642,14 @@
             "title": "Handoffs",
             "type": "array"
           },
+          "inbox": {
+            "description": "Handoffs a helper's own thread carries, newest first: received and sent (docs/HELPER-INBOX-CONTRACT.md).",
+            "items": {
+              "$ref": "#/components/schemas/InboxItem"
+            },
+            "title": "Inbox",
+            "type": "array"
+          },
           "messages": {
             "items": {
               "$ref": "#/components/schemas/Message"

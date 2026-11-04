@@ -275,9 +275,22 @@ def get_thread(engine: Engine, tenant: str, thread_id: str, *,
             "simulated": bool(r.simulated), "created_at": r.created_at,
             "finished_at": r.finished_at} for r in rows_t]
         handoffs = [h for h in (turn_handoff(r) for r in rows_t) if h]
+        # A helper's own thread carries the handoffs she received and the ones
+        # she sent, so her conversation is her inbox (docs/HELPER-INBOX-CONTRACT.md).
+        who = _thread_helper(tenant, thread_id)
+        cond = s.helper_tasks.c.thread_id == thread_id
+        if who:
+            cond = sa.or_(cond, s.helper_tasks.c.from_helper == who)
+        inbox = [_inbox_item(r) for r in conn.execute(
+            sa.select(s.helper_tasks).where(
+                s.helper_tasks.c.tenant_id == tenant, cond)
+            .order_by(s.helper_tasks.c.created_ts.desc()))]
+        shop_names = {str(k).lower(): v for k, v in names.shops.items()}
+        for it in inbox:
+            it["shop_name"] = shop_names.get(str(it["shop_id"]).lower(), "")
         summary = _thread_summary(conn, tenant, t)
     return {"thread": summary, "state": loads(t.state, {}), "messages": msgs,
-            "steps": steps, "turns": turns, "handoffs": handoffs}
+            "steps": steps, "turns": turns, "handoffs": handoffs, "inbox": inbox}
 
 
 # ------------------------------------------------------------------ tasks
@@ -373,6 +386,13 @@ def _intent_inbox_item(conn: sa.Connection, tenant: str, row: Any, sender: str,
         "result": "", "chain": [from_helper, to_helper] if to_helper else [from_helper],
         "parent_task_id": "", "thread_id": str(row.thread_id), "turn_id": str(row.turn_id),
         "created_at": str(row.created_at), "finished_at": ""}
+
+
+def _thread_helper(tenant: str, thread_id: str) -> str:
+    """The helper whose own thread this is, or ``""`` (delegation.thread_helper)."""
+    from mimi.api import delegation as dlg
+
+    return dlg.thread_helper(tenant, thread_id)
 
 
 def list_inbox(engine: Engine, tenant: str, *, helper: str = "", state: str = "",

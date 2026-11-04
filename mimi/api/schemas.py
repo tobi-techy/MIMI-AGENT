@@ -241,6 +241,9 @@ class ThreadDetail(_Out):
     turns: list[TurnSummary]
     handoffs: list[Handoff] = Field(default_factory=list, description="Each turn's handoff, "
                                     "oldest first (docs/HANDOFFS.md).")
+    inbox: list[InboxItem] = Field(default_factory=list, description="Handoffs a helper's own "
+                                   "thread carries, newest first: received and sent "
+                                   "(docs/HELPER-INBOX-CONTRACT.md).")
 
 
 class TaskOut(_Out):

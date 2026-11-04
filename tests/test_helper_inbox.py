@@ -55,6 +55,23 @@ def test_switch_defaults_off(monkeypatch: Any) -> None:
     assert dlg.enabled({"MIMI_HELPER_DELEGATION": "0"}) is False
 
 
+def test_reason_is_always_a_sentence_never_a_code(store_url: str) -> None:
+    """The contract promises `reason` is a sentence; this holds it to that."""
+    engine = _engine(store_url)
+    with engine.begin() as conn:
+        ib.record(conn, T, source_key="r1", from_helper="collector", to_helper="proof",
+                  skill="proof/fake-alert-check", shop_id="", thread_id="",
+                  ask="check the screenshot", chain=["collector", "proof"], now=wall())
+        assert dlg.note(conn, T, source_key="r2", from_helper="proof", to_helper="proof",
+                        shop_id="", ask="look again", turn_id="", now=wall()) is None
+    rows = _rows(engine)
+    assert len(rows) == 2
+    for row in rows:
+        assert row.reason not in ib.STATES, "a state word is a code, not a sentence"
+        assert " " in row.reason and row.reason[0].isupper()
+    engine.dispose()
+
+
 def test_outcome_is_never_empty_for_any_state() -> None:
     for state in ib.STATES:
         assert ib.outcome(state, "Proof").strip()
@@ -222,6 +239,31 @@ def test_wake_sends_a_helper_finished_event_on_the_receiver_thread(store_url: st
     assert inb.payload.shop_id == "shop-001"
     row = _one(engine, "k-wake")
     assert row.state == "working" and row.turn_id == "turn_child"
+    engine.dispose()
+
+
+def test_thread_helper_reads_the_receiver_shape() -> None:
+    assert dlg.thread_helper(T, dlg.receiver_thread(T, "proof")) == "proof"
+    assert dlg.thread_helper(T, f"{T}:owner") == ""
+    assert dlg.thread_helper("other", dlg.receiver_thread(T, "proof")) == ""
+
+
+def test_a_helpers_own_thread_carries_her_conversation_inbox(store_url: str) -> None:
+    engine = _engine(store_url)
+    recv = dlg.receiver_thread(T, "proof")
+    with engine.begin() as conn:
+        conn.execute(s.threads.insert().values(
+            tenant_id=T, thread_id=recv, kind="helper", shop_id="", state="{}",
+            summary="", claim_seq=0, last_at=wall_utc(), last_ts=wall(),
+            created_at=wall_utc()))
+        ib.record(conn, T, source_key="k-th", from_helper="collector", to_helper="proof",
+                  skill="proof/fake-alert-check", shop_id="", thread_id=recv,
+                  ask="Check the screenshot", chain=["collector", "proof"], now=wall())
+    out = reads.get_thread(engine, T, recv)
+    assert len(out["inbox"]) == 1
+    assert out["inbox"][0]["to_helper"] == "proof"
+    assert out["inbox"][0]["from_title"] == "Collector"
+    assert out["inbox"][0]["state"] == "queued"
     engine.dispose()
 
 
