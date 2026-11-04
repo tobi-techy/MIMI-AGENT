@@ -243,6 +243,7 @@ approval reads as 404. Keys are compared by SHA-256 in constant time; give
 | `PUT /v1/policy` | owner | Change rules: `{"rules": [{"action_type", "behaviour"}], "by"}`. 409 for a built-in stop, floor or unknown type (nothing changes); 403 for a demo session or demo mode. Logged with who; in force on the next turn |
 | `GET /v1/routines` | owner | The routine rail (4 Nov 2026, [ROUTINES.md](ROUTINES.md)): `{"routines": [{id, name, schedule, paused, paused_reason?, last_run_at, next_run_at, last_finding, last_finding_shop_id?}], "as_of"}`. `name`, `schedule` and `last_finding` are sentences written by code; `last_run_at` and `next_run_at` are ISO 8601 with an explicit zone (Africa/Lagos) and empty `last_run_at` when the routine has never run, with `last_finding` saying so. `paused_reason` is present only when paused. `last_finding_shop_id` is present only when the last finding is about exactly one shop; it is never guessed |
 | `POST /v1/routines/{id}/pause`, `POST /v1/routines/{id}/resume` | owner | `{id, name, paused}` plus an optional body `{reason?, by?}`. The switch is a row in the store, so it survives a restart and needs no deploy. `all` (or `*`) is the kill switch: one row stops every routine. Pausing a routine under the kill switch still answers `paused: true` |
+| `POST /v1/routines/{id}/run` | owner | Runs one routine now through the tick's own path (same finding, message and recording), for a demo or a check. Answers that routine's row exactly as `GET /v1/routines` reads it after the run. The same Lagos-day claim applies, so a second run today is 409 "It has already run today. It runs again tomorrow at 8:00 AM."; a paused routine is 409 with its reason. Neither sends anything. No model call |
 | `GET /v1/credit` | owner | Per-shop limit, outstanding, available, and credit requests from helpers' credit intents (Credit, RAI-271). Each limit row also has `over_limit`, `over_limit_by_kobo`, `over_limit_by_naira` (owes more than its limit, from code) |
 | `POST /v1/credit/{shop_id}/limit` | owner | The owner sets a shop's limit: `{amount_ngn, reason?}` (whole naira) answers `{shop_id, old_limit_ngn, new_limit_ngn, change_id}`. Recorded as a `limit_change` step on the shop's thread. 404 for another distributor's shop |
 | `POST /v1/credit/changes/{change_id}/undo` | owner | Puts the limit back: `{shop_id, old_limit_ngn, new_limit_ngn, change_id, undone: true}`; a second undo is 409 |
@@ -374,6 +375,11 @@ over the book: **no model call and no kobo spent**. See
   key is (tenant, routine, day). A restart or a second API process loses the
   insert and does nothing, so a routine can never fire twice on a day. A run
   that dies half way is not repeated that day either.
+* **The owner can run one now.** `POST /v1/routines/{id}/run` goes through the
+  tick's own path and answers the routine's row after the run. It takes the
+  same day's claim, so a second run today, or the scheduled tick after a
+  manual run, is refused with a sentence and sends nothing. A paused routine
+  is refused with its reason.
 * **A late start catches up.** A tick at 9:00 still sends the 8:00 brief,
   until 4 hours after the schedule (cut at Lagos midnight). A window that
   passed is recorded as missed, with words saying so, and never borrows the

@@ -121,6 +121,7 @@ from mimi.api.schemas import (
     ReturnSettingsOut,
     ReturnSettleIn,
     RoutineList,
+    RoutineOut,
     RoutinePauseIn,
     RoutineToggleOut,
     SellThroughOut,
@@ -833,6 +834,23 @@ def create_app(settings: Settings | None = None, agent: Agent | None = None, *,
         that has never run says so; it never borrows the current time. Times
         are for the console to word itself."""
         return rt.view(engine, key.tenant_id)
+
+    @app.post("/v1/routines/{routine_id}/run", response_model=RoutineOut,
+              responses=_ERRORS, response_model_exclude_none=True,
+              summary="Run one routine now, once for today's Lagos day")
+    def post_routine_run(routine_id: str, key: Owner) -> dict[str, Any]:
+        """Run one routine now, through the same path a tick uses: the same
+        finding sentence, the same shop link, the same message and recording.
+        The Lagos day's claim is the same too, so a second run today answers
+        409 with a sentence instead of sending twice; a paused routine answers
+        409 with its reason. Answers the routine's row as the rail reads it
+        after the run. No model call: the routines are code."""
+        try:
+            return rt.run_now(engine, key.tenant_id, routine_id)
+        except rt.UnknownRoutine:
+            raise HTTPException(404, "unknown routine") from None
+        except rt.RoutineRefused as exc:
+            raise HTTPException(409, str(exc)) from None
 
     @app.post("/v1/routines/{routine_id}/pause", response_model=RoutineToggleOut,
               responses=_ERRORS,

@@ -118,7 +118,7 @@ def test_the_morning_brief_runs_itself_at_eight_and_says_what_it_found(
     # link it; that link is a field, never a guess out of the sentence.
     row = {r["id"]: r for r in rt.view(
         engine, T, now=lagos_at(2026, 11, 4, 8, 1))["routines"]}["morning_brief"]
-    assert row["last_finding"] == "Mama Sola Provisions is 45 days overdue, ₦2,387,250 of it."
+    assert row["last_finding"] == "Mama Sola Provisions owes ₦3,497,300. Of that, ₦2,387,250 is overdue, and the oldest invoice is 45 days old."
     assert row["last_finding_shop_id"] == "shop-001"
 
 
@@ -334,6 +334,69 @@ def test_the_scheduler_thread_survives_a_tick_that_throws(
     assert not scheduler.running
 
 
+# --------------------------------------------------------- the owner's run
+
+
+def test_the_owner_can_run_a_routine_now_and_only_once(env: dict[str, object]) -> None:
+    """The demo button: the same path as a tick, the same day's claim."""
+    engine = env["engine"]
+    row = rt.run_now(engine, T, "morning_brief", now=lagos_at(2026, 11, 4, 3, 0))
+    assert row["last_run_at"] == "2026-11-04T03:00:00+01:00"
+    assert row["next_run_at"] == "2026-11-04T08:00:00+01:00"
+    assert row["last_finding"] == (
+        "Mama Sola Provisions owes ₦3,497,300. Of that, ₦2,387,250 is overdue, and the oldest invoice is 45 days old.")
+    assert row["last_finding_shop_id"] == "shop-001"
+    assert len(_messages(engine, "morning_brief")) == 1
+
+    with pytest.raises(rt.RoutineRefused) as refused:
+        rt.run_now(engine, T, "morning_brief", now=lagos_at(2026, 11, 4, 3, 1))
+    assert str(refused.value) == (
+        "It has already run today. It runs again tomorrow at 8:00 AM.")
+    assert len(_messages(engine, "morning_brief")) == 1
+
+    # The scheduled tick later that day sees the manual run's claim.
+    assert _actions(rt.run_due(engine, T, now=lagos_at(2026, 11, 4, 8, 0)))[
+        "morning_brief"] == "already_claimed"
+    assert len(_messages(engine, "morning_brief")) == 1
+
+
+def test_the_owner_run_refuses_a_paused_routine_with_its_reason(
+        env: dict[str, object]) -> None:
+    engine = env["engine"]
+    rt.set_paused(engine, T, "morning_brief", True, reason="Checking the early run",
+                  now=lagos_at(2026, 11, 4, 2, 0).timestamp())
+    with pytest.raises(rt.RoutineRefused) as refused:
+        rt.run_now(engine, T, "morning_brief", now=lagos_at(2026, 11, 4, 3, 0))
+    assert str(refused.value) == (
+        "It is paused, so it did not run. The reason: Checking the early run.")
+    assert _messages(engine, "morning_brief") == []
+    row = {r["id"]: r for r in rt.view(
+        engine, T, now=lagos_at(2026, 11, 4, 3, 1))["routines"]}["morning_brief"]
+    assert row["paused"] is True
+    assert row["paused_reason"] == "Checking the early run."
+    assert row["last_finding"] == "It did not run today: it is paused."
+    assert row["last_run_at"] == ""
+
+
+def test_the_owner_run_refuses_the_kill_switch_with_its_reason(
+        env: dict[str, object]) -> None:
+    engine = env["engine"]
+    rt.set_paused(engine, T, "all", True, reason="A bad deployment at 3am",
+                  now=lagos_at(2026, 11, 4, 2, 0).timestamp())
+    with pytest.raises(rt.RoutineRefused) as refused:
+        rt.run_now(engine, T, "aging_scan", now=lagos_at(2026, 11, 4, 3, 0))
+    assert str(refused.value) == (
+        "It is paused, so it did not run. The reason: A bad deployment at 3am.")
+
+
+def test_the_owner_run_does_not_accept_all_or_an_unknown_id(
+        env: dict[str, object]) -> None:
+    engine = env["engine"]
+    for bad in ("all", "*", "pay_everyone"):
+        with pytest.raises(rt.UnknownRoutine):
+            rt.run_now(engine, T, bad, now=lagos_at(2026, 11, 4, 3, 0))
+
+
 # --------------------------------------------------------------- the switch
 
 
@@ -441,7 +504,7 @@ def test_the_routine_reads_one_line_and_never_borrows_the_clock(
     assert after["morning_brief"]["last_run_at"] == "2026-11-04T08:00:00+01:00"
     assert after["morning_brief"]["next_run_at"] == "2026-11-05T08:00:00+01:00"
     assert after["morning_brief"]["last_finding"] == (
-        "Mama Sola Provisions is 45 days overdue, ₦2,387,250 of it.")
+        "Mama Sola Provisions owes ₦3,497,300. Of that, ₦2,387,250 is overdue, and the oldest invoice is 45 days old.")
     assert after["morning_brief"]["last_finding_shop_id"] == "shop-001"
     assert after["aging_scan"]["last_run_at"] == ""
     assert after["aging_scan"]["last_finding"] == "It has not run yet."
@@ -495,8 +558,57 @@ def test_the_api_carries_the_one_shop_only_when_there_is_one(
     rows = {x["id"]: x for x in c.get("/v1/routines", headers=hk("owner")).json()["routines"]}
     assert rows["morning_brief"]["last_finding_shop_id"] == "shop-001"
     assert rows["morning_brief"]["last_finding"] == (
-        "Mama Sola Provisions is 45 days overdue, ₦2,387,250 of it.")
+        "Mama Sola Provisions owes ₦3,497,300. Of that, ₦2,387,250 is overdue, and the oldest invoice is 45 days old.")
     assert "last_finding_shop_id" not in rows["aging_scan"]
+
+
+def test_the_run_endpoint_answers_the_row_and_refuses_twice(
+        api: dict[str, object]) -> None:
+    c = api["c"]
+    engine = api["engine"]
+    r = c.post("/v1/routines/morning_brief/run", headers=hk("owner"))
+    assert r.status_code == 200, r.text
+    row = r.json()
+    assert set(row) == {"id", "name", "schedule", "paused", "last_run_at",
+                        "next_run_at", "last_finding", "last_finding_shop_id"}
+    assert row["name"] == "Morning briefing"
+    assert row["last_run_at"].endswith("+01:00")
+    assert row["last_finding"] == (
+        "Mama Sola Provisions owes ₦3,497,300. Of that, ₦2,387,250 is overdue, and the oldest invoice is 45 days old.")
+    assert row["last_finding_shop_id"] == "shop-001"
+    assert len(_messages(engine, "morning_brief")) == 1
+
+    # One run a day is the contract: the second answers with words, not a
+    # second finding on the owner's thread.
+    again = c.post("/v1/routines/morning_brief/run", headers=hk("owner"))
+    assert again.status_code == 409
+    assert again.json()["detail"] == (
+        "It has already run today. It runs again tomorrow at 8:00 AM.")
+    assert len(_messages(engine, "morning_brief")) == 1
+
+    # The rail is the same row the run answered.
+    rail = {x["id"]: x for x in c.get("/v1/routines",
+                                     headers=hk("owner")).json()["routines"]}
+    assert rail["morning_brief"] == row
+    # No model call: the button costs nothing.
+    with engine.connect() as conn:
+        spent = conn.execute(sa.select(sa.func.count()).select_from(s.spend)
+                             .where(s.spend.c.tenant_id == T)).scalar()
+    assert spent == 0
+
+    # Paused and unknown refuse; the channel key and no key are refused first.
+    c.post("/v1/routines/aging_scan/pause", json={"reason": "Hold it"},
+           headers=hk("owner"))
+    paused = c.post("/v1/routines/aging_scan/run", headers=hk("owner"))
+    assert paused.status_code == 409
+    assert paused.json()["detail"] == (
+        "It is paused, so it did not run. The reason: Hold it.")
+    assert c.post("/v1/routines/pay_everyone/run",
+                  headers=hk("owner")).status_code == 404
+    assert c.post("/v1/routines/all/run", headers=hk("owner")).status_code == 404
+    assert c.post("/v1/routines/morning_brief/run",
+                  headers=hk("chan")).status_code == 403
+    assert c.post("/v1/routines/morning_brief/run").status_code == 401
 
 
 def test_pause_and_resume_answer_the_switch_and_persist(api: dict[str, object]) -> None:
@@ -596,7 +708,7 @@ def test_a_finding_about_one_shop_carries_that_shop(env: dict[str, object]) -> N
     rt.run_due(engine, T, now=lagos_at(2026, 11, 4, 8, 0))
     row = {r["id"]: r for r in rt.view(
         engine, T, now=lagos_at(2026, 11, 4, 8, 1))["routines"]}["morning_brief"]
-    assert row["last_finding"] == "Mama Sola Provisions is 45 days overdue, ₦2,387,250 of it."
+    assert row["last_finding"] == "Mama Sola Provisions owes ₦3,497,300. Of that, ₦2,387,250 is overdue, and the oldest invoice is 45 days old."
     assert row["last_finding_shop_id"] == "shop-001"
 
 
