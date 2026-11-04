@@ -741,8 +741,63 @@ checkin_shops = sa.Table(
     sa.PrimaryKeyConstraint("tenant_id", "shop_id"),
 )
 
+# Computer tasks (RAI-326): one task, its steps and its artifacts. A task is a
+# goal, an approved domain and a code-built plan the owner approves once. No
+# credential, no card number and no page text is stored: a step keeps a redacted
+# note and the name of a screenshot artifact.
+computer_tasks = sa.Table(
+    "computer_tasks", metadata,
+    _tenant(),
+    sa.Column("task_id", sa.String(64), nullable=False),
+    sa.Column("goal", sa.Text(), nullable=False),
+    sa.Column("url", sa.String(2000), nullable=False, default=""),
+    sa.Column("domain", sa.String(255), nullable=False, default=""),
+    sa.Column("kind", sa.String(32), nullable=False, default="generic"),
+    sa.Column("status", sa.String(24), nullable=False, default="proposed"),
+    sa.Column("plan", sa.Text(), nullable=False, default="[]"),  # JSON list of steps
+    sa.Column("inputs", sa.Text(), nullable=False, default="{}"),  # JSON: owner values
+    sa.Column("limits", sa.Text(), nullable=False, default="{}"),  # JSON GuardLimits
+    sa.Column("engine", sa.String(40), nullable=False, default=""),
+    sa.Column("stop_reason", sa.String(32), nullable=False, default=""),
+    sa.Column("note", sa.Text(), nullable=False, default=""),
+    sa.Column("created_at", sa.String(40), nullable=False),
+    sa.Column("created_ts", sa.Float(), nullable=False),
+    sa.Column("started_at", sa.String(40), nullable=False, default=""),
+    sa.Column("finished_at", sa.String(40), nullable=False, default=""),
+    sa.PrimaryKeyConstraint("tenant_id", "task_id"),
+    sa.Index("ix_computer_tasks_created", "tenant_id", "created_ts"),
+)
+
+computer_steps = sa.Table(
+    "computer_steps", metadata,
+    _tenant(),
+    sa.Column("task_id", sa.String(64), nullable=False),
+    sa.Column("idx", sa.Integer(), nullable=False),
+    sa.Column("action", sa.String(32), nullable=False),
+    sa.Column("url", sa.String(2000), nullable=False, default=""),
+    sa.Column("note", sa.Text(), nullable=False, default=""),
+    sa.Column("screenshot", sa.String(120), nullable=False, default=""),
+    sa.Column("created_at", sa.String(40), nullable=False),
+    sa.PrimaryKeyConstraint("tenant_id", "task_id", "idx"),
+)
+
+computer_artifacts = sa.Table(
+    "computer_artifacts", metadata,
+    _tenant(),
+    sa.Column("task_id", sa.String(64), nullable=False),
+    sa.Column("name", sa.String(120), nullable=False),
+    sa.Column("kind", sa.String(16), nullable=False),
+    sa.Column("mime", sa.String(64), nullable=False, default=""),
+    sa.Column("size", sa.Integer(), nullable=False, default=0),
+    sa.Column("sha256", sa.String(64), nullable=False, default=""),
+    sa.Column("path", sa.String(500), nullable=False, default=""),
+    sa.Column("created_at", sa.String(40), nullable=False),
+    sa.PrimaryKeyConstraint("tenant_id", "task_id", "name"),
+)
+
 BOOK_TABLES = (reps, shops, consent_withheld, skus, deliveries, delivery_lines, receivables,
                payments, bank_feed, promises, disputes, proof_events, proof_asks)
 AGENT_TABLES = (threads, inbound_messages, turns, turn_attempts, messages, thread_events,
                 intents, approvals, credit_requests, spend, asked_once, kill_switches, history,
-                prefixes, artifacts, compactions)
+                prefixes, artifacts, compactions, computer_tasks, computer_steps,
+                computer_artifacts)

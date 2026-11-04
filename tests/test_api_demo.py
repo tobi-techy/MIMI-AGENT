@@ -305,6 +305,91 @@ def test_the_kill_switch_refuses_new_and_reset_sessions_like_a_turn(store_url: s
     engine.dispose()
 
 
+# --------------------------------------------------------- browser tasks
+
+
+def propose(c: TestClient, sess: dict[str, Any], addr: str = "198.51.100.1") -> Any:
+    return c.post("/v1/computer/tasks", headers=bearer(sess, addr), json={
+        "goal": "check the price list", "url": "https://portal.supplier.example/prices",
+        "domain": "supplier.example", "kind": "price_check"})
+
+
+def test_a_demo_visitor_may_start_three_browser_tasks_and_no_more(
+        env: dict[str, Any]) -> None:
+    """A browser task spends browser minutes, not naira, so it writes no kobo
+    and the naira caps never see it. The count is the bound, and it is the
+    fourth task this session starts that is refused."""
+    c = env["c"]
+    sess = start(c)
+    for _ in range(3):
+        assert propose(c, sess).status_code == 201
+    r = propose(c, sess)
+    assert r.status_code == 429
+    assert r.json()["demo_limit"]["code"] == "session_task_cap"
+    assert r.json()["demo_limit"]["resets_at"]
+    # reading the tasks back still works
+    assert c.get("/v1/computer/tasks", headers=bearer(sess)).status_code == 200
+
+
+def test_the_browser_task_bound_spans_a_visitors_sessions(env: dict[str, Any]) -> None:
+    """A visitor cannot start the day over by starting another copy: the count
+    is by address and day, not by session. Eight a day, three a session."""
+    c = env["c"]
+    first = start(c, "198.51.100.7")
+    for _ in range(3):
+        assert propose(c, first, "198.51.100.7").status_code == 201
+    second = start(c, "198.51.100.7")
+    for _ in range(3):
+        assert propose(c, second, "198.51.100.7").status_code == 201
+    # six today, two more allowed
+    third = start(c, "198.51.100.7")
+    assert propose(c, third, "198.51.100.7").status_code == 201
+    assert propose(c, third, "198.51.100.7").status_code == 201
+    r = propose(c, third, "198.51.100.7")
+    assert r.status_code == 429
+    assert r.json()["demo_limit"]["code"] == "visitor_task_cap"
+    # another address has its own day
+    other = start(c, "203.0.113.9")
+    assert propose(c, other, "203.0.113.9").status_code == 201
+
+
+def test_the_kill_switch_refuses_a_browser_task_but_keeps_reads(store_url: str) -> None:
+    before, engine0 = make(store_url, cfg())
+    with before as c0:
+        sess = start(c0)
+    engine0.dispose()
+    client, engine = make(store_url, cfg(killed=True))
+    with client as c:
+        r = propose(c, sess)
+        assert r.status_code == 503 and r.json()["detail"] == demo.PAUSED
+        assert r.json()["demo_limit"]["code"] == "paused"
+        assert c.get("/v1/computer/tasks", headers=bearer(sess)).status_code == 200
+    engine.dispose()
+
+
+def test_the_bound_is_at_creation_so_approving_is_not_charged_twice(
+        env: dict[str, Any]) -> None:
+    """A session that started one task may approve it, stop it and read it, and
+    still has two proposals left: the count is of tasks created, not of calls."""
+    c, engine = env["c"], env["engine"]
+    sess = start(c)
+    body = propose(c, sess).json()
+    # No container in this test: approving says so plainly, and that is not the
+    # bound, which is what this test is about.
+    approve = c.post(f"/v1/computer/tasks/{body['task_id']}/approve", headers=bearer(sess))
+    assert approve.status_code == 503 and "container" in approve.json()["detail"]
+    assert c.post(f"/v1/computer/tasks/{body['task_id']}/stop",
+                  headers=bearer(sess)).status_code == 200
+    assert c.get("/v1/computer/tasks", headers=bearer(sess)).status_code == 200
+    assert propose(c, sess).status_code == 201
+    assert propose(c, sess).status_code == 201
+    assert propose(c, sess).status_code == 429
+    with engine.connect() as conn:
+        n = conn.execute(sa.select(sa.func.count()).select_from(s.computer_tasks).where(
+            s.computer_tasks.c.tenant_id == sess["tenant_id"])).scalar()
+    assert n == 3
+
+
 # -------------------------------------------------------------- approvals
 
 

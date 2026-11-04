@@ -775,3 +775,137 @@ class PolicyIn(BaseModel):
     rules: list[PolicyRuleIn] = Field(min_length=1, max_length=50)
     # Who changed it, for the log (the console sends the owner's name).
     by: str = Field(default="owner", max_length=100)
+
+
+# ----------------------------------------------------------- computer tasks
+# A computer task is a goal, an approved domain and a plan code built from the
+# task's own fields. The owner approves the plan once; code runs it under the
+# guardrails. Nothing here is a model choice and nothing here moves money.
+
+_COMPUTER_KINDS = "price_check | order_list | bank_statement | gov_form | generic"
+
+
+class ComputerTaskIn(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    goal: str = Field(..., min_length=1, max_length=600,
+                      description="What the distributor wants done, in their own words.")
+    url: str = Field(..., min_length=1, max_length=2000,
+                     description="The page to start on. It must be on the approved domain.")
+    domain: str = Field(..., min_length=1, max_length=255,
+                        description="The only domain the task may use, with its subdomains.")
+    kind: Literal["price_check", "order_list", "bank_statement", "gov_form", "generic"] = Field(
+        "generic", description=f"The task kind: {_COMPUTER_KINDS}.")
+    inputs: dict[str, str] = Field(
+        default_factory=dict, max_length=20,
+        description="Values the owner typed for a form task (a gov_form fills only these, "
+                    "never a password or a code).")
+
+
+class ComputerPlanStep(_Out):
+    action: str = Field(..., description="The step in plain words. This is what "
+                                         "the console renders: never a code.")
+    code: str = Field("", description="Our own name for the step (a machine verb, "
+                                      "for example 'goto'). The console does not "
+                                      "render this field.")
+    note: str = ""
+    url: str = ""
+    target: str = ""
+    field: str = ""
+    value_key: str = ""
+    direction: str = ""
+    amount: int = 0
+
+
+class ComputerTask(_Out):
+    task_id: str
+    status: Literal["proposed", "running", "awaiting_owner", "done", "stopped",
+                    "stopped_runaway", "failed"] = Field(
+        ..., description="One of exactly these seven. A task is never 'queued': "
+                         "that is an internal queue word, not a task status.")
+    kind: str
+    goal: str
+    url: str
+    domain: str
+    stop_reason: str = Field(
+        "", description="A machine code for the log: off_domain, forbidden_page, "
+                        "budget_steps, budget_seconds, login_wall, "
+                        "stopped_by_owner, unsupported_step, engine_error, empty "
+                        "while the task has not stopped. Never render this.")
+    note: str = Field(
+        "", description="The sentence for a person, and the one to render. It is "
+                        "always plain words when the task has stopped, whatever "
+                        "the stop_reason says.")
+    created_at: str
+    started_at: str = ""
+    finished_at: str = ""
+    plan: list[ComputerPlanStep] = Field(default_factory=list)
+    inputs: dict[str, str] = Field(default_factory=dict)
+
+
+class ComputerStep(_Out):
+    index: int
+    action: str = Field(..., description="What the step did, in plain words. This "
+                                         "is what the console renders: never a code.")
+    code: str = Field("", description="Our own name for the step (a machine verb, "
+                                      "for example 'goto'). The console does not "
+                                      "render this field.")
+    url: str = ""
+    note: str = ""
+    screenshot: str = Field("", description="An artifact name. Its bytes are at "
+                                            "GET /v1/computer/tasks/{task_id}/artifacts/{name}")
+
+
+class ComputerArtifact(_Out):
+    name: str
+    kind: Literal["screenshot", "text", "file"]
+    mime: str = ""
+    size: int = 0
+    sha256: str = ""
+
+
+class ComputerTaskDetail(ComputerTask):
+    steps: list[ComputerStep] = Field(default_factory=list)
+    artifacts: list[ComputerArtifact] = Field(default_factory=list)
+    live_view_url: str | None = Field(
+        None, description="A signed link to watch this task's session while one "
+                          "is open: the real screen, polled by the console in a "
+                          "new tab. It is per session, it dies with the session, "
+                          "and it holds no key of ours. Null once the task ends.")
+
+
+class ComputerKind(_Out):
+    kind: str = Field(..., description="The kind string to send in a task's kind field.")
+    label: str = Field("", description="What that kind of task does, in plain words.")
+
+
+class ComputerKindList(_Out):
+    kinds: list[ComputerKind] = Field(default_factory=list)
+
+
+class ComputerTaskSummary(_Out):
+    task_id: str
+    goal: str
+    domain: str
+    status: str
+    created_at: str
+    step_count: int = 0
+    stop_reason: str = Field(
+        "", description="A machine code, as on the task detail. Never render "
+                        "this: the sentence beside it is the one for a person.")
+    note: str = Field(
+        "", description="The sentence for a person, and the one to render in a "
+                        "list: it is always plain words when the task has "
+                        "stopped or paused.")
+
+
+class ComputerTaskList(_Out):
+    tasks: list[ComputerTaskSummary] = Field(default_factory=list)
+
+
+class ComputerProposal(_Out):
+    """The proposal the owner approves. ``plan`` is what will run, step by step."""
+
+    task_id: str
+    status: Literal["proposed"]
+    plan: list[ComputerPlanStep] = Field(default_factory=list)

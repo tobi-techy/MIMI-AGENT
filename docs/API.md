@@ -157,9 +157,19 @@ Every demo refusal (429 for a cap or too many sessions, 503 when paused)
 answers one shape. `detail` is kept for older clients; `demo_limit` is what
 the console shows (OpenAPI `DemoLimitError`):
 
+**The naira caps do not bound a browser task.** A computer task spends browser
+minutes, not model tokens, so it writes no kobo into `demo_usage`, which is
+what `gate` sums: adding the gate to the two computer routes gives the kill
+switch and nothing else, and a run that costs no naira will never push a
+visitor over a naira cap. The count of tasks is what bounds them, checked where
+a task is created (three a session, eight a visitor address a day), which is
+why `POST /v1/computer/tasks` answers `session_task_cap` or `visitor_task_cap`
+rather than a spend cap. `POST /v1/computer/tasks/{id}/approve` is gated but
+never counted, so resuming a paused task does not spend the allowance twice.
+
 | Field | Type | What |
 |---|---|---|
-| `code` | string | `visitor_daily_cap`, `global_daily_cap`, `paused`, `too_many_sessions` |
+| `code` | string | `visitor_daily_cap`, `global_daily_cap`, `paused`, `too_many_sessions`, `session_task_cap`, `visitor_task_cap` |
 | `scope` | string | `visitor` (this address), `global` (every visitor), `demo` (paused) |
 | `title` | string | a short heading: `You have used today's demo allowance` |
 | `message` | string | one plain sentence to show under it |

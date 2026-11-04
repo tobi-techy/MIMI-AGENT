@@ -94,6 +94,12 @@ BASE_TIERS: dict[str, Tier] = {
     "send_to_user": "auto",
     "ask_question": "auto",
     "update_plan": "auto",
+    # Computer tasks (RAI-326): a helper reading one page of a portal the owner
+    # approved, with a real browser. A read, so auto: it buys nothing, sends
+    # nothing and changes nothing, and what it reads reaches the book only
+    # through the owner's approval. It is offered to a helper only when
+    # MIMI_COMPUTER_TOOLS is on (mimi.harness.computer).
+    "read_portal_page": "auto",
     # Proof (minimal, for the connector-down rule).
     "check_bank_feed": "auto",
     "open_bank_portal": "approve",
@@ -297,6 +303,8 @@ READ_TOOLS: frozenset[str] = frozenset({
     "find_credit_candidates", "find_shop", "check_payment_screenshot",
     "get_open_deliveries", "read_receipt_reply", "get_stock_estimates",
     "read_stock_answer", "read_order_photo", "price_order", "read_checkin_reply",
+    # RAI-326: the browser reads a portal page and changes nothing.
+    "read_portal_page",
 })
 INTERNAL_ACTIONS = {**INTERNAL_ACTIONS, "internal.read": _a(
     "internal.read", "all", "Read the book", "act", tuple(sorted(READ_TOOLS)))}
@@ -426,6 +434,10 @@ class OwnerLimits:
 
 # Bump on any tier, allowlist or limit change: recorded loop answers are keyed
 # by it (RAI-309), so a bump makes every replayed loop call miss as stale.
+# RAI-326 added the "read_portal_page" row above without a bump, on purpose:
+# the tool is in no helper's toolset unless MIMI_COMPUTER_TOOLS is on, so no
+# recording's request or tier changes. Turning that flag on is the change that
+# needs this bumped, and the loop caches re-recorded with it.
 POLICY_VERSION = "policy-2026-10-27"
 
 

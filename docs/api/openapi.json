@@ -570,6 +570,442 @@
         "title": "ChipIntent",
         "type": "object"
       },
+      "ComputerArtifact": {
+        "additionalProperties": false,
+        "properties": {
+          "kind": {
+            "enum": [
+              "screenshot",
+              "text",
+              "file"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "mime": {
+            "default": "",
+            "title": "Mime",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "sha256": {
+            "default": "",
+            "title": "Sha256",
+            "type": "string"
+          },
+          "size": {
+            "default": 0,
+            "title": "Size",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "name",
+          "kind"
+        ],
+        "title": "ComputerArtifact",
+        "type": "object"
+      },
+      "ComputerKind": {
+        "additionalProperties": false,
+        "properties": {
+          "kind": {
+            "description": "The kind string to send in a task's kind field.",
+            "title": "Kind",
+            "type": "string"
+          },
+          "label": {
+            "default": "",
+            "description": "What that kind of task does, in plain words.",
+            "title": "Label",
+            "type": "string"
+          }
+        },
+        "required": [
+          "kind"
+        ],
+        "title": "ComputerKind",
+        "type": "object"
+      },
+      "ComputerKindList": {
+        "additionalProperties": false,
+        "properties": {
+          "kinds": {
+            "items": {
+              "$ref": "#/components/schemas/ComputerKind"
+            },
+            "title": "Kinds",
+            "type": "array"
+          }
+        },
+        "title": "ComputerKindList",
+        "type": "object"
+      },
+      "ComputerPlanStep": {
+        "additionalProperties": false,
+        "properties": {
+          "action": {
+            "description": "The step in plain words. This is what the console renders: never a code.",
+            "title": "Action",
+            "type": "string"
+          },
+          "amount": {
+            "default": 0,
+            "title": "Amount",
+            "type": "integer"
+          },
+          "code": {
+            "default": "",
+            "description": "Our own name for the step (a machine verb, for example 'goto'). The console does not render this field.",
+            "title": "Code",
+            "type": "string"
+          },
+          "direction": {
+            "default": "",
+            "title": "Direction",
+            "type": "string"
+          },
+          "field": {
+            "default": "",
+            "title": "Field",
+            "type": "string"
+          },
+          "note": {
+            "default": "",
+            "title": "Note",
+            "type": "string"
+          },
+          "target": {
+            "default": "",
+            "title": "Target",
+            "type": "string"
+          },
+          "url": {
+            "default": "",
+            "title": "Url",
+            "type": "string"
+          },
+          "value_key": {
+            "default": "",
+            "title": "Value Key",
+            "type": "string"
+          }
+        },
+        "required": [
+          "action"
+        ],
+        "title": "ComputerPlanStep",
+        "type": "object"
+      },
+      "ComputerProposal": {
+        "additionalProperties": false,
+        "description": "The proposal the owner approves. ``plan`` is what will run, step by step.",
+        "properties": {
+          "plan": {
+            "items": {
+              "$ref": "#/components/schemas/ComputerPlanStep"
+            },
+            "title": "Plan",
+            "type": "array"
+          },
+          "status": {
+            "const": "proposed",
+            "title": "Status",
+            "type": "string"
+          },
+          "task_id": {
+            "title": "Task Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "task_id",
+          "status"
+        ],
+        "title": "ComputerProposal",
+        "type": "object"
+      },
+      "ComputerStep": {
+        "additionalProperties": false,
+        "properties": {
+          "action": {
+            "description": "What the step did, in plain words. This is what the console renders: never a code.",
+            "title": "Action",
+            "type": "string"
+          },
+          "code": {
+            "default": "",
+            "description": "Our own name for the step (a machine verb, for example 'goto'). The console does not render this field.",
+            "title": "Code",
+            "type": "string"
+          },
+          "index": {
+            "title": "Index",
+            "type": "integer"
+          },
+          "note": {
+            "default": "",
+            "title": "Note",
+            "type": "string"
+          },
+          "screenshot": {
+            "default": "",
+            "description": "An artifact name. Its bytes are at GET /v1/computer/tasks/{task_id}/artifacts/{name}",
+            "title": "Screenshot",
+            "type": "string"
+          },
+          "url": {
+            "default": "",
+            "title": "Url",
+            "type": "string"
+          }
+        },
+        "required": [
+          "index",
+          "action"
+        ],
+        "title": "ComputerStep",
+        "type": "object"
+      },
+      "ComputerTaskDetail": {
+        "additionalProperties": false,
+        "properties": {
+          "artifacts": {
+            "items": {
+              "$ref": "#/components/schemas/ComputerArtifact"
+            },
+            "title": "Artifacts",
+            "type": "array"
+          },
+          "created_at": {
+            "title": "Created At",
+            "type": "string"
+          },
+          "domain": {
+            "title": "Domain",
+            "type": "string"
+          },
+          "finished_at": {
+            "default": "",
+            "title": "Finished At",
+            "type": "string"
+          },
+          "goal": {
+            "title": "Goal",
+            "type": "string"
+          },
+          "inputs": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "title": "Inputs",
+            "type": "object"
+          },
+          "kind": {
+            "title": "Kind",
+            "type": "string"
+          },
+          "live_view_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "A signed link to watch this task's session while one is open: the real screen, polled by the console in a new tab. It is per session, it dies with the session, and it holds no key of ours. Null once the task ends.",
+            "title": "Live View Url"
+          },
+          "note": {
+            "default": "",
+            "description": "The sentence for a person, and the one to render. It is always plain words when the task has stopped, whatever the stop_reason says.",
+            "title": "Note",
+            "type": "string"
+          },
+          "plan": {
+            "items": {
+              "$ref": "#/components/schemas/ComputerPlanStep"
+            },
+            "title": "Plan",
+            "type": "array"
+          },
+          "started_at": {
+            "default": "",
+            "title": "Started At",
+            "type": "string"
+          },
+          "status": {
+            "description": "One of exactly these seven. A task is never 'queued': that is an internal queue word, not a task status.",
+            "enum": [
+              "proposed",
+              "running",
+              "awaiting_owner",
+              "done",
+              "stopped",
+              "stopped_runaway",
+              "failed"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "steps": {
+            "items": {
+              "$ref": "#/components/schemas/ComputerStep"
+            },
+            "title": "Steps",
+            "type": "array"
+          },
+          "stop_reason": {
+            "default": "",
+            "description": "A machine code for the log: off_domain, forbidden_page, budget_steps, budget_seconds, login_wall, stopped_by_owner, unsupported_step, engine_error, empty while the task has not stopped. Never render this.",
+            "title": "Stop Reason",
+            "type": "string"
+          },
+          "task_id": {
+            "title": "Task Id",
+            "type": "string"
+          },
+          "url": {
+            "title": "Url",
+            "type": "string"
+          }
+        },
+        "required": [
+          "task_id",
+          "status",
+          "kind",
+          "goal",
+          "url",
+          "domain",
+          "created_at"
+        ],
+        "title": "ComputerTaskDetail",
+        "type": "object"
+      },
+      "ComputerTaskIn": {
+        "additionalProperties": false,
+        "properties": {
+          "domain": {
+            "description": "The only domain the task may use, with its subdomains.",
+            "maxLength": 255,
+            "minLength": 1,
+            "title": "Domain",
+            "type": "string"
+          },
+          "goal": {
+            "description": "What the distributor wants done, in their own words.",
+            "maxLength": 600,
+            "minLength": 1,
+            "title": "Goal",
+            "type": "string"
+          },
+          "inputs": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "Values the owner typed for a form task (a gov_form fills only these, never a password or a code).",
+            "maxProperties": 20,
+            "title": "Inputs",
+            "type": "object"
+          },
+          "kind": {
+            "default": "generic",
+            "description": "The task kind: price_check | order_list | bank_statement | gov_form | generic.",
+            "enum": [
+              "price_check",
+              "order_list",
+              "bank_statement",
+              "gov_form",
+              "generic"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "url": {
+            "description": "The page to start on. It must be on the approved domain.",
+            "maxLength": 2000,
+            "minLength": 1,
+            "title": "Url",
+            "type": "string"
+          }
+        },
+        "required": [
+          "goal",
+          "url",
+          "domain"
+        ],
+        "title": "ComputerTaskIn",
+        "type": "object"
+      },
+      "ComputerTaskList": {
+        "additionalProperties": false,
+        "properties": {
+          "tasks": {
+            "items": {
+              "$ref": "#/components/schemas/ComputerTaskSummary"
+            },
+            "title": "Tasks",
+            "type": "array"
+          }
+        },
+        "title": "ComputerTaskList",
+        "type": "object"
+      },
+      "ComputerTaskSummary": {
+        "additionalProperties": false,
+        "properties": {
+          "created_at": {
+            "title": "Created At",
+            "type": "string"
+          },
+          "domain": {
+            "title": "Domain",
+            "type": "string"
+          },
+          "goal": {
+            "title": "Goal",
+            "type": "string"
+          },
+          "note": {
+            "default": "",
+            "description": "The sentence for a person, and the one to render in a list: it is always plain words when the task has stopped or paused.",
+            "title": "Note",
+            "type": "string"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "step_count": {
+            "default": 0,
+            "title": "Step Count",
+            "type": "integer"
+          },
+          "stop_reason": {
+            "default": "",
+            "description": "A machine code, as on the task detail. Never render this: the sentence beside it is the one for a person.",
+            "title": "Stop Reason",
+            "type": "string"
+          },
+          "task_id": {
+            "title": "Task Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "task_id",
+          "goal",
+          "domain",
+          "status",
+          "created_at"
+        ],
+        "title": "ComputerTaskSummary",
+        "type": "object"
+      },
       "ConnectorConnectIn": {
         "additionalProperties": false,
         "properties": {
@@ -4509,6 +4945,559 @@
           }
         ],
         "summary": "Owner undoes an approved Zoho payment write (or a limit Credit suggested)"
+      }
+    },
+    "/v1/computer/kinds": {
+      "get": {
+        "description": "The one place the kind strings are published, so the console and the\nAPI never disagree: the value of ``kind`` is what goes in a proposal.\nAn empty list is never right here: the plans are code, not data.",
+        "operationId": "get_computer_kinds_v1_computer_kinds_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ComputerKindList"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Conflict"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "The task kinds, exactly as the code names them"
+      }
+    },
+    "/v1/computer/tasks": {
+      "get": {
+        "description": "An empty list is a valid answer: nothing is seeded.",
+        "operationId": "get_computer_tasks_v1_computer_tasks_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ComputerTaskList"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Conflict"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "This distributor's computer tasks, newest first"
+      },
+      "post": {
+        "description": "Build the plan in code from the goal, the url and the approved\ndomain, and return it for the owner to approve. Nothing runs yet and\nnothing is charged. The plan is what will run: it never holds a step\nthat buys, pays, sends or changes settings, and never a credential.",
+        "operationId": "post_computer_task_v1_computer_tasks_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ComputerTaskIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ComputerProposal"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Propose a task for the browser container"
+      }
+    },
+    "/v1/computer/tasks/{task_id}": {
+      "get": {
+        "operationId": "get_computer_task_v1_computer_tasks__task_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "task_id",
+            "required": true,
+            "schema": {
+              "title": "Task Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ComputerTaskDetail"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "One task with its step log and artifacts"
+      }
+    },
+    "/v1/computer/tasks/{task_id}/approve": {
+      "post": {
+        "description": "The owner approves the whole task once. The run continues in the\nbackground; poll this task for its steps. Approving a paused task\n(a sign-in wall) runs the plan again in a fresh browser session: the\nsign-in the owner did is not carried over, so a page that still asks\nfor one pauses the task again, with a fresh live view link. The resumed\nrun continues the task's own step log. One approval starts the run and\na second one in flight gets 409. The guardrails and the budgets are\ncode.",
+        "operationId": "post_computer_approve_v1_computer_tasks__task_id__approve_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "task_id",
+            "required": true,
+            "schema": {
+              "title": "Task Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ComputerTaskDetail"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Approve the plan once; it runs under the guardrails"
+      }
+    },
+    "/v1/computer/tasks/{task_id}/artifacts/{name}": {
+      "get": {
+        "operationId": "get_computer_artifact_v1_computer_tasks__task_id__artifacts__name__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "task_id",
+            "required": true,
+            "schema": {
+              "title": "Task Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "title": "Name",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "image/png": {}
+            },
+            "description": "The artifact"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "The bytes of one step screenshot or extracted text"
+      }
+    },
+    "/v1/computer/tasks/{task_id}/stop": {
+      "post": {
+        "description": "Accepts a task in any open state, including ``proposed``: that is how\nthe owner discards a task they decided not to run. It is recorded\n``stopped`` with ``stopped_by_owner``. A task that has already ended is\nreturned unchanged, rather than having its history rewritten.",
+        "operationId": "post_computer_stop_v1_computer_tasks__task_id__stop_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "task_id",
+            "required": true,
+            "schema": {
+              "title": "Task Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ComputerTaskDetail"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Stop the task now, and record why"
       }
     },
     "/v1/connectors": {
