@@ -1459,6 +1459,7 @@ FIGURE_CHECKED: dict[str, str] = {
     "notify_rep": "message",
     "notify_owner": "message",
     "ask_helper": "task",
+    "delegate_task": "task",
 }
 def _known_kobo(messages: Sequence[dict[str, Any]]) -> set[int]:
     """Figures this run may state: tool results, the book slice, helper

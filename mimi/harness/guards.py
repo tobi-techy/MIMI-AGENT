@@ -47,7 +47,7 @@ class LoopLimits:
 LIMITS = LoopLimits()
 
 # Tools whose output is a message a shop reads, and how to tell.
-DELEGATING_TOOLS = frozenset({"ask_helper"})
+DELEGATING_TOOLS = frozenset({"ask_helper", "delegate_task"})
 FOLLOWUP_TOOLS = frozenset({"set_followup"})
 _SHOP_MESSAGE_TOOLS = frozenset({"send_reminder", "send_receipt"})
 

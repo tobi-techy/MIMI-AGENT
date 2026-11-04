@@ -33,7 +33,7 @@ from __future__ import annotations
 
 import os
 from collections.abc import Mapping
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from functools import partial
 from pathlib import Path
 from typing import Any
@@ -59,6 +59,7 @@ from mimi.harness.collector import (
     PROOF_TOOLS,
     collector_helper,
     default_registry,
+    register_delegation,
 )
 from mimi.harness.loop import Helper
 from mimi.harness.policy import GoPolicy, RiskPolicy
@@ -174,7 +175,9 @@ def build_helpers(policy: RiskPolicy | None = None, *, go: SqlGo | None = None,
         from mimi.harness.collector import proof_helper
 
         helpers["proof"] = proof_helper(reg, policy)
-        return _with_skills(helpers, reg, policy, deps.distributor)
+        register_delegation(reg)
+        return _with_skills(_with_delegation(helpers, reg, policy), reg, policy,
+                            deps.distributor)
     dist = deps.distributor
     register_proof_tools(reg, ProofPorts(images=StoreScreens(go, deps.media),
                                          reader=ScreenshotReader(deps.vision),
@@ -224,7 +227,37 @@ def build_helpers(policy: RiskPolicy | None = None, *, go: SqlGo | None = None,
     credit = credit_helper(reg, policy, distributor=dist)
     helpers["credit"] = Helper(credit.name, credit.skill + APPROVAL_LINE, credit.toolset,
                                credit.budget, skill_version=credit.skill_version)
-    return _with_skills(helpers, reg, policy, dist)
+    register_delegation(reg)  # the tool; membership is decided by the switch
+    return _with_skills(_with_delegation(helpers, reg, policy), reg, policy, dist)
+
+
+# The helpers that may hand work to another helper when the switch is on.
+DELEGATION_HELPERS: frozenset[str] = frozenset(
+    {"collector", "proof", "order", "stock", "brand", "credit"})
+DELEGATION_TOOLS: tuple[str, ...] = ("delegate_task",)
+
+
+def _with_delegation(helpers: dict[str, Helper], reg: ToolRegistry,
+                     policy: RiskPolicy) -> dict[str, Helper]:
+    """Helper-to-helper delegation (``MIMI_HELPER_DELEGATION``, default off).
+
+    Off, every toolset and recorded request is byte-identical to before, so no
+    recorded answer is invalidated. On, each of the six helpers gains the one
+    write tool and its recordings must be re-recorded. The plain chat helper is
+    left out on purpose: it is the fallback, like the browser tool."""
+    from mimi.api.delegation import enabled
+
+    if not enabled():
+        return helpers
+    out: dict[str, Helper] = {}
+    for key, helper in helpers.items():
+        if helper.name not in DELEGATION_HELPERS:
+            out[key] = helper
+            continue
+        names = list(helper.toolset.names)
+        names.extend(n for n in DELEGATION_TOOLS if n not in names)
+        out[key] = replace(helper, toolset=build_toolset(reg, helper.name, names, policy))
+    return out
 
 
 def _with_skills(helpers: dict[str, Helper], reg: ToolRegistry, policy: RiskPolicy,

@@ -82,6 +82,9 @@ BASE_TIERS: dict[str, Tier] = {
     "send_reminder": "notify",
     "set_followup": "auto",
     "ask_helper": "auto",
+    # Every helper may hand work to another (MIMI_HELPER_DELEGATION); the tool
+    # is in no toolset until the switch is on.
+    "delegate_task": "auto",
     "notify_rep": "auto",
     "notify_owner": "auto",
     # The owner raises the day's model allowance when the daily cap parks
@@ -280,6 +283,8 @@ INTERNAL_ACTIONS: Mapping[str, ActionType] = {
         _a("internal.plan", "all", "Update the work plan", "act", ("update_plan",)),
         _a("internal.follow_up", "all", "Set a follow-up timer", "act", ("set_followup",)),
         _a("internal.ask_helper", "all", "Hand work to another helper", "act", ("ask_helper",)),
+        _a("internal.delegate", "all", "Hand work to another helper", "act",
+           ("delegate_task",)),
         _a("internal.notify_owner", "all", "Tell you something", "act", ("notify_owner",)),
         _a("internal.owner_message", "all", "Write to you", "act", ()),
         _a("internal.skill", "all", "Read a skill or compute", "act",

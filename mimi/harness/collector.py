@@ -522,6 +522,45 @@ def _ask_helper_dry(ctx: ToolContext, a: AskHelperIn, o: AskHelperOut) -> str:
     return f"Would hand to {o.helper}: {o.task[:100]}"
 
 
+# Helper-to-helper delegation (MiMi inboxes, RAI-327): every helper may hand a
+# complete task to any other helper. Offered only when MIMI_HELPER_DELEGATION
+# is on (mimi.api.delegation), so off, every helper's toolset and recorded
+# request is unchanged; the wider target set is the part that would otherwise
+# stale the replays.
+DelegateTarget = Literal["order", "collector", "credit", "stock", "brand", "proof"]
+
+
+class DelegateTaskIn(_In):
+    helper: DelegateTarget
+    task: str = Field(min_length=5, max_length=600)
+    shop_id: str = ""
+
+
+class DelegateTaskOut(_Out):
+    helper: str
+    task: str
+    shop_id: str
+    task_digest: str
+
+
+def delegate_task(ctx: ToolContext, args: DelegateTaskIn) -> DelegateTaskOut:
+    """Hand a complete task to another helper: Proof checks a screenshot or POS claim, Credit looks at limits and risk, Order checks for a coming delivery, Collector checks a payment, Stock checks what is running low, Brand answers a promo question. Give a complete task with the shop it concerns."""
+    return DelegateTaskOut(helper=args.helper, task=args.task, shop_id=args.shop_id,
+                           task_digest=digest(args.task))
+
+
+def _delegate_dry(ctx: ToolContext, a: DelegateTaskIn, o: DelegateTaskOut) -> str:
+    return f"Would hand to {o.helper}: {o.task[:100]}"
+
+
+def register_delegation(registry: ToolRegistry) -> None:
+    """Register the delegation tool. Its membership in a helper's toolset is
+    decided by ``mimi.api.helpers._with_delegation`` (the switch), never here."""
+    registry.tool(kind="write_intent", scope="org:helpers", tier="auto",
+                  idem=("helper", "shop_id", "task_digest"),
+                  dry_run=_delegate_dry)(delegate_task)
+
+
 class NotifyRepIn(_In):
     shop_id: str
     message: str = Field(min_length=3, max_length=600)
