@@ -62,6 +62,13 @@ Its 8:00 AM time has passed." It does not claim the API was down, because it
 cannot know that; a deploy, a restart, a young process and a new tenant look
 the same from here.
 
+A routine that has already run today is never a miss. The gate is
+`last_run_day == day`, not "has it ever run": once a run is recorded, a tick
+after its window says `already_claimed` and leaves the finding and the
+`last_run_at` stamp alone. Otherwise a run at 12:35 would be overwritten by
+its own window closing at 12:36, which is exactly what the rail did before
+this fix.
+
 A routine with no history at all is not missed. A book opened at noon did not
 exist at 8:00, so its rail stays at "not run yet" (empty `last_finding`) and
 the day is not written as a miss. It can still catch up if it is inside the

@@ -383,10 +383,11 @@ over the book: **no model call and no kobo spent**. See
 * **A late start catches up.** A tick at 9:00 still sends the 8:00 brief,
   until 4 hours after the schedule (cut at Lagos midnight). The window is per
   routine, so the 8:30 scan stays open half an hour longer than the 8:00
-  brief. After the window, a routine that has run before is recorded as
-  missed once with words that state only that its time passed; a routine with
-  no history is not a miss and its rail stays at "not run yet". Neither
-  borrows the current time or invents a cause.
+  brief. After the window, a routine that has run before **and has not run
+  today** is recorded as missed once with words that state only that its time
+  passed; a routine that already ran today keeps its finding and stamp, and a
+  routine with no history is not a miss and its rail stays at "not run yet".
+  Neither borrows the current time or invents a cause.
 * **Pause is a row.** `POST /v1/routines/{id}/pause` sets it, `resume` clears
   it; both survive a restart. `all` is the kill switch: one row pauses every
   routine without a deploy. A paused routine records that it skipped the day
