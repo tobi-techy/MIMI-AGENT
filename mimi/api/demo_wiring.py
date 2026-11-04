@@ -38,6 +38,7 @@ from sqlalchemy.engine import Engine
 
 from mimi import owed
 from mimi.api.agent import Conflict, NotFound
+from mimi.api.zoho_match import ZOHO_ONLY_PREFIX, ShopMatch, ZohoCustomer, match_shops
 from mimi.clock import wall
 from mimi.connectors.base import ConnectorError
 from mimi.connectors.composio import ComposioTransport, FakeComposio
@@ -821,6 +822,13 @@ def books_agreement(engine: Engine, tenant: str,
     read as "this shop owes nothing", which is a lie about money. When
     Zoho is not connected, every zoho and difference field is null and
     ``note`` says so plainly, so the console shows no figure at all.
+
+    A Zoho customer no shop claims keeps its own row (``zoho:<name>``), so
+    Zoho money never leaves the total just because Mimi has no shop for it.
+    ``match`` on each row says how it was matched: ``id`` (the ``zc-``
+    convention), ``name``, ``ambiguous`` (two Zoho customers carried the
+    shop's name, so neither was picked), ``none`` (Zoho does not know the
+    shop) or ``zoho_only`` (Zoho's customer, not Mimi's).
     """
     from mimi.connectors.env import ConnectorSettings
 
@@ -840,18 +848,23 @@ def books_agreement(engine: Engine, tenant: str,
         return _agreement(False, shops, names, {}, "Zoho Books is not connected, "
                          "so the comparison cannot be made.")
     try:
-        account, org = _zoho_account_org(engine, tenant, transport)
+        account, _org = _zoho_account_org(engine, tenant, transport)
     except ConnectorError as exc:
         # The named org is not on this token's list, or the list itself
         # refused: could-not-read, never a false agreement on nothing.
         return _agreement(False, shops, names, {},
                           f"Zoho Books could not be read ({exc}); no comparison was made.")
     try:
-        zoho = _zoho_outstanding(tenant, account, org, transport)
+        customers = _zoho_customers(tenant, account, transport)
     except ConnectorError as exc:
         return _agreement(False, shops, names, {},
                           f"Zoho Books could not be read ({exc}); no comparison was made.")
-    return _agreement(True, shops, names, zoho, "")
+    match = match_shops(names, customers)
+    zoho: dict[str, int] = dict(match.per_shop)
+    for key, (zname, kobo) in match.zoho_only.items():
+        zoho[key] = kobo
+        names[key] = zname
+    return _agreement(True, shops, names, zoho, "", match=match)
 
 
 def _zoho_connected(engine: Engine, tenant: str) -> bool:
@@ -908,34 +921,71 @@ def _zoho_account_org(engine: Engine, tenant: str,
     return account, org
 
 
-def _zoho_outstanding(tenant: str, account: str, org: str,
-                      transport: Any | None = None) -> dict[str, int]:
-    """Zoho's outstanding per Mimi shop id, matched on the ``zc-`` prefix
-    Mimi writes as the Zoho customer id (``zc-<shop_id>``).
+def _zoho_customers(tenant: str, account: str,
+                    transport: Any | None = None) -> list[ZohoCustomer]:
+    """Every Zoho Books customer the connection returns, and what it owes.
 
-    ``org`` is the caller's organization and is unused here because the
-    transport addresses the connected account directly; it is kept so the
-    call reads as scoped to that org and a future multi-org tenant can
-    filter on it."""
-    del org
+    The invoice balance is the source of the outstanding figure: it is per
+    bill, it survives a partial payment, and it is the same row an approved
+    payment has to allocate against, so the screen and the write read one
+    shape of data. A customer with at least one invoice is answered from
+    those balances alone, zero when its bills are settled. A customer the
+    invoice list never mentions falls back to the contact's own
+    ``outstanding_receivable_amount``, which is all a contact-only book (the
+    fake one) carries; that is a fact about the response, never about which
+    transport is in play. Only positive balances count: zero is a settled
+    invoice and a negative balance is a credit Zoho holds for the customer,
+    not money the customer owes.
+
+    The organization is not passed here because the transport addresses the
+    connected account, as it did before this read; ``_zoho_account_org``
+    has already proved the named org is reachable on that account."""
     from mimi.connectors.zoho.books import ZohoBooksConnector
 
     books = ZohoBooksConnector(transport or ComposioTransport(),
-                                 tenant_id=_zoho_user(tenant, account),
+                               tenant_id=_zoho_user(tenant, account),
                                connection_id=account)
-    out: dict[str, int] = {}
-    for row in books.read("zoho_books_contacts").rows:
-        cid = str(row.values.get("customer_id") or row.values.get("shop_id") or "")
-        if not cid.startswith("zc-"):
+    contacts = books.read("zoho_books_contacts").rows
+    invoices = books.read("zoho_books_invoices").rows
+
+    balances: dict[str, int] = {}
+    billed: set[str] = set()
+    invoice_names: dict[str, str] = {}
+    for row in invoices:
+        cid = str(row.values.get("shop_id") or "")
+        if not cid:
             continue
-        out[cid.removeprefix("zc-")] = out.get(cid.removeprefix("zc-"), 0) + int(
-            row.values.get("outstanding_kobo") or 0)
+        billed.add(cid)
+        if not invoice_names.get(cid):
+            invoice_names[cid] = str(row.values.get("customer_name") or "")
+        kobo = int(row.values.get("outstanding_kobo") or 0)
+        if kobo > 0:
+            balances[cid] = balances.get(cid, 0) + kobo
+
+    out: list[ZohoCustomer] = []
+    seen: set[str] = set()
+    for row in contacts:
+        cid = str(row.values.get("shop_id") or "")
+        if not cid or cid in seen:
+            continue
+        seen.add(cid)
+        if cid in billed:
+            kobo = balances.get(cid, 0)
+        else:
+            kobo = max(0, int(row.values.get("outstanding_kobo") or 0))
+        out.append(ZohoCustomer(cid, str(row.values.get("name") or cid), kobo))
+    for cid, kobo in balances.items():
+        if cid not in seen:
+            # An invoice names a customer the contact list did not return:
+            # keep the money, under the name the invoice carries if any,
+            # rather than drop it.
+            out.append(ZohoCustomer(cid, invoice_names.get(cid) or cid, kobo))
     return out
 
 
 def _agreement(connected: bool, shops: dict[str, dict[str, Any]],
                names: dict[str, str], zoho: dict[str, int],
-               note: str) -> dict[str, Any]:
+               note: str, *, match: ShopMatch | None = None) -> dict[str, Any]:
     rows: list[dict[str, Any]] = []
     mimi_total, zoho_total = 0, 0
     for sid in sorted(set(shops) | set(zoho)):
@@ -947,6 +997,7 @@ def _agreement(connected: bool, shops: dict[str, dict[str, Any]],
         diff = (mimi - zk) if zk is not None else None
         rows.append({
             "shop_id": sid, "shop_name": names.get(sid, sid),
+            "match": _how_matched(connected, sid, match),
             "mimi_outstanding_kobo": mimi, "mimi_outstanding_naira": owed.naira(mimi),
             "zoho_outstanding_kobo": zk,
             "zoho_outstanding_naira": owed.naira(zk) if zk is not None else "",
@@ -955,6 +1006,12 @@ def _agreement(connected: bool, shops: dict[str, dict[str, Any]],
         })
     total_zk = zoho_total if connected else None
     total_diff = (mimi_total - total_zk) if total_zk is not None else None
+    text = note or ("Mimi minus Zoho: positive means Mimi's book is "
+                    "higher than what Zoho Books reports.")
+    if connected and match is not None and match.ambiguous:
+        n = len(match.ambiguous)
+        text = (f"{text} {n} shop{'s' if n != 1 else ''} matched more than one Zoho "
+                "customer by name, so each was left unmatched rather than pick one.")
     return {
         "as_of": now_iso(wall()), "zoho_connected": connected, "currency": "NGN",
         "shops": rows,
@@ -966,9 +1023,21 @@ def _agreement(connected: bool, shops: dict[str, dict[str, Any]],
             "difference_kobo": total_diff,
             "difference_naira": owed.naira(total_diff) if total_diff is not None else "",
         },
-        "note": note or ("Mimi minus Zoho: positive means Mimi's book is "
-                         "higher than what Zoho Books reports."),
+        "note": text,
     }
+
+
+def _how_matched(connected: bool, sid: str, match: ShopMatch | None) -> str:
+    """How one row was matched, for the console to say rather than guess."""
+    if not connected:
+        return "none"
+    if sid.startswith(ZOHO_ONLY_PREFIX):
+        return "zoho_only"
+    if match is None:
+        return "none"
+    if sid in match.ambiguous:
+        return "ambiguous"
+    return match.matched_by.get(sid, "none")
 
 
 # ------------------------------------------------------------ over the limit

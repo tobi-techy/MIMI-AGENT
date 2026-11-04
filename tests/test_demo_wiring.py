@@ -289,13 +289,14 @@ class LiveLikeZoho(FakeComposio):
     canned organization/contact rows, so the live path runs with no network."""
 
     def __init__(self, settings: Any = None, orgs: Any = None, contacts: Any = None,
-                 fail_create: bool = False) -> None:
+                 invoices: Any = None, fail_create: bool = False) -> None:
         from mimi.connectors.env import ConnectorSettings
 
         super().__init__(settings or ConnectorSettings.from_env({"MIMI_ZOHO_REGION": "com"}))
         self.org_rows = orgs if orgs is not None else [
             {"organization_id": "org-live-1", "name": "Coral Organization"}]
         self.contact_rows = contacts if contacts is not None else []
+        self.invoice_rows = invoices if invoices is not None else []
         self.fail_create = fail_create
         self.payments: dict[str, dict[str, Any]] = {}
 
@@ -305,6 +306,8 @@ class LiveLikeZoho(FakeComposio):
             return {"organizations": [dict(r) for r in self.org_rows]}
         if action == "zoho_books_contacts":
             return {"contacts": [dict(r) for r in self.contact_rows]}
+        if action == "zoho_books_invoices":
+            return {"invoices": [dict(r) for r in self.invoice_rows]}
         raise ConnectorError(f"No fixture for {action}.")
 
     def proxy(self, name: str, **kw: Any) -> dict[str, Any]:
@@ -706,6 +709,166 @@ def test_agreement_sign_flips_when_zoho_is_higher(
     assert row["difference_kobo"] == row["mimi_outstanding_kobo"] - 99999999900
     assert row["difference_kobo"] < 0  # Zoho higher here
     assert row["difference_naira"].startswith("-₦")
+
+
+def test_agreement_matches_a_real_shaped_zoho_by_name(
+        env: dict[str, Any], monkeypatch: pytest.MonkeyPatch) -> None:
+    """A real organization numbers its contacts, so the shop is found by
+    name (case and spacing folded), and the figure comes from the invoice
+    balances, not the contact's own rollup. A shop Zoho knows with nothing
+    open reads zero; a shop Zoho does not know still reads unknown."""
+    _live_env(monkeypatch)
+    _seed_live_connection(env["engine"])
+    live = LiveLikeZoho(
+        contacts=[
+            # The real shape: numeric ids, and a rollup deliberately at odds
+            # with the invoices so the test proves which one wins.
+            {"contact_id": "5139000000001", "contact_name": "  mama   SOLA Provisions ",
+             "outstanding_receivable_amount": 999999.0},
+            {"contact_id": "5139000000002", "contact_name": "Iya Tolu Foodstuff"},
+        ],
+        invoices=[
+            {"invoice_id": "zh-1", "invoice_number": "INV-1",
+             "customer_id": "5139000000001", "total": 20000.0, "balance": 12050.0},
+            {"invoice_id": "zh-2", "invoice_number": "INV-2",
+             "customer_id": "5139000000001", "total": 7950.0, "balance": 7950.0},
+            # Settled: the shop is known to Zoho and owes nothing.
+            {"invoice_id": "zh-3", "invoice_number": "INV-3",
+             "customer_id": "5139000000002", "total": 5000.0, "balance": 0.0},
+        ])
+    _live_transport(monkeypatch, live)
+    body = env["c"].get("/v1/books/agreement", headers=h()).json()
+    by_shop = {x["shop_id"]: x for x in body["shops"]}
+
+    row = by_shop["shop-001"]
+    assert row["match"] == "name" and row["shop_name"] == "Mama Sola Provisions"
+    assert row["zoho_outstanding_kobo"] == 2_000_000  # the invoices, not the rollup
+    assert row["difference_kobo"] == row["mimi_outstanding_kobo"] - 2_000_000
+
+    assert by_shop["shop-002"]["match"] == "name"
+    assert by_shop["shop-002"]["zoho_outstanding_kobo"] == 0  # known, nothing open
+    assert by_shop["shop-002"]["difference_kobo"] == by_shop["shop-002"][
+        "mimi_outstanding_kobo"]
+
+    with_money = {r.shop_id for r in W.receivables if r.outstanding_kobo > 0}
+    stranger_id = sorted(with_money - {"shop-001", "shop-002"})[0]
+    stranger = by_shop[stranger_id]
+    assert stranger["zoho_outstanding_kobo"] is None and stranger["match"] == "none"
+    assert stranger["difference_kobo"] is None and stranger["zoho_outstanding_naira"] == ""
+    assert body["total"]["zoho_outstanding_kobo"] == 2_000_000
+    assert body["total"]["difference_kobo"] == (
+        body["total"]["mimi_outstanding_kobo"] - 2_000_000)
+
+
+def test_agreement_two_customers_with_one_name_match_nobody(
+        env: dict[str, Any], monkeypatch: pytest.MonkeyPatch) -> None:
+    """Two Zoho customers carry the shop's name: neither is picked, the shop
+    reads unknown, and both customers keep their money in rows of their own."""
+    _live_env(monkeypatch)
+    _seed_live_connection(env["engine"])
+    live = LiveLikeZoho(
+        contacts=[
+            {"contact_id": "5139000000101", "contact_name": "Mama Sola Provisions"},
+            {"contact_id": "5139000000102", "contact_name": "mama sola   provisions"},
+        ],
+        invoices=[
+            {"invoice_id": "zh-1", "customer_id": "5139000000101", "balance": 500.0},
+            {"invoice_id": "zh-2", "customer_id": "5139000000102", "balance": 700.0},
+        ])
+    _live_transport(monkeypatch, live)
+    body = env["c"].get("/v1/books/agreement", headers=h()).json()
+    by_shop = {x["shop_id"]: x for x in body["shops"]}
+
+    row = by_shop["shop-001"]
+    assert row["zoho_outstanding_kobo"] is None  # never a coin toss
+    assert row["match"] == "ambiguous" and row["difference_kobo"] is None
+    assert "more than one Zoho customer" in body["note"]
+
+    zoho_only = [x for x in body["shops"] if x["match"] == "zoho_only"]
+    assert len(zoho_only) == 2  # each customer its own row, even sharing a name
+    assert {x["zoho_outstanding_kobo"] for x in zoho_only} == {50000, 70000}
+    assert all(x["mimi_outstanding_kobo"] == 0 for x in zoho_only)
+    assert body["total"]["zoho_outstanding_kobo"] == 120000
+
+
+def test_agreement_keeps_money_zoho_holds_for_a_customer_mimi_lacks(
+        env: dict[str, Any], monkeypatch: pytest.MonkeyPatch) -> None:
+    """A Zoho customer with no Mimi shop keeps its own row, so its money
+    stays in the total instead of vanishing into it."""
+    _live_env(monkeypatch)
+    _seed_live_connection(env["engine"])
+    live = LiveLikeZoho(
+        contacts=[{"contact_id": "5139000000201", "contact_name": "New Layout Stores"}],
+        invoices=[{"invoice_id": "zh-1", "customer_id": "5139000000201",
+                   "balance": 4500.0}])
+    _live_transport(monkeypatch, live)
+    body = env["c"].get("/v1/books/agreement", headers=h()).json()
+    by_shop = {x["shop_id"]: x for x in body["shops"]}
+
+    row = by_shop["zoho:New Layout Stores"]
+    assert row["shop_name"] == "New Layout Stores" and row["match"] == "zoho_only"
+    assert row["mimi_outstanding_kobo"] == 0 and row["mimi_outstanding_naira"] == "₦0"
+    assert row["zoho_outstanding_kobo"] == 450000
+    assert row["difference_kobo"] == -450000  # Mimi minus Zoho, by code
+    assert body["total"]["zoho_outstanding_kobo"] == 450000
+    assert body["total"]["difference_kobo"] == (
+        body["total"]["mimi_outstanding_kobo"] - 450000)
+
+
+def test_agreement_on_the_org_as_it_stands_today(
+        env: dict[str, Any], monkeypatch: pytest.MonkeyPatch) -> None:
+    """The real Coral Organization as read on 4 Nov 2026: three contacts and
+    three draft invoices, contacts' own rollup at zero. The screen finds
+    Mama Sola by name from the invoices, gives the two stray customers rows
+    of their own, and totals ₦231,500 on Zoho's side against the book's
+    ₦12,560,350."""
+    _live_env(monkeypatch)
+    _seed_live_connection(env["engine"])
+    live = LiveLikeZoho(
+        contacts=[
+            {"contact_id": "1631856000000100001",
+             "contact_name": "Mama Sola Provisions",
+             "outstanding_receivable_amount": 0},
+            {"contact_id": "1631856000000101001",
+             "contact_name": "Chidi Fagbemi Stores",
+             "outstanding_receivable_amount": 0},
+            {"contact_id": "1631856000000102001",
+             "contact_name": "Blessed Hands Supermarket",
+             "outstanding_receivable_amount": 0},
+        ],
+        invoices=[
+            {"invoice_id": "inv-1", "invoice_number": "INV-000001",
+             "customer_id": "1631856000000100001", "customer_name": "Mama Sola Provisions",
+             "total": 45000.0, "balance": 45000.0, "status": "draft"},
+            {"invoice_id": "inv-2", "invoice_number": "INV-000002",
+             "customer_id": "1631856000000100001", "customer_name": "Mama Sola Provisions",
+             "total": 62500.0, "balance": 62500.0, "status": "draft"},
+            {"invoice_id": "inv-3", "invoice_number": "INV-000003",
+             "customer_id": "1631856000000101001",
+             "customer_name": "Chidi Fagbemi Stores",
+             "total": 124000.0, "balance": 124000.0, "status": "draft"},
+        ])
+    _live_transport(monkeypatch, live)
+    body = env["c"].get("/v1/books/agreement", headers=h()).json()
+    by_shop = {x["shop_id"]: x for x in body["shops"]}
+
+    assert body["zoho_connected"] is True
+    row = by_shop["shop-001"]
+    assert row["shop_name"] == "Mama Sola Provisions" and row["match"] == "name"
+    assert row["zoho_outstanding_kobo"] == 10_750_000  # ₦107,500, drafts included
+    assert row["mimi_outstanding_kobo"] == 349_730_000  # ₦3,497,300, from the book
+    assert row["difference_kobo"] == 338_980_000
+
+    chidi = by_shop["zoho:Chidi Fagbemi Stores"]
+    assert chidi["match"] == "zoho_only" and chidi["mimi_outstanding_kobo"] == 0
+    assert chidi["zoho_outstanding_kobo"] == 12_400_000
+    assert "zoho:Blessed Hands Supermarket" not in by_shop  # owes nothing
+
+    assert body["total"]["mimi_outstanding_kobo"] == 1_256_035_000
+    assert body["total"]["mimi_outstanding_naira"] == "₦12,560,350"
+    assert body["total"]["zoho_outstanding_kobo"] == 23_150_000  # ₦231,500
+    assert body["total"]["zoho_outstanding_naira"] == "₦231,500"
+    assert body["total"]["difference_kobo"] == 1_232_885_000
 
 
 # ------------------------------------------------------------ shop text
