@@ -902,10 +902,56 @@ returns_settings = sa.Table(
     sa.Column("updated_at", sa.String(40), nullable=False),
 )
 
+# ------------------------------------------------------------- routines
+# Scheduled routines (4 Nov 2026, ``mimi.api.routines``): a routine files its
+# findings on the owner's thread on a schedule in Africa/Lagos, without anyone
+# asking. ``routine_state`` holds one row per routine and tenant, plus the
+# kill switch row (routine ``*``: one row pauses every routine without a
+# deploy); it survives restarts. ``routine_runs`` claims one day per routine
+# with its primary key, so a restart or a second API process can never fire
+# the same routine twice on the same Lagos day. Alembic ``0018_routines``.
+
+routine_state = sa.Table(
+    "routine_state", metadata,
+    _tenant(),
+    sa.Column("routine", sa.String(64), nullable=False),  # the id, or "*" for all
+    sa.Column("paused", sa.Boolean(), nullable=False, default=False),
+    sa.Column("pause_reason", sa.Text(), nullable=False, default=""),
+    sa.Column("paused_at", sa.String(40), nullable=False, default=""),
+    sa.Column("last_run_day", sa.String(10), nullable=False, default=""),  # Africa/Lagos
+    sa.Column("last_run_at", sa.String(40), nullable=False, default=""),
+    # done | failed | skipped | missed (the read says it in words)
+    sa.Column("last_status", sa.String(16), nullable=False, default=""),
+    sa.Column("last_finding", sa.Text(), nullable=False, default=""),
+    sa.Column("last_error", sa.Text(), nullable=False, default=""),
+    sa.Column("last_skip_day", sa.String(10), nullable=False, default=""),
+    sa.Column("last_missed_day", sa.String(10), nullable=False, default=""),
+    sa.Column("updated_at", sa.String(40), nullable=False),
+    sa.PrimaryKeyConstraint("tenant_id", "routine"),
+)
+
+routine_runs = sa.Table(
+    "routine_runs", metadata,
+    _tenant(),
+    sa.Column("routine", sa.String(64), nullable=False),
+    sa.Column("day", sa.String(10), nullable=False),  # Africa/Lagos: the claim key
+    # running | done | failed
+    sa.Column("status", sa.String(16), nullable=False),
+    # Which API process ran it (host, pid, thread): diagnostics only.
+    sa.Column("owner", sa.String(160), nullable=False, default=""),
+    sa.Column("started_at", sa.String(40), nullable=False),
+    sa.Column("started_ts", sa.Float(), nullable=False),
+    sa.Column("finished_at", sa.String(40), nullable=False, default=""),
+    sa.Column("findings", sa.Integer(), nullable=False, default=0),
+    sa.Column("result", sa.Text(), nullable=False, default=""),
+    sa.Column("error", sa.Text(), nullable=False, default=""),
+    sa.PrimaryKeyConstraint("tenant_id", "routine", "day"),
+)
+
 BOOK_TABLES = (reps, shops, consent_withheld, skus, deliveries, delivery_lines, receivables,
                payments, bank_feed, promises, disputes, proof_events, proof_asks)
 AGENT_TABLES = (threads, inbound_messages, turns, turn_attempts, messages, thread_events,
                 intents, approvals, credit_requests, spend, asked_once, kill_switches, history,
                 prefixes, artifacts, compactions, computer_tasks, computer_steps,
                 computer_artifacts, returns, return_lines, return_events, credit_notes,
-                returns_settings)
+                returns_settings, routine_state, routine_runs)
