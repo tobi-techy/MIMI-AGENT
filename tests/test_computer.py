@@ -50,6 +50,25 @@ def test_host_allowed_takes_the_domain_and_its_subdomains_only() -> None:
     assert not g.host_allowed(PAGE, "")
 
 
+def test_host_allowed_refuses_a_url_that_carries_a_credential() -> None:
+    """A username or password in the address is refused: the address may come
+    from a model, and a session should never be handed a credential."""
+    assert not g.host_allowed("https://ada:pw@supplier.example/x", "supplier.example")
+    assert not g.host_allowed("https://ada@supplier.example/x", "supplier.example")
+    assert not g.host_allowed("https://:pw@supplier.example/x", "supplier.example")
+
+
+def test_the_secret_check_catches_a_number_written_in_groups() -> None:
+    """The rule is "never type a card number", so the grouping a person writes
+    must not be the thing that slips one past it."""
+    assert g.looks_like_secret("4111 1111 1111 1111")
+    assert g.looks_like_secret("4111-1111-1111-1111")
+    assert g.looks_like_secret("4111111111111111")
+    # a price and a field a person fills are not card numbers
+    assert not g.looks_like_secret("45000")
+    assert not g.looks_like_secret("Ada Nwosu")
+
+
 def test_redact_takes_out_emails_numbers_and_long_digit_runs() -> None:
     out = g.redact("Sign in as ada@example.com, call 0803 555 1234, card 4111111111111111")
     assert "ada@example.com" not in out
@@ -131,6 +150,22 @@ def test_a_read_only_task_captures_a_screenshot_per_step_and_finishes() -> None:
     assert len(shots) >= 2 and all(b.data for b in shots)
     assert any(b.kind == "text" and b"Paracetamol" in b.data for b in out.artifacts)
     assert all(s.screenshot for s in out.steps if s.action != "finish")
+
+
+def test_the_kept_text_is_redacted_like_a_note_is() -> None:
+    """What a step read is written to the task's artifacts, so the redaction a
+    note gets applies there too: one rule, not two."""
+    fake = FakeComputer(pages={PAGE: {
+        "title": "Price list", "html": "<h1>Price list</h1>",
+        "text": "Ada ada@example.com 0803 555 1234 card 4111 1111 1111 1111 sugar 45000",
+        "png": b"\x89PNG-real"}})
+    steps = plans.build("price_check", "check prices", PAGE, "supplier.example").steps
+    out = _run("price_check", steps, fake)
+    kept = next(b.data for b in out.artifacts if b.kind == "text")
+    assert b"ada@example.com" not in kept and b"4111 1111" not in kept
+    assert b"0803 555 1234" not in kept
+    # the page's own figure is what the read is for, and it stays
+    assert b"45000" in kept
 
 
 def test_a_redirect_off_the_approved_domain_stops_the_task() -> None:

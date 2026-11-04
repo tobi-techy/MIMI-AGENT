@@ -21,7 +21,13 @@ Caps, all enforced before a turn is queued (``DemoStore.gate``):
   (503, the same answer as a refused turn); reads keep working;
 * each copy's own daily cap is the per-address cap, so a run that goes over
   mid-turn parks on the loop's existing daily cap (``Agent._park``), and the
-  "raise the allowance" approval it posts is refused in demo.
+  "raise the allowance" approval it posts is refused in demo;
+* per visitor address, per day, and per session, the browser tasks started
+  (``MIMI_DEMO_COMPUTER_TASKS_PER_DAY``, default 8, and
+  ``MIMI_DEMO_COMPUTER_TASKS_PER_SESSION``, default 3): a computer task spends
+  browser minutes, not model tokens, so it writes no kobo and the naira caps
+  never see it. Checked where a task is created, so resuming a paused task does
+  not spend an allowance twice.
 
 Approvals that would raise a credit limit or the model allowance are refused
 in demo (``refuses_approval``); declining them still works.
@@ -34,6 +40,9 @@ caps):
 * ``MIMI_DEMO_GLOBAL_DAILY_CAP_NAIRA`` (default 2000)
 * ``MIMI_DEMO_SESSION_TTL_S`` (default 3600)
 * ``MIMI_DEMO_SESSIONS_PER_IP`` (default 20 a day)
+* ``MIMI_DEMO_COMPUTER_TASKS_PER_SESSION`` (default 3) and
+  ``MIMI_DEMO_COMPUTER_TASKS_PER_DAY`` (default 8): browser tasks a demo
+  session, and one visitor address, may start. ``0`` turns the bound off.
 * ``MIMI_DEMO_KILL`` (``1`` refuses new turns and new sessions)
 * ``MIMI_DEMO_CLIENT_IP_HEADER`` (default ``cf-connecting-ip``): the one
   header the edge sets to the visitor's address. Cloudflare (in front of
@@ -59,7 +68,7 @@ import ipaddress
 import secrets
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from functools import lru_cache
 from typing import Any
 
@@ -71,7 +80,7 @@ from mimi.harness.policy import NEVER_TOOLS
 from mimi.store import schema as s
 from mimi.store.seed import delete_tenant, seed_world
 from mimi.store.util import insert_ignore, now_iso
-from mimi.tz import lagos_day
+from mimi.tz import LAGOS, lagos_day
 from mimi.world.loader import load_world
 from mimi.world.model import World
 
@@ -79,6 +88,10 @@ from mimi.world.model import World
 DEFAULT_IP_CAP_NAIRA = 400  # about 25 turns at about N16 a turn (30 Oct 2026)
 DEFAULT_GLOBAL_CAP_NAIRA = 2_000
 DEFAULT_CLIENT_IP_HEADER = "cf-connecting-ip"
+# A browser task spends browser minutes, not model tokens, so it writes no kobo
+# and the naira caps never see it. The count is what bounds it (``gate_computer_tasks``).
+DEFAULT_COMPUTER_TASKS_PER_SESSION = 3
+DEFAULT_COMPUTER_TASKS_PER_DAY = 8
 DEFAULT_TRUSTED_PROXIES = ("10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16", "100.64.0.0/10",
                            "127.0.0.0/8", "169.254.0.0/16", "::1/128", "fc00::/7",
                            "fe80::/10")
@@ -103,6 +116,10 @@ GLOBAL_CAPPED = ("the demo has used today's allowance for everyone; it resets at
                  "Lagos time")
 TOO_MANY = "too many demo sessions from this address today; try again tomorrow"
 EXPIRED = "demo session expired: start a new one"
+SESSION_TASKS_CAPPED = ("this demo session has started the browser tasks it may; "
+                        "come back tomorrow")
+DAY_TASKS_CAPPED = ("you have started today's browser tasks; it resets at midnight "
+                    "Lagos time")
 
 
 class DemoRefused(Exception):
@@ -113,7 +130,8 @@ class DemoRefused(Exception):
     shows (docs/API.md, "Demo limits"):
 
     ``code`` (``visitor_daily_cap``, ``global_daily_cap``, ``paused``,
-    ``too_many_sessions``), ``scope`` (``visitor``, ``global``, ``demo``),
+    ``too_many_sessions``, ``session_task_cap``, ``visitor_task_cap``),
+    ``scope`` (``visitor``, ``global``, ``demo``),
     ``title`` and ``message`` (plain words to show), ``spent_kobo``,
     ``cap_kobo`` and their ``*_naira`` strings (null when not a spend cap),
     ``resets_at`` (next midnight Africa/Lagos, ISO 8601) and ``retry``
@@ -172,6 +190,8 @@ class DemoConfig:
     global_daily_cap_kobo: int = DEFAULT_GLOBAL_CAP_NAIRA * 100
     session_ttl_s: float = DEFAULT_TTL_S
     sessions_per_ip: int = DEFAULT_SESSIONS_PER_IP
+    computer_tasks_per_session: int = DEFAULT_COMPUTER_TASKS_PER_SESSION
+    computer_tasks_per_day: int = DEFAULT_COMPUTER_TASKS_PER_DAY
     killed: bool = False
     client_ip_header: str = DEFAULT_CLIENT_IP_HEADER
     trusted_proxies: tuple[str, ...] = DEFAULT_TRUSTED_PROXIES
@@ -189,6 +209,12 @@ class DemoConfig:
             session_ttl_s=float(e.get("MIMI_DEMO_SESSION_TTL_S", "") or DEFAULT_TTL_S),
             sessions_per_ip=int(e.get("MIMI_DEMO_SESSIONS_PER_IP", "")
                                 or DEFAULT_SESSIONS_PER_IP),
+            computer_tasks_per_session=int(
+                e.get("MIMI_DEMO_COMPUTER_TASKS_PER_SESSION", "")
+                or DEFAULT_COMPUTER_TASKS_PER_SESSION),
+            computer_tasks_per_day=int(
+                e.get("MIMI_DEMO_COMPUTER_TASKS_PER_DAY", "")
+                or DEFAULT_COMPUTER_TASKS_PER_DAY),
             killed=_flag(e.get("MIMI_DEMO_KILL", "")),
             client_ip_header=_header_name(e.get("MIMI_DEMO_CLIENT_IP_HEADER")),
             trusted_proxies=_proxies(e.get("MIMI_DEMO_TRUSTED_PROXIES")),
@@ -449,6 +475,52 @@ class DemoStore:
                               spent_kobo=u["ip_spent_kobo"],
                               cap_kobo=self.conf.ip_daily_cap_kobo, resets_at=resets,
                               retry="tomorrow")
+
+    def computer_tasks_created(self, ip_hash: str, tenant_id: str) -> dict[str, int]:
+        """Browser tasks started today: by this session, and by this address.
+
+        A computer task spends browser minutes, not model tokens, so it writes
+        no kobo into ``demo_usage`` and the naira caps never bind. The count is
+        what bounds it, and a task row outlives the sweep of its session, so a
+        visitor cannot reset the day by starting another copy.
+        """
+        local = datetime.fromtimestamp(self.clock(), LAGOS)
+        start = local.replace(hour=0, minute=0, second=0, microsecond=0)
+        lo = start.astimezone(UTC).isoformat()
+        hi = (start + timedelta(days=1)).astimezone(UTC).isoformat()
+        by_day = (s.computer_tasks.c.created_at >= lo, s.computer_tasks.c.created_at < hi)
+        with self.engine.connect() as conn:
+            mine = int(conn.execute(
+                sa.select(sa.func.count()).select_from(s.computer_tasks).where(
+                    s.computer_tasks.c.tenant_id == tenant_id, *by_day)).scalar() or 0)
+            tenants = sa.select(s.demo_sessions.c.session_tenant).where(
+                s.demo_sessions.c.ip_hash == ip_hash)
+            addr = int(conn.execute(
+                sa.select(sa.func.count()).select_from(s.computer_tasks).where(
+                    s.computer_tasks.c.tenant_id.in_(tenants), *by_day)).scalar() or 0)
+        return {"session": mine, "day": addr}
+
+    def gate_computer_tasks(self, ip_hash: str, tenant_id: str) -> None:
+        """Refuse a new browser task when the demo's own bound is used up.
+
+        The same shape as ``gate``: the kill switch, then the bound, answered
+        as 429 with a plain sentence. Creation is the only place it is checked,
+        so resuming a paused task does not spend a visitor's allowance twice.
+        """
+        self.refuse_if_paused()
+        conf = self.conf
+        if conf.computer_tasks_per_session <= 0 and conf.computer_tasks_per_day <= 0:
+            return
+        n = self.computer_tasks_created(ip_hash, tenant_id)
+        resets = next_lagos_midnight(self.clock())
+        if 0 < conf.computer_tasks_per_session <= n["session"]:
+            raise DemoRefused(429, SESSION_TASKS_CAPPED, code="session_task_cap",
+                              scope="visitor", title="That is this session's browser tasks",
+                              resets_at=resets, retry="tomorrow")
+        if 0 < conf.computer_tasks_per_day <= n["day"]:
+            raise DemoRefused(429, DAY_TASKS_CAPPED, code="visitor_task_cap",
+                              scope="visitor", title="That is today's browser tasks",
+                              resets_at=resets, retry="tomorrow")
 
     def status(self, sess: Session | None, ip_hash: str,
                ip_source: str = "") -> dict[str, Any]:

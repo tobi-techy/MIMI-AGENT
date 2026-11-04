@@ -59,6 +59,8 @@ _CREDENTIAL_FIELD = re.compile(
 _EMAIL = re.compile(r"[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}")
 _PHONE = re.compile(r"(?<![\d])(?:\+?\d[\d\s().-]{8,}\d)(?![\d])")
 _DIGITS = re.compile(r"(?<![\d])\d{12,}(?![\d])")
+# What separates the groups of a number a person wrote: "4111 1111 1111 1111".
+_GROUPING = re.compile(r"[\s-]")
 
 
 class GuardrailError(RuntimeError):
@@ -100,9 +102,10 @@ def is_ip(host: str) -> bool:
 def host_allowed(url: str, domain: str) -> bool:
     """The approved domain and its subdomains only.
 
-    An empty domain allows nothing. IPv4/IPv6 literals are never allowed, and
-    the scheme must be http or https: a ``file:`` or ``javascript:`` target is
-    not a page on the approved domain.
+    An empty domain allows nothing. IPv4/IPv6 literals are never allowed, the
+    scheme must be http or https, and a URL that carries a username or password
+    is refused: a credential in an address is one nobody meant to send to a
+    session, and the address may come from a model.
     """
     if not domain:
         return False
@@ -111,6 +114,8 @@ def host_allowed(url: str, domain: str) -> bool:
     except ValueError:
         return False
     if parts.scheme not in ("http", "https"):
+        return False
+    if parts.username or parts.password:
         return False
     host = (parts.hostname or "").lower().rstrip(".")
     if not host or is_ip(host):
@@ -167,8 +172,12 @@ def credential_field(field: str) -> bool:
 
 
 def looks_like_secret(value: str) -> bool:
-    """A value we refuse to type: it is a card number or a long ID run."""
-    return bool(_DIGITS.search(value or ""))
+    """A value we refuse to type: it is a card number or a long ID run.
+
+    Spaces and hyphens come out first. A card number is written in groups, and
+    grouping must not be the thing that gets one typed into a form.
+    """
+    return bool(_DIGITS.search(_GROUPING.sub("", value or "")))
 
 
 def budget_stop(steps_done: int, seconds: float, limits: GuardLimits) -> str:

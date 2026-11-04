@@ -24,6 +24,7 @@ from mimi.harness.computer import (
     ComputerPorts,
     ReadPortalPageIn,
     ReadPortalPageOut,
+    browser_domains,
     computer_tools_mode,
     register_computer_tools,
 )
@@ -43,10 +44,12 @@ def _registry(ports: ComputerPorts) -> ToolRegistry:
     return reg
 
 
-def _ports(fake: FakeComputer | None = None, store: Any = None) -> ComputerPorts:
+def _ports(fake: FakeComputer | None = None, store: Any = None,
+           domains: tuple[str, ...] = ("supplier.example",)) -> ComputerPorts:
     db = make_engine("sqlite://")
     ensure_schema(db)
     return ComputerPorts(store=store if store is not None else ComputerStore(db),
+                         domains=domains,
                          engine=fake if fake is not None else FakeComputer(
                              pages={PAGE: {"title": "Price list",
                                            "text": "Sugar 42000 <b>promo</b>",
@@ -105,6 +108,35 @@ def test_the_tool_will_not_read_a_domain_the_owner_did_not_approve() -> None:
     with pytest.raises(ToolError) as err:
         spec.fn(_ctx(), args)
     assert "Next step:" in str(err.value)
+
+
+def test_the_tool_will_not_read_a_domain_the_owner_never_set_up() -> None:
+    """The model names the domain; the owner names what may be read. A claim on
+    its own is not an approval, however well the url and the domain agree."""
+    spec = _registry(_ports()).get("read_portal_page")
+    args = spec.input_model(url="https://evil.example/x", domain="evil.example")
+    with pytest.raises(ToolError) as err:
+        spec.fn(_ctx(), args)
+    assert "Next step:" in str(err.value)
+    assert "evil.example" in str(err.value)
+
+
+def test_with_no_domain_set_up_anywhere_the_tool_reads_nothing() -> None:
+    """The list is empty by default, so the tool fails closed."""
+    with pytest.raises(ToolError) as err:
+        _call(_ports(domains=()))
+    assert "Next step:" in str(err.value)
+    assert "domain" in str(err.value)
+
+
+def test_the_approved_domains_come_from_the_owner_not_the_model() -> None:
+    assert browser_domains({}) == ()
+    assert browser_domains({"MIMI_COMPUTER_DOMAINS": "  "}) == ()
+    # an address, a port, a leading dot and a repeat are all tolerated
+    assert browser_domains({
+        "MIMI_COMPUTER_DOMAINS": "https://portal.supplier.example:443/, .other.example,"
+                                 "portal.supplier.example"}) == (
+        "portal.supplier.example", "other.example")
 
 
 def test_a_sign_in_wall_stops_the_read_and_types_nothing() -> None:

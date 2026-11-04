@@ -218,6 +218,18 @@ def create_app(settings: Settings | None = None, agent: Agent | None = None, *,
         if demo is not None:
             demo.gate(visitor(request, key))
 
+    def demo_gate_computer(request: Request, key: ApiKey) -> None:
+        """The demo caps, plus the bound on browser tasks.
+
+        A computer task spends browser minutes, not model tokens: it writes no
+        kobo, so the naira caps alone would never see it. The count of tasks
+        created is what bounds the demo, and it is checked nowhere else, so
+        resuming a paused task does not spend a visitor's allowance twice."""
+        if demo is not None:
+            who = visitor(request, key)
+            demo.gate(who)
+            demo.gate_computer_tasks(who, key.tenant_id)
+
     def reader(key: Annotated[ApiKey, Depends(auth)]) -> ApiKey:
         if key.role != "owner":
             raise HTTPException(403, "this key may only post turns")
@@ -676,11 +688,13 @@ def create_app(settings: Settings | None = None, agent: Agent | None = None, *,
 
     @app.post("/v1/computer/tasks", response_model=ComputerProposal, status_code=201,
               responses=_ERRORS, summary="Propose a task for the browser container")
-    def post_computer_task(body: ComputerTaskIn, key: Owner) -> dict[str, Any]:
+    def post_computer_task(body: ComputerTaskIn, request: Request,
+                           key: Owner) -> dict[str, Any]:
         """Build the plan in code from the goal, the url and the approved
         domain, and return it for the owner to approve. Nothing runs yet and
         nothing is charged. The plan is what will run: it never holds a step
         that buys, pays, sends or changes settings, and never a credential."""
+        demo_gate_computer(request, key)
         try:
             return computer.propose(key.tenant_id, body.goal, body.url, body.domain,
                                     body.kind, body.inputs)
@@ -704,14 +718,17 @@ def create_app(settings: Settings | None = None, agent: Agent | None = None, *,
 
     @app.post("/v1/computer/tasks/{task_id}/approve", response_model=ComputerTaskDetail,
               responses=_ERRORS, summary="Approve the plan once; it runs under the guardrails")
-    def post_computer_approve(task_id: str, key: Owner) -> dict[str, Any]:
+    def post_computer_approve(task_id: str, request: Request,
+                              key: Owner) -> dict[str, Any]:
         """The owner approves the whole task once. The run continues in the
         background; poll this task for its steps. Approving a paused task
-        (a sign-in wall) resumes it in the session it paused in, so a sign-in
-        the owner did through the live view is still there; if that session has
-        ended, the task ends failed and the owner proposes it again. One
-        approval starts the run and a second one in flight gets 409. The
-        guardrails and the budgets are code."""
+        (a sign-in wall) runs the plan again in a fresh browser session: the
+        sign-in the owner did is not carried over, so a page that still asks
+        for one pauses the task again, with a fresh live view link. The resumed
+        run continues the task's own step log. One approval starts the run and
+        a second one in flight gets 409. The guardrails and the budgets are
+        code."""
+        demo_gate(request, key)
         try:
             computer.approve(key.tenant_id, task_id)
         except Refused as exc:

@@ -200,11 +200,13 @@ rendered step and plan string and fails on anything shaped like a code
 | Domain allowlist, abort off-domain | `guardrails.host_allowed` before every navigation **and against the observed URL of every step**, checked before the page is judged at all: a redirect, or a page that moves itself, to an unapproved domain ends the task `off_domain` without reading or keeping anything from it |
 | Never type credentials or a code | a password field, a sign-in form or an MFA prompt pauses the task `awaiting_owner` (after the allowlist check, so an unapproved page is never a page to pause on). Nothing is typed, and the step vocabulary has no action that could type one |
 | Never buy, message, or change settings; never enter card data | a page scan ends the task `forbidden_page` on a checkout, a card field, a message box or a settings page. Those actions are not in the vocabulary at all |
+| Never type a card number, however it is written | `guardrails.looks_like_secret` at proposal: spaces and hyphens come out of a value first, so `4111 1111 1111 1111` is refused like `4111111111111111`. A price (`45000`) and an ordinary answer are not long digit runs and pass |
+| A URL never carries a credential | `guardrails.host_allowed` refuses an address with a username or password in it (`https://ada:pw@supplier.example/`), so a session is never handed one. The host check would have resolved the real host anyway; this is the second rule, and it comes from the fact that the URL may be named by a model |
 | 10 minutes and 40 steps, then `stopped_runaway` | `GuardLimits(max_seconds=600, max_steps=40)`, wall clock from `mimi.clock.wall()`, checked before each step, consistent with `docs/LOOP-SAFETY.md`. The count is the task's whole step log, so no number of resumes can push a task past it |
 | Immediate stop, with the reason recorded | `/stop` writes `stopped_by_owner` first, then closes the session. The runner reads the stop between steps and keeps nothing the in-flight step produced, and the run's own writes are conditional on the row still being `running`: a stop can never be recorded as a browser failure, and a finished run cannot overwrite it |
 | One approval starts one run | the move to `running` is a single conditional `UPDATE` (`store.claim`). Two approvals in flight: one starts the run, the other gets `409` |
 | Every step logged | one row per step: action, URL, a code-written note, and the name of a screenshot artifact. A resumed task continues its own log, so a resume never rewrites the steps the paused run wrote |
-| Redaction | `guardrails.redact` removes emails, phone numbers and long digit runs from a note. Prices stay readable |
+| Redaction | `guardrails.redact` removes emails, phone numbers and long digit runs. It runs on a note on its way to the owner **and on the page text an `extract` step keeps as an artifact**, so there is one rule and not two. Prices stay readable |
 | Nothing applied to the book | a task produces artifacts only. No book or Go write path is reachable from `mimi/computer` |
 
 ## 7. Architecture
@@ -294,9 +296,14 @@ It is one tool, `read_portal_page` (`mimi/harness/computer.py`, wired in
   pose as one of Mimi's records. Nothing it finds reaches the book: a figure
   the page published is the page's figure, and any change to a record goes to
   the owner for approval like every other write.
-* With no browser configured, or a domain the owner has not approved, it
-  refuses with a plain message and a next step, rather than pretending to have
-  read something.
+* **The domains are the owner's, never the model's.** `MIMI_COMPUTER_DOMAINS`
+  names them (comma separated; empty by default). The model names a domain in
+  `args.domain`; the code checks that domain against the list, and then that
+  `args.url` is on that same domain. With the list empty the tool reads
+  nothing, so a domain the model names on its own is never an approval.
+* With no browser configured, no domain set up, or a domain that is not on the
+  list, it refuses with a plain message and a next step, rather than pretending
+  to have read something.
 * **It is offered to helpers behind `MIMI_COMPUTER_TOOLS`, off by default**,
   like the check-in stage. Off, every helper's toolset is byte-identical, so no
   recorded answer is invalidated. On, Collector, Proof, Order, Order intake,
@@ -325,6 +332,17 @@ the kinds and the artifact bytes; the harness tool (registered, tiered, tested
 offline); the signed live view link, proven reachable with no provider login.
 
 **Not available yet, plainly.**
+
+* **The demo gate does not bound a browser task by itself.** `DemoStore.gate`
+  refuses with `503` while the kill switch is on and `429` when an allowance is
+  used up, and it sums `demo_usage.kobo`. A computer task spends browser
+  minutes, not model tokens, so it writes no kobo and that sum never sees it:
+  the gate gives the kill switch and nothing else. What bounds browser minutes
+  is the count in `DemoStore.gate_computer_tasks`, checked where a task is
+  created (three a session, eight a visitor address a Lagos day). Recording a
+  kobo figure per run would make the caps mean one thing everywhere, and it
+  needs a price per browser minute the repo does not have, so it is the
+  post-demo shape rather than a made-up number in the demo's own ledger.
 
 * **A signed-in session reused across tasks.** The owner can sign in through a
   task's live view today, but the next task starts fresh. Keeping a provider

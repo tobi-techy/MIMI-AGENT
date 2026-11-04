@@ -238,16 +238,20 @@ def build_helpers(policy: RiskPolicy | None = None, *, go: SqlGo | None = None,
 
 
 def _browser_ports(engine: Any) -> ComputerPorts:
-    """The browser behind the read tool: the API's own store and the configured
-    container. With no container (or no store) the tool is still registered and
-    refuses with a plain message rather than pretending to have read a page."""
+    """The browser behind the read tool: the API's own store, the configured
+    container, and the domains the owner approved. With no container (or no
+    store) the tool is still registered and refuses with a plain message rather
+    than pretending to have read a page; with no domain named it refuses every
+    page, so a model's claim alone is never an approval."""
     from mimi.computer.service import engine_from_env
     from mimi.computer.store import ComputerStore
+    from mimi.harness.computer import browser_domains
 
     container = engine_from_env()
     ready = container.name != "unconfigured" and engine is not None
     return ComputerPorts(store=ComputerStore(engine) if ready else None,
-                         engine=container if ready else None)
+                         engine=container if ready else None,
+                         domains=browser_domains())
 
 
 def _with_browser(helpers: dict[str, Helper], reg: ToolRegistry,

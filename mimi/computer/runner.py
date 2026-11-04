@@ -241,8 +241,11 @@ class Runner:
         shot = self._screenshot(out, index, page.screenshot)
         if step.action == "extract" and page.text:
             name = f"{_slug(step.target or 'page')}-{index:02d}.txt"
+            # The same redaction the note to the owner gets: a page that shows
+            # an email, a phone number or a card number does not have it written
+            # into the task's artifacts either.
             self._keep(out, Blob(name=name, kind="text", mime="text/plain",
-                                 data=page.text.encode()))
+                                 data=g.redact(page.text).encode()))
         return shot
 
     def _record(self, out: Outcome, index: int, step: Step, page: g.Page,

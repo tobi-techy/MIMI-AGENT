@@ -25,6 +25,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Literal
+from urllib.parse import urlparse
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -35,6 +36,10 @@ from mimi.harness.untrusted import defang
 # The one tool, and the switch that offers it to a helper.
 COMPUTER_TOOLS: tuple[str, ...] = ("read_portal_page",)
 ENV_VAR = "MIMI_COMPUTER_TOOLS"
+# The domains the owner set up for the tool, comma separated. Empty by default:
+# with nothing named, the tool refuses every page, so a model's own claim is
+# never taken for the owner's approval.
+DOMAINS_VAR = "MIMI_COMPUTER_DOMAINS"
 # The helpers the browser is offered to when the switch is on: the ones that do
 # the owner's work. The plain chat helper is left out on purpose: it is the
 # fallback, and it carries the smallest toolset budget.
@@ -67,13 +72,49 @@ def computer_tools_mode(env: dict[str, str] | None = None) -> bool:
     return raw in ("1", "on", "yes", "true")
 
 
+def browser_domains(env: dict[str, str] | None = None) -> tuple[str, ...]:
+    """The domains the owner approved for the read tool, from the environment.
+
+    A port, a subdomain and a leading dot are tolerated; the list is empty when
+    nothing is set, which refuses every page. The owner names the domains; the
+    model only ever names one of them, and a claim it makes alone is not an
+    approval.
+    """
+    import os
+
+    raw = (env if env is not None else os.environ).get(DOMAINS_VAR, "")
+    out: list[str] = []
+    for piece in (raw or "").split(","):
+        host = _host_of(piece)
+        if host and host not in out:
+            out.append(host)
+    return tuple(out)
+
+
+def _host_of(value: str) -> str:
+    """A domain as a host: it may arrive as ``portal.example``, with a scheme,
+    with a port, or with a path."""
+    v = (value or "").strip().lower()
+    if not v:
+        return ""
+    if "//" not in v:
+        v = "//" + v
+    try:
+        host = urlparse(v).hostname or ""
+    except ValueError:
+        return ""
+    return host.rstrip(".").lstrip(".")
+
+
 @dataclass
 class ComputerPorts:
     """The browser the tool reads through: the same store and container the API
-    uses for an owner-triggered task. None (the default) means no browser."""
+    uses for an owner-triggered task. None (the default) means no browser, and
+    no domains means nothing to read: the tool fails closed."""
 
     store: Any = None
     engine: Any = None
+    domains: tuple[str, ...] = ()
 
     @property
     def ready(self) -> bool:
@@ -133,6 +174,18 @@ def register_computer_tools(reg: ToolRegistry, ports: ComputerPorts) -> None:
                 "Tell the owner that reading portals is not switched on yet. Do not "
                 "guess what the page says.",
                 code="no_browser")
+        claimed = _host_of(args.domain)
+        if not ports.domains or not claimed:
+            raise ToolError(
+                "No portal domain is set up on this server, so I cannot read that page.",
+                "Tell the owner that reading a portal needs the domain they want read, "
+                "and that none is set up yet. Do not guess what the page says.",
+                code="no_domain")
+        if not any(host_allowed(f"https://{claimed}/", d) for d in ports.domains):
+            raise ToolError(
+                f"{claimed} is not a domain the owner set up for me to read.",
+                "Ask the owner to approve that domain, then try again.",
+                code="domain_not_approved")
         if not host_allowed(args.url, args.domain):
             raise ToolError(
                 f"{args.domain} is the only domain I may read, and {args.url} is not on it.",

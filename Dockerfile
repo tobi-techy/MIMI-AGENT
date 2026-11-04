@@ -20,7 +20,9 @@ COPY mimi ./mimi
 # Skills (RAI-314, used when MIMI_SKILLS=1): vetted folders, locked by hash.
 COPY skills ./skills
 COPY alembic ./alembic
-RUN pip install '.[postgres]' \
+# The computer extra is the browser driver the cloud session is reached with
+# (RAI-326): a remote session needs no browser binary, only the package.
+RUN pip install '.[postgres,computer]' \
     && useradd --system --uid 10001 mimi \
     && mkdir -p /data && chown mimi /data
 
