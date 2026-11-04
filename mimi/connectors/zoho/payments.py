@@ -84,8 +84,15 @@ def books_url(region: str, path: str, query: str) -> str:
     return f"{host}/books/v3{path}?{query}" if query else f"{host}/books/v3{path}"
 
 
-def reference_for(idempotency_key: str) -> str:
-    """The idempotency key, safe for Zoho's reference_number field."""
+def reference_for(idempotency_key: str, approval_id: str = "") -> str:
+    """The idempotency key, safe for Zoho's reference_number field.
+
+    An owner-approved write carries the approval id (``mimi-apr_<digest>``),
+    so a payment in Zoho can be traced back to the approval that made it and
+    taken out again by ``scripts/seed_demo_zoho.py --reset``. A call without
+    an approval keeps the older ``mimi-<idempotency key>`` shape."""
+    if approval_id:
+        return f"mimi-{approval_id}"[:100]
     return f"mimi-{idempotency_key}"[:100]
 
 
@@ -121,7 +128,8 @@ def _naira(kobo: int) -> str:
     return f"\u20a6{whole:,}" + (f".{part:02d}" if part else "")
 
 
-def create_body(payload: dict[str, Any], idempotency_key: str) -> dict[str, Any]:
+def create_body(payload: dict[str, Any], idempotency_key: str,
+                approval_id: str = "") -> dict[str, Any]:
     """The Zoho create-customer-payment body. Amounts leave here in naira,
     computed from integer kobo in code.
 
@@ -170,7 +178,7 @@ def create_body(payload: dict[str, Any], idempotency_key: str) -> dict[str, Any]
         "payment_mode": payload.get("payment_mode") or "Bank Transfer",
         "amount": round(amount_kobo / 100, 2),
         "date": payload.get("date"),
-        "reference_number": reference_for(idempotency_key),
+        "reference_number": reference_for(idempotency_key, approval_id),
         "invoices": lines,
     }
 
@@ -185,11 +193,12 @@ def create_payment(*, transport: ComposioTransport | FakeComposio, tenant_id: st
         raise ConnectorError("A customer payment needs the owner's approval.",
                              next_step="Wait for the owner to approve it.")
     _refuse_foreign_ledger(transport, connection_id)
-    body = create_body(payload, idempotency_key)
+    body = create_body(payload, idempotency_key, approval_id)
     endpoint = books_url(transport.settings.zoho_region,
                          "/customerpayments", f"organization_id={organization_id}")
     reply = _proxy(transport, "customer_payment_create", method="POST",
-                   endpoint=endpoint, connected_account_id=connection_id, body=body)
+                   endpoint=endpoint, connected_account_id=connection_id, body=body,
+                   user_id=tenant_id)
     # Zoho Books answers a create with ``{"code": 0, "payment": {...}}``.
     payment = reply.get("payment") or reply.get("customerpayment") or reply
     if not isinstance(payment, dict):
@@ -205,7 +214,7 @@ def create_payment(*, transport: ComposioTransport | FakeComposio, tenant_id: st
 
 def find_by_reference(*, transport: ComposioTransport | FakeComposio,
                       connection_id: str, organization_id: str,
-                      reference: str) -> dict[str, Any] | None:
+                      reference: str, user_id: str = "") -> dict[str, Any] | None:
     """Read back a payment by its reference (the idempotency check)."""
     _refuse_foreign_ledger(transport, connection_id)
     endpoint = books_url(transport.settings.zoho_region, "/customerpayments",
@@ -213,7 +222,7 @@ def find_by_reference(*, transport: ComposioTransport | FakeComposio,
                          f"&reference_number={quote(reference, safe='')}")
     reply = _proxy(transport, "customer_payment_search", method="GET",
                    endpoint=endpoint, connected_account_id=connection_id,
-                   body={"reference_number": reference})
+                   body={"reference_number": reference}, user_id=user_id)
     # A search that failed must never read as "no payment exists": that is
     # the one answer this module acts on by creating a second payment.
     check_reply("customer_payment_search", reply)
@@ -232,11 +241,12 @@ def record_payment(*, transport: ComposioTransport | FakeComposio, tenant_id: st
     if not approval_id:
         raise ConnectorError("A customer payment needs the owner's approval.",
                              next_step="Wait for the owner to approve it.")
-    body = create_body(payload, idempotency_key)
+    body = create_body(payload, idempotency_key, approval_id)
     reference = body["reference_number"]
     payload_hash = hashlib.sha256(json.dumps(body, sort_keys=True).encode()).hexdigest()
     existing = find_by_reference(transport=transport, connection_id=connection_id,
-                                 organization_id=organization_id, reference=reference)
+                                 organization_id=organization_id, reference=reference,
+                                 user_id=tenant_id)
     if existing is not None:
         return {"payment_id": str(existing.get("payment_id") or ""),
                 "reference_number": reference, "payload_hash": payload_hash,
@@ -250,7 +260,8 @@ def record_payment(*, transport: ComposioTransport | FakeComposio, tenant_id: st
                 "already_recorded": False}
     except ConnectorError:
         landed = find_by_reference(transport=transport, connection_id=connection_id,
-                                   organization_id=organization_id, reference=reference)
+                                   organization_id=organization_id, reference=reference,
+                                   user_id=tenant_id)
         if landed is None:
             raise
         return {"payment_id": str(landed.get("payment_id") or ""),
@@ -260,7 +271,7 @@ def record_payment(*, transport: ComposioTransport | FakeComposio, tenant_id: st
 
 def delete_payment(*, transport: ComposioTransport | FakeComposio,
                    connection_id: str, organization_id: str,
-                   payment_id: str) -> None:
+                   payment_id: str, user_id: str = "") -> None:
     """Undo a created payment: delete it by its Zoho payment id."""
     _refuse_foreign_ledger(transport, connection_id)
     endpoint = books_url(transport.settings.zoho_region,
@@ -268,12 +279,12 @@ def delete_payment(*, transport: ComposioTransport | FakeComposio,
                          f"organization_id={organization_id}")
     _proxy(transport, "customer_payment_delete", method="DELETE",
            endpoint=endpoint, connected_account_id=connection_id,
-           body={"payment_id": payment_id})
+           body={"payment_id": payment_id}, user_id=user_id)
 
 
 def _proxy(transport: ComposioTransport | FakeComposio, name: str, *, method: str,
            endpoint: str, connected_account_id: str,
-           body: dict[str, Any]) -> dict[str, Any]:
+           body: dict[str, Any], user_id: str = "") -> dict[str, Any]:
     """One proxy call through the transport's own proxy path: the fake
     replays its fixture, the live transport calls ``tools.proxy``."""
     if isinstance(transport, FakeComposio):
@@ -281,12 +292,13 @@ def _proxy(transport: ComposioTransport | FakeComposio, name: str, *, method: st
                                         connected_account_id=connected_account_id,
                                         body=body), status=200)
     return _live_proxy(transport, name, method=method, endpoint=endpoint,
-                       connected_account_id=connected_account_id, body=body)
+                       connected_account_id=connected_account_id, body=body,
+                       user_id=user_id)
 
 
 def _live_proxy(transport: ComposioTransport | FakeComposio, name: str, *, method: str,
                 endpoint: str, connected_account_id: str,
-                body: dict[str, Any]) -> dict[str, Any]:
+                body: dict[str, Any], user_id: str = "") -> dict[str, Any]:
     """The live proxy call. ``name`` is the fake's fixture key and is
     unused live; the endpoint carries the absolute Books URL."""
     del name
@@ -298,9 +310,27 @@ def _live_proxy(transport: ComposioTransport | FakeComposio, name: str, *, metho
     # to nothing (PR #56 fixed this; main regressed it back to the
     # ``zoho_books`` prefix in the merge). Kept here with the fix, where
     # every proxy call in this module carries it.
+    #
+    # The user id belongs beside the call, not inside the Zoho body: a
+    # project with 2FA on refuses ``connected_account_id`` alone ("user_id
+    # is required with connected_account_id"), and a GET may carry no body
+    # at all. The SDK's ``tools.proxy`` has no user_id parameter, so a
+    # named user reaches the generated client underneath it.
     try:
-        res = client.tools.proxy(endpoint=endpoint, method=method,  # type: ignore[arg-type]
-                                 body=body, connected_account_id=connected_account_id)
+        if user_id and method == "GET":
+            res = client._client.tools.proxy(  # type: ignore[attr-defined]
+                endpoint=endpoint, method=method, body=None,
+                connected_account_id=connected_account_id,
+                extra_body={"user_id": user_id})
+        elif user_id:
+            res = client._client.tools.proxy(  # type: ignore[attr-defined]
+                endpoint=endpoint, method=method, body=body,
+                connected_account_id=connected_account_id,
+                extra_body={"user_id": user_id})
+        else:
+            res = client.tools.proxy(endpoint=endpoint, method=method,  # type: ignore[arg-type]
+                                     body=body,
+                                     connected_account_id=connected_account_id)
     except Exception as exc:
         raise ConnectorError(f"The Zoho Books payment call failed: {exc}",
                              next_step="Read back by reference before retrying.") from exc

@@ -28,6 +28,15 @@ from dataclasses import dataclass, field
 
 ZOHO_ONLY_PREFIX = "zoho:"
 FAKE_ID_PREFIX = "zc-"
+#: The number the seed writes on the one invoice it makes per shop. The
+#: payment path and the seed's ``--reset`` find it again by this, so the
+#: convention lives in one place.
+SEED_INVOICE_PREFIX = "MZ-"
+
+
+def seed_invoice_number(shop_id: str) -> str:
+    """The seeded invoice number for a shop: ``MZ-<shop_id>``."""
+    return f"{SEED_INVOICE_PREFIX}{shop_id}"
 
 
 def norm_name(name: str) -> str:

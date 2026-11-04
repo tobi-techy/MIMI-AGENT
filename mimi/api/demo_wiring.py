@@ -38,7 +38,13 @@ from sqlalchemy.engine import Engine
 
 from mimi import owed
 from mimi.api.agent import Conflict, NotFound
-from mimi.api.zoho_match import ZOHO_ONLY_PREFIX, ShopMatch, ZohoCustomer, match_shops
+from mimi.api.zoho_match import (
+    ZOHO_ONLY_PREFIX,
+    ShopMatch,
+    ZohoCustomer,
+    match_shops,
+    seed_invoice_number,
+)
 from mimi.clock import wall
 from mimi.connectors.base import ConnectorError
 from mimi.connectors.composio import ComposioTransport, FakeComposio
@@ -552,7 +558,7 @@ def zoho_approval(conn: sa.Connection, tenant: str, owner_thread: str, shop: Any
         "waiting_for_roll_kobo": int(applied.get("waiting_for_roll_kobo") or 0),
         "billed_by_roll_kobo": int(applied.get("billed_by_roll_kobo") or 0),
         "invoice_number": invoice_number(first), "delivery_id": first,
-        "reference_number": zp.reference_for(key), "payment_id": payment_id,
+        "reference_number": zp.reference_for(key, apr), "payment_id": payment_id,
         "date": paid_on, "customer_id": f"zc-{shop.shop_id}",
         "invoices": invoices}
     insert_ignore(conn, s.approvals, {
@@ -714,6 +720,8 @@ def on_approved(engine: Engine, tenant: str, a: dict[str, Any], *,
                     _set_payload(conn, tenant, a["approval_id"], payload)
                 return
         try:
+            if not fake:
+                payload = _resolve_live_payment(tenant, conn_id, org, payload, transport)
             res = zp.record_payment(transport=transport,
                                     tenant_id=_zoho_user(tenant, conn_id),
                                     connection_id=conn_id, organization_id=org,
@@ -793,7 +801,8 @@ def undo_approval(engine: Engine, tenant: str, approval_id: str, *,
         raise Conflict(f"Zoho did not undo it: {exc}") from exc
     try:
         zp.delete_payment(transport=transport, connection_id=conn_id, organization_id=org,
-                          payment_id=str(res["zoho_payment_id"]))
+                          payment_id=str(res["zoho_payment_id"]),
+                          user_id=_zoho_user(tenant, conn_id))
     except ConnectorError as exc:
         raise Conflict(f"Zoho did not undo it: {exc}") from exc
     now = wall()
@@ -983,6 +992,65 @@ def _zoho_customers(tenant: str, account: str, org: str,
             # rather than drop it.
             out.append(ZohoCustomer(cid, invoice_names.get(cid) or cid, kobo))
     return out
+
+
+def _resolve_live_payment(tenant: str, account: str, org: str,
+                          payload: dict[str, Any],
+                          transport: Any | None) -> dict[str, Any]:
+    """Point a live write at the real Zoho customer and the seeded invoice.
+
+    The card was built against Mimi's book, with the fake book's ``zc-``
+    customer id and ``INV-`` number. A real organization needs its own
+    contact and invoice ids, so they are read here by the same rules as the
+    agreement: ``zc-`` first, then exactly one customer with the shop's
+    name. The invoice is the one the seed writes per shop
+    (``MZ-<shop_id>``). Anything that cannot be resolved refuses instead of
+    guessing: a write that guessed would land on another customer's ledger.
+    Both reads carry ``organization_id``: Zoho refuses a books read without
+    it, and a refused read must never look like a shop Zoho does not know.
+    """
+    from mimi.connectors.zoho.books import ZohoBooksConnector
+
+    shop_id = str(payload.get("shop_id") or "")
+    shop_name = str(payload.get("shop_name") or shop_id)
+    match = match_shops({shop_id: shop_name},
+                        _zoho_customers(tenant, account, org, transport))
+    cid = match.by_id.get(shop_id)
+    if not cid:
+        why = (f"more than one Zoho customer is named {shop_name}, so no payment "
+               "was recorded" if shop_id in match.ambiguous else
+               f"Zoho Books has no customer named {shop_name}, so no payment was "
+               "recorded")
+        raise ConnectorError(
+            f"{why}. Run scripts/seed_demo_zoho.py, then approve again.",
+            next_step="Run scripts/seed_demo_zoho.py, then approve again.")
+    books = ZohoBooksConnector(transport or ComposioTransport(),
+                               tenant_id=_zoho_user(tenant, account),
+                               connection_id=account)
+    number = seed_invoice_number(shop_id)
+    found = [r for r in books.read("zoho_books_invoices",
+                                   {"organization_id": org}).rows
+             if str(r.values.get("invoice_number")) == number
+             and str(r.values.get("shop_id")) == cid]
+    if len(found) != 1:
+        raise ConnectorError(
+            f"Zoho Books has {len(found) or 'no'} invoice numbered {number} for "
+            f"{shop_name}, so no payment was recorded. Run "
+            "scripts/seed_demo_zoho.py, then approve again.",
+            next_step="Run scripts/seed_demo_zoho.py, then approve again.")
+    invoice = found[0].values
+    owes = int(invoice.get("outstanding_kobo") or 0)
+    applied = int(payload.get("applied_kobo") or 0)
+    if applied > owes:
+        raise ConnectorError(
+            f"Zoho's invoice {number} has {owed.naira(owes)} open, less than the "
+            f"{owed.naira(applied)} this payment would apply, so no payment was "
+            "recorded. Run scripts/seed_demo_zoho.py --reset, then approve again.",
+            next_step=("Run scripts/seed_demo_zoho.py --reset, then approve again."))
+    return {**payload, "customer_id": cid, "invoice_number": number,
+            "invoices": ([{"invoice_id": str(invoice.get("invoice_id")),
+                           "amount_applied_kobo": applied,
+                           "invoice_outstanding_kobo": owes}] if applied else [])}
 
 
 def _agreement(connected: bool, shops: dict[str, dict[str, Any]],
