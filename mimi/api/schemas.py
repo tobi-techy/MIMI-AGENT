@@ -990,7 +990,8 @@ class RoutineOut(_Out):
     ``name``, ``schedule`` and ``last_finding`` are sentences written by code
     and rendered as written. ``last_run_at`` and ``next_run_at`` are ISO 8601
     with an explicit zone (Africa/Lagos); ``last_run_at`` is empty when the
-    routine has never run, and ``last_finding`` then says so.
+    routine has never run, and ``last_finding`` is empty then too (the rail
+    says "Not run yet" from the timestamps, not twice).
     """
 
     id: str

@@ -189,20 +189,40 @@ def test_a_restart_after_the_schedule_catches_up_inside_the_window(
     assert len(_messages(engine)) == 2
 
 
-def test_a_window_that_passed_is_recorded_as_missed_not_borrowed(
+def test_a_late_tick_on_a_fresh_book_records_no_miss(
         env: dict[str, object]) -> None:
+    """A book opened at noon has missed nothing, and the rail says so once."""
     engine = env["engine"]
     out = rt.run_due(engine, T, now=lagos_at(2026, 11, 4, 13, 0))
-    assert _actions(out) == {"morning_brief": "missed", "aging_scan": "missed"}
+    assert _actions(out) == {"morning_brief": "never_run", "aging_scan": "never_run"}
     assert _messages(engine) == []
+    assert _runs(engine) == []
+    rows = {r["id"]: r for r in rt.view(
+        engine, T, now=lagos_at(2026, 11, 4, 13, 1))["routines"]}
+    for row in rows.values():
+        assert row["last_run_at"] == ""
+        assert row["last_finding"] == ""
+    assert _states(engine) == {}
+
+
+def test_a_window_that_passed_after_a_run_is_recorded_as_missed(
+        env: dict[str, object]) -> None:
+    engine = env["engine"]
+    # A real run the day before gives the routine a history to miss.
+    rt.run_due(engine, T, now=lagos_at(2026, 11, 3, 8, 30))
+    out = rt.run_due(engine, T, now=lagos_at(2026, 11, 4, 13, 0))
+    assert _actions(out) == {"morning_brief": "missed", "aging_scan": "missed"}
+    assert len(_messages(engine)) == 2          # the day before's two, no more
     state = _states(engine)["morning_brief"]
     assert state["last_status"] == "missed"
-    assert "8:00 AM window passed" in str(state["last_finding"])
-    # The rail says it in the same plain words: no code, no blank row.
+    # It says only what it knows: the time passed and there was no run. It
+    # does not invent an outage.
+    assert state["last_finding"] == (
+        "It did not run today. Its 8:00 AM time has passed.")
     row = {r["id"]: r for r in rt.view(
         engine, T, now=lagos_at(2026, 11, 4, 13, 1))["routines"]}["morning_brief"]
     assert row["last_finding"] == (
-        "It did not run today: the 8:00 AM window passed while the API was down.")
+        "It did not run today. Its 8:00 AM time has passed.")
     assert "last_finding_shop_id" not in row
     # The same day never records it twice, and the next day runs normally.
     rt.run_due(engine, T, now=lagos_at(2026, 11, 4, 14, 0))
@@ -498,7 +518,7 @@ def test_the_routine_reads_one_line_and_never_borrows_the_clock(
     assert rows["morning_brief"] == {
         "id": "morning_brief", "name": "Morning briefing", "schedule": "Every day at 8:00 AM",
         "paused": False, "last_run_at": "", "next_run_at": "2026-11-04T08:00:00+01:00",
-        "last_finding": "It has not run yet."}
+        "last_finding": ""}
     rt.run_due(engine, T, now=lagos_at(2026, 11, 4, 8, 0))
     after = {r["id"]: r for r in rt.view(engine, T, now=lagos_at(2026, 11, 4, 8, 1))["routines"]}
     assert after["morning_brief"]["last_run_at"] == "2026-11-04T08:00:00+01:00"
@@ -507,7 +527,7 @@ def test_the_routine_reads_one_line_and_never_borrows_the_clock(
         "Mama Sola Provisions owes ₦3,497,300. Of that, ₦2,387,250 is overdue, and the oldest invoice is 45 days old.")
     assert after["morning_brief"]["last_finding_shop_id"] == "shop-001"
     assert after["aging_scan"]["last_run_at"] == ""
-    assert after["aging_scan"]["last_finding"] == "It has not run yet."
+    assert after["aging_scan"]["last_finding"] == ""
 
 
 # ------------------------------------------------------------------- the API
@@ -541,7 +561,7 @@ def test_get_routines_has_the_console_shape(api: dict[str, object]) -> None:
         assert set(row) == expected
         assert row["paused"] is False
         assert row["last_run_at"] == ""
-        assert row["last_finding"] == "It has not run yet."
+        assert row["last_finding"] == ""
         assert " at " in row["schedule"]
         next_at = datetime.fromisoformat(row["next_run_at"])
         assert next_at.tzinfo is not None and next_at.utcoffset().total_seconds() == 3600

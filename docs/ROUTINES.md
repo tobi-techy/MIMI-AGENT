@@ -52,9 +52,21 @@ with the other routines. The next day runs normally.
 A tick at 9:00 still sends the 8:00 brief: a window of `CATCH_UP` (4 hours)
 after the scheduled time lets a restart recover. A window is cut at Lagos
 midnight, so a run just before midnight never claims the next day, and the
-day key never borrows the current time. A tick after the window records the
-day as `missed` once, with the words "It did not run today: the 8:00 AM
-window passed while the API was down."
+day key never borrows the current time. The window is per routine, so at
+12:15 the aging scan (8:30, open until 12:30) still catches up while the
+brief (8:00, closed at 12:00) does not; that is one rule, not two.
+
+A routine with a run history that misses its window is recorded `missed`
+once, with words that state only what the code knows: "It did not run today.
+Its 8:00 AM time has passed." It does not claim the API was down, because it
+cannot know that; a deploy, a restart, a young process and a new tenant look
+the same from here.
+
+A routine with no history at all is not missed. A book opened at noon did not
+exist at 8:00, so its rail stays at "not run yet" (empty `last_finding`) and
+the day is not written as a miss. It can still catch up if it is inside the
+window, which is why a fresh tenant at 12:09 gets the 8:30 aging scan's real
+finding and no morning brief.
 
 ## The switch
 
@@ -135,9 +147,11 @@ POST /v1/routines/{id}/resume  owner key
 
 `name`, `schedule` and `last_finding` are sentences written by code and
 rendered as written. `last_run_at` and `next_run_at` are ISO 8601 with an
-explicit zone, and `last_run_at` is empty until the routine really has run,
-with `last_finding = "It has not run yet."` rather than a claim at the current
-time. `paused_reason` is present only when paused. `last_finding_shop_id` is
+explicit zone, and `last_run_at` is empty until the routine really has run;
+`last_finding` is empty then too, because the console words "Not run yet"
+from the empty timestamp and a sentence would say it twice. A skip, miss or
+failure is something that happened, so those sentences stay. `paused_reason`
+is present only when paused. `last_finding_shop_id` is
 present only when the last finding names one shop; it is never guessed from
 the sentence. Resuming one routine under the kill switch answers
 `paused: true`: the kill switch is the truth.

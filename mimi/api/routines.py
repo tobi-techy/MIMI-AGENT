@@ -72,7 +72,6 @@ MAX_REASON = 300
 # by the scheduler at all. The per-run model count is declared on each routine
 # and checked in ``tests/test_routines.py``; the cap is 0 because the cost is 0.
 MODEL_CALLS_PER_RUN = 0
-NEVER_RUN = "It has not run yet."
 DEFAULT_PAUSE_REASON = "Paused by the owner."
 DEFAULT_ALL_REASON = "Every routine is paused."
 
@@ -474,12 +473,17 @@ def _run_one(engine: Engine, tenant: str, routine: Routine, now: datetime, day: 
         if now < scheduled:
             return {"routine": routine.id, "action": "not_due"}
         if now >= window_end:
+            if not (state.get("last_run_at") or state.get("last_status")):
+                # No run history: a book opened after the time has missed
+                # nothing, and the rail stays at "not run yet". A miss is only
+                # for a routine that has run before.
+                return {"routine": routine.id, "action": "never_run"}
             if state.get("last_missed_day") != day:
                 _update_state(engine, tenant, routine.id, now.timestamp(),
                               last_missed_day=day, last_status="missed",
-                              last_finding=("It did not run today: the "
-                                            f"{_clock_words(routine.schedule)} window passed "
-                                            "while the API was down."),
+                              last_finding=("It did not run today. Its "
+                                            f"{_clock_words(routine.schedule)} "
+                                            "time has passed."),
                               last_finding_shop_id="")
             return {"routine": routine.id, "action": "missed"}
     if not _claim(engine, tenant, routine.id, day, now, _owner_label()):
@@ -599,7 +603,7 @@ def view(engine: Engine, tenant: str, *, now: datetime | None = None) -> dict[st
             "paused": paused,
             "last_run_at": _stored_iso(str(state.get("last_run_at") or "")),
             "next_run_at": _iso(routine.schedule.next_after(here)),
-            "last_finding": str(state.get("last_finding") or NEVER_RUN),
+            "last_finding": str(state.get("last_finding") or ""),
         }
         if paused:
             row["paused_reason"] = reason
