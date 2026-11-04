@@ -33,7 +33,10 @@ Reads only, no model calls. The live host is
 10:38 UTC from main `d995e67` (holder commit `813c20d`, deployment
 `01a1a623`), which is the build that carries the routines rail (operational
 note 5). The book is the same seeded book either side of it: every demo
-session gets its own fresh copy.
+session gets its own fresh copy. A later deploy from main `a18a7b3` carries
+the books agreement and run-now; it adds no database revision (the head stays
+`0018`), so the seeded book and every read above are unaffected. What it adds
+to this script is note 5's run button.
 
 | # | Shop | Delivery / invoice | Amount | Runs on the live book? |
 |---|---|---|---|---|
@@ -383,8 +386,16 @@ These are the things that cost a take if nobody says them out loud first.
    a sentence ("Checking the note."); `resume` puts it back. `all` (or `*`) is
    the kill switch: `POST /v1/routines/all/pause` answers
    `{"id":"all","name":"All routines","paused":true}`. A visitor's session
-   shows no routine that has already run, so film the rail, the switch and its
-   sentence, not a run, and do not promise one.
+   starts with no routine that has run, and **the owner's own button runs one
+   on demand**: `POST /v1/routines/morning_brief/run` (owner key) goes through
+   the same tick path, writes the same finding sentence and answers with the
+   routine's row as the rail reads it afterwards, so a real run with its
+   `last_run_at` and its finding is filmable inside a take instead of waiting
+   for 8:00 AM. It takes the day's own claim, so a second run today answers
+   **409** "It has already run today. It runs again tomorrow at 8:00 AM.", and
+   a paused routine answers **409** with its reason. Neither sends anything and
+   neither spends a model call: the routines are code. (The run route arrives
+   with the run-now deploy; on the build before it, that `POST` answers 404.)
 6. **The console paints its shell before its data.** Tiles appear with labels
    and no values for one to two seconds while eight reads land. Open the
    screen, count to two, then speak. Otherwise the first frame of a shot has
