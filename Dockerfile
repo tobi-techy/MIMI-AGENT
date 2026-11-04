@@ -23,7 +23,10 @@ COPY skills ./skills
 COPY alembic ./alembic
 # The computer extra is the browser driver the cloud session is reached with
 # (RAI-326): a remote session needs no browser binary, only the package.
-RUN pip install '.[postgres,computer]' \
+# The connectors extra is the Composio SDK and the Excel reader: without it
+# every shop-tool call fails with "the Composio package is not installed", in
+# production as well as locally, and the two-books read has nothing to read.
+RUN pip install '.[postgres,computer,connectors]' \
     && useradd --system --uid 10001 mimi \
     && mkdir -p /data && chown mimi /data
 
