@@ -5,8 +5,9 @@ name, its turns and pending approvals). Shop text never reaches a title.
 
 * ``helper``: the helper of the thread's newest routed turn (``mimi`` when
   nothing has been routed yet), plus its display name (``helper_name``).
-* ``status``: ``needs_you`` (a pending approval, or a turn parked waiting on
-  the owner), ``running`` (a turn queued or running), else ``done``.
+* ``status``: ``needs_you`` (a pending approval, or a turn waiting on a person:
+  an ask, a park, a denial - the handoff contract's rule, ``handoff.task_status``),
+  ``running`` (a turn queued or running), else ``done``.
 * ``title``: who the thread is with and, for a shop, what it is about.
 """
 
@@ -15,6 +16,7 @@ from __future__ import annotations
 from collections.abc import Mapping, Sequence
 from typing import Any
 
+from mimi.harness import handoff as hx
 from mimi.harness.skills import HELPER_TITLE, HELPERS
 
 # Owner-facing names for each skill (the router's LABELS are shop-facing).
@@ -41,8 +43,6 @@ SKILL_TITLES: dict[str, str] = {
     "mimi/budget": "Daily allowance",
     "mimi/stop": "Stopped",
 }
-RUNNING_STATES = frozenset({"queued", "leased"})
-WAITING_STATES = frozenset({"parked"})
 MAX_TITLE = 80
 
 
@@ -54,17 +54,22 @@ def skill_title(skill: str) -> str:
 
 
 def _status(pending: int, turns: Sequence[Mapping[str, Any]]) -> str:
-    states = {str(t.get("state") or "") for t in turns}
-    if pending > 0 or states & WAITING_STATES:
+    """The thread's bucket, from the handoff contract's own rule (hx.task_status),
+    so a thread and its tasks never disagree about who is being waited on."""
+    if pending > 0:
         return "needs_you"
-    if states & RUNNING_STATES:
+    ranks = {hx.task_status(str(t.get("state") or ""), str(t.get("status") or ""))
+             for t in turns}
+    if "needs_you" in ranks:
+        return "needs_you"
+    if "working" in ranks:
         return "running"
     return "done"
 
 
 def derive(*, kind: str, thread_id: str, shop_id: str, shop_name: str, pending: int,
            turns: Sequence[Mapping[str, Any]], rep_name: str = "") -> dict[str, str]:
-    """``turns`` oldest first, each with ``helper``, ``skill`` and ``state``."""
+    """``turns`` oldest first, each with ``helper``, ``skill``, ``state`` and ``status``."""
     routed = [t for t in turns if str(t.get("helper") or "") in HELPERS]
     newest = routed[-1] if routed else None
     helper = str(newest["helper"]) if newest else "mimi"

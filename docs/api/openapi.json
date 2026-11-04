@@ -5115,7 +5115,7 @@
             "type": "string"
           },
           "status": {
-            "description": "needs_you: a pending approval or a turn waiting on the owner; running: a turn queued or running; done: otherwise.",
+            "description": "needs_you: a pending approval, or a turn waiting on a person (a question to answer, a park, a denial); running: a turn queued or running; done: otherwise.",
             "enum": [
               "needs_you",
               "running",

@@ -223,8 +223,9 @@ class ThreadSummary(_Out):
     helper_name: str = Field(..., description="Its display name (Order, Collector, Credit, "
                              "Stock, Brand, Proof or Mimi).")
     status: Literal["needs_you", "running", "done"] = Field(
-        ..., description="needs_you: a pending approval or a turn waiting on the owner; "
-        "running: a turn queued or running; done: otherwise.")
+        ..., description="needs_you: a pending approval, or a turn waiting on a person "
+        "(a question to answer, a park, a denial); running: a turn queued or running; "
+        "done: otherwise.")
     title: str = Field(..., description="A short title written by code (never shop text).")
 
 

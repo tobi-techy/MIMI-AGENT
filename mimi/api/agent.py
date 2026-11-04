@@ -2036,6 +2036,13 @@ class Agent:
         pending = int(conn.execute(sa.select(sa.func.count()).select_from(s.approvals).where(
             s.approvals.c.tenant_id == tenant, s.approvals.c.turn_id == turn_id,
             s.approvals.c.status == "pending")).scalar() or 0)
+        # The row's state is not read here on purpose: ``queue.finish_in`` has
+        # just written state "done" for every completing status (the parks with
+        # their own path write "parked" and never reach this function), so the
+        # status is what carries the wait: an ``asked_question`` turn waits for
+        # its answer and the park statuses wait on the owner
+        # (``hx.NEEDS_YOU_STATUSES``). Passing "done" here is therefore true,
+        # not a placeholder, and it never hides a waiting turn.
         tstatus = hx.task_status("done", status, pending_approvals=pending)
         helper = d.helper if d.status == "routed" else "mimi"
         steps = hx.steps_from_events(fin.events if fin is not None else (),
