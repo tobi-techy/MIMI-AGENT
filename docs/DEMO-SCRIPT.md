@@ -378,14 +378,14 @@ These are the things that cost a take if nobody says them out loud first.
    `sessionStorage["mimi-console-session"]` as `{token, expiresAt}`, and that
    token reads the rail. On a fresh session it lists two routines, "Morning
    briefing" (every day at 8:00 AM) and "Aging scan" (every day at 8:30 AM),
-   with an empty `last_run_at` and a `next_run_at` on the next day. **The
-   finding sentence moves under you.** For the first seconds it reads "It has
-   not run yet.", and then the routines daemon ticks the new tenant, sees that
-   today's window has already passed, and records "It did not run today: the
-   8:00 AM window passed while the API was down." (measured on 4 Nov at about
-   12:00 WAT: the sentence had changed ten seconds after the session was
-   minted). Both sentences are honest, and neither is a run. If the film wants
-   a run, use the owner's button next, instead of waiting for 8:00 AM.
+   with an empty `last_run_at`, `last_finding` "It has not run yet." and a
+   `next_run_at` on the next day. A session opened after 8:00 AM can have that
+   sentence replaced by a skip sentence while you watch (measured on 4 Nov: it
+   had changed within ten seconds of the session being minted, with
+   `last_run_at` still empty), and the skip wording is itself being changed so
+   that a routine which has never run keeps saying "It has not run yet."
+   Either way there is no run in it. If the film wants a run, use the owner's
+   button next, instead of waiting for 8:00 AM.
    `POST /v1/routines/morning_brief/pause`
    answers `{"id":"morning_brief","name":"Morning briefing","paused":true}` and
    the rail then carries the switch as a row with a `paused_reason` written as
