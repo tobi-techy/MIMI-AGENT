@@ -623,6 +623,151 @@ _MONEY_MOVE = re.compile(
 _EDIT_APPROVED = re.compile(r"\b(?:changed|edited|updated|amended|modified)\s+(?:the|your)?\s*"
                             r"approved\b", re.I)
 
+# A refusal that reached the model as plain text (a scope check, a Go
+# refusal, a plain error line) carries one of these short noes. Typed
+# denials (``denied: true`` JSON) are checked structurally, never by pattern.
+_REFUSED_TOOL = re.compile(r"\b(denied|refused|not available|no access|not shared)\b", re.I)
+_HONEST_SUCCESS = re.compile(
+    r"\b(recorded|logged|saved|noted|read|checked|looked(?:\s+up|\s+into)?|found|verified|"
+    r"sent|forwarded|approved|confirmed|received|"
+    r"scheduled|booked|done|updated|added|placed|cancelled|cleared)\b", re.I)
+_HONEST_DONE = re.compile(r"\b(done|ok|okay|sure|all set|taken care of)\b", re.I)
+_HONEST_OK_NOUNS = re.compile(r"\b(update|reminder|payment|order|receipt|request|"
+                              r"message|report)\b", re.I)
+# A bare success word next to one of these in its own clause reports the
+# failure honestly ("I could not read the balance"), never a success claim.
+_CLAUSE_BREAK = re.compile(r"[.;!?,]|\s+(?:and|but|so|then|while|which)\s+", re.I)
+_NEGATION = re.compile(
+    r"\b(?:not|no|never|cannot|can't|unable|fail(?:ed|s|ure)?|error(?:ed|s)?|"
+    r"refus(?:ed|es)|deni(?:ed|es)|nothing|none|without)\b", re.I)
+
+
+def _negated(text: str, at: int) -> bool:
+    """Whether the clause ending at ``at`` carries a negation or a failure cue."""
+    start = 0
+    for m in _CLAUSE_BREAK.finditer(text, 0, at):
+        start = m.end()
+    return bool(_NEGATION.search(text[start:at]))
+
+
+# "read" is a noun too ("the read was refused"): only a verb use counts as
+# a success claim, i.e. read with a subject or auxiliary in front of it
+# ("I read", "have read", "was read"). A bare "read" after a determiner or
+# another noun is the failure being named, never a claim (RAI-324 review).
+_READ_VERB = re.compile(
+    r"\b(?:i|we|you|they|he|she|it|have|has|had|'ve|’ve|was|were|is|are|am|"
+    r"been|being|already|just|not|never|n't|can|could|to|will|would|"
+    r"should|shall|must|may|might|did|do|does)\s+(?:\w+\s+){0,2}?read\s*$", re.I)
+
+
+def _verb_read(text: str, at: int, end: int) -> bool:
+    """Whether the "read" ending at ``end`` is used as a verb: a subject or
+    an auxiliary stands just before it in the same clause."""
+    start = 0
+    for m in _CLAUSE_BREAK.finditer(text, 0, at):
+        start = m.end()
+    return bool(_READ_VERB.search(text[start:end]))
+
+
+def _affirmative(text: str, pattern: re.Pattern[str]) -> bool:
+    """A match for ``pattern`` that its own clause does not negate."""
+    return any(not _negated(text, m.start()) for m in pattern.finditer(text))
+
+
+def _affirmative_success(text: str) -> bool:
+    """An unnegated success word, where a bare noun "read" never counts."""
+    for m in _HONEST_SUCCESS.finditer(text):
+        if _negated(text, m.start()):
+            continue
+        if m.group(0).lower() == "read" and not _verb_read(text, m.start(), m.end()):
+            continue
+        return True
+    return False
+
+
+def _tool_texts(messages: Sequence[Any]) -> list[str]:
+    """What this turn's tools actually said, newest first."""
+    out = []
+    for m in reversed(list(messages or [])):
+        if isinstance(m, dict) and m.get("role") == "tool":
+            out.append(str(m.get("content") or ""))
+    return out
+
+
+def _step_tool_texts(messages: Sequence[dict[str, Any]]) -> list[str]:
+    """The current step's tool answers: everything after the last assistant
+    turn that proposed tools (repair turns are new steps, so the held
+    message's own failure stays in scope)."""
+    texts: list[str] = []
+    for m in reversed(list(messages or [])):
+        if not isinstance(m, dict):
+            continue
+        if m.get("role") == "tool":
+            texts.append(str(m.get("content") or ""))
+            continue
+        if m.get("role") == "assistant" and m.get("tool_calls"):
+            break
+    return texts
+
+
+def _refused_text(text: str) -> bool:
+    """One tool answer that is a no: typed (``denied: true`` JSON) or a plain
+    text no (a scope check, a Go refusal, an error line)."""
+    try:
+        node = json.loads(text)
+    except ValueError:
+        node = None
+    if isinstance(node, dict):
+        return node.get("denied") is True
+    return bool(_REFUSED_TOOL.search(text))
+
+
+def tool_refused(messages: Sequence[Any]) -> bool:
+    """Whether a step in this turn was refused (a consent, scope, Go, policy
+    or built-in no): the reply must ask the owner for a next step instead of
+    claiming it did the work (RAI-324)."""
+    return any(_refused_text(text) for text in _tool_texts(messages))
+
+
+def dishonest_success(text: str, *, messages: Sequence[dict[str, Any]],
+                      intents: Sequence[Any] = (),
+                      refused: bool = False) -> list[str]:
+    """Success claims in ``text`` after this step's own tools said no, or
+    after a denial in an earlier step of the same run that no progress has
+    reset yet (``refused``: the breaker's own streak notion).
+
+    Only this run counts: thread history from earlier turns never holds a
+    reply (pass ``refused=False`` for that). A success claim with no refusal
+    behind it is the outcomes check's job (``unbacked_claims``), not this
+    one. A success word the reply negates in its own clause ("I could not
+    read it") reports the failure honestly and is never held.
+    """
+    if not refused and not any(_refused_text(t) for t in _step_tool_texts(messages)):
+        return []
+    plain = _QUOTED.sub(" ", text)
+    hits = [m.group(1).lower() for m in _CLAIM.finditer(plain)]
+    hits += [m.group(1).lower() for m in _PASSIVE.finditer(plain)
+             if not _CONDITION.search(plain[:m.start()])]
+    head = _HEADLINE.match(plain)
+    if head and not _CONDITION.search(plain):
+        hits.append(head.group(1).lower())
+    if _DONE_START.search(plain):
+        hits.append("done")
+    if not hits and _affirmative_success(plain):
+        hits.append("refused tool reported as success")
+    if not hits and _affirmative(plain, _HONEST_DONE) and _HONEST_OK_NOUNS.search(plain):
+        hits.append("refused tool reported as success")
+    if not hits and _PROMISE.search(plain):
+        hits.append("refused tool with a promise")
+    return list(dict.fromkeys(hits))
+
+
+def honesty_note(problems: list[str]) -> str:
+    """The repair line for an honesty hold: name the refusal, not a lecture."""
+    return ("the checks said no this step (" + ", ".join(problems) +
+            "); say what was refused and ask the owner for a next step instead "
+            "of claiming success")
+
 SPEAKING = frozenset({"send_to_user", "ask_question"})
 _INTERNAL = frozenset({"update_plan"})
 
@@ -907,10 +1052,13 @@ def check_outcomes(tool: str, text: str, *, messages: Sequence[dict[str, Any]],
                    intents: Sequence[Any], wake_source: str,
                    other_drafts: int = 0, history_end: int = 0, names: Iterable[str] = (),
                    shops: Mapping[str, str] | None = None, channel: str | None = None,
-                   to_shop: str = "", exclude: str = "") -> dict[str, list[str]]:
+                   to_shop: str = "", exclude: str = "",
+                   refused: bool = False) -> dict[str, list[str]]:
     """Done claims and promises, checked once the whole step has run, so a
     send_to_user next to the tool that does the work in the same model turn is
-    judged on what that tool actually did."""
+    judged on what that tool actually did. A failed tool behind a success
+    claim is held too (RAI-324): the reply must report the failure.
+    """
     if tool not in PERSON_FACING:
         return {}
     src = sources(messages, intents, history_end=history_end)
@@ -920,6 +1068,12 @@ def check_outcomes(tool: str, text: str, *, messages: Sequence[dict[str, Any]],
                         to_shop=to_shop, exclude=exclude)
     if c:
         out["claims"] = c
+    bad = dishonest_success(text, messages=messages, intents=intents, refused=refused)
+    if bad and "claims" not in out:
+        # A claim the outcomes already hold needs no second verdict; the
+        # honesty check catches a "success" the evidence cannot back at all
+        # (a failed tool, or no usable result behind the words).
+        out["honesty"] = bad
     p = unbacked_promises(text, intents=intents)
     if p:
         out["promises"] = p
@@ -930,7 +1084,8 @@ def check(tool: str, text: str, *, messages: Sequence[dict[str, Any]], intents: 
           today: date, wake_source: str, names: Iterable[str] = (),
           other_drafts: int = 0, outcomes: bool = True,
           history_end: int = 0, shops: Mapping[str, str] | None = None,
-          channel: str | None = None, to_shop: str = "") -> dict[str, list[str]]:
+          channel: str | None = None, to_shop: str = "",
+          refused: bool = False) -> dict[str, list[str]]:
     """Every problem with ``text`` by kind; empty when it may be sent.
     ``outcomes=False`` leaves done claims and promises to ``check_outcomes``."""
     names = list(names)
@@ -946,11 +1101,14 @@ def check(tool: str, text: str, *, messages: Sequence[dict[str, Any]], intents: 
         n = unknown_names(src, text, names, shops)
         if n:
             out["names"] = n
+        bad = dishonest_success(text, messages=messages, intents=intents, refused=refused)
+        if bad:
+            out["honesty"] = bad
     if outcomes:
         out.update(check_outcomes(tool, text, messages=messages, intents=intents,
                                   wake_source=wake_source, other_drafts=other_drafts,
                                   history_end=history_end, names=names, shops=shops,
-                                  channel=channel, to_shop=to_shop))
+                                  channel=channel, to_shop=to_shop, refused=refused))
     nv = never_claims(text)
     if nv:
         out["never"] = nv
@@ -982,6 +1140,8 @@ def repair_text(problems: dict[str, list[str]]) -> tuple[str, str]:
     if "never" in problems:
         parts.append("it says money moved or an approved record changed, which Mimi never "
                      "does")
+    if "honesty" in problems:
+        parts.append(honesty_note(problems["honesty"]))
     if "deflection" in problems:
         parts.append("it sends the person to another helper or the rep instead of answering ("
                      + "; ".join(problems["deflection"]) + "); answer from your own tools, or "

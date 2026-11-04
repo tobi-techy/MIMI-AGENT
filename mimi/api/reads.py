@@ -337,6 +337,7 @@ def list_tasks(engine: Engine, tenant: str, *, thread_id: str = "", helper: str 
 _ACTIVITY_STEP_TYPES = {
     "handoff": "route", "handback": "handback", "route": "route",
     "tool_called": "tool", "tool_result": "tool", "tool_refused": "tool",
+    "claim_blocked": "tool", "breaker_tripped": "tool", "owner_stop": "tool",
     "model_called": "model", "draft_proposed": "reply", "card_read": "code",
     "step_finished": "tool",
 }
@@ -367,7 +368,10 @@ def _activity_steps(conn: sa.Connection, tenant: str, turn_id: str) -> list[dict
         else:
             name = str(e.tool or "step")
             short = display.humanize(str(e.short or ""), names) or name.replace("_", " ")
-        st = "failed" if str(e.type) in ("tool_refused", "claim_blocked") else "ok"
+        st = "failed" if str(e.type) in ("tool_refused", "claim_blocked") else (
+            # A stop is not a success: the breaker trip and the owner's stop
+            # both read "held".
+            "held" if str(e.type) in ("breaker_tripped", "owner_stop") else "ok")
         out.append({"name": name, "kind": kind, "status": st, "short": short[:300],
                     "ms": round(float(e.duration_ms or 0.0), 3), "at": str(e.at)})
     return out

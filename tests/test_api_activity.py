@@ -181,6 +181,11 @@ def test_stopping_a_running_turn_ends_it_with_nothing_more_sent(env: dict[str, A
             )
         ).scalar()
         assert stop_evt  # the stop itself is on the thread's steps
+    # And it is not drawn as a successful step: a stop reads "held".
+    [row] = [r for r in rows(c)["rows"] if r["turn_id"] == turn_id]
+    held = [st for st in row["steps"] if st["status"] == "held"]
+    assert len(held) == 1, row["steps"]
+    assert "stopped" in held[0]["short"].lower()
 
 
 def test_a_second_stop_after_the_worker_parked_it_says_so(env: dict[str, Any]) -> None:

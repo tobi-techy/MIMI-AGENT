@@ -47,6 +47,9 @@ RunStatus = Literal[
     "stopped_killed",
     # A loop guard tripped (mimi.harness.guards): repeat, no progress, tool errors.
     "stopped_runaway",
+    # The denial circuit breaker tripped (mimi.harness.denials): told no too
+    # often, so the turn parked and the owner was asked to look.
+    "stopped_denied",
     "failed",
 ]
 
@@ -71,6 +74,8 @@ EventType = Literal[
     "artifact_stored",
     # A loop guard tripped (mimi.harness.guards).
     "loop_guard",
+    # The denial circuit breaker tripped (mimi.harness.denials).
+    "breaker_tripped",
     # When to speak (RAI-300): the decision and its reason, on every turn
     # that proposed a message.
     "speak_decision",
