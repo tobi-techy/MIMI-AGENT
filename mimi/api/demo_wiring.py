@@ -801,7 +801,8 @@ def undo_approval(engine: Engine, tenant: str, approval_id: str, *,
         raise Conflict(f"Zoho did not undo it: {exc}") from exc
     try:
         zp.delete_payment(transport=transport, connection_id=conn_id, organization_id=org,
-                          payment_id=str(res["zoho_payment_id"]))
+                          payment_id=str(res["zoho_payment_id"]),
+                          user_id=_zoho_user(tenant, conn_id))
     except ConnectorError as exc:
         raise Conflict(f"Zoho did not undo it: {exc}") from exc
     now = wall()

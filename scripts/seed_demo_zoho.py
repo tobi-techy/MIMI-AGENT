@@ -256,9 +256,16 @@ class LiveZoho:
     def _proxy(self, method: str, path: str, body: dict[str, Any] | None = None,
                query: str = "") -> dict[str, Any]:
         endpoint = books_url(self.region, path, f"organization_id={self.org}{query}")
-        res = self.client.tools.proxy(
-            endpoint=endpoint, method=method, body=body or {},
-            connected_account_id=self.connection)
+        # The proxy API wants the user id beside the call, because this
+        # project has 2FA on and connected_account_id alone is refused
+        # ("user_id is required with connected_account_id"), and a GET must
+        # carry no body at all. The SDK's own tools.proxy has no user_id
+        # parameter, so this reaches the generated client underneath it.
+        res = self.client._client.tools.proxy(
+            endpoint=endpoint, method=method,
+            body=None if method == "GET" else (body or {}),
+            connected_account_id=self.connection,
+            extra_body={"user_id": self.user})
         return _ok(f"{method} {path}", _plain(res))
 
     # -- writes -----------------------------------------------------------
@@ -272,16 +279,18 @@ class LiveZoho:
 
     def create_invoice(self, *, contact_id: str, number: str, amount_kobo: int,
                        date: str, due_date: str, name: str) -> dict[str, Any]:
+        # The flag belongs in the query string: Zoho ignores it in the JSON
+        # body and answers code 4097, "Number entered does not match the
+        # auto-generated number", for the number we chose.
         reply = self._proxy("POST", "/invoices", {
             "customer_id": contact_id,
             "date": date,
             "due_date": due_date,
             "invoice_number": number,
-            "ignore_auto_number_generation": True,
             "line_items": [{"name": f"Outstanding, {name}",
                             "rate": round(int(amount_kobo) / 100, 2),
                             "quantity": 1}],
-        })
+        }, query="&ignore_auto_number_generation=true")
         invoice = reply.get("invoice") or {}
         if not isinstance(invoice, dict) or not invoice.get("invoice_id"):
             raise SeedRefused(f"Zoho created no invoice {number}; stopping.")
@@ -538,8 +547,6 @@ def print_seed_plan(plan: SeedPlan, shops: Sequence[ShopDebt], *,
                     clear_strays: bool) -> None:
     _say("DRY RUN: nothing will be written. Pass --yes to perform it.")
     _say(f"Demo book: {len(shops)} owing shops, total {owed.naira(plan.total_kobo)}")
-    _say(f"Contacts: {len(plan.contact_create)} to create, "
-         f"{len(plan.contact_reuse)} reused (never edited)")
     if plan.draft_delete:
         _say(f"Draft invoices to delete first: {len(plan.draft_delete)}")
     for inv in plan.draft_delete:
@@ -554,6 +561,8 @@ def print_seed_plan(plan: SeedPlan, shops: Sequence[ShopDebt], *,
              f"({c.get('contact_id')})")
     for name, why in plan.stray_skip:
         _say(f"  skip contact {name}: {why}")
+    _say(f"Then contacts: {len(plan.contact_create)} to create, "
+         f"{len(plan.contact_reuse)} reused (never edited)")
     for shop in plan.contact_create:
         _say(f"  would create contact {shop.name} ({shop.phone})")
     for shop in shops:
