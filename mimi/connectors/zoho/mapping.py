@@ -56,6 +56,7 @@ def map_invoice(invoice: dict[str, Any]) -> dict[str, Any]:
     return {
         "delivery_id": str(v.get("invoice_id") or v.get("invoice_number") or ""),
         "shop_id": str(v.get("customer_id") or ""),
+        "customer_name": str(v.get("customer_name") or ""),
         "due_on": str(v.get("due_date") or ""),
         "total_kobo": total,
         "paid_kobo": paid_kobo,
