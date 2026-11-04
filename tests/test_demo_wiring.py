@@ -378,6 +378,24 @@ def _live_transport(monkeypatch: pytest.MonkeyPatch, live: LiveLikeZoho) -> None
         lambda transport, name, **kw: live.proxy(name, **kw))
 
 
+def _live_book(shop_id: str = "shop-008", naira: float = 1_000_000.0
+               ) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+    """The seeded Zoho book for one shop: contact by name, invoice MZ-<shop>."""
+    name = next(s.name for s in W.shops if s.shop_id == shop_id)
+    cid = f"zc-live-{shop_id}"
+    return ([{"contact_id": cid, "contact_name": name}],
+            [{"invoice_id": f"zi-live-{shop_id}",
+              "invoice_number": f"MZ-{shop_id}", "customer_id": cid,
+              "customer_name": name, "total": naira, "balance": naira,
+              "status": "sent"}])
+
+
+def _live_zoho(**kw: Any) -> LiveLikeZoho:
+    """A live-shaped fake with the shop-008 book, so a live write resolves."""
+    contacts, invoices = _live_book()
+    return LiveLikeZoho(contacts=contacts, invoices=invoices, **kw)
+
+
 def _approve_zoho(env: dict[str, Any]) -> dict[str, Any]:
     """Run the screenshot-to-approval flow and approve the Zoho payment."""
     c, engine = env["c"], env["engine"]
@@ -400,10 +418,11 @@ def _approve_zoho(env: dict[str, Any]) -> dict[str, Any]:
 def test_live_write_and_undo_through_live_like_transport(
         env: dict[str, Any], monkeypatch: pytest.MonkeyPatch) -> None:
     """Switch on with a live-shaped transport: exactly one create, one
-    delete, absolute endpoints, and the owner text names Zoho Books."""
+    delete, absolute endpoints, the real customer and invoice, and the owner
+    text names Zoho Books."""
     _live_env(monkeypatch)
     _seed_live_connection(env["engine"])
-    live = LiveLikeZoho()
+    live = _live_zoho()
     _live_transport(monkeypatch, live)
     approval = _approve_zoho(env)
     res = approval["result"]
@@ -411,6 +430,13 @@ def test_live_write_and_undo_through_live_like_transport(
     assert res["zoho_payment_id"].startswith("zp-live-")
     creates = [c for c in live.calls if c.get("action") == "proxy:customer_payment_create"]
     assert len(creates) == 1  # exactly one call per approval
+    body = creates[0]["body"]
+    applied = int(approval["payload"]["applied_kobo"])
+    assert body["customer_id"] == "zc-live-shop-008"  # not the fake's zc-shop-008
+    assert body["invoices"] == [{"invoice_id": "zi-live-shop-008",
+                                 "amount_applied": applied / 100}]
+    assert body["reference_number"].startswith("mimi-apr_")  # attributable
+    assert approval["payload"]["invoice_number"] == "MZ-shop-008"
     owner = env["c"].get(f"/v1/threads/{A}:owner", headers=h()).json()
     done = [m for m in owner["messages"] if m["kind"] == "zoho_payment_recorded"]
     assert done and "in Zoho Books" in done[-1]["text"]
@@ -548,7 +574,7 @@ def test_timeout_then_readback_finds_nothing_is_an_error(
     error, not a silent miss: the approval says so and nothing is undone."""
     _live_env(monkeypatch)
     _seed_live_connection(env["engine"])
-    live = LiveLikeZoho(fail_create=True)
+    live = _live_zoho(fail_create=True)
     _live_transport(monkeypatch, live)
     approval = _approve_zoho(env)
     res = approval["result"]
@@ -582,6 +608,58 @@ def _second_approval(env: dict[str, Any]) -> str:
     return str(zoho["approval_id"])
 
 
+def test_live_write_refuses_a_shop_zoho_does_not_know(
+        env: dict[str, Any], monkeypatch: pytest.MonkeyPatch) -> None:
+    """No customer with the shop's name: nothing is written and the approval
+    says so. The fake's zc- id is never sent to a real org."""
+    _live_env(monkeypatch)
+    _seed_live_connection(env["engine"])
+    live = LiveLikeZoho()  # no contacts, no invoices
+    _live_transport(monkeypatch, live)
+    approval = _approve_zoho(env)
+    res = approval["result"]
+    assert res["undo_available"] is False and "no customer named" in res["error"]
+    assert "zoho_payment_id" not in res
+    assert not [c for c in live.calls if c.get("action") == "proxy:customer_payment_create"]
+    owner = env["c"].get(f"/v1/threads/{A}:owner", headers=h()).json()
+    assert not [m for m in owner["messages"] if m["kind"] == "zoho_payment_recorded"]
+
+
+def test_live_write_refuses_when_the_seeded_invoice_is_missing(
+        env: dict[str, Any], monkeypatch: pytest.MonkeyPatch) -> None:
+    """The contact resolves but its MZ- invoice does not: refuse, never
+    apply a guessed invoice id."""
+    _live_env(monkeypatch)
+    _seed_live_connection(env["engine"])
+    contacts, _invoices = _live_book()
+    missing = LiveLikeZoho(contacts=contacts, invoices=[])
+    _live_transport(monkeypatch, missing)
+    res = _approve_zoho(env)["result"]
+    assert res["undo_available"] is False
+    assert "invoice numbered MZ-shop-008" in res["error"]
+    assert not [c for c in missing.calls
+                if c.get("action") == "proxy:customer_payment_create"]
+
+
+def test_live_write_refuses_when_the_invoice_owes_less_than_the_payment(
+        env: dict[str, Any], monkeypatch: pytest.MonkeyPatch) -> None:
+    """A previous take left the invoice lower than this payment: refuse and
+    point at --reset, rather than silently apply less than the card says."""
+    _live_env(monkeypatch)
+    _seed_live_connection(env["engine"])
+    contacts, _invoices = _live_book()
+    short = LiveLikeZoho(contacts=contacts, invoices=[
+        {"invoice_id": "zi-short", "invoice_number": "MZ-shop-008",
+         "customer_id": "zc-live-shop-008", "balance": 1.0, "total": 1.0,
+         "status": "sent"}])
+    _live_transport(monkeypatch, short)
+    res = _approve_zoho(env)["result"]
+    assert res["undo_available"] is False and "less than the" in res["error"]
+    assert "reset" in res["error"]
+    assert not [c for c in short.calls
+                if c.get("action") == "proxy:customer_payment_create"]
+
+
 def test_second_live_write_same_day_refused_without_provider_call(
         env: dict[str, Any], monkeypatch: pytest.MonkeyPatch) -> None:
     """Cap default 1: the second real write refuses before any provider
@@ -590,7 +668,7 @@ def test_second_live_write_same_day_refused_without_provider_call(
 
     _live_env(monkeypatch)
     _seed_live_connection(env["engine"])
-    live = LiveLikeZoho()
+    live = _live_zoho()
     _live_transport(monkeypatch, live)
     first = _approve_zoho(env)
     assert first["result"]["zoho_payment_id"].startswith("zp-live-")
@@ -615,7 +693,7 @@ def test_fake_write_does_not_consume_the_live_cap(
     """A fake-books write (no live connection row) leaves the live cap alone:
     the first real write after it still lands."""
     _live_env(monkeypatch)
-    live = LiveLikeZoho()
+    live = _live_zoho()
     _live_transport(monkeypatch, live)
     # No connection row: fake path, demo venue.
     fake_approval = _approve_zoho(env)
@@ -635,7 +713,7 @@ def test_live_cap_is_per_tenant(
     _live_env(monkeypatch)
     _seed_live_connection(env["engine"])
     _seed_live_connection(env["engine"], tenant=tenant_b)
-    live = LiveLikeZoho()
+    live = _live_zoho()
     _live_transport(monkeypatch, live)
     first = _approve_zoho(env)
     assert first["result"]["zoho_payment_id"].startswith("zp-live-")
