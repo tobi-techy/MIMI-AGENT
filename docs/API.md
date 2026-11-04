@@ -241,6 +241,8 @@ approval reads as 404. Keys are compared by SHA-256 in constant time; give
 | `POST /v1/approvals/{id}/reject` | owner | Nothing is sent; the helper is told |
 | `GET /v1/policy` | owner | The rulebook (RAI-323, docs/POLICY.md): each step with its behaviour (`act`, `act_if_preapproved`, `ask`, `hand_off`), default, allowed behaviours and who changed it; built-in stops listed `locked`; `editable` false in demo mode |
 | `PUT /v1/policy` | owner | Change rules: `{"rules": [{"action_type", "behaviour"}], "by"}`. 409 for a built-in stop, floor or unknown type (nothing changes); 403 for a demo session or demo mode. Logged with who; in force on the next turn |
+| `GET /v1/routines` | owner | The routine rail (4 Nov 2026, [ROUTINES.md](ROUTINES.md)): `{"routines": [{id, name, schedule, paused, paused_reason?, last_run_at, next_run_at, last_finding}], "as_of"}`. `name`, `schedule` and `last_finding` are sentences written by code; `last_run_at` and `next_run_at` are ISO 8601 with an explicit zone (Africa/Lagos) and empty `last_run_at` when the routine has never run, with `last_finding` saying so. `paused_reason` is present only when paused |
+| `POST /v1/routines/{id}/pause`, `POST /v1/routines/{id}/resume` | owner | `{id, name, paused}` plus an optional body `{reason?, by?}`. The switch is a row in the store, so it survives a restart and needs no deploy. `all` (or `*`) is the kill switch: one row stops every routine. Pausing a routine under the kill switch still answers `paused: true` |
 | `GET /v1/credit` | owner | Per-shop limit, outstanding, available, and credit requests from helpers' credit intents (Credit, RAI-271). Each limit row also has `over_limit`, `over_limit_by_kobo`, `over_limit_by_naira` (owes more than its limit, from code) |
 | `POST /v1/credit/{shop_id}/limit` | owner | The owner sets a shop's limit: `{amount_ngn, reason?}` (whole naira) answers `{shop_id, old_limit_ngn, new_limit_ngn, change_id}`. Recorded as a `limit_change` step on the shop's thread. 404 for another distributor's shop |
 | `POST /v1/credit/changes/{change_id}/undo` | owner | Puts the limit back: `{shop_id, old_limit_ngn, new_limit_ngn, change_id, undone: true}`; a second undo is 409 |
@@ -353,6 +355,32 @@ the audio from `GET /v1/messages/{message_id}/voice`. Off unless
 `MIMI_VOICE_REPLIES` names the distributor (`docs/VOICE.md`). Sending them on WhatsApp is the
 webhook adapter's job (the Meta app and test number exist; the send wiring
 is RAI-266's remaining piece).
+
+### Scheduled routines (4 Nov 2026, `mimi/api/routines.py`)
+
+Nothing used to run unless someone asked. Now two known routines fire on
+their own schedule in Africa/Lagos, from one daemon thread inside the API
+process (`MIMI_ROUTINES=1`, set in the Dockerfile; off in CI). Both are code
+over the book: **no model call and no kobo spent**. See
+[ROUTINES.md](ROUTINES.md).
+
+* **Morning brief** (`morning_brief`, every day at 8:00 AM): the top overdue
+  shops by name and ₦, on the owner's thread (`kind: "morning_brief"`).
+* **Aging scan** (`aging_scan`, every day at 8:30 AM): shops whose oldest
+  money has passed 60 days, and transfer alerts that never matched a payment
+  (`kind: "aging_scan"`). It reports only; nothing on the book changes.
+* **Once per Lagos day.** The claim is a row in `routine_runs` whose primary
+  key is (tenant, routine, day). A restart or a second API process loses the
+  insert and does nothing, so a routine can never fire twice on a day. A run
+  that dies half way is not repeated that day either.
+* **A late start catches up.** A tick at 9:00 still sends the 8:00 brief,
+  until 4 hours after the schedule (cut at Lagos midnight). A window that
+  passed is recorded as missed, with words saying so, and never borrows the
+  current time.
+* **Pause is a row.** `POST /v1/routines/{id}/pause` sets it, `resume` clears
+  it; both survive a restart. `all` is the kill switch: one row pauses every
+  routine without a deploy. A paused routine records that it skipped the day
+  and why. The read says "It has not run yet." until a routine really has.
 
 ## Helpers hired (RAI-272)
 
