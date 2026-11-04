@@ -45,7 +45,9 @@ import sqlalchemy as sa
 from sqlalchemy.engine import Engine
 
 from mimi.api import cards as cx
+from mimi.api import delegation as dlg
 from mimi.api import display
+from mimi.api import inbox as ib
 from mimi.api import steering as sx
 from mimi.api import voice as vx
 from mimi.api.helpers import HelperDeps
@@ -227,7 +229,7 @@ def thread_kind(tenant_id: str, thread_id: str) -> tuple[str, str]:
     head, _, tail = rest.partition(":")
     if head == "shop":
         return "shop", tail
-    if head in ("owner", "rep", "job", "new"):
+    if head in ("owner", "rep", "job", "new", "helper"):
         return head, ""
     return "other", ""
 
@@ -839,7 +841,9 @@ class Agent:
                                                 text=sv.get("primary_text"))
             ctx = self.builder.build(event, helper, d.skill, job=job,
                                      extra_notes=list(sv.get("notes") or []))
-            state = self.harness.start(event, helper, context=ctx, route=route)
+            state = self.harness.start(event, helper, context=ctx, route=route,
+                                       lineage=self._delegation_lineage(claim.tenant_id,
+                                                                        claim.turn_id))
             ck.update(event=event.model_dump(mode="json"), loop=state.model_dump(mode="json"))
             if plain.enabled():
                 p = plain.choose(skill=d.skill, source=event.wake_source,
@@ -1590,6 +1594,8 @@ class Agent:
         override = ans.sentence if (ans.card is not None and not did_work
                                     and not keep_own) else ""
         owner_said = False
+        # Handoffs whose receiver to wake after the commit (never nested).
+        wakes: list[dict[str, Any]] = []
         with self.engine.begin() as conn:
             for i, ev in enumerate(d.events):
                 insert_ignore(conn, s.thread_events, {
@@ -1658,6 +1664,18 @@ class Agent:
                         outcomes[rec.idempotency_key] = outcome
                         if outcome == "queued_for_approval" and apr:
                             queued[rec.idempotency_key] = apr
+                        if rec.tool in ib.DELEGATE_TOOLS and outcome == "applied":
+                            # One inbox item for the receiver; the wake happens
+                            # after this transaction commits (never nested).
+                            spec = dlg.note(
+                                conn, tenant, source_key=rec.idempotency_key,
+                                from_helper=d.helper or "mimi",
+                                to_helper=str(rec.payload.get("helper") or ""),
+                                shop_id=rec.shop_id,
+                                ask=str(rec.payload.get("task") or ""),
+                                turn_id=turn_id, now=now, outcome=outcome)
+                            if spec is not None:
+                                wakes.append(spec)
                         msg = MESSAGE_INTENTS.get(rec.tool)
                         text = str(rec.payload.get(msg[1], "")) if msg else ""
                         if msg and text and outcome in ("applied", "queued_for_approval"):
@@ -1791,6 +1809,22 @@ class Agent:
             self._in_txn("finish", claim)
             self.queue.finish_in(conn, claim, status=status, helper=d.helper, skill=d.skill,
                                  run_id=run_id, result=result)
+        # Helper-to-helper wake (Phase 2): after the commit, so a receiver's
+        # turn is never created inside the sender's transaction. Off by default
+        # (``MIMI_HELPER_DELEGATION``); off, the item stays queued and honest.
+        for spec in wakes:
+            if not dlg.enabled():
+                continue
+            try:
+                dlg.wake(self, tenant, spec, now)
+            except Exception:  # a wake never fails the sender's turn
+                log.exception("delegation wake failed for %s", spec.get("task_id"))
+        # A delegated child turn writes its result back to the item (and so to
+        # the sender's line). A normal turn finds nothing here.
+        try:
+            self._finish_delegation(tenant, turn_id, status, now)
+        except Exception:
+            log.exception("delegation result write-back failed for %s", turn_id)
         # After the commit: a turn that lost its lease above never gets here,
         # so each job is traced once, as one trace (tracing never raises).
         if getattr(self.exporter, "enabled", False):
@@ -1803,6 +1837,41 @@ class Agent:
             self._maybe_schedule_compaction(tenant, thread, d)
         except Exception:
             log.exception("compaction schedule failed for %s", thread)
+
+    def _delegation_lineage(self, tenant: str, turn_id: str) -> list[str]:
+        """The chain above this run when the turn is a delegated child
+        (``mimi.api.delegation``), root first, this helper last; empty for a
+        normal turn. The harness appends this helper and refuses a handoff to
+        one already in the chain, or past depth 2."""
+        with self.engine.connect() as conn:
+            row = conn.execute(sa.select(s.helper_tasks.c.chain).where(
+                s.helper_tasks.c.tenant_id == tenant,
+                s.helper_tasks.c.turn_id == turn_id)).first()
+        chain = loads(row.chain, []) if row is not None else []
+        return [str(x) for x in chain][:-1]
+
+    def _finish_delegation(self, tenant: str, turn_id: str, status: str, now: float) -> None:
+        """Write the receiver's result back to the inbox item it belongs to.
+
+        A normal turn finds no item and does nothing. The result is the
+        receiver's own reply to the owner console, never a shop message."""
+        with self.engine.begin() as conn:
+            row = conn.execute(sa.select(s.helper_tasks.c.task_id).where(
+                s.helper_tasks.c.tenant_id == tenant,
+                s.helper_tasks.c.turn_id == turn_id,
+                s.helper_tasks.c.state.in_(("queued", "working")))).first()
+            if row is None:
+                return
+            outs = conn.execute(sa.select(s.messages.c.text, s.messages.c.channel).where(
+                s.messages.c.tenant_id == tenant, s.messages.c.turn_id == turn_id,
+                s.messages.c.direction == "out").order_by(
+                s.messages.c.ts.desc(), s.messages.c.message_id.desc())).all()
+            result = next((str(m.text) for m in outs
+                           if m.channel not in ("shop_whatsapp", "rep_whatsapp")), "")
+            state = "failed" if status == "failed" else (
+                "handed_back" if "hand" in status else "done")
+            ib.set_state(conn, tenant, str(row.task_id), state,
+                         result=clean_reply(result)[:600], now=now)
 
     def _handoff_records(self, conn: sa.Connection, claim: Claim, d: RouteDecision,
                          lead: Inbound, fin: Any, status: str, result: dict[str, Any],
