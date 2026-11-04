@@ -4455,6 +4455,16 @@
             "title": "Name",
             "type": "string"
           },
+          "on_account_kobo": {
+            "default": 0,
+            "title": "On Account Kobo",
+            "type": "integer"
+          },
+          "on_account_naira": {
+            "default": "",
+            "title": "On Account Naira",
+            "type": "string"
+          },
           "open_invoices": {
             "title": "Open Invoices",
             "type": "integer"

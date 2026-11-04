@@ -29,6 +29,7 @@ import hashlib
 import json
 import math
 import os
+from collections.abc import Mapping
 from datetime import date, timedelta
 from typing import Any
 
@@ -43,6 +44,7 @@ from mimi.connectors.composio import FakeComposio
 from mimi.connectors.zoho import payments as zp
 from mimi.provenance import parse_witnesses, payment_stamp, proof_word
 from mimi.store import invoices as invoice_reads
+from mimi.store import on_account
 from mimi.store import schema as s
 from mimi.store.book import SqlGo, approval_id_for
 from mimi.store.util import dumps, insert_ignore, loads, now_iso
@@ -327,8 +329,9 @@ def bank_credit(conn: sa.Connection, tenant: str, shop_id: str, *, event_id: str
         "record_id": pay.payment_id, "old_level": "likely", "new_level": stamp.proof_level,
         "witness_kind": "bank_feed", "witness_source": credit_id,
         "policy_version": stamp.proof_policy_version, "at": now_iso(now)})
-    invoice = _apply_to_invoices(conn, tenant, shop_id, int(pay.amount_kobo),
-                                 str(pay.delivery_id or ""))
+    applied = _apply_to_invoices(conn, tenant, shop_id, int(pay.amount_kobo),
+                                 str(pay.delivery_id or ""),
+                                 payment_id=str(pay.payment_id))
     money = owed.naira(int(pay.amount_kobo))
     _say(conn, tenant, shop_thread, key=f"bank:{event_id}:shop", channel="shop_whatsapp",
          shop_id=shop_id, turn_id=turn_id, kind="bank_credit_thanks", now=now,
@@ -338,24 +341,61 @@ def bank_credit(conn: sa.Connection, tenant: str, shop_id: str, *, event_id: str
          text=(f"The bank confirmed {shop.name}'s {money} transfer, so it is now verified. "
                "Approve it to record it in Zoho Books."))
     apr = zoho_approval(conn, tenant, owner, shop, pay.payment_id, int(pay.amount_kobo),
-                        invoice, str(pay.paid_on), turn_id, now)
+                        applied, str(pay.paid_on), turn_id, now)
+    # What the invoices could not absorb is the shop's money held on its account,
+    # recorded on the credit note row so the payments table and the receivables
+    # add up (mimi.store.on_account). Nothing to record when it all applied, and
+    # the part the payment's own delivery will take when it is billed is not on
+    # the account either: that roll is where it lands (roll_will_take_kobo).
+    on_account.record(conn, tenant=tenant, shop_id=shop_id, payment_id=pay.payment_id,
+                      amount=int(pay.amount_kobo), applied_kobo=applied["applied_kobo"],
+                      applications=applied["applications"],
+                      waiting_kobo=applied["waiting_for_roll_kobo"], approval_id=apr, now=now)
     return {"matched": True, "payment_id": pay.payment_id, "approval_id": apr}
 
 
 def _apply_to_invoices(conn: sa.Connection, tenant: str, shop_id: str, amount: int,
-                       first: str) -> str:
+                       first: str, payment_id: str = "") -> dict[str, Any]:
     """Take a verified payment off the shop's open invoices (the matched one
-    first, then oldest first). Returns the first invoice it paid.
+    first, then oldest first).
 
     The invoices are read holding them (``mimi.store.invoices``), in the one
     order every writer takes them in: a return credit and the routine read the
     same rows the same way, so this payment cannot be computed from figures a
     credit commits over, and no two writers cycle on each other's locks. Sorting
     the rows below for the allocation (matched invoice first) happens after the
-    lock is held, so it cannot change the order the locks were taken in."""
+    lock is held, so it cannot change the order the locks were taken in.
+
+    Returns what those invoices could absorb: ``{"first": delivery_id,
+    "applied_kobo": int, "waiting_for_roll_kobo": int, "billed_by_roll_kobo":
+    int, "on_account_kobo": int, "applications": [{"delivery_id",
+    "amount_kobo"}]}``. Each invoice takes no more than its own open balance, so
+    the applications never add up to more than the invoices owed, which is what
+    the Zoho card has to say: an application bigger than the invoice is a real
+    over-application in a real org. ``first`` is the first invoice that actually
+    took something, or empty when none did, so nothing downstream names an
+    invoice that got nothing.
+
+    The payment's own delivery is handled first, whichever side of the roll it
+    is on (``on_account.roll_share_kobo``). If the roll has already billed it,
+    the roll spent this payment on that invoice and this function adds that
+    application, naming the invoice, without touching an older one: Zoho is a
+    separate book and needs the same application. If the delivery has not been
+    billed, its part is ``waiting_for_roll_kobo``: the roll will credit it there,
+    so it is applied nowhere and held nowhere. Only what is left after the
+    delivery and the invoices is ``on_account_kobo``, for the caller to record on
+    the shop's account. The parts add up to ``amount``."""
+    share = on_account.roll_share_kobo(conn, tenant=tenant, delivery_id=first,
+                                       payment_id=payment_id, amount=amount)
+    applications: list[dict[str, Any]] = []
+    paid_first = ""
+    if share.billed and share.kobo > 0:
+        applications.append({"delivery_id": str(first), "amount_kobo": share.kobo})
+        paid_first = str(first)  # the invoice the roll already spent it on
+    waiting = 0 if share.billed else share.kobo
     rows = list(invoice_reads.open_invoices(conn, tenant, shop_id, lock=True))
     rows.sort(key=lambda r: 0 if r.delivery_id == first else 1)
-    left, paid_first = amount, ""
+    left = int(amount) - share.kobo
     for r in rows:
         if left <= 0:
             break
@@ -366,9 +406,13 @@ def _apply_to_invoices(conn: sa.Connection, tenant: str, shop_id: str, amount: i
             s.receivables.c.delivery_id == r.delivery_id)
             .values(paid_kobo=int(r.paid_kobo) + take, outstanding_kobo=out,
                     status="paid" if out == 0 else r.status))
+        applications.append({"delivery_id": str(r.delivery_id), "amount_kobo": take})
         paid_first = paid_first or r.delivery_id
         left -= take
-    return paid_first or first
+    return {"first": paid_first, "applied_kobo": int(amount) - waiting - max(0, left),
+            "waiting_for_roll_kobo": waiting, "billed_by_roll_kobo": share.kobo
+            if share.billed else 0, "on_account_kobo": max(0, left),
+            "applications": applications}
 
 
 def invoice_number(delivery_id: str) -> str:
@@ -377,18 +421,40 @@ def invoice_number(delivery_id: str) -> str:
 
 
 def zoho_approval(conn: sa.Connection, tenant: str, owner_thread: str, shop: Any,
-                  payment_id: str, amount: int, delivery_id: str, paid_on: str,
+                  payment_id: str, amount: int, applied: Mapping[str, Any], paid_on: str,
                   turn_id: str, now: float) -> str:
+    """The card the owner approves to write the payment into Zoho Books.
+
+    ``invoices`` names what came off each invoice, cents for cents, and never
+    more than that invoice owed: ``applied`` is what
+    ``_apply_to_invoices`` actually took, not the payment amount. When the
+    payment was bigger than the shop owed, ``on_account_kobo`` carries the
+    difference and the invoice list adds up to less than ``amount_kobo``, which
+    is what Zoho records as an unapplied amount on the customer payment. When
+    part of the payment belongs to a delivery that has not been billed yet,
+    ``waiting_for_roll_kobo`` carries it: it is not on the account and not on an
+    invoice, and ``invoice_number`` and ``delivery_id`` name the first invoice
+    that did take something, so the card never names one that took nothing.
+    ``billed_by_roll_kobo`` is the part the roll already spent on the payment's
+    own invoice when it billed the delivery, and it is in ``invoices`` too, so
+    the Zoho book gets the application the shop's own book already made."""
     key = f"zoho_payment:{payment_id}"
     apr = approval_id_for(tenant, key)
+    first = str(applied.get("first") or "")
+    invoices = [{"invoice_id": invoice_number(str(a.get("delivery_id") or "")),
+                 "amount_applied_kobo": int(a.get("amount_kobo") or 0)}
+                for a in applied.get("applications") or []]
     payload = {
         "kind": ZOHO_KIND, "shop_id": shop.shop_id, "shop_name": shop.name,
         "amount_ngn": ngn(amount), "amount_kobo": amount,
-        "invoice_number": invoice_number(delivery_id), "delivery_id": delivery_id,
+        "applied_kobo": int(applied.get("applied_kobo") or 0),
+        "on_account_kobo": int(applied.get("on_account_kobo") or 0),
+        "waiting_for_roll_kobo": int(applied.get("waiting_for_roll_kobo") or 0),
+        "billed_by_roll_kobo": int(applied.get("billed_by_roll_kobo") or 0),
+        "invoice_number": invoice_number(first), "delivery_id": first,
         "reference_number": zp.reference_for(key), "payment_id": payment_id,
         "date": paid_on, "customer_id": f"zc-{shop.shop_id}",
-        "invoices": ([{"invoice_id": invoice_number(delivery_id), "amount_applied_kobo": amount}]
-                     if delivery_id else [])}
+        "invoices": invoices}
     insert_ignore(conn, s.approvals, {
         "approval_id": apr, "tenant_id": tenant, "idempotency_key": key,
         "turn_id": turn_id, "thread_id": owner_thread, "helper": "", "skill": "proof/bank-credit",

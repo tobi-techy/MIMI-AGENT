@@ -184,8 +184,101 @@ MIMI_TEST_DATABASE_URL=postgresql://... META_API_KEY= python -m pytest \
     tests/test_receivables_locking.py -q
 ```
 
+`tests/test_payment_on_account.py` covers a payment bigger than the balance:
+the card capped invoice by invoice, the excess recorded on the shop's account,
+the payment row and the receivables adding up, the shop read showing it, and
+Go's own writer doing the same.
+
 The frozen field names and status strings the console builds against are in
 [`returns-exposure-contract.md`](returns-exposure-contract.md).
+
+## A payment bigger than the shop owes
+
+A shop can pay more than it owes. Until this change the excess went nowhere:
+`demo_wiring._apply_to_invoices` and `week.go.GoSim._pay` clamped the invoice
+while the `payments` row kept the full amount the bank sent, so two tables in
+the same book disagreed and nothing complained. And the `zoho_payment` card
+built from that payment named the full amount against one invoice, which in a
+real Zoho Books org is a real over-application: the shop's record would say it
+settled more of an invoice than the invoice ever owed.
+
+Both halves are fixed in `mimi/store/on_account.py`, so the demo's bank credit
+and the simulated week behave the same way:
+
+* the amount applied to each invoice is capped at that invoice's open balance.
+  `_apply_to_invoices` returns what the invoices could absorb
+  (`{"first", "applied_kobo", "waiting_for_roll_kobo", "on_account_kobo",
+  "applications"}`) and the card is built from that, invoice by invoice, never
+  from the payment amount;
+* `payments.create_body` now accepts an invoice list that adds up to less than
+  the payment (Zoho holds the difference as an unapplied amount on the customer
+  payment) and refuses one that adds up to more;
+* what is left is a `credit_notes` row on the shop's account. 0017 already gave
+  that table `on_account_kobo`, so there is no new table and no new revision: a
+  payment credit has no return, so its `return_id` is empty and its `credit_id`
+  is built from the payment id (`crn_` plus a hash, the same shape as a return
+  credit, so the scrub catches it too). The row keeps the applications as well,
+  so the payment row and the receivables add up:
+  `payments.amount_kobo == applied_kobo + waiting_for_roll_kobo +
+  on_account_kobo`;
+* `GET /v1/shops` and `GET /v1/shops/{shop_id}` carry `on_account_kobo` and
+  `on_account_naira`, so the owner sees what the shop holds on its account, and
+  the card's preview says in words how much of the payment stays there.
+
+**A payment and the roll are two writers of the same delivery.** The demo does
+this in one order and it can happen in the other, and both are handled, because
+the roll credits every payment that names a delivery into the invoice it closes
+(`GoSim.open_day` sums them into the new invoice's `paid_kobo`):
+
+* before the roll: a same-day screenshot names the day's live delivery, which has
+  no receivable to come off. The part that delivery will take is neither applied
+  to an older invoice nor held on the account (`roll_share_kobo` returns it, and
+  the card carries it as `waiting_for_roll_kobo`), and it lands on that delivery's
+  invoice when the roll closes it.
+* after the roll: the demo rolls at 06:00 and the bank's webhook arrives at 09:00,
+  and the payment row was written the day before naming that delivery, so the roll
+  already spent it on the invoice it closed. The webhook must not take it off the
+  shop's older invoices as well. `roll_share_kobo` says how much the roll spent
+  there (`billed=True`), the card names that invoice with it
+  (`billed_by_roll_kobo`, and the invoice is in the card's list, so Zoho gets the
+  application the shop's own book already made), and no older invoice moves.
+
+What the delivery cannot take is dealt with as usual, off the older invoices
+first and then on the account, so `applied_kobo`, `waiting_for_roll_kobo` and
+`on_account_kobo` add up to what the bank sent. The card names the first invoice
+that actually took money, or names none when none did, so neither the Zoho write
+nor the owner's message names an invoice that got nothing.
+
+The limit worth knowing: the after-the-roll case is decided by the payment's day
+against the delivery's day, which is what places it on one side of the roll. A
+payment written while its delivery sat unbilled for more than a day and verified
+only after the roll is left as it was before this change, which means the roll's
+credit and this payment's application can both count. Fixing that properly moves
+the decision to the roll: close a delivery with what was applied to it rather
+than with every payment that names it, which needs its own change.
+
+Allocating that credit onto a later invoice is not built. It wants its own
+approval and its own undo, and this change only has to make the money visible
+and the two tables agree. Until it exists, an over-payment sits on the shop's
+account and an invoice it could have paid stays open.
+
+`tests/test_payment_on_account.py` covers the payment bigger than the balance:
+a payment bigger than every invoice (capped invoice by invoice, the excess
+recorded, the payment row keeping what the bank sent, the shop read showing what
+is held), a payment bigger than one invoice spreading over the next, Go's own
+writer recording its excess the same way, a payment that fits recording nothing,
+a payment for a delivery that has not been billed yet (nothing applied, nothing
+on the account, and the roll crediting it once when it closes the delivery),
+a payment bigger than that delivery (the delivery's part waits, the older
+invoices take theirs, only the rest is on the account), a payment the roll
+already spent because it was written the day of the delivery and verified after
+the roll (the older invoices do not move, the card names the invoice the money is
+already on, and the shop's debt falls by it once), the card naming the first
+invoice that took money and nothing when none did, and the preview wording.
+Measured, not asserted: with `roll_share_kobo` forced to zero, three of these
+fail, the roll-first one on the older invoices taking money the roll had already
+credited:
+`META_API_KEY= python -m pytest tests/test_payment_on_account.py -q`.
 
 ## Not built (stated plainly)
 

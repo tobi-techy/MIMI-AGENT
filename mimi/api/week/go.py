@@ -24,6 +24,7 @@ import sqlalchemy as sa
 from sqlalchemy.engine import Engine
 
 from mimi.store import invoices as invoice_reads
+from mimi.store import on_account
 from mimi.store import schema as s
 from mimi.world.model import World
 
@@ -168,6 +169,22 @@ class GoSim:
                 s.receivables.c.delivery_id == rec.delivery_id).values(
                 paid_kobo=int(rec.paid_kobo) + paid, outstanding_kobo=out,
                 status="settled" if out == 0 else rec.status))
+            applications = [{"delivery_id": str(rec.delivery_id), "amount_kobo": paid}]
+        else:
+            paid, applications = 0, []
+        # Paid more than it owed: the excess is the shop's money on its account,
+        # not a silently dropped remainder. The payments row keeps what the bank
+        # sent, so the two tables add up: sent = after the invoices + on account.
+        # A payment whose delivery has not been billed yet is the exception: the
+        # day roll closes that delivery and credits the payment to it, so the
+        # part it will take is neither applied here nor held on the account.
+        # (This payment was written today, so a delivery that already rolled
+        # cannot hold it: the roll only counts payments that were there.)
+        share = on_account.roll_share_kobo(
+            conn, tenant=self.tenant, delivery_id=did, payment_id=pid, amount=amount)
+        on_account.record(conn, tenant=self.tenant, shop_id=shop_id, payment_id=pid,
+                          amount=amount, applied_kobo=paid, applications=applications,
+                          waiting_kobo=0 if share.billed else share.kobo)
         self.ledger.payments.append(pid)
         return pid
 
