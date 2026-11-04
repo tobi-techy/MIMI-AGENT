@@ -478,6 +478,10 @@ def _run_one(engine: Engine, tenant: str, routine: Routine, now: datetime, day: 
                 # nothing, and the rail stays at "not run yet". A miss is only
                 # for a routine that has run before.
                 return {"routine": routine.id, "action": "never_run"}
+            if state.get("last_run_day") == day:
+                # It ran today. A closed window is not a miss, and it must not
+                # overwrite the finding that run just filed.
+                return {"routine": routine.id, "action": "already_claimed"}
             if state.get("last_missed_day") != day:
                 _update_state(engine, tenant, routine.id, now.timestamp(),
                               last_missed_day=day, last_status="missed",

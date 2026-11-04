@@ -230,6 +230,47 @@ def test_a_window_that_passed_after_a_run_is_recorded_as_missed(
         "morning_brief"] == "ran"
 
 
+def test_a_run_today_is_never_overwritten_by_a_miss(
+        env: dict[str, object], monkeypatch: pytest.MonkeyPatch) -> None:
+    """The 12:36:34 case: a run at 12:35, then a tick past the window."""
+    monkeypatch.setattr(rt, "ROUTINES", (rt.AGING_SCAN,))
+    engine = env["engine"]
+    first = rt.run_now(engine, T, "aging_scan",
+                       now=datetime(2026, 11, 4, 12, 35, 28, tzinfo=LAGOS))
+    finding = first["last_finding"]
+    assert first["last_run_at"] == "2026-11-04T12:35:28+01:00"
+    assert finding == "4 transfer alerts never matched a payment."
+
+    out = rt.run_due(engine, T, now=datetime(2026, 11, 4, 12, 36, 34, tzinfo=LAGOS))
+    assert _actions(out) == {"aging_scan": "already_claimed"}
+    state = _states(engine)["aging_scan"]
+    assert state["last_run_day"] == "2026-11-04"
+    assert state["last_status"] == "done"
+    assert state["last_missed_day"] == ""
+    assert state["last_finding"] == finding
+    assert len(_messages(engine, "aging_scan")) == 1
+    row = {r["id"]: r for r in rt.view(
+        engine, T, now=datetime(2026, 11, 4, 12, 36, 35, tzinfo=LAGOS))["routines"]}["aging_scan"]
+    assert row["last_run_at"] == "2026-11-04T12:35:28+01:00"
+    assert row["last_finding"] == finding
+
+
+def test_a_scheduled_run_today_is_not_missed_when_its_window_closes(
+        env: dict[str, object], monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(rt, "ROUTINES", (rt.AGING_SCAN,))
+    engine = env["engine"]
+    assert _actions(rt.run_due(engine, T, now=lagos_at(2026, 11, 4, 8, 30)))[
+        "aging_scan"] == "ran"
+    finding = _states(engine)["aging_scan"]["last_finding"]
+    out = rt.run_due(engine, T, now=lagos_at(2026, 11, 4, 13, 0))
+    assert _actions(out) == {"aging_scan": "already_claimed"}
+    state = _states(engine)["aging_scan"]
+    assert state["last_status"] == "done"
+    assert state["last_missed_day"] == ""
+    assert state["last_finding"] == finding
+    assert len(_messages(engine, "aging_scan")) == 1
+
+
 def test_the_lagos_midnight_boundary(env: dict[str, object]) -> None:
     engine = env["engine"]
     # 23:59 on 4 November is still the fourth; a tick then must not claim the
