@@ -72,6 +72,16 @@ def test_the_book_is_the_one_the_owner_named(book: tuple[list[Any], set[str]]) -
     seed.check_book(shops)
 
 
+def test_a_reply_with_no_result_code_stops_the_seed() -> None:
+    """A read that cannot prove it succeeded must not look like an empty org:
+    the plan would think nothing exists and write a duplicate contact."""
+    with pytest.raises(seed.SeedRefused, match="no result code"):
+        seed._ok("zoho_books_contacts", {"contacts": []})
+    with pytest.raises(seed.SeedRefused, match="code 57"):
+        seed._ok("zoho_books_invoices", {"code": 57, "message": "Denied"})
+    assert seed._ok("x", {"code": 0, "invoices": []})["code"] == 0
+
+
 def test_a_moved_book_stops_the_run(book: tuple[list[Any], set[str]]) -> None:
     """A wrong total or a wrong delivery refuses; the seed is never adjusted."""
     shops, _names = book

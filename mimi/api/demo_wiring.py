@@ -721,7 +721,7 @@ def on_approved(engine: Engine, tenant: str, a: dict[str, Any], *,
                 return
         try:
             if not fake:
-                payload = _resolve_live_payment(tenant, conn_id, payload, transport)
+                payload = _resolve_live_payment(tenant, conn_id, org, payload, transport)
             res = zp.record_payment(transport=transport,
                                     tenant_id=_zoho_user(tenant, conn_id),
                                     connection_id=conn_id, organization_id=org,
@@ -993,7 +993,8 @@ def _zoho_customers(tenant: str, account: str, org: str,
     return out
 
 
-def _resolve_live_payment(tenant: str, account: str, payload: dict[str, Any],
+def _resolve_live_payment(tenant: str, account: str, org: str,
+                          payload: dict[str, Any],
                           transport: Any | None) -> dict[str, Any]:
     """Point a live write at the real Zoho customer and the seeded invoice.
 
@@ -1004,13 +1005,15 @@ def _resolve_live_payment(tenant: str, account: str, payload: dict[str, Any],
     name. The invoice is the one the seed writes per shop
     (``MZ-<shop_id>``). Anything that cannot be resolved refuses instead of
     guessing: a write that guessed would land on another customer's ledger.
+    Both reads carry ``organization_id``: Zoho refuses a books read without
+    it, and a refused read must never look like a shop Zoho does not know.
     """
     from mimi.connectors.zoho.books import ZohoBooksConnector
 
     shop_id = str(payload.get("shop_id") or "")
     shop_name = str(payload.get("shop_name") or shop_id)
     match = match_shops({shop_id: shop_name},
-                        _zoho_customers(tenant, account, transport))
+                        _zoho_customers(tenant, account, org, transport))
     cid = match.by_id.get(shop_id)
     if not cid:
         why = (f"more than one Zoho customer is named {shop_name}, so no payment "
@@ -1024,7 +1027,8 @@ def _resolve_live_payment(tenant: str, account: str, payload: dict[str, Any],
                                tenant_id=_zoho_user(tenant, account),
                                connection_id=account)
     number = seed_invoice_number(shop_id)
-    found = [r for r in books.read("zoho_books_invoices").rows
+    found = [r for r in books.read("zoho_books_invoices",
+                                   {"organization_id": org}).rows
              if str(r.values.get("invoice_number")) == number
              and str(r.values.get("shop_id")) == cid]
     if len(found) != 1:

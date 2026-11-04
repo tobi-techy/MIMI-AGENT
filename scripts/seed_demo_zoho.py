@@ -178,10 +178,19 @@ def _plain(res: Any) -> dict[str, Any]:
 
 
 def _ok(what: str, reply: dict[str, Any]) -> dict[str, Any]:
-    code = reply.get("code", 0)
-    if isinstance(code, int) and code != 0:
-        raise SeedRefused(f"Zoho refused {what}: code {code}, "
-                          f"{reply.get('message') or 'no message'}.")
+    """Zoho's own rule: a successful call carries ``code: 0``.
+
+    A reply with no code is a malformed or refused call, and reading it as
+    an empty list would let the plan think the org holds nothing and write
+    a second contact or invoice with a name it already has."""
+    code = reply.get("code")
+    if not isinstance(code, int) or code != 0:
+        message = str(reply.get("message") or "no message")
+        raise SeedRefused(
+            f"Zoho refused {what}: " + (f"code {code}, {message}."
+                                        if code is not None else
+                                        f"no result code, so nothing was read "
+                                        f"({message})."))
     return reply
 
 
