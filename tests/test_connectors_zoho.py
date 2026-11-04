@@ -112,3 +112,32 @@ def test_execute_write_refuses_proxy_slugs() -> None:
     with pytest.raises(ConnectorError, match="proxy"):
         fake.execute_write("zoho_books_customer_payment", user_id=TENANT,
                            connected_account_id=CONN, arguments={})
+
+
+def test_unwritable_sdk_cache_refuses_rather_than_crashing(monkeypatch) -> None:
+    """The SDK raises RuntimeError at import when its cache directory is not
+    writable. Measured in production on 4 Nov 2026: the image ran as user
+    ``mimi`` with no writable home, ``composio`` raised
+    "Cache directory /home/mimi/.composio is not writable", the import path
+    only caught ImportError, and /v1/books/agreement answered 500 with no
+    sentence. A connector that cannot start must refuse like any failed read."""
+    import builtins
+
+    from mimi.connectors.composio import ComposioTransport
+
+    real = builtins.__import__
+
+    def fake(name: str, *args, **kwargs):  # type: ignore[no-untyped-def]
+        if name == "composio":
+            raise RuntimeError(
+                "Cache directory /home/mimi/.composio is not writable please "
+                "provide a path that is writable using COMPOSIO_CACHE_DIR "
+                "environment variable.")
+        return real(name, *args, **kwargs)
+
+    transport = ComposioTransport(ConnectorSettings.from_env({}))
+    monkeypatch.setattr(builtins, "__import__", fake)
+    with pytest.raises(ConnectorError) as raised:
+        transport._sdk()
+    assert "could not start" in str(raised.value)
+    assert "COMPOSIO_CACHE_DIR" in raised.value.next_step
