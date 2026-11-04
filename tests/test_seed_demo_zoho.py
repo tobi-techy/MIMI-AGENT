@@ -232,6 +232,114 @@ def test_reset_refuses_a_payment_touching_an_invoice_it_did_not_seed() -> None:
     assert writes(fake) == []
 
 
+class _LiveReply(seed.LiveZoho):
+    """The live reader over canned replies, keyed by slug.
+
+    ``LiveZoho.__init__`` starts the Composio client; this skips that and
+    replaces only ``_call``, so the list parsing under test is the real one.
+    """
+
+    def __init__(self, replies: dict[str, dict[str, Any]]) -> None:
+        self.replies = replies
+        self.deleted: list[str] = []
+
+    def _call(self, slug: str, arguments: dict[str, Any]) -> dict[str, Any]:
+        if slug == "ZOHO_BOOKS_LIST_INVOICES" and self.deleted:
+            # After the delete Zoho puts the applied amount back on the
+            # invoice; the stub mirrors that so the printed figure is real.
+            restored = {**REAL_INVOICE_LIST["invoices"][0], "balance": 2211200.0}
+            return {"code": 0, "message": "success", "invoices": [restored],
+                    "page_context": {"has_more_page": False}}
+        return dict(self.replies[slug])
+
+    def delete_payment(self, payment_id: str) -> None:
+        self.deleted.append(payment_id)
+
+    def payment_detail(self, payment_id: str) -> dict[str, Any]:
+        return {"payment_id": payment_id,
+                "invoices": [{"invoice_id": "zi-funke", "amount_applied": 4000.0}]}
+
+
+#: The reply Zoho actually sent on 4 Nov 2026, shape and key included, for
+#: the payment the take wrote.
+REAL_PAYMENT_LIST = {
+    "code": 0, "message": "success",
+    "customerpayments": [{
+        "payment_id": "1631856000000143009",
+        "reference_number": "mimi-apr_ac92ab118e4560478760",
+        "date": "2026-10-26", "amount": 4000.0,
+        "customer_id": "1631856000000119001"}],
+    "page_context": {"has_more_page": False},
+}
+
+REAL_INVOICE_LIST = {
+    "code": 0, "message": "success",
+    "invoices": [{"invoice_id": "zi-funke", "invoice_number": "MZ-shop-005",
+                  "customer_id": "1631856000000119001",
+                  "customer_name": "Funke & Sons Mini Mart",
+                  "total": 2211200.0, "balance": 2207200.0, "status": "overdue"}],
+    "page_context": {"has_more_page": False},
+}
+
+
+def test_reset_reads_the_real_payment_list_key() -> None:
+    """Zoho names the list ``customerpayments``. Reading ``customer_payments``
+    matched nothing and the reset saw a take's payment as no payment at all."""
+    live = _LiveReply({"ZOHO_BOOKS_LIST_CUSTOMER_PAYMENTS": REAL_PAYMENT_LIST,
+                       "ZOHO_BOOKS_LIST_INVOICES": REAL_INVOICE_LIST})
+    plan = seed.plan_reset(live)
+    assert [p["payment_id"] for p in plan.payments] == ["1631856000000143009"]
+    assert [p["reference_number"] for p in plan.payments] == [
+        "mimi-apr_ac92ab118e4560478760"]
+    assert plan.ignored == 0
+    assert plan.before == {"MZ-shop-005": 2207200.0}
+
+
+def test_a_payment_list_with_no_rows_key_stops_the_run() -> None:
+    """A reply that carries no list at all is a read that failed, never an
+    empty book."""
+    live = _LiveReply({"ZOHO_BOOKS_LIST_CUSTOMER_PAYMENTS": {
+        "code": 0, "message": "success", "items": [],
+        "page_context": {"has_more_page": False}}})
+    with pytest.raises(seed.SeedRefused, match="no customerpayments list"):
+        live.payments()
+
+
+def test_reset_shouts_when_it_sees_payments_it_cannot_attribute(
+        capsys: pytest.CaptureFixture[str]) -> None:
+    """Payments in the org and none of them Mimi's is the state that ruins a
+    take: the reset must stop and name them, not report done."""
+    reply = {"code": 0, "message": "success",
+             "customerpayments": [
+                 {"payment_id": "p-manual", "reference_number": "KST-12345",
+                  "amount": 1000.0, "date": "2026-10-01"}],
+             "page_context": {"has_more_page": False}}
+    live = _LiveReply({"ZOHO_BOOKS_LIST_CUSTOMER_PAYMENTS": reply,
+                       "ZOHO_BOOKS_LIST_INVOICES": REAL_INVOICE_LIST})
+    with pytest.raises(seed.SeedRefused) as caught:
+        seed.run_reset(live, yes=True)
+    said = str(caught.value)
+    assert "cannot prove which payment is Mimi's" in said
+    assert "KST-12345" in said
+    assert "delete" in said
+    assert "MZ-shop-005" not in capsys.readouterr().out
+
+
+def test_reset_after_a_real_take_restores_the_invoice(
+        capsys: pytest.CaptureFixture[str]) -> None:
+    """The live order, with the real reply shapes: one approved ₦4,000 payment
+    on MZ-shop-005, then --reset puts the invoice back and says so."""
+    live = _LiveReply({"ZOHO_BOOKS_LIST_CUSTOMER_PAYMENTS": REAL_PAYMENT_LIST,
+                       "ZOHO_BOOKS_LIST_INVOICES": REAL_INVOICE_LIST})
+    counts = seed.run_reset(live, yes=True)
+    assert counts["payments"] == 1
+    assert live.deleted == ["1631856000000143009"]
+    out = capsys.readouterr().out
+    assert "deleted payment 1631856000000143009 ₦4,000 ref " in out
+    assert "ref mimi-apr_ac92ab118e4560478760" in out
+    assert "invoice MZ-shop-005: ₦2,207,200 -> ₦2,211,200" in out
+
+
 def test_reset_then_a_payment_keeps_both_books_equal(
         book: tuple[list[Any], set[str]]) -> None:
     """The filmed order: seed, one ₦4,000 payment, both books fall by ₦4,000,
