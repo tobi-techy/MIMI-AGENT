@@ -404,9 +404,10 @@ def list_activity(engine: Engine, tenant: str, *,
                 s.approvals.c.tenant_id == tenant, s.approvals.c.status == "pending")
             .group_by(s.approvals.c.turn_id))}
         names = display.names_for(conn, tenant)
-        shop_of = dict(conn.execute(sa.select(
-            s.threads.c.thread_id, s.threads.c.shop_id).where(
-                s.threads.c.tenant_id == tenant)).all())
+        shop_of: dict[str, str] = {
+            str(r[0]): str(r[1]) for r in conn.execute(sa.select(
+                s.threads.c.thread_id, s.threads.c.shop_id).where(
+                s.threads.c.tenant_id == tenant)).all()}
         out: list[dict[str, Any]] = []
         counts = {"running": 0, "waiting": 0, "done": 0}
         for r in rows:
@@ -469,6 +470,44 @@ def list_approvals(engine: Engine, tenant: str, *, status: str) -> dict[str, Any
 
 
 # ----------------------------------------------------------------- credit
+
+
+def exposure(engine: Engine, tenant: str) -> dict[str, Any]:
+    """Per shop and in total, aged and risk-weighted (feat/returns-and-exposure).
+
+    Only bank-verified payments count; a payment the shop reported is shown,
+    not counted. Code only, no model (``mimi.credit.exposure``)."""
+    from mimi.credit import exposure as ex
+
+    go = SqlGo(engine)
+    with engine.connect() as conn:
+        t = conn.execute(sa.select(s.tenants.c.live_date, s.tenants.c.live_day).where(
+            s.tenants.c.tenant_id == tenant)).first()
+        if t is None:
+            raise NotFound(tenant)
+        shops = list(conn.execute(sa.select(s.shops.c.shop_id, s.shops.c.name).where(
+            s.shops.c.tenant_id == tenant).order_by(s.shops.c.shop_id)))
+        pays = list(conn.execute(
+            sa.select(s.payments.c.shop_id, s.payments.c.payment_id, s.payments.c.day,
+                      s.payments.c.amount_kobo, s.payments.c.fake_alert,
+                      s.payments.c.proof_level, s.payments.c.proof_policy_version,
+                      s.payments.c.witnesses).where(s.payments.c.tenant_id == tenant)))
+    payment_rows = [{
+        "shop_id": p.shop_id, "payment_id": p.payment_id, "day": int(p.day),
+        "amount_kobo": 0 if p.fake_alert else int(p.amount_kobo),
+        "claimed_kobo": int(p.amount_kobo), "proof_level": p.proof_level,
+        "proof_policy_version": p.proof_policy_version, "witnesses": p.witnesses,
+    } for p in pays]
+    receivables = go.receivables(tenant, None)
+    as_of_day = int(t.live_day)
+    rows = []
+    for sh in shops:
+        recs = [r for r in receivables if r["shop_id"] == sh.shop_id]
+        mine = [p for p in payment_rows if p["shop_id"] == sh.shop_id]
+        rows.append(ex.shop_exposure(sh.shop_id, str(sh.name), recs, mine, as_of_day))
+    body = ex.exposure_summary(rows)
+    body["as_of"] = str(t.live_date)
+    return body
 
 
 def credit(engine: Engine, tenant: str) -> dict[str, Any]:

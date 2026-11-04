@@ -586,6 +586,194 @@ class CreditLimitOut(_Out):
     undone: bool = False
 
 
+# ------------------------------------------- returns (feat/returns-and-exposure)
+
+
+class ReturnLineOut(_Out):
+    """One line of a return. The console maps: product=item, quantity=
+    quantity_drafted, unit=unit, collected=quantity_collected, came back=
+    quantity_returned, disposition=disposition."""
+
+    line_no: int
+    sku: str
+    item: str
+    unit: str
+    reason: str
+    quantity_drafted: int
+    quantity_collected: int | None = None
+    quantity_returned: int | None = None
+    unit_price_kobo: int
+    value_drafted_kobo: int
+    value_returned_kobo: int | None = None
+    condition: Literal["", "resellable", "damaged", "expired"] = ""
+    disposition: Literal["", "resell", "write_off", "return_to_supplier"] = ""
+    expires_on: str | None = Field(None, description="From the distributor's own invoice "
+                                                     "line when the note carried one")
+    batch: str = ""
+    expiry_source: Literal["invoice", "estimated"] = Field(
+        "estimated", description="invoice: the delivery note carried it. estimated: it "
+                                 "did not, so nothing is claimed off a shop count")
+
+
+class ReturnTransition(_Out):
+    status: str
+    at: str
+    by: str
+    note: str
+
+
+class ReturnOut(_Out):
+    return_id: str
+    shop_id: str
+    shop_name: str
+    source: Literal["slow_stock", "manual"]
+    approval_id: str | None = Field(None, description="The approved pickup it opened from")
+    reason: str
+    status: Literal["drafted", "approved", "collected", "inspected", "settled", "cancelled"]
+    lines: list[ReturnLineOut]
+    value_drafted_kobo: int
+    value_collected_kobo: int
+    value_returned_kobo: int = Field(description="Value of what came back at inspection")
+    recovered_kobo: int = Field(description="Value off the lines that sell again or go "
+                                            "back to the supplier; a write-off recovers 0")
+    pickup_cost_kobo: int | None = Field(None, description="The owner's configured pickup "
+                                                           "cost, or null when not set")
+    saving_kobo: int | None = Field(None, description="recovered less the pickup cost, or "
+                                                      "null when no pickup cost is set")
+    saving_basis: str = ""
+    credit_kobo: int | None = None
+    credit_approval_id: str | None = None
+    credit_applied_kobo: int | None = Field(None, description="Off the shop's open invoices")
+    credit_on_account_kobo: int | None = Field(None, description="Held on the shop's account "
+                                                                 "because it owed nothing")
+    transitions: list[ReturnTransition]
+    created_at: str
+    updated_at: str
+
+
+class ReturnList(_Out):
+    returns: list[ReturnOut]
+    total: int
+
+
+class ReturnOpenLine(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    sku: str = Field(..., max_length=64)
+    quantity: int = Field(..., ge=1, le=1_000_000)
+    reason: str = Field("", max_length=300)
+
+
+class ReturnOpenIn(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    approval_id: str = Field("", max_length=64, description="An approved slow-stock pickup "
+                                                            "option; opens the return from it")
+    shop_id: str = Field("", max_length=64)
+    reason: str = Field("", max_length=500)
+    lines: list[ReturnOpenLine] = Field(default_factory=list)
+
+
+class CollectLine(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    line_no: int = Field(..., ge=1)
+    quantity: int = Field(..., ge=0)
+
+
+class CollectIn(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    by: str = Field("rep", max_length=100)
+    lines: list[CollectLine] = Field(default_factory=list, description="Omit to take what "
+                                                                       "was drafted")
+
+
+class InspectLine(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    line_no: int = Field(..., ge=1)
+    quantity_returned: int = Field(..., ge=0, description="What came back; never above what "
+                                                          "was collected")
+    condition: Literal["", "resellable", "damaged", "expired"] = ""
+    disposition: Literal["", "resell", "write_off", "return_to_supplier"] = ""
+
+
+class InspectIn(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    by: str = Field("owner", max_length=100)
+    lines: list[InspectLine] = Field(default_factory=list, description="Every line must be "
+                                                                       "named")
+
+
+class ReturnDecisionIn(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    by: str = Field("owner", max_length=100)
+    note: str = Field("", max_length=2000)
+
+
+class ReturnSettleIn(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    by: str = Field("owner", max_length=100)
+    amount_kobo: int | None = Field(None, ge=1, description="The credit; default is what "
+                                                            "came back, never more")
+
+
+class ReturnSettingsIn(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    pickup_cost_kobo: int = Field(..., ge=0, le=100_000_000_000,
+                                  description="What a collection trip costs, in kobo")
+
+
+class ReturnSettingsOut(_Out):
+    pickup_cost_kobo: int | None = None
+    pickup_cost_naira: str = ""
+    note: str = ""
+
+
+class ExposureBucket(_Out):
+    key: str
+    label: str
+    from_days: int | None
+    to_days: int | None
+    weight_pct: int
+
+
+class ExposureRow(_Out):
+    shop_id: str
+    shop_name: str
+    outstanding_kobo: int = Field(description="What the shop owes; the money figure")
+    outstanding_naira: str
+    overdue_kobo: int
+    overdue_naira: str
+    oldest_days_overdue: int
+    buckets: dict[str, int] = Field(description="Outstanding per ageing band, in kobo")
+    exposure_kobo: int = Field(description="Risk-weighted: outstanding scaled by each band's "
+                                           "weight. An assumption, not money owed")
+    exposure_naira: str
+    verified_paid_kobo: int = Field(description="Bank-verified payments only")
+    shown_not_counted_kobo: int = Field(description="Reported payments, not in the bank feed")
+    open_invoices: int
+    confidence: Literal["low", "medium", "high"] = Field(
+        description="From the count of bank-verified payments in the last 8 weeks: 8 or more "
+                    "high, 4 to 7 medium, fewer than 4 low")
+    note: str
+
+
+class ExposureOut(_Out):
+    as_of: str
+    policy_version: str
+    buckets: list[ExposureBucket]
+    note: str = Field(description="The weights, stated plainly")
+    shops: list[ExposureRow]
+    total: ExposureRow = Field(description="Every shop summed; confidence is the weakest "
+                                           "shop's with exposure")
+
+
 class ErrorOut(_Out):
     detail: str
 
@@ -775,3 +963,137 @@ class PolicyIn(BaseModel):
     rules: list[PolicyRuleIn] = Field(min_length=1, max_length=50)
     # Who changed it, for the log (the console sends the owner's name).
     by: str = Field(default="owner", max_length=100)
+
+
+# ----------------------------------------------------------- computer tasks
+# A computer task is a goal, an approved domain and a plan code built from the
+# task's own fields. The owner approves the plan once; code runs it under the
+# guardrails. Nothing here is a model choice and nothing here moves money.
+
+_COMPUTER_KINDS = "price_check | order_list | bank_statement | gov_form | generic"
+
+
+class ComputerTaskIn(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    goal: str = Field(..., min_length=1, max_length=600,
+                      description="What the distributor wants done, in their own words.")
+    url: str = Field(..., min_length=1, max_length=2000,
+                     description="The page to start on. It must be on the approved domain.")
+    domain: str = Field(..., min_length=1, max_length=255,
+                        description="The only domain the task may use, with its subdomains.")
+    kind: Literal["price_check", "order_list", "bank_statement", "gov_form", "generic"] = Field(
+        "generic", description=f"The task kind: {_COMPUTER_KINDS}.")
+    inputs: dict[str, str] = Field(
+        default_factory=dict, max_length=20,
+        description="Values the owner typed for a form task (a gov_form fills only these, "
+                    "never a password or a code).")
+
+
+class ComputerPlanStep(_Out):
+    action: str = Field(..., description="The step in plain words. This is what "
+                                         "the console renders: never a code.")
+    code: str = Field("", description="Our own name for the step (a machine verb, "
+                                      "for example 'goto'). The console does not "
+                                      "render this field.")
+    note: str = ""
+    url: str = ""
+    target: str = ""
+    field: str = ""
+    value_key: str = ""
+    direction: str = ""
+    amount: int = 0
+
+
+class ComputerTask(_Out):
+    task_id: str
+    status: Literal["proposed", "running", "awaiting_owner", "done", "stopped",
+                    "stopped_runaway", "failed"] = Field(
+        ..., description="One of exactly these seven. A task is never 'queued': "
+                         "that is an internal queue word, not a task status.")
+    kind: str
+    goal: str
+    url: str
+    domain: str
+    stop_reason: str = Field(
+        "", description="A machine code for the log: off_domain, forbidden_page, "
+                        "budget_steps, budget_seconds, login_wall, "
+                        "stopped_by_owner, unsupported_step, engine_error, empty "
+                        "while the task has not stopped. Never render this.")
+    note: str = Field(
+        "", description="The sentence for a person, and the one to render. It is "
+                        "always plain words when the task has stopped, whatever "
+                        "the stop_reason says.")
+    created_at: str
+    started_at: str = ""
+    finished_at: str = ""
+    plan: list[ComputerPlanStep] = Field(default_factory=list)
+    inputs: dict[str, str] = Field(default_factory=dict)
+
+
+class ComputerStep(_Out):
+    index: int
+    action: str = Field(..., description="What the step did, in plain words. This "
+                                         "is what the console renders: never a code.")
+    code: str = Field("", description="Our own name for the step (a machine verb, "
+                                      "for example 'goto'). The console does not "
+                                      "render this field.")
+    url: str = ""
+    note: str = ""
+    screenshot: str = Field("", description="An artifact name. Its bytes are at "
+                                            "GET /v1/computer/tasks/{task_id}/artifacts/{name}")
+
+
+class ComputerArtifact(_Out):
+    name: str
+    kind: Literal["screenshot", "text", "file"]
+    mime: str = ""
+    size: int = 0
+    sha256: str = ""
+
+
+class ComputerTaskDetail(ComputerTask):
+    steps: list[ComputerStep] = Field(default_factory=list)
+    artifacts: list[ComputerArtifact] = Field(default_factory=list)
+    live_view_url: str | None = Field(
+        None, description="A signed link to watch this task's session while one "
+                          "is open: the real screen, polled by the console in a "
+                          "new tab. It is per session, it dies with the session, "
+                          "and it holds no key of ours. Null once the task ends.")
+
+
+class ComputerKind(_Out):
+    kind: str = Field(..., description="The kind string to send in a task's kind field.")
+    label: str = Field("", description="What that kind of task does, in plain words.")
+
+
+class ComputerKindList(_Out):
+    kinds: list[ComputerKind] = Field(default_factory=list)
+
+
+class ComputerTaskSummary(_Out):
+    task_id: str
+    goal: str
+    domain: str
+    status: str
+    created_at: str
+    step_count: int = 0
+    stop_reason: str = Field(
+        "", description="A machine code, as on the task detail. Never render "
+                        "this: the sentence beside it is the one for a person.")
+    note: str = Field(
+        "", description="The sentence for a person, and the one to render in a "
+                        "list: it is always plain words when the task has "
+                        "stopped or paused.")
+
+
+class ComputerTaskList(_Out):
+    tasks: list[ComputerTaskSummary] = Field(default_factory=list)
+
+
+class ComputerProposal(_Out):
+    """The proposal the owner approves. ``plan`` is what will run, step by step."""
+
+    task_id: str
+    status: Literal["proposed"]
+    plan: list[ComputerPlanStep] = Field(default_factory=list)

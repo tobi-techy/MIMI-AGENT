@@ -515,6 +515,38 @@
   },
   {
    "group": "matrix",
+   "case": "stock.record_supplier_lines=act",
+   "ok": true,
+   "want": "code's tier",
+   "got": "notify/act/owner",
+   "bypass": false
+  },
+  {
+   "group": "matrix",
+   "case": "stock.record_supplier_lines=act_if_preapproved",
+   "ok": true,
+   "want": "approve; pre-approved goes ahead",
+   "got": "approve/act_if_preapproved/owner",
+   "bypass": false
+  },
+  {
+   "group": "matrix",
+   "case": "stock.record_supplier_lines=ask",
+   "ok": true,
+   "want": "approve",
+   "got": "approve/ask/owner",
+   "bypass": false
+  },
+  {
+   "group": "matrix",
+   "case": "stock.record_supplier_lines=hand_off",
+   "ok": true,
+   "want": "approve as a hand-off",
+   "got": "approve/hand_off/owner",
+   "bypass": false
+  },
+  {
+   "group": "matrix",
    "case": "stock.draft_restock=act",
    "ok": true,
    "want": "refused; stays approve",
@@ -1034,9 +1066,9 @@
    "bypass": false
   }
  ],
- "passed_cases": "129/129",
+ "passed_cases": "133/133",
  "groups": {
-  "matrix": "92/92",
+  "matrix": "96/96",
   "built_in": "28/28",
   "loosening": "9/9"
  },

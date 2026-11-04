@@ -157,9 +157,19 @@ Every demo refusal (429 for a cap or too many sessions, 503 when paused)
 answers one shape. `detail` is kept for older clients; `demo_limit` is what
 the console shows (OpenAPI `DemoLimitError`):
 
+**The naira caps do not bound a browser task.** A computer task spends browser
+minutes, not model tokens, so it writes no kobo into `demo_usage`, which is
+what `gate` sums: adding the gate to the two computer routes gives the kill
+switch and nothing else, and a run that costs no naira will never push a
+visitor over a naira cap. The count of tasks is what bounds them, checked where
+a task is created (three a session, eight a visitor address a day), which is
+why `POST /v1/computer/tasks` answers `session_task_cap` or `visitor_task_cap`
+rather than a spend cap. `POST /v1/computer/tasks/{id}/approve` is gated but
+never counted, so resuming a paused task does not spend the allowance twice.
+
 | Field | Type | What |
 |---|---|---|
-| `code` | string | `visitor_daily_cap`, `global_daily_cap`, `paused`, `too_many_sessions` |
+| `code` | string | `visitor_daily_cap`, `global_daily_cap`, `paused`, `too_many_sessions`, `session_task_cap`, `visitor_task_cap` |
 | `scope` | string | `visitor` (this address), `global` (every visitor), `demo` (paused) |
 | `title` | string | a short heading: `You have used today's demo allowance` |
 | `message` | string | one plain sentence to show under it |
@@ -234,9 +244,19 @@ approval reads as 404. Keys are compared by SHA-256 in constant time; give
 | `GET /v1/credit` | owner | Per-shop limit, outstanding, available, and credit requests from helpers' credit intents (Credit, RAI-271). Each limit row also has `over_limit`, `over_limit_by_kobo`, `over_limit_by_naira` (owes more than its limit, from code) |
 | `POST /v1/credit/{shop_id}/limit` | owner | The owner sets a shop's limit: `{amount_ngn, reason?}` (whole naira) answers `{shop_id, old_limit_ngn, new_limit_ngn, change_id}`. Recorded as a `limit_change` step on the shop's thread. 404 for another distributor's shop |
 | `POST /v1/credit/changes/{change_id}/undo` | owner | Puts the limit back: `{shop_id, old_limit_ngn, new_limit_ngn, change_id, undone: true}`; a second undo is 409 |
-| `POST /v1/approvals/{id}/undo` | owner | An approved `zoho_payment`: Zoho Books' delete path (`result.undo_available` turns false). An approved `credit_over_limit`: the old limit back. An approved `slow_stock`: the plan is off and the shop is told. 409 for anything else or a second undo |
+| `POST /v1/approvals/{id}/undo` | owner | An approved `zoho_payment`: Zoho Books' delete path (`result.undo_available` turns false). An approved `credit_over_limit`: the old limit back. An approved `slow_stock`: the plan is off, the shop is told, and a return opened from the pickup that collected nothing is cancelled. An approved `return_credit`: the credit is taken back off the invoices it touched by arithmetic, so it stays right after a bank payment or a morning roll moved them, and the return returns to `inspected` (`docs/RETURNS.md`). 409 for anything else or a second undo |
 | `GET /v1/stock/sell-through` | owner | Sales tracking (3 Nov 2026): per shop and product `sold_units` over `sold_over_days` (`sold_method` `counts`: two shop counts, count + delivered - later count; else `estimate`), `sold_value_ngn`, `proof_level` / `proof_grade` / `proof` ("estimated (shop count)"), `units_left` (estimate), `days_of_cover`, `days_to_expiry`, `expires_on`, `status` (`near_expiry`, `slow`, `low`, `ok`) and `status_word`, `watch` (a low-confidence slow reading: hint only), `confidence`, `at_risk_units` / `at_risk_ngn`, `last_count_on`, a plain `note` (names and ₦, no ids). `days` 7 to 90 (28), `shop_id`, `status` filters; top-level `counts` per status, `at_risk_ngn`, `at_risk_text`. Code only |
 | `POST /v1/stock/slow-check` | owner | Runs the weekly slow-stock check (also the `slow_stock_check` routine with `MIMI_DEMO_WIRING=1`): opens `slow_stock` approvals, one per shop and per item a week (a rerun opens nothing). `{week, opened, skipped, checked}` |
+| `GET /v1/returns` | owner | The returns ledger (3 Nov 2026, `docs/RETURNS.md`), newest first: `status` (`drafted`, `approved`, `collected`, `inspected`, `settled`, `cancelled`) and `shop_id` filters. Each return carries its lines (product, unit, drafted, collected and returned quantities, condition, disposition, and the invoice `batch`, `expires_on` and `expiry_source`), its reason, `value_drafted_kobo`, `value_returned_kobo`, `recovered_kobo`, the owner's `pickup_cost_kobo`, `saving_kobo` and `saving_basis`, its credit fields and its `transitions`. Names and ₦ only, no ids |
+| `GET /v1/returns/{return_id}` | owner | One return; 404 for another distributor's |
+| `POST /v1/returns` | owner | Opens a draft: `{approval_id}` from an approved `slow_stock` **pickup** (idempotent: the same pickup returns the one draft), or `{shop_id, reason, lines: [{sku, quantity, reason}]}`. Quantities and naira are summed in code. 409 when the pickup was not approved or its option is not a pickup |
+| `POST /v1/returns/{id}/approve` | owner | `drafted` to `approved` |
+| `POST /v1/returns/{id}/collect` | owner | `approved` to `collected`: the rep collected. `lines: [{line_no, quantity}]` may lower each line (never above the drafted quantity) |
+| `POST /v1/returns/{id}/inspect` | owner | `collected` to `inspected`: every line named with `quantity_returned`, `condition` (`resellable`, `damaged`, `expired`) and `disposition` (`resell`, `write_off`, `return_to_supplier`). 409 when more came back than was collected, or a line is missing |
+| `POST /v1/returns/{id}/settle` | owner | `inspected` drafts a pending `return_credit` approval: `{by?, amount_kobo?}` (default what came back; 409 above it). Settling again with the same amount hands back the waiting card; a different amount replaces it. Nothing changes until the owner approves it (`POST /v1/approvals/{id}/approve`), and it can be undone like a Zoho payment |
+| `POST /v1/returns/{id}/cancel` | owner | `drafted` or `approved` to `cancelled` |
+| `GET /v1/returns/settings`, `PUT /v1/returns/settings` | owner | The pickup cost `{pickup_cost_kobo}` a return reports against, so `saving_kobo` rests on a stated figure, not a guess |
+| `GET /v1/credit/exposure` | owner | Credit exposure per shop and in total, code only: `outstanding_kobo` and `overdue_kobo` (the money owed), the ageing bands (`current`, `days_1_30`, `days_31_60`, `days_over_60`) with their weights and per-shop `buckets`, the risk-weighted `exposure_kobo` (an assumption, always shown with its weights), `verified_paid_kobo` and `shown_not_counted_kobo` (only bank-verified payments count) and a defined `confidence` (`low`, `medium`, `high`). The `buckets` block defines the boundaries once, so no surface keeps its own copy |
 | `GET /v1/mentions` | owner | The console's @ picker: `{mentions: [{kind, id, name, subtitle, mention, assign_to}], total}`. `kind` is `helper`, `shop` or `rep`. `q` matches the start of a name or of any word in it (a leading `@` is ignored); `kinds` is a comma list (`shop`, `helper,rep`), empty for all; `limit` 1 to 200 (50). Helper rows carry `mention` (`@Collector`) and `assign_to` for `POST /v1/turns`; shop rows' `subtitle` is area and rep, rep rows' is their areas. A channel key is 403 |
 | `GET /v1/connectors` | owner | Connector toolkits (Zoho Books, Zoho CRM, Google Sheets, CSV/Excel, Mono soon) with their reads, writes and connections (RAI-277; `docs/CONNECTORS.md`) |
 | `POST /v1/connectors/{toolkit}/connect` | owner | Start the connect flow: body `{region}` for Zoho (`com`, `eu`, `in`, `cn`, `au`); returns `redirect_url` and a single-use `state`. Demo and offline runs return a fake redirect, never real OAuth |
@@ -566,6 +586,11 @@ asked-once topics, kill switches, history, pinned prefixes, artifacts).
 `SqlGo` reads the book exactly as `FakeGo` does (a test compares every port
 on all 40 shops). In production Go owns the book; `SqlGo` keeps the same
 ports so a real Go client can replace it.
+
+The returns ledger adds `returns`, `return_lines`, `return_events` (one row
+per lifecycle transition), `credit_notes` (every applied settlement credit,
+with the invoice applications it used, so an undo restores exactly what it
+changed) and `returns_settings` (the owner's pickup cost). Alembic `0016`.
 
 Phone numbers are stored only where the book needs them (shops, reps, the
 owner's numbers) and in a queued message until its turn is done; the API
