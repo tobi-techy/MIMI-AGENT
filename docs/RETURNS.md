@@ -184,8 +184,49 @@ MIMI_TEST_DATABASE_URL=postgresql://... META_API_KEY= python -m pytest \
     tests/test_receivables_locking.py -q
 ```
 
+`tests/test_payment_on_account.py` covers a payment bigger than the balance:
+the card capped invoice by invoice, the excess recorded on the shop's account,
+the payment row and the receivables adding up, the shop read showing it, and
+Go's own writer doing the same.
+
 The frozen field names and status strings the console builds against are in
 [`returns-exposure-contract.md`](returns-exposure-contract.md).
+
+## A payment bigger than the shop owes
+
+A shop can pay more than it owes. Until this change the excess went nowhere:
+`demo_wiring._apply_to_invoices` and `week.go.GoSim._pay` clamped the invoice
+while the `payments` row kept the full amount the bank sent, so two tables in
+the same book disagreed and nothing complained. And the `zoho_payment` card
+built from that payment named the full amount against one invoice, which in a
+real Zoho Books org is a real over-application: the shop's record would say it
+settled more of an invoice than the invoice ever owed.
+
+Both halves are fixed in `mimi/store/on_account.py`, so the demo's bank credit
+and the simulated week behave the same way:
+
+* the amount applied to each invoice is capped at that invoice's open balance.
+  `_apply_to_invoices` returns what the invoices could absorb
+  (`{"first", "applied_kobo", "on_account_kobo", "applications"}`) and the card
+  is built from that, invoice by invoice, never from the payment amount;
+* `payments.create_body` now accepts an invoice list that adds up to less than
+  the payment (Zoho holds the difference as an unapplied amount on the customer
+  payment) and refuses one that adds up to more;
+* what is left is a `credit_notes` row on the shop's account. 0017 already gave
+  that table `on_account_kobo`, so there is no new table and no new revision: a
+  payment credit has no return, so its `return_id` is empty and its `credit_id`
+  is built from the payment id (`crn_` plus a hash, the same shape as a return
+  credit, so the scrub catches it too). The row keeps the applications as well,
+  so the payment row and the receivables add up:
+  `payments.amount_kobo == applied_kobo + on_account_kobo`;
+* `GET /v1/shops` and `GET /v1/shops/{shop_id}` carry `on_account_kobo` and
+  `on_account_naira`, so the owner sees what the shop holds on its account, and
+  the card's preview says in words how much of the payment stays there.
+
+Allocating that credit onto a later invoice is not built. It wants its own
+approval and its own undo, and this change only has to make the money visible
+and the two tables agree. Until it exists, an over-payment sits on the shop's
+account and an invoice it could have paid stays open.
 
 ## Not built (stated plainly)
 

@@ -341,6 +341,10 @@ class ShopSummary(_Out):
     outstanding_naira: str
     overdue_kobo: int
     overdue_naira: str
+    # A payment (or a return credit) bigger than the shop owed, held on its
+    # account until it is allocated to an invoice.
+    on_account_kobo: int = 0
+    on_account_naira: str = ""
     open_invoices: int
     simulated: bool
     # Whole naira and days (demo wiring, 2 Nov 2026): days since the oldest

@@ -41,9 +41,19 @@ def test_create_needs_approval_amount_customer_date() -> None:
     with pytest.raises(ConnectorError, match="positive amount"):
         pay.create_body(bad, "k1")
     bad = dict(PAYLOAD, invoices=[{"invoice_id": "zoho-d1",
-                                   "amount_applied_kobo": 1}])
-    with pytest.raises(ConnectorError, match="add up"):
+                                   "amount_applied_kobo": 60_000_000}])
+    with pytest.raises(ConnectorError, match="more than the payment"):
         pay.create_body(bad, "k1")
+
+
+def test_create_allows_a_payment_bigger_than_the_invoices() -> None:
+    """A shop can pay more than it owes: the invoice list adds up to less than
+    the payment, and Zoho holds the difference unapplied."""
+    part = dict(PAYLOAD, invoices=[{"invoice_id": "zoho-d1",
+                                    "amount_applied_kobo": 30_000_000}])
+    body = pay.create_body(part, "k1")
+    assert body["amount"] == 500_000.0
+    assert body["invoices"] == [{"invoice_id": "zoho-d1", "amount_applied": 300000.0}]
 
 
 def test_create_search_delete_exactly_three_proxy_calls() -> None:
