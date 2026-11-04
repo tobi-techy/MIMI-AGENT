@@ -436,8 +436,10 @@ def test_tasks_endpoint_reports_status_per_helper(env: dict[str, Any]) -> None:
 
 def test_the_task_status_rule_reads_an_ask_as_waiting() -> None:
     """The turn's own question is the one wait the rule used to miss: the helper
-    asked, so the turn is not done (RAI-324 follow-up)."""
+    asked, so the turn is not done. A runaway stop is the same shape: the
+    safety layer told the owner to look (RAI-324 follow-up)."""
     assert hx.task_status("done", "asked_question") == "needs_you"
+    assert hx.task_status("done", "stopped_runaway") == "needs_you"
     assert hx.task_status("done", "parked_for_timer") == "done"  # nobody is waited on
     assert hx.task_status("done", "stopped_denied") == "needs_you"
     assert hx.task_status("done", "done") == "done"
@@ -465,6 +467,34 @@ def test_an_ask_turn_waits_on_the_person_in_tasks_activity_and_the_summary(
             waiting = c.get("/v1/tasks?status=needs_you", headers=owner_h()).json()
             assert [x["turn_id"] for x in waiting["tasks"]] == [t["turn_id"]]
             assert c.get("/v1/tasks?status=done", headers=owner_h()).json()["tasks"] == []
+            act = c.get("/v1/activity?tab=waiting", headers=owner_h()).json()
+            assert act["by_tab"] == {"running": 0, "waiting": 1, "done": 0}
+            assert [r["turn_id"] for r in act["rows"]] == [t["turn_id"]]
+            th = c.get(f"/v1/threads/{t['thread_id']}", headers=owner_h()).json()
+            assert th["thread"]["status"] == "needs_you"
+    finally:
+        engine.dispose()
+
+
+def test_a_runaway_stop_waits_on_the_owner_in_all_three_views(store_url: str) -> None:
+    """The safety layer stopped the run and told the owner to look, so the turn
+    is not done: /v1/tasks, /v1/activity and the thread summary all say so
+    (RAI-324 follow-up)."""
+
+    def loop_script(messages: Any, tools: Any) -> ModelTurn:
+        return say("", ("get_balance", {"shop_id": "shop-001"}))
+
+    c, agent, engine = _env(store_url, loop_script)
+    try:
+        with c:
+            t = owner_turn(c, "run.1", "Who is the highest debtor?")
+            assert t["status"] == "stopped_runaway"
+            assert t["task_status"] == "needs_you"
+            assert t["handoff"]["status"] == "needs_you"
+            assert c.get("/v1/tasks", headers=owner_h()).json()["by_status"] == {
+                "needs_you": 1}
+            waiting = c.get("/v1/tasks?status=needs_you", headers=owner_h()).json()
+            assert [x["turn_id"] for x in waiting["tasks"]] == [t["turn_id"]]
             act = c.get("/v1/activity?tab=waiting", headers=owner_h()).json()
             assert act["by_tab"] == {"running": 0, "waiting": 1, "done": 0}
             assert [r["turn_id"] for r in act["rows"]] == [t["turn_id"]]

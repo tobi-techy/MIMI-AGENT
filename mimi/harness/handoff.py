@@ -228,14 +228,16 @@ def via_of(layer: str, rule: str) -> Via:
 
 
 # The statuses where a turn stopped on a person: an approval to give, a
-# question to answer, the day's cap to raise, a denial to look at. A timer park
-# is deliberately not here: nobody is being waited on. ``asked_question`` is
-# here because the helper asked and the turn holds until the answer arrives, so
-# it is waiting, not done (``mimi.harness.durable`` groups the same statuses as
-# ``ask_owner`` for the job runtime).
+# question to answer, the day's cap to raise, a denial or a runaway stop to
+# look at. A timer park is deliberately not here: nobody is being waited on.
+# ``asked_question`` is here because the helper asked and the turn holds until
+# the answer arrives, so it is waiting, not done. ``stopped_runaway`` is here
+# because the safety layer stopped the run and wrote the owner a note
+# (``mimi.harness.durable`` groups the same statuses as ``ask_owner`` for the
+# job runtime, this one included).
 NEEDS_YOU_STATUSES = frozenset({
     "parked_for_approval", "asked_to_clarify", "parked_budget", "steer_which_owner",
-    "stopped_denied", "asked_question"})
+    "stopped_denied", "asked_question", "stopped_runaway"})
 
 
 def task_status(state: str, status: str, *, pending_approvals: int = 0) -> TaskStatus:
