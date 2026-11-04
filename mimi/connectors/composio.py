@@ -162,10 +162,15 @@ class ComposioTransport:
         # would never return.
         sep_cb = "&" if "?" in settings.callback_url else "?"
         callback = f"{settings.callback_url}{sep_cb}state={state}"
+        # ``link`` is Composio's connect call for every redirectable OAuth
+        # scheme, Composio-managed or our own app; ``initiate`` is retired
+        # for Composio-managed OAuth configs (it now answers 400). Same
+        # return shape; ``initiate`` stays only for an SDK without ``link``.
+        accounts = client.connected_accounts
+        start = getattr(accounts, "link", None) or accounts.initiate
         try:
-            req = client.connected_accounts.initiate(
-                user_id=user_id, auth_config_id=auth_config,
-                callback_url=callback)
+            req = start(user_id=user_id, auth_config_id=auth_config,
+                        callback_url=callback)
         except Exception as exc:
             log_failure(log, f"{toolkit} connect", exc)
             raise ConnectorError(f"Couldn't start connecting {_label(toolkit)}. "
