@@ -196,9 +196,9 @@ def _thread_summary(conn: sa.Connection, tenant: str, t: Any) -> dict[str, Any]:
         rep_id = t.thread_id.rsplit(":", 1)[-1]
         rep_name = str(conn.execute(sa.select(s.reps.c.name).where(
             s.reps.c.tenant_id == tenant, s.reps.c.rep_id == rep_id)).scalar() or "")
-    turns = [{"helper": r.helper, "skill": r.skill, "state": r.state}
+    turns = [{"helper": r.helper, "skill": r.skill, "state": r.state, "status": r.status}
              for r in conn.execute(sa.select(s.turns.c.helper, s.turns.c.skill,
-                                             s.turns.c.state).where(
+                                             s.turns.c.state, s.turns.c.status).where(
                  s.turns.c.tenant_id == tenant, s.turns.c.thread_id == t.thread_id)
                  .order_by(s.turns.c.created_ts, s.turns.c.turn_id))]
     meta = threadmeta.derive(kind=t.kind, thread_id=t.thread_id, shop_id=t.shop_id,
