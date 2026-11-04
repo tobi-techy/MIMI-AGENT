@@ -84,6 +84,12 @@ BASE_TIERS: dict[str, Tier] = {
     "ask_helper": "auto",
     # Every helper may hand work to another (MIMI_HELPER_DELEGATION); the tool
     # is in no toolset until the switch is on.
+    #
+    # POLICY_VERSION is NOT bumped for this row yet, deliberately: the row
+    # changes no helper's toolset or recorded request while the switch is off,
+    # and a bump would make every recorded loop answer miss as stale (RAI-309)
+    # with no way to re-record here (no key). The bump travels with the
+    # deployment turn-on, in the same change as `--live` re-records.
     "delegate_task": "auto",
     "notify_rep": "auto",
     "notify_owner": "auto",
