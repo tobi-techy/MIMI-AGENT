@@ -2,6 +2,8 @@
  {
   "match": {},
   "reply": {
+   "code": 0,
+   "message": "success",
    "invoices": [
     {
      "invoice_id": "zoho-dlv-04-0001",
@@ -38,6 +40,8 @@
    "organization_id": "org-coral-lane"
   },
   "reply": {
+   "code": 0,
+   "message": "success",
    "invoices": [
     {
      "invoice_id": "zoho-dlv-04-0001",
