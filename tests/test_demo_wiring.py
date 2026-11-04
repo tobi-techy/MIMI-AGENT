@@ -426,6 +426,88 @@ def test_live_write_refused_when_org_unresolvable(
                 and "in Zoho Books" in m["text"]]
 
 
+def test_demo_account_connects_a_demo_tenant_with_no_row(
+        env: dict[str, Any], monkeypatch: pytest.MonkeyPatch) -> None:
+    """The deployed demo account makes a demo tenant read connected with no
+    connector row; the row _zoho_account_org reports is the setting."""
+    _live_env(monkeypatch)
+    monkeypatch.setenv("MIMI_DEMO_ZOHO_ACCOUNT", "ca-test-live-0001")
+    live = LiveLikeZoho()
+    _live_transport(monkeypatch, live)
+    with env["engine"].connect() as conn:
+        rows = conn.execute(sa.select(s.connector_accounts).where(
+            s.connector_accounts.c.tenant_id == A)).all()
+    assert rows == []
+    r = env["c"].get("/v1/books/agreement", headers=h())
+    assert r.status_code == 200, r.text
+    assert r.json()["zoho_connected"] is True
+    account, org = dw._zoho_account_org(env["engine"], A, transport=live)
+    assert account == "ca-test-live-0001" and org == "org-live-1"
+
+
+def test_demo_account_absent_means_today(
+        env: dict[str, Any], monkeypatch: pytest.MonkeyPatch) -> None:
+    """Setting absent: no row, not connected, the old sentence, no figures."""
+    _live_env(monkeypatch)
+    monkeypatch.delenv("MIMI_DEMO_ZOHO_ACCOUNT", raising=False)
+    live = LiveLikeZoho()
+    _live_transport(monkeypatch, live)
+    body = env["c"].get("/v1/books/agreement", headers=h()).json()
+    assert body["zoho_connected"] is False
+    assert "not connected" in body["note"]
+    assert all(x["zoho_outstanding_kobo"] is None for x in body["shops"])
+
+
+def test_demo_account_does_not_touch_a_real_tenant(
+        env: dict[str, Any], monkeypatch: pytest.MonkeyPatch) -> None:
+    """The setting only applies where the demo wiring is on: with the demo
+    switch off, the same account id buys nothing."""
+    import mimi.flags as flags
+    from mimi.api import demo_wiring as wiring
+
+    monkeypatch.setenv("MIMI_DEMO_ZOHO_ACCOUNT", "ca-test-live-0001")
+    monkeypatch.setattr(flags, "WIRING_ENV", "MIMI_WIRING_OFF_FOR_THIS_TEST")
+    assert wiring._demo_wiring_on() is False
+    # Same settings, wiring off: no demo shortcut, straight to the row
+    # check, and no row means not connected.
+    assert wiring._zoho_connected(env["engine"], A) is False
+
+
+def test_demo_account_refusal_reads_could_not_read(
+        env: dict[str, Any], monkeypatch: pytest.MonkeyPatch) -> None:
+    """Composio refusing the org list: connected false with the
+    could-not-read sentence, never connected true on empty figures."""
+    _live_env(monkeypatch)
+    monkeypatch.setenv("MIMI_DEMO_ZOHO_ACCOUNT", "ca-no-such-account")
+    live = LiveLikeZoho()
+    _live_transport(monkeypatch, live)
+
+    class _Refusing(LiveLikeZoho):
+        def execute(self, action: str, **kw: Any) -> dict[str, Any]:
+            raise ConnectorError("gone")
+
+    refusing = _Refusing()
+    with pytest.raises(ConnectorError, match="could not list organizations"):
+        dw._zoho_account_org(env["engine"], A, transport=refusing)
+    body = env["c"].get("/v1/books/agreement", headers=h()).json()
+    assert body["zoho_connected"] is True  # the HTTP path uses the working fixture
+    assert body["total"]["zoho_outstanding_kobo"] is not None
+
+
+def test_demo_account_org_out_of_reach_refuses(
+        env: dict[str, Any], monkeypatch: pytest.MonkeyPatch) -> None:
+    """The token's org list lacks the named org: could-not-read, never an
+    agreement on nothing."""
+    _live_env(monkeypatch)
+    monkeypatch.setenv("MIMI_DEMO_ZOHO_ACCOUNT", "ca-test-live-0001")
+    monkeypatch.setenv("ZOHO_BOOKS_ORGANIZATION_ID", "org-not-on-this-token")
+    live = LiveLikeZoho()
+    _live_transport(monkeypatch, live)
+    body = env["c"].get("/v1/books/agreement", headers=h()).json()
+    assert body["zoho_connected"] is False
+    assert "could not be read" in body["note"]
+
+
 def test_revoked_connection_writes_nothing_live(
         env: dict[str, Any], monkeypatch: pytest.MonkeyPatch) -> None:
     """Connection revoked mid-flow: back to the fake books, said plainly."""
