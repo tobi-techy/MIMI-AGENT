@@ -108,9 +108,8 @@ Errors: 409 when `quantity_returned > quantity_collected`; 409 when a line is
 missing at inspection; 409 when the settle `amount_kobo > value_returned_kobo`;
 409 on a transition not allowed from the current status; 409 when a pickup was
 not approved, its option is not a pickup, or the owner has undone the pickup;
-409 when the credit being undone is not the newest active credit on each
-invoice it touched (undo the later one first); 422 when `amount_kobo < 1`; 404
-unknown return.
+409 when the undo finds an invoice the credit came off no longer on the book;
+422 when `amount_kobo < 1`; 404 unknown return.
 
 Settlement rules the console can rely on:
 
@@ -121,15 +120,13 @@ Settlement rules the console can rely on:
 - A card the owner rejected, withdrew or superseded is not the return's
   credit: `credit_kobo` and `credit_approval_id` read as null, and the next
   settle drafts a fresh card. A rejection never blocks settlement.
-- Undoing an applied credit is last in, first out per invoice: with two
-  returns crediting one invoice (one shop, two returns), the older credit is
-  refused while the newer one is still applied.
-- An undo is also refused (409) when anything else moved the invoice since
-  the credit came off it: Go writes the same `paid_kobo`, `outstanding_kobo`
-  and `status` columns from a verified bank payment and from the morning roll
-  that marks invoices overdue. The undo then changes nothing rather than
-  writing a figure that does not match the book; settling the return again
-  works from the balance as it stands.
+- Undoing an applied credit subtracts that credit's own applications from the
+  invoices: it stays correct when two returns credit one invoice (either order
+  can be undone) and when a verified bank payment or Go's morning roll moved
+  the invoice first. The invoice's word (`open`, `overdue`, `settled`) is
+  recomputed from the balance the undo leaves and the due day, so a credit is
+  never stuck with no way to reverse it. The only refusal is an invoice that
+  is no longer on the book.
 - Undoing the pickup (the `slow_stock` approval) cancels a return opened from
   it that has collected nothing, and no return can be opened or walked from an
   undone pickup.
@@ -238,7 +235,7 @@ feed, so a shop-reported payment never lowers exposure; it appears as
 
 ## Tests
 
-`tests/test_returns.py` (25 tests) and `tests/test_exposure.py` (9 tests)
+`tests/test_returns.py` (26 tests) and `tests/test_exposure.py` (9 tests)
 cover every string above, including the unhappy paths and the two
 person-read-string guarantees: tenant filtering, and no internal id anywhere
 a person reads.

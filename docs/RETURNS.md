@@ -87,20 +87,21 @@ Three rules keep the card and the return honest:
 * A card the owner rejected, withdrew or superseded is not the return's
   credit any more: the return reads no credit waiting, and the next settle
   drafts a fresh one. A rejection never blocks settling.
-* An undo is last in, first out per invoice. One shop with two returns shares
-  an invoice, and each credit is undone by putting the invoice back to what it
-  was just before that credit came off, so the older credit is refused while a
-  newer one is still applied, with a plain message saying to undo the later
-  one first. Undoing out of order would leave the invoice owing more than the
-  shop really owes with a live credit still on it.
-* An undo is also refused when anything else moved the invoice since the
-  credit came off it. Go's own system writes the same three columns
-  (`paid_kobo`, `outstanding_kobo`, `status`): a verified bank payment
-  (`demo_wiring._apply_to_invoices`) and the morning roll that closes the day
-  and marks invoices overdue (`week.go.GoSim.open_day` and `GoSim._pay`). The
-  undo checks the invoice still holds exactly what the credit left on it and
-  fails closed when it does not, so it never writes a wrong number; the owner
-  settles the return again from the balance they see.
+* The undo takes this credit's own applications back off the invoices by
+  arithmetic: `paid` less what the credit put on that invoice, `outstanding`
+  plus it. That is the right figure however the invoice has moved since, so
+  two credits on one invoice can be undone in either order and a verified bank
+  payment landing in between survives the undo instead of making it impossible
+  (Go's own system writes the same columns: `demo_wiring._apply_to_invoices`,
+  and `week.go.GoSim.open_day` with `GoSim._pay`).
+* The invoice's word is recomputed from the balance the undo leaves and its
+  due day, the same rule Go's morning roll uses. An invoice that went overdue
+  while the credit was on it keeps that word rather than getting a stale one
+  back, and no money-inert change can leave the credit stuck with no way to
+  reverse it.
+* The one case the undo refuses is an invoice that is no longer on the book:
+  there is nothing to take the credit back off, so it says so and changes
+  nothing.
 
 Undoing the **pickup** itself also reaches the ledger: a return opened from it
 that has collected nothing is cancelled with it, and no return can be opened
@@ -143,10 +144,9 @@ What one shop could cost, aged and risk-weighted, per shop and in total.
 * the lifecycle, the three quantities, the settlement against a balance and
   its undo, and the credit-on-account case for a shop that owes nothing;
 * the settlement rules: a rejected card leaves the return settleable, a second
-  settle with a new amount replaces the waiting card, two credits on one
-  invoice refuse an out-of-order undo, undoing the pickup cancels the draft,
-  and an undo is refused when a bank payment or a morning roll moved the
-  invoice in the meantime;
+  settle with a new amount replaces the waiting card, undoing the pickup
+  cancels the draft, and the undo reverses the credit's own applications so it
+  stays right when a bank payment or a morning roll moved the invoice first;
 * the unhappy paths: a pickup with no approval, a non-pickup plan, an
   inspection that disagrees with what was collected, a settlement above the
   return value, a transition out of order, settling with no shop and no

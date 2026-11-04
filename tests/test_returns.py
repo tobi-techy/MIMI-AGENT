@@ -476,20 +476,18 @@ def test_settle_again_with_a_different_amount_replaces_the_waiting_card(
     assert new["status"] == "pending" and new["payload"]["amount_kobo"] == PRICE
 
 
-def test_an_out_of_order_undo_is_refused_and_the_book_is_left_alone(
-        api: dict[str, Any], monkeypatch: pytest.MonkeyPatch) -> None:
+def test_two_credits_on_one_invoice_can_be_undone_in_either_order(
+        api: dict[str, Any]) -> None:
     """Two returns credit one invoice (one shop, two returns: the normal case).
-    The older credit's undo would put the invoice back past the newer credit,
-    so it is refused with the one to undo first."""
+    The undo takes this credit's own applications back off the invoice rather
+    than restoring a snapshot, so the older one can go first and each step
+    lands on the right balance."""
     c, engine = api["c"], api["engine"]
-    ticks = iter([1_000.0 + i for i in range(50)])
-    monkeypatch.setattr(returns_api, "wall", lambda: next(ticks))
     owes = max(c.get("/v1/shops", headers=h()).json()["shops"],
                key=lambda x: x["outstanding_kobo"])
     shop_id = owes["shop_id"]
     assert owes["outstanding_kobo"] > 3 * PRICE  # both credits land on one invoice
-    before = {x["delivery_id"]: x["outstanding_kobo"]
-              for x in SqlGo(engine).receivables(A, shop_id)}
+    before = _receivables(engine, shop_id)
     first = _walk(c, _open_manual(c, shop_id, quantity=1))
     second = _walk(c, _open_manual(c, shop_id, quantity=1))
     a1 = c.post(f"/v1/returns/{first['return_id']}/settle", headers=h(),
@@ -498,22 +496,20 @@ def test_an_out_of_order_undo_is_refused_and_the_book_is_left_alone(
     a2 = c.post(f"/v1/returns/{second['return_id']}/settle", headers=h(),
                 json={}).json()["credit_approval_id"]
     assert c.post(f"/v1/approvals/{a2}/approve", headers=h(), json={}).status_code == 200
-    after = {x["delivery_id"]: x["outstanding_kobo"]
-             for x in SqlGo(engine).receivables(A, shop_id)}
-    assert sum(before.values()) - sum(after.values()) == 2 * PRICE
-    older = c.post(f"/v1/approvals/{a1}/undo", headers=h())
-    assert older.status_code == 409, older.text
-    assert "Undo the" in older.json()["detail"]
-    assert not ID_RE.search(older.json()["detail"])
-    assert {x["delivery_id"]: x["outstanding_kobo"]
-            for x in SqlGo(engine).receivables(A, shop_id)} == after
-    assert c.get(f"/v1/returns/{first['return_id']}",
-                 headers=h()).json()["status"] == "settled"
-    # Newest first works, and then the older one goes back cleanly.
-    assert c.post(f"/v1/approvals/{a2}/undo", headers=h()).status_code == 200
+    both = _receivables(engine, shop_id)
+    assert sum(before.values()) - sum(both.values()) == 2 * PRICE
+    touched = max(before, key=lambda d: before[d] - both[d])
+    assert before[touched] - both[touched] == 2 * PRICE  # one invoice took both
+    # The older credit first: the newer one stays on the invoice, untouched.
     assert c.post(f"/v1/approvals/{a1}/undo", headers=h()).status_code == 200
-    assert {x["delivery_id"]: x["outstanding_kobo"]
-            for x in SqlGo(engine).receivables(A, shop_id)} == before
+    one_left = _receivables(engine, shop_id)
+    expected = dict(before)
+    expected[touched] = before[touched] - PRICE
+    assert one_left == expected
+    assert c.get(f"/v1/returns/{first['return_id']}",
+                 headers=h()).json()["status"] == "inspected"
+    assert c.post(f"/v1/approvals/{a2}/undo", headers=h()).status_code == 200
+    assert _receivables(engine, shop_id) == before
 
 
 def test_undoing_the_pickup_calls_the_return_off(api: dict[str, Any]) -> None:
@@ -559,11 +555,11 @@ def _receivables(engine: Any, shop_id: str) -> dict[str, int]:
             for x in SqlGo(engine).receivables(A, shop_id)}
 
 
-def test_an_undo_is_refused_when_a_bank_credit_lands_on_the_invoice(
+def test_an_undo_after_a_bank_credit_lands_on_the_invoice_is_still_right(
         api: dict[str, Any]) -> None:
-    """A verified bank payment writes the same columns the snapshot restore
-    does (`demo_wiring._apply_to_invoices`), so it makes the snapshot stale.
-    The undo fails closed instead of writing a wrong figure."""
+    """A verified bank payment writes the same columns the undo does
+    (`demo_wiring._apply_to_invoices`). The undo subtracts this credit's own
+    application, so the payment survives it and the invoice lands right."""
     from mimi.api.demo_wiring import _apply_to_invoices
 
     c, engine = api["c"], api["engine"]
@@ -571,29 +567,34 @@ def test_an_undo_is_refused_when_a_bank_credit_lands_on_the_invoice(
                key=lambda x: x["outstanding_kobo"])
     shop_id = owes["shop_id"]
     assert owes["outstanding_kobo"] > 3 * PRICE
+    base = _receivables(engine, shop_id)
     body = _walk(c, _open_manual(c, shop_id, quantity=1))
     apr, invoice_number = _settle_and_apply(c, body, amount_kobo=PRICE)
     credited = _receivables(engine, shop_id)
     # The bank confirms a transfer for the same invoice the credit came off.
     delivery_id = "dlv-" + invoice_number.removeprefix("INV-")
+    payment = PRICE // 2
     with engine.begin() as conn:
-        _apply_to_invoices(conn, A, shop_id, PRICE // 2, delivery_id)
+        _apply_to_invoices(conn, A, shop_id, payment, delivery_id)
     paid = _receivables(engine, shop_id)
-    assert paid != credited and paid[delivery_id] < credited[delivery_id]
-    refused = c.post(f"/v1/approvals/{apr}/undo", headers=h())
-    assert refused.status_code == 409, refused.text
-    assert "moved after this credit" in refused.json()["detail"]
-    assert not ID_RE.search(refused.json()["detail"])
-    assert _receivables(engine, shop_id) == paid  # nothing was written back
+    assert paid[delivery_id] == credited[delivery_id] - payment
+    done = c.post(f"/v1/approvals/{apr}/undo", headers=h())
+    assert done.status_code == 200, done.text
+    expected = dict(base)
+    expected[delivery_id] = base[delivery_id] - payment  # the payment stays
+    assert _receivables(engine, shop_id) == expected
     got = c.get(f"/v1/returns/{body['return_id']}", headers=h()).json()
-    assert got["status"] == "settled" and got["credit_applied_kobo"] == PRICE
+    assert got["status"] == "inspected" and got["credit_applied_kobo"] is None
+    assert got["credit_approval_id"] is None  # and it can be settled again
+    assert c.post(f"/v1/returns/{body['return_id']}/settle", headers=h(),
+                  json={}).status_code == 200
 
 
-def test_an_undo_is_refused_when_the_morning_roll_calls_the_invoice_overdue(
+def test_an_undo_after_the_morning_roll_still_works_and_keeps_the_word(
         api: dict[str, Any]) -> None:
-    """Go's morning roll marks an invoice overdue on the same column
-    (`week.go.GoSim.open_day`). A credit that was applied while the invoice
-    was current cannot be undone over that change either."""
+    """Go's morning roll writes the same columns (`week.go.GoSim.open_day`).
+    It moves no money, so nothing should be refused over it, and the undo must
+    not put a stale status back: the invoice keeps the reason it is overdue."""
     from mimi.api.week.go import GoSim
 
     c, engine = api["c"], api["engine"]
@@ -604,16 +605,42 @@ def test_an_undo_is_refused_when_the_morning_roll_calls_the_invoice_overdue(
     shop_id = next(
         x["shop_id"] for x in fresh
         if all(r["status"] == "open" for r in SqlGo(engine).receivables(A, x["shop_id"])))
+    base = _receivables(engine, shop_id)
     body = _walk(c, _open_manual(c, shop_id, quantity=1))
-    apr, _ = _settle_and_apply(c, body, amount_kobo=PRICE)
+    apr, invoice_number = _settle_and_apply(c, body, amount_kobo=PRICE)
     credited = _receivables(engine, shop_id)
+    delivery_id = "dlv-" + invoice_number.removeprefix("INV-")
     sim.open_day(64)  # past the newest due day: the open invoice goes overdue
-    statuses = {r["delivery_id"]: r["status"] for r in SqlGo(engine).receivables(A, shop_id)}
-    assert "overdue" in statuses.values(), statuses
     assert _receivables(engine, shop_id) == credited  # only the status moved
+    done = c.post(f"/v1/approvals/{apr}/undo", headers=h())
+    assert done.status_code == 200, done.text
+    got = _receivables(engine, shop_id)
+    for delivery in base:
+        assert got[delivery] == base[delivery]
+    statuses = {r["delivery_id"]: r["status"] for r in SqlGo(engine).receivables(A, shop_id)}
+    assert statuses[delivery_id] == "overdue"  # not the word from before the roll
+    assert c.get(f"/v1/returns/{body['return_id']}",
+                 headers=h()).json()["status"] == "inspected"
+
+
+def test_an_undo_refuses_only_when_the_invoice_is_gone(api: dict[str, Any]) -> None:
+    """The one case left with no honest arithmetic: the invoice is not on the
+    book any more, so there is nothing to take the credit back off."""
+    c, engine = api["c"], api["engine"]
+    owes = max(c.get("/v1/shops", headers=h()).json()["shops"],
+               key=lambda x: x["outstanding_kobo"])
+    shop_id = owes["shop_id"]
+    body = _walk(c, _open_manual(c, shop_id, quantity=1))
+    apr, invoice_number = _settle_and_apply(c, body, amount_kobo=PRICE)
+    before = _receivables(engine, shop_id)
+    with engine.begin() as conn:
+        conn.execute(s.receivables.delete().where(
+            s.receivables.c.tenant_id == A,
+            s.receivables.c.delivery_id == "dlv-" + invoice_number.removeprefix("INV-")))
     refused = c.post(f"/v1/approvals/{apr}/undo", headers=h())
     assert refused.status_code == 409, refused.text
-    assert "moved after this credit" in refused.json()["detail"]
-    assert _receivables(engine, shop_id) == credited
+    assert "by hand" in refused.json()["detail"]
+    assert not ID_RE.search(refused.json()["detail"])
     assert c.get(f"/v1/returns/{body['return_id']}",
                  headers=h()).json()["status"] == "settled"
+    assert len(before) == len(_receivables(engine, shop_id)) + 1
