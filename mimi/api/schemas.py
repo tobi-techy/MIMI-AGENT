@@ -866,10 +866,15 @@ class Liveness(_Out):
 
 class BooksShopAgreement(_Out):
     """One shop's two-books comparison. ``difference_*`` is Mimi minus
-    Zoho: positive means Mimi's book is higher."""
+    Zoho: positive means Mimi's book is higher. ``match`` says how the row
+    was matched: ``id`` (the ``zc-`` convention), ``name``, ``ambiguous``
+    (two Zoho customers carried the shop's name, so neither was picked),
+    ``none`` (Zoho does not know the shop) or ``zoho_only`` (Zoho's
+    customer, with no Mimi shop behind it)."""
 
     shop_id: str
     shop_name: str
+    match: Literal["id", "name", "ambiguous", "none", "zoho_only"] = "none"
     mimi_outstanding_kobo: int
     mimi_outstanding_naira: str
     zoho_outstanding_kobo: int | None

@@ -473,7 +473,7 @@
       },
       "BooksShopAgreement": {
         "additionalProperties": false,
-        "description": "One shop's two-books comparison. ``difference_*`` is Mimi minus\nZoho: positive means Mimi's book is higher.",
+        "description": "One shop's two-books comparison. ``difference_*`` is Mimi minus\nZoho: positive means Mimi's book is higher. ``match`` says how the row\nwas matched: ``id`` (the ``zc-`` convention), ``name``, ``ambiguous``\n(two Zoho customers carried the shop's name, so neither was picked),\n``none`` (Zoho does not know the shop) or ``zoho_only`` (Zoho's\ncustomer, with no Mimi shop behind it).",
         "properties": {
           "difference_kobo": {
             "anyOf": [
@@ -488,6 +488,18 @@
           },
           "difference_naira": {
             "title": "Difference Naira",
+            "type": "string"
+          },
+          "match": {
+            "default": "none",
+            "enum": [
+              "id",
+              "name",
+              "ambiguous",
+              "none",
+              "zoho_only"
+            ],
+            "title": "Match",
             "type": "string"
           },
           "mimi_outstanding_kobo": {
