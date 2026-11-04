@@ -366,15 +366,20 @@ def test_the_day_roll_waits_for_a_writer_holding_an_overdue_invoice(
         book: dict[str, Any]) -> None:
     """The roll marks overdue with one bulk update, which takes the rows it
     touches itself. It reads them through the store's invoice reads first, so a
-    writer holding one of them is waited for instead of deadlocked against.
+    writer holding one of them is waited for instead of deadlocked against, and
+    it marks exactly the rows that read returned, so no row can start matching
+    between the read and the write and be taken unheld.
     (That the roll takes them in the house order is pinned by the shape test
-    below; here the evidence is that it takes them at all.)"""
+    below; here the evidence is that it takes them at all, and which ones.)"""
     engine = book["engine"]
     _postgres(engine)
     with engine.connect() as conn:
         day_no = max(int(r.due_day) for r in conn.execute(sa.select(s.receivables).where(
             s.receivables.c.tenant_id == A))) + 1
-        assert invoice_reads.overdue_ids(conn, A, day_no, lock=False)
+        billed = {str(r.delivery_id) for r in conn.execute(sa.select(
+            s.receivables.c.delivery_id).where(s.receivables.c.tenant_id == A))}
+        expected = set(invoice_reads.overdue_ids(conn, A, day_no, lock=False))
+        assert expected
     with engine.connect() as holder:
         tx = holder.begin()
         invoice_reads.open_invoices(holder, A, SHOP, lock=True)
@@ -386,9 +391,12 @@ def test_the_day_roll_waits_for_a_writer_holding_an_overdue_invoice(
         th.join(WAIT)
     assert not th.is_alive() and done.get("error") is None, done
     with engine.connect() as conn:
-        overdue = [str(r.delivery_id) for r in conn.execute(sa.select(s.receivables).where(
-            s.receivables.c.tenant_id == A, s.receivables.c.status == "overdue"))]
-    assert overdue, "the roll should have marked the past-due invoices"
+        after = {str(r.delivery_id): str(r.status) for r in conn.execute(
+            sa.select(s.receivables).where(s.receivables.c.tenant_id == A))}
+    assert after, "the roll should have marked the past-due invoices"
+    # Exactly the rows the read returned, and every one of them marked.
+    overdue = {d for d in billed if after[d] == "overdue"}
+    assert overdue == expected
 
 
 def test_the_locked_read_is_one_statement_in_the_house_order(book: dict[str, Any]) -> None:

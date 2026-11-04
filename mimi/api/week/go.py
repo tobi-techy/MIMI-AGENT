@@ -86,12 +86,17 @@ class GoSim:
             # The mark-overdue below is one bulk UPDATE, which takes the rows it
             # touches itself, in whatever order the planner picks. Read them
             # first through the store's invoice reads, in the house order and
-            # holding them, so this transaction queues the way every other
-            # writer does instead of deadlocking against one of them.
-            invoice_reads.overdue_ids(conn, self.tenant, day_no, lock=True)
-            conn.execute(s.receivables.update().where(
-                s.receivables.c.tenant_id == self.tenant, s.receivables.c.outstanding_kobo > 0,
-                s.receivables.c.due_day < day_no).values(status="overdue"))
+            # holding them, and mark exactly the rows that read returned: each
+            # statement takes its own snapshot, so a row that starts matching
+            # between the read and the write would otherwise be taken unheld, in
+            # an order of the planner's choosing. The rows that read returned are
+            # the past-due rows still owing, and it holds them until this
+            # transaction ends, so that set cannot have changed underneath it.
+            overdue = invoice_reads.overdue_ids(conn, self.tenant, day_no, lock=True)
+            if overdue:
+                conn.execute(s.receivables.update().where(
+                    s.receivables.c.tenant_id == self.tenant,
+                    s.receivables.c.delivery_id.in_(overdue)).values(status="overdue"))
         return today
 
     # ------------------------------------------------------------- deliveries

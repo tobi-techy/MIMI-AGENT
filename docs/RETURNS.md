@@ -225,7 +225,10 @@ transaction, always in one order, `position` then `delivery_id`:
   past-due invoices with one bulk `UPDATE`. A bulk update takes the rows it
   touches itself, in whatever order the planner picks, so the roll would be the
   one writer that does not queue in the house order and could cycle with one
-  that does. It reads them through here first, holding them, and then updates.
+  that does. It reads them through here first, holding them, and then updates
+  exactly the ids that read returned: each statement takes its own snapshot, so
+  a row that starts matching in between would otherwise be taken unheld, and the
+  rows the read returned cannot change under it because it holds them.
 * `LOCK_ORDER` is the one definition, and the order in the statements comes from
   it (`order_by(*(s.receivables.c[name] for name in LOCK_ORDER))`), not from a
   second literal that could drift from it. A new writer (the routine) calls the
