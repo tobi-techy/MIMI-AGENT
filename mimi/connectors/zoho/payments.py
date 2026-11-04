@@ -36,15 +36,18 @@ from __future__ import annotations
 
 import hashlib
 import json
+import logging
 import re
 from typing import Any
 from urllib.parse import quote
 
-from mimi.connectors.base import ConnectorError
+from mimi.connectors.base import ConnectorError, log_failure
 from mimi.connectors.composio import ComposioTransport, FakeComposio
 from mimi.connectors.types import WriteRecord
 from mimi.connectors.zoho.replies import check_reply
 from mimi.store.util import now_iso
+
+log = logging.getLogger(__name__)
 
 # Zoho data-centre API hosts, keyed by the MIMI_ZOHO_REGION code: the
 # Composio proxy has no server-side base for this toolkit, so a relative
@@ -353,7 +356,8 @@ def _live_proxy(transport: ComposioTransport | FakeComposio, name: str, *, metho
                                      body=body,
                                      connected_account_id=connected_account_id)
     except Exception as exc:
-        raise ConnectorError(f"The Zoho Books payment call failed: {exc}",
+        log_failure(log, f"Zoho Books proxy {method}", exc)
+        raise ConnectorError("Zoho Books didn't answer the payment call.",
                              next_step="Read back by reference before retrying.") from exc
     status = getattr(res, "status", None)
     return _checked(_plain(res), status=int(status) if isinstance(status, int | float) else 200)

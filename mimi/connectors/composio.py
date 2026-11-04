@@ -13,12 +13,22 @@ The model never touches this module. Only allowlisted actions wrapped by
 from __future__ import annotations
 
 import json
+import logging
 from pathlib import Path
 from typing import Any
 
 from mimi.connectors import allowlist
-from mimi.connectors.base import ConnectorError
+from mimi.connectors.base import ConnectorError, log_failure
 from mimi.connectors.env import ConnectorSettings
+
+log = logging.getLogger(__name__)
+
+_LABELS = {"ZOHO_BOOKS": "Zoho Books", "ZOHO": "Zoho CRM", "GOOGLESHEETS": "Google Sheets"}
+
+
+def _label(toolkit: str) -> str:
+    """The tool's name as the owner reads it."""
+    return _LABELS.get(toolkit.upper(), "The tool")
 
 FIXTURES_DIR = Path(__file__).resolve().parent.parent.parent / "eval" / "connectors" / "fixtures"
 
@@ -93,7 +103,8 @@ class ComposioTransport:
                 arguments=args,
             )
         except Exception as exc:
-            raise ConnectorError(f"The {row.toolkit} call failed: {exc}",
+            log_failure(log, f"{row.toolkit} read {action}", exc)
+            raise ConnectorError(f"{_label(row.toolkit)} didn't answer. Nothing changed.",
                                  next_step="Retry the sync; the read stays refused.") from exc
         return _plain(res)
 
@@ -121,7 +132,9 @@ class ComposioTransport:
                 arguments=arguments,
             )
         except Exception as exc:
-            raise ConnectorError(f"The {row.toolkit} write failed: {exc}",
+            log_failure(log, f"{row.toolkit} write {action}", exc)
+            raise ConnectorError(f"{_label(row.toolkit)} didn't accept this. "
+                                 "Nothing was recorded.",
                                  next_step="Read back the record before retrying.") from exc
         return _plain(res)
 
@@ -154,7 +167,9 @@ class ComposioTransport:
                 user_id=user_id, auth_config_id=auth_config,
                 callback_url=callback)
         except Exception as exc:
-            raise ConnectorError(f"Could not start the {toolkit} connect flow: {exc}",
+            log_failure(log, f"{toolkit} connect", exc)
+            raise ConnectorError(f"Couldn't start connecting {_label(toolkit)}. "
+                                 "Nothing changed.",
                                  next_step="Retry the connect from Settings.") from exc
         url = getattr(req, "redirect_url", "") or ""
         if not url:
@@ -168,6 +183,7 @@ class ComposioTransport:
         try:
             res = client.connected_accounts.get(connected_account_id)
         except Exception as exc:
+            log_failure(log, "connected account read", exc)
             raise ConnectorError("That connection is gone.",
                                  next_step="Connect again from Settings.") from exc
         return _plain(res)
@@ -178,7 +194,8 @@ class ComposioTransport:
         try:
             client.connected_accounts.delete(connected_account_id)
         except Exception as exc:
-            raise ConnectorError(f"Could not disconnect: {exc}",
+            log_failure(log, "disconnect", exc)
+            raise ConnectorError("Couldn't disconnect right now. Nothing changed.",
                                  next_step="Retry the disconnect.") from exc
 
     def _require_version(self, toolkit: str, version: str) -> None:

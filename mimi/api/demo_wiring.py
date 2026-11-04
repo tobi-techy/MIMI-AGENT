@@ -27,6 +27,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import logging
 import math
 import os
 from collections.abc import Mapping
@@ -46,7 +47,7 @@ from mimi.api.zoho_match import (
     seed_invoice_number,
 )
 from mimi.clock import wall
-from mimi.connectors.base import ConnectorError
+from mimi.connectors.base import ConnectorError, ConnectorRefusal, log_failure
 from mimi.connectors.composio import ComposioTransport, FakeComposio
 from mimi.connectors.zoho import payments as zp
 from mimi.provenance import parse_witnesses, payment_stamp, proof_word
@@ -62,6 +63,13 @@ OVER_LIMIT_KIND = "credit_over_limit"
 # this same approve/undo path, so the card behaves exactly like a Zoho payment.
 RETURN_CREDIT_KIND = "return_credit"
 WIRING_KINDS = (ZOHO_KIND, OVER_LIMIT_KIND, RETURN_CREDIT_KIND)
+
+log = logging.getLogger(__name__)
+
+# What the owner reads when a Zoho write or undo did not go through. The
+# tool's own error text stays in our logs (redacted), never in the console.
+ZOHO_WRITE_FAILED = "Zoho didn't accept this. Nothing was recorded. Try again."
+ZOHO_UNDO_FAILED = "Zoho didn't undo it. Nothing changed. Try again."
 
 # One explicit switch for a real Zoho Books write. ``MIMI_ZOHO_LIVE_WRITE=1``
 # lets ``_zoho`` return the real Composio transport when the tenant has an
@@ -668,7 +676,7 @@ def _zoho(engine: Engine, tenant: str, demo_mode: bool,
             # guessing: the first org off the connection could be any org
             # the owner connected, and a real payment into the wrong org is
             # the worst outcome available to us.
-            raise ConnectorError(
+            raise ConnectorRefusal(
                 "Zoho Books is connected but no organization was named, so the "
                 "payment was not recorded anywhere.",
                 next_step="Set ZOHO_BOOKS_ORGANIZATION_ID to the org id, then approve again.")
@@ -683,13 +691,43 @@ def _set_payload(conn: sa.Connection, tenant: str, approval_id: str,
         .values(payload=dumps(payload)))
 
 
+def _owner_line(exc: ConnectorError) -> str:
+    """Mimi's own plain refusal as written; anything from Zoho or the
+    transport becomes the one plain line (its detail is in the log)."""
+    return str(exc) if isinstance(exc, ConnectorRefusal) else ZOHO_WRITE_FAILED
+
+
+def _zoho_failed(engine: Engine, tenant: str, approval_id: str,
+                 payload: dict[str, Any], *, now: float, fake: bool,
+                 message: str = ZOHO_WRITE_FAILED) -> bool:
+    """Record a Zoho write that did not go through: the approval keeps a
+    plain, retryable result and the owner reads one plain line. The
+    caller (``decide``) puts the approval back to pending, so a retry
+    runs the same approval with the same reference: the read back by
+    reference finds an earlier attempt that did land, never a second
+    payment."""
+    attempts = int(payload.get("attempts") or 0)
+    payload["result"] = {"error": message, "retryable": True,
+                         "undo_available": False, "demo": fake}
+    with engine.begin() as conn:
+        _set_payload(conn, tenant, approval_id, payload)
+        _say(conn, tenant, _owner_thread(conn, tenant),
+             key=f"zoho:{approval_id}:failed:{attempts}", channel="owner_console",
+             shop_id="", kind="zoho_payment_failed", now=now, text=message)
+    return False
+
+
 def on_approved(engine: Engine, tenant: str, a: dict[str, Any], *,
-                demo_mode: bool, transport: Any | None = None) -> None:
-    """Run the code action an approved wiring approval stands for."""
+                demo_mode: bool, transport: Any | None = None) -> bool:
+    """Run the code action an approved wiring approval stands for.
+
+    Returns whether it went through. Only a Zoho write can fail here; a
+    failed one leaves a plain retryable result and returns False."""
     payload = dict(a.get("payload") or {})
     kind = payload.get("kind")
     now = wall()
     if kind == ZOHO_KIND:
+        payload["attempts"] = int(payload.get("attempts") or 0) + 1
         try:
             transport, conn_id, org, fake = _zoho(engine, tenant, demo_mode, transport)
         except ConnectorError as exc:
@@ -697,10 +735,9 @@ def on_approved(engine: Engine, tenant: str, a: dict[str, Any], *,
             # org read failed): nothing is recorded anywhere, and the
             # approval says so. Never fall back to demo books for a tenant
             # that asked for the real ledger.
-            payload["result"] = {"error": str(exc), "undo_available": False, "demo": False}
-            with engine.begin() as conn:
-                _set_payload(conn, tenant, a["approval_id"], payload)
-            return
+            log_failure(log, "Zoho write setup", exc)
+            return _zoho_failed(engine, tenant, a["approval_id"], payload,
+                                now=now, fake=False, message=_owner_line(exc))
         if not fake:
             # The day's real-write cap, counted per tenant since Lagos
             # midnight. Fake and demo writes never count. At the cap the
@@ -710,28 +747,43 @@ def on_approved(engine: Engine, tenant: str, a: dict[str, Any], *,
                 made = zoho_live_writes_today(conn, tenant, now)
             limit = zoho_live_write_max()
             if made >= limit:
-                payload["result"] = {
-                    "error": ("Today's real Zoho write has already been made, "
-                              "so nothing was written. To make another one, raise "
-                              "MIMI_ZOHO_LIVE_WRITE_MAX to 2 and approve again."),
-                    "undo_available": False, "demo": False}
-                with engine.begin() as conn:
-                    _set_payload(conn, tenant, a["approval_id"], payload)
-                return
+                return _zoho_failed(
+                    engine, tenant, a["approval_id"], payload, now=now, fake=False,
+                    message=("Today's real Zoho write has already been made, "
+                             "so nothing was written. To make another one, raise "
+                             "MIMI_ZOHO_LIVE_WRITE_MAX to 2 and approve again."))
+        # The card as it was approved: a failed attempt stores this back,
+        # so a retry resolves the live customer and invoice afresh.
+        base = dict(payload)
+        idem = f"zoho_payment:{payload['payment_id']}"
         try:
+            landed: dict[str, Any] | None = None
             if not fake:
-                payload = _resolve_live_payment(tenant, conn_id, org, payload, transport)
-            res = zp.record_payment(transport=transport,
-                                    tenant_id=_zoho_user(tenant, conn_id),
-                                    connection_id=conn_id, organization_id=org,
-                                    payload=payload,
-                                    idempotency_key=f"zoho_payment:{payload['payment_id']}",
-                                    approval_id=a["approval_id"])
+                # Read back by reference before anything else: an earlier
+                # attempt may have landed even though it answered with an
+                # error, and then the invoice no longer owes what the card
+                # says. The reference rides on the approval, so a retry asks
+                # for the same one and never writes a second payment.
+                landed = zp.find_by_reference(
+                    transport=transport, connection_id=conn_id, organization_id=org,
+                    reference=zp.reference_for(idem, a["approval_id"]),
+                    user_id=_zoho_user(tenant, conn_id))
+            if landed is not None:
+                res = {"payment_id": str(landed.get("payment_id") or ""),
+                       "already_recorded": True}
+            else:
+                if not fake:
+                    payload = _resolve_live_payment(tenant, conn_id, org, payload,
+                                                    transport)
+                res = zp.record_payment(transport=transport,
+                                        tenant_id=_zoho_user(tenant, conn_id),
+                                        connection_id=conn_id, organization_id=org,
+                                        payload=payload, idempotency_key=idem,
+                                        approval_id=a["approval_id"])
         except ConnectorError as exc:
-            payload["result"] = {"error": str(exc), "undo_available": False, "demo": fake}
-            with engine.begin() as conn:
-                _set_payload(conn, tenant, a["approval_id"], payload)
-            return
+            log_failure(log, "Zoho payment write", exc)
+            return _zoho_failed(engine, tenant, a["approval_id"], base,
+                                now=now, fake=fake, message=_owner_line(exc))
         payload["result"] = {"zoho_payment_id": res["payment_id"], "undo_available": True,
                              "demo": fake,
                              "venue": "zoho" if not fake else "mimi-book-only"}
@@ -761,6 +813,7 @@ def on_approved(engine: Engine, tenant: str, a: dict[str, Any], *,
         from mimi.api import returns as returns_ledger
 
         returns_ledger.apply_credit(engine, tenant, a)
+    return True
 
 
 def undo_approval(engine: Engine, tenant: str, approval_id: str, *,
@@ -797,13 +850,15 @@ def undo_approval(engine: Engine, tenant: str, approval_id: str, *,
     try:
         transport, conn_id, org, _fake = _zoho(engine, tenant, demo_mode, transport)
     except ConnectorError as exc:
-        raise Conflict(f"Zoho did not undo it: {exc}") from exc
+        log_failure(log, "Zoho undo setup", exc)
+        raise Conflict(ZOHO_UNDO_FAILED) from exc
     try:
         zp.delete_payment(transport=transport, connection_id=conn_id, organization_id=org,
                           payment_id=str(res["zoho_payment_id"]),
                           user_id=_zoho_user(tenant, conn_id))
     except ConnectorError as exc:
-        raise Conflict(f"Zoho did not undo it: {exc}") from exc
+        log_failure(log, "Zoho undo", exc)
+        raise Conflict(ZOHO_UNDO_FAILED) from exc
     now = wall()
     payload["result"] = {**res, "undo_available": False, "undone_at": now_iso(now)}
     with engine.begin() as conn:
@@ -860,13 +915,15 @@ def books_agreement(engine: Engine, tenant: str,
     except ConnectorError as exc:
         # The named org is not on this token's list, or the list itself
         # refused: could-not-read, never a false agreement on nothing.
+        log_failure(log, "Zoho agreement org read", exc)
         return _agreement(False, shops, names, {},
-                          f"Zoho Books could not be read ({exc}); no comparison was made.")
+                          "Zoho Books could not be read, so no comparison was made.")
     try:
         customers = _zoho_customers(tenant, account, org, transport)
     except ConnectorError as exc:
+        log_failure(log, "Zoho agreement customer read", exc)
         return _agreement(False, shops, names, {},
-                          f"Zoho Books could not be read ({exc}); no comparison was made.")
+                          "Zoho Books could not be read, so no comparison was made.")
     match = match_shops(names, customers)
     zoho: dict[str, int] = dict(match.per_shop)
     for key, (zname, kobo) in match.zoho_only.items():
@@ -921,7 +978,8 @@ def _zoho_account_org(engine: Engine, tenant: str,
                                   connection_id=account).read(
             "zoho_books_organizations").rows
     except ConnectorError as exc:
-        raise ConnectorError(f"Zoho Books could not list organizations ({exc}).",
+        log_failure(log, "Zoho organization list", exc)
+        raise ConnectorError("Zoho Books could not list organizations.",
                              next_step="Reconnect Zoho Books from Settings.") from exc
     if org not in {str(r.values.get("organization_id") or "") for r in orgs}:
         raise ConnectorError(f"Zoho Books could not reach organization {org}.",
@@ -1020,7 +1078,7 @@ def _resolve_live_payment(tenant: str, account: str, org: str,
                "was recorded" if shop_id in match.ambiguous else
                f"Zoho Books has no customer named {shop_name}, so no payment was "
                "recorded")
-        raise ConnectorError(
+        raise ConnectorRefusal(
             f"{why}. Run scripts/seed_demo_zoho.py, then approve again.",
             next_step="Run scripts/seed_demo_zoho.py, then approve again.")
     books = ZohoBooksConnector(transport or ComposioTransport(),
@@ -1032,7 +1090,7 @@ def _resolve_live_payment(tenant: str, account: str, org: str,
              if str(r.values.get("invoice_number")) == number
              and str(r.values.get("shop_id")) == cid]
     if len(found) != 1:
-        raise ConnectorError(
+        raise ConnectorRefusal(
             f"Zoho Books has {len(found) or 'no'} invoice numbered {number} for "
             f"{shop_name}, so no payment was recorded. Run "
             "scripts/seed_demo_zoho.py, then approve again.",
@@ -1041,7 +1099,7 @@ def _resolve_live_payment(tenant: str, account: str, org: str,
     owes = int(invoice.get("outstanding_kobo") or 0)
     applied = int(payload.get("applied_kobo") or 0)
     if applied > owes:
-        raise ConnectorError(
+        raise ConnectorRefusal(
             f"Zoho's invoice {number} has {owed.naira(owes)} open, less than the "
             f"{owed.naira(applied)} this payment would apply, so no payment was "
             "recorded. Run scripts/seed_demo_zoho.py --reset, then approve again.",
