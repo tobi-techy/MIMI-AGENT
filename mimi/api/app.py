@@ -78,6 +78,7 @@ from mimi.api.schemas import (
     ErrorOut,
     EventIn,
     Health,
+    InboxList,
     Liveness,
     MediaOut,
     MentionList,
@@ -396,6 +397,17 @@ def create_app(settings: Settings | None = None, agent: Agent | None = None, *,
                   limit: Annotated[int, Query(ge=1, le=200)] = 50) -> dict[str, Any]:
         return reads.list_tasks(engine, key.tenant_id, thread_id=thread_id, helper=helper,
                                 status=status, limit=limit)
+
+    @app.get("/v1/inbox", response_model=InboxList, responses=_ERRORS,
+             summary="Per-helper inbox: work one helper handed to another")
+    def get_inbox(key: Owner, helper: str = "",
+                  state: Annotated[str, Query(pattern=r"^(|queued|working|done|handed_back"
+                                                      r"|failed|refused)$")] = "",
+                  limit: Annotated[int, Query(ge=1, le=200)] = 50) -> dict[str, Any]:
+        """Every handoff whose receiver is this helper, newest first, with the
+        one line per helper the sidebar reads (docs/HELPER-INBOX-CONTRACT.md)."""
+        return reads.list_inbox(engine, key.tenant_id, helper=helper, state=state,
+                                limit=limit)
 
     @app.get("/v1/activity", response_model=ActivityList, responses=_ERRORS,
              summary="Activity: every helper task with per-task steps (RAI-325)")

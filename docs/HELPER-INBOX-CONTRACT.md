@@ -24,7 +24,40 @@ still records an intent and nothing else. On, all six helpers also gain
 receiver. See `mimi/api/helpers.py` (`_with_delegation`), the same pattern as
 `MIMI_COMPUTER_TOOLS`.
 
+**With the switch OFF, `GET /v1/inbox` still works.** The route exists and
+returns items; it does not error and it does not pretend. Every applied
+`ask_helper` intent still records one inbox item in state `queued` (a record,
+not execution: no wake, no turn, no message). Those items stay `queued`
+because nothing runs them. When the switch is ON a `queued` item moves to
+`working` then `done` (or `failed`/`handed_back`). So a console reading with
+the switch off sees the assignments that exist, honestly marked as not started,
+not an empty list and not an error.
+
 ## 1. Inbox item (`InboxItem`)
+
+`from_helper: "mimi"` means the **owner's own ask**, routed by Mimi: the owner
+asked for this work and Mimi passed it to a helper. The console must render it
+as the owner's own assignment ("You asked Collector to ..."), never as a task
+"from Mimi" to a helper. Every other `from_helper` is a real helper id.
+
+Fields are machine values or sentences; the console renders the sentence, never
+a code. A person must never read a code (the console's hard rule).
+
+| Field | Kind | The console renders it |
+|---|---|---|
+| `task_id`, `contract`, `state`, `thread_id`, `turn_id`, `chain`, `parent_task_id`, `created_at`, `finished_at`, `shop_id` | machine | no |
+| `from_helper`, `to_helper`, `skill` | machine id | via `from_title`/`to_title` |
+| `from_title`, `to_title` | name | yes |
+| `shop_name` | name | yes |
+| `ask` | sentence (the sender's words) | yes |
+| `reason` | sentence (a plain ack like "Asking Proof", or why it was refused) | yes, as the line above the status |
+| `outcome` | sentence | yes: the one sidebar/status sentence |
+| `result` | sentence | yes, when `state` is `done` |
+| `state` | closed set | the console maps it to a face, never prints it |
+
+`reason` and `outcome` are always plain words written by code; neither is ever
+a code, an id or a JSON blob. `outcome` is never empty; `result` is `""` until
+the item is `done`.
 
 | Field | Type | What |
 |---|---|---|
@@ -114,8 +147,10 @@ is not delivered work, so it never appears in an inbox.
 narrow it), so the console can show a per-helper badge without a second call.
 
 The same response carries the team line the sidebar needs, one honest sentence
-per helper, derived in code from open turns and open inbox items (never a
-stored state word; a helper with nothing open is absent):
+per helper, derived in code from inbox items and open turns (never a stored
+state word; a helper with no item and no open turn is absent). `outcome` is the
+newest item's sentence, open or finished, so the sidebar shows what a helper
+did last as well as what she is doing now:
 
 ```json
 {

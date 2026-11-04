@@ -1954,6 +1954,198 @@
         "title": "Health",
         "type": "object"
       },
+      "HelperLine": {
+        "additionalProperties": false,
+        "description": "The one honest sentence per helper the sidebar needs, from real data.\n\nThe console derives the face state from ``open`` and ``waiting_on_owner``;\nthe API never stores a state word that can drift.",
+        "properties": {
+          "helper": {
+            "title": "Helper",
+            "type": "string"
+          },
+          "helper_name": {
+            "title": "Helper Name",
+            "type": "string"
+          },
+          "open": {
+            "title": "Open",
+            "type": "integer"
+          },
+          "outcome": {
+            "title": "Outcome",
+            "type": "string"
+          },
+          "waiting_on_owner": {
+            "title": "Waiting On Owner",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "helper",
+          "helper_name",
+          "open",
+          "waiting_on_owner",
+          "outcome"
+        ],
+        "title": "HelperLine",
+        "type": "object"
+      },
+      "InboxItem": {
+        "additionalProperties": false,
+        "description": "One piece of work a helper handed to another (docs/HELPER-INBOX-CONTRACT.md).\n\n``from_helper`` is ``mimi`` for the owner's own ask routed by Mimi. Every\nfield a person reads (``from_title``, ``to_title``, ``shop_name``, ``ask``,\n``reason``, ``outcome``, ``result``) is a sentence written by code; the\nrest are machine values.",
+        "properties": {
+          "ask": {
+            "title": "Ask",
+            "type": "string"
+          },
+          "chain": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Chain",
+            "type": "array"
+          },
+          "contract": {
+            "title": "Contract",
+            "type": "string"
+          },
+          "created_at": {
+            "title": "Created At",
+            "type": "string"
+          },
+          "finished_at": {
+            "default": "",
+            "title": "Finished At",
+            "type": "string"
+          },
+          "from_helper": {
+            "title": "From Helper",
+            "type": "string"
+          },
+          "from_title": {
+            "title": "From Title",
+            "type": "string"
+          },
+          "outcome": {
+            "title": "Outcome",
+            "type": "string"
+          },
+          "parent_task_id": {
+            "default": "",
+            "title": "Parent Task Id",
+            "type": "string"
+          },
+          "reason": {
+            "title": "Reason",
+            "type": "string"
+          },
+          "result": {
+            "title": "Result",
+            "type": "string"
+          },
+          "shop_id": {
+            "title": "Shop Id",
+            "type": "string"
+          },
+          "shop_name": {
+            "title": "Shop Name",
+            "type": "string"
+          },
+          "skill": {
+            "title": "Skill",
+            "type": "string"
+          },
+          "state": {
+            "enum": [
+              "queued",
+              "working",
+              "done",
+              "handed_back",
+              "failed",
+              "refused"
+            ],
+            "title": "State",
+            "type": "string"
+          },
+          "task_id": {
+            "title": "Task Id",
+            "type": "string"
+          },
+          "thread_id": {
+            "default": "",
+            "title": "Thread Id",
+            "type": "string"
+          },
+          "to_helper": {
+            "title": "To Helper",
+            "type": "string"
+          },
+          "to_title": {
+            "title": "To Title",
+            "type": "string"
+          },
+          "turn_id": {
+            "default": "",
+            "title": "Turn Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "task_id",
+          "contract",
+          "from_helper",
+          "from_title",
+          "to_helper",
+          "to_title",
+          "skill",
+          "shop_id",
+          "shop_name",
+          "ask",
+          "state",
+          "reason",
+          "outcome",
+          "result",
+          "created_at"
+        ],
+        "title": "InboxItem",
+        "type": "object"
+      },
+      "InboxList": {
+        "additionalProperties": false,
+        "properties": {
+          "by_state": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "title": "By State",
+            "type": "object"
+          },
+          "helpers": {
+            "items": {
+              "$ref": "#/components/schemas/HelperLine"
+            },
+            "title": "Helpers",
+            "type": "array"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/InboxItem"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "total",
+          "by_state"
+        ],
+        "title": "InboxList",
+        "type": "object"
+      },
       "LimitChange": {
         "additionalProperties": false,
         "description": "A credit-limit change the owner asked for in words, worked out by code.\n\nMimi never sets a limit: the console shows this beside the shop row and\nthe owner confirms it with Set credit limit (``POST\n/v1/credit/{shop_id}/limit`` with ``{\"amount_ngn\": proposed_limit_kobo //\n100}``, which answers ``{shop_id, old_limit_ngn, new_limit_ngn,\nchange_id}`` and is undone with ``POST /v1/credit/changes/{change_id}/undo``),\nor leaves it.",
@@ -5433,6 +5625,115 @@
           }
         },
         "summary": "Health"
+      }
+    },
+    "/v1/inbox": {
+      "get": {
+        "description": "Every handoff whose receiver is this helper, newest first, with the\none line per helper the sidebar reads (docs/HELPER-INBOX-CONTRACT.md).",
+        "operationId": "get_inbox_v1_inbox_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "helper",
+            "required": false,
+            "schema": {
+              "default": "",
+              "title": "Helper",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "state",
+            "required": false,
+            "schema": {
+              "default": "",
+              "pattern": "^(|queued|working|done|handed_back|failed|refused)$",
+              "title": "State",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 200,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InboxList"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Per-helper inbox: work one helper handed to another"
       }
     },
     "/v1/me": {

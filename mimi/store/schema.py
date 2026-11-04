@@ -741,8 +741,48 @@ checkin_shops = sa.Table(
     sa.PrimaryKeyConstraint("tenant_id", "shop_id"),
 )
 
+# Helper inboxes: one row per piece of work one helper hands to another
+# (``ask_helper`` / ``delegate_task``). The item is the record; the console
+# reads it as a line in the receiving helper's conversation
+# (docs/HELPER-INBOX-CONTRACT.md). Alembic ``0018``.
+helper_tasks = sa.Table(
+    "helper_tasks", metadata,
+    _tenant(),
+    sa.Column("task_id", sa.String(64), nullable=False),
+    # The intent's idempotency key: one item per handoff, however often applied.
+    sa.Column("source_key", sa.String(100), nullable=False, default=""),
+    # The item that asked for this one ("" for a root assignment).
+    sa.Column("parent_task_id", sa.String(64), nullable=False, default=""),
+    # "mimi" for an owner assignment, else a helper id.
+    sa.Column("from_helper", sa.String(32), nullable=False),
+    sa.Column("to_helper", sa.String(32), nullable=False),
+    # The helper/skill the receiver runs ("" when none was chosen).
+    sa.Column("skill", sa.String(64), nullable=False, default=""),
+    sa.Column("shop_id", sa.String(64), nullable=False, default=""),
+    # The receiver's own thread, and its child turn ("" until it is created).
+    sa.Column("thread_id", sa.String(200), nullable=False, default=""),
+    sa.Column("turn_id", sa.String(64), nullable=False, default=""),
+    # What was asked, in the sender's own words (model-written, figure-checked).
+    sa.Column("ask", sa.Text(), nullable=False, default=""),
+    # queued | working | done | handed_back | failed | refused
+    sa.Column("state", sa.String(16), nullable=False, default="queued"),
+    # One line written by code: the ack, or why it was refused.
+    sa.Column("reason", sa.Text(), nullable=False, default=""),
+    # One short present-tense sentence for the sidebar; never empty.
+    sa.Column("outcome", sa.Text(), nullable=False, default=""),
+    # What came back, written by code from the receiver's own reply.
+    sa.Column("result", sa.Text(), nullable=False, default=""),
+    # The helpers above and including the receiver, root first (JSON list).
+    sa.Column("chain", sa.Text(), nullable=False, default="[]"),
+    sa.Column("created_at", sa.String(40), nullable=False),
+    sa.Column("created_ts", sa.Float(), nullable=False),
+    sa.Column("finished_at", sa.String(40), nullable=False, default=""),
+    sa.PrimaryKeyConstraint("tenant_id", "task_id"),
+    sa.Index("ix_helper_tasks_tenant_to", "tenant_id", "to_helper", "created_ts"),
+)
+
 BOOK_TABLES = (reps, shops, consent_withheld, skus, deliveries, delivery_lines, receivables,
                payments, bank_feed, promises, disputes, proof_events, proof_asks)
 AGENT_TABLES = (threads, inbound_messages, turns, turn_attempts, messages, thread_events,
                 intents, approvals, credit_requests, spend, asked_once, kill_switches, history,
-                prefixes, artifacts, compactions)
+                prefixes, artifacts, compactions, helper_tasks)

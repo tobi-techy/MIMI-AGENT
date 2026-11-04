@@ -328,6 +328,146 @@ def list_tasks(engine: Engine, tenant: str, *, thread_id: str = "", helper: str 
     return {"tasks": tasks, "total": sum(counts.values()), "by_status": counts}
 
 
+# ------------------------------------------------------------------ inbox
+
+
+def _inbox_item(row: Any) -> dict[str, Any]:
+    from mimi.api import inbox as ib
+
+    chain = loads(row.chain, []) or []
+    state = str(row.state)
+    return {
+        "task_id": row.task_id, "contract": ib.CONTRACT_VERSION,
+        "from_helper": row.from_helper, "from_title": ib.title(row.from_helper),
+        "to_helper": row.to_helper, "to_title": ib.title(row.to_helper),
+        "skill": row.skill, "shop_id": row.shop_id, "shop_name": "",
+        "ask": row.ask, "state": state, "reason": row.reason,
+        "outcome": row.outcome or ib.outcome(state, ib.title(row.to_helper),
+                                             result=row.result, reason=row.reason),
+        "result": row.result, "chain": list(chain),
+        "parent_task_id": row.parent_task_id, "thread_id": row.thread_id,
+        "turn_id": row.turn_id, "created_at": row.created_at,
+        "finished_at": row.finished_at}
+
+
+def _intent_inbox_item(conn: sa.Connection, tenant: str, row: Any, sender: str,
+                       shop_name: str) -> dict[str, Any]:
+    """An applied handoff intent with no inbox row yet (Phase 1: the intents
+    already stored become visible), rendered as a queued item."""
+    from mimi.api import inbox as ib
+
+    payload = loads(row.payload, {}) or {}
+    to_helper = str(payload.get("helper") or "")
+    ask = str(payload.get("task") or row.preview or "")
+    from_helper = sender or "mimi"
+    state = "queued"
+    return {
+        "task_id": ib.task_id_for(tenant, str(row.idempotency_key)),
+        "contract": ib.CONTRACT_VERSION,
+        "from_helper": from_helper, "from_title": ib.title(from_helper),
+        "to_helper": to_helper, "to_title": ib.title(to_helper),
+        "skill": "", "shop_id": str(row.shop_id), "shop_name": shop_name,
+        "ask": ask, "state": state,
+        "reason": hx.ack(to_helper, from_helper=from_helper) if to_helper else "",
+        "outcome": ib.outcome(state, ib.title(to_helper)),
+        "result": "", "chain": [from_helper, to_helper] if to_helper else [from_helper],
+        "parent_task_id": "", "thread_id": str(row.thread_id), "turn_id": str(row.turn_id),
+        "created_at": str(row.created_at), "finished_at": ""}
+
+
+def list_inbox(engine: Engine, tenant: str, *, helper: str = "", state: str = "",
+               limit: int = 50) -> dict[str, Any]:
+    """Every handoff whose receiver is this helper (docs/HELPER-INBOX-CONTRACT.md).
+
+    Newest first. Items come from ``helper_tasks``; an applied ``ask_helper``
+    or ``delegate_task`` intent without a row yet is shown as a ``queued``
+    item, so the intents already stored are visible too."""
+    from mimi.api import inbox as ib
+
+    with engine.connect() as conn:
+        names = display.names_for(conn, tenant)
+        shop_names = dict(names.shops)  # shop_id (lower) -> name
+        rows = list(conn.execute(sa.select(s.helper_tasks).where(
+            s.helper_tasks.c.tenant_id == tenant)))
+        seen_keys = {str(r.source_key) for r in rows if r.source_key}
+        items = [_inbox_item(r) for r in rows]
+        # Phase 1: handoff intents already stored, with no inbox row yet.
+        irows = list(conn.execute(sa.select(s.intents).where(
+            s.intents.c.tenant_id == tenant,
+            s.intents.c.tool.in_(tuple(ib.DELEGATE_TOOLS)),
+            s.intents.c.outcome.not_in(("refused", "shadowed")))))
+        turn_helpers = {str(t.turn_id): str(t.helper) for t in conn.execute(
+            sa.select(s.turns.c.turn_id, s.turns.c.helper).where(
+                s.turns.c.tenant_id == tenant,
+                s.turns.c.turn_id.in_([str(r.turn_id) for r in irows if r.turn_id]
+                                      or ["__none__"])))}
+        for r in irows:
+            if str(r.idempotency_key) in seen_keys:
+                continue
+            items.append(_intent_inbox_item(
+                conn, tenant, r, turn_helpers.get(str(r.turn_id), ""),
+                shop_names.get(str(r.shop_id).lower(), "")))
+        for it in items:
+            it["shop_name"] = it["shop_name"] or shop_names.get(
+                str(it["shop_id"]).lower(), "")
+        if helper:
+            items = [i for i in items if i["to_helper"] == helper]
+        by_state: dict[str, int] = {}
+        for i in items:
+            by_state[i["state"]] = by_state.get(i["state"], 0) + 1
+        if state:
+            items = [i for i in items if i["state"] == state]
+        items.sort(key=lambda i: (i["created_at"], i["task_id"]), reverse=True)
+        total = len(items)
+        helpers = _inbox_helpers(conn, tenant, rows)
+    return {"items": items[:limit], "total": total, "by_state": by_state,
+            "helpers": helpers}
+
+
+def _inbox_helpers(conn: sa.Connection, tenant: str,
+                   rows: list[Any]) -> list[dict[str, Any]]:
+    """The one sentence per helper the sidebar reads, from open items and turns
+    (never a stored state word; docs/HELPER-INBOX-CONTRACT.md)."""
+    from mimi.api import inbox as ib
+
+    open_items: dict[str, int] = {}
+    newest: dict[str, tuple[str, str]] = {}
+    has_items: set[str] = set()
+    for r in rows:
+        st = str(r.state)
+        who = str(r.to_helper)
+        has_items.add(who)
+        if st in ib.OPEN_STATES:
+            open_items[who] = open_items.get(who, 0) + 1
+        prev = newest.get(who)
+        if prev is None or str(r.created_at) >= prev[0]:
+            newest[who] = (str(r.created_at), str(r.outcome))
+    running: dict[str, int] = dict(conn.execute(
+        sa.select(s.turns.c.helper, sa.func.count()).where(
+            s.turns.c.tenant_id == tenant,
+            s.turns.c.state.in_(("queued", "leased")),
+            s.turns.c.helper != "").group_by(s.turns.c.helper)).all())
+    parked: dict[str, int] = dict(conn.execute(
+        sa.select(s.turns.c.helper, sa.func.count()).where(
+            s.turns.c.tenant_id == tenant, s.turns.c.state == "parked").group_by(
+            s.turns.c.helper)).all())
+    pending: dict[str, int] = dict(conn.execute(
+        sa.select(s.approvals.c.helper, sa.func.count()).where(
+            s.approvals.c.tenant_id == tenant, s.approvals.c.status == "pending")
+        .group_by(s.approvals.c.helper)).all())
+    out: list[dict[str, Any]] = []
+    for name in sorted({*has_items, *running, *parked, *pending} - {""}):
+        wait = int(parked.get(name, 0)) + int(pending.get(name, 0))
+        opn = int(open_items.get(name, 0)) + int(running.get(name, 0))
+        line = newest.get(name, ("", ""))[1]
+        if not line:
+            line = (ib.outcome("queued", ib.title(name)) if opn
+                    else f"{ib.title(name)} is waiting on you")
+        out.append({"helper": name, "helper_name": ib.title(name),
+                    "open": opn, "waiting_on_owner": wait, "outcome": line})
+    return out
+
+
 # --------------------------------------------------------------- activity
 
 

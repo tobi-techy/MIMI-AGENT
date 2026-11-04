@@ -268,6 +268,56 @@ class TaskList(_Out):
     by_status: dict[str, int]
 
 
+class InboxItem(_Out):
+    """One piece of work a helper handed to another (docs/HELPER-INBOX-CONTRACT.md).
+
+    ``from_helper`` is ``mimi`` for the owner's own ask routed by Mimi. Every
+    field a person reads (``from_title``, ``to_title``, ``shop_name``, ``ask``,
+    ``reason``, ``outcome``, ``result``) is a sentence written by code; the
+    rest are machine values."""
+
+    task_id: str
+    contract: str
+    from_helper: str
+    from_title: str
+    to_helper: str
+    to_title: str
+    skill: str
+    shop_id: str
+    shop_name: str
+    ask: str
+    state: Literal["queued", "working", "done", "handed_back", "failed", "refused"]
+    reason: str
+    outcome: str
+    result: str
+    chain: list[str] = Field(default_factory=list)
+    parent_task_id: str = ""
+    thread_id: str = ""
+    turn_id: str = ""
+    created_at: str
+    finished_at: str = ""
+
+
+class HelperLine(_Out):
+    """The one honest sentence per helper the sidebar needs, from real data.
+
+    The console derives the face state from ``open`` and ``waiting_on_owner``;
+    the API never stores a state word that can drift."""
+
+    helper: str
+    helper_name: str
+    open: int
+    waiting_on_owner: int
+    outcome: str
+
+
+class InboxList(_Out):
+    items: list[InboxItem]
+    total: int
+    by_state: dict[str, int]
+    helpers: list[HelperLine] = Field(default_factory=list)
+
+
 class ActivityStep(_Out):
     """One step of the helper's work, in plain words for the Activity row.
 
