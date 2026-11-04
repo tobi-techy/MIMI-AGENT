@@ -25,11 +25,15 @@ META_API_KEY= python scripts/demo_script_check.py   # e2e replay, then 16 checks
 ## Runnable on the live book (audited 4 Nov 2026)
 
 Audited by reading the hosted demo and the seed: `GET /v1/shops`,
-`GET /v1/shops/{shop_id}`, `GET /v1/credit`, and every fixture in
-`eval/proof/screens.jsonl` compared with the shop's open invoices. Reads only,
-no model calls. The live host is
+`GET /v1/shops/{shop_id}`, `GET /v1/credit`, `GET /v1/routines`, and every
+fixture in `eval/proof/screens.jsonl` compared with the shop's open invoices.
+Reads only, no model calls. The live host is
 `https://mimi-agent-tobi-omotade-2cd167ac.atlasflow.dev`; the console is
-`https://demo.userail.money`.
+`https://demo.userail.money`. The host was redeployed on 4 Nov at about
+10:38 UTC from main `d995e67` (holder commit `813c20d`, deployment
+`01a1a623`), which is the build that carries the routines rail (operational
+note 5). The book is the same seeded book either side of it: every demo
+session gets its own fresh copy.
 
 | # | Shop | Delivery / invoice | Amount | Runs on the live book? |
 |---|---|---|---|---|
@@ -230,7 +234,9 @@ Custard 2kg at N7,200 a tub, which is where the N43,200 comes from. The shop
 owes N328,750 against a N670,000 limit, so a restock of this size is not over
 the limit. The `routine` event routes by rule (`stock.weekly_check` ->
 `stock/stock-count`, no model call for the route), so this scene does not
-depend on the routines rail, which the deployed API does not have yet.
+depend on the routines rail: the event is what wakes the helper. The rail is
+filmable on the deployed host now, but it lists the daily briefing and the
+aging scan, not a stock check (operational note 5).
 
 **Console:** shop thread (tap buttons visible), then the restock card in
 approvals: version 2, 6 tubs. Version 1 (4 tubs) never reaches the owner,
@@ -361,11 +367,24 @@ These are the things that cost a take if nobody says them out loud first.
    tasks are bounded by **count, not money**: 3 per session and 8 per visitor
    address a day, and 7 of the 8 were still available when this was written,
    after the day's rehearsal. Spend at most one browser task in a take.
-5. **The deployed API has no routines rail.** `GET /v1/routines` answers 404
-   on the hosted demo, because the routines rail was merged after this deploy
-   went out. Nothing about pausing, resuming or the kill switch can be filmed
-   there. The `stock.weekly_check` **event** in scene 3 still routes, because
-   the deployed build carries that mapping.
+5. **The routines rail is on the deployed host, behind the owner key.** Since
+   the 4 Nov 10:38 UTC deploy, `GET /v1/routines` answers **401** to an
+   unauthenticated call (`{"detail":"a valid bearer key is required"}`), so
+   **mint a demo session first**: `POST /v1/demo/sessions` answers 201 and
+   returns the token the console keeps in
+   `sessionStorage["mimi-console-session"]` as `{token, expiresAt}`, and that
+   token reads the rail. On a fresh session it lists two routines, "Morning
+   briefing" (every day at 8:00 AM) and "Aging scan" (every day at 8:30 AM),
+   each with an empty `last_run_at`, `last_finding` "It has not run yet." and a
+   `next_run_at` on the next day. That is the honest state of a fresh
+   container, and it is filmable. `POST /v1/routines/morning_brief/pause`
+   answers `{"id":"morning_brief","name":"Morning briefing","paused":true}` and
+   the rail then carries the switch as a row with a `paused_reason` written as
+   a sentence ("Checking the note."); `resume` puts it back. `all` (or `*`) is
+   the kill switch: `POST /v1/routines/all/pause` answers
+   `{"id":"all","name":"All routines","paused":true}`. A visitor's session
+   shows no routine that has already run, so film the rail, the switch and its
+   sentence, not a run, and do not promise one.
 6. **The console paints its shell before its data.** Tiles appear with labels
    and no values for one to two seconds while eight reads land. Open the
    screen, count to two, then speak. Otherwise the first frame of a shot has
@@ -404,16 +423,22 @@ not the seeded live book, so scene 2's live shop change does not move it.
 4. **"One YES joins the shop".** There is no separate join step in the
    recorded run: the confirmed receipt is recorded as the shop's consent.
    The voiceover says that, not "joins".
-5. **An over-payment has nowhere to sit, on the bank-credit path.** A credit
-   bigger than everything the shop owes is refused before it is applied
-   (there has to be a waiting screenshot), so it is not reachable from the
-   sim. But if a matched payment ever exceeded the last open invoice,
-   `mimi/api/demo_wiring.py::_apply_to_invoices` applies `min(left,
-   outstanding)` down the list and drops the remainder with no note, while
-   the Zoho card carries the **whole** payment against the **first** invoice
-   it touched. A code reading, not something seen live; the return-credit
-   path keeps such an excess on the shop's account, the bank-credit path does
-   not. Worth a fix, and worth knowing if a judge asks.
+5. **Two edges left on a payment bigger than the bill.** The demo's bank
+   credit spreads a payment over the shop's open invoices, caps each
+   application at what that invoice owes, records the excess on the shop's
+   account (`mimi/store/on_account.py`, visible as `on_account_kobo` and
+   `on_account_naira` on `GET /v1/shops`) and builds the Zoho card from what
+   was **actually applied**, so the card can no longer claim more against an
+   invoice than the invoice ever owed (PR #61, merged before this deploy).
+   What remains, and is documented in `docs/RETURNS.md` ("A payment bigger
+   than the shop owes"): Go's own writer (`mimi/api/week/go.py`,
+   `GoSim._pay`) pays the single oldest open invoice and puts the rest on the
+   account rather than spreading it over the next invoices, and the
+   after-the-roll case is decided by the payment's day against the delivery's
+   day, so a payment written while its delivery sat unbilled for more than a
+   day and verified only after the roll cannot be placed by its day stamp, and
+   the roll's credit and the payment's application can both count. Neither is
+   reachable in the five scenes.
 6. **A shop's duplicate screenshot is silent** (operational note 2), and the
    rehearsal that found it was on the live host, not in the replay store.
 
@@ -440,7 +465,9 @@ Two sources, both labelled "synthetic data" on screen:
 * **The hosted demo (a live take with no setup at all).** `demo.userail.money`
   drives the same messages, inside one address's N400 day and 8 browser
   tasks. Scene 2 was proved end to end this way on 4 Nov, and it is the
-  cheapest way to film the money loop closing.
+  cheapest way to film the money loop closing. The routines rail reads there
+  too, once you have a session: mint one with `POST /v1/demo/sessions` and the
+  rail is the owner read that token opens (operational note 5).
 
 On the hosted demo a visitor's session token also takes shop messages by
 phone and system events, so the sim can drive it, inside the caps. One
