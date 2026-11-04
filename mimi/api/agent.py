@@ -2398,8 +2398,50 @@ class Agent:
                 raise Conflict(f"approval is already {a.status}")
             if approve and moves_money(a.tool, a.intent_kind):
                 raise Conflict("Mimi never moves money; this cannot be approved here")
+        # A Zoho write is approved only once Zoho has accepted it: the
+        # approval is claimed (``applying``, so a second tap cannot run it
+        # twice), the write runs, and only a write that went through marks it
+        # approved. A failed one goes back to pending with a plain,
+        # retryable result; a retry keeps the same approval and so the same
+        # reference, which the write reads back before creating anything.
+        from_status = "pending"
+        if approve and a.tool == "zoho_payment":
+            from mimi.api import demo_wiring as dw
+
+            with self.engine.begin() as conn:
+                claim = conn.execute(s.approvals.update().where(
+                    s.approvals.c.tenant_id == tenant_id,
+                    s.approvals.c.approval_id == approval_id,
+                    s.approvals.c.status == "pending").values(status="applying"))
+                if claim.rowcount != 1:
+                    raise Conflict("approval was decided at the same time")
+            try:
+                ok = dw.on_approved(self.engine, tenant_id,
+                                    self.approval(tenant_id, approval_id),
+                                    demo_mode=demo_mode)
+            except Exception:
+                ok = False
+                log.exception("zoho write raised for approval %s", approval_id)
+                payload = loads(a.payload, {})
+                payload["result"] = {"error": dw.ZOHO_WRITE_FAILED, "retryable": True,
+                                     "undo_available": False}
+                with self.engine.begin() as conn:
+                    conn.execute(s.approvals.update().where(
+                        s.approvals.c.tenant_id == tenant_id,
+                        s.approvals.c.approval_id == approval_id)
+                        .values(payload=dumps(payload)))
+            if not ok:
+                with self.engine.begin() as conn:
+                    conn.execute(s.approvals.update().where(
+                        s.approvals.c.tenant_id == tenant_id,
+                        s.approvals.c.approval_id == approval_id,
+                        s.approvals.c.status == "applying").values(status="pending"))
+                return self.approval(tenant_id, approval_id), None
+            from_status = "applying"
+        with self.engine.begin() as conn:
             res = conn.execute(s.approvals.update().where(
-                s.approvals.c.approval_id == approval_id, s.approvals.c.status == "pending")
+                s.approvals.c.approval_id == approval_id,
+                s.approvals.c.status == from_status)
                 .values(status=decision, decided_by=by[:100], note=note[:2000],
                         decided_at=now_iso(now)))
             if res.rowcount != 1:
@@ -2431,7 +2473,7 @@ class Agent:
                 # last step with a clear denial streak (RAI-324). A rule set
                 # to hand_off is the owner's to do by hand: nothing resumes.
                 resumed = self.resume_denied(conn, a.turn_id)
-        if approve and a.tool in ("zoho_payment", "credit_over_limit", "return_credit"):
+        if approve and a.tool in ("credit_over_limit", "return_credit"):
             from mimi.api import demo_wiring as dw
 
             dw.on_approved(self.engine, tenant_id, self.approval(tenant_id, approval_id),

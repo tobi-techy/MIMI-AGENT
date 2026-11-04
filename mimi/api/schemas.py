@@ -809,6 +809,11 @@ class ConnectorConnection(_Out):
     revoked_at: str | None
 
 
+class ConnectorConnectStatus(_Out):
+    available: bool
+    reason: str
+
+
 class ConnectorToolkit(_Out):
     toolkit: str
     label: str
@@ -816,6 +821,20 @@ class ConnectorToolkit(_Out):
     reads: list[str]
     writes: list[str]
     connections: list[ConnectorConnection]
+    connect: ConnectorConnectStatus
+
+
+class ConnectorReadItem(_Out):
+    label: str
+    detail: str = ""
+
+
+class ConnectorRead(_Out):
+    connection_id: str
+    toolkit: str
+    read_at: str
+    summary: str
+    items: list[ConnectorReadItem]
 
 
 class ConnectorList(_Out):

@@ -96,6 +96,7 @@ from mimi.api.schemas import (
     ConnectorConnectOut,
     ConnectorDetail,
     ConnectorList,
+    ConnectorRead,
     CreditLimitIn,
     CreditLimitOut,
     CreditOut,
@@ -152,6 +153,21 @@ from mimi.store.util import now_iso
 from mimi.tz import assume_lagos
 
 log = logging.getLogger(__name__)
+
+# What the owner reads when an outside tool fails behind a connector route.
+# The tool's own error text stays in our logs (redacted), never in a reply.
+CONNECT_FAILED = "Couldn't start connecting right now. Nothing changed. Try again."
+CALLBACK_FAILED = "Couldn't confirm the connection. Nothing was saved. Start a new connect."
+READ_FAILED = "Couldn't read from the connected account right now. Try again."
+DISCONNECT_FAILED = "Couldn't disconnect right now. Nothing changed. Try again."
+
+
+def _connector_failed(where: str, exc: BaseException, message: str) -> HTTPException:
+    """A 502 with a plain line for the owner; the detail goes to the log."""
+    from mimi.connectors.base import log_failure
+
+    log_failure(log, where, exc)
+    return HTTPException(502, message)
 VERSION = "0.1.0"
 _bearer = HTTPBearer(auto_error=False)
 _ERRORS: dict[int | str, dict[str, Any]] = {
@@ -212,7 +228,8 @@ def create_app(settings: Settings | None = None, agent: Agent | None = None, *,
     app.add_middleware(
         CORSMiddleware, allow_origins=list(settings.cors_origins),
         allow_origin_regex=LOCALHOST_REGEX, allow_credentials=False,
-        allow_methods=["GET", "POST", "PUT", "OPTIONS"],
+        # DELETE: the console disconnects a tool (DELETE /v1/connectors/{id}).
+        allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
         allow_headers=["Authorization", "Content-Type"])
     engine = agent.engine
     uploads: ConsoleUploads | None = None
@@ -738,11 +755,19 @@ def create_app(settings: Settings | None = None, agent: Agent | None = None, *,
         region = ((body.region if body else "") or "").strip().lower()
         if upper in ("ZOHO_BOOKS", "ZOHO") and region and region not in ZOHO_REGIONS:
             raise HTTPException(422, f"region is {region!r}: use com, eu, in, cn or au")
+        from mimi.connectors.env import ConnectorSettings
+
+        settings_c = ConnectorSettings.from_env()
+        ready, why = settings_c.connect_status(upper)
+        if settings_c.mode == "composio" and not ready:
+            # A setup gap on this server, said plainly (the same words
+            # Settings shows); no env names or values reach the owner.
+            raise HTTPException(503, why)
         transport = _connector_transport()
         try:
             return transport.initiate(upper, user_id=key.tenant_id)
         except ConnectorError as exc:
-            raise HTTPException(502, str(exc)) from exc
+            raise _connector_failed("connect start", exc, CONNECT_FAILED) from exc
 
     @app.get("/v1/connectors/callback", responses=_ERRORS,
              summary="Composio returns here after consent")
@@ -764,14 +789,17 @@ def create_app(settings: Settings | None = None, agent: Agent | None = None, *,
             raise HTTPException(422, "that link is not valid; start a new connect")
         if _connector_state_used(engine, key.tenant_id, state):
             raise HTTPException(422, "that link was already used; start a new connect")
-        connected_id = params.get("connected_account_id", "")
+        if params.get("status") and params["status"].lower() not in ("success", "active"):
+            raise HTTPException(422, "the tool did not finish connecting; start a new connect")
+        # Composio has used both spellings for the account id on the way back.
+        connected_id = params.get("connected_account_id", "") or params.get("connectedAccountId", "")
         if not connected_id:
             raise HTTPException(422, "Composio gave no connected account; start a new connect")
         transport = _connector_transport()
         try:
             info = transport.account(connected_id)
         except ConnectorError as exc:
-            raise HTTPException(502, str(exc)) from exc
+            raise _connector_failed("connect callback", exc, CALLBACK_FAILED) from exc
         connection_id = f"conn-{connected_id[-12:]}"
         cx.save_account(engine, key.tenant_id, connection_id=connection_id,
                         toolkit=str(payload.get("toolkit") or ""),
@@ -787,6 +815,17 @@ def create_app(settings: Settings | None = None, agent: Agent | None = None, *,
     def get_connector(connection_id: str, key: Owner) -> dict[str, Any]:
         return cx.get_connection(engine, key.tenant_id, connection_id)
 
+    @app.get("/v1/connectors/{connection_id}/read", response_model=ConnectorRead,
+             responses=_ERRORS, summary="A live read from a connected account")
+    def get_connector_read(connection_id: str, key: Owner) -> dict[str, Any]:
+        """Read-only, on the same transport every helper uses: proves Mimi can
+        see the account right after connecting."""
+        try:
+            return cx.read_connection(engine, key.tenant_id, connection_id,
+                                      _connector_transport())
+        except ConnectorError as exc:
+            raise _connector_failed("connector read", exc, READ_FAILED) from exc
+
     @app.delete("/v1/connectors/{connection_id}", responses=_ERRORS,
                 summary="Disconnect: revoke before the next sync")
     def delete_connector(connection_id: str, key: Owner) -> dict[str, Any]:
@@ -800,7 +839,7 @@ def create_app(settings: Settings | None = None, agent: Agent | None = None, *,
         try:
             transport.disconnect(str(row.connected_account_id or connection_id))
         except ConnectorError as exc:
-            raise HTTPException(502, str(exc)) from exc
+            raise _connector_failed("disconnect", exc, DISCONNECT_FAILED) from exc
         cx.revoke_account(engine, key.tenant_id, connection_id, now_iso(wall()))
         return {"connection_id": connection_id, "status": "revoked"}
 

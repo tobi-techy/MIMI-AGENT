@@ -685,7 +685,9 @@ def test_second_live_write_same_day_refused_without_provider_call(
     assert "—" not in text and "–" not in text  # no em or en dashes
     live_again = env["c"].get("/v1/approvals?status=all", headers=h()).json()["approvals"]
     row = next(a for a in live_again if a["approval_id"] == second_id)
-    assert row["status"] == "approved"  # the approval stays visible, not gone
+    # Nothing was written, so the approval stays visible and retryable:
+    # it is back to pending, never marked approved for a write that failed.
+    assert row["status"] == "pending"
 
 
 def test_fake_write_does_not_consume_the_live_cap(
@@ -887,7 +889,8 @@ def test_agreement_that_forgets_the_organization_reads_as_could_not_read(
     _live_transport(monkeypatch, live)
     body = env["c"].get("/v1/books/agreement", headers=h()).json()
     assert body["zoho_connected"] is False
-    assert "could not be read" in body["note"] and "organization_id" in body["note"]
+    # Zoho's own error text stays in the server log, not the owner's note.
+    assert "could not be read" in body["note"] and "organization_id" not in body["note"]
     assert body["total"]["zoho_outstanding_kobo"] is None
     assert all(x["zoho_outstanding_kobo"] is None for x in body["shops"])
 

@@ -90,6 +90,22 @@ class ConnectorSettings:
         """True only when the real transport can run (key set, mode on)."""
         return self.mode == "composio" and bool(self.composio_api_key)
 
+    def connect_status(self, toolkit: str) -> tuple[bool, str]:
+        """Whether this server can start a real connect flow for a toolkit,
+        and, when it cannot, why in plain words (shown in Settings)."""
+        upper = toolkit.upper()
+        if upper not in ("ZOHO_BOOKS", "ZOHO", "GOOGLESHEETS"):
+            return False, "This tool has no connect flow yet."
+        if self.mode != "composio":
+            return False, "Connecting tools isn't switched on for this server yet."
+        if not self.composio_api_key:
+            return False, "This server has no Composio key yet."
+        if not self.auth_config_for(upper):
+            return False, "This tool's sign-in app isn't set up on this server yet."
+        if not self.callback_url:
+            return False, "This server has no return address for the sign-in yet."
+        return True, ""
+
 
 ALL_CONNECTOR_VARS: tuple[str, ...] = (
     "COMPOSIO_API_KEY",

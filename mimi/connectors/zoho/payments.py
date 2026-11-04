@@ -5,10 +5,12 @@ built on Zoho Books' own API, called through Composio's proxy execute on
 the distributor's existing ZOHO_BOOKS connected account: no second OAuth
 app, no raw token in our code. Only this module makes these calls.
 
-* Create: ``POST /customerpayments?organization_id=<org>`` with
-  customer_id, payment_mode, amount, date, reference_number and
+* Create: ``POST https://<region-host>/books/v3/customerpayments?organization_id=<org>``
+  with customer_id, payment_mode, amount, date, reference_number and
   invoices [{invoice_id, amount_applied}].
-* Undo: ``DELETE /customerpayments/{payment_id}?organization_id=<org>``.
+* Undo: ``DELETE https://<region-host>/books/v3/customerpayments/{payment_id}?organization_id=<org>``.
+  The proxy resolves nothing from a relative endpoint, so every call
+  carries an absolute URL (host from ``MIMI_ZOHO_REGION``).
 * Scopes: ZohoBooks.customerpayments.CREATE and .DELETE on our Zoho auth
   config.
 
@@ -34,15 +36,18 @@ from __future__ import annotations
 
 import hashlib
 import json
+import logging
 import re
 from typing import Any
 from urllib.parse import quote
 
-from mimi.connectors.base import ConnectorError
+from mimi.connectors.base import ConnectorError, log_failure
 from mimi.connectors.composio import ComposioTransport, FakeComposio
 from mimi.connectors.types import WriteRecord
 from mimi.connectors.zoho.replies import check_reply
 from mimi.store.util import now_iso
+
+log = logging.getLogger(__name__)
 
 # Zoho data-centre API hosts, keyed by the MIMI_ZOHO_REGION code: the
 # Composio proxy has no server-side base for this toolkit, so a relative
@@ -351,7 +356,8 @@ def _live_proxy(transport: ComposioTransport | FakeComposio, name: str, *, metho
                                      body=body,
                                      connected_account_id=connected_account_id)
     except Exception as exc:
-        raise ConnectorError(f"The Zoho Books payment call failed: {exc}",
+        log_failure(log, f"Zoho Books proxy {method}", exc)
+        raise ConnectorError("Zoho Books didn't answer the payment call.",
                              next_step="Read back by reference before retrying.") from exc
     status = getattr(res, "status", None)
     return _checked(_plain(res), status=int(status) if isinstance(status, int | float) else 200)

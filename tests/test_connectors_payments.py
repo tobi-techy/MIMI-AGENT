@@ -118,6 +118,42 @@ def test_a_failed_create_reads_back_and_is_not_retried() -> None:
     assert [c["method"] for c in fake.calls] == ["GET", "POST", "GET"]
 
 
+def test_proxy_uses_absolute_region_urls_for_create_search_delete() -> None:
+    fake = _fake()
+    pay.create_payment(
+        transport=fake, tenant_id=TENANT, connection_id=CONN,
+        organization_id=ORG, payload=PAYLOAD,
+        idempotency_key="zoho-books-abc123", approval_id="appr-2")
+    pay.find_by_reference(
+        transport=fake, connection_id=CONN, organization_id=ORG,
+        reference=pay.reference_for("zoho-books-abc123"))
+    pay.delete_payment(transport=fake, connection_id=CONN,
+                       organization_id=ORG, payment_id="zp-001")
+    proxy = [c for c in fake.calls if c["action"].startswith("proxy:")]
+    assert [c["endpoint"] for c in proxy] == [
+        f"https://www.zohoapis.com/books/v3/customerpayments?organization_id={ORG}",
+        ("https://www.zohoapis.com/books/v3/customerpayments"
+         f"?organization_id={ORG}&reference_number=mimi-zoho-books-abc123"),
+        (f"https://www.zohoapis.com/books/v3/customerpayments/zp-001"
+         f"?organization_id={ORG}"),
+    ]
+    assert all(e.startswith("https://") for e in [c["endpoint"] for c in proxy])
+
+
+def test_proxy_region_maps_to_the_data_centre_host() -> None:
+    assert pay.books_url("com", "/customerpayments", "organization_id=o") == \
+        "https://www.zohoapis.com/books/v3/customerpayments?organization_id=o"
+    assert pay.books_url("eu", "/customerpayments", "organization_id=o") == \
+        "https://www.zohoapis.eu/books/v3/customerpayments?organization_id=o"
+    assert pay.books_url("in", "/customerpayments", "organization_id=o") == \
+        "https://www.zohoapis.in/books/v3/customerpayments?organization_id=o"
+    fake = FakeComposio(ConnectorSettings.from_env({"MIMI_ZOHO_REGION": "eu"}))
+    pay.delete_payment(transport=fake, connection_id=CONN,
+                       organization_id=ORG, payment_id="zp-001")
+    assert fake.calls[-1]["endpoint"] == \
+        f"https://www.zohoapis.eu/books/v3/customerpayments/zp-001?organization_id={ORG}"
+
+
 def test_zoho_create_reply_shape_and_error_codes() -> None:
     assert pay._checked({"code": 0, "payment": {"payment_id": "p1"}}, status=201)
     with pytest.raises(ConnectorError):
