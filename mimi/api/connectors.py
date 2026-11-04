@@ -31,7 +31,11 @@ TOOLKITS: tuple[dict[str, str], ...] = (
 
 
 def list_connectors(engine: Engine, tenant: str) -> dict[str, Any]:
-    """Every toolkit with its connection status for this distributor."""
+    """Every toolkit with its connection status for this distributor, and
+    whether this server can start a real connect flow for it (``connect``)."""
+    from mimi.connectors.env import ConnectorSettings
+
+    settings = ConnectorSettings.from_env()
     with engine.connect() as conn:
         rows = list(conn.execute(sa.select(s.connector_accounts).where(
             s.connector_accounts.c.tenant_id == tenant)).all())
@@ -47,8 +51,57 @@ def list_connectors(engine: Engine, tenant: str) -> dict[str, Any]:
                            and a.kind == "read"}),
          "writes": sorted({a.action for a in ACTIONS if a.toolkit == t["toolkit"]
                             and a.kind == "write"}),
-         "connections": by_toolkit.get(t["toolkit"], [])}
+         "connections": by_toolkit.get(t["toolkit"], []),
+         "connect": _connect(settings, t["toolkit"])}
         for t in TOOLKITS]}
+
+
+def _connect(settings: Any, toolkit: str) -> dict[str, Any]:
+    ok, reason = settings.connect_status(toolkit)
+    return {"available": ok, "reason": reason}
+
+
+def read_connection(engine: Engine, tenant: str, connection_id: str,
+                    transport: Any) -> dict[str, Any]:
+    """A live read from one active connection, so the owner sees Mimi can
+    really read the account: the organization and the first customers for
+    Zoho Books, the first contacts for Zoho CRM. Read-only."""
+    from mimi.store.util import now_iso
+
+    with engine.connect() as conn:
+        a = conn.execute(sa.select(s.connector_accounts).where(
+            s.connector_accounts.c.tenant_id == tenant,
+            s.connector_accounts.c.connection_id == connection_id)).first()
+    if a is None or a.status != "active":
+        raise NotFound(connection_id)
+    account = str(a.connected_account_id or connection_id)
+    toolkit = str(a.toolkit or "").upper()
+    items: list[dict[str, str]] = []
+    if toolkit == "ZOHO_BOOKS":
+        from mimi.connectors.zoho.books import ZohoBooksConnector
+
+        books = ZohoBooksConnector(transport, tenant_id=tenant, connection_id=account)
+        orgs = books.read("zoho_books_organizations").rows
+        contacts = books.read("zoho_books_contacts").rows
+        org = str(orgs[0].values.get("name")) if orgs else "your Zoho Books"
+        for r in contacts[:5]:
+            owed = int(r.values.get("outstanding_kobo") or 0) // 100
+            items.append({"label": str(r.values.get("name") or "Customer"),
+                          "detail": f"owes ₦{owed:,}" if owed else ""})
+        summary = (f"Read {len(contacts)} customer{'s' if len(contacts) != 1 else ''} "
+                   f"from {org}.")
+    elif toolkit == "ZOHO":
+        from mimi.connectors.zoho.crm import ZohoCrmConnector
+
+        crm = ZohoCrmConnector(transport, tenant_id=tenant, connection_id=account)
+        rows = crm.read("zoho_crm_accounts").rows
+        for r in rows[:5]:
+            items.append({"label": str(r.values.get("name") or "Account"), "detail": ""})
+        summary = f"Read {len(rows)} account{'s' if len(rows) != 1 else ''} from Zoho CRM."
+    else:
+        summary = "Connected. This tool is read when Mimi syncs a shop's sheet."
+    return {"connection_id": connection_id, "toolkit": toolkit,
+            "read_at": now_iso(), "summary": summary, "items": items}
 
 
 def get_connection(engine: Engine, tenant: str, connection_id: str) -> dict[str, Any]:

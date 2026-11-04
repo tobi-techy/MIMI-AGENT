@@ -13,12 +13,22 @@ The model never touches this module. Only allowlisted actions wrapped by
 from __future__ import annotations
 
 import json
+import logging
 from pathlib import Path
 from typing import Any
 
 from mimi.connectors import allowlist
-from mimi.connectors.base import ConnectorError
+from mimi.connectors.base import ConnectorError, log_failure
 from mimi.connectors.env import ConnectorSettings
+
+log = logging.getLogger(__name__)
+
+_LABELS = {"ZOHO_BOOKS": "Zoho Books", "ZOHO": "Zoho CRM", "GOOGLESHEETS": "Google Sheets"}
+
+
+def _label(toolkit: str) -> str:
+    """The tool's name as the owner reads it."""
+    return _LABELS.get(toolkit.upper(), "The tool")
 
 FIXTURES_DIR = Path(__file__).resolve().parent.parent.parent / "eval" / "connectors" / "fixtures"
 
@@ -58,9 +68,12 @@ class ComposioTransport:
                 "ZOHO": self.settings.version_zoho,
                 "GOOGLESHEETS": self.settings.version_googlesheets,
             }
+            kwargs: dict[str, Any] = {}
+            if self.settings.composio_api_key:
+                kwargs["api_key"] = self.settings.composio_api_key
             self._client = Composio(
-                api_key=self.settings.composio_api_key or None,
                 toolkit_versions=versions,  # type: ignore[arg-type]
+                **kwargs,  # type: ignore[arg-type]
             )
         return self._client
 
@@ -90,7 +103,8 @@ class ComposioTransport:
                 arguments=args,
             )
         except Exception as exc:
-            raise ConnectorError(f"The {row.toolkit} call failed: {exc}",
+            log_failure(log, f"{row.toolkit} read {action}", exc)
+            raise ConnectorError(f"{_label(row.toolkit)} didn't answer. Nothing changed.",
                                  next_step="Retry the sync; the read stays refused.") from exc
         return _plain(res)
 
@@ -118,7 +132,9 @@ class ComposioTransport:
                 arguments=arguments,
             )
         except Exception as exc:
-            raise ConnectorError(f"The {row.toolkit} write failed: {exc}",
+            log_failure(log, f"{row.toolkit} write {action}", exc)
+            raise ConnectorError(f"{_label(row.toolkit)} didn't accept this. "
+                                 "Nothing was recorded.",
                                  next_step="Read back the record before retrying.") from exc
         return _plain(res)
 
@@ -140,19 +156,26 @@ class ComposioTransport:
         client = self._sdk()
         state = sign_state(settings.state_secret,
                            {"tenant": user_id, "toolkit": toolkit})
+        # The signed state rides on the callback url: Composio sends the
+        # owner back there (adding its connected account id), so the state
+        # comes back with them. Appending it to the consent link instead
+        # would never return.
+        sep_cb = "&" if "?" in settings.callback_url else "?"
+        callback = f"{settings.callback_url}{sep_cb}state={state}"
         try:
             req = client.connected_accounts.initiate(
                 user_id=user_id, auth_config_id=auth_config,
-                callback_url=settings.callback_url)
+                callback_url=callback)
         except Exception as exc:
-            raise ConnectorError(f"Could not start the {toolkit} connect flow: {exc}",
+            log_failure(log, f"{toolkit} connect", exc)
+            raise ConnectorError(f"Couldn't start connecting {_label(toolkit)}. "
+                                 "Nothing changed.",
                                  next_step="Retry the connect from Settings.") from exc
         url = getattr(req, "redirect_url", "") or ""
         if not url:
             raise ConnectorError(f"The {toolkit} connect flow gave no redirect.",
                                  next_step="Retry the connect from Settings.")
-        sep = "&state=" if "?" in url else "?state="
-        return {"redirect_url": f"{url}{sep}{state}", "state": state}
+        return {"redirect_url": url, "state": state}
 
     def account(self, connected_account_id: str) -> dict[str, Any]:
         """Status of one connected account. Raises when it is gone."""
@@ -160,6 +183,7 @@ class ComposioTransport:
         try:
             res = client.connected_accounts.get(connected_account_id)
         except Exception as exc:
+            log_failure(log, "connected account read", exc)
             raise ConnectorError("That connection is gone.",
                                  next_step="Connect again from Settings.") from exc
         return _plain(res)
@@ -170,7 +194,8 @@ class ComposioTransport:
         try:
             client.connected_accounts.delete(connected_account_id)
         except Exception as exc:
-            raise ConnectorError(f"Could not disconnect: {exc}",
+            log_failure(log, "disconnect", exc)
+            raise ConnectorError("Couldn't disconnect right now. Nothing changed.",
                                  next_step="Retry the disconnect.") from exc
 
     def _require_version(self, toolkit: str, version: str) -> None:
