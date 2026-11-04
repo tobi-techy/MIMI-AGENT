@@ -53,9 +53,13 @@ def test_host_allowed_takes_the_domain_and_its_subdomains_only() -> None:
 def test_host_allowed_refuses_a_url_that_carries_a_credential() -> None:
     """A username or password in the address is refused: the address may come
     from a model, and a session should never be handed a credential."""
-    assert not g.host_allowed("https://ada:pw@supplier.example/x", "supplier.example")
-    assert not g.host_allowed("https://ada@supplier.example/x", "supplier.example")
-    assert not g.host_allowed("https://:pw@supplier.example/x", "supplier.example")
+    # The addresses below are shaped like credentials on purpose: each is refused.
+    assert not g.host_allowed(
+        "https://ada:pw@supplier.example/x", "supplier.example")  # pragma: allowlist secret
+    assert not g.host_allowed(
+        "https://ada@supplier.example/x", "supplier.example")  # pragma: allowlist secret
+    assert not g.host_allowed(
+        "https://:pw@supplier.example/x", "supplier.example")  # pragma: allowlist secret
 
 
 def test_the_secret_check_catches_a_number_written_in_groups() -> None:
