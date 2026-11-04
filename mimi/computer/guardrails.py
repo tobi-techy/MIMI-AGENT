@@ -57,10 +57,17 @@ _CREDENTIAL_FIELD = re.compile(
     + r")s?(?![a-z0-9])", re.IGNORECASE)
 
 _EMAIL = re.compile(r"[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}")
-_PHONE = re.compile(r"(?<![\d])(?:\+?\d[\d\s().-]{8,}\d)(?![\d])")
+# A phone, by its shape and not merely by "digits and separators": a country
+# code, or the trunk zero a Lagos number starts with, then the digits. "digits
+# with separators" also matched an invoice id ("INV-2026-000123") and took away
+# the very thing an order read was opened for.
+_PHONE = re.compile(r"(?<![\d])(?:\+\d[\d\s().-]{7,15}|0\d[\d\s().-]{6,13})\d(?![\d])")
 _DIGITS = re.compile(r"(?<![\d])\d{12,}(?![\d])")
+# A card number, however its groups are written: 12 digits or more, each group
+# optionally separated. A price, an invoice id and a date are far below it.
+_GROUPED_DIGITS = re.compile(r"(?<![\d])\d(?:[\s._-]?\d){11,}(?![\d])")
 # What separates the groups of a number a person wrote: "4111 1111 1111 1111".
-_GROUPING = re.compile(r"[\s-]")
+_GROUPING = re.compile(r"[\s._-]")
 
 
 class GuardrailError(RuntimeError):
@@ -75,12 +82,14 @@ class GuardrailError(RuntimeError):
 def redact(text: str) -> str:
     """A step note with anything sensitive taken out.
 
-    Emails, phone numbers and long digit runs (a card number is 13 to 19
-    digits) are replaced. Prices stay: a task note may quote a price list.
+    Emails, phone numbers and card-like digit runs (a card number is 13 to 19
+    digits, however its groups are written) are replaced. Everything else stays:
+    a task note may quote a price list, and an order read is opened for the
+    invoice ids, so an id is never mistaken for a phone number.
     """
     out = _EMAIL.sub("[email]", text or "")
     out = _PHONE.sub("[number]", out)
-    out = _DIGITS.sub("[number]", out)
+    out = _GROUPED_DIGITS.sub("[number]", out)
     return out
 
 

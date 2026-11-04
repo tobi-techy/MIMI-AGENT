@@ -53,7 +53,7 @@ def test_host_allowed_takes_the_domain_and_its_subdomains_only() -> None:
 def test_host_allowed_refuses_a_url_that_carries_a_credential() -> None:
     """A username or password in the address is refused: the address may come
     from a model, and a session should never be handed a credential."""
-    # The addresses below are shaped like credentials on purpose: each is refused.
+    # These are shaped like credentials on purpose: each one is refused below.
     assert not g.host_allowed(
         "https://ada:pw@supplier.example/x", "supplier.example")  # pragma: allowlist secret
     assert not g.host_allowed(
@@ -67,9 +67,13 @@ def test_the_secret_check_catches_a_number_written_in_groups() -> None:
     must not be the thing that slips one past it."""
     assert g.looks_like_secret("4111 1111 1111 1111")
     assert g.looks_like_secret("4111-1111-1111-1111")
+    assert g.looks_like_secret("4111.1111.1111.1111")
+    assert g.looks_like_secret("4111_1111_1111_1111")
     assert g.looks_like_secret("4111111111111111")
-    # a price and a field a person fills are not card numbers
+    # a price, a date, an invoice id and a field a person fills are not cards
     assert not g.looks_like_secret("45000")
+    assert not g.looks_like_secret("2026-11-04")
+    assert not g.looks_like_secret("INV-2026-000123")
     assert not g.looks_like_secret("Ada Nwosu")
 
 
@@ -80,6 +84,19 @@ def test_redact_takes_out_emails_numbers_and_long_digit_runs() -> None:
     assert "4111111111111111" not in out
     # a price is not a secret and stays readable
     assert "45000" in g.redact("the price is 45000")
+
+
+def test_redact_leaves_an_order_id_alone_and_still_takes_a_phone() -> None:
+    """A phone is recognised by its shape, not by "digits with separators":
+    an order read is opened for the invoice ids, and those must survive."""
+    assert g.redact("INV-2026-000123") == "INV-2026-000123"
+    assert g.redact("order 2026-000123 shipped") == "order 2026-000123 shipped"
+    assert g.redact("SKU 000123") == "SKU 000123"
+    assert g.redact("the price is 45000") == "the price is 45000"
+    assert g.redact("call 0803 555 1234") == "call [number]"
+    assert g.redact("+234 803 555 1234") == "[number]"
+    assert g.redact("card 4111 1111 1111 1111") == "card [number]"
+    assert g.redact("card 4111.1111.1111.1111") == "card [number]"
 
 
 def test_classify_sees_a_login_wall_a_forbidden_page_and_a_plain_one() -> None:
