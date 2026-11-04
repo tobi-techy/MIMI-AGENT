@@ -78,6 +78,7 @@ old code), so `POLICY_VERSION` is unchanged and no recorded answer misses.
 | `proof.flag_payment` | proof | Flag a payment proof that looks wrong | ask | ask, hand_off |
 | `brand.send_email` | brand | Email a brand or bank | ask | ask, hand_off |
 | `plan.raise_allowance` | mimi | Raise today's model allowance | ask | ask, hand_off |
+| `plan.review_denied` | mimi | Look at a job the checks kept stopping | ask | ask, hand_off |
 
 Steps inside Mimi's own working (her plan, timers, handing work between
 helpers, telling or asking the owner, reads, skills) also pass through

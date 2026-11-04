@@ -85,7 +85,7 @@ to Brand and never through the model.
 | `via` | string | how the helper was picked: `rule`, `lexical`, `fast`, `model`, `mention`, `assign`, `handback`, `binding` |
 | `hop` | int | 0, or 1 after a hand-back |
 | `status` | string | `working`, `needs_you`, `done`, `handed_back`, `failed` |
-| `steps` | list | `{name, kind, status, ms, at}`; `kind` is `route`, `tool`, `model`, `reply`, `handback` or `code`; `status` is `ok`, `refused`, `held` (claims gate) or `failed`; `ms` is the step's own time |
+| `steps` | list | `{name, kind, status, ms, at}`; `kind` is `route`, `tool`, `model`, `reply`, `handback` or `code`; `status` is `ok`, `refused`, `held` (the claims gate, a breaker trip or the owner's stop) or `failed`; `ms` is the step's own time |
 | `started_at`, `finished_at` | string | ISO 8601 with zone |
 
 ```json
@@ -275,7 +275,9 @@ through Collector's own tiers (a firm one waits in approvals).
 `GET /v1/tasks` (owner key): `thread_id`, `helper`, `status`, `limit`
 (1 to 200, default 50). Newest first. `by_status` counts every task that
 matches `thread_id` and `helper`. A task whose approval still waits is
-`needs_you`; once the owner decides it, `done`.
+`needs_you`; once the owner decides it, `done`. A turn that asked one question
+and ended waiting for the answer is `needs_you` too, until that answer arrives
+in a later turn: the turn stopped on a person, so it is not `done`.
 
 ```json
 {

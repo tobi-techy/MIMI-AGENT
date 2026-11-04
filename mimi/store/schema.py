@@ -741,8 +741,221 @@ checkin_shops = sa.Table(
     sa.PrimaryKeyConstraint("tenant_id", "shop_id"),
 )
 
+# Computer tasks (RAI-326): one task, its steps and its artifacts. A task is a
+# goal, an approved domain and a code-built plan the owner approves once. No
+# credential, no card number and no page text is stored: a step keeps a redacted
+# note and the name of a screenshot artifact.
+computer_tasks = sa.Table(
+    "computer_tasks", metadata,
+    _tenant(),
+    sa.Column("task_id", sa.String(64), nullable=False),
+    sa.Column("goal", sa.Text(), nullable=False),
+    sa.Column("url", sa.String(2000), nullable=False, default=""),
+    sa.Column("domain", sa.String(255), nullable=False, default=""),
+    sa.Column("kind", sa.String(32), nullable=False, default="generic"),
+    sa.Column("status", sa.String(24), nullable=False, default="proposed"),
+    sa.Column("plan", sa.Text(), nullable=False, default="[]"),  # JSON list of steps
+    sa.Column("inputs", sa.Text(), nullable=False, default="{}"),  # JSON: owner values
+    sa.Column("limits", sa.Text(), nullable=False, default="{}"),  # JSON GuardLimits
+    sa.Column("engine", sa.String(40), nullable=False, default=""),
+    sa.Column("stop_reason", sa.String(32), nullable=False, default=""),
+    sa.Column("note", sa.Text(), nullable=False, default=""),
+    sa.Column("created_at", sa.String(40), nullable=False),
+    sa.Column("created_ts", sa.Float(), nullable=False),
+    sa.Column("started_at", sa.String(40), nullable=False, default=""),
+    sa.Column("finished_at", sa.String(40), nullable=False, default=""),
+    sa.PrimaryKeyConstraint("tenant_id", "task_id"),
+    sa.Index("ix_computer_tasks_created", "tenant_id", "created_ts"),
+)
+
+computer_steps = sa.Table(
+    "computer_steps", metadata,
+    _tenant(),
+    sa.Column("task_id", sa.String(64), nullable=False),
+    sa.Column("idx", sa.Integer(), nullable=False),
+    sa.Column("action", sa.String(32), nullable=False),
+    sa.Column("url", sa.String(2000), nullable=False, default=""),
+    sa.Column("note", sa.Text(), nullable=False, default=""),
+    sa.Column("screenshot", sa.String(120), nullable=False, default=""),
+    sa.Column("created_at", sa.String(40), nullable=False),
+    sa.PrimaryKeyConstraint("tenant_id", "task_id", "idx"),
+)
+
+computer_artifacts = sa.Table(
+    "computer_artifacts", metadata,
+    _tenant(),
+    sa.Column("task_id", sa.String(64), nullable=False),
+    sa.Column("name", sa.String(120), nullable=False),
+    sa.Column("kind", sa.String(16), nullable=False),
+    sa.Column("mime", sa.String(64), nullable=False, default=""),
+    sa.Column("size", sa.Integer(), nullable=False, default=0),
+    sa.Column("sha256", sa.String(64), nullable=False, default=""),
+    sa.Column("path", sa.String(500), nullable=False, default=""),
+    sa.Column("created_at", sa.String(40), nullable=False),
+    sa.PrimaryKeyConstraint("tenant_id", "task_id", "name"),
+)
+
+# ------------------------------------------------------------- returns
+# The returns ledger (feat/returns-and-exposure): a return opens from an
+# approved slow-stock pickup option, then drafted, approved, collected,
+# inspected, settled (or cancelled). Quantities and naira are computed in
+# code; the rep collects, because Mimi never moves stock. A settlement is a
+# ``return_credit`` approval the owner approves, applied to the shop's open
+# invoices, undoable (``credit_notes``). Alembic ``0017_returns_exposure``.
+
+returns = sa.Table(
+    "returns", metadata,
+    _tenant(),
+    sa.Column("return_id", sa.String(64), nullable=False),
+    sa.Column("shop_id", sa.String(64), nullable=False),
+    # slow_stock (opened from an approved pickup) | manual
+    sa.Column("source", sa.String(16), nullable=False, default="manual"),
+    sa.Column("approval_id", sa.String(64), nullable=True),
+    sa.Column("reason", sa.Text(), nullable=False, default=""),
+    # drafted | approved | collected | inspected | settled | cancelled
+    sa.Column("status", sa.String(16), nullable=False, default="drafted"),
+    sa.Column("value_drafted_kobo", sa.BigInteger(), nullable=False, default=0),
+    sa.Column("value_collected_kobo", sa.BigInteger(), nullable=False, default=0),
+    sa.Column("value_returned_kobo", sa.BigInteger(), nullable=False, default=0),
+    # Value of what came back able to sell again or go to the supplier.
+    sa.Column("recovered_kobo", sa.BigInteger(), nullable=False, default=0),
+    # The owner's configured pickup cost, and what the return saved or cost.
+    sa.Column("pickup_cost_kobo", sa.BigInteger(), nullable=True),
+    sa.Column("saving_kobo", sa.BigInteger(), nullable=True),
+    sa.Column("credit_kobo", sa.BigInteger(), nullable=True),
+    sa.Column("credit_approval_id", sa.String(64), nullable=True),
+    sa.Column("created_at", sa.String(40), nullable=False),
+    sa.Column("created_ts", sa.Float(), nullable=False),
+    sa.Column("updated_at", sa.String(40), nullable=False),
+    sa.PrimaryKeyConstraint("tenant_id", "return_id"),
+    sa.Index("ix_returns_tenant_status", "tenant_id", "status"),
+    sa.Index("ix_returns_tenant_shop", "tenant_id", "shop_id"),
+)
+
+return_lines = sa.Table(
+    "return_lines", metadata,
+    _tenant(),
+    sa.Column("return_id", sa.String(64), nullable=False),
+    sa.Column("line_no", sa.Integer(), nullable=False),
+    sa.Column("sku", sa.String(64), nullable=False),
+    sa.Column("item", sa.String(200), nullable=False, default=""),
+    sa.Column("unit", sa.String(32), nullable=False, default=""),
+    sa.Column("reason", sa.Text(), nullable=False, default=""),
+    sa.Column("quantity_drafted", sa.Integer(), nullable=False, default=0),
+    sa.Column("quantity_collected", sa.Integer(), nullable=True),
+    sa.Column("quantity_returned", sa.Integer(), nullable=True),
+    sa.Column("unit_price_kobo", sa.BigInteger(), nullable=False, default=0),
+    sa.Column("value_drafted_kobo", sa.BigInteger(), nullable=False, default=0),
+    sa.Column("value_returned_kobo", sa.BigInteger(), nullable=True),
+    # resellable | damaged | expired | "" (before inspection)
+    sa.Column("condition", sa.String(16), nullable=False, default=""),
+    # resell | write_off | return_to_supplier | "" (before inspection)
+    sa.Column("disposition", sa.String(24), nullable=False, default=""),
+    # Batch and expiry from the distributor's own invoice line (alembic 0015)
+    # when the note carried them; ``expiry_source`` says which.
+    sa.Column("expires_on", sa.String(10), nullable=True),
+    sa.Column("batch", sa.String(64), nullable=False, default=""),
+    sa.Column("expiry_source", sa.String(16), nullable=False, default="estimated"),
+    sa.PrimaryKeyConstraint("tenant_id", "return_id", "line_no"),
+)
+
+return_events = sa.Table(
+    "return_events", metadata,
+    _tenant(),
+    sa.Column("event_id", sa.String(64), nullable=False),
+    sa.Column("return_id", sa.String(64), nullable=False),
+    sa.Column("seq", sa.Integer(), nullable=False, default=0),
+    sa.Column("status", sa.String(16), nullable=False),
+    sa.Column("by", sa.String(100), nullable=False, default=""),
+    sa.Column("note", sa.Text(), nullable=False, default=""),
+    sa.Column("at", sa.String(40), nullable=False),
+    sa.PrimaryKeyConstraint("tenant_id", "event_id"),
+    sa.Index("ix_return_events_return", "tenant_id", "return_id", "seq"),
+)
+
+# The settlement credits actually applied: what came off the shop's invoices
+# (``applications``, oldest first) and what is held on the shop's account
+# because it owed nothing. Undo reverses both. One row per settle attempt.
+credit_notes = sa.Table(
+    "credit_notes", metadata,
+    _tenant(),
+    sa.Column("credit_id", sa.String(64), nullable=False),
+    sa.Column("return_id", sa.String(64), nullable=False),
+    sa.Column("shop_id", sa.String(64), nullable=False),
+    sa.Column("approval_id", sa.String(64), nullable=False, default=""),
+    sa.Column("amount_kobo", sa.BigInteger(), nullable=False),
+    sa.Column("applied_kobo", sa.BigInteger(), nullable=False, default=0),
+    sa.Column("on_account_kobo", sa.BigInteger(), nullable=False, default=0),
+    sa.Column("applications", sa.Text(), nullable=False, default="[]"),
+    sa.Column("applied_at", sa.String(40), nullable=False, default=""),
+    sa.Column("undone_at", sa.String(40), nullable=True),
+    sa.PrimaryKeyConstraint("tenant_id", "credit_id"),
+    sa.Index("ix_credit_notes_return", "tenant_id", "return_id"),
+)
+
+# The owner's configured pickup cost (what a collection trip costs him), so a
+# return can report what the pickup saved or cost. No row: not configured.
+returns_settings = sa.Table(
+    "returns_settings", metadata,
+    sa.Column("tenant_id", sa.String(64), primary_key=True),
+    sa.Column("pickup_cost_kobo", sa.BigInteger(), nullable=True),
+    sa.Column("updated_at", sa.String(40), nullable=False),
+)
+
+# ------------------------------------------------------------- routines
+# Scheduled routines (4 Nov 2026, ``mimi.api.routines``): a routine files its
+# findings on the owner's thread on a schedule in Africa/Lagos, without anyone
+# asking. ``routine_state`` holds one row per routine and tenant, plus the
+# kill switch row (routine ``*``: one row pauses every routine without a
+# deploy); it survives restarts. ``routine_runs`` claims one day per routine
+# with its primary key, so a restart or a second API process can never fire
+# the same routine twice on the same Lagos day. Alembic ``0018_routines``.
+
+routine_state = sa.Table(
+    "routine_state", metadata,
+    _tenant(),
+    sa.Column("routine", sa.String(64), nullable=False),  # the id, or "*" for all
+    sa.Column("paused", sa.Boolean(), nullable=False, default=False),
+    sa.Column("pause_reason", sa.Text(), nullable=False, default=""),
+    sa.Column("paused_at", sa.String(40), nullable=False, default=""),
+    sa.Column("last_run_day", sa.String(10), nullable=False, default=""),  # Africa/Lagos
+    sa.Column("last_run_at", sa.String(40), nullable=False, default=""),
+    # done | failed | skipped | missed (the read says it in words)
+    sa.Column("last_status", sa.String(16), nullable=False, default=""),
+    sa.Column("last_finding", sa.Text(), nullable=False, default=""),
+    # The shop the last finding is about, when it is about exactly one shop;
+    # "" when it is about several or the whole book (the console then shows
+    # the sentence as plain text, never a guessed link).
+    sa.Column("last_finding_shop_id", sa.String(64), nullable=False, default=""),
+    sa.Column("last_error", sa.Text(), nullable=False, default=""),
+    sa.Column("last_skip_day", sa.String(10), nullable=False, default=""),
+    sa.Column("last_missed_day", sa.String(10), nullable=False, default=""),
+    sa.Column("updated_at", sa.String(40), nullable=False),
+    sa.PrimaryKeyConstraint("tenant_id", "routine"),
+)
+
+routine_runs = sa.Table(
+    "routine_runs", metadata,
+    _tenant(),
+    sa.Column("routine", sa.String(64), nullable=False),
+    sa.Column("day", sa.String(10), nullable=False),  # Africa/Lagos: the claim key
+    # running | done | failed
+    sa.Column("status", sa.String(16), nullable=False),
+    # Which API process ran it (host, pid, thread): diagnostics only.
+    sa.Column("owner", sa.String(160), nullable=False, default=""),
+    sa.Column("started_at", sa.String(40), nullable=False),
+    sa.Column("started_ts", sa.Float(), nullable=False),
+    sa.Column("finished_at", sa.String(40), nullable=False, default=""),
+    sa.Column("findings", sa.Integer(), nullable=False, default=0),
+    sa.Column("result", sa.Text(), nullable=False, default=""),
+    sa.Column("error", sa.Text(), nullable=False, default=""),
+    sa.PrimaryKeyConstraint("tenant_id", "routine", "day"),
+)
+
 BOOK_TABLES = (reps, shops, consent_withheld, skus, deliveries, delivery_lines, receivables,
                payments, bank_feed, promises, disputes, proof_events, proof_asks)
 AGENT_TABLES = (threads, inbound_messages, turns, turn_attempts, messages, thread_events,
                 intents, approvals, credit_requests, spend, asked_once, kill_switches, history,
-                prefixes, artifacts, compactions)
+                prefixes, artifacts, compactions, computer_tasks, computer_steps,
+                computer_artifacts, returns, return_lines, return_events, credit_notes,
+                returns_settings, routine_state, routine_runs)

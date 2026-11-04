@@ -92,6 +92,7 @@ TOOL_NOUN: dict[str, str] = {
     "submit_credit_review": "the credit request", "flag_payment_proof": "the flagged payment",
     "record_payment_proof": "the payment proof", "draft_brand_email": "the brand email draft",
     "raise_daily_allowance": "today's allowance raise",
+    "review_denied_job": "the paused job review",
     "propose_credit_limit": "the credit limit change",
 }
 _DECIDED = re.compile(r"^The owner (approved|rejected) approvals item \S+ \((\w+) for ([\w-]+|the "

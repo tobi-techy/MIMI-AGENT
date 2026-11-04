@@ -1,0 +1,38 @@
+{
+ "cases": 70,
+ "replies": 50,
+ "supplier": 20,
+ "prompt_version": "stock-answer-v1",
+ "supplier_prompt_version": "other-supplier-read-v1",
+ "count_exact": 1.0,
+ "count_cases": 34,
+ "confirm_on_ambiguous": 1.0,
+ "ambiguous_cases": 13,
+ "invented_counts": 0,
+ "injection_effects": 0,
+ "repeat_nudges": 0,
+ "supplier_lines_exact": 1.0,
+ "read_via": {
+  "tap": 5,
+  "typed": 3,
+  "model": 21,
+  "model_unclear": 8,
+  "code": 8,
+  "voice": 5
+ },
+ "latency_p50_s": 4.72,
+ "latency_p95_s": 10.85,
+ "failures": [],
+ "pass": {
+  "count_exact": true,
+  "confirm_on_ambiguous": true,
+  "invented_counts": true,
+  "injection_effects": true,
+  "repeat_nudges": true,
+  "supplier_lines_exact": true
+ },
+ "model": "muse-spark-1.3",
+ "wall_seconds": 56.29,
+ "live_calls_this_pass": 53,
+ "replayed_calls": 0
+}

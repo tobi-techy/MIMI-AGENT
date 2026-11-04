@@ -26,6 +26,12 @@ live grant every read. `sync.py` pulls rows into `stock_counts` with
   `LIST_CUSTOMER_PAYMENTS`, `LIST_INVOICE_PAYMENTS`, `LIST_ITEMS` into
   shops, receivables, payments and SKUs (`zoho/mapping.py`: figures from
   the response only, naira to integer kobo in code, nothing invented).
+  Every books read carries `organization_id`: Zoho refuses a books read
+  without it, and Composio answers that refusal with an error payload
+  rather than an exception. So `zoho/replies.py` checks every reply for
+  `code: 0` before a row is mapped; anything else raises with what Zoho
+  said. A read that returns nothing means the book holds nothing, never
+  that the request was malformed.
   Writes, owner-approved only: `ADD_INVOICE_COMMENT` (undo
   `DELETE_INVOICE_COMMENT`), `UPDATE_CONTACT` (phone or note fields only;
   undo is the same action with the saved before values).
@@ -85,6 +91,27 @@ New tables (alembic `0010`): `connector_accounts` (no tokens),
 `MIMI_COMPOSIO_CALLBACK_URL`, `MIMI_ZOHO_REGION` (default `com`),
 `MIMI_COMPOSIO_VERSION_*`, `MIMI_CONNECTOR_STATE_SECRET`,
 `MONO_SECRET_KEY`, `MONO_API_BASE`.
+
+## The demo org and the one real write (beat 3)
+
+For the demo the owner connects his own Zoho Books org and Mimi records
+one real payment there on camera. Two settings bound that write, and
+both live in the Atlasflow dashboard:
+
+* `MIMI_ZOHO_LIVE_WRITE=1` lets an approved `zoho_payment` write to the
+  real org. Off, the write stays in Mimi's own fake books and the
+  owner text says so plainly.
+* `ZOHO_BOOKS_ORGANIZATION_ID` names the org (demo night: the org id the
+  owner gave). When it is set, the write uses it and only it; when it
+  is unset, the write refuses rather than guessing an org. A real
+  payment into the wrong org is the worst outcome, so there is no
+  "first org off the connection" fallback on the write path.
+* `MIMI_ZOHO_LIVE_WRITE_MAX` caps how many real writes one tenant may
+  make per Lagos day (default 1 when the switch is on; unset never
+  means unlimited). Fake and demo writes never count. At the cap the
+  approval records a plain refusal and stays visible: nothing was
+  written. To make another one the same day, set the cap to 2 and
+  approve again.
 
 ## Eval
 

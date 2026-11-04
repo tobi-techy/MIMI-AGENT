@@ -157,9 +157,19 @@ Every demo refusal (429 for a cap or too many sessions, 503 when paused)
 answers one shape. `detail` is kept for older clients; `demo_limit` is what
 the console shows (OpenAPI `DemoLimitError`):
 
+**The naira caps do not bound a browser task.** A computer task spends browser
+minutes, not model tokens, so it writes no kobo into `demo_usage`, which is
+what `gate` sums: adding the gate to the two computer routes gives the kill
+switch and nothing else, and a run that costs no naira will never push a
+visitor over a naira cap. The count of tasks is what bounds them, checked where
+a task is created (three a session, eight a visitor address a day), which is
+why `POST /v1/computer/tasks` answers `session_task_cap` or `visitor_task_cap`
+rather than a spend cap. `POST /v1/computer/tasks/{id}/approve` is gated but
+never counted, so resuming a paused task does not spend the allowance twice.
+
 | Field | Type | What |
 |---|---|---|
-| `code` | string | `visitor_daily_cap`, `global_daily_cap`, `paused`, `too_many_sessions` |
+| `code` | string | `visitor_daily_cap`, `global_daily_cap`, `paused`, `too_many_sessions`, `session_task_cap`, `visitor_task_cap` |
 | `scope` | string | `visitor` (this address), `global` (every visitor), `demo` (paused) |
 | `title` | string | a short heading: `You have used today's demo allowance` |
 | `message` | string | one plain sentence to show under it |
@@ -222,7 +232,7 @@ approval reads as 404. Keys are compared by SHA-256 in constant time; give
 | `POST /v1/events` | any | One system event from Go or the scheduler: `event_id` (the dedupe key), `kind` (`webhook` or `routine`), `name` (`delivery_completed`, `stock.weekly_check`, ...), `shop_id` (empty for the distributor), `received_at`, `simulated`. Queued as a turn on the shop's thread and routed by rule (202 with the turn id). The words the helper sees are written by code from the kind, name and shop; an event carries no free text. Another distributor's shop is 404 |
 | `GET /v1/turns/{turn_id}` | any | State, status, route, run id (the trace id) and replies; plus the handoff contract (`handoff`, `handback`, `card`, `chips`, `task_status`, [HANDOFFS.md](HANDOFFS.md)) |
 | `GET /v1/tasks` | owner | Each helper task (a turn Mimi handed to a helper), newest first, with its status (`working`, `needs_you`, `done`, `handed_back`, `failed`); `thread_id`, `helper`, `status`, `limit` ([HANDOFFS.md](HANDOFFS.md)) |
-| `GET /v1/threads` | owner | Threads, newest first: kind, shop, last message, pending approvals, and for the console `helper` / `helper_name` (newest routed turn's helper), `status` (`needs_you`: a pending approval or a parked turn; `running`: a turn queued or running; `done`) and a code-written `title` (never shop text). `limit`, `offset`, `kind` |
+| `GET /v1/threads` | owner | Threads, newest first: kind, shop, last message, pending approvals, and for the console `helper` / `helper_name` (newest routed turn's helper), `status` (`needs_you`: a pending approval or a turn waiting on a person, an ask or a park; `running`: a turn queued or running; `done`) and a code-written `title` (never shop text). `limit`, `offset`, `kind` |
 | `GET /v1/threads/{thread_id}` | owner | Messages (each with `voice`: the reply has a voice note at `/v1/messages/{id}/voice`, and `media`: in demo, the owner's console attachment at `/v1/messages/{id}/media`), reasoning steps (routing and every harness step: tool, tier, short line, model, cost, time; never the model's private text), turns, router state |
 | `GET /v1/shops` | owner | Shops with credit limit, outstanding and overdue (kobo and naira, summed in code), phone as last four digits |
 | `GET /v1/shops/{shop_id}` | owner | Plus open invoices, payments, promises, the last 10 deliveries with lines, disputes |
@@ -231,12 +241,25 @@ approval reads as 404. Keys are compared by SHA-256 in constant time; give
 | `POST /v1/approvals/{id}/reject` | owner | Nothing is sent; the helper is told |
 | `GET /v1/policy` | owner | The rulebook (RAI-323, docs/POLICY.md): each step with its behaviour (`act`, `act_if_preapproved`, `ask`, `hand_off`), default, allowed behaviours and who changed it; built-in stops listed `locked`; `editable` false in demo mode |
 | `PUT /v1/policy` | owner | Change rules: `{"rules": [{"action_type", "behaviour"}], "by"}`. 409 for a built-in stop, floor or unknown type (nothing changes); 403 for a demo session or demo mode. Logged with who; in force on the next turn |
+| `GET /v1/routines` | owner | The routine rail (4 Nov 2026, [ROUTINES.md](ROUTINES.md)): `{"routines": [{id, name, schedule, paused, paused_reason?, last_run_at, next_run_at, last_finding, last_finding_shop_id?}], "as_of"}`. `name`, `schedule` and `last_finding` are sentences written by code; `last_run_at` and `next_run_at` are ISO 8601 with an explicit zone (Africa/Lagos) and empty `last_run_at` when the routine has never run, with `last_finding` saying so. `paused_reason` is present only when paused. `last_finding_shop_id` is present only when the last finding is about exactly one shop; it is never guessed |
+| `POST /v1/routines/{id}/pause`, `POST /v1/routines/{id}/resume` | owner | `{id, name, paused}` plus an optional body `{reason?, by?}`. The switch is a row in the store, so it survives a restart and needs no deploy. `all` (or `*`) is the kill switch: one row stops every routine. Pausing a routine under the kill switch still answers `paused: true` |
+| `POST /v1/routines/{id}/run` | owner | Runs one routine now through the tick's own path (same finding, message and recording), for a demo or a check. Answers that routine's row exactly as `GET /v1/routines` reads it after the run. The same Lagos-day claim applies, so a second run today is 409 "It has already run today. It runs again tomorrow at 8:00 AM."; a paused routine is 409 with its reason. Neither sends anything. No model call |
 | `GET /v1/credit` | owner | Per-shop limit, outstanding, available, and credit requests from helpers' credit intents (Credit, RAI-271). Each limit row also has `over_limit`, `over_limit_by_kobo`, `over_limit_by_naira` (owes more than its limit, from code) |
 | `POST /v1/credit/{shop_id}/limit` | owner | The owner sets a shop's limit: `{amount_ngn, reason?}` (whole naira) answers `{shop_id, old_limit_ngn, new_limit_ngn, change_id}`. Recorded as a `limit_change` step on the shop's thread. 404 for another distributor's shop |
 | `POST /v1/credit/changes/{change_id}/undo` | owner | Puts the limit back: `{shop_id, old_limit_ngn, new_limit_ngn, change_id, undone: true}`; a second undo is 409 |
-| `POST /v1/approvals/{id}/undo` | owner | An approved `zoho_payment`: Zoho Books' delete path (`result.undo_available` turns false). An approved `credit_over_limit`: the old limit back. An approved `slow_stock`: the plan is off and the shop is told. 409 for anything else or a second undo |
+| `POST /v1/approvals/{id}/undo` | owner | An approved `zoho_payment`: Zoho Books' delete path (`result.undo_available` turns false). An approved `credit_over_limit`: the old limit back. An approved `slow_stock`: the plan is off, the shop is told, and a return opened from the pickup that collected nothing is cancelled. An approved `return_credit`: the credit is taken back off the invoices it touched by arithmetic, so it stays right after a bank payment or a morning roll moved them, and the return returns to `inspected` (`docs/RETURNS.md`). 409 for anything else or a second undo |
 | `GET /v1/stock/sell-through` | owner | Sales tracking (3 Nov 2026): per shop and product `sold_units` over `sold_over_days` (`sold_method` `counts`: two shop counts, count + delivered - later count; else `estimate`), `sold_value_ngn`, `proof_level` / `proof_grade` / `proof` ("estimated (shop count)"), `units_left` (estimate), `days_of_cover`, `days_to_expiry`, `expires_on`, `status` (`near_expiry`, `slow`, `low`, `ok`) and `status_word`, `watch` (a low-confidence slow reading: hint only), `confidence`, `at_risk_units` / `at_risk_ngn`, `last_count_on`, a plain `note` (names and ₦, no ids). `days` 7 to 90 (28), `shop_id`, `status` filters; top-level `counts` per status, `at_risk_ngn`, `at_risk_text`. Code only |
 | `POST /v1/stock/slow-check` | owner | Runs the weekly slow-stock check (also the `slow_stock_check` routine with `MIMI_DEMO_WIRING=1`): opens `slow_stock` approvals, one per shop and per item a week (a rerun opens nothing). `{week, opened, skipped, checked}` |
+| `GET /v1/returns` | owner | The returns ledger (3 Nov 2026, `docs/RETURNS.md`), newest first: `status` (`drafted`, `approved`, `collected`, `inspected`, `settled`, `cancelled`) and `shop_id` filters. Each return carries its lines (product, unit, drafted, collected and returned quantities, condition, disposition, and the invoice `batch`, `expires_on` and `expiry_source`), its reason, `value_drafted_kobo`, `value_returned_kobo`, `recovered_kobo`, the owner's `pickup_cost_kobo`, `saving_kobo` and `saving_basis`, its credit fields and its `transitions`. Names and ₦ only, no ids |
+| `GET /v1/returns/{return_id}` | owner | One return; 404 for another distributor's |
+| `POST /v1/returns` | owner | Opens a draft: `{approval_id}` from an approved `slow_stock` **pickup** (idempotent: the same pickup returns the one draft), or `{shop_id, reason, lines: [{sku, quantity, reason}]}`. Quantities and naira are summed in code. 409 when the pickup was not approved or its option is not a pickup |
+| `POST /v1/returns/{id}/approve` | owner | `drafted` to `approved` |
+| `POST /v1/returns/{id}/collect` | owner | `approved` to `collected`: the rep collected. `lines: [{line_no, quantity}]` may lower each line (never above the drafted quantity) |
+| `POST /v1/returns/{id}/inspect` | owner | `collected` to `inspected`: every line named with `quantity_returned`, `condition` (`resellable`, `damaged`, `expired`) and `disposition` (`resell`, `write_off`, `return_to_supplier`). 409 when more came back than was collected, or a line is missing |
+| `POST /v1/returns/{id}/settle` | owner | `inspected` drafts a pending `return_credit` approval: `{by?, amount_kobo?}` (default what came back; 409 above it). Settling again with the same amount hands back the waiting card; a different amount replaces it. Nothing changes until the owner approves it (`POST /v1/approvals/{id}/approve`), and it can be undone like a Zoho payment |
+| `POST /v1/returns/{id}/cancel` | owner | `drafted` or `approved` to `cancelled` |
+| `GET /v1/returns/settings`, `PUT /v1/returns/settings` | owner | The pickup cost `{pickup_cost_kobo}` a return reports against, so `saving_kobo` rests on a stated figure, not a guess |
+| `GET /v1/credit/exposure` | owner | Credit exposure per shop and in total, code only: `outstanding_kobo` and `overdue_kobo` (the money owed), the ageing bands (`current`, `days_1_30`, `days_31_60`, `days_over_60`) with their weights and per-shop `buckets`, the risk-weighted `exposure_kobo` (an assumption, always shown with its weights), `verified_paid_kobo` and `shown_not_counted_kobo` (only bank-verified payments count) and a defined `confidence` (`low`, `medium`, `high`). The `buckets` block defines the boundaries once, so no surface keeps its own copy |
 | `GET /v1/mentions` | owner | The console's @ picker: `{mentions: [{kind, id, name, subtitle, mention, assign_to}], total}`. `kind` is `helper`, `shop` or `rep`. `q` matches the start of a name or of any word in it (a leading `@` is ignored); `kinds` is a comma list (`shop`, `helper,rep`), empty for all; `limit` 1 to 200 (50). Helper rows carry `mention` (`@Collector`) and `assign_to` for `POST /v1/turns`; shop rows' `subtitle` is area and rep, rep rows' is their areas. A channel key is 403 |
 | `GET /v1/connectors` | owner | Connector toolkits (Zoho Books, Zoho CRM, Google Sheets, CSV/Excel, Mono soon) with their reads, writes and connections (RAI-277; `docs/CONNECTORS.md`) |
 | `POST /v1/connectors/{toolkit}/connect` | owner | Start the connect flow: body `{region}` for Zoho (`com`, `eu`, `in`, `cn`, `au`); returns `redirect_url` and a single-use `state`. Demo and offline runs return a fake redirect, never real OAuth |
@@ -278,7 +301,14 @@ behind `MIMI_DEMO_WIRING=1` (set in the Dockerfile, off in CI and `make check`).
   No match: the owner is told and nothing changes. No model call.
 * **Zoho write.** Approving a `zoho_payment` records it through
   `mimi/connectors/zoho/payments.py` (read back by reference, then one create);
-  `result` is `{zoho_payment_id, undo_available: true, demo}`. In demo mode, or
+  `result` is `{zoho_payment_id, undo_available: true, demo}`. A real write
+  first resolves the shop to its Zoho contact and to the seeded invoice
+  `MZ-<shop_id>` (`mimi.api.zoho_match`), and refuses with its reason when
+  either is missing or the invoice owes less than the payment applies. The
+  `reference_number` carries the approval id (`mimi-apr_<digest>`), so a
+  payment can be traced to the approval that made it and taken back out by
+  `scripts/seed_demo_zoho.py --reset`, which deletes only those and only
+  invoices the seed wrote. In demo mode, or
   without an active Zoho Books connection and `ZOHO_BOOKS_ORGANIZATION_ID`, the
   transport is `StoreZoho`: a deterministic fake that keeps its payments in
   `artifacts` and never calls Zoho. Mimi never moves money.
@@ -333,6 +363,53 @@ the audio from `GET /v1/messages/{message_id}/voice`. Off unless
 `MIMI_VOICE_REPLIES` names the distributor (`docs/VOICE.md`). Sending them on WhatsApp is the
 webhook adapter's job (the Meta app and test number exist; the send wiring
 is RAI-266's remaining piece).
+
+### Scheduled routines (4 Nov 2026, `mimi/api/routines.py`)
+
+Nothing used to run unless someone asked. Now two known routines fire on
+their own schedule in Africa/Lagos, from one daemon thread inside the API
+process (`MIMI_ROUTINES=1`, set in the Dockerfile; off in CI). Both are code
+over the book: **no model call and no kobo spent**. See
+[ROUTINES.md](ROUTINES.md).
+
+* **Morning briefing** (`morning_brief`, every day at 8:00 AM): the single
+  most overdue shop by name, days and ₦, on the owner's thread
+  (`kind: "morning_brief"`), with the fuller brief behind it.
+* **Aging scan** (`aging_scan`, every day at 8:30 AM): shops whose oldest
+  money has passed 60 days, and transfer alerts that never matched a payment
+  (`kind: "aging_scan"`). It reports only; nothing on the book changes.
+* **Once per Lagos day.** The claim is a row in `routine_runs` whose primary
+  key is (tenant, routine, day). A restart or a second API process loses the
+  insert and does nothing, so a routine can never fire twice on a day. A run
+  that dies half way is not repeated that day either.
+* **The owner can run one now.** `POST /v1/routines/{id}/run` goes through the
+  tick's own path and answers the routine's row after the run. It takes the
+  same day's claim, so a second run today, or the scheduled tick after a
+  manual run, is refused with a sentence and sends nothing. A paused routine
+  is refused with its reason.
+* **A late start catches up.** A tick at 9:00 still sends the 8:00 brief,
+  until 4 hours after the schedule (cut at Lagos midnight). The window is per
+  routine, so the 8:30 scan stays open half an hour longer than the 8:00
+  brief. After the window, a routine that has run before **and has not run
+  today** is recorded as missed once with words that state only that its time
+  passed; a routine that already ran today keeps its finding and stamp, and a
+  routine with no history is not a miss and its rail stays at "not run yet".
+  Neither borrows the current time or invents a cause.
+* **Pause is a row.** `POST /v1/routines/{id}/pause` sets it, `resume` clears
+  it; both survive a restart. `all` is the kill switch: one row pauses every
+  routine without a deploy. A paused routine records that it skipped the day
+  and why. The rail is empty, not "It has not run yet.", until a routine really
+  has: the empty timestamp says so once.
+* **One thread per process, one process per container.** `MIMI_WORKERS` adds
+  turn threads inside the process, not processes, so they share the one
+  scheduler. Several processes are still safe by the claim, but they each
+  tick; set `MIMI_ROUTINES=0` on a process that should not.
+* **No connection is held.** A tick opens a short-lived connection, does its
+  reads and writes, and closes it before waiting again; an idle scheduler
+  holds nothing on the pool.
+* **The demo kill switch stops it.** `MIMI_DEMO_KILL=1` starts no scheduler,
+  so routines stop with turns and sessions. `MIMI_ROUTINES=0` disables them
+  entirely in a process.
 
 ## Helpers hired (RAI-272)
 
@@ -566,6 +643,11 @@ asked-once topics, kill switches, history, pinned prefixes, artifacts).
 `SqlGo` reads the book exactly as `FakeGo` does (a test compares every port
 on all 40 shops). In production Go owns the book; `SqlGo` keeps the same
 ports so a real Go client can replace it.
+
+The returns ledger adds `returns`, `return_lines`, `return_events` (one row
+per lifecycle transition), `credit_notes` (every applied settlement credit,
+with the invoice applications it used, so an undo restores exactly what it
+changed) and `returns_settings` (the owner's pickup cost). Alembic `0016`.
 
 Phone numbers are stored only where the book needs them (shops, reps, the
 owner's numbers) and in a queued message until its turn is done; the API

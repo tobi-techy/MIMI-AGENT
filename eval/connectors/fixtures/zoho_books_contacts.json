@@ -2,6 +2,8 @@
  {
   "match": {},
   "reply": {
+   "code": 0,
+   "message": "success",
    "contacts": [
     {
      "contact_id": "zoho-shop-001",
@@ -65,6 +67,8 @@
    "organization_id": "org-coral-lane"
   },
   "reply": {
+   "code": 0,
+   "message": "success",
    "contacts": [
     {
      "contact_id": "zoho-shop-001",

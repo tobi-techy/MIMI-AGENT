@@ -12,7 +12,9 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     MIMI_SKILLS_DIR=/app/skills \
     MIMI_SKILL_DRAFTS_DIR=/data/skill-drafts \
     MIMI_FIXES_2026_10_30=1 \
-    MIMI_DEMO_WIRING=1
+    MIMI_DEMO_WIRING=1 \
+    MIMI_ROUTINES=1 \
+    COMPOSIO_CACHE_DIR=/data/.composio
 
 WORKDIR /app
 COPY pyproject.toml README.md LICENSE alembic.ini ./
@@ -20,8 +22,12 @@ COPY mimi ./mimi
 # Skills (RAI-314, used when MIMI_SKILLS=1): vetted folders, locked by hash.
 COPY skills ./skills
 COPY alembic ./alembic
-# connectors: the Composio SDK, so a real connect flow can run once COMPOSIO_API_KEY is set
-RUN pip install '.[postgres,connectors]' \
+# The computer extra is the browser driver the cloud session is reached with
+# (RAI-326): a remote session needs no browser binary, only the package.
+# The connectors extra is the Composio SDK and the Excel reader: without it
+# every shop-tool call fails with "the Composio package is not installed", in
+# production as well as locally, and the two-books read has nothing to read.
+RUN pip install '.[postgres,computer,connectors]' \
     && useradd --system --uid 10001 mimi \
     && mkdir -p /data && chown mimi /data
 

@@ -26,6 +26,10 @@ FIXTURES_DIR = Path(__file__).resolve().parent.parent.parent / "eval" / "connect
 class ComposioTransport:
     """Thin wrapper over the Composio SDK: allowlisted slugs only."""
 
+    #: The toolkit this transport speaks. The payment module refuses a
+    #: write through any other toolkit, so one ledger stays the ledger.
+    toolkit = "ZOHO_BOOKS"
+
     def __init__(self, settings: ConnectorSettings | None = None) -> None:
         self.settings = settings or ConnectorSettings.from_env()
         self._client: Any = None
@@ -38,6 +42,17 @@ class ComposioTransport:
                 raise ConnectorError(
                     "The Composio package is not installed.",
                     next_step="Install it with pip install -e '.[connectors]'.") from exc
+            except Exception as exc:
+                # The SDK raises at import time when its cache directory is not
+                # writable (``RuntimeError: Cache directory ... is not
+                # writable``), which an unguarded import turned into a 500 with
+                # no sentence. A connector that cannot start must refuse like
+                # any other failed read.
+                raise ConnectorError(
+                    "The Composio client could not start.", next_step=(
+                        "Set COMPOSIO_CACHE_DIR to a writable path and retry."
+                        if "Cache directory" in str(exc) else
+                        "Check the Composio settings and retry.")) from exc
             versions = {
                 "ZOHO_BOOKS": self.settings.version_zoho_books,
                 "ZOHO": self.settings.version_zoho,

@@ -57,8 +57,15 @@ def _shop_rows(conn: sa.Connection, tenant: str, shop_id: str | None = None) -> 
         sa.func.count().label("open_n"))
         .where(r.c.tenant_id == tenant, r.c.outstanding_kobo > 0)
         .group_by(r.c.shop_id).subquery())
-    q = (sa.select(s.shops, agg.c.outstanding, agg.c.overdue, agg.c.open_n)
+    acct = (sa.select(
+        s.credit_notes.c.shop_id,
+        sa.func.coalesce(sa.func.sum(s.credit_notes.c.on_account_kobo), 0).label("on_account"))
+        .where(s.credit_notes.c.tenant_id == tenant, s.credit_notes.c.undone_at.is_(None))
+        .group_by(s.credit_notes.c.shop_id).subquery())
+    q = (sa.select(s.shops, agg.c.outstanding, agg.c.overdue, agg.c.open_n,
+                   acct.c.on_account)
          .outerjoin(agg, agg.c.shop_id == s.shops.c.shop_id)
+         .outerjoin(acct, acct.c.shop_id == s.shops.c.shop_id)
          .where(s.shops.c.tenant_id == tenant).order_by(s.shops.c.shop_id))
     if shop_id is not None:
         q = q.where(s.shops.c.shop_id == shop_id)
@@ -68,6 +75,9 @@ def _shop_rows(conn: sa.Connection, tenant: str, shop_id: str | None = None) -> 
 def _shop_summary(row: Any, book: owed.ShopOwed | None = None) -> dict[str, Any]:
     out, over = int(row.outstanding or 0), int(row.overdue or 0)
     n_open = int(row.open_n or 0)
+    # What the shop holds on its account: a payment (or a return credit) bigger
+    # than it owed, recorded rather than dropped (mimi.store.on_account).
+    acct = int(getattr(row, "on_account", 0) or 0)
     if book is not None:
         # One definition of owed and overdue for every surface (mimi.owed).
         out, over, n_open = book.owed_kobo, book.overdue_kobo, book.open_invoices
@@ -79,6 +89,7 @@ def _shop_summary(row: Any, book: owed.ShopOwed | None = None) -> dict[str, Any]
         "credit_limit_naira": naira(int(row.credit_limit_kobo)),
         "outstanding_kobo": out, "outstanding_naira": naira(out),
         "overdue_kobo": over, "overdue_naira": naira(over),
+        "on_account_kobo": acct, "on_account_naira": naira(acct),
         "open_invoices": n_open, "simulated": bool(row.simulated),
         "credit_limit_ngn": ngn(int(row.credit_limit_kobo)), "outstanding_ngn": ngn(out),
         "overdue_ngn": ngn(over),
@@ -185,9 +196,9 @@ def _thread_summary(conn: sa.Connection, tenant: str, t: Any) -> dict[str, Any]:
         rep_id = t.thread_id.rsplit(":", 1)[-1]
         rep_name = str(conn.execute(sa.select(s.reps.c.name).where(
             s.reps.c.tenant_id == tenant, s.reps.c.rep_id == rep_id)).scalar() or "")
-    turns = [{"helper": r.helper, "skill": r.skill, "state": r.state}
+    turns = [{"helper": r.helper, "skill": r.skill, "state": r.state, "status": r.status}
              for r in conn.execute(sa.select(s.turns.c.helper, s.turns.c.skill,
-                                             s.turns.c.state).where(
+                                             s.turns.c.state, s.turns.c.status).where(
                  s.turns.c.tenant_id == tenant, s.turns.c.thread_id == t.thread_id)
                  .order_by(s.turns.c.created_ts, s.turns.c.turn_id))]
     meta = threadmeta.derive(kind=t.kind, thread_id=t.thread_id, shop_id=t.shop_id,
@@ -337,6 +348,7 @@ def list_tasks(engine: Engine, tenant: str, *, thread_id: str = "", helper: str 
 _ACTIVITY_STEP_TYPES = {
     "handoff": "route", "handback": "handback", "route": "route",
     "tool_called": "tool", "tool_result": "tool", "tool_refused": "tool",
+    "claim_blocked": "tool", "breaker_tripped": "tool", "owner_stop": "tool",
     "model_called": "model", "draft_proposed": "reply", "card_read": "code",
     "step_finished": "tool",
 }
@@ -367,7 +379,10 @@ def _activity_steps(conn: sa.Connection, tenant: str, turn_id: str) -> list[dict
         else:
             name = str(e.tool or "step")
             short = display.humanize(str(e.short or ""), names) or name.replace("_", " ")
-        st = "failed" if str(e.type) in ("tool_refused", "claim_blocked") else "ok"
+        st = "failed" if str(e.type) in ("tool_refused", "claim_blocked") else (
+            # A stop is not a success: the breaker trip and the owner's stop
+            # both read "held".
+            "held" if str(e.type) in ("breaker_tripped", "owner_stop") else "ok")
         out.append({"name": name, "kind": kind, "status": st, "short": short[:300],
                     "ms": round(float(e.duration_ms or 0.0), 3), "at": str(e.at)})
     return out
@@ -404,9 +419,10 @@ def list_activity(engine: Engine, tenant: str, *,
                 s.approvals.c.tenant_id == tenant, s.approvals.c.status == "pending")
             .group_by(s.approvals.c.turn_id))}
         names = display.names_for(conn, tenant)
-        shop_of = dict(conn.execute(sa.select(
-            s.threads.c.thread_id, s.threads.c.shop_id).where(
-                s.threads.c.tenant_id == tenant)).all())
+        shop_of: dict[str, str] = {
+            str(r[0]): str(r[1]) for r in conn.execute(sa.select(
+                s.threads.c.thread_id, s.threads.c.shop_id).where(
+                s.threads.c.tenant_id == tenant)).all()}
         out: list[dict[str, Any]] = []
         counts = {"running": 0, "waiting": 0, "done": 0}
         for r in rows:
@@ -469,6 +485,44 @@ def list_approvals(engine: Engine, tenant: str, *, status: str) -> dict[str, Any
 
 
 # ----------------------------------------------------------------- credit
+
+
+def exposure(engine: Engine, tenant: str) -> dict[str, Any]:
+    """Per shop and in total, aged and risk-weighted (feat/returns-and-exposure).
+
+    Only bank-verified payments count; a payment the shop reported is shown,
+    not counted. Code only, no model (``mimi.credit.exposure``)."""
+    from mimi.credit import exposure as ex
+
+    go = SqlGo(engine)
+    with engine.connect() as conn:
+        t = conn.execute(sa.select(s.tenants.c.live_date, s.tenants.c.live_day).where(
+            s.tenants.c.tenant_id == tenant)).first()
+        if t is None:
+            raise NotFound(tenant)
+        shops = list(conn.execute(sa.select(s.shops.c.shop_id, s.shops.c.name).where(
+            s.shops.c.tenant_id == tenant).order_by(s.shops.c.shop_id)))
+        pays = list(conn.execute(
+            sa.select(s.payments.c.shop_id, s.payments.c.payment_id, s.payments.c.day,
+                      s.payments.c.amount_kobo, s.payments.c.fake_alert,
+                      s.payments.c.proof_level, s.payments.c.proof_policy_version,
+                      s.payments.c.witnesses).where(s.payments.c.tenant_id == tenant)))
+    payment_rows = [{
+        "shop_id": p.shop_id, "payment_id": p.payment_id, "day": int(p.day),
+        "amount_kobo": 0 if p.fake_alert else int(p.amount_kobo),
+        "claimed_kobo": int(p.amount_kobo), "proof_level": p.proof_level,
+        "proof_policy_version": p.proof_policy_version, "witnesses": p.witnesses,
+    } for p in pays]
+    receivables = go.receivables(tenant, None)
+    as_of_day = int(t.live_day)
+    rows = []
+    for sh in shops:
+        recs = [r for r in receivables if r["shop_id"] == sh.shop_id]
+        mine = [p for p in payment_rows if p["shop_id"] == sh.shop_id]
+        rows.append(ex.shop_exposure(sh.shop_id, str(sh.name), recs, mine, as_of_day))
+    body = ex.exposure_summary(rows)
+    body["as_of"] = str(t.live_date)
+    return body
 
 
 def credit(engine: Engine, tenant: str) -> dict[str, Any]:

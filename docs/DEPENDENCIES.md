@@ -28,6 +28,7 @@ Optional extras:
 | `psycopg2-binary` | `postgres` | LGPL with exceptions (dynamic use only, unmodified) | only when the sim, alembic or the API store points at Postgres (the Docker image installs it) |
 | `composio` 0.15.0 (pinned) | `connectors` | Apache-2.0 (checked on PyPI, 1 Nov 2026) | `mimi/connectors/composio.py` only (the Composio transport; FakeComposio replays fixtures with no SDK). Imported only when `MIMI_CONNECTORS=composio` with `COMPOSIO_API_KEY` |
 | `openpyxl` 3.1.5 (pinned) | `connectors` | MIT | `mimi/connectors/csv/connector.py` only (Excel import; CSV is the standard library). Imported only when an Excel file arrives |
+| `playwright` >= 1.44 | `computer` | Apache-2.0 | `mimi/computer/cloud_browser.py` only, and only in the path that drives a browser session (`connect_over_cdp` to the session's CDP endpoint, screenshots, clicks, downloads). Imported lazily, so the API, the harness and the tests never import it, and no local browser binary is downloaded or needed for a remote session |
 
 Their transitive packages: `httpcore` (BSD-3-Clause), `h11` (MIT), `anyio`
 (MIT), `idna` (BSD-3-Clause), `certifi` (MPL-2.0), `pydantic-core` (MIT),
@@ -85,6 +86,18 @@ vision input for payment screenshots), `muse-spark-1.3-contributor`,
 `muse-voice-transcribe-1.0` and `sam-3.1` (shelf-photo segmentation over
 `POST /v1/responses`, USD 2.50 per 1,000 images), used under Meta's terms for
 the hackathon.
+
+The browser container for computer tasks (RAI-326) is a third-party service
+used under its terms: a real Chromium session per task, created over its REST
+API, driven over the session's CDP endpoint and released by us when the task
+ends. It also gives each session a signed live view link, which the console can
+show to the owner. The chosen provider is an implementation detail behind
+`mimi/computer/engine.py`'s `ComputerPort`: nothing in the API or the storage
+schema names it, and the engine is swapped by configuration
+(`MIMI_CLOUD_BROWSER_API_KEY`, `MIMI_CLOUD_BROWSER_BASE`). Only portal pages are
+read: no credential is ever typed, no card is ever entered, nothing is bought,
+sent or changed. The free tier is what is used: no proxies and no CAPTCHA
+solving, so bot-protected sites are out of scope rather than worked around.
 
 Spitch (`https://api.spitch.app/v1`), a third-party paid API, usage-based:
 speech to text (USD 0.00042 per second of audio) for voice notes, and text to

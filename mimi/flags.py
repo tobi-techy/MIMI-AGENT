@@ -49,3 +49,20 @@ def demo_wiring() -> bool:
     replies, so their recorded answers need the text as recorded). Off (CI, ``make check``) the recorded evals replay as
     recorded; the new endpoints and read fields need no switch."""
     return os.environ.get(WIRING_ENV, "").strip().lower() in ("1", "true", "yes", "on")
+
+
+ROUTINES_ENV = "MIMI_ROUTINES"
+
+
+def routines_enabled() -> bool:
+    """The in-process scheduler for known routines (4 Nov 2026).
+
+    ``MIMI_ROUTINES=1`` (set in the Dockerfile) starts one scheduler thread
+    inside the API process: the morning brief and the aging scan fire on their
+    own schedule in Africa/Lagos, with no model call (``mimi.api.routines``).
+    Off (CI, ``make check``): the routes and the tables still work and a test
+    calls ``tick`` by hand, but no thread starts, so a test's seeded book is
+    never written to behind its back. The owner's kill switch and each
+    routine's pause are rows in the store either way, so they survive a
+    restart and need no deploy."""
+    return os.environ.get(ROUTINES_ENV, "").strip().lower() in ("1", "true", "yes", "on")

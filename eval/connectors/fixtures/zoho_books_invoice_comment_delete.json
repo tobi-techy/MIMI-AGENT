@@ -4,12 +4,16 @@
    "comment_id": "comment-001"
   },
   "reply": {
+   "code": 0,
+   "message": "success",
    "success": true
   }
  },
  {
   "match": {},
   "reply": {
+   "code": 0,
+   "message": "success",
    "success": true
   }
  }

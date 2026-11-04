@@ -227,14 +227,30 @@ def via_of(layer: str, rule: str) -> Via:
     return "rule"
 
 
+# The statuses where a turn stopped on a person: an approval to give, a
+# question to answer, the day's cap to raise, a denial or a runaway stop to
+# look at. A timer park is deliberately not here: nobody is being waited on.
+# ``asked_question`` is here because the helper asked and the turn holds until
+# the answer arrives, so it is waiting, not done. ``stopped_runaway`` is here
+# because the safety layer stopped the run and wrote the owner a note
+# (``mimi.harness.durable`` groups the same statuses as ``ask_owner`` for the
+# job runtime, this one included).
+NEEDS_YOU_STATUSES = frozenset({
+    "parked_for_approval", "asked_to_clarify", "parked_budget", "steer_which_owner",
+    "stopped_denied", "asked_question", "stopped_runaway"})
+
+
 def task_status(state: str, status: str, *, pending_approvals: int = 0) -> TaskStatus:
-    """A turn's state and status as the helper's task status."""
+    """A turn's state and status as the helper's task status.
+
+    The one rule behind ``/v1/tasks``, ``/v1/activity`` and a thread's summary
+    (``mimi.api.threadmeta``), so the three cannot disagree about a turn that
+    is waiting on someone."""
     if state in ("queued", "leased"):
         return "working"
     if state == "failed" or status in ("failed",):
         return "failed"
-    if state == "parked" or pending_approvals > 0 or status in (
-            "parked_for_approval", "asked_to_clarify", "parked_budget", "steer_which_owner"):
+    if state == "parked" or pending_approvals > 0 or status in NEEDS_YOU_STATUSES:
         return "needs_you"
     if status.startswith("handed_back"):
         return "handed_back"
@@ -245,7 +261,8 @@ def task_status(state: str, status: str, *, pending_approvals: int = 0) -> TaskS
 
 
 _STEP_TYPES = {"tool_result": "tool", "tool_refused": "tool", "model_called": "model",
-               "claim_blocked": "tool", "draft_proposed": "reply"}
+               "claim_blocked": "tool", "draft_proposed": "reply", "breaker_tripped": "tool",
+               "owner_stop": "tool"}
 
 
 def steps_from_events(events: Iterable[Any], *, route_ms: float = 0.0,
@@ -263,6 +280,12 @@ def steps_from_events(events: Iterable[Any], *, route_ms: float = 0.0,
         if typ == "tool_refused":
             status = "refused"
         elif typ == "claim_blocked":
+            status = "held"
+        elif typ == "breaker_tripped":
+            # A stop is not a success: the trip event reads "held".
+            status = "held"
+        elif typ == "owner_stop":
+            # The owner's stop reads the same way.
             status = "held"
         name = getattr(e, "tool", "") or ("model" if kind == "model" else kind)
         at: Any = getattr(e, "at", None)

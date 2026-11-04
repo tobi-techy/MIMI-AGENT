@@ -55,7 +55,10 @@ def map_invoice(invoice: dict[str, Any]) -> dict[str, Any]:
     paid_kobo = naira_to_kobo(paid) if paid is not None else total - naira_to_kobo(v.get("balance", 0))
     return {
         "delivery_id": str(v.get("invoice_id") or v.get("invoice_number") or ""),
+        "invoice_id": str(v.get("invoice_id") or ""),
+        "invoice_number": str(v.get("invoice_number") or ""),
         "shop_id": str(v.get("customer_id") or ""),
+        "customer_name": str(v.get("customer_name") or ""),
         "due_on": str(v.get("due_date") or ""),
         "total_kobo": total,
         "paid_kobo": paid_kobo,

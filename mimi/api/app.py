@@ -13,9 +13,29 @@ Endpoints (all under ``/v1``, all but health need ``Authorization: Bearer``):
 * ``GET /v1/approvals``; ``POST /v1/approvals/{id}/approve`` and ``/reject``
   (owner key only).
 * ``GET /v1/credit``: limits and credit requests.
+* ``GET /v1/credit/exposure``: credit exposure per shop and in total, aged and
+  risk-weighted (the bands and weights come back with the figures).
+* ``GET /v1/returns``, ``GET /v1/returns/{id}``, ``POST /v1/returns`` and its
+  ``/approve``, ``/collect``, ``/inspect``, ``/settle`` and ``/cancel`` moves:
+  the returns ledger (drafted, approved, collected, inspected, settled,
+  cancelled). Settlement drafts a ``return_credit`` approval the owner
+  approves or undoes like a Zoho payment.
 * ``GET /v1/policy``, ``PUT /v1/policy``: the owner's rulebook (RAI-323);
   built-in stops are listed locked. Only an owner key changes it; a demo
   session, or demo mode, gets 403.
+* ``GET /v1/routines``, ``POST /v1/routines/{id}/pause`` and ``/resume``: what
+  runs on its own (the morning brief and the aging scan), with its schedule in
+  words, its last run and finding, and its pause switch. The switch is a row,
+  so it survives a restart; ``all`` is the kill switch (``mimi.api.routines``).
+  Owner key only.
+* ``POST /v1/computer/tasks``, ``GET /v1/computer/tasks``,
+  ``GET /v1/computer/tasks/{id}``, ``POST /v1/computer/tasks/{id}/approve``
+  and ``/stop``, ``GET /v1/computer/tasks/{id}/artifacts/{name}`` and
+  ``GET /v1/computer/kinds``: a task
+  for the browser container. Code builds the plan, the owner approves it once,
+  and the guardrails (domain allowlist, no credentials, no purchase or
+  messaging, budgets, immediate stop) are enforced in code (``mimi.computer``).
+  A running task carries a signed ``live_view_url`` to watch its session.
 * ``GET /v1/health``; ``GET /`` (liveness only: no database, no auth).
 * ``GET /v1/me``: the caller's tenant, role and mode.
 * ``POST /v1/demo/sessions``, ``POST /v1/demo/reset``: demo mode only
@@ -48,7 +68,8 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
 from mimi.api import connectors as cx
 from mimi.api import demo_wiring as dw
-from mimi.api import reads, sales
+from mimi.api import reads, returns, sales
+from mimi.api import routines as rt
 from mimi.api.agent import Agent, Conflict, NotFound
 from mimi.api.config import LOCALHOST_REGEX, ApiKey, Settings
 from mimi.api.demo import (
@@ -64,6 +85,13 @@ from mimi.api.media import MAX_BYTES
 from mimi.api.schemas import (
     ActivityList,
     ApprovalList,
+    BooksAgreementOut,
+    CollectIn,
+    ComputerKindList,
+    ComputerProposal,
+    ComputerTaskDetail,
+    ComputerTaskIn,
+    ComputerTaskList,
     ConnectorConnectIn,
     ConnectorConnectOut,
     ConnectorDetail,
@@ -78,13 +106,26 @@ from mimi.api.schemas import (
     DemoSessionOut,
     ErrorOut,
     EventIn,
+    ExposureOut,
     Health,
+    InspectIn,
     Liveness,
     MediaOut,
     MentionList,
     MeOut,
     PolicyIn,
     PolicyOut,
+    ReturnDecisionIn,
+    ReturnList,
+    ReturnOpenIn,
+    ReturnOut,
+    ReturnSettingsIn,
+    ReturnSettingsOut,
+    ReturnSettleIn,
+    RoutineList,
+    RoutineOut,
+    RoutinePauseIn,
+    RoutineToggleOut,
     SellThroughOut,
     ShopDetail,
     ShopList,
@@ -98,7 +139,10 @@ from mimi.api.schemas import (
 )
 from mimi.api.uploads import ConsoleUploads, UploadRefused
 from mimi.clock import wall, wall_utc
+from mimi.computer.service import ComputerService, Refused
+from mimi.computer.store import ComputerStore
 from mimi.connectors.base import ConnectorError
+from mimi.flags import routines_enabled
 from mimi.harness.go import CrossTenant
 from mimi.harness.inbound import Inbound, Media, Payload
 from mimi.harness.policy import PolicyLocked, owner_rules_on
@@ -119,16 +163,32 @@ _DEMO_ERRORS: dict[int | str, dict[str, Any]] = {
 
 
 def create_app(settings: Settings | None = None, agent: Agent | None = None, *,
-               workers: int | None = None) -> FastAPI:
+               workers: int | None = None,
+               computer: ComputerService | None = None) -> FastAPI:
     settings = settings or Settings.from_env()
     settings.check()
     if agent is None:
         agent = Agent.from_env(make_engine(settings.database_url), lease_s=settings.lease_s)
     n_workers = settings.workers if workers is None else workers
     stop = threading.Event()
+    # Routines (4 Nov 2026): one daemon thread per API process fires the
+    # morning brief and the aging scan on their Lagos schedule, with no model
+    # call. MIMI_ROUTINES=1 (the Dockerfile) starts it; the flag is off in CI so
+    # a test's seeded book is never written to behind its back. MIMI_WORKERS
+    # adds turn-worker threads, not processes, so they never each get a
+    # scheduler; if the platform ever runs several processes, the day's claim
+    # in routine_runs means only one fires (the rest tick and do nothing).
+    # MIMI_DEMO_KILL=1 starts no scheduler at all: the demo's kill switch stops
+    # every routine as well as every new turn and session. The pause and the
+    # per-routine kill switch are rows, not flags in this process.
+    scheduler = (rt.RoutineScheduler(agent.engine)
+                 if routines_enabled() and not (settings.demo_mode and settings.demo.killed)
+                 else None)
 
     @asynccontextmanager
     async def lifespan(_: FastAPI) -> AsyncIterator[None]:
+        if scheduler is not None:
+            scheduler.start()
         threads = [threading.Thread(target=agent.run_worker, args=(stop,), daemon=True,
                                     name=f"mimi-worker-{i}") for i in range(n_workers)]
         for t in threads:
@@ -137,6 +197,8 @@ def create_app(settings: Settings | None = None, agent: Agent | None = None, *,
             yield
         finally:
             stop.set()
+            if scheduler is not None:
+                scheduler.stop()
             for t in threads:
                 t.join(timeout=5)
 
@@ -147,11 +209,12 @@ def create_app(settings: Settings | None = None, agent: Agent | None = None, *,
                      "moves money. Demo data is synthetic; model calls are real."))
     app.state.agent = agent
     app.state.settings = settings
+    app.state.routines = scheduler
     app.add_middleware(
         CORSMiddleware, allow_origins=list(settings.cors_origins),
         allow_origin_regex=LOCALHOST_REGEX, allow_credentials=False,
         # DELETE: the console disconnects a tool (DELETE /v1/connectors/{id}).
-        allow_methods=["GET", "POST", "DELETE", "OPTIONS"],
+        allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
         allow_headers=["Authorization", "Content-Type"])
     engine = agent.engine
     uploads: ConsoleUploads | None = None
@@ -161,6 +224,12 @@ def create_app(settings: Settings | None = None, agent: Agent | None = None, *,
             if settings.demo_mode else None)
     app.state.demo = demo
     app.state.uploads = uploads
+    # Computer tasks: code-built plans run on a browser container under code
+    # guardrails. With no container configured a task is still proposed and
+    # approving it says so plainly, rather than pretending to run.
+    if computer is None:
+        computer = ComputerService(ComputerStore(engine))
+    app.state.computer = computer
 
     def auth(creds: Annotated[HTTPAuthorizationCredentials | None, Depends(_bearer)]
              ) -> ApiKey:
@@ -197,6 +266,18 @@ def create_app(settings: Settings | None = None, agent: Agent | None = None, *,
         """Demo caps and kill switch, checked before anything is queued."""
         if demo is not None:
             demo.gate(visitor(request, key))
+
+    def demo_gate_computer(request: Request, key: ApiKey) -> None:
+        """The demo caps, plus the bound on browser tasks.
+
+        A computer task spends browser minutes, not model tokens: it writes no
+        kobo, so the naira caps alone would never see it. The count of tasks
+        created is what bounds the demo, and it is checked nowhere else, so
+        resuming a paused task does not spend a visitor's allowance twice."""
+        if demo is not None:
+            who = visitor(request, key)
+            demo.gate(who)
+            demo.gate_computer_tasks(who, key.tenant_id)
 
     def reader(key: Annotated[ApiKey, Depends(auth)]) -> ApiKey:
         if key.role != "owner":
@@ -502,6 +583,28 @@ def create_app(settings: Settings | None = None, agent: Agent | None = None, *,
     def get_credit(key: Owner) -> dict[str, Any]:
         return reads.credit(engine, key.tenant_id)
 
+    @app.get("/v1/credit/exposure", response_model=ExposureOut, responses=_ERRORS,
+             summary="Credit exposure per shop and in total, aged and risk-weighted")
+    def get_credit_exposure(key: Owner) -> dict[str, Any]:
+        """What each shop owes and what it could cost, code only. The ageing bands
+        (current, 1 to 30, 31 to 60, over 60 days) and their weights are defined
+        once here and returned with the figures, so no surface keeps its own copy.
+        ``outstanding_kobo`` and ``overdue_kobo`` are the money owed;
+        ``exposure_kobo`` is the same money weighted up by age. Only bank-verified
+        payments count: a payment the shop reported is shown, not counted."""
+        return reads.exposure(engine, key.tenant_id)
+
+    @app.get("/v1/books/agreement", response_model=BooksAgreementOut,
+             responses=_ERRORS, summary="Two books: Mimi's outstanding against "
+             "Zoho Books', per shop and as a total")
+    def get_books_agreement(key: Owner) -> dict[str, Any]:
+        """The trust read: Mimi's outstanding against what Zoho Books
+        reports, the difference (Mimi minus Zoho), and which shops differ.
+        When Zoho is not connected every zoho and difference field is null
+        and ``note`` says so in plain words, so the screen shows no figure
+        rather than a zero."""
+        return dw.books_agreement(engine, key.tenant_id)
+
     @app.get("/v1/stock/sell-through", response_model=SellThroughOut, responses=_ERRORS,
              summary="Sell-through per shop and product: sold, days of cover, days to "
                      "expiry, status")
@@ -526,6 +629,86 @@ def create_app(settings: Settings | None = None, agent: Agent | None = None, *,
         same week opens nothing new. Nothing moves until the owner approves; Mimi
         never moves stock or money."""
         return sales.run_slow_check(engine, key.tenant_id)
+
+    # --------------------------------------------------- returns and exposure
+
+    @app.get("/v1/returns/settings", response_model=ReturnSettingsOut, responses=_ERRORS,
+             summary="The owner's pickup cost, so a return can report its outcome")
+    def get_return_settings(key: Owner) -> dict[str, Any]:
+        return returns.settings(engine, key.tenant_id)
+
+    @app.put("/v1/returns/settings", response_model=ReturnSettingsOut, responses=_ERRORS,
+             summary="Set what a collection trip costs (recorded)")
+    def put_return_settings(body: ReturnSettingsIn, key: Owner) -> dict[str, Any]:
+        return returns.set_settings(engine, key.tenant_id, body.pickup_cost_kobo)
+
+    @app.get("/v1/returns", response_model=ReturnList, responses=_ERRORS,
+             summary="Returns, newest first (status and shop filters)")
+    def get_returns(key: Owner,
+                    status: Annotated[str, Query(pattern=(
+                        "^(|drafted|approved|collected|inspected|settled|cancelled)$"))] = "",
+                    shop_id: Annotated[str, Query(max_length=64)] = "") -> dict[str, Any]:
+        return returns.list_returns(engine, key.tenant_id, status=status, shop_id=shop_id)
+
+    @app.post("/v1/returns", response_model=ReturnOut, status_code=201, responses=_ERRORS,
+              summary="Open a return from an approved pickup, or with named lines")
+    def post_return(body: ReturnOpenIn, key: Owner) -> dict[str, Any]:
+        """Opens a return draft and computes its quantities and naira in code. From
+        ``approval_id`` it must be an approved slow-stock pickup option; it is
+        idempotent, so opening twice returns the same draft. Otherwise name a shop
+        and its lines. Nothing moves: the rep collects, and every later step is
+        recorded."""
+        return returns.open_return(engine, key.tenant_id, approval_id=body.approval_id,
+                                   shop_id=body.shop_id, reason=body.reason,
+                                   lines=[ln.model_dump() for ln in body.lines])
+
+    @app.get("/v1/returns/{return_id}", response_model=ReturnOut, responses=_ERRORS,
+             summary="One return: lines, transitions and its credit")
+    def get_return(return_id: str, key: Owner) -> dict[str, Any]:
+        return returns.get_return(engine, key.tenant_id, return_id)
+
+    @app.post("/v1/returns/{return_id}/approve", response_model=ReturnOut,
+              responses=_ERRORS, summary="Owner approves the pickup: a return is approved")
+    def post_return_approve(return_id: str, key: Owner,
+                            body: ReturnDecisionIn | None = None) -> dict[str, Any]:
+        b = body or ReturnDecisionIn(by="owner", note="")
+        return returns.approve(engine, key.tenant_id, return_id, by=b.by, note=b.note)
+
+    @app.post("/v1/returns/{return_id}/collect", response_model=ReturnOut,
+              responses=_ERRORS, summary="The rep collected the goods (quantities recorded)")
+    def post_return_collect(return_id: str, key: Owner,
+                            body: CollectIn | None = None) -> dict[str, Any]:
+        b = body or CollectIn(by="rep", lines=[])
+        return returns.collect(engine, key.tenant_id, return_id, by=b.by,
+                               lines=[ln.model_dump() for ln in b.lines])
+
+    @app.post("/v1/returns/{return_id}/inspect", response_model=ReturnOut,
+              responses=_ERRORS, summary="Inspection: what came back, its condition "
+                                         "and the disposition per line")
+    def post_return_inspect(return_id: str, key: Owner,
+                            body: InspectIn | None = None) -> dict[str, Any]:
+        b = body or InspectIn(by="owner", lines=[])
+        return returns.inspect(engine, key.tenant_id, return_id, by=b.by,
+                               lines=[ln.model_dump() for ln in b.lines])
+
+    @app.post("/v1/returns/{return_id}/settle", response_model=ReturnOut,
+              responses=_ERRORS, summary="Draft the settlement credit for the owner")
+    def post_return_settle(return_id: str, key: Owner,
+                           body: ReturnSettleIn | None = None) -> dict[str, Any]:
+        """Opens a pending ``return_credit`` approval carrying what would come off
+        the shop's open invoices and what would sit on its account. Nothing changes
+        until the owner approves it (``POST /v1/approvals/{id}/approve``), exactly
+        like a Zoho payment, and it can be undone the same way."""
+        b = body or ReturnSettleIn(by="owner", amount_kobo=None)
+        return returns.settle(engine, key.tenant_id, return_id, amount_kobo=b.amount_kobo,
+                              by=b.by)
+
+    @app.post("/v1/returns/{return_id}/cancel", response_model=ReturnOut,
+              responses=_ERRORS, summary="Owner cancels a drafted return: nothing moves")
+    def post_return_cancel(return_id: str, key: Owner,
+                           body: ReturnDecisionIn | None = None) -> dict[str, Any]:
+        b = body or ReturnDecisionIn(by="owner", note="")
+        return returns.cancel(engine, key.tenant_id, return_id, by=b.by, note=b.note)
 
     @app.get("/v1/mentions", response_model=MentionList, responses=_ERRORS,
              summary="The owner's @ picker: helpers, shops and reps")
@@ -657,6 +840,156 @@ def create_app(settings: Settings | None = None, agent: Agent | None = None, *,
         except PolicyLocked as exc:
             raise HTTPException(409, str(exc)) from None
         return rules.view(key.tenant_id, editable=True)
+
+    # ------------------------------------------------------------- routines
+
+    def _routine_switch(routine_id: str, key: ApiKey, paused: bool,
+                        body: RoutinePauseIn | None) -> dict[str, Any]:
+        b = body or RoutinePauseIn(reason="", by="")
+        try:
+            return rt.set_paused(engine, key.tenant_id, routine_id, paused,
+                                 reason=b.reason, by=b.by)
+        except rt.UnknownRoutine:
+            raise HTTPException(404, "unknown routine") from None
+
+    @app.get("/v1/routines", response_model=RoutineList, responses=_ERRORS,
+             response_model_exclude_none=True,
+             summary="Scheduled routines: what runs on its own and what it found")
+    def get_routines(key: Owner) -> dict[str, Any]:
+        """The console's routine rail (4 Nov 2026): each routine's name and
+        schedule in words, when it last ran and runs next (Africa/Lagos ISO),
+        its pause switch, and what it found last time in one line. A routine
+        that has never run says so; it never borrows the current time. Times
+        are for the console to word itself."""
+        return rt.view(engine, key.tenant_id)
+
+    @app.post("/v1/routines/{routine_id}/run", response_model=RoutineOut,
+              responses=_ERRORS, response_model_exclude_none=True,
+              summary="Run one routine now, once for today's Lagos day")
+    def post_routine_run(routine_id: str, key: Owner) -> dict[str, Any]:
+        """Run one routine now, through the same path a tick uses: the same
+        finding sentence, the same shop link, the same message and recording.
+        The Lagos day's claim is the same too, so a second run today answers
+        409 with a sentence instead of sending twice; a paused routine answers
+        409 with its reason. Answers the routine's row as the rail reads it
+        after the run. No model call: the routines are code."""
+        try:
+            return rt.run_now(engine, key.tenant_id, routine_id)
+        except rt.UnknownRoutine:
+            raise HTTPException(404, "unknown routine") from None
+        except rt.RoutineRefused as exc:
+            raise HTTPException(409, str(exc)) from None
+
+    @app.post("/v1/routines/{routine_id}/pause", response_model=RoutineToggleOut,
+              responses=_ERRORS,
+              summary="Pause one routine (or all): the row survives a restart")
+    def post_routine_pause(routine_id: str, key: Owner,
+                           body: RoutinePauseIn | None = None) -> dict[str, Any]:
+        """Pause on the Lagos schedule until resumed. The switch is a row in
+        the store, so it survives a restart and needs no deploy. ``all`` (or
+        ``*``) is the kill switch: one row stops every routine at once. A
+        paused routine records that it skipped the day and why, in words."""
+        return _routine_switch(routine_id, key, True, body)
+
+    @app.post("/v1/routines/{routine_id}/resume", response_model=RoutineToggleOut,
+              responses=_ERRORS,
+              summary="Resume one routine (or all) from its next tick")
+    def post_routine_resume(routine_id: str, key: Owner,
+                            body: RoutinePauseIn | None = None) -> dict[str, Any]:
+        """Resume from the next tick. Resuming one routine while the kill
+        switch is on answers ``paused: true`` with that reason: the kill
+        switch is the truth, and the console should show it."""
+        return _routine_switch(routine_id, key, False, body)
+
+    # --------------------------------------------------- computer tasks
+
+    @app.get("/v1/computer/kinds", response_model=ComputerKindList, responses=_ERRORS,
+             summary="The task kinds, exactly as the code names them")
+    def get_computer_kinds(key: Owner) -> dict[str, Any]:
+        """The one place the kind strings are published, so the console and the
+        API never disagree: the value of ``kind`` is what goes in a proposal.
+        An empty list is never right here: the plans are code, not data."""
+        return {"kinds": computer.kinds()}
+
+    @app.post("/v1/computer/tasks", response_model=ComputerProposal, status_code=201,
+              responses=_ERRORS, summary="Propose a task for the browser container")
+    def post_computer_task(body: ComputerTaskIn, request: Request,
+                           key: Owner) -> dict[str, Any]:
+        """Build the plan in code from the goal, the url and the approved
+        domain, and return it for the owner to approve. Nothing runs yet and
+        nothing is charged. The plan is what will run: it never holds a step
+        that buys, pays, sends or changes settings, and never a credential."""
+        demo_gate_computer(request, key)
+        try:
+            return computer.propose(key.tenant_id, body.goal, body.url, body.domain,
+                                    body.kind, body.inputs)
+        except Refused as exc:
+            raise HTTPException(exc.status, exc.message) from None
+
+    @app.get("/v1/computer/tasks", response_model=ComputerTaskList, responses=_ERRORS,
+             summary="This distributor's computer tasks, newest first")
+    def get_computer_tasks(key: Owner) -> dict[str, Any]:
+        """An empty list is a valid answer: nothing is seeded."""
+        return {"tasks": computer.tasks(key.tenant_id)}
+
+    @app.get("/v1/computer/tasks/{task_id}", response_model=ComputerTaskDetail,
+             responses=_ERRORS,
+             summary="One task with its step log and artifacts")
+    def get_computer_task(task_id: str, key: Owner) -> dict[str, Any]:
+        view = computer.get(key.tenant_id, task_id)
+        if view is None:
+            raise HTTPException(404, "not found")
+        return view
+
+    @app.post("/v1/computer/tasks/{task_id}/approve", response_model=ComputerTaskDetail,
+              responses=_ERRORS, summary="Approve the plan once; it runs under the guardrails")
+    def post_computer_approve(task_id: str, request: Request,
+                              key: Owner) -> dict[str, Any]:
+        """The owner approves the whole task once. The run continues in the
+        background; poll this task for its steps. Approving a paused task
+        (a sign-in wall) runs the plan again in a fresh browser session: the
+        sign-in the owner did is not carried over, so a page that still asks
+        for one pauses the task again, with a fresh live view link. The resumed
+        run continues the task's own step log. One approval starts the run and
+        a second one in flight gets 409. The guardrails and the budgets are
+        code."""
+        demo_gate(request, key)
+        try:
+            computer.approve(key.tenant_id, task_id)
+        except Refused as exc:
+            raise HTTPException(exc.status, exc.message) from None
+        view = computer.get(key.tenant_id, task_id)
+        if view is None:
+            raise HTTPException(404, "not found")
+        return view
+
+    @app.post("/v1/computer/tasks/{task_id}/stop", response_model=ComputerTaskDetail,
+              responses=_ERRORS, summary="Stop the task now, and record why")
+    def post_computer_stop(task_id: str, key: Owner) -> dict[str, Any]:
+        """Accepts a task in any open state, including ``proposed``: that is how
+        the owner discards a task they decided not to run. It is recorded
+        ``stopped`` with ``stopped_by_owner``. A task that has already ended is
+        returned unchanged, rather than having its history rewritten."""
+        try:
+            return computer.stop(key.tenant_id, task_id)
+        except Refused as exc:
+            raise HTTPException(exc.status, exc.message) from None
+
+    @app.get("/v1/computer/tasks/{task_id}/artifacts/{name}",
+             summary="The bytes of one step screenshot or extracted text",
+             responses={**_ERRORS, 200: {"content": {"image/png": {}},
+                                         "description": "The artifact"}},
+             response_class=Response)
+    def get_computer_artifact(task_id: str, name: str, key: Owner) -> Response:
+        row = computer.artifact(key.tenant_id, task_id, name)
+        if row is None:
+            raise HTTPException(404, "not found")
+        try:
+            data = Path(row["path"]).read_bytes()
+        except OSError:
+            raise HTTPException(404, "not found") from None
+        return Response(content=data, media_type=row["mime"] or "application/octet-stream",
+                        headers={"Cache-Control": "no-store"})
 
     @app.get("/v1/health", response_model=Health)
     def health(response: Response) -> dict[str, Any]:

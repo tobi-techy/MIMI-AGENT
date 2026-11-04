@@ -4,12 +4,16 @@
    "phone": "+2340000000100"
   },
   "reply": {
+   "code": 0,
+   "message": "success",
    "contact_id": "zoho-shop-001"
   }
  },
  {
   "match": {},
   "reply": {
+   "code": 0,
+   "message": "success",
    "contact_id": "zoho-shop-001"
   }
  }
