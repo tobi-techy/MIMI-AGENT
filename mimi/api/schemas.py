@@ -863,6 +863,42 @@ class Liveness(_Out):
     status: Literal["ok"]
 
 
+class BooksShopAgreement(_Out):
+    """One shop's two-books comparison. ``difference_*`` is Mimi minus
+    Zoho: positive means Mimi's book is higher."""
+
+    shop_id: str
+    shop_name: str
+    mimi_outstanding_kobo: int
+    mimi_outstanding_naira: str
+    zoho_outstanding_kobo: int | None
+    zoho_outstanding_naira: str
+    difference_kobo: int | None
+    difference_naira: str
+
+
+class BooksAgreementTotal(_Out):
+    mimi_outstanding_kobo: int
+    mimi_outstanding_naira: str
+    zoho_outstanding_kobo: int | None
+    zoho_outstanding_naira: str
+    difference_kobo: int | None
+    difference_naira: str
+
+
+class BooksAgreementOut(_Out):
+    """The two-books trust read. When ``zoho_connected`` is false the
+    console shows no Zoho figure at all: every zoho and difference field
+    is null and ``note`` says why in plain words."""
+
+    as_of: str
+    zoho_connected: bool
+    currency: str
+    shops: list[BooksShopAgreement]
+    total: BooksAgreementTotal
+    note: str
+
+
 class DemoStatus(_Out):
     """A demo caller's session and today's spend against the caps (kobo)."""
 

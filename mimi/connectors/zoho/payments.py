@@ -18,8 +18,16 @@ come from Mimi's records (a Proof-verified payment); the idempotency key
 sits in reference_number plus a check for an existing payment with that
 reference before creating; the audit row carries the Zoho payment_id;
 exactly one call per approval (the proxy never retries: on timeout read
-back by reference before anything else). This records a payment the shop
-already made; Mimi still never moves money.
+back by reference before anything else); each invoice's applied amount
+is capped at what that invoice still owes, so an over-application can
+never leave this module as a number Zoho would accept. This records a
+payment the shop already made; Mimi still never moves money.
+
+Zoho Books is the only money system of record. A payment write to any
+other toolkit (BeatRoute, a CRM, a spreadsheet) is refused here, not
+left to discipline: two ledgers allocating the same cash is worse than
+no integration. ``record_payment`` and ``delete_payment`` take the
+connection through this module only; anything else raises.
 """
 
 from __future__ import annotations
@@ -33,6 +41,46 @@ from mimi.connectors.base import ConnectorError
 from mimi.connectors.composio import ComposioTransport, FakeComposio
 from mimi.connectors.types import WriteRecord
 from mimi.store.util import now_iso
+
+# Zoho data-centre API hosts, keyed by the MIMI_ZOHO_REGION code: the
+# Composio proxy has no server-side base for this toolkit, so a relative
+# endpoint resolves to nothing (Zoho answers code 5, "Invalid URL Passed").
+# Every proxy call therefore carries an absolute URL on the region's host.
+REGION_HOSTS = {
+    "com": "https://www.zohoapis.com",
+    "eu": "https://www.zohoapis.eu",
+    "in": "https://www.zohoapis.in",
+    "cn": "https://www.zohoapis.com.cn",
+    "au": "https://www.zohoapis.com.au",
+}
+
+
+# Zoho Books is the only ledger a payment may be written to. A write
+# addressed anywhere else (a CRM, a DMS, a sheet) allocates the same
+# cash twice across two systems that will silently disagree. Refused
+# here, in code, not by convention.
+PAYMENT_LEDGER_TOOLKIT = "ZOHO_BOOKS"
+
+
+def _refuse_foreign_ledger(transport: ComposioTransport | FakeComposio,
+                           connection_id: str) -> None:
+    toolkit = str(getattr(transport, "toolkit", "") or "").upper()
+    if toolkit and toolkit != PAYMENT_LEDGER_TOOLKIT:
+        raise ConnectorError(
+            f"Payments are recorded in Zoho Books only, not in {toolkit}.",
+            next_step="Record it in Zoho Books; read the other system instead.")
+    cid = str(connection_id or "")
+    if cid and not (cid.startswith("ca-") or cid.startswith("conn-")
+                    or cid.startswith("demo-") or cid.startswith("zp-")):
+        raise ConnectorError(
+            "That is not a Zoho Books connection, so no payment goes there.",
+            next_step="Use the tenant's Zoho Books connection.")
+
+
+def books_url(region: str, path: str, query: str) -> str:
+    """Absolute Zoho Books API URL: host from the region, then /books/v3."""
+    host = REGION_HOSTS.get((region or "").lower(), REGION_HOSTS["com"])
+    return f"{host}/books/v3{path}?{query}" if query else f"{host}/books/v3{path}"
 
 
 def reference_for(idempotency_key: str) -> str:
@@ -99,15 +147,30 @@ def create_body(payload: dict[str, Any], idempotency_key: str) -> dict[str, Any]
         raise ConnectorError(
             "The invoice amounts add up to more than the payment.",
             next_step="Cap each application at the invoice's open balance in code first.")
+    lines = []
+    for i in invoices:
+        if not isinstance(i, dict):
+            continue
+        want = int(i.get("amount_applied_kobo") or 0)
+        owes = i.get("invoice_outstanding_kobo")
+        owes_kobo = int(owes) if isinstance(owes, int) else None
+        # Second line of defence behind the caller-side cap (PR #61
+        # already capped ``applied_kobo`` at what each invoice owed):
+        # an application larger than the invoice owes is a wrong number
+        # we chose to send to a real ledger, so it never leaves here
+        # uncapped. It agrees with ``applied_kobo`` rather than
+        # recomputing it: the caller's split still applies unchanged
+        # when no outstanding figure rides along.
+        capped = min(want, owes_kobo) if owes_kobo is not None and owes_kobo >= 0 else want
+        lines.append({"invoice_id": i.get("invoice_id"),
+                      "amount_applied": round(capped / 100, 2)})
     return {
         "customer_id": payload.get("customer_id"),
         "payment_mode": payload.get("payment_mode") or "Bank Transfer",
         "amount": round(amount_kobo / 100, 2),
         "date": payload.get("date"),
         "reference_number": reference_for(idempotency_key),
-        "invoices": [{"invoice_id": i.get("invoice_id"),
-                      "amount_applied": round(int(i.get("amount_applied_kobo") or 0) / 100, 2)}
-                     for i in invoices if isinstance(i, dict)],
+        "invoices": lines,
     }
 
 
@@ -120,8 +183,10 @@ def create_payment(*, transport: ComposioTransport | FakeComposio, tenant_id: st
     if not approval_id:
         raise ConnectorError("A customer payment needs the owner's approval.",
                              next_step="Wait for the owner to approve it.")
+    _refuse_foreign_ledger(transport, connection_id)
     body = create_body(payload, idempotency_key)
-    endpoint = f"/customerpayments?organization_id={organization_id}"
+    endpoint = books_url(transport.settings.zoho_region,
+                         "/customerpayments", f"organization_id={organization_id}")
     reply = _proxy(transport, "customer_payment_create", method="POST",
                    endpoint=endpoint, connected_account_id=connection_id, body=body)
     # Zoho Books answers a create with ``{"code": 0, "payment": {...}}``.
@@ -141,8 +206,10 @@ def find_by_reference(*, transport: ComposioTransport | FakeComposio,
                       connection_id: str, organization_id: str,
                       reference: str) -> dict[str, Any] | None:
     """Read back a payment by its reference (the idempotency check)."""
-    endpoint = (f"/customerpayments?organization_id={organization_id}"
-                f"&reference_number={quote(reference, safe='')}")
+    _refuse_foreign_ledger(transport, connection_id)
+    endpoint = books_url(transport.settings.zoho_region, "/customerpayments",
+                         f"organization_id={organization_id}"
+                         f"&reference_number={quote(reference, safe='')}")
     reply = _proxy(transport, "customer_payment_search", method="GET",
                    endpoint=endpoint, connected_account_id=connection_id,
                    body={"reference_number": reference})
@@ -191,7 +258,10 @@ def delete_payment(*, transport: ComposioTransport | FakeComposio,
                    connection_id: str, organization_id: str,
                    payment_id: str) -> None:
     """Undo a created payment: delete it by its Zoho payment id."""
-    endpoint = f"/customerpayments/{payment_id}?organization_id={organization_id}"
+    _refuse_foreign_ledger(transport, connection_id)
+    endpoint = books_url(transport.settings.zoho_region,
+                         f"/customerpayments/{payment_id}",
+                         f"organization_id={organization_id}")
     _proxy(transport, "customer_payment_delete", method="DELETE",
            endpoint=endpoint, connected_account_id=connection_id,
            body={"payment_id": payment_id})
@@ -200,15 +270,32 @@ def delete_payment(*, transport: ComposioTransport | FakeComposio,
 def _proxy(transport: ComposioTransport | FakeComposio, name: str, *, method: str,
            endpoint: str, connected_account_id: str,
            body: dict[str, Any]) -> dict[str, Any]:
+    """One proxy call through the transport's own proxy path: the fake
+    replays its fixture, the live transport calls ``tools.proxy``."""
     if isinstance(transport, FakeComposio):
         return _checked(transport.proxy(name, method=method, endpoint=endpoint,
                                         connected_account_id=connected_account_id,
                                         body=body), status=200)
+    return _live_proxy(transport, name, method=method, endpoint=endpoint,
+                       connected_account_id=connected_account_id, body=body)
+
+
+def _live_proxy(transport: ComposioTransport | FakeComposio, name: str, *, method: str,
+                endpoint: str, connected_account_id: str,
+                body: dict[str, Any]) -> dict[str, Any]:
+    """The live proxy call. ``name`` is the fake's fixture key and is
+    unused live; the endpoint carries the absolute Books URL."""
+    del name
     from mimi.connectors.composio import _plain
 
     client = transport._sdk()
+    # Absolute Books URL on the region's host: the Composio proxy has no
+    # server-side base for this toolkit, so a relative endpoint resolves
+    # to nothing (PR #56 fixed this; main regressed it back to the
+    # ``zoho_books`` prefix in the merge). Kept here with the fix, where
+    # every proxy call in this module carries it.
     try:
-        res = client.tools.proxy(endpoint=f"zoho_books{endpoint}", method=method,  # type: ignore[arg-type]
+        res = client.tools.proxy(endpoint=endpoint, method=method,  # type: ignore[arg-type]
                                  body=body, connected_account_id=connected_account_id)
     except Exception as exc:
         raise ConnectorError(f"The Zoho Books payment call failed: {exc}",

@@ -18,6 +18,8 @@ from mimi.api.agent import Agent
 from mimi.api.app import create_app
 from mimi.api.config import Settings, parse_keys
 from mimi.clock import wall
+from mimi.connectors.base import ConnectorError
+from mimi.connectors.composio import FakeComposio
 from mimi.harness.gateway import ScriptedModel
 from mimi.harness.style import shop_text
 from mimi.store import ensure_schema, make_engine, seed_world
@@ -252,6 +254,263 @@ def test_order_within_limit_opens_nothing(env: dict[str, Any]) -> None:
     with env["engine"].begin() as conn:
         assert dw.after_intents(conn, A, [rec], {"ik-ord-2": "queued_for_approval"},
                                 wall()) == []
+
+
+# ------------------------------------------------------------ live switch and honesty
+
+
+def test_approve_without_switch_stays_in_mimi_book_only(env: dict[str, Any]) -> None:
+    """Switch off (CI default): the approved write lands in the fake books
+    and says so in plain words."""
+    approval = _approve_zoho(env)
+    res = approval["result"]
+    assert res["venue"] == "mimi-book-only" and res["demo"] is True
+    assert res["zoho_payment_id"].startswith("zfake_")
+    owner = env["c"].get(f"/v1/threads/{A}:owner", headers=h()).json()
+    done = [m for m in owner["messages"] if m["kind"] == "zoho_payment_recorded"]
+    assert done and "Mimi's own book only (Zoho Books is not connected)" in done[-1]["text"]
+
+
+def test_agreement_without_connection_shows_no_figures(env: dict[str, Any]) -> None:
+    """No Zoho connection: nulls, not zeros, plus a plain-words note."""
+    r = env["c"].get("/v1/books/agreement", headers=h())
+    assert r.status_code == 200, r.text
+    body = r.json()
+    assert body["zoho_connected"] is False and body["currency"] == "NGN"
+    assert "not connected" in body["note"] and body["total"]["zoho_outstanding_kobo"] is None
+    assert body["total"]["difference_kobo"] is None
+    assert all(s["zoho_outstanding_kobo"] is None for s in body["shops"])
+    assert all(s["difference_kobo"] is None for s in body["shops"])
+    assert body["as_of"] and body["total"]["mimi_outstanding_naira"].startswith("₦")
+
+
+class LiveLikeZoho(FakeComposio):
+    """A fake with a live transport's shape: absolute proxy endpoints and
+    canned organization/contact rows, so the live path runs with no network."""
+
+    def __init__(self, settings: Any = None, orgs: Any = None, contacts: Any = None,
+                 fail_create: bool = False) -> None:
+        from mimi.connectors.env import ConnectorSettings
+
+        super().__init__(settings or ConnectorSettings.from_env({"MIMI_ZOHO_REGION": "com"}))
+        self.org_rows = orgs if orgs is not None else [
+            {"organization_id": "org-live-1", "name": "Coral Organization"}]
+        self.contact_rows = contacts if contacts is not None else []
+        self.fail_create = fail_create
+        self.payments: dict[str, dict[str, Any]] = {}
+
+    def execute(self, action: str, **kw: Any) -> dict[str, Any]:
+        self.calls.append({"action": action, **kw})
+        if action == "zoho_books_organizations":
+            return {"organizations": [dict(r) for r in self.org_rows]}
+        if action == "zoho_books_contacts":
+            return {"contacts": [dict(r) for r in self.contact_rows]}
+        raise ConnectorError(f"No fixture for {action}.")
+
+    def proxy(self, name: str, **kw: Any) -> dict[str, Any]:
+        self.calls.append({"action": f"proxy:{name}", **kw})
+        endpoint = str(kw.get("endpoint") or "")
+        assert endpoint.startswith("https://"), f"relative proxy endpoint: {endpoint}"
+        body = dict(kw.get("body") or {})
+        if name == "customer_payment_search":
+            ref = str(body.get("reference_number", ""))
+            return {"code": 0, "customer_payments": [
+                p for p in self.payments.values() if p.get("reference_number") == ref]}
+        if name == "customer_payment_create":
+            if self.fail_create:
+                return {"code": 0, "payment": {}}
+            pid = f"zp-live-{len(self.payments) + 1:03d}"
+            self.payments[pid] = {**body, "payment_id": pid}
+            return {"code": 0, "payment": dict(self.payments[pid])}
+        if name == "customer_payment_delete":
+            pid = str(body.get("payment_id", ""))
+            if pid not in self.payments:
+                return {"code": 1002, "message": "payment not found"}
+            del self.payments[pid]
+            return {"code": 0, "message": "The payment has been deleted."}
+        return {"code": 9, "message": f"unknown call {name}"}
+
+
+def _seed_live_connection(engine: Any, tenant: str = A) -> None:
+    """One active ZOHO_BOOKS row, as the callback would have saved it."""
+    from mimi.store.util import now_iso
+
+    with engine.begin() as conn:
+        conn.execute(sa.insert(s.connector_accounts).values(
+            tenant_id=tenant, connection_id="conn-test-live", toolkit="ZOHO_BOOKS",
+            connected_account_id="ca-test-live-0001", region="com",
+            status="active", connected_at=now_iso(wall()), revoked_at=None))
+
+
+def _live_env(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("MIMI_CONNECTORS", "composio")
+    monkeypatch.setenv("COMPOSIO_API_KEY", "ck_test_live")  # pragma: allowlist secret
+    monkeypatch.setenv("MIMI_COMPOSIO_AUTH_ZOHO_BOOKS", "ac_test_books")
+    monkeypatch.setenv("MIMI_COMPOSIO_CALLBACK_URL", "https://demo.userail.money/x")
+    monkeypatch.setenv("MIMI_ZOHO_LIVE_WRITE", "1")
+
+
+def _live_transport(monkeypatch: pytest.MonkeyPatch, live: LiveLikeZoho) -> None:
+    """Patch reads onto the live-shaped fake, and force its proxy calls
+    through ``live.proxy`` too: ``record_payment`` reaches ``_live_proxy``
+    on the real class, whose ``client.tools`` no test fake provides. The
+    hook keeps the absolute-endpoint assertion inside ``live.proxy``."""
+    monkeypatch.setattr(dw.ComposioTransport, "execute", live.execute)
+    monkeypatch.setattr(
+        dw.zp, "_live_proxy",
+        lambda transport, name, **kw: live.proxy(name, **kw))
+
+
+def _approve_zoho(env: dict[str, Any]) -> dict[str, Any]:
+    """Run the screenshot-to-approval flow and approve the Zoho payment."""
+    c, engine = env["c"], env["engine"]
+    open_r = next(r for r in W.receivables if r.shop_id == "shop-008" and r.outstanding_kobo > 0)
+    amount = min(3_495_000, open_r.outstanding_kobo)
+    _likely(engine, "shop-008", amount, open_r.delivery_id)
+    r = c.post("/v1/events", json={"event_id": "bank-9", "kind": "webhook",
+                                   "name": "bank_credit", "shop_id": "shop-008",
+                                   "amount_ngn": amount // 100}, headers=h(CHAN))
+    t = run(env, r)
+    assert t["state"] == "done", t
+    zoho = next(a for a in c.get("/v1/approvals", headers=h()).json()["approvals"]
+                if a["kind"] == "zoho_payment")
+    ok = c.post(f"/v1/approvals/{zoho['approval_id']}/approve", headers=h())
+    assert ok.status_code == 200, ok.text
+    return ok.json()["approval"]
+
+
+
+def test_live_write_and_undo_through_live_like_transport(
+        env: dict[str, Any], monkeypatch: pytest.MonkeyPatch) -> None:
+    """Switch on with a live-shaped transport: exactly one create, one
+    delete, absolute endpoints, and the owner text names Zoho Books."""
+    _live_env(monkeypatch)
+    _seed_live_connection(env["engine"])
+    live = LiveLikeZoho()
+    _live_transport(monkeypatch, live)
+    approval = _approve_zoho(env)
+    res = approval["result"]
+    assert res["venue"] == "zoho" and res["demo"] is False
+    assert res["zoho_payment_id"].startswith("zp-live-")
+    creates = [c for c in live.calls if c.get("action") == "proxy:customer_payment_create"]
+    assert len(creates) == 1  # exactly one call per approval
+    owner = env["c"].get(f"/v1/threads/{A}:owner", headers=h()).json()
+    done = [m for m in owner["messages"] if m["kind"] == "zoho_payment_recorded"]
+    assert done and "in Zoho Books" in done[-1]["text"]
+    undo = env["c"].post(f"/v1/approvals/{approval['approval_id']}/undo", headers=h())
+    assert undo.status_code == 200, undo.text
+    assert undo.json()["approval"]["result"]["undo_available"] is False
+    deletes = [c for c in live.calls if c.get("action") == "proxy:customer_payment_delete"]
+    assert len(deletes) == 1  # the undo deletes exactly the payment created
+    assert deletes[0]["body"]["payment_id"] == res["zoho_payment_id"]
+
+
+def test_live_write_refused_when_org_unresolvable(
+        env: dict[str, Any], monkeypatch: pytest.MonkeyPatch) -> None:
+    """Live switch on but the org read is empty: no fake fallback, the
+    approval records the error and no owner text claims a Zoho write."""
+    _live_env(monkeypatch)
+    _seed_live_connection(env["engine"])
+    live = LiveLikeZoho(orgs=[])
+    _live_transport(monkeypatch, live)
+    approval = _approve_zoho(env)
+    res = approval["result"]
+    assert res["undo_available"] is False and "organization" in res["error"]
+    assert "zoho_payment_id" not in res
+    assert live.calls == [] or all(
+        c.get("action") == "zoho_books_organizations" for c in live.calls)
+    owner = env["c"].get(f"/v1/threads/{A}:owner", headers=h()).json()
+    assert not [m for m in owner["messages"]
+                if m["kind"] == "zoho_payment_recorded"
+                and "in Zoho Books" in m["text"]]
+
+
+def test_revoked_connection_writes_nothing_live(
+        env: dict[str, Any], monkeypatch: pytest.MonkeyPatch) -> None:
+    """Connection revoked mid-flow: back to the fake books, said plainly."""
+    from mimi.store.util import now_iso
+
+    _live_env(monkeypatch)
+    _seed_live_connection(env["engine"])
+    live = LiveLikeZoho()
+    _live_transport(monkeypatch, live)
+    with env["engine"].begin() as conn:
+        conn.execute(sa.update(s.connector_accounts).where(
+            s.connector_accounts.c.tenant_id == A).values(
+                status="revoked", revoked_at=now_iso(wall())))
+    approval = _approve_zoho(env)
+    assert approval["result"]["venue"] == "mimi-book-only"
+    assert not [c for c in live.calls if str(c.get("action", "")).startswith("proxy:")]
+
+
+def test_timeout_then_readback_finds_nothing_is_an_error(
+        env: dict[str, Any], monkeypatch: pytest.MonkeyPatch) -> None:
+    """A create that returns no payment id and no read-back row is an
+    error, not a silent miss: the approval says so and nothing is undone."""
+    _live_env(monkeypatch)
+    _seed_live_connection(env["engine"])
+    live = LiveLikeZoho(fail_create=True)
+    _live_transport(monkeypatch, live)
+    approval = _approve_zoho(env)
+    res = approval["result"]
+    assert res["undo_available"] is False and "error" in res
+    assert "zoho_payment_id" not in res
+
+
+def test_agreement_reports_drift_per_shop(
+        env: dict[str, Any], monkeypatch: pytest.MonkeyPatch) -> None:
+    """Live transport with contacts: per-shop figures, Mimi-minus-Zoho
+    differences, and null (never zero) for a shop Zoho does not know."""
+    _live_env(monkeypatch)
+    _seed_live_connection(env["engine"])
+    with env["engine"].connect() as conn:
+        mimi_total = sum(int(r.outstanding_kobo) for r in conn.execute(
+            sa.select(s.receivables).where(
+                s.receivables.c.tenant_id == A,
+                s.receivables.c.outstanding_kobo > 0)))
+    first_shop = next(iter(W.shops)).shop_id
+    live = LiveLikeZoho(contacts=[
+        {"contact_id": f"zc-{first_shop}", "contact_name": "Shop",
+         "outstanding_receivable_amount": 120.5},
+        {"contact_id": "zc-no-such-shop", "contact_name": "Ghost",
+         "outstanding_receivable_amount": 7.0}])
+    _live_transport(monkeypatch, live)
+    r = env["c"].get("/v1/books/agreement", headers=h())
+    assert r.status_code == 200, r.text
+    body = r.json()
+    assert body["zoho_connected"] is True and body["currency"] == "NGN"
+    by_shop = {x["shop_id"]: x for x in body["shops"]}
+    row = by_shop[first_shop]
+    assert row["mimi_outstanding_kobo"] > 0  # shop-001 carries the book's largest debt
+    assert row["zoho_outstanding_kobo"] == 12050
+    assert row["zoho_outstanding_naira"] == "₦120.50"
+    # Sign: difference is Mimi minus Zoho, positive means the book is higher.
+    assert row["difference_kobo"] == row["mimi_outstanding_kobo"] - 12050
+    assert row["difference_kobo"] > 0  # Mimi higher here, by construction
+    assert "zc-no-such-shop" not in by_shop  # unmapped contacts invent no Mimi shop
+    assert body["total"]["zoho_outstanding_kobo"] == 12050 + 700
+    assert body["total"]["mimi_outstanding_kobo"] == mimi_total
+    assert body["total"]["difference_kobo"] == mimi_total - (12050 + 700)
+    assert body["total"]["difference_kobo"] > 0  # Mimi higher in total too
+    assert body["total"]["zoho_outstanding_naira"].startswith("₦")
+
+
+def test_agreement_sign_flips_when_zoho_is_higher(
+        env: dict[str, Any], monkeypatch: pytest.MonkeyPatch) -> None:
+    """One shop where Zoho reports more than the book: the difference is
+    negative, and the naira string carries the minus, by code."""
+    _live_env(monkeypatch)
+    _seed_live_connection(env["engine"])
+    first_shop = next(iter(W.shops)).shop_id
+    live = LiveLikeZoho(contacts=[
+        {"contact_id": f"zc-{first_shop}", "contact_name": "Shop",
+         "outstanding_receivable_amount": 999999999.0}])
+    _live_transport(monkeypatch, live)
+    body = env["c"].get("/v1/books/agreement", headers=h()).json()
+    row = {x["shop_id"]: x for x in body["shops"]}[first_shop]
+    assert row["difference_kobo"] == row["mimi_outstanding_kobo"] - 99999999900
+    assert row["difference_kobo"] < 0  # Zoho higher here
+    assert row["difference_naira"].startswith("-₦")
 
 
 # ------------------------------------------------------------ shop text

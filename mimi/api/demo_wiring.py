@@ -40,7 +40,7 @@ from mimi import owed
 from mimi.api.agent import Conflict, NotFound
 from mimi.clock import wall
 from mimi.connectors.base import ConnectorError
-from mimi.connectors.composio import FakeComposio
+from mimi.connectors.composio import ComposioTransport, FakeComposio
 from mimi.connectors.zoho import payments as zp
 from mimi.provenance import parse_witnesses, payment_stamp, proof_word
 from mimi.store import invoices as invoice_reads
@@ -55,6 +55,20 @@ OVER_LIMIT_KIND = "credit_over_limit"
 # this same approve/undo path, so the card behaves exactly like a Zoho payment.
 RETURN_CREDIT_KIND = "return_credit"
 WIRING_KINDS = (ZOHO_KIND, OVER_LIMIT_KIND, RETURN_CREDIT_KIND)
+
+# One explicit switch for a real Zoho Books write. ``MIMI_ZOHO_LIVE_WRITE=1``
+# lets ``_zoho`` return the real Composio transport when the tenant has an
+# active ZOHO_BOOKS connection; off (CI, offline, and every run until the
+# owner says GO REAL) the write stays in the store's fake Zoho and nothing
+# else changes. The switch never auto-approves, never retries, and never
+# widens what may be written: it only chooses where an approved write lands.
+ZOHO_LIVE_WRITE_ENV = "MIMI_ZOHO_LIVE_WRITE"
+
+
+def zoho_live_write() -> bool:
+    """True only when the owner switched on real Zoho Books writes."""
+    return os.environ.get(ZOHO_LIVE_WRITE_ENV, "").strip().lower() in (
+        "1", "true", "yes", "on")
 
 # The demo's words for the stored proof levels.
 PROOF_GRADE = {"verified": "verified", "likely": "estimated", "estimated": "unverified"}
@@ -519,21 +533,54 @@ class StoreZoho(FakeComposio):
         return {"code": 9, "message": f"unknown call {name}"}
 
 
-def _zoho(engine: Engine, tenant: str, demo_mode: bool) -> tuple[Any, str, str, bool]:
-    """(transport, connection id, organization id, is_fake). Live only with an
-    active Zoho Books connection, an organization id and outside demo mode."""
-    if not demo_mode:
-        with engine.connect() as conn:
-            acct = conn.execute(sa.select(s.connector_accounts).where(
-                s.connector_accounts.c.tenant_id == tenant,
-                s.connector_accounts.c.toolkit == "ZOHO_BOOKS",
-                s.connector_accounts.c.status == "active")).first()
-        org = os.environ.get("ZOHO_BOOKS_ORGANIZATION_ID", "").strip()
-        if acct is not None and org:
-            from mimi.connectors.composio import ComposioTransport
+def _zoho(engine: Engine, tenant: str, demo_mode: bool,
+          transport: Any | None = None) -> tuple[Any, str, str, bool]:
+    """(transport, connected account id, organization id, is_fake).
 
-            return ComposioTransport(), str(acct.connection_id), org, False
+    The write goes to the real Zoho Books account only when the owner
+    switched it on (``MIMI_ZOHO_LIVE_WRITE=1``) and the tenant has an
+    active ZOHO_BOOKS connection on a live transport. Otherwise the
+    tenant's write stays in the store's fake Zoho (sample data).
+    ``demo_mode`` is kept for callers; it no longer changes the path.
+
+    When a live write was asked for but the organization cannot be
+    resolved, this raises instead of falling back to the fake books: a
+    real tenant must never silently show demo numbers, and the approval
+    result must say plainly where the payment landed."""
+    del demo_mode
+    from mimi.connectors.env import ConnectorSettings
+
+    with engine.connect() as conn:
+        acct = conn.execute(sa.select(s.connector_accounts).where(
+            s.connector_accounts.c.tenant_id == tenant,
+            s.connector_accounts.c.toolkit == "ZOHO_BOOKS",
+            s.connector_accounts.c.status == "active")).first()
+    if acct is not None and ConnectorSettings.from_env().live and zoho_live_write():
+        transport = transport or ComposioTransport()
+        # Composio addresses the account by its own id, not our connection id.
+        account = str(acct.connected_account_id or acct.connection_id)
+        org = os.environ.get("ZOHO_BOOKS_ORGANIZATION_ID", "").strip() or _zoho_org(transport, tenant, account)
+        if not org:
+            raise ConnectorError(
+                "Zoho Books is connected but gave no organization, so the "
+                "payment was not recorded anywhere.",
+                next_step="Reconnect Zoho Books from Settings, then approve again.")
+        return transport, account, org, False
     return StoreZoho(engine, tenant), "demo-zoho", "demo-org", True
+    return StoreZoho(engine, tenant), "demo-zoho", "demo-org", True
+
+
+def _zoho_org(transport: Any, tenant: str, account: str) -> str:
+    """The connected Zoho Books account's first organization id ('' when it
+    has none or the read fails), so each distributor writes to its own books."""
+    from mimi.connectors.zoho.books import ZohoBooksConnector
+
+    try:
+        rows = ZohoBooksConnector(transport, tenant_id=tenant, connection_id=account).read(
+            "zoho_books_organizations").rows
+    except ConnectorError:
+        return ""
+    return str(rows[0].values.get("organization_id") or "") if rows else ""
 
 
 def _set_payload(conn: sa.Connection, tenant: str, approval_id: str,
@@ -544,13 +591,23 @@ def _set_payload(conn: sa.Connection, tenant: str, approval_id: str,
 
 
 def on_approved(engine: Engine, tenant: str, a: dict[str, Any], *,
-                demo_mode: bool) -> None:
+                demo_mode: bool, transport: Any | None = None) -> None:
     """Run the code action an approved wiring approval stands for."""
     payload = dict(a.get("payload") or {})
     kind = payload.get("kind")
     now = wall()
     if kind == ZOHO_KIND:
-        transport, conn_id, org, fake = _zoho(engine, tenant, demo_mode)
+        try:
+            transport, conn_id, org, fake = _zoho(engine, tenant, demo_mode, transport)
+        except ConnectorError as exc:
+            # Live was asked for but the tenant has no usable org (or the
+            # org read failed): nothing is recorded anywhere, and the
+            # approval says so. Never fall back to demo books for a tenant
+            # that asked for the real ledger.
+            payload["result"] = {"error": str(exc), "undo_available": False, "demo": False}
+            with engine.begin() as conn:
+                _set_payload(conn, tenant, a["approval_id"], payload)
+            return
         try:
             res = zp.record_payment(transport=transport, tenant_id=tenant,
                                     connection_id=conn_id, organization_id=org,
@@ -563,14 +620,17 @@ def on_approved(engine: Engine, tenant: str, a: dict[str, Any], *,
                 _set_payload(conn, tenant, a["approval_id"], payload)
             return
         payload["result"] = {"zoho_payment_id": res["payment_id"], "undo_available": True,
-                             "demo": fake}
+                             "demo": fake,
+                             "venue": "zoho" if not fake else "mimi-book-only"}
         with engine.begin() as conn:
             _set_payload(conn, tenant, a["approval_id"], payload)
+            where = ("in Zoho Books" if not fake
+                     else "in Mimi's own book only (Zoho Books is not connected)")
             _say(conn, tenant, _owner_thread(conn, tenant),
                  key=f"zoho:{a['approval_id']}:done", channel="owner_console", shop_id="",
                  kind="zoho_payment_recorded", now=now,
                  text=(f"Recorded {payload['shop_name']}'s "
-                       f"{owed.naira(int(payload['amount_kobo']))} payment in Zoho Books"
+                       f"{owed.naira(int(payload['amount_kobo']))} payment {where}"
                        + (f" against {payload['invoice_number']}"
                           if payload.get("invoice_number") else "")
                        + ". You can undo it."))
@@ -591,7 +651,7 @@ def on_approved(engine: Engine, tenant: str, a: dict[str, Any], *,
 
 
 def undo_approval(engine: Engine, tenant: str, approval_id: str, *,
-                  demo_mode: bool) -> None:
+                  demo_mode: bool, transport: Any | None = None) -> None:
     with engine.connect() as conn:
         a = conn.execute(sa.select(s.approvals).where(
             s.approvals.c.tenant_id == tenant, s.approvals.c.approval_id == approval_id)).first()
@@ -620,7 +680,11 @@ def undo_approval(engine: Engine, tenant: str, approval_id: str, *,
         raise Conflict("only an approved Zoho payment or limit change can be undone")
     if not res.get("undo_available"):
         raise Conflict("this Zoho payment was already undone")
-    transport, conn_id, org, _fake = _zoho(engine, tenant, demo_mode)
+    venue = str(res.get("venue") or ("mimi-book-only" if res.get("demo") else "zoho"))
+    try:
+        transport, conn_id, org, _fake = _zoho(engine, tenant, demo_mode, transport)
+    except ConnectorError as exc:
+        raise Conflict(f"Zoho did not undo it: {exc}") from exc
     try:
         zp.delete_payment(transport=transport, connection_id=conn_id, organization_id=org,
                           payment_id=str(res["zoho_payment_id"]))
@@ -630,10 +694,144 @@ def undo_approval(engine: Engine, tenant: str, approval_id: str, *,
     payload["result"] = {**res, "undo_available": False, "undone_at": now_iso(now)}
     with engine.begin() as conn:
         _set_payload(conn, tenant, approval_id, payload)
+        where = ("in Zoho Books" if venue == "zoho"
+                 else "in Mimi's own book (it never reached Zoho Books)")
         _say(conn, tenant, _owner_thread(conn, tenant), key=f"zoho:{approval_id}:undo",
              channel="owner_console", shop_id="", kind="zoho_payment_undone", now=now,
              text=(f"Undone: {payload.get('shop_name', 'the shop')}'s payment is no longer "
-                   "in Zoho Books."))
+                   f"{where}."))
+
+
+# ------------------------------------------------------------ two books agreement
+
+
+def books_agreement(engine: Engine, tenant: str,
+                    transport: Any | None = None) -> dict[str, Any]:
+    """Mimi's outstanding against Zoho Books', per shop and as a total.
+
+    Sign convention, written down once: ``difference`` is Mimi minus
+    Zoho. Positive means Mimi's book is higher; negative means Zoho
+    reports more. A shop Mimi knows but Zoho
+    does not is ``zoho_outstanding_kobo: null``, never zero: zero would
+    read as "this shop owes nothing", which is a lie about money. When
+    Zoho is not connected, every zoho and difference field is null and
+    ``note`` says so plainly, so the console shows no figure at all.
+    """
+    from mimi.connectors.env import ConnectorSettings
+
+    shops: dict[str, dict[str, Any]] = {}
+    names: dict[str, str] = {}
+    with engine.connect() as conn:
+        for row in conn.execute(sa.select(s.shops).where(
+                s.shops.c.tenant_id == tenant)):
+            names[str(row.shop_id)] = str(row.name or row.shop_id)
+        for row in conn.execute(sa.select(s.receivables).where(
+                s.receivables.c.tenant_id == tenant,
+                s.receivables.c.outstanding_kobo > 0)):
+            sid = str(row.shop_id)
+            shops.setdefault(sid, {"shop_id": sid, "mimi_kobo": 0})
+            shops[sid]["mimi_kobo"] += int(row.outstanding_kobo)
+    if not (ConnectorSettings.from_env().live and _zoho_connected(engine, tenant)):
+        return _agreement(False, shops, names, {}, "Zoho Books is not connected, "
+                         "so the comparison cannot be made.")
+    account, org = _zoho_account_org(engine, tenant, transport)
+    try:
+        zoho = _zoho_outstanding(tenant, account, org, transport)
+    except ConnectorError as exc:
+        return _agreement(False, shops, names, {},
+                          f"Zoho Books could not be read ({exc}); no comparison was made.")
+    return _agreement(True, shops, names, zoho, "")
+
+
+def _zoho_connected(engine: Engine, tenant: str) -> bool:
+    with engine.connect() as conn:
+        return conn.execute(sa.select(sa.select(
+            s.connector_accounts).where(
+                s.connector_accounts.c.tenant_id == tenant,
+                s.connector_accounts.c.toolkit == "ZOHO_BOOKS",
+                s.connector_accounts.c.status == "active").exists())).scalar() or False
+
+
+def _zoho_account_org(engine: Engine, tenant: str,
+                      transport: Any | None = None) -> tuple[str, str]:
+    """The live account and org for a read; raises rather than guessing."""
+    with engine.connect() as conn:
+        acct = conn.execute(sa.select(s.connector_accounts).where(
+            s.connector_accounts.c.tenant_id == tenant,
+            s.connector_accounts.c.toolkit == "ZOHO_BOOKS",
+            s.connector_accounts.c.status == "active")).first()
+    if acct is None:
+        raise ConnectorError("Zoho Books is not connected.",
+                             next_step="Connect it from Settings first.")
+    account = str(acct.connected_account_id or acct.connection_id)
+    org = os.environ.get("ZOHO_BOOKS_ORGANIZATION_ID", "").strip() or _zoho_org(
+        transport or ComposioTransport(), tenant, account)
+    if not org:
+        raise ConnectorError("Zoho Books gave no organization.",
+                             next_step="Reconnect Zoho Books from Settings.")
+    return account, org
+
+
+def _zoho_outstanding(tenant: str, account: str, org: str,
+                      transport: Any | None = None) -> dict[str, int]:
+    """Zoho's outstanding per Mimi shop id, matched on the ``zc-`` prefix
+    Mimi writes as the Zoho customer id (``zc-<shop_id>``).
+
+    ``org`` is the caller's organization and is unused here because the
+    transport addresses the connected account directly; it is kept so the
+    call reads as scoped to that org and a future multi-org tenant can
+    filter on it."""
+    del org
+    from mimi.connectors.zoho.books import ZohoBooksConnector
+
+    books = ZohoBooksConnector(transport or ComposioTransport(), tenant_id=tenant,
+                               connection_id=account)
+    out: dict[str, int] = {}
+    for row in books.read("zoho_books_contacts").rows:
+        cid = str(row.values.get("customer_id") or row.values.get("shop_id") or "")
+        if not cid.startswith("zc-"):
+            continue
+        out[cid.removeprefix("zc-")] = out.get(cid.removeprefix("zc-"), 0) + int(
+            row.values.get("outstanding_kobo") or 0)
+    return out
+
+
+def _agreement(connected: bool, shops: dict[str, dict[str, Any]],
+               names: dict[str, str], zoho: dict[str, int],
+               note: str) -> dict[str, Any]:
+    rows: list[dict[str, Any]] = []
+    mimi_total, zoho_total = 0, 0
+    for sid in sorted(set(shops) | set(zoho)):
+        mimi = int(shops.get(sid, {}).get("mimi_kobo") or 0)
+        zk = zoho.get(sid) if connected else None
+        mimi_total += mimi
+        if zk is not None:
+            zoho_total += zk
+        diff = (mimi - zk) if zk is not None else None
+        rows.append({
+            "shop_id": sid, "shop_name": names.get(sid, sid),
+            "mimi_outstanding_kobo": mimi, "mimi_outstanding_naira": owed.naira(mimi),
+            "zoho_outstanding_kobo": zk,
+            "zoho_outstanding_naira": owed.naira(zk) if zk is not None else "",
+            "difference_kobo": diff,
+            "difference_naira": owed.naira(diff) if diff is not None else "",
+        })
+    total_zk = zoho_total if connected else None
+    total_diff = (mimi_total - total_zk) if total_zk is not None else None
+    return {
+        "as_of": now_iso(wall()), "zoho_connected": connected, "currency": "NGN",
+        "shops": rows,
+        "total": {
+            "mimi_outstanding_kobo": mimi_total,
+            "mimi_outstanding_naira": owed.naira(mimi_total),
+            "zoho_outstanding_kobo": total_zk,
+            "zoho_outstanding_naira": owed.naira(total_zk) if total_zk is not None else "",
+            "difference_kobo": total_diff,
+            "difference_naira": owed.naira(total_diff) if total_diff is not None else "",
+        },
+        "note": note or ("Mimi minus Zoho: positive means Mimi's book is "
+                         "higher than what Zoho Books reports."),
+    }
 
 
 # ------------------------------------------------------------ over the limit

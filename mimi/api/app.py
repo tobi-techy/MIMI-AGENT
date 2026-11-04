@@ -85,6 +85,7 @@ from mimi.api.media import MAX_BYTES
 from mimi.api.schemas import (
     ActivityList,
     ApprovalList,
+    BooksAgreementOut,
     CollectIn,
     ComputerKindList,
     ComputerProposal,
@@ -589,6 +590,17 @@ def create_app(settings: Settings | None = None, agent: Agent | None = None, *,
         ``exposure_kobo`` is the same money weighted up by age. Only bank-verified
         payments count: a payment the shop reported is shown, not counted."""
         return reads.exposure(engine, key.tenant_id)
+
+    @app.get("/v1/books/agreement", response_model=BooksAgreementOut,
+             responses=_ERRORS, summary="Two books: Mimi's outstanding against "
+             "Zoho Books', per shop and as a total")
+    def get_books_agreement(key: Owner) -> dict[str, Any]:
+        """The trust read: Mimi's outstanding against what Zoho Books
+        reports, the difference (Mimi minus Zoho), and which shops differ.
+        When Zoho is not connected every zoho and difference field is null
+        and ``note`` says so in plain words, so the screen shows no figure
+        rather than a zero."""
+        return dw.books_agreement(engine, key.tenant_id)
 
     @app.get("/v1/stock/sell-through", response_model=SellThroughOut, responses=_ERRORS,
              summary="Sell-through per shop and product: sold, days of cover, days to "

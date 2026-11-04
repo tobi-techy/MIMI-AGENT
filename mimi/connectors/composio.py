@@ -26,6 +26,10 @@ FIXTURES_DIR = Path(__file__).resolve().parent.parent.parent / "eval" / "connect
 class ComposioTransport:
     """Thin wrapper over the Composio SDK: allowlisted slugs only."""
 
+    #: The toolkit this transport speaks. The payment module refuses a
+    #: write through any other toolkit, so one ledger stays the ledger.
+    toolkit = "ZOHO_BOOKS"
+
     def __init__(self, settings: ConnectorSettings | None = None) -> None:
         self.settings = settings or ConnectorSettings.from_env()
         self._client: Any = None
