@@ -117,3 +117,38 @@ def test_zoho_create_reply_shape_and_error_codes() -> None:
         pay._checked({"code": 0}, status=500)
     with pytest.raises(ConnectorError):
         pay._checked({"code": 57, "message": "not authorised"}, status=200)
+
+
+def test_payment_to_a_foreign_ledger_is_refused() -> None:
+    """Zoho Books is the only money system of record: a payment through
+    any other toolkit raises instead of allocating cash twice."""
+
+    class OtherLedger(FakeComposio):
+        toolkit = "BEATROUTE"
+
+    other = OtherLedger(ConnectorSettings.from_env({}))
+    with pytest.raises(ConnectorError, match="Zoho Books only"):
+        pay.create_payment(transport=other, tenant_id=TENANT, connection_id="ca-x",
+                           organization_id=ORG, payload=PAYLOAD,
+                           idempotency_key="k9", approval_id="appr-9")
+    with pytest.raises(ConnectorError, match="Zoho Books only"):
+        pay.find_by_reference(transport=other, connection_id="ca-x",
+                              organization_id=ORG, reference="mimi-k9")
+    with pytest.raises(ConnectorError, match="Zoho Books only"):
+        pay.delete_payment(transport=other, connection_id="ca-x",
+                           organization_id=ORG, payment_id="zp-1")
+
+
+def test_applied_amount_is_capped_at_what_the_invoice_owes() -> None:
+    """An application larger than the invoice owes is capped at this
+    module's boundary, so the wrong number never reaches the ledger."""
+    over = dict(PAYLOAD, amount_kobo=999_999_999,
+                    invoices=[{"invoice_id": "zoho-d1",
+                               "amount_applied_kobo": 999_999_999,
+                               "invoice_outstanding_kobo": 50_000_000}])
+    body = pay.create_body(over, "zoho-books-cap1")
+    assert body["amount"] == 9999999.99
+    assert body["invoices"] == [{"invoice_id": "zoho-d1", "amount_applied": 500000.0}]
+    # Without an outstanding figure the caller's split still applies.
+    plain = pay.create_body(PAYLOAD, "zoho-books-cap2")
+    assert plain["invoices"] == [{"invoice_id": "zoho-d1", "amount_applied": 500000.0}]
