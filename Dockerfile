@@ -12,7 +12,8 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     MIMI_SKILLS_DIR=/app/skills \
     MIMI_SKILL_DRAFTS_DIR=/data/skill-drafts \
     MIMI_FIXES_2026_10_30=1 \
-    MIMI_DEMO_WIRING=1
+    MIMI_DEMO_WIRING=1 \
+    MIMI_ROUTINES=1
 
 WORKDIR /app
 COPY pyproject.toml README.md LICENSE alembic.ini ./

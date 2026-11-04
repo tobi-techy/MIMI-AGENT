@@ -23,6 +23,11 @@ Endpoints (all under ``/v1``, all but health need ``Authorization: Bearer``):
 * ``GET /v1/policy``, ``PUT /v1/policy``: the owner's rulebook (RAI-323);
   built-in stops are listed locked. Only an owner key changes it; a demo
   session, or demo mode, gets 403.
+* ``GET /v1/routines``, ``POST /v1/routines/{id}/pause`` and ``/resume``: what
+  runs on its own (the morning brief and the aging scan), with its schedule in
+  words, its last run and finding, and its pause switch. The switch is a row,
+  so it survives a restart; ``all`` is the kill switch (``mimi.api.routines``).
+  Owner key only.
 * ``POST /v1/computer/tasks``, ``GET /v1/computer/tasks``,
   ``GET /v1/computer/tasks/{id}``, ``POST /v1/computer/tasks/{id}/approve``
   and ``/stop``, ``GET /v1/computer/tasks/{id}/artifacts/{name}`` and
@@ -64,6 +69,7 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from mimi.api import connectors as cx
 from mimi.api import demo_wiring as dw
 from mimi.api import reads, returns, sales
+from mimi.api import routines as rt
 from mimi.api.agent import Agent, Conflict, NotFound
 from mimi.api.config import LOCALHOST_REGEX, ApiKey, Settings
 from mimi.api.demo import (
@@ -114,6 +120,9 @@ from mimi.api.schemas import (
     ReturnSettingsIn,
     ReturnSettingsOut,
     ReturnSettleIn,
+    RoutineList,
+    RoutinePauseIn,
+    RoutineToggleOut,
     SellThroughOut,
     ShopDetail,
     ShopList,
@@ -130,6 +139,7 @@ from mimi.clock import wall, wall_utc
 from mimi.computer.service import ComputerService, Refused
 from mimi.computer.store import ComputerStore
 from mimi.connectors.base import ConnectorError
+from mimi.flags import routines_enabled
 from mimi.harness.go import CrossTenant
 from mimi.harness.inbound import Inbound, Media, Payload
 from mimi.harness.policy import PolicyLocked, owner_rules_on
@@ -158,9 +168,24 @@ def create_app(settings: Settings | None = None, agent: Agent | None = None, *,
         agent = Agent.from_env(make_engine(settings.database_url), lease_s=settings.lease_s)
     n_workers = settings.workers if workers is None else workers
     stop = threading.Event()
+    # Routines (4 Nov 2026): one daemon thread per API process fires the
+    # morning brief and the aging scan on their Lagos schedule, with no model
+    # call. MIMI_ROUTINES=1 (the Dockerfile) starts it; the flag is off in CI so
+    # a test's seeded book is never written to behind its back. MIMI_WORKERS
+    # adds turn-worker threads, not processes, so they never each get a
+    # scheduler; if the platform ever runs several processes, the day's claim
+    # in routine_runs means only one fires (the rest tick and do nothing).
+    # MIMI_DEMO_KILL=1 starts no scheduler at all: the demo's kill switch stops
+    # every routine as well as every new turn and session. The pause and the
+    # per-routine kill switch are rows, not flags in this process.
+    scheduler = (rt.RoutineScheduler(agent.engine)
+                 if routines_enabled() and not (settings.demo_mode and settings.demo.killed)
+                 else None)
 
     @asynccontextmanager
     async def lifespan(_: FastAPI) -> AsyncIterator[None]:
+        if scheduler is not None:
+            scheduler.start()
         threads = [threading.Thread(target=agent.run_worker, args=(stop,), daemon=True,
                                     name=f"mimi-worker-{i}") for i in range(n_workers)]
         for t in threads:
@@ -169,6 +194,8 @@ def create_app(settings: Settings | None = None, agent: Agent | None = None, *,
             yield
         finally:
             stop.set()
+            if scheduler is not None:
+                scheduler.stop()
             for t in threads:
                 t.join(timeout=5)
 
@@ -179,6 +206,7 @@ def create_app(settings: Settings | None = None, agent: Agent | None = None, *,
                      "moves money. Demo data is synthetic; model calls are real."))
     app.state.agent = agent
     app.state.settings = settings
+    app.state.routines = scheduler
     app.add_middleware(
         CORSMiddleware, allow_origins=list(settings.cors_origins),
         allow_origin_regex=LOCALHOST_REGEX, allow_credentials=False,
@@ -783,6 +811,49 @@ def create_app(settings: Settings | None = None, agent: Agent | None = None, *,
         except PolicyLocked as exc:
             raise HTTPException(409, str(exc)) from None
         return rules.view(key.tenant_id, editable=True)
+
+    # ------------------------------------------------------------- routines
+
+    def _routine_switch(routine_id: str, key: ApiKey, paused: bool,
+                        body: RoutinePauseIn | None) -> dict[str, Any]:
+        b = body or RoutinePauseIn(reason="", by="")
+        try:
+            return rt.set_paused(engine, key.tenant_id, routine_id, paused,
+                                 reason=b.reason, by=b.by)
+        except rt.UnknownRoutine:
+            raise HTTPException(404, "unknown routine") from None
+
+    @app.get("/v1/routines", response_model=RoutineList, responses=_ERRORS,
+             response_model_exclude_none=True,
+             summary="Scheduled routines: what runs on its own and what it found")
+    def get_routines(key: Owner) -> dict[str, Any]:
+        """The console's routine rail (4 Nov 2026): each routine's name and
+        schedule in words, when it last ran and runs next (Africa/Lagos ISO),
+        its pause switch, and what it found last time in one line. A routine
+        that has never run says so; it never borrows the current time. Times
+        are for the console to word itself."""
+        return rt.view(engine, key.tenant_id)
+
+    @app.post("/v1/routines/{routine_id}/pause", response_model=RoutineToggleOut,
+              responses=_ERRORS,
+              summary="Pause one routine (or all): the row survives a restart")
+    def post_routine_pause(routine_id: str, key: Owner,
+                           body: RoutinePauseIn | None = None) -> dict[str, Any]:
+        """Pause on the Lagos schedule until resumed. The switch is a row in
+        the store, so it survives a restart and needs no deploy. ``all`` (or
+        ``*``) is the kill switch: one row stops every routine at once. A
+        paused routine records that it skipped the day and why, in words."""
+        return _routine_switch(routine_id, key, True, body)
+
+    @app.post("/v1/routines/{routine_id}/resume", response_model=RoutineToggleOut,
+              responses=_ERRORS,
+              summary="Resume one routine (or all) from its next tick")
+    def post_routine_resume(routine_id: str, key: Owner,
+                            body: RoutinePauseIn | None = None) -> dict[str, Any]:
+        """Resume from the next tick. Resuming one routine while the kill
+        switch is on answers ``paused: true`` with that reason: the kill
+        switch is the truth, and the console should show it."""
+        return _routine_switch(routine_id, key, False, body)
 
     # --------------------------------------------------- computer tasks
 

@@ -3867,6 +3867,139 @@
         "title": "ReturnTransition",
         "type": "object"
       },
+      "RoutineList": {
+        "additionalProperties": false,
+        "properties": {
+          "as_of": {
+            "title": "As Of",
+            "type": "string"
+          },
+          "routines": {
+            "items": {
+              "$ref": "#/components/schemas/RoutineOut"
+            },
+            "title": "Routines",
+            "type": "array"
+          }
+        },
+        "required": [
+          "routines",
+          "as_of"
+        ],
+        "title": "RoutineList",
+        "type": "object"
+      },
+      "RoutineOut": {
+        "additionalProperties": false,
+        "description": "One scheduled routine on the console's rail (4 Nov 2026).\n\n``name``, ``schedule`` and ``last_finding`` are sentences written by code\nand rendered as written. ``last_run_at`` and ``next_run_at`` are ISO 8601\nwith an explicit zone (Africa/Lagos); ``last_run_at`` is empty when the\nroutine has never run, and ``last_finding`` then says so.",
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "last_finding": {
+            "title": "Last Finding",
+            "type": "string"
+          },
+          "last_finding_shop_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Finding Shop Id"
+          },
+          "last_run_at": {
+            "title": "Last Run At",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "next_run_at": {
+            "title": "Next Run At",
+            "type": "string"
+          },
+          "paused": {
+            "title": "Paused",
+            "type": "boolean"
+          },
+          "paused_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Paused Reason"
+          },
+          "schedule": {
+            "title": "Schedule",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "schedule",
+          "paused",
+          "last_run_at",
+          "next_run_at",
+          "last_finding"
+        ],
+        "title": "RoutineOut",
+        "type": "object"
+      },
+      "RoutinePauseIn": {
+        "additionalProperties": false,
+        "description": "Why a routine is being paused (the skip records it); optional.",
+        "properties": {
+          "by": {
+            "default": "",
+            "maxLength": 100,
+            "title": "By",
+            "type": "string"
+          },
+          "reason": {
+            "default": "",
+            "maxLength": 300,
+            "title": "Reason",
+            "type": "string"
+          }
+        },
+        "title": "RoutinePauseIn",
+        "type": "object"
+      },
+      "RoutineToggleOut": {
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "paused": {
+            "title": "Paused",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "paused"
+        ],
+        "title": "RoutineToggleOut",
+        "type": "object"
+      },
       "SellThroughOut": {
         "additionalProperties": false,
         "properties": {
@@ -8861,6 +8994,274 @@
           }
         ],
         "summary": "Draft the settlement credit for the owner"
+      }
+    },
+    "/v1/routines": {
+      "get": {
+        "description": "The console's routine rail (4 Nov 2026): each routine's name and\nschedule in words, when it last ran and runs next (Africa/Lagos ISO),\nits pause switch, and what it found last time in one line. A routine\nthat has never run says so; it never borrows the current time. Times\nare for the console to word itself.",
+        "operationId": "get_routines_v1_routines_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RoutineList"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Conflict"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Scheduled routines: what runs on its own and what it found"
+      }
+    },
+    "/v1/routines/{routine_id}/pause": {
+      "post": {
+        "description": "Pause on the Lagos schedule until resumed. The switch is a row in\nthe store, so it survives a restart and needs no deploy. ``all`` (or\n``*``) is the kill switch: one row stops every routine at once. A\npaused routine records that it skipped the day and why, in words.",
+        "operationId": "post_routine_pause_v1_routines__routine_id__pause_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "routine_id",
+            "required": true,
+            "schema": {
+              "title": "Routine Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/RoutinePauseIn"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Body"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RoutineToggleOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Pause one routine (or all): the row survives a restart"
+      }
+    },
+    "/v1/routines/{routine_id}/resume": {
+      "post": {
+        "description": "Resume from the next tick. Resuming one routine while the kill\nswitch is on answers ``paused: true`` with that reason: the kill\nswitch is the truth, and the console should show it.",
+        "operationId": "post_routine_resume_v1_routines__routine_id__resume_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "routine_id",
+            "required": true,
+            "schema": {
+              "title": "Routine Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/RoutinePauseIn"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Body"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RoutineToggleOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Resume one routine (or all) from its next tick"
       }
     },
     "/v1/shops": {
