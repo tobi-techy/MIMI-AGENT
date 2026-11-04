@@ -23,6 +23,7 @@ from mimi.api import routines as rt
 from mimi.api.agent import Agent
 from mimi.api.app import create_app
 from mimi.api.config import Settings, parse_keys
+from mimi.api.demo import DemoConfig
 from mimi.api.offline import OfflineModel
 from mimi.store import schema as s
 from mimi.store.db import ensure_schema, make_engine
@@ -113,6 +114,12 @@ def test_the_morning_brief_runs_itself_at_eight_and_says_what_it_found(
     assert "shop-" not in str(brief["text"]) and "dlv-" not in str(brief["text"])
     # The routine read the book and wrote a message: no number moved.
     assert _book_digest(engine) == before
+    # The rail's one line names the one shop it is about, so the console can
+    # link it; that link is a field, never a guess out of the sentence.
+    row = {r["id"]: r for r in rt.view(
+        engine, T, now=lagos_at(2026, 11, 4, 8, 1))["routines"]}["morning_brief"]
+    assert row["last_finding"] == "Mama Sola Provisions is 45 days overdue, ₦2,387,250 of it."
+    assert row["last_finding_shop_id"] == "shop-001"
 
 
 def test_the_aging_scan_files_shops_past_sixty_days_and_unmatched_alerts(
@@ -128,6 +135,11 @@ def test_the_aging_scan_files_shops_past_sixty_days_and_unmatched_alerts(
     assert "Mama Sola Provisions" in text and "₦430,000" in text
     assert "shop-" not in text and "pay-" not in text
     assert text.endswith("Nothing has changed on the book.")
+    # Four shops, so the rail's sentence stays plain text: no link.
+    row = {r["id"]: r for r in rt.view(
+        engine, T, now=lagos_at(2026, 11, 4, 8, 31))["routines"]}["aging_scan"]
+    assert row["last_finding"] == "4 transfer alerts never matched a payment."
+    assert "last_finding_shop_id" not in row
 
 
 def test_the_aging_scan_names_shops_over_sixty_days(env: dict[str, object]) -> None:
@@ -409,14 +421,16 @@ def test_the_routine_reads_one_line_and_never_borrows_the_clock(
     rows = {r["id"]: r for r in before["routines"]}
     assert set(rows) == {"morning_brief", "aging_scan"}
     assert rows["morning_brief"] == {
-        "id": "morning_brief", "name": "Morning brief", "schedule": "Every day at 8:00 AM",
+        "id": "morning_brief", "name": "Morning briefing", "schedule": "Every day at 8:00 AM",
         "paused": False, "last_run_at": "", "next_run_at": "2026-11-04T08:00:00+01:00",
         "last_finding": "It has not run yet."}
     rt.run_due(engine, T, now=lagos_at(2026, 11, 4, 8, 0))
     after = {r["id"]: r for r in rt.view(engine, T, now=lagos_at(2026, 11, 4, 8, 1))["routines"]}
     assert after["morning_brief"]["last_run_at"] == "2026-11-04T08:00:00+01:00"
     assert after["morning_brief"]["next_run_at"] == "2026-11-05T08:00:00+01:00"
-    assert after["morning_brief"]["last_finding"].startswith("Top overdue:")
+    assert after["morning_brief"]["last_finding"] == (
+        "Mama Sola Provisions is 45 days overdue, ₦2,387,250 of it.")
+    assert after["morning_brief"]["last_finding_shop_id"] == "shop-001"
     assert after["aging_scan"]["last_run_at"] == ""
     assert after["aging_scan"]["last_finding"] == "It has not run yet."
 
@@ -460,13 +474,26 @@ def test_get_routines_has_the_console_shape(api: dict[str, object]) -> None:
     assert c.get("/v1/routines").status_code == 401
 
 
+def test_the_api_carries_the_one_shop_only_when_there_is_one(
+        api: dict[str, object]) -> None:
+    c = api["c"]
+    engine = api["engine"]
+    rt.run_due(engine, T, now=lagos_at(2026, 11, 4, 8, 0))
+    rt.run_due(engine, T, now=lagos_at(2026, 11, 4, 8, 30))
+    rows = {x["id"]: x for x in c.get("/v1/routines", headers=hk("owner")).json()["routines"]}
+    assert rows["morning_brief"]["last_finding_shop_id"] == "shop-001"
+    assert rows["morning_brief"]["last_finding"] == (
+        "Mama Sola Provisions is 45 days overdue, ₦2,387,250 of it.")
+    assert "last_finding_shop_id" not in rows["aging_scan"]
+
+
 def test_pause_and_resume_answer_the_switch_and_persist(api: dict[str, object]) -> None:
     c = api["c"]
     r = c.post("/v1/routines/morning_brief/pause",
                json={"reason": "Checking the scheduler", "by": "Tobi"},
                headers=hk("owner"))
     assert r.status_code == 200, r.text
-    assert r.json() == {"id": "morning_brief", "name": "Morning brief", "paused": True}
+    assert r.json() == {"id": "morning_brief", "name": "Morning briefing", "paused": True}
     row = {x["id"]: x for x in c.get("/v1/routines", headers=hk("owner")).json()["routines"]}
     assert row["morning_brief"]["paused"] is True
     assert row["morning_brief"]["paused_reason"] == "Checking the scheduler."
@@ -477,7 +504,7 @@ def test_pause_and_resume_answer_the_switch_and_persist(api: dict[str, object]) 
                   headers=hk("owner")).status_code == 404
     r = c.post("/v1/routines/morning_brief/resume", headers=hk("owner"))
     assert r.status_code == 200
-    assert r.json() == {"id": "morning_brief", "name": "Morning brief", "paused": False}
+    assert r.json() == {"id": "morning_brief", "name": "Morning briefing", "paused": False}
 
 
 def test_the_kill_switch_through_the_api(api: dict[str, object]) -> None:
@@ -539,3 +566,106 @@ def test_the_api_starts_the_scheduler_only_behind_the_switch(
         assert on.app.state.routines is not None
         assert on.app.state.routines.running is True
     assert on.app.state.routines.running is False
+
+
+def test_a_finding_about_one_shop_carries_that_shop(env: dict[str, object]) -> None:
+    """The console links a shop only when the sentence is about one shop."""
+    engine = env["engine"]
+    with engine.begin() as conn:
+        rows = conn.execute(sa.select(s.receivables.c.delivery_id,
+                                      s.receivables.c.shop_id)
+                            .where(s.receivables.c.tenant_id == T)).all()
+        for delivery_id, shop_id in rows:
+            if shop_id != "shop-001":
+                conn.execute(sa.update(s.receivables)
+                             .where(s.receivables.c.tenant_id == T,
+                                    s.receivables.c.delivery_id == delivery_id)
+                             .values(outstanding_kobo=0, status="paid"))
+    rt.run_due(engine, T, now=lagos_at(2026, 11, 4, 8, 0))
+    row = {r["id"]: r for r in rt.view(
+        engine, T, now=lagos_at(2026, 11, 4, 8, 1))["routines"]}["morning_brief"]
+    assert row["last_finding"] == "Mama Sola Provisions is 45 days overdue, ₦2,387,250 of it."
+    assert row["last_finding_shop_id"] == "shop-001"
+
+
+def test_a_lone_unmatched_alert_names_its_shop(env: dict[str, object]) -> None:
+    engine = env["engine"]
+    with engine.begin() as conn:
+        conn.execute(sa.delete(s.payments)
+                     .where(s.payments.c.tenant_id == T,
+                            s.payments.c.fake_alert.is_(True),
+                            s.payments.c.shop_id != "shop-017"))
+    rt.run_due(engine, T, now=lagos_at(2026, 11, 4, 8, 30))
+    row = {r["id"]: r for r in rt.view(
+        engine, T, now=lagos_at(2026, 11, 4, 8, 31))["routines"]}["aging_scan"]
+    assert row["last_finding"] == (
+        "A transfer alert from Kehinde POS & Provisions never matched a payment.")
+    assert row["last_finding_shop_id"] == "shop-017"
+
+
+def test_a_skip_clears_the_shop_the_last_finding_named(env: dict[str, object]) -> None:
+    engine = env["engine"]
+    rt.run_due(engine, T, now=lagos_at(2026, 11, 4, 8, 0))
+    rt.set_paused(engine, T, "morning_brief", True, reason="hold it",
+                  now=lagos_at(2026, 11, 4, 8, 2).timestamp())
+    rt.run_due(engine, T, now=lagos_at(2026, 11, 4, 8, 5))
+    row = {r["id"]: r for r in rt.view(
+        engine, T, now=lagos_at(2026, 11, 4, 8, 6))["routines"]}["morning_brief"]
+    assert row["last_finding"] == "It did not run today: it is paused."
+    assert "last_finding_shop_id" not in row
+
+
+def test_the_idle_loop_holds_no_connection(env: dict[str, object],
+                                           monkeypatch: pytest.MonkeyPatch) -> None:
+    """A sleeping tick loop must not keep a pooled connection checked out."""
+    engine = env["engine"]
+    checked: list[int] = []
+    real_run_due = rt.run_due
+
+    def spy(*_a: object, **_k: object) -> list[dict[str, object]]:
+        checked.append(int(engine.pool.checkedout()))
+        return []
+
+    monkeypatch.setattr(rt, "run_due", spy)
+    scheduler = rt.RoutineScheduler(engine, tick_s=1, tenants=[T])
+    scheduler.start()
+    try:
+        deadline = time.monotonic() + 4
+        while len(checked) < 2 and time.monotonic() < deadline:
+            time.sleep(0.02)
+    finally:
+        scheduler.stop()
+    assert len(checked) >= 2, "the scheduler never ticked"
+    assert max(checked) == 0
+
+    # And a real tick closes what it opened.
+    monkeypatch.setattr(rt, "run_due", real_run_due)
+    real_run_due(engine, T, now=lagos_at(2026, 11, 4, 7, 0))
+    assert engine.pool.checkedout() == 0
+
+
+def test_one_scheduler_per_process_even_with_worker_threads(
+        env: dict[str, object], monkeypatch: pytest.MonkeyPatch) -> None:
+    """MIMI_WORKERS adds turn threads, not processes, so they share one scheduler."""
+    engine = env["engine"]
+    monkeypatch.setenv("MIMI_ROUTINES", "1")
+    settings = Settings(keys=parse_keys(f"{T}:owner:{KEYS['owner']}"), wait_s=5,
+                        workers=4)
+    with TestClient(create_app(settings, Agent(engine, models=[OfflineModel()]))) as app:
+        named = [t for t in threading.enumerate() if t.name == "mimi-routines"]
+        assert len(named) == 1
+        assert app.app.state.routines is not None
+
+
+def test_the_demo_kill_switch_starts_no_routines(env: dict[str, object],
+                                                 monkeypatch: pytest.MonkeyPatch) -> None:
+    """The kill switch is the thing reached for in front of a buyer: routines
+    stop with the turns."""
+    engine = env["engine"]
+    monkeypatch.setenv("MIMI_ROUTINES", "1")
+    settings = Settings(keys=parse_keys(f"{T}:owner:{KEYS['owner']}"), wait_s=5,
+                        mode="demo", demo=DemoConfig(killed=True))
+    with TestClient(create_app(settings, Agent(engine, models=[OfflineModel()]),
+                               workers=0)) as app:
+        assert app.app.state.routines is None
+        assert [t for t in threading.enumerate() if t.name == "mimi-routines"] == []

@@ -3901,6 +3901,17 @@
             "title": "Last Finding",
             "type": "string"
           },
+          "last_finding_shop_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Finding Shop Id"
+          },
           "last_run_at": {
             "title": "Last Run At",
             "type": "string"

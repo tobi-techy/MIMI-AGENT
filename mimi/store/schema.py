@@ -923,6 +923,10 @@ routine_state = sa.Table(
     # done | failed | skipped | missed (the read says it in words)
     sa.Column("last_status", sa.String(16), nullable=False, default=""),
     sa.Column("last_finding", sa.Text(), nullable=False, default=""),
+    # The shop the last finding is about, when it is about exactly one shop;
+    # "" when it is about several or the whole book (the console then shows
+    # the sentence as plain text, never a guessed link).
+    sa.Column("last_finding_shop_id", sa.String(64), nullable=False, default=""),
     sa.Column("last_error", sa.Text(), nullable=False, default=""),
     sa.Column("last_skip_day", sa.String(10), nullable=False, default=""),
     sa.Column("last_missed_day", sa.String(10), nullable=False, default=""),

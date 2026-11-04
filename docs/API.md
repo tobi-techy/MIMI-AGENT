@@ -241,7 +241,7 @@ approval reads as 404. Keys are compared by SHA-256 in constant time; give
 | `POST /v1/approvals/{id}/reject` | owner | Nothing is sent; the helper is told |
 | `GET /v1/policy` | owner | The rulebook (RAI-323, docs/POLICY.md): each step with its behaviour (`act`, `act_if_preapproved`, `ask`, `hand_off`), default, allowed behaviours and who changed it; built-in stops listed `locked`; `editable` false in demo mode |
 | `PUT /v1/policy` | owner | Change rules: `{"rules": [{"action_type", "behaviour"}], "by"}`. 409 for a built-in stop, floor or unknown type (nothing changes); 403 for a demo session or demo mode. Logged with who; in force on the next turn |
-| `GET /v1/routines` | owner | The routine rail (4 Nov 2026, [ROUTINES.md](ROUTINES.md)): `{"routines": [{id, name, schedule, paused, paused_reason?, last_run_at, next_run_at, last_finding}], "as_of"}`. `name`, `schedule` and `last_finding` are sentences written by code; `last_run_at` and `next_run_at` are ISO 8601 with an explicit zone (Africa/Lagos) and empty `last_run_at` when the routine has never run, with `last_finding` saying so. `paused_reason` is present only when paused |
+| `GET /v1/routines` | owner | The routine rail (4 Nov 2026, [ROUTINES.md](ROUTINES.md)): `{"routines": [{id, name, schedule, paused, paused_reason?, last_run_at, next_run_at, last_finding, last_finding_shop_id?}], "as_of"}`. `name`, `schedule` and `last_finding` are sentences written by code; `last_run_at` and `next_run_at` are ISO 8601 with an explicit zone (Africa/Lagos) and empty `last_run_at` when the routine has never run, with `last_finding` saying so. `paused_reason` is present only when paused. `last_finding_shop_id` is present only when the last finding is about exactly one shop; it is never guessed |
 | `POST /v1/routines/{id}/pause`, `POST /v1/routines/{id}/resume` | owner | `{id, name, paused}` plus an optional body `{reason?, by?}`. The switch is a row in the store, so it survives a restart and needs no deploy. `all` (or `*`) is the kill switch: one row stops every routine. Pausing a routine under the kill switch still answers `paused: true` |
 | `GET /v1/credit` | owner | Per-shop limit, outstanding, available, and credit requests from helpers' credit intents (Credit, RAI-271). Each limit row also has `over_limit`, `over_limit_by_kobo`, `over_limit_by_naira` (owes more than its limit, from code) |
 | `POST /v1/credit/{shop_id}/limit` | owner | The owner sets a shop's limit: `{amount_ngn, reason?}` (whole naira) answers `{shop_id, old_limit_ngn, new_limit_ngn, change_id}`. Recorded as a `limit_change` step on the shop's thread. 404 for another distributor's shop |
@@ -364,8 +364,9 @@ process (`MIMI_ROUTINES=1`, set in the Dockerfile; off in CI). Both are code
 over the book: **no model call and no kobo spent**. See
 [ROUTINES.md](ROUTINES.md).
 
-* **Morning brief** (`morning_brief`, every day at 8:00 AM): the top overdue
-  shops by name and ₦, on the owner's thread (`kind: "morning_brief"`).
+* **Morning briefing** (`morning_brief`, every day at 8:00 AM): the single
+  most overdue shop by name, days and ₦, on the owner's thread
+  (`kind: "morning_brief"`), with the fuller brief behind it.
 * **Aging scan** (`aging_scan`, every day at 8:30 AM): shops whose oldest
   money has passed 60 days, and transfer alerts that never matched a payment
   (`kind: "aging_scan"`). It reports only; nothing on the book changes.
@@ -381,6 +382,16 @@ over the book: **no model call and no kobo spent**. See
   it; both survive a restart. `all` is the kill switch: one row pauses every
   routine without a deploy. A paused routine records that it skipped the day
   and why. The read says "It has not run yet." until a routine really has.
+* **One thread per process, one process per container.** `MIMI_WORKERS` adds
+  turn threads inside the process, not processes, so they share the one
+  scheduler. Several processes are still safe by the claim, but they each
+  tick; set `MIMI_ROUTINES=0` on a process that should not.
+* **No connection is held.** A tick opens a short-lived connection, does its
+  reads and writes, and closes it before waiting again; an idle scheduler
+  holds nothing on the pool.
+* **The demo kill switch stops it.** `MIMI_DEMO_KILL=1` starts no scheduler,
+  so routines stop with turns and sessions. `MIMI_ROUTINES=0` disables them
+  entirely in a process.
 
 ## Helpers hired (RAI-272)
 

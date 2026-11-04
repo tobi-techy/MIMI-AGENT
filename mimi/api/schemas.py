@@ -961,6 +961,10 @@ class RoutineOut(_Out):
     last_run_at: str
     next_run_at: str
     last_finding: str
+    # Present only when the last finding is about exactly one shop, so the
+    # console can link it. Never guessed: several shops or the whole book
+    # leave it out and the sentence renders as plain text.
+    last_finding_shop_id: str | None = None
 
 
 class RoutineList(_Out):

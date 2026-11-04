@@ -13,7 +13,7 @@ Code: `mimi/api/routines.py`. Tables: `routine_state` and `routine_runs`
 
 | Routine | Schedule | What it files |
 |---|---|---|
-| `morning_brief` ("Morning brief") | Every day at 8:00 AM | The top overdue shops by name and ₦, on the owner's thread |
+| `morning_brief` ("Morning briefing") | Every day at 8:00 AM | The shop most overdue by name and ₦, on the owner's thread |
 | `aging_scan` ("Aging scan") | Every day at 8:30 AM | Shops whose oldest money has passed 60 days, and transfer alerts that never matched a payment |
 
 Both are code over the same book the reads use (`mimi.owed`, `SqlGo`,
@@ -58,6 +58,10 @@ window passed while the API was down."
 * the routine's own `paused` and `pause_reason`;
 * the last run (`last_run_day`, `last_run_at`) and what it found
   (`last_finding`), or the last skip/miss/failure, with its status;
+* `last_finding_shop_id`, set only when the last finding is about exactly one
+  shop. The console links that shop; several shops or the whole book leave it
+  empty and the sentence renders as plain text. A skip, miss or failure clears
+  it, so a link never outlives the finding it belonged to;
 * one row with `routine = "*"`, the kill switch: paused, it stops every
   routine at once.
 
@@ -76,12 +80,19 @@ claim.
 
 ## Findings: a proposal or a note, never an action
 
-A routine returns a `Finding` with the thread's words and a one-line summary;
-the writer (`file_finding`) only ever writes one message on the owner's
-thread. It does not call a write tool, change a receivable, a payment, an
-approval or a stock row. `test_a_routine_has_no_model_and_never_writes_the_book`
-digests the book and the approvals before and after both routines and
-compares: no change, no spend row.
+A routine returns a `Finding` with the thread's words, a one-line summary, and
+the shops that summary is about (none, one, or several); the writer
+(`file_finding`) only ever writes one message on the owner's thread. It does
+not call a write tool, change a receivable, a payment, an approval or a stock
+row. `test_a_routine_has_no_model_and_never_writes_the_book` digests the book
+and the approvals before and after both routines and compares: no change, no
+spend row.
+
+The morning brief's line names the single most overdue shop ("Mama Sola
+Provisions is 45 days overdue, ₦2,387,250 of it.") and carries that shop's
+id, so the console can link it without reading the sentence. The aging scan's
+line names a shop only when the whole finding is about one shop; several shops
+or a list of alerts leave the id empty.
 
 A routine that would have to change a number must stop and propose through
 the product's existing approval path. Neither of these two needs to: the
@@ -103,26 +114,41 @@ one claim insert, and at most one message insert per routine.
 ```
 GET /v1/routines          owner key
 { "routines": [ { "id", "name", "schedule", "paused", "paused_reason"?,
-                  "last_run_at", "next_run_at", "last_finding" } ],
+                  "last_run_at", "next_run_at", "last_finding",
+                  "last_finding_shop_id"? } ],
   "as_of": "2026-11-04T08:31:00+01:00" }
 
 POST /v1/routines/{id}/pause   owner key
 POST /v1/routines/{id}/resume  owner key
-{ "id": "morning_brief", "name": "Morning brief", "paused": true }
+{ "id": "morning_brief", "name": "Morning briefing", "paused": true }
 ```
 
 `name`, `schedule` and `last_finding` are sentences written by code and
 rendered as written. `last_run_at` and `next_run_at` are ISO 8601 with an
 explicit zone, and `last_run_at` is empty until the routine really has run,
 with `last_finding = "It has not run yet."` rather than a claim at the current
-time. `paused_reason` is present only when paused. Resuming one routine under
-the kill switch answers `paused: true`: the kill switch is the truth.
+time. `paused_reason` is present only when paused. `last_finding_shop_id` is
+present only when the last finding names one shop; it is never guessed from
+the sentence. Resuming one routine under the kill switch answers
+`paused: true`: the kill switch is the truth.
 
 ## Wiring and settings
 
 * `MIMI_ROUTINES=1` (the Dockerfile) starts one daemon thread in the API
-  process. Off (CI, `make check`) no thread starts, so a test's seeded book is
-  never written behind its back; the routes and tables still work.
+  process. Off (CI, `make check`, or `MIMI_ROUTINES=0` in a container) no
+  thread starts, so a test's seeded book is never written behind its back;
+  the routes and tables still work.
+* It is one thread per process. `MIMI_WORKERS` adds turn-worker threads
+  inside the same process, not processes, so they share that one thread. If
+  a platform ever runs several processes, each has its own scheduler; the
+  day's claim means only one fires, but the rest still tick and do nothing,
+  so run one process (or set `MIMI_ROUTINES=0` on the extras).
+* `MIMI_DEMO_KILL=1` starts no scheduler at all: the demo's kill switch stops
+  routines with turns and sessions. The per-routine pause and the `*` row are
+  the no-restart switches.
+* A tick opens its own short-lived connection and closes it before waiting
+  again: an idle tick loop holds nothing on the pool, so it cannot starve
+  demo traffic between ticks.
 * `MIMI_ROUTINES_TICK_S` changes how often the thread looks (default 30 s,
   minimum 1 s). It is a poll, not a timer per routine: no infinite loop can
   take the API down, and every exception in a tick is caught, logged and

@@ -38,6 +38,7 @@ def upgrade() -> None:
         sa.Column("last_run_at", sa.String(40), nullable=False, server_default=""),
         sa.Column("last_status", sa.String(16), nullable=False, server_default=""),
         sa.Column("last_finding", sa.Text(), nullable=False, server_default=""),
+        sa.Column("last_finding_shop_id", sa.String(64), nullable=False, server_default=""),
         sa.Column("last_error", sa.Text(), nullable=False, server_default=""),
         sa.Column("last_skip_day", sa.String(10), nullable=False, server_default=""),
         sa.Column("last_missed_day", sa.String(10), nullable=False, server_default=""),

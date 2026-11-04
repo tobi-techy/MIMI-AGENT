@@ -126,10 +126,12 @@ class Schedule:
 
 @dataclass(frozen=True)
 class Finding:
-    """What a routine found: the thread's words and the one-line summary."""
+    """What a routine found: the thread's words, the one-line summary, and the
+    shops that summary is about (one, several, or none)."""
 
     line: str
     text: str = ""
+    shop_ids: frozenset[str] = frozenset()
 
 
 @dataclass(frozen=True)
@@ -169,20 +171,22 @@ def _day_words(raw: str) -> str:
 
 def _morning_brief(engine: Engine, tenant: str, day: date,
                    now: datetime) -> Finding:
-    """The read-only book: top overdue shops by name and ₦, summed in code."""
+    """The read-only book: the most overdue shop, and the full brief behind it.
+
+    The one-line finding names one shop, so the console can link it; the
+    thread message still gives the top three and the book total."""
     debtors = sorted((b for b in dw.overdue_by_shop(engine, tenant).values()
                       if b.overdue_kobo > 0),
                      key=lambda b: (-b.overdue_kobo, b.shop_id))
     text = dw.brief_text(engine, tenant)
     if not debtors:
         return Finding(line="No shop is overdue.", text=text)
-    total = sum(b.overdue_kobo for b in debtors)
     top = debtors[0]
     return Finding(
-        line=(f"Top overdue: {top.shop_name} on {owed.naira(top.overdue_kobo)}; "
-              f"{len(debtors)} {_shops_word(len(debtors))} overdue, "
-              f"{owed.naira(total)} in all."),
-        text=text)
+        line=(f"{top.shop_name} is {top.oldest_days_overdue} days overdue, "
+              f"{owed.naira(top.overdue_kobo)} of it."),
+        text=text,
+        shop_ids=frozenset({top.shop_id}))
 
 
 def _unmatched_alerts(engine: Engine, tenant: str) -> list[dict[str, Any]]:
@@ -195,8 +199,8 @@ def _unmatched_alerts(engine: Engine, tenant: str) -> list[dict[str, Any]]:
                                    s.shops.c.shop_id == s.payments.c.shop_id))
             .where(s.payments.c.tenant_id == tenant, s.payments.c.fake_alert.is_(True))
             .order_by(s.payments.c.day, s.payments.c.payment_id)).all()
-    return [{"shop_name": str(r.name), "amount_kobo": int(r.amount_kobo),
-             "paid_on": str(r.paid_on)} for r in rows]
+    return [{"shop_id": str(r.shop_id), "shop_name": str(r.name),
+             "amount_kobo": int(r.amount_kobo), "paid_on": str(r.paid_on)} for r in rows]
 
 
 def _over_sixty(engine: Engine, tenant: str) -> list[dict[str, Any]]:
@@ -230,7 +234,6 @@ def _aging_scan(engine: Engine, tenant: str, day: date, now: datetime) -> Findin
     if not over and not alerts:
         return Finding(line="Nothing has passed 60 days and every transfer alert is matched.")
     parts: list[str] = []
-    line = ""
     if over:
         shown_shops = over[:5]
         shop_lines = [f"{b['shop_name']} is {b['oldest_days_overdue']} days overdue on "
@@ -241,7 +244,6 @@ def _aging_scan(engine: Engine, tenant: str, day: date, now: datetime) -> Findin
         total = sum(int(b["overdue_kobo"]) for b in over)
         parts.append(f"{_shop_phrase(len(over))} passed 60 days: {'; '.join(shop_lines)}. "
                      f"In all {owed.naira(total)} is more than 60 days old.")
-        line = f"{_shop_phrase(len(over))} passed 60 days"
     if alerts:
         shown_alerts = alerts[:5]
         alert_lines = [f"{a['shop_name']} on {owed.naira(a['amount_kobo'])} from "
@@ -251,14 +253,27 @@ def _aging_scan(engine: Engine, tenant: str, day: date, now: datetime) -> Findin
             alert_lines.append(f"and {more} more")
         parts.append(f"{len(alerts)} {_alerts_word(len(alerts))} never matched a payment: "
                      f"{'; '.join(alert_lines)}.")
-        line = (f"{line} and {len(alerts)} {_alerts_word(len(alerts))} never matched a payment"
-                if line else f"{len(alerts)} {_alerts_word(len(alerts))} never matched a payment")
     parts.append("Nothing has changed on the book.")
-    return Finding(line=f"{line}.", text=" ".join(parts))
+    # The one-line finding names a shop only when the finding is about one,
+    # so the console's link can never point at a guess.
+    shop_ids = {str(b["shop_id"]) for b in over} | {str(a["shop_id"]) for a in alerts}
+    if over and alerts:
+        line = (f"{_shop_phrase(len(over))} passed 60 days and {len(alerts)} "
+                f"{_alerts_word(len(alerts))} never matched a payment.")
+    elif over:
+        only = over[0]
+        line = (f"{only['shop_name']} is {only['oldest_days_overdue']} days overdue, "
+                f"{owed.naira(only['overdue_kobo'])} of it." if len(over) == 1
+                else f"{_shop_phrase(len(over))} passed 60 days.")
+    elif len(alerts) == 1:
+        line = f"A transfer alert from {alerts[0]['shop_name']} never matched a payment."
+    else:
+        line = f"{len(alerts)} {_alerts_word(len(alerts))} never matched a payment."
+    return Finding(line=line, text=" ".join(parts), shop_ids=frozenset(shop_ids))
 
 
 MORNING_BRIEF = Routine(
-    id="morning_brief", name="Morning brief", schedule=Schedule(8, 0),
+    id="morning_brief", name="Morning briefing", schedule=Schedule(8, 0),
     summary="The shops most overdue, by name and naira, at the start of the day.",
     run=_morning_brief)
 AGING_SCAN = Routine(
@@ -313,8 +328,8 @@ def _stored_iso(raw: str) -> str:
 
 _STATE_DEFAULTS: dict[str, Any] = {
     "paused": False, "pause_reason": "", "paused_at": "", "last_run_day": "",
-    "last_run_at": "", "last_status": "", "last_finding": "", "last_error": "",
-    "last_skip_day": "", "last_missed_day": "", "updated_at": "",
+    "last_run_at": "", "last_status": "", "last_finding": "", "last_finding_shop_id": "",
+    "last_error": "", "last_skip_day": "", "last_missed_day": "", "updated_at": "",
 }
 
 
@@ -440,7 +455,8 @@ def _run_one(engine: Engine, tenant: str, routine: Routine, now: datetime, day: 
         if now >= scheduled and state.get("last_skip_day") != day:
             _update_state(engine, tenant, routine.id, now.timestamp(),
                           last_skip_day=day, last_status="skipped",
-                          last_finding="It did not run today: it is paused.")
+                          last_finding="It did not run today: it is paused.",
+                          last_finding_shop_id="")
         return {"routine": routine.id, "action": "skipped_paused", "reason": reason}
     if now < scheduled:
         return {"routine": routine.id, "action": "not_due"}
@@ -450,7 +466,8 @@ def _run_one(engine: Engine, tenant: str, routine: Routine, now: datetime, day: 
                           last_missed_day=day, last_status="missed",
                           last_finding=("It did not run today: the "
                                         f"{_clock_words(routine.schedule)} window passed "
-                                        "while the API was down."))
+                                        "while the API was down."),
+                          last_finding_shop_id="")
         return {"routine": routine.id, "action": "missed"}
     if not _claim(engine, tenant, routine.id, day, now, _owner_label()):
         # Another process (or an earlier start of this one) already has today.
@@ -464,13 +481,16 @@ def _run_one(engine: Engine, tenant: str, routine: Routine, now: datetime, day: 
                       error=type(exc).__name__, findings=0, now=now)
         _update_state(engine, tenant, routine.id, now.timestamp(),
                       last_status="failed", last_error=type(exc).__name__,
-                      last_finding="Its last run did not finish. It will try again tomorrow.")
+                      last_finding="Its last run did not finish. It will try again tomorrow.",
+                      last_finding_shop_id="")
         return {"routine": routine.id, "action": "failed", "error": type(exc).__name__}
     _finish_claim(engine, tenant, routine.id, day, status="done",
                   result=finding.line, error="", findings=1 if finding.text else 0, now=now)
     _update_state(engine, tenant, routine.id, now.timestamp(),
                   last_run_day=day, last_run_at=now_iso(now.timestamp()),
-                  last_status="done", last_finding=finding.line, last_error="")
+                  last_status="done", last_finding=finding.line, last_error="",
+                  last_finding_shop_id=(next(iter(finding.shop_ids))
+                                        if len(finding.shop_ids) == 1 else ""))
     return {"routine": routine.id, "action": "ran", "finding": finding.line}
 
 
@@ -538,6 +558,9 @@ def view(engine: Engine, tenant: str, *, now: datetime | None = None) -> dict[st
         }
         if paused:
             row["paused_reason"] = reason
+        shop_id = str(state.get("last_finding_shop_id") or "")
+        if shop_id:
+            row["last_finding_shop_id"] = shop_id
         rows.append(row)
     return {"routines": rows, "as_of": _iso(here)}
 

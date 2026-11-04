@@ -168,12 +168,19 @@ def create_app(settings: Settings | None = None, agent: Agent | None = None, *,
         agent = Agent.from_env(make_engine(settings.database_url), lease_s=settings.lease_s)
     n_workers = settings.workers if workers is None else workers
     stop = threading.Event()
-    # Routines (4 Nov 2026): one daemon thread fires the morning brief and the
-    # aging scan on their Lagos schedule, with no model call. MIMI_ROUTINES=1
-    # (the Dockerfile) starts it; the flag is off in CI so a test's seeded
-    # book is never written to behind its back. The pause and the kill switch
-    # are rows, not flags in this process.
-    scheduler = rt.RoutineScheduler(agent.engine) if routines_enabled() else None
+    # Routines (4 Nov 2026): one daemon thread per API process fires the
+    # morning brief and the aging scan on their Lagos schedule, with no model
+    # call. MIMI_ROUTINES=1 (the Dockerfile) starts it; the flag is off in CI so
+    # a test's seeded book is never written to behind its back. MIMI_WORKERS
+    # adds turn-worker threads, not processes, so they never each get a
+    # scheduler; if the platform ever runs several processes, the day's claim
+    # in routine_runs means only one fires (the rest tick and do nothing).
+    # MIMI_DEMO_KILL=1 starts no scheduler at all: the demo's kill switch stops
+    # every routine as well as every new turn and session. The pause and the
+    # per-routine kill switch are rows, not flags in this process.
+    scheduler = (rt.RoutineScheduler(agent.engine)
+                 if routines_enabled() and not (settings.demo_mode and settings.demo.killed)
+                 else None)
 
     @asynccontextmanager
     async def lifespan(_: FastAPI) -> AsyncIterator[None]:
