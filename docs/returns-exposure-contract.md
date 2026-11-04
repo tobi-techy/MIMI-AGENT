@@ -124,6 +124,12 @@ Settlement rules the console can rely on:
 - Undoing an applied credit is last in, first out per invoice: with two
   returns crediting one invoice (one shop, two returns), the older credit is
   refused while the newer one is still applied.
+- An undo is also refused (409) when anything else moved the invoice since
+  the credit came off it: Go writes the same `paid_kobo`, `outstanding_kobo`
+  and `status` columns from a verified bank payment and from the morning roll
+  that marks invoices overdue. The undo then changes nothing rather than
+  writing a figure that does not match the book; settling the return again
+  works from the balance as it stands.
 - Undoing the pickup (the `slow_stock` approval) cancels a return opened from
   it that has collected nothing, and no return can be opened or walked from an
   undone pickup.
@@ -232,7 +238,7 @@ feed, so a shop-reported payment never lowers exposure; it appears as
 
 ## Tests
 
-`tests/test_returns.py` (23 tests) and `tests/test_exposure.py` (9 tests)
+`tests/test_returns.py` (25 tests) and `tests/test_exposure.py` (9 tests)
 cover every string above, including the unhappy paths and the two
 person-read-string guarantees: tenant filtering, and no internal id anywhere
 a person reads.

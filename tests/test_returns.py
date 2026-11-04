@@ -540,3 +540,80 @@ def test_undoing_the_pickup_calls_the_return_off(api: dict[str, Any]) -> None:
     assert "called" in again.json()["detail"]
     assert c.post(f"/v1/returns/{rid}/approve", headers=h(), json={}).status_code == 409
     assert c.post(f"/v1/returns/{rid}/collect", headers=h(), json={}).status_code == 409
+
+
+def _settle_and_apply(c: TestClient, body: dict[str, Any],
+                      amount_kobo: int | None = None) -> tuple[str, str]:
+    """Settle the return, approve the card, and hand back both ids."""
+    payload: dict[str, Any] = {} if amount_kobo is None else {"amount_kobo": amount_kobo}
+    r = c.post(f"/v1/returns/{body['return_id']}/settle", headers=h(), json=payload)
+    assert r.status_code == 200, r.text
+    apr = r.json()["credit_approval_id"]
+    ok = c.post(f"/v1/approvals/{apr}/approve", headers=h(), json={})
+    assert ok.status_code == 200, ok.text
+    return apr, ok.json()["approval"]["payload"]["invoices"][0]["invoice_number"]
+
+
+def _receivables(engine: Any, shop_id: str) -> dict[str, int]:
+    return {x["delivery_id"]: x["outstanding_kobo"]
+            for x in SqlGo(engine).receivables(A, shop_id)}
+
+
+def test_an_undo_is_refused_when_a_bank_credit_lands_on_the_invoice(
+        api: dict[str, Any]) -> None:
+    """A verified bank payment writes the same columns the snapshot restore
+    does (`demo_wiring._apply_to_invoices`), so it makes the snapshot stale.
+    The undo fails closed instead of writing a wrong figure."""
+    from mimi.api.demo_wiring import _apply_to_invoices
+
+    c, engine = api["c"], api["engine"]
+    owes = max(c.get("/v1/shops", headers=h()).json()["shops"],
+               key=lambda x: x["outstanding_kobo"])
+    shop_id = owes["shop_id"]
+    assert owes["outstanding_kobo"] > 3 * PRICE
+    body = _walk(c, _open_manual(c, shop_id, quantity=1))
+    apr, invoice_number = _settle_and_apply(c, body, amount_kobo=PRICE)
+    credited = _receivables(engine, shop_id)
+    # The bank confirms a transfer for the same invoice the credit came off.
+    delivery_id = "dlv-" + invoice_number.removeprefix("INV-")
+    with engine.begin() as conn:
+        _apply_to_invoices(conn, A, shop_id, PRICE // 2, delivery_id)
+    paid = _receivables(engine, shop_id)
+    assert paid != credited and paid[delivery_id] < credited[delivery_id]
+    refused = c.post(f"/v1/approvals/{apr}/undo", headers=h())
+    assert refused.status_code == 409, refused.text
+    assert "moved after this credit" in refused.json()["detail"]
+    assert not ID_RE.search(refused.json()["detail"])
+    assert _receivables(engine, shop_id) == paid  # nothing was written back
+    got = c.get(f"/v1/returns/{body['return_id']}", headers=h()).json()
+    assert got["status"] == "settled" and got["credit_applied_kobo"] == PRICE
+
+
+def test_an_undo_is_refused_when_the_morning_roll_calls_the_invoice_overdue(
+        api: dict[str, Any]) -> None:
+    """Go's morning roll marks an invoice overdue on the same column
+    (`week.go.GoSim.open_day`). A credit that was applied while the invoice
+    was current cannot be undone over that change either."""
+    from mimi.api.week.go import GoSim
+
+    c, engine = api["c"], api["engine"]
+    sim = GoSim(engine, W, A)
+    sim.open_day(57)  # the seeded live deliveries close into receivables
+    fresh = [x for x in c.get("/v1/shops", headers=h()).json()["shops"]
+             if x["outstanding_kobo"] > 3 * PRICE]
+    shop_id = next(
+        x["shop_id"] for x in fresh
+        if all(r["status"] == "open" for r in SqlGo(engine).receivables(A, x["shop_id"])))
+    body = _walk(c, _open_manual(c, shop_id, quantity=1))
+    apr, _ = _settle_and_apply(c, body, amount_kobo=PRICE)
+    credited = _receivables(engine, shop_id)
+    sim.open_day(64)  # past the newest due day: the open invoice goes overdue
+    statuses = {r["delivery_id"]: r["status"] for r in SqlGo(engine).receivables(A, shop_id)}
+    assert "overdue" in statuses.values(), statuses
+    assert _receivables(engine, shop_id) == credited  # only the status moved
+    refused = c.post(f"/v1/approvals/{apr}/undo", headers=h())
+    assert refused.status_code == 409, refused.text
+    assert "moved after this credit" in refused.json()["detail"]
+    assert _receivables(engine, shop_id) == credited
+    assert c.get(f"/v1/returns/{body['return_id']}",
+                 headers=h()).json()["status"] == "settled"

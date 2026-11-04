@@ -669,6 +669,13 @@ def apply_credit(engine: Engine, tenant: str, approval: Mapping[str, Any]) -> No
             app["was_status"] = str(src["status"])
             app["was_paid_kobo"] = int(src["paid_kobo"])
             app["was_outstanding_kobo"] = int(src["outstanding_kobo"])
+            # What this credit left behind, so the undo can check the invoice
+            # still holds it (see ``_refuse_unless_untouched``): Go writes
+            # these same columns, so a verified payment or a morning roll can
+            # land between the application and the undo.
+            app["after_paid_kobo"] = int(src["paid_kobo"]) + int(app["amount_kobo"])
+            app["after_outstanding_kobo"] = max(0, out)
+            app["after_status"] = "settled" if out <= 0 else str(src["status"])
         credit_id = ledger.credit_id_for(tenant, return_id, _attempt(conn, tenant, return_id))
         insert_ignore(conn, s.credit_notes, {
             "tenant_id": tenant, "credit_id": credit_id, "return_id": return_id,
@@ -735,6 +742,40 @@ def _refuse_unless_newest(conn: sa.Connection, tenant: str, note: Any) -> None:
                 "then this one.")
 
 
+def _refuse_unless_untouched(conn: sa.Connection, tenant: str, note: Any) -> None:
+    """Every invoice this credit came off must still hold exactly what the
+    credit left on it, or the undo fails closed.
+
+    A credit is undone by putting the invoice back to the figures taken just
+    before it came off. That is only the right number while nothing else has
+    written the same three columns since: Go's own system does, from the
+    verified bank payment (``demo_wiring._apply_to_invoices``) and from the
+    morning roll that closes the day and marks invoices overdue
+    (``week.go.GoSim.open_day`` and ``GoSim._pay``). A payment landing in
+    between is not a reason to guess: the undo refuses, changes nothing, and
+    says so, and the owner can settle the return again from where the book
+    really is."""
+    for app in loads(note.applications, []):
+        row = conn.execute(sa.select(s.receivables).where(
+            s.receivables.c.tenant_id == tenant,
+            s.receivables.c.delivery_id == app["delivery_id"])).first()
+        if row is None or "after_paid_kobo" not in app:
+            raise Conflict(
+                "the invoice this credit came off cannot be checked where it "
+                "stands now, so nothing was undone. Settle the return again "
+                "from the balance you see.")
+        holds = (int(row.paid_kobo), int(row.outstanding_kobo), str(row.status))
+        left = (int(app["after_paid_kobo"]), int(app["after_outstanding_kobo"]),
+                str(app["after_status"]))
+        if holds != left:
+            shop_name = _shop_name(conn, tenant, str(note.shop_id))
+            raise Conflict(
+                f"the balance on {shop_name}'s invoice moved after this credit "
+                "came off it, so undoing it now would write a wrong figure. "
+                "Nothing was undone. Settle the return again to match the "
+                "balance you see.")
+
+
 def undo_credit(engine: Engine, tenant: str, approval: Mapping[str, Any]) -> None:
     """Reverse an applied credit: the invoices go back to what they were and
     the credit note is marked undone. The return goes back to ``inspected``."""
@@ -758,6 +799,7 @@ def undo_credit(engine: Engine, tenant: str, approval: Mapping[str, Any]) -> Non
         if note is None:
             raise Conflict("this credit is no longer on the books")
         _refuse_unless_newest(conn, tenant, note)
+        _refuse_unless_untouched(conn, tenant, note)
         for app in loads(note.applications, []):
             conn.execute(s.receivables.update().where(
                 s.receivables.c.tenant_id == tenant,

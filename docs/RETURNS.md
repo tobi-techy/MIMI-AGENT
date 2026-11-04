@@ -93,6 +93,14 @@ Three rules keep the card and the return honest:
   newer one is still applied, with a plain message saying to undo the later
   one first. Undoing out of order would leave the invoice owing more than the
   shop really owes with a live credit still on it.
+* An undo is also refused when anything else moved the invoice since the
+  credit came off it. Go's own system writes the same three columns
+  (`paid_kobo`, `outstanding_kobo`, `status`): a verified bank payment
+  (`demo_wiring._apply_to_invoices`) and the morning roll that closes the day
+  and marks invoices overdue (`week.go.GoSim.open_day` and `GoSim._pay`). The
+  undo checks the invoice still holds exactly what the credit left on it and
+  fails closed when it does not, so it never writes a wrong number; the owner
+  settles the return again from the balance they see.
 
 Undoing the **pickup** itself also reaches the ledger: a return opened from it
 that has collected nothing is cancelled with it, and no return can be opened
@@ -136,8 +144,9 @@ What one shop could cost, aged and risk-weighted, per shop and in total.
   its undo, and the credit-on-account case for a shop that owes nothing;
 * the settlement rules: a rejected card leaves the return settleable, a second
   settle with a new amount replaces the waiting card, two credits on one
-  invoice refuse an out-of-order undo, and undoing the pickup cancels the
-  draft;
+  invoice refuse an out-of-order undo, undoing the pickup cancels the draft,
+  and an undo is refused when a bank payment or a morning roll moved the
+  invoice in the meantime;
 * the unhappy paths: a pickup with no approval, a non-pickup plan, an
   inspection that disagrees with what was collected, a settlement above the
   return value, a transition out of order, settling with no shop and no
