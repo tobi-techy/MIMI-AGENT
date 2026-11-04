@@ -159,3 +159,31 @@ def test_applied_amount_is_capped_at_what_the_invoice_owes() -> None:
     # Without an outstanding figure the caller's split still applies.
     plain = pay.create_body(PAYLOAD, "zoho-books-cap2")
     assert plain["invoices"] == [{"invoice_id": "zoho-d1", "amount_applied": 500000.0}]
+
+
+@pytest.mark.parametrize("cid", ["ca_M3aPpWNfL_p7", "ca-x", "conn-test",
+                                 "demo-d9681c17b02d2aea", "zp-1"])
+def test_a_zoho_connection_id_is_accepted_with_either_separator(cid: str) -> None:
+    """Composio has issued ``ca-...`` and now issues ``ca_...``; the separator
+    is not part of the contract.
+
+    Measured live on 4 Nov 2026: the tenant's real account was
+    ``ca_M3aPpWNfL_p7``, the hyphen-only check refused it, and the owner was
+    told "That is not a Zoho Books connection, so no payment goes there." A
+    wrong sentence about the ledger is worse than a refusal, because it sends
+    whoever reads it looking at the wrong system."""
+    pay._refuse_foreign_ledger(FakeComposio(ConnectorSettings.from_env({})), cid)
+
+
+@pytest.mark.parametrize("cid", ["crm_1", "sheet-2", "beatroute", "ca", "ca_",
+                                 "-ca_1", "zoho-1", "conn", "demo"])
+def test_anything_that_is_not_a_zoho_connection_is_still_refused(cid: str) -> None:
+    """A prefix without a real id after the separator is not a connection."""
+    with pytest.raises(ConnectorError, match="not a Zoho Books connection"):
+        pay._refuse_foreign_ledger(FakeComposio(ConnectorSettings.from_env({})), cid)
+
+
+def test_an_empty_connection_id_is_not_a_foreign_ledger() -> None:
+    """Nothing to check is not the same as a wrong ledger; the toolkit guard
+    still applies, and the payload checks that follow raise on their own."""
+    pay._refuse_foreign_ledger(FakeComposio(ConnectorSettings.from_env({})), "")
