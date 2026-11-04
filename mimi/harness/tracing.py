@@ -109,9 +109,11 @@ def run_observations(events: Sequence[Event]) -> list[Observation]:
             current.metadata.update({"cost_kobo": ev.cost_kobo,
                                      "duration_ms": round(ev.duration_ms, 3)})
     for ev in events:
-        if ev.type in ("budget_hit", "cap_hit", "kill_switch"):
+        if ev.type in ("budget_hit", "cap_hit", "kill_switch", "breaker_tripped"):
             steps.append(Observation("span", ev.type, _ns(ev), level="WARNING",
-                                     status_message=ev.short))
+                                     status_message=ev.short,
+                                     output={"short": ev.short},
+                                     metadata=dict(ev.data or {})))
     return steps
 
 

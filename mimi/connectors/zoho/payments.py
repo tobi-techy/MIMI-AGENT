@@ -47,12 +47,41 @@ def preview_payment(payload: dict[str, Any]) -> str:
     else:
         text = "the amount"
     shop = payload.get("shop_name") or payload.get("customer_id") or "the shop"
+    on_account = payload.get("on_account_kobo")
+    waiting = payload.get("waiting_for_roll_kobo")
+    billed = payload.get("billed_by_roll_kobo")
+    held = (_naira(int(on_account)) if isinstance(on_account, int) and on_account > 0 else "")
+    later = (_naira(int(waiting)) if isinstance(waiting, int) and waiting > 0 else "")
+    already = (_naira(int(billed)) if isinstance(billed, int) and billed > 0 else "")
+    said = []
+    if already:
+        said.append(f"{already} of it is already off that delivery's invoice in the book")
+    if later:
+        said.append(f"{later} of it goes on the delivery it was sent for once that "
+                    "delivery is billed")
+    if held:
+        said.append(f"{held} of it stays on the shop's account: it owed less than that")
+    if said:
+        return (f"Record {shop}'s {text} transfer in Zoho Books. "
+                + ", and ".join(said) + ".")
     return f"Record {shop}'s {text} transfer in Zoho Books."
+
+
+def _naira(kobo: int) -> str:
+    whole, part = divmod(int(kobo), 100)
+    return f"\u20a6{whole:,}" + (f".{part:02d}" if part else "")
 
 
 def create_body(payload: dict[str, Any], idempotency_key: str) -> dict[str, Any]:
     """The Zoho create-customer-payment body. Amounts leave here in naira,
-    computed from integer kobo in code."""
+    computed from integer kobo in code.
+
+    The invoice list may add up to the payment or to less than it, never to
+    more: less means part of the payment was not applied to any invoice, which
+    Zoho Books holds as an unapplied amount on the customer payment. That is the
+    case when a shop paid more than it owed, and the alternative (applying it to
+    an invoice anyway) would record a bigger application than the invoice ever
+    owed."""
     amount_kobo = payload.get("amount_kobo")
     if not isinstance(amount_kobo, int) or amount_kobo <= 0:
         raise ConnectorError("A customer payment needs a positive amount in kobo.",
@@ -66,10 +95,10 @@ def create_body(payload: dict[str, Any], idempotency_key: str) -> dict[str, Any]
     invoices = payload.get("invoices") or []
     applied = sum(int(i.get("amount_applied_kobo") or 0) for i in invoices
                   if isinstance(i, dict))
-    if invoices and applied != amount_kobo:
+    if applied > amount_kobo:
         raise ConnectorError(
-            "The invoice amounts do not add up to the payment.",
-            next_step="Split the payment across its invoices in code first.")
+            "The invoice amounts add up to more than the payment.",
+            next_step="Cap each application at the invoice's open balance in code first.")
     return {
         "customer_id": payload.get("customer_id"),
         "payment_mode": payload.get("payment_mode") or "Bank Transfer",

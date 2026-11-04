@@ -73,6 +73,8 @@ jobs:
         run: python -m mimi.api.loop_safety_eval --no-write
       - name: Claims-gate eval (outbound figures, dates and names must match the run's records, shop numbers are never owner figures, done or sent or approved claims need a confirmed tool outcome, promises need a scheduled follow-up, money-moved claims always held; fails unless every bad case is held and no control is)
         run: python -m mimi.harness.claims_eval --no-write
+      - name: Denials eval (RAI-324, denial circuit breaker - persistence trips the breaker and parks, replies after a refusal report it honestly, chained tasks never trip; fails on any miss)
+        run: python -m mimi.harness.denials_eval --no-write
       - name: Policy eval (RAI-323, the owner's rulebook - every action type x behaviour, every built-in stop x behaviour, loosening attempts by shop or chat message; fails on any miss or a built-in stop bypass)
         run: python -m mimi.harness.policy_eval --no-write
       - name: Harness evals (50 Collector scenarios scripted and recorded Muse Spark, 41 security cases, 200 replayed retries, runaway budgets, idle cost; fails on any pass mark)
@@ -179,8 +181,8 @@ jobs:
         env:
           MIMI_DB_URL: postgresql://postgres:mimi-ci@localhost:5432/mimi  # pragma: allowlist secret
         run: alembic upgrade head && alembic downgrade base
-      - name: Store, API and worker-kill tests on Postgres
-        run: python -m pytest tests/test_store.py tests/test_api.py tests/test_worker_kill.py tests/test_budget_park.py
+      - name: Store, API, invoice-locking and worker-kill tests on Postgres
+        run: python -m pytest tests/test_store.py tests/test_api.py tests/test_receivables_locking.py tests/test_worker_kill.py tests/test_budget_park.py
       - name: End-to-end eval on Postgres (the same scenes and 11 SIGKILLs; the workers claim with FOR UPDATE SKIP LOCKED; recorded answers; same pass marks)
         run: python -m mimi.api.e2e --no-write --db "$MIMI_TEST_DATABASE_URL"
 

@@ -57,8 +57,15 @@ def _shop_rows(conn: sa.Connection, tenant: str, shop_id: str | None = None) -> 
         sa.func.count().label("open_n"))
         .where(r.c.tenant_id == tenant, r.c.outstanding_kobo > 0)
         .group_by(r.c.shop_id).subquery())
-    q = (sa.select(s.shops, agg.c.outstanding, agg.c.overdue, agg.c.open_n)
+    acct = (sa.select(
+        s.credit_notes.c.shop_id,
+        sa.func.coalesce(sa.func.sum(s.credit_notes.c.on_account_kobo), 0).label("on_account"))
+        .where(s.credit_notes.c.tenant_id == tenant, s.credit_notes.c.undone_at.is_(None))
+        .group_by(s.credit_notes.c.shop_id).subquery())
+    q = (sa.select(s.shops, agg.c.outstanding, agg.c.overdue, agg.c.open_n,
+                   acct.c.on_account)
          .outerjoin(agg, agg.c.shop_id == s.shops.c.shop_id)
+         .outerjoin(acct, acct.c.shop_id == s.shops.c.shop_id)
          .where(s.shops.c.tenant_id == tenant).order_by(s.shops.c.shop_id))
     if shop_id is not None:
         q = q.where(s.shops.c.shop_id == shop_id)
@@ -68,6 +75,9 @@ def _shop_rows(conn: sa.Connection, tenant: str, shop_id: str | None = None) -> 
 def _shop_summary(row: Any, book: owed.ShopOwed | None = None) -> dict[str, Any]:
     out, over = int(row.outstanding or 0), int(row.overdue or 0)
     n_open = int(row.open_n or 0)
+    # What the shop holds on its account: a payment (or a return credit) bigger
+    # than it owed, recorded rather than dropped (mimi.store.on_account).
+    acct = int(getattr(row, "on_account", 0) or 0)
     if book is not None:
         # One definition of owed and overdue for every surface (mimi.owed).
         out, over, n_open = book.owed_kobo, book.overdue_kobo, book.open_invoices
@@ -79,6 +89,7 @@ def _shop_summary(row: Any, book: owed.ShopOwed | None = None) -> dict[str, Any]
         "credit_limit_naira": naira(int(row.credit_limit_kobo)),
         "outstanding_kobo": out, "outstanding_naira": naira(out),
         "overdue_kobo": over, "overdue_naira": naira(over),
+        "on_account_kobo": acct, "on_account_naira": naira(acct),
         "open_invoices": n_open, "simulated": bool(row.simulated),
         "credit_limit_ngn": ngn(int(row.credit_limit_kobo)), "outstanding_ngn": ngn(out),
         "overdue_ngn": ngn(over),
@@ -337,6 +348,7 @@ def list_tasks(engine: Engine, tenant: str, *, thread_id: str = "", helper: str 
 _ACTIVITY_STEP_TYPES = {
     "handoff": "route", "handback": "handback", "route": "route",
     "tool_called": "tool", "tool_result": "tool", "tool_refused": "tool",
+    "claim_blocked": "tool", "breaker_tripped": "tool", "owner_stop": "tool",
     "model_called": "model", "draft_proposed": "reply", "card_read": "code",
     "step_finished": "tool",
 }
@@ -367,7 +379,10 @@ def _activity_steps(conn: sa.Connection, tenant: str, turn_id: str) -> list[dict
         else:
             name = str(e.tool or "step")
             short = display.humanize(str(e.short or ""), names) or name.replace("_", " ")
-        st = "failed" if str(e.type) in ("tool_refused", "claim_blocked") else "ok"
+        st = "failed" if str(e.type) in ("tool_refused", "claim_blocked") else (
+            # A stop is not a success: the breaker trip and the owner's stop
+            # both read "held".
+            "held" if str(e.type) in ("breaker_tripped", "owner_stop") else "ok")
         out.append({"name": name, "kind": kind, "status": st, "short": short[:300],
                     "ms": round(float(e.duration_ms or 0.0), 3), "at": str(e.at)})
     return out

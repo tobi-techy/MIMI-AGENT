@@ -179,6 +179,23 @@ def test_a_working_turn_shows_the_handoff_before_the_answer(env: dict[str, Any])
     assert done["handoff"]["status"] == "done" and done["task_status"] == "done"
 
 
+def test_a_trip_and_a_stop_read_held_in_the_console_steps() -> None:
+    """A stop is not a success: the helper's step lines read a breaker trip and
+    the owner's stop as "held", the same way a held claim does (RAI-324)."""
+    from types import SimpleNamespace
+
+    events = [
+        SimpleNamespace(type="tool_result", tool="read_book", duration_ms=1.5, at="t1"),
+        SimpleNamespace(type="breaker_tripped", tool="denials", duration_ms=0.0, at="t2"),
+        SimpleNamespace(type="owner_stop", tool="", duration_ms=0.0, at="t3"),
+    ]
+    steps = hx.steps_from_events(events, route_ms=0.5, route_at="t0",
+                                 route_name="Balance question")
+    status = {st.name: st.status for st in steps}
+    assert status == {"Balance question": "ok", "read_book": "ok",
+                      "denials": "held", "tool": "held"}
+
+
 # ---------------------------------------------------------- 2. no dead end
 
 

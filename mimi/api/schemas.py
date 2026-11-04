@@ -341,6 +341,10 @@ class ShopSummary(_Out):
     outstanding_naira: str
     overdue_kobo: int
     overdue_naira: str
+    # A payment (or a return credit) bigger than the shop owed, held on its
+    # account until it is allocated to an invoice.
+    on_account_kobo: int = 0
+    on_account_naira: str = ""
     open_invoices: int
     simulated: bool
     # Whole naira and days (demo wiring, 2 Nov 2026): days since the oldest
@@ -941,6 +945,50 @@ class PolicyChangeOut(_Out):
     to: str
     by: str
     at: str
+
+
+class RoutineOut(_Out):
+    """One scheduled routine on the console's rail (4 Nov 2026).
+
+    ``name``, ``schedule`` and ``last_finding`` are sentences written by code
+    and rendered as written. ``last_run_at`` and ``next_run_at`` are ISO 8601
+    with an explicit zone (Africa/Lagos); ``last_run_at`` is empty when the
+    routine has never run, and ``last_finding`` then says so.
+    """
+
+    id: str
+    name: str
+    schedule: str
+    paused: bool
+    # Present only when paused (the route excludes the None).
+    paused_reason: str | None = None
+    last_run_at: str
+    next_run_at: str
+    last_finding: str
+    # Present only when the last finding is about exactly one shop, so the
+    # console can link it. Never guessed: several shops or the whole book
+    # leave it out and the sentence renders as plain text.
+    last_finding_shop_id: str | None = None
+
+
+class RoutineList(_Out):
+    routines: list[RoutineOut]
+    as_of: str
+
+
+class RoutinePauseIn(BaseModel):
+    """Why a routine is being paused (the skip records it); optional."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    reason: str = Field("", max_length=300)
+    by: str = Field("", max_length=100)
+
+
+class RoutineToggleOut(_Out):
+    id: str
+    name: str
+    paused: bool
 
 
 class PolicyOut(_Out):

@@ -87,6 +87,9 @@ BASE_TIERS: dict[str, Tier] = {
     # The owner raises the day's model allowance when the daily cap parks
     # helpers (RAI-272). Mimi's own spend, never the book's money.
     "raise_daily_allowance": "approve",
+    # The owner looks at a job the denial breaker parked (RAI-324): approve
+    # to let it carry on. Mimi's own working, never the book's money.
+    "review_denied_job": "approve",
     # Brand's Promo Check (RAI-272): reads promos; brand emails stay drafts.
     "get_brand_promos": "auto",
     "draft_brand_email": "approve",
@@ -153,6 +156,7 @@ BASE_TIERS: dict[str, Tier] = {
 ALWAYS_APPROVE: frozenset[str] = frozenset({"submit_credit_review", "flag_payment_proof",
                                             "draft_restock", "revise_restock",
                                             "draft_brand_email", "raise_daily_allowance",
+                                            "review_denied_job",
                                             "submit_order", "revise_order"})
 
 
@@ -274,6 +278,8 @@ ACTION_TYPES: Mapping[str, ActionType] = {
            ("draft_brand_email",), "ask"),
         _a("plan.raise_allowance", "mimi", "Raise today's model allowance", "ask",
            ("raise_daily_allowance",), "ask"),
+        _a("plan.review_denied", "mimi", "Look at a job the checks kept stopping", "ask",
+           ("review_denied_job",), "ask"),
     )
 }
 

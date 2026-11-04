@@ -172,8 +172,113 @@ What one shop could cost, aged and risk-weighted, per shop and in total.
 META_API_KEY= python -m pytest tests/test_returns.py tests/test_exposure.py -q
 ```
 
+`tests/test_receivables_locking.py` covers the row locking across the writers
+of a shop's invoices (see below). Six of its eight tests need row locks, so they
+run only where `MIMI_TEST_DATABASE_URL` points at Postgres and skip on SQLite
+with the reason in the skip message. The file is named in the Postgres job in
+`.github/workflows/ci.yml`, so those six run in CI and not only on a machine
+where someone happens to point the variable at a database:
+
+```bash
+MIMI_TEST_DATABASE_URL=postgresql://... META_API_KEY= python -m pytest \
+    tests/test_receivables_locking.py -q
+```
+
+`tests/test_payment_on_account.py` covers a payment bigger than the balance:
+the card capped invoice by invoice, the excess recorded on the shop's account,
+the payment row and the receivables adding up, the shop read showing it, and
+Go's own writer doing the same.
+
 The frozen field names and status strings the console builds against are in
 [`returns-exposure-contract.md`](returns-exposure-contract.md).
+
+## A payment bigger than the shop owes
+
+A shop can pay more than it owes. Until this change the excess went nowhere:
+`demo_wiring._apply_to_invoices` and `week.go.GoSim._pay` clamped the invoice
+while the `payments` row kept the full amount the bank sent, so two tables in
+the same book disagreed and nothing complained. And the `zoho_payment` card
+built from that payment named the full amount against one invoice, which in a
+real Zoho Books org is a real over-application: the shop's record would say it
+settled more of an invoice than the invoice ever owed.
+
+Both halves are fixed in `mimi/store/on_account.py`, so the demo's bank credit
+and the simulated week behave the same way:
+
+* the amount applied to each invoice is capped at that invoice's open balance.
+  `_apply_to_invoices` returns what the invoices could absorb
+  (`{"first", "applied_kobo", "waiting_for_roll_kobo", "on_account_kobo",
+  "applications"}`) and the card is built from that, invoice by invoice, never
+  from the payment amount;
+* `payments.create_body` now accepts an invoice list that adds up to less than
+  the payment (Zoho holds the difference as an unapplied amount on the customer
+  payment) and refuses one that adds up to more;
+* what is left is a `credit_notes` row on the shop's account. 0017 already gave
+  that table `on_account_kobo`, so there is no new table and no new revision: a
+  payment credit has no return, so its `return_id` is empty and its `credit_id`
+  is built from the payment id (`crn_` plus a hash, the same shape as a return
+  credit, so the scrub catches it too). The row keeps the applications as well,
+  so the payment row and the receivables add up:
+  `payments.amount_kobo == applied_kobo + waiting_for_roll_kobo +
+  on_account_kobo`;
+* `GET /v1/shops` and `GET /v1/shops/{shop_id}` carry `on_account_kobo` and
+  `on_account_naira`, so the owner sees what the shop holds on its account, and
+  the card's preview says in words how much of the payment stays there.
+
+**A payment and the roll are two writers of the same delivery.** The demo does
+this in one order and it can happen in the other, and both are handled, because
+the roll credits every payment that names a delivery into the invoice it closes
+(`GoSim.open_day` sums them into the new invoice's `paid_kobo`):
+
+* before the roll: a same-day screenshot names the day's live delivery, which has
+  no receivable to come off. The part that delivery will take is neither applied
+  to an older invoice nor held on the account (`roll_share_kobo` returns it, and
+  the card carries it as `waiting_for_roll_kobo`), and it lands on that delivery's
+  invoice when the roll closes it.
+* after the roll: the demo rolls at 06:00 and the bank's webhook arrives at 09:00,
+  and the payment row was written the day before naming that delivery, so the roll
+  already spent it on the invoice it closed. The webhook must not take it off the
+  shop's older invoices as well. `roll_share_kobo` says how much the roll spent
+  there (`billed=True`), the card names that invoice with it
+  (`billed_by_roll_kobo`, and the invoice is in the card's list, so Zoho gets the
+  application the shop's own book already made), and no older invoice moves.
+
+What the delivery cannot take is dealt with as usual, off the older invoices
+first and then on the account, so `applied_kobo`, `waiting_for_roll_kobo` and
+`on_account_kobo` add up to what the bank sent. The card names the first invoice
+that actually took money, or names none when none did, so neither the Zoho write
+nor the owner's message names an invoice that got nothing.
+
+The limit worth knowing: the after-the-roll case is decided by the payment's day
+against the delivery's day, which is what places it on one side of the roll. A
+payment written while its delivery sat unbilled for more than a day and verified
+only after the roll is left as it was before this change, which means the roll's
+credit and this payment's application can both count. Fixing that properly moves
+the decision to the roll: close a delivery with what was applied to it rather
+than with every payment that names it, which needs its own change.
+
+Allocating that credit onto a later invoice is not built. It wants its own
+approval and its own undo, and this change only has to make the money visible
+and the two tables agree. Until it exists, an over-payment sits on the shop's
+account and an invoice it could have paid stays open.
+
+`tests/test_payment_on_account.py` covers the payment bigger than the balance:
+a payment bigger than every invoice (capped invoice by invoice, the excess
+recorded, the payment row keeping what the bank sent, the shop read showing what
+is held), a payment bigger than one invoice spreading over the next, Go's own
+writer recording its excess the same way, a payment that fits recording nothing,
+a payment for a delivery that has not been billed yet (nothing applied, nothing
+on the account, and the roll crediting it once when it closes the delivery),
+a payment bigger than that delivery (the delivery's part waits, the older
+invoices take theirs, only the rest is on the account), a payment the roll
+already spent because it was written the day of the delivery and verified after
+the roll (the older invoices do not move, the card names the invoice the money is
+already on, and the shop's debt falls by it once), the card naming the first
+invoice that took money and nothing when none did, and the preview wording.
+Measured, not asserted: with `roll_share_kobo` forced to zero, three of these
+fail, the roll-first one on the older invoices taking money the roll had already
+credited:
+`META_API_KEY= python -m pytest tests/test_payment_on_account.py -q`.
 
 ## Not built (stated plainly)
 
@@ -186,25 +291,105 @@ The frozen field names and status strings the console builds against are in
   no shop-initiated return request yet, and no partial-line reason per
   disposition beyond the line's own reason.
 
-Two things the review found and this branch does not fix, both about two
-readers and writers on the same invoices at once. Neither can happen in a demo
-walked by one person, and both want tests, so they are the first items after
-the demo rather than a late change:
+## Row locking on the invoices, and why it is in the read
 
-1. **Row locking on the receivable writers.** `apply_credit` and
-   `_reverse_applications` read an invoice and then write an absolute `paid`
-   and `outstanding`. So does Go's own writer for a verified bank payment. Two
-   of them can read the same invoice before either commits and the later
-   commit then overwrites the earlier one, the classic lost update this branch
-   introduces by adding a second writer. The fix is `with_for_update()` on the
-   invoice rows read inside the same transaction, and it has to be taken in
-   one consistent order (the invoice read order is already `position` then
-   `delivery_id`, so the lock order should follow it) to keep two credits on
-   one shop from deadlocking.
-2. **One snapshot for the exposure read.** `GET /v1/credit/exposure` reads
-   payments and receivables separately (and on two connections), so a bank
-   credit committing between them shows the same money as both verified and
-   outstanding for one request. One connection is not enough by itself under
-   READ COMMITTED: the two sides want a single snapshot, so read them in one
-   transaction at a repeatable-read isolation level or from one statement.
+Three things write a shop's `paid_kobo`, `outstanding_kobo` and `status`: a
+return credit (`apply_credit`, `_reverse_applications`), Go's own writer for a
+verified bank payment (`demo_wiring._apply_to_invoices`, and
+`week.go.GoSim._pay`), and the routine. Each of them has to read the invoice,
+work out the new figures from that read, and write those figures back, so a
+reader that holds nothing can have its figures overwritten by another writer
+that read first and committed later. Nobody sees an error: the balance is just
+wrong afterwards. That is why this is the first item after the demo and not a
+later tidy-up.
+
+Built (branch `feat/returns-locking`): every one of those reads goes through
+`mimi/store/invoices.py`, which takes the rows `FOR UPDATE` inside the caller's
+transaction, always in one order, `position` then `delivery_id`:
+
+* `open_invoices(conn, tenant, shop_id, lock=True)` for a shop's open invoices,
+  oldest first. `lock=False` is for the draft (`settle`), which only shows the
+  owner a plan.
+* `invoices_by_id(conn, tenant, delivery_ids, lock=True)` for the undo, which
+  reads the invoices a credit came off by id. It takes all of them, in that
+  order, before it writes any, so an undo cannot interleave with another writer
+  on the second invoice.
+* `overdue_ids(conn, tenant, day_no, lock=True)` for the day roll, which marks
+  past-due invoices with one bulk `UPDATE`. A bulk update takes the rows it
+  touches itself, in whatever order the planner picks, so the roll would be the
+  one writer that does not queue in the house order and could cycle with one
+  that does. It reads them through here first, holding them, and then updates
+  exactly the ids that read returned: each statement takes its own snapshot, so
+  a row that starts matching in between would otherwise be taken unheld, and the
+  rows the read returned cannot change under it because it holds them.
+* `LOCK_ORDER` is the one definition, and the order in the statements comes from
+  it (`order_by(*(s.receivables.c[name] for name in LOCK_ORDER))`), not from a
+  second literal that could drift from it. A new writer (the routine) calls the
+  read instead of writing its own query, which is what keeps a second order from
+  appearing and a deadlock from cycling on it.
+
+**Why the read and not the write.** Two reasons, and the second is the one that
+decides it. The write needs figures only the read has: which invoice a credit
+comes off first, how much each takes, and the status each is left with, since
+the credit is planned oldest first, recorded on the `credit_notes` row so an
+undo can subtract exactly what it put on, and shown to the owner before it is
+applied. But even if the write did not need them, `UPDATE ... SET outstanding =
+outstanding - :x` is not a shape this code can use: the amount each invoice
+takes is the outcome of a plan (`returns.ledger.credit_plan`) that a person
+approves, and the same plan is what the undo reverses. Taking the lock with the
+read keeps one place where the figures are decided, and it makes the write a
+plain absolute assignment of figures that were read under the lock.
+
+What that buys, proven by tests in `tests/test_receivables_locking.py` (Postgres
+only for the ones that need row locks, and they skip on SQLite with the reason
+in the skip message):
+
+1. A locked read waits for the writer holding the row, and a read that does not
+   ask for the lock returns the figures from before that write at once.
+2. A second writer on one invoice waits for the first (here a bank payment
+   holding its transaction), then both allocations land: `paid` is the sum of
+   both, `outstanding` is the original less both, and `paid + outstanding ==
+   total`.
+3. The same the other way round: the credit is applied and held, the bank
+   payment waits, and the invoice ends with both amounts off one figure.
+4. A credit spanning two invoices waits on the first and holds nothing, so
+   another writer on the second invoice is not blocked by it. That is the
+   property that makes a cycle impossible: a transaction never waits for a
+   lower row while it holds a higher one, because every writer takes the rows
+   in one order. A transaction may hold a lower row and wait for a higher one,
+   which is what this test shows.
+5. Two credits over several invoices at once both land, and every invoice keeps
+   `paid + outstanding == total`.
+6. The same two amounts in either order (a credit and a bank payment) leave the
+   same balance, first the payment then the credit, and the other way round.
+7. The statement itself: one order (`ORDER BY receivables.position,
+   receivables.delivery_id`) with `FOR UPDATE` on the locked reads (including
+   the roll's overdue read) and without it on the draft's read.
+8. The day roll waits for a writer holding one of the invoices it is about to
+   mark overdue: the roll's bulk `UPDATE` is preceded by the same ordered,
+   locked read, so the roll queues the way every other writer does.
+
+Removing the lock from `mimi/store/invoices.py` fails six of these eight, every
+run: 1 and 4 on their waiting assertions (the second reader gets in at once), 2
+and 3 on the lost update (the invoice ends with one writer's figures instead of
+both), 7 on `FOR UPDATE` falling out of both locked statements, and 8 on the
+roll walking past the invoice the test is holding. The other two do not: 6 is
+the plain arithmetic in either order, and 5 is the two-credit race, which fails
+only when the two transactions interleave that way. A reviewer measured 5
+failing three times of three on Postgres 18.6 (one credit lost each time) and
+three runs here passed, which is what a race is. A guard that only fails on some
+interleavings is the reason the whole file is named in the Postgres job in
+`.github/workflows/ci.yml`: with `with_for_update()` deleted, the offline job
+skips these tests and the job that does run Postgres was not running this file,
+so both stayed green. The Postgres tests need a database:
+`MIMI_TEST_DATABASE_URL=postgresql://... python
+-m pytest tests/test_receivables_locking.py`.
+
+One thing still not built: **one snapshot for the exposure read.**
+`GET /v1/credit/exposure` reads payments and receivables separately (and on two
+connections), so a bank credit committing between them shows the same money as
+both verified and outstanding for one request. One connection is not enough by
+itself under READ COMMITTED: the two sides want a single snapshot, so read them
+in one transaction at a repeatable-read isolation level or from one statement.
+
 
