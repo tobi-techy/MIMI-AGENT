@@ -367,26 +367,35 @@ def _apply_to_invoices(conn: sa.Connection, tenant: str, shop_id: str, amount: i
     lock is held, so it cannot change the order the locks were taken in.
 
     Returns what those invoices could absorb: ``{"first": delivery_id,
-    "applied_kobo": int, "waiting_for_roll_kobo": int, "on_account_kobo": int,
-    "applications": [{"delivery_id", "amount_kobo"}]}``. Each invoice takes no
-    more than its own open balance, so the applications never add up to more
-    than the invoices owed, which is what the Zoho card has to say: an
-    application bigger than the invoice is a real over-application in a real
-    org. ``first`` is the first invoice that actually took something, or empty
-    when none did, so nothing downstream names an invoice that got nothing.
+    "applied_kobo": int, "waiting_for_roll_kobo": int, "billed_by_roll_kobo":
+    int, "on_account_kobo": int, "applications": [{"delivery_id",
+    "amount_kobo"}]}``. Each invoice takes no more than its own open balance, so
+    the applications never add up to more than the invoices owed, which is what
+    the Zoho card has to say: an application bigger than the invoice is a real
+    over-application in a real org. ``first`` is the first invoice that actually
+    took something, or empty when none did, so nothing downstream names an
+    invoice that got nothing.
 
-    A payment sent for a delivery that has not been billed yet is not applied to
-    the older invoices for the part that delivery will take: the day roll closes
-    that delivery and credits the payment to it, so applying it here too would
-    count the same money twice. That part is ``waiting_for_roll_kobo``. Whatever
-    is left after the invoices and that part is ``on_account_kobo``, for the
-    caller to record on the shop's account. The three add up to ``amount``."""
-    waiting = on_account.roll_will_take_kobo(conn, tenant=tenant, delivery_id=first,
-                                             payment_id=payment_id, amount=amount)
+    The payment's own delivery is handled first, whichever side of the roll it
+    is on (``on_account.roll_share_kobo``). If the roll has already billed it,
+    the roll spent this payment on that invoice and this function adds that
+    application, naming the invoice, without touching an older one: Zoho is a
+    separate book and needs the same application. If the delivery has not been
+    billed, its part is ``waiting_for_roll_kobo``: the roll will credit it there,
+    so it is applied nowhere and held nowhere. Only what is left after the
+    delivery and the invoices is ``on_account_kobo``, for the caller to record on
+    the shop's account. The parts add up to ``amount``."""
+    share = on_account.roll_share_kobo(conn, tenant=tenant, delivery_id=first,
+                                       payment_id=payment_id, amount=amount)
+    applications: list[dict[str, Any]] = []
+    paid_first = ""
+    if share.billed and share.kobo > 0:
+        applications.append({"delivery_id": str(first), "amount_kobo": share.kobo})
+        paid_first = str(first)  # the invoice the roll already spent it on
+    waiting = 0 if share.billed else share.kobo
     rows = list(invoice_reads.open_invoices(conn, tenant, shop_id, lock=True))
     rows.sort(key=lambda r: 0 if r.delivery_id == first else 1)
-    left, paid_first = int(amount) - waiting, ""
-    applications: list[dict[str, Any]] = []
+    left = int(amount) - share.kobo
     for r in rows:
         if left <= 0:
             break
@@ -401,7 +410,8 @@ def _apply_to_invoices(conn: sa.Connection, tenant: str, shop_id: str, amount: i
         paid_first = paid_first or r.delivery_id
         left -= take
     return {"first": paid_first, "applied_kobo": int(amount) - waiting - max(0, left),
-            "waiting_for_roll_kobo": waiting, "on_account_kobo": max(0, left),
+            "waiting_for_roll_kobo": waiting, "billed_by_roll_kobo": share.kobo
+            if share.billed else 0, "on_account_kobo": max(0, left),
             "applications": applications}
 
 
@@ -424,7 +434,10 @@ def zoho_approval(conn: sa.Connection, tenant: str, owner_thread: str, shop: Any
     part of the payment belongs to a delivery that has not been billed yet,
     ``waiting_for_roll_kobo`` carries it: it is not on the account and not on an
     invoice, and ``invoice_number`` and ``delivery_id`` name the first invoice
-    that did take something, so the card never names one that took nothing."""
+    that did take something, so the card never names one that took nothing.
+    ``billed_by_roll_kobo`` is the part the roll already spent on the payment's
+    own invoice when it billed the delivery, and it is in ``invoices`` too, so
+    the Zoho book gets the application the shop's own book already made."""
     key = f"zoho_payment:{payment_id}"
     apr = approval_id_for(tenant, key)
     first = str(applied.get("first") or "")
@@ -437,6 +450,7 @@ def zoho_approval(conn: sa.Connection, tenant: str, owner_thread: str, shop: Any
         "applied_kobo": int(applied.get("applied_kobo") or 0),
         "on_account_kobo": int(applied.get("on_account_kobo") or 0),
         "waiting_for_roll_kobo": int(applied.get("waiting_for_roll_kobo") or 0),
+        "billed_by_roll_kobo": int(applied.get("billed_by_roll_kobo") or 0),
         "invoice_number": invoice_number(first), "delivery_id": first,
         "reference_number": zp.reference_for(key), "payment_id": payment_id,
         "date": paid_on, "customer_id": f"zc-{shop.shop_id}",

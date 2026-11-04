@@ -178,11 +178,13 @@ class GoSim:
         # A payment whose delivery has not been billed yet is the exception: the
         # day roll closes that delivery and credits the payment to it, so the
         # part it will take is neither applied here nor held on the account.
-        waiting = on_account.roll_will_take_kobo(
+        # (This payment was written today, so a delivery that already rolled
+        # cannot hold it: the roll only counts payments that were there.)
+        share = on_account.roll_share_kobo(
             conn, tenant=self.tenant, delivery_id=did, payment_id=pid, amount=amount)
         on_account.record(conn, tenant=self.tenant, shop_id=shop_id, payment_id=pid,
                           amount=amount, applied_kobo=paid, applications=applications,
-                          waiting_kobo=waiting)
+                          waiting_kobo=0 if share.billed else share.kobo)
         self.ledger.payments.append(pid)
         return pid
 

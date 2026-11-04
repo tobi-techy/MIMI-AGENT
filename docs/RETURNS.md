@@ -225,19 +225,37 @@ and the simulated week behave the same way:
   `on_account_naira`, so the owner sees what the shop holds on its account, and
   the card's preview says in words how much of the payment stays there.
 
-**A payment for a delivery that has not been billed yet.** The screenshot book
-offers the day's live delivery, so a same-day payment names a delivery with no
-receivable row: there is no invoice for it to come off. The morning roll is what
-closes that delivery into one, and it credits every payment that names it
-(`GoSim.open_day` sums them into the new invoice's `paid_kobo`). So the part that
-delivery will take is neither applied to an older invoice nor held on the
-account, or one payment would be counted twice: `on_account.roll_will_take_kobo`
-returns it (the delivery's total less the payments already on it, capped at the
-payment) and the card carries it as `waiting_for_roll_kobo`. What the delivery
-cannot take is dealt with as usual, off the older invoices first and then on the
-account. The card names the first invoice that actually took money, or names
-none when none did, so neither the Zoho write nor the owner's message ever names
-an invoice that got nothing.
+**A payment and the roll are two writers of the same delivery.** The demo does
+this in one order and it can happen in the other, and both are handled, because
+the roll credits every payment that names a delivery into the invoice it closes
+(`GoSim.open_day` sums them into the new invoice's `paid_kobo`):
+
+* before the roll: a same-day screenshot names the day's live delivery, which has
+  no receivable to come off. The part that delivery will take is neither applied
+  to an older invoice nor held on the account (`roll_share_kobo` returns it, and
+  the card carries it as `waiting_for_roll_kobo`), and it lands on that delivery's
+  invoice when the roll closes it.
+* after the roll: the demo rolls at 06:00 and the bank's webhook arrives at 09:00,
+  and the payment row was written the day before naming that delivery, so the roll
+  already spent it on the invoice it closed. The webhook must not take it off the
+  shop's older invoices as well. `roll_share_kobo` says how much the roll spent
+  there (`billed=True`), the card names that invoice with it
+  (`billed_by_roll_kobo`, and the invoice is in the card's list, so Zoho gets the
+  application the shop's own book already made), and no older invoice moves.
+
+What the delivery cannot take is dealt with as usual, off the older invoices
+first and then on the account, so `applied_kobo`, `waiting_for_roll_kobo` and
+`on_account_kobo` add up to what the bank sent. The card names the first invoice
+that actually took money, or names none when none did, so neither the Zoho write
+nor the owner's message names an invoice that got nothing.
+
+The limit worth knowing: the after-the-roll case is decided by the payment's day
+against the delivery's day, which is what places it on one side of the roll. A
+payment written while its delivery sat unbilled for more than a day and verified
+only after the roll is left as it was before this change, which means the roll's
+credit and this payment's application can both count. Fixing that properly moves
+the decision to the roll: close a delivery with what was applied to it rather
+than with every payment that names it, which needs its own change.
 
 Allocating that credit onto a later invoice is not built. It wants its own
 approval and its own undo, and this change only has to make the money visible
@@ -252,11 +270,14 @@ writer recording its excess the same way, a payment that fits recording nothing,
 a payment for a delivery that has not been billed yet (nothing applied, nothing
 on the account, and the roll crediting it once when it closes the delivery),
 a payment bigger than that delivery (the delivery's part waits, the older
-invoices take theirs, only the rest is on the account), the card naming the first
+invoices take theirs, only the rest is on the account), a payment the roll
+already spent because it was written the day of the delivery and verified after
+the roll (the older invoices do not move, the card names the invoice the money is
+already on, and the shop's debt falls by it once), the card naming the first
 invoice that took money and nothing when none did, and the preview wording.
-Measured, not asserted: with `roll_will_take_kobo` forced to zero the two
-delivery-not-billed tests fail, one of them on the older invoices taking money
-that the roll then credits again:
+Measured, not asserted: with `roll_share_kobo` forced to zero, three of these
+fail, the roll-first one on the older invoices taking money the roll had already
+credited:
 `META_API_KEY= python -m pytest tests/test_payment_on_account.py -q`.
 
 ## Not built (stated plainly)

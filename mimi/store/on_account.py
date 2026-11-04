@@ -21,12 +21,12 @@ credit and the simulated week behave the same:
   is built from the payment id. ``for_shop_kobo`` is what the shop holds on
   account (every credit note on it that has not been undone, returns included).
 
-The exception is a payment sent for a delivery that has not been billed yet.
-That delivery has no receivable to come off, and the day roll is what closes it
-and credits every payment that names it, so the part that delivery will take is
-neither applied to an older invoice nor held on the account:
-``roll_will_take_kobo`` says how much that is, and it is what keeps one payment
-from being counted twice.
+The exception is a payment sent for a delivery that has not been billed yet, and
+the mirror of it: a payment that was already there when the roll billed the
+delivery it names. That delivery is where the roll credits every payment naming
+it, or has already, so that part of the payment is neither applied to an older
+invoice nor held on the account: ``roll_share_kobo`` says how much it is, and it
+is what keeps one payment from being counted twice.
 
 Allocating that credit onto a later invoice is deliberately not built: it wants
 its own approval and its own undo, and tonight it only has to be visible and to
@@ -37,13 +37,21 @@ from __future__ import annotations
 
 import hashlib
 from collections.abc import Mapping, Sequence
-from typing import Any
+from typing import Any, NamedTuple
 
 import sqlalchemy as sa
 
 from mimi.clock import wall
 from mimi.store import schema as s
 from mimi.store.util import dumps, insert_ignore, now_iso
+
+
+class RollShare(NamedTuple):
+    """A payment's part that belongs to its own delivery: ``kobo``, and whether
+    the roll has already billed the delivery and spent it (``billed``)."""
+
+    kobo: int
+    billed: bool
 
 
 def credit_id_for(tenant_id: str, payment_id: str) -> str:
@@ -61,37 +69,51 @@ def amount_kobo(amount: int, applied_kobo: int) -> int:
     return max(0, int(amount) - max(0, int(applied_kobo)))
 
 
-def roll_will_take_kobo(conn: sa.Connection, *, tenant: str, delivery_id: str,
-                        payment_id: str = "", amount: int = 0) -> int:
-    """How much of a payment the day roll will put against its own delivery.
+def roll_share_kobo(conn: sa.Connection, *, tenant: str, delivery_id: str,
+                    payment_id: str = "", amount: int = 0) -> RollShare:
+    """How much of a payment the day roll owns on the payment's own delivery.
 
-    A delivery that has not closed into an invoice yet (``deliveries.live``) has
-    no receivable for a payment to come off, but the roll is what closes it:
-    ``GoSim.open_day`` sums every payment that names the delivery into the new
-    invoice's ``paid_kobo``. So the part of a payment that delivery can still
-    take is already spoken for and must not be applied to another invoice or
-    held on the account, which would count the same money twice. The rest of the
-    payment (beyond what the delivery will owe) is dealt with as usual.
+    A payment names the delivery it was sent for, and that delivery can be on
+    either side of the roll, so there are two orders and both happen here:
 
-    ``payment_id`` is this payment's own row, so it is not counted as one of the
-    payments already on the delivery; pass an empty string for a caller that has
-    not written its payment row yet. Returns zero for a delivery that is not
-    live, which is every payment whose delivery has already been billed."""
+    * the delivery has not been billed yet. The roll is what closes it and it
+      sums every payment naming the delivery into the new invoice's
+      ``paid_kobo``, so this payment's part of the delivery's room is still to
+      come (``billed=False``);
+    * the delivery has been billed, and this payment was written on or before the
+      delivery's own day, so it was there when the roll ran and the roll already
+      spent it on that invoice (``billed=True``). A payment written after its
+      delivery rolled is not the roll's money and gets zero, which is the case
+      for Go's own writer paying an invoice it matched.
+
+    Either way the money must not also come off an older invoice or land on the
+    account, or one payment is counted twice. The amount is the delivery's total
+    less the payments already naming it, capped at this payment: the arithmetic
+    ``GoSim.open_day`` does. The limit is a payment written while its delivery
+    sat unbilled for more than a day and verified only after it rolled: the day
+    stamp cannot place it, and it is left as it was before this change."""
     if not delivery_id:
-        return 0
-    total = conn.execute(sa.select(s.deliveries.c.total_kobo).where(
+        return RollShare(0, False)
+    d = conn.execute(sa.select(s.deliveries.c.live, s.deliveries.c.day,
+                               s.deliveries.c.total_kobo).where(
         s.deliveries.c.tenant_id == tenant,
-        s.deliveries.c.delivery_id == delivery_id,
-        s.deliveries.c.live.is_(True))).first()
-    if total is None:
-        return 0
+        s.deliveries.c.delivery_id == delivery_id)).first()
+    if d is None:
+        return RollShare(0, False)
+    billed = not bool(d.live)
+    if billed:
+        wrote = conn.execute(sa.select(s.payments.c.day).where(
+            s.payments.c.tenant_id == tenant,
+            s.payments.c.payment_id == payment_id)).first() if payment_id else None
+        if wrote is None or int(wrote.day) > int(d.day):
+            return RollShare(0, True)  # after the roll: not the roll's money
     others = int(conn.execute(sa.select(sa.func.coalesce(
         sa.func.sum(s.payments.c.amount_kobo), 0)).where(
         s.payments.c.tenant_id == tenant,
         s.payments.c.delivery_id == delivery_id,
         s.payments.c.payment_id != payment_id,
         s.payments.c.fake_alert.is_(False))).scalar() or 0)
-    return max(0, min(int(amount), int(total.total_kobo) - others))
+    return RollShare(max(0, min(int(amount), int(d.total_kobo) - others)), billed)
 
 
 def record(conn: sa.Connection, *, tenant: str, shop_id: str, payment_id: str,
@@ -101,10 +123,11 @@ def record(conn: sa.Connection, *, tenant: str, shop_id: str, payment_id: str,
 
     Returns the credit note id, or an empty string when the payment came off the
     invoices in full. Idempotent on the payment: the id is derived from it, so a
-    repeated call writes the one row. ``waiting_kobo`` is the part the day roll
-    will take for the payment's own delivery (``roll_will_take_kobo``); it is
-    not applied to an invoice yet, so it is not on the account either, and the
-    row records what did come off the invoices."""
+    repeated call writes the one row. ``waiting_kobo`` is the part of the payment
+    the roll will take for its own delivery and has not taken yet
+    (``roll_share_kobo`` with the delivery unbilled); it is not on an invoice and
+    not on the account. A part the roll already spent on the delivery's invoice
+    is not passed here either: it is already off the shop's invoices."""
     on_account = amount_kobo(amount, int(applied_kobo) + int(waiting_kobo))
     if on_account <= 0:
         return ""

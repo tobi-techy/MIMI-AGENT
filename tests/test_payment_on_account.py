@@ -64,13 +64,14 @@ def _open(engine: Any, shop: str = SHOP) -> list[dict[str, Any]]:
 
 
 def _likely_payment(engine: Any, shop: str, amount: int, *, payment_id: str,
-                    delivery_id: str = "") -> str:
+                    delivery_id: str = "", day: int = 60) -> str:
     """The screenshot payment a bank credit would verify: a payment row that is
-    ``likely`` and not a fake alert."""
+    ``likely`` and not a fake alert. ``day`` is the world day the screenshot was
+    written on, which is what ``record_screenshot_payment`` stamps."""
     with engine.begin() as conn:
         conn.execute(s.payments.insert().values(
             tenant_id=A, payment_id=payment_id, shop_id=shop, delivery_id=delivery_id,
-            day=60, paid_on="2026-10-26", amount_kobo=int(amount), method="transfer",
+            day=day, paid_on="2026-10-26", amount_kobo=int(amount), method="transfer",
             reference="TRF-0001", status="matched", partial=False, fake_alert=False,
             proof_level="likely", witnesses="[]", proof_policy_version="v1"))
     return payment_id
@@ -356,6 +357,61 @@ def test_a_payment_bigger_than_that_delivery_still_adds_up(book: dict[str, Any])
     assert all(left.get(did, 0) == 0 for did in owed_by)  # nothing came back
 
 
+def test_a_payment_the_roll_already_spent_is_not_taken_off_the_invoices_again(
+        book: dict[str, Any]) -> None:
+    """The demo's order is the roll first, then the bank's webhook: the payment
+    was written the day of the delivery it names, so the roll counted it into
+    that delivery's paid_kobo when it billed it, and the webhook that verifies it
+    hours later must not take the same money off the shop's older invoices. The
+    card names the invoice the money is already on, so Zoho gets that
+    application, and nothing else moves."""
+    engine, c = book["engine"], book["c"]
+    live = _live(engine)
+    owed = {r["delivery_id"]: r["outstanding_kobo"] for r in _open(engine)}
+    assert owed and sum(owed.values()) > 0
+    amount = live["total_kobo"]
+    payment = _likely_payment(engine, SHOP, amount, payment_id="pay-rolled-1",
+                              delivery_id=live["delivery_id"], day=live["day"])
+    assert _on_the_delivery(engine, live["delivery_id"], payment) == 0  # only this one
+    _roll(engine, live["day"] + 1)  # 06:00: the delivery becomes an invoice
+    with engine.connect() as conn:
+        billed = conn.execute(sa.select(s.receivables).where(
+            s.receivables.c.tenant_id == A,
+            s.receivables.c.delivery_id == live["delivery_id"])).first()
+        assert int(billed.paid_kobo) == amount  # the roll already spent it
+        assert int(billed.outstanding_kobo) == 0
+    owed_after_roll = {r["delivery_id"]: r["outstanding_kobo"] for r in _open(engine)}
+    with engine.begin() as conn:
+        got = demo_wiring.bank_credit(conn, A, SHOP, event_id="ev-rolled",
+                                      amount_ngn=None, now=wall())
+    item = _card(c, str(got["approval_id"]))
+    payload = item["payload"]
+    assert payload["applied_kobo"] == amount  # where it is, not new money
+    assert payload["billed_by_roll_kobo"] == amount
+    assert payload["waiting_for_roll_kobo"] == 0
+    assert payload["on_account_kobo"] == 0
+    assert payload["delivery_id"] == live["delivery_id"]  # the invoice it is on
+    assert {i["invoice_id"]: i["amount_applied_kobo"] for i in payload["invoices"]} == {
+        demo_wiring.invoice_number(live["delivery_id"]): amount}  # and no other invoice
+    assert "already off that delivery's invoice" in item["preview"]
+    # Nothing came off the older invoices, and nothing is on the account.
+    after = {r["delivery_id"]: r["outstanding_kobo"] for r in _open(engine)}
+    assert after == owed_after_roll
+    with engine.connect() as conn:
+        assert on_account.for_shop_kobo(conn, A, SHOP) == 0
+        assert _note(conn, payment) is None
+        billed = conn.execute(sa.select(s.receivables).where(
+            s.receivables.c.tenant_id == A,
+            s.receivables.c.delivery_id == live["delivery_id"])).first()
+        assert int(billed.paid_kobo) == amount  # the webhook did not add it again
+        assert int(billed.outstanding_kobo) == 0
+        pay = conn.execute(sa.select(s.payments).where(
+            s.payments.c.tenant_id == A, s.payments.c.payment_id == payment)).first()
+        assert int(pay.amount_kobo) == amount
+    # One payment of that size took exactly that much off the shop's debt, once.
+    assert sum(owed.values()) - sum(after.values()) == 0
+
+
 def test_the_roll_names_the_first_invoice_that_took_the_money(book: dict[str, Any]) -> None:
     """``first`` is the first invoice that actually took something, so the card
     never names a delivery that got nothing (the payment's own, or an id that
@@ -368,8 +424,10 @@ def test_the_roll_names_the_first_invoice_that_took_the_money(book: dict[str, An
         assert got["first"] == rows[0]["delivery_id"]
         assert got["applications"][0]["delivery_id"] == rows[0]["delivery_id"]
         assert got["waiting_for_roll_kobo"] == 0  # not a live delivery either
+        assert got["billed_by_roll_kobo"] == 0  # and no payment row, so not the roll's
         assert got["applied_kobo"] + got["on_account_kobo"] == rows[0]["outstanding_kobo"]
     with engine.begin() as conn:
         nothing = demo_wiring._apply_to_invoices(conn, A, SHOP2, 0, "dlv-nothing")
         assert nothing == {"first": "", "applied_kobo": 0, "waiting_for_roll_kobo": 0,
-                           "on_account_kobo": 0, "applications": []}
+                           "billed_by_roll_kobo": 0, "on_account_kobo": 0,
+                           "applications": []}
