@@ -348,6 +348,7 @@ def _live_env(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("MIMI_COMPOSIO_AUTH_ZOHO_BOOKS", "ac_test_books")
     monkeypatch.setenv("MIMI_COMPOSIO_CALLBACK_URL", "https://demo.userail.money/x")
     monkeypatch.setenv("MIMI_ZOHO_LIVE_WRITE", "1")
+    monkeypatch.setenv("ZOHO_BOOKS_ORGANIZATION_ID", "org-live-1")
 
 
 def _live_transport(monkeypatch: pytest.MonkeyPatch, live: LiveLikeZoho) -> None:
@@ -407,9 +408,10 @@ def test_live_write_and_undo_through_live_like_transport(
 
 def test_live_write_refused_when_org_unresolvable(
         env: dict[str, Any], monkeypatch: pytest.MonkeyPatch) -> None:
-    """Live switch on but the org read is empty: no fake fallback, the
+    """Live switch on but no org named: no guess, no fake fallback, the
     approval records the error and no owner text claims a Zoho write."""
     _live_env(monkeypatch)
+    monkeypatch.delenv("ZOHO_BOOKS_ORGANIZATION_ID")
     _seed_live_connection(env["engine"])
     live = LiveLikeZoho(orgs=[])
     _live_transport(monkeypatch, live)
@@ -417,8 +419,7 @@ def test_live_write_refused_when_org_unresolvable(
     res = approval["result"]
     assert res["undo_available"] is False and "organization" in res["error"]
     assert "zoho_payment_id" not in res
-    assert live.calls == [] or all(
-        c.get("action") == "zoho_books_organizations" for c in live.calls)
+    assert live.calls == []
     owner = env["c"].get(f"/v1/threads/{A}:owner", headers=h()).json()
     assert not [m for m in owner["messages"]
                 if m["kind"] == "zoho_payment_recorded"
@@ -455,6 +456,118 @@ def test_timeout_then_readback_finds_nothing_is_an_error(
     res = approval["result"]
     assert res["undo_available"] is False and "error" in res
     assert "zoho_payment_id" not in res
+
+
+def _second_approval(env: dict[str, Any]) -> str:
+    """Run the flow again for a second pending approval.
+
+    A new screenshot payment (new proof id) plus a new bank event, so the
+    second approval carries a distinct payment id and idempotency key."""
+    c, engine = env["c"], env["engine"]
+    open_r = next(r for r in W.receivables if r.shop_id == "shop-008" and r.outstanding_kobo > 0)
+    amount = min(3_495_000, open_r.outstanding_kobo)
+    with engine.begin() as conn:
+        dw.after_intents(conn, A, [{
+            "tool": "record_payment_proof", "idempotency_key": "ik-demo-2",
+            "shop_id": "shop-008",
+            "payload": {"proof_id": "prf-demo-2", "shop_id": "shop-008",
+                        "amount_kobo": amount, "delivery_ids": [open_r.delivery_id],
+                        "paid_at": "2026-10-26T15:57:00+01:00"}}],
+            {"ik-demo-2": "applied"}, wall())
+    r = c.post("/v1/events", json={"event_id": "bank-10", "kind": "webhook",
+                                   "name": "bank_credit", "shop_id": "shop-008",
+                                   "amount_ngn": amount // 100}, headers=h(CHAN))
+    t = run(env, r)
+    assert t["state"] == "done", t
+    zoho = next(a for a in c.get("/v1/approvals", headers=h()).json()["approvals"]
+                if a["kind"] == "zoho_payment" and a["status"] == "pending")
+    return str(zoho["approval_id"])
+
+
+def test_second_live_write_same_day_refused_without_provider_call(
+        env: dict[str, Any], monkeypatch: pytest.MonkeyPatch) -> None:
+    """Cap default 1: the second real write refuses before any provider
+    call, records the refusal, and stays visible."""
+    import re
+
+    _live_env(monkeypatch)
+    _seed_live_connection(env["engine"])
+    live = LiveLikeZoho()
+    _live_transport(monkeypatch, live)
+    first = _approve_zoho(env)
+    assert first["result"]["zoho_payment_id"].startswith("zp-live-")
+    second_id = _second_approval(env)
+    before = len(live.calls)
+    ok = env["c"].post(f"/v1/approvals/{second_id}/approve", headers=h())
+    assert ok.status_code == 200, ok.text
+    res = ok.json()["approval"]["result"]
+    assert res["undo_available"] is False and "nothing was written" in res["error"]
+    assert "zoho_payment_id" not in res
+    assert len(live.calls) == before  # the provider client was never called
+    text = res["error"]
+    assert not re.search(r"\d{4,}", text)  # no digits-only ids in the owner sentence
+    assert "—" not in text and "–" not in text  # no em or en dashes
+    live_again = env["c"].get("/v1/approvals?status=all", headers=h()).json()["approvals"]
+    row = next(a for a in live_again if a["approval_id"] == second_id)
+    assert row["status"] == "approved"  # the approval stays visible, not gone
+
+
+def test_fake_write_does_not_consume_the_live_cap(
+        env: dict[str, Any], monkeypatch: pytest.MonkeyPatch) -> None:
+    """A fake-books write (no live connection row) leaves the live cap alone:
+    the first real write after it still lands."""
+    _live_env(monkeypatch)
+    live = LiveLikeZoho()
+    _live_transport(monkeypatch, live)
+    # No connection row: fake path, demo venue.
+    fake_approval = _approve_zoho(env)
+    assert fake_approval["result"]["venue"] == "mimi-book-only"
+    _seed_live_connection(env["engine"])
+    second_id = _second_approval(env)
+    ok = env["c"].post(f"/v1/approvals/{second_id}/approve", headers=h())
+    assert ok.status_code == 200, ok.text
+    res = ok.json()["approval"]["result"]
+    assert res["venue"] == "zoho" and res["zoho_payment_id"].startswith("zp-live-")
+
+
+def test_live_cap_is_per_tenant(
+        env: dict[str, Any], monkeypatch: pytest.MonkeyPatch) -> None:
+    """One tenant's real write does not block another tenant's first write."""
+    tenant_b = "second-lane"
+    _live_env(monkeypatch)
+    _seed_live_connection(env["engine"])
+    _seed_live_connection(env["engine"], tenant=tenant_b)
+    live = LiveLikeZoho()
+    _live_transport(monkeypatch, live)
+    first = _approve_zoho(env)
+    assert first["result"]["zoho_payment_id"].startswith("zp-live-")
+
+    from mimi.store.util import dumps as _dumps
+
+    with env["engine"].connect() as conn:
+        agents_row = conn.execute(sa.select(s.approvals).where(
+            s.approvals.c.approval_id == first["approval_id"])).first()
+    payload = loads(agents_row.payload, {})
+    with env["engine"].begin() as conn:
+        conn.execute(sa.insert(s.approvals).values(
+            approval_id="appr-tenant-b-live-1", tenant_id=tenant_b,
+            idempotency_key="zoho_payment:tenant-b-live-1", turn_id="t-b",
+            thread_id=f"{tenant_b}:owner", helper="", skill="proof/bank-credit",
+            shop_id="shop-008", tool="zoho_payment", intent_kind="zoho_payment",
+            preview="preview", payload=_dumps(payload), status="pending",
+            created_at=agents_row.created_at, created_ts=agents_row.created_ts,
+            handling=""))
+    ok = env["c"].post("/v1/approvals/appr-tenant-b-live-1", headers=h())
+    assert ok.status_code in (403, 404)  # the demo key only knows tenant A, as it should
+    # Approve tenant B directly at the seam instead.
+    dw.on_approved(env["engine"], tenant_b,
+                   {"approval_id": "appr-tenant-b-live-1",
+                    **{"payload": dict(payload)}},
+                   demo_mode=True, transport=live)
+    with env["engine"].connect() as conn:
+        done = conn.execute(sa.select(s.approvals).where(
+            s.approvals.c.approval_id == "appr-tenant-b-live-1")).first()
+    assert loads(done.payload, {})["result"]["zoho_payment_id"].startswith("zp-live-")
 
 
 def test_agreement_reports_drift_per_shop(
