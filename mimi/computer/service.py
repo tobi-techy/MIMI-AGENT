@@ -51,10 +51,12 @@ class Refused(Exception):
 
 @dataclass
 class _Run:
-    """One task's run in flight: the runner and the owner's stop flag."""
+    """One task's run in flight: the owner's stop flag, and the runner once it
+    exists. Registered the moment the row says "running", so a stop that lands
+    before the thread starts is not lost."""
 
-    runner: Runner
     stop: threading.Event
+    runner: Runner | None = None
 
 
 def engine_from_env() -> ComputerPort:
@@ -183,6 +185,9 @@ class ComputerService:
                 "created_at": task["created_at"],
                 "step_count": int(task.get("step_count", 0)),
                 "stop_reason": task.get("stop_reason", ""),
+                # The sentence for a person, so the list obeys the same rule as
+                # the detail: render this, never the code above.
+                "note": task.get("note", ""),
             })
         return out
 
@@ -221,20 +226,24 @@ class ComputerService:
         # a run: the loser is told, not silently ignored.
         if not self.store.claim(tenant, task_id, RUNNABLE):
             raise Refused("this task has already been started", 409)
-        # A resumed task runs in the session it paused in, so any link the
-        # console already holds is read again from that session, never assumed.
+        # The stop flag exists from the moment the row says "running", so a stop
+        # landing before the thread starts is not lost. The route drops any live
+        # link the console holds, because this run will read its own.
+        run = _Run(stop=threading.Event())
         with self._lock:
+            self._runs[(tenant, task_id)] = run
             self._live.pop((tenant, task_id), None)
         if inline:
-            self._run(tenant, task)
+            self._run(tenant, task, run)
         else:
-            threading.Thread(target=self._run, args=(tenant, task), daemon=True,
+            threading.Thread(target=self._run, args=(tenant, task, run), daemon=True,
                              name=f"computer-{task_id}").start()
         return self.get(tenant, task_id) or {}
 
-    def _run(self, tenant: str, task: dict[str, Any]) -> None:
+    def _run(self, tenant: str, task: dict[str, Any], run: _Run) -> None:
         task_id = task["task_id"]
-        stop = threading.Event()
+        stop = run.stop
+        outcome: Any = None
         try:
             limits = GuardLimits(**loads(task.get("limits"), {}))
             inputs = loads(task.get("inputs"), {})
@@ -252,8 +261,7 @@ class ComputerService:
             runner = Runner(self.engine, limits=limits, clock=self.clock,
                             on_step=on_step, on_artifact=on_artifact,
                             should_stop=stop.is_set)
-            with self._lock:
-                self._runs[(tenant, task_id)] = _Run(runner=runner, stop=stop)
+            run.runner = runner
             # A resumed task continues the step log it paused with.
             outcome = runner.run(task_id, task["domain"], task["kind"], steps, inputs,
                                  start_index=self.store.next_index(tenant, task_id))
@@ -265,22 +273,27 @@ class ComputerService:
                                   finished=True, only_from=("running",))
             return
         finally:
+            # The run is over once its own row is written, below: until then a
+            # stop still finds this flag, and the row it writes stands.
+            if outcome is not None:
+                if outcome.status != "awaiting_owner":
+                    # The session's work is done. A task paused at a sign-in wall
+                    # keeps its session and its live view link: that is where the
+                    # owner signs in. This thread owns the session, so this is
+                    # also the thread that closes it.
+                    self._release(
+                        tenant, task_id, task,
+                        "stopped_by_owner"
+                        if outcome.stop_reason == "stopped_by_owner" else "task_finished")
+                # Only from "running": a stop that landed first wrote its own row,
+                # and this run must not overwrite what the owner decided.
+                self.store.set_status(tenant, task_id, outcome.status,
+                                      stop_reason=outcome.stop_reason or "",
+                                      note=outcome.note or "",
+                                      finished=outcome.status != "awaiting_owner",
+                                      only_from=("running",))
             with self._lock:
                 self._runs.pop((tenant, task_id), None)
-        if outcome.status != "awaiting_owner":
-            # The session's work is done. A task paused at a sign-in wall keeps
-            # its session and its live view link: that is where the owner signs
-            # in, and the session dies of its own accord if they do not.
-            self._release(tenant, task_id, task,
-                          "stopped_by_owner"
-                          if outcome.stop_reason == "stopped_by_owner" else "task_finished")
-        # Only from "running": a stop that landed first wrote its own row, and
-        # this run must not overwrite what the owner decided.
-        self.store.set_status(tenant, task_id, outcome.status,
-                              stop_reason=outcome.stop_reason or "",
-                              note=outcome.note or "",
-                              finished=outcome.status != "awaiting_owner",
-                              only_from=("running",))
 
     def _read_live(self, tenant: str, task_id: str, task: dict[str, Any]) -> None:
         """Read the session's signed live view link once, while it is open, so
@@ -321,8 +334,8 @@ class ComputerService:
 
         with self._lock:
             run = self._runs.get((tenant, task_id))
-        if run is not None:
-            run.stop.set()  # the runner stops at its next step, keeping nothing
+            if run is not None:
+                run.stop.set()  # the runner stops at its next step, keeping nothing
         # The status is written before the session is closed: the run's own or
         # failure writes are conditional on "running", so the owner's stop is
         # the row that stands.
@@ -330,7 +343,11 @@ class ComputerService:
                               stop_reason="stopped_by_owner",
                               note="Stopped by the owner.", finished=True,
                               only_from=OPEN_STATUSES)
-        self._release(tenant, task_id, task, "stopped_by_owner")
+        if run is None:
+            # No run in flight, so nothing else will close this session. When a
+            # run is in flight it owns the session and closes it on its own
+            # thread as it returns.
+            self._release(tenant, task_id, task, "stopped_by_owner")
         return self.get(tenant, task_id) or {}
 
 

@@ -892,7 +892,11 @@ class ComputerTaskSummary(_Out):
     step_count: int = 0
     stop_reason: str = Field(
         "", description="A machine code, as on the task detail. Never render "
-                        "this: the detail's note is the sentence for a person.")
+                        "this: the sentence beside it is the one for a person.")
+    note: str = Field(
+        "", description="The sentence for a person, and the one to render in a "
+                        "list: it is always plain words when the task has "
+                        "stopped or paused.")
 
 
 class ComputerTaskList(_Out):

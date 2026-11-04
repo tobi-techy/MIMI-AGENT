@@ -151,13 +151,17 @@ already being started, or that has ended, is `409` and changes nothing.
 ### `status`, `stop_reason` and `note`
 
 **`stop_reason` is a code for machines; `note` is the sentence for people, and
-it is the one to render.** The codes are `off_domain`, `forbidden_page`,
-`budget_steps`, `budget_seconds`, `login_wall`, `stopped_by_owner`,
-`unsupported_step` and `engine_error`, and it is empty while the task has not
-stopped. `note` is always plain words when a task has stopped: the sentence
-comes from `runner.STOP_NOTES` for that code, with `runner.stop_note` supplying
-a plain default for any code that has no entry, so a renderer never has to
-invent words and never has to fall back to a code.
+it is the one to render**, on both the task detail and a row of the task list.
+The codes are `off_domain`, `forbidden_page`, `budget_steps`, `budget_seconds`,
+`login_wall`, `stopped_by_owner`, `unsupported_step` and `engine_error`.
+`stop_reason` is empty while nothing has been stopped **or paused**: a task
+paused at a sign-in wall carries `login_wall` and is not stopped, so switch on
+`status` (`awaiting_owner` against `stopped`, `stopped_runaway` and `failed`)
+and never on a non-empty code. `note` is always plain words once a task has
+stopped or paused: the sentence comes from `runner.STOP_NOTES` for that code,
+with `runner.stop_note` supplying a plain default for any code that has no
+entry, so a renderer never has to invent words and never has to fall back to a
+code.
 
 **`status` is exactly one of seven, and `queued` is not one of them** (`queued`
 is an internal queue and turn word, and no task response ever carries it):
@@ -252,15 +256,16 @@ A page that asks for a sign-in pauses the task and keeps its session open, and
 themselves, in their own browser, through that link.** Mimi does not type a
 password or a code, ever, and stores neither.
 
-Approving the paused task then **resumes it in that same session**
-(`cloud_browser.start` reuses the session it already opened for the task), so
-the sign-in the owner just did is still there and the run carries on from the
-plan's first step, which now lands on the real page. The resumed run continues
-the task's own step log, and the console is handed that session's link, read
-again, never the paused run's link from memory. If that session has ended in the
-meantime, the run ends `failed` with a plain note and the owner proposes the
-task again: a resumed run never quietly opens a second session to leak, and it
-never pretends a fresh session is the signed-in one.
+Approving the paused task then **re-runs the plan**, and it does so on a **new
+session**: playwright's sync API is bound to the thread that opened a session,
+and every run is its own thread, so a run that found the paused run's session
+closes it (the provider session is released, not left to time out) and opens a
+fresh one. That new session has no cookies, so a page behind a login pauses
+again, with a fresh live view link for the owner to sign in through once more.
+The resumed run continues the task's own step log, and it never hands the
+console an old link from memory. In other words: **a paused task can be resumed,
+but the sign-in itself is not carried over**, and the honest fix for that is a
+session owned by one long-lived thread per task, which is named in section 9.
 
 Reuse **across tasks** is designed but **not built**: the provider keeps a
 browser context (cookies and login state) that a later session can attach to,
@@ -324,6 +329,12 @@ offline); the signed live view link, proven reachable with no provider login.
 * **A signed-in session reused across tasks.** The owner can sign in through a
   task's live view today, but the next task starts fresh. Keeping a provider
   context is the design, not the code.
+* **A session owned by one long-lived thread per task.** That is what would let a
+  resume keep the owner's sign-in (and let `/stop` close the local driver from
+  the thread that opened it). Today each run is its own thread and a session
+  belongs to its thread, so a resumed run opens a fresh session, and a stop that
+  lands on a session opened by another thread frees the provider session while
+  the local driver is left to die with the process.
 * **A live view of a finished task.** The link dies with the session by design,
   so a task that is over has screenshots, not a screen.
 * **Bot-protected sites.** No proxies, no CAPTCHA solving on the free tier, so

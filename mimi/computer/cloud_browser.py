@@ -9,7 +9,10 @@ What the engine does, in the provider's own words:
 
 * create one session per task (``keepAlive`` so a long task is not cut off at
   the default five minutes), and release it ourselves when the task ends;
-* drive the session with Playwright over the session's CDP endpoint;
+* drive the session with Playwright over the session's CDP endpoint. A session
+  belongs to the thread that opened it: playwright's sync API is bound to that
+  thread, so a run that finds an earlier run's session closes it instead of
+  driving it from a thread it does not belong to;
 * take a real screenshot after every step and hand it back as bytes;
 * read back a live view URL for the session, which is a signed link a person
   who is not logged in to the provider can open.
@@ -21,6 +24,7 @@ and the stop are the runner's (``mimi.computer.runner``).
 from __future__ import annotations
 
 import re
+import threading
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -47,6 +51,10 @@ class CloudConfig:
 class _Session:
     session_id: str
     connect_url: str
+    # The thread that opened it. Playwright's sync API is bound to that thread:
+    # every call switches to a greenlet it owns, and a call from anywhere else
+    # raises. So a session may only be driven, and only be closed, by its owner.
+    owner: int = 0
     pw: Any = None
     browser: Any = None
     page: Any = None
@@ -116,15 +124,11 @@ class CloudBrowserEngine:
     def start(self, task: TaskRef) -> None:
         open_session = self._state.sessions.get(task.task_id)
         if open_session is not None:
-            if _alive(open_session):
-                # A task paused at a sign-in wall keeps its session: resuming
-                # drives the same browser, so a sign-in the owner did through
-                # the live view is still there, and no second session is
-                # created to be left open.
-                return
-            # The session we opened has gone: close it out before opening a new
-            # one, or the old one stays open until the provider times it out.
-            self.stop(task, "session_gone")
+            # A session may only be driven by the thread that opened it, and
+            # every run is its own thread, so a session left by an earlier run
+            # is closed here rather than reused: a playwright handle from a
+            # thread that has exited raises on the first call.
+            self.stop(task, "session_replaced")
         session_id, connect = self._create()
         if not connect:
             raise EngineError("the browser session had no CDP endpoint")
@@ -148,8 +152,8 @@ class CloudBrowserEngine:
             self._release(session_id)
             raise EngineError(f"could not connect to the browser session: {exc}") from exc
         self._state.sessions[task.task_id] = _Session(
-            session_id=session_id, connect_url=connect, pw=pw, browser=browser,
-            context=context, page=page)
+            session_id=session_id, connect_url=connect, owner=threading.get_ident(),
+            pw=pw, browser=browser, context=context, page=page)
 
     def _page(self, task: TaskRef) -> _Session:
         sess = self._state.sessions.get(task.task_id)
@@ -204,6 +208,14 @@ class CloudBrowserEngine:
         return self.live_view(sess.session_id) if sess else ""
 
     def stop(self, task: TaskRef, reason: str) -> None:
+        """Release the provider session and close the local driver.
+
+        The provider release always happens. The four closes only work on the
+        thread that opened the session: called from another one (an owner's
+        `/stop` while a run is in flight, or a run replacing a session a paused
+        run left) they raise and are dropped here, which frees the provider
+        session and leaves the local driver to die with this process.
+        """
         sess = self._state.sessions.pop(task.task_id, None)
         if sess is None:
             return
@@ -218,18 +230,6 @@ class CloudBrowserEngine:
 
 def _clean(text: str) -> str:
     return re.sub(r"\s+", " ", text).strip()
-
-
-def _alive(sess: _Session) -> bool:
-    """Whether a session we already opened can still be driven.
-
-    A page that is closed, or a connection that has gone, means the provider
-    released the session: nothing to reuse, and it must not be left open.
-    """
-    try:
-        return sess.page is not None and not sess.page.is_closed()
-    except Exception:
-        return False
 
 
 def engine_from_env() -> Any:

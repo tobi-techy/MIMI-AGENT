@@ -121,6 +121,8 @@ class ComputerStore:
         for row in rows:
             d = _row(row)
             d["step_count"] = int(counts.get(d["task_id"], 0))
+            # The list renders the sentence, like the detail, never the code.
+            d["note"] = _note(d)
             out.append(d)
         return out
 

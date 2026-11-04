@@ -46,9 +46,15 @@ _FORBIDDEN_INPUT = re.compile(
     re.IGNORECASE)
 
 # Field labels a credential would live in. A fill against one is refused.
-_CREDENTIAL_FIELD = ("password", "passcode", "pin", "otp", "one-time", "token",
-                     "cvv", "cvc", "card number", "cardnumber", "security code",
-                     "secret", "answer")
+# Matched as whole words: "Shipping address" and "Pincode" carry the letters of
+# "pin" but are not a field a credential goes in, and refusing them would
+# refuse an ordinary government form.
+_CREDENTIAL_WORDS = ("password", "passcode", "pin", "otp", "one-time", "one time",
+                     "token", "cvv", "cvc", "card number", "cardnumber",
+                     "security code", "secret", "answer")
+_CREDENTIAL_FIELD = re.compile(
+    r"(?<![a-z0-9])(?:" + "|".join(re.escape(w) for w in _CREDENTIAL_WORDS)
+    + r")s?(?![a-z0-9])", re.IGNORECASE)
 
 _EMAIL = re.compile(r"[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}")
 _PHONE = re.compile(r"(?<![\d])(?:\+?\d[\d\s().-]{8,}\d)(?![\d])")
@@ -151,9 +157,13 @@ def classify(page: Page) -> PageVerdict:
 
 
 def credential_field(field: str) -> bool:
-    """A form field that only a credential belongs in. Never filled."""
-    low = (field or "").strip().lower()
-    return any(word in low for word in _CREDENTIAL_FIELD)
+    """A form field that only a credential belongs in. Never filled.
+
+    Whole words only: a field labelled "Shipping address", "Pincode" or
+    "Shopping list" is not a credential field, however many of its letters
+    spell one.
+    """
+    return bool(_CREDENTIAL_FIELD.search((field or "").strip()))
 
 
 def looks_like_secret(value: str) -> bool:

@@ -970,6 +970,12 @@
             "title": "Goal",
             "type": "string"
           },
+          "note": {
+            "default": "",
+            "description": "The sentence for a person, and the one to render in a list: it is always plain words when the task has stopped or paused.",
+            "title": "Note",
+            "type": "string"
+          },
           "status": {
             "title": "Status",
             "type": "string"
@@ -981,7 +987,7 @@
           },
           "stop_reason": {
             "default": "",
-            "description": "A machine code, as on the task detail. Never render this: the detail's note is the sentence for a person.",
+            "description": "A machine code, as on the task detail. Never render this: the sentence beside it is the one for a person.",
             "title": "Stop Reason",
             "type": "string"
           },
