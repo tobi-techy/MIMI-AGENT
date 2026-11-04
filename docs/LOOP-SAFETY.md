@@ -106,6 +106,19 @@ All in code, none from the model: `mimi.harness.guards.LoopLimits`,
   re-queues the turn with a clear streak, window snapshot and loop guard.
   Every parked transcript keeps exactly one tool reply per call, so the
   resumed turn is a valid request.
+
+  The honesty gate (`mimi.harness.claims.dishonest_success`) reads the refusal
+  the run has not moved past: the step's own tool answers, or the loop's live
+  denial (`refused` from `Harness._verify_outcomes`), which is the streak a
+  step that moved the run on clears. A step whose own read or write worked has
+  answered the denial and is not judged as refused, so an honest report of the
+  new work goes out. That is step level on purpose: a claim about the refused
+  call can ride along with unrelated progress in the same step, and that is the
+  cheaper error, because a false hold's repair line would tell the model the
+  work was refused when it was not and would count a denial that can arm the
+  window. The follow-up if that shape shows up live is to arm the gate unless
+  the refused call itself was retried and answered (the tool name is on the
+  run's denial events; the loop state keeps only the count today).
 * False blocks: the e2e, two open asks, binding, Order, photo route, steer,
   context, credit and harness evals were replayed with `MIMI_GUARD_TRIPS` set.
   Zero trips on legitimate replies. The only trips are the harness security
