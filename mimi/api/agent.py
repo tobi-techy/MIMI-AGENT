@@ -2201,7 +2201,7 @@ class Agent:
                     s.tenants.c.tenant_id == tenant_id,
                     s.tenants.c.daily_cap_kobo < new_cap).values(daily_cap_kobo=new_cap))
                 resumed = self.resume_parked(conn, tenant_id)
-        if approve and a.tool in ("zoho_payment", "credit_over_limit"):
+        if approve and a.tool in ("zoho_payment", "credit_over_limit", "return_credit"):
             from mimi.api import demo_wiring as dw
 
             dw.on_approved(self.engine, tenant_id, self.approval(tenant_id, approval_id),

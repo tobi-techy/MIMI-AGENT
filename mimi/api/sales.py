@@ -394,6 +394,13 @@ def on_approved(engine: Engine, tenant: str, approval_id: str, option: str) -> N
         p["result"] = {"option": option, "shop_told": True, "undo_available": True,
                        "decided_at": now_iso(now)}
         _set(conn, tenant, approval_id, p)
+    if option == "pickup":
+        # A pickup opens a returns draft (the ledger), so the collected goods
+        # have somewhere to land. Mimi moves nothing; the rep collects.
+        from mimi.api import returns as returns_ledger
+
+        with engine.begin() as conn:
+            returns_ledger.draft_from_pickup(conn, tenant, approval_id, now)
 
 
 def undo(engine: Engine, tenant: str, approval_id: str) -> None:
@@ -416,6 +423,14 @@ def undo(engine: Engine, tenant: str, approval_id: str) -> None:
              text=f"Undone: the plan for {p['shop_name']}'s {p['item']} is off. The shop has been told.")
         p["result"] = {**res, "undo_available": False, "undone_at": now_iso(now)}
         _set(conn, tenant, approval_id, p)
+        if p.get("chosen") == "pickup":
+            # The pickup is off, so the return it opened is off with it: the
+            # shop has just been told to ignore the plan and nothing has been
+            # collected yet. A return that already collected goods keeps its
+            # own record (returns.cancel_from_pickup leaves it alone).
+            from mimi.api import returns as returns_ledger
+
+            returns_ledger.cancel_from_pickup(conn, tenant, approval_id, now)
 
 
 def book_name(conn: sa.Connection, tenant: str) -> str:

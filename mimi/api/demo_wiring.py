@@ -48,7 +48,10 @@ from mimi.store.util import dumps, insert_ignore, loads, now_iso
 
 ZOHO_KIND = "zoho_payment"
 OVER_LIMIT_KIND = "credit_over_limit"
-WIRING_KINDS = (ZOHO_KIND, OVER_LIMIT_KIND)
+# The returns ledger's settlement credit (feat/returns-and-exposure). It rides
+# this same approve/undo path, so the card behaves exactly like a Zoho payment.
+RETURN_CREDIT_KIND = "return_credit"
+WIRING_KINDS = (ZOHO_KIND, OVER_LIMIT_KIND, RETURN_CREDIT_KIND)
 
 # The demo's words for the stored proof levels.
 PROOF_GRADE = {"verified": "verified", "likely": "estimated", "estimated": "unverified"}
@@ -508,6 +511,12 @@ def on_approved(engine: Engine, tenant: str, a: dict[str, Any], *,
         payload["result"] = {**res, "undo_available": True}
         with engine.begin() as conn:
             _set_payload(conn, tenant, a["approval_id"], payload)
+    elif kind == RETURN_CREDIT_KIND:
+        # The returns ledger applies the credit itself (invoices, the credit
+        # note row and the return's status), all in its own transaction.
+        from mimi.api import returns as returns_ledger
+
+        returns_ledger.apply_credit(engine, tenant, a)
 
 
 def undo_approval(engine: Engine, tenant: str, approval_id: str, *,
@@ -519,6 +528,15 @@ def undo_approval(engine: Engine, tenant: str, approval_id: str, *,
         raise NotFound(approval_id)
     payload = loads(a.payload, {})
     res = payload.get("result") or {}
+    if payload.get("kind") == RETURN_CREDIT_KIND:
+        # The returns ledger reverses the credit (invoices back, the note row
+        # marked undone, the return back to inspected).
+        from mimi.api import returns as returns_ledger
+
+        if a.status != "approved" or not res.get("undo_available"):
+            raise Conflict("only an approved credit can be undone, once")
+        returns_ledger.undo_credit(engine, tenant, {"approval_id": approval_id})
+        return
     if payload.get("kind") == OVER_LIMIT_KIND and a.status == "approved" and res.get(
             "change_id") and res.get("undo_available"):
         undo_limit(engine, tenant, str(res["change_id"]))
