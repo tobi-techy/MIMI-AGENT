@@ -376,6 +376,165 @@
         "title": "ApprovalOut",
         "type": "object"
       },
+      "BooksAgreementOut": {
+        "additionalProperties": false,
+        "description": "The two-books trust read. When ``zoho_connected`` is false the\nconsole shows no Zoho figure at all: every zoho and difference field\nis null and ``note`` says why in plain words.",
+        "properties": {
+          "as_of": {
+            "title": "As Of",
+            "type": "string"
+          },
+          "currency": {
+            "title": "Currency",
+            "type": "string"
+          },
+          "note": {
+            "title": "Note",
+            "type": "string"
+          },
+          "shops": {
+            "items": {
+              "$ref": "#/components/schemas/BooksShopAgreement"
+            },
+            "title": "Shops",
+            "type": "array"
+          },
+          "total": {
+            "$ref": "#/components/schemas/BooksAgreementTotal"
+          },
+          "zoho_connected": {
+            "title": "Zoho Connected",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "as_of",
+          "zoho_connected",
+          "currency",
+          "shops",
+          "total",
+          "note"
+        ],
+        "title": "BooksAgreementOut",
+        "type": "object"
+      },
+      "BooksAgreementTotal": {
+        "additionalProperties": false,
+        "properties": {
+          "difference_kobo": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Difference Kobo"
+          },
+          "difference_naira": {
+            "title": "Difference Naira",
+            "type": "string"
+          },
+          "mimi_outstanding_kobo": {
+            "title": "Mimi Outstanding Kobo",
+            "type": "integer"
+          },
+          "mimi_outstanding_naira": {
+            "title": "Mimi Outstanding Naira",
+            "type": "string"
+          },
+          "zoho_outstanding_kobo": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Zoho Outstanding Kobo"
+          },
+          "zoho_outstanding_naira": {
+            "title": "Zoho Outstanding Naira",
+            "type": "string"
+          }
+        },
+        "required": [
+          "mimi_outstanding_kobo",
+          "mimi_outstanding_naira",
+          "zoho_outstanding_kobo",
+          "zoho_outstanding_naira",
+          "difference_kobo",
+          "difference_naira"
+        ],
+        "title": "BooksAgreementTotal",
+        "type": "object"
+      },
+      "BooksShopAgreement": {
+        "additionalProperties": false,
+        "description": "One shop's two-books comparison. ``difference_*`` is Mimi minus\nZoho: positive means Mimi's book is higher.",
+        "properties": {
+          "difference_kobo": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Difference Kobo"
+          },
+          "difference_naira": {
+            "title": "Difference Naira",
+            "type": "string"
+          },
+          "mimi_outstanding_kobo": {
+            "title": "Mimi Outstanding Kobo",
+            "type": "integer"
+          },
+          "mimi_outstanding_naira": {
+            "title": "Mimi Outstanding Naira",
+            "type": "string"
+          },
+          "shop_id": {
+            "title": "Shop Id",
+            "type": "string"
+          },
+          "shop_name": {
+            "title": "Shop Name",
+            "type": "string"
+          },
+          "zoho_outstanding_kobo": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Zoho Outstanding Kobo"
+          },
+          "zoho_outstanding_naira": {
+            "title": "Zoho Outstanding Naira",
+            "type": "string"
+          }
+        },
+        "required": [
+          "shop_id",
+          "shop_name",
+          "mimi_outstanding_kobo",
+          "mimi_outstanding_naira",
+          "zoho_outstanding_kobo",
+          "zoho_outstanding_naira",
+          "difference_kobo",
+          "difference_naira"
+        ],
+        "title": "BooksShopAgreement",
+        "type": "object"
+      },
       "Card": {
         "additionalProperties": false,
         "properties": {
@@ -3891,7 +4050,7 @@
       },
       "RoutineOut": {
         "additionalProperties": false,
-        "description": "One scheduled routine on the console's rail (4 Nov 2026).\n\n``name``, ``schedule`` and ``last_finding`` are sentences written by code\nand rendered as written. ``last_run_at`` and ``next_run_at`` are ISO 8601\nwith an explicit zone (Africa/Lagos); ``last_run_at`` is empty when the\nroutine has never run, and ``last_finding`` then says so.",
+        "description": "One scheduled routine on the console's rail (4 Nov 2026).\n\n``name``, ``schedule`` and ``last_finding`` are sentences written by code\nand rendered as written. ``last_run_at`` and ``next_run_at`` are ISO 8601\nwith an explicit zone (Africa/Lagos); ``last_run_at`` is empty when the\nroutine has never run, and ``last_finding`` is empty then too (the rail\nsays \"Not run yet\" from the timestamps, not twice).",
         "properties": {
           "id": {
             "title": "Id",
@@ -4956,7 +5115,7 @@
             "type": "string"
           },
           "status": {
-            "description": "needs_you: a pending approval or a turn waiting on the owner; running: a turn queued or running; done: otherwise.",
+            "description": "needs_you: a pending approval, or a turn waiting on a person (a question to answer, a park, a denial); running: a turn queued or running; done: otherwise.",
             "enum": [
               "needs_you",
               "running",
@@ -5907,6 +6066,70 @@
           }
         ],
         "summary": "Owner undoes an approved Zoho payment write (or a limit Credit suggested)"
+      }
+    },
+    "/v1/books/agreement": {
+      "get": {
+        "description": "The trust read: Mimi's outstanding against what Zoho Books\nreports, the difference (Mimi minus Zoho), and which shops differ.\nWhen Zoho is not connected every zoho and difference field is null\nand ``note`` says so in plain words, so the screen shows no figure\nrather than a zero.",
+        "operationId": "get_books_agreement_v1_books_agreement_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BooksAgreementOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Conflict"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Two books: Mimi's outstanding against Zoho Books', per shop and as a total"
       }
     },
     "/v1/computer/kinds": {
@@ -9272,6 +9495,91 @@
           }
         ],
         "summary": "Resume one routine (or all) from its next tick"
+      }
+    },
+    "/v1/routines/{routine_id}/run": {
+      "post": {
+        "description": "Run one routine now, through the same path a tick uses: the same\nfinding sentence, the same shop link, the same message and recording.\nThe Lagos day's claim is the same too, so a second run today answers\n409 with a sentence instead of sending twice; a paused routine answers\n409 with its reason. Answers the routine's row as the rail reads it\nafter the run. No model call: the routines are code.",
+        "operationId": "post_routine_run_v1_routines__routine_id__run_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "routine_id",
+            "required": true,
+            "schema": {
+              "title": "Routine Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RoutineOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Run one routine now, once for today's Lagos day"
       }
     },
     "/v1/shops": {

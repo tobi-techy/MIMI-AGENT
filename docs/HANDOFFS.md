@@ -275,7 +275,9 @@ through Collector's own tiers (a firm one waits in approvals).
 `GET /v1/tasks` (owner key): `thread_id`, `helper`, `status`, `limit`
 (1 to 200, default 50). Newest first. `by_status` counts every task that
 matches `thread_id` and `helper`. A task whose approval still waits is
-`needs_you`; once the owner decides it, `done`.
+`needs_you`; once the owner decides it, `done`. A turn that asked one question
+and ended waiting for the answer is `needs_you` too, until that answer arrives
+in a later turn: the turn stopped on a person, so it is not `done`.
 
 ```json
 {

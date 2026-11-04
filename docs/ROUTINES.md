@@ -38,6 +38,11 @@ day.
 The message is also idempotent on its own: `out:routine:{id}:{day}`. That is
 belt and braces, not the mechanism.
 
+The owner's `POST /v1/routines/{id}/run` takes the same claim, so it fires at
+most once too. Running a routine by hand before its scheduled time uses that
+day: the 8:00 AM tick later sees the claim and does nothing. For a demo that
+is the point, but run it before the Lagos day whose scheduled run matters.
+
 A run that throws after the claim is recorded `failed` in `routine_runs` and
 in `routine_state`; the same day is not retried, and the next tick carries on
 with the other routines. The next day runs normally.
@@ -47,9 +52,21 @@ with the other routines. The next day runs normally.
 A tick at 9:00 still sends the 8:00 brief: a window of `CATCH_UP` (4 hours)
 after the scheduled time lets a restart recover. A window is cut at Lagos
 midnight, so a run just before midnight never claims the next day, and the
-day key never borrows the current time. A tick after the window records the
-day as `missed` once, with the words "It did not run today: the 8:00 AM
-window passed while the API was down."
+day key never borrows the current time. The window is per routine, so at
+12:15 the aging scan (8:30, open until 12:30) still catches up while the
+brief (8:00, closed at 12:00) does not; that is one rule, not two.
+
+A routine with a run history that misses its window is recorded `missed`
+once, with words that state only what the code knows: "It did not run today.
+Its 8:00 AM time has passed." It does not claim the API was down, because it
+cannot know that; a deploy, a restart, a young process and a new tenant look
+the same from here.
+
+A routine with no history at all is not missed. A book opened at noon did not
+exist at 8:00, so its rail stays at "not run yet" (empty `last_finding`) and
+the day is not written as a miss. It can still catch up if it is inside the
+window, which is why a fresh tenant at 12:09 gets the 8:30 aging scan's real
+finding and no morning brief.
 
 ## The switch
 
@@ -88,11 +105,12 @@ row. `test_a_routine_has_no_model_and_never_writes_the_book` digests the book
 and the approvals before and after both routines and compares: no change, no
 spend row.
 
-The morning brief's line names the single most overdue shop ("Mama Sola
-Provisions is 45 days overdue, ₦2,387,250 of it.") and carries that shop's
-id, so the console can link it without reading the sentence. The aging scan's
-line names a shop only when the whole finding is about one shop; several shops
-or a list of alerts leave the id empty.
+The morning brief's line names the single most overdue shop, with the book's
+own integers turned into naira by code: "Mama Sola Provisions owes ₦3,497,300.
+Of that, ₦2,387,250 is overdue, and the oldest invoice is 45 days old." It
+carries that shop's id, so the console can link it without reading the
+sentence. The aging scan's line names a shop only when the whole finding is
+about one shop; several shops or a list of alerts leave the id empty.
 
 A routine that would have to change a number must stop and propose through
 the product's existing approval path. Neither of these two needs to: the
@@ -118,6 +136,10 @@ GET /v1/routines          owner key
                   "last_finding_shop_id"? } ],
   "as_of": "2026-11-04T08:31:00+01:00" }
 
+POST /v1/routines/{id}/run     owner key
+  the routine's row, as GET /v1/routines reads it after the run
+  (409 with a sentence if it is paused or already ran today)
+
 POST /v1/routines/{id}/pause   owner key
 POST /v1/routines/{id}/resume  owner key
 { "id": "morning_brief", "name": "Morning briefing", "paused": true }
@@ -125,12 +147,22 @@ POST /v1/routines/{id}/resume  owner key
 
 `name`, `schedule` and `last_finding` are sentences written by code and
 rendered as written. `last_run_at` and `next_run_at` are ISO 8601 with an
-explicit zone, and `last_run_at` is empty until the routine really has run,
-with `last_finding = "It has not run yet."` rather than a claim at the current
-time. `paused_reason` is present only when paused. `last_finding_shop_id` is
+explicit zone, and `last_run_at` is empty until the routine really has run;
+`last_finding` is empty then too, because the console words "Not run yet"
+from the empty timestamp and a sentence would say it twice. A skip, miss or
+failure is something that happened, so those sentences stay. `paused_reason`
+is present only when paused. `last_finding_shop_id` is
 present only when the last finding names one shop; it is never guessed from
 the sentence. Resuming one routine under the kill switch answers
 `paused: true`: the kill switch is the truth.
+
+`/run` is the owner's button for a demo or a check. It goes through the tick's
+own `_run_one`: the same finding, writer, message and recording, with only the
+clock gate skipped because the owner said now. It answers with the row after
+the run, so the rail is never a separate implementation. A paused routine
+answers 409 "It is paused, so it did not run. The reason: ..."; a routine that
+already ran today answers 409 "It has already run today. It runs again
+tomorrow at 8:00 AM." Neither sends anything.
 
 ## Wiring and settings
 
@@ -167,3 +199,5 @@ the sentence. Resuming one routine under the kill switch answers
 * Retrying a failed run the same day: the claim is once a day, so a crash
   cannot double-send. The failure is visible as a sentence and the next day
   runs normally.
+* A manual run that bypasses the day's claim: the owner's button exists so a
+  demo does not wait for 8:00 AM, not so a finding can go out twice.

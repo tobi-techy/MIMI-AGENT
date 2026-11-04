@@ -72,7 +72,6 @@ MAX_REASON = 300
 # by the scheduler at all. The per-run model count is declared on each routine
 # and checked in ``tests/test_routines.py``; the cap is 0 because the cost is 0.
 MODEL_CALLS_PER_RUN = 0
-NEVER_RUN = "It has not run yet."
 DEFAULT_PAUSE_REASON = "Paused by the owner."
 DEFAULT_ALL_REASON = "Every routine is paused."
 
@@ -81,6 +80,16 @@ MONTHS = ("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", 
 
 class UnknownRoutine(LookupError):
     """No routine has this id (and it is not the kill switch)."""
+
+
+class RoutineRefused(Exception):
+    """The owner asked for a run that a pause or the day's claim refuses.
+
+    ``sentence`` is the whole message: words written by code, never a code."""
+
+    def __init__(self, sentence: str) -> None:
+        super().__init__(sentence)
+        self.sentence = sentence
 
 
 # ------------------------------------------------------------------ schedule
@@ -183,8 +192,9 @@ def _morning_brief(engine: Engine, tenant: str, day: date,
         return Finding(line="No shop is overdue.", text=text)
     top = debtors[0]
     return Finding(
-        line=(f"{top.shop_name} is {top.oldest_days_overdue} days overdue, "
-              f"{owed.naira(top.overdue_kobo)} of it."),
+        line=(f"{top.shop_name} owes {owed.naira(top.owed_kobo)}. Of that, "
+              f"{owed.naira(top.overdue_kobo)} is overdue, and the oldest "
+              f"invoice is {top.oldest_days_overdue} days old."),
         text=text,
         shop_ids=frozenset({top.shop_id}))
 
@@ -446,29 +456,36 @@ def run_due(engine: Engine, tenant: str, *, now: datetime | None = None,
 
 
 def _run_one(engine: Engine, tenant: str, routine: Routine, now: datetime, day: str,
-             everything: dict[str, Any], writer: FindingWriter) -> dict[str, Any]:
+             everything: dict[str, Any], writer: FindingWriter, *,
+             manual: bool = False) -> dict[str, Any]:
     state = _state(engine, tenant, routine.id)
     paused, reason = _paused(state, everything)
     scheduled = routine.schedule.at(now.date())
     window_end = routine.schedule.window_end(now.date())
     if paused:
-        if now >= scheduled and state.get("last_skip_day") != day:
+        if (manual or now >= scheduled) and state.get("last_skip_day") != day:
             _update_state(engine, tenant, routine.id, now.timestamp(),
                           last_skip_day=day, last_status="skipped",
                           last_finding="It did not run today: it is paused.",
                           last_finding_shop_id="")
         return {"routine": routine.id, "action": "skipped_paused", "reason": reason}
-    if now < scheduled:
-        return {"routine": routine.id, "action": "not_due"}
-    if now >= window_end:
-        if state.get("last_missed_day") != day:
-            _update_state(engine, tenant, routine.id, now.timestamp(),
-                          last_missed_day=day, last_status="missed",
-                          last_finding=("It did not run today: the "
-                                        f"{_clock_words(routine.schedule)} window passed "
-                                        "while the API was down."),
-                          last_finding_shop_id="")
-        return {"routine": routine.id, "action": "missed"}
+    if not manual:
+        if now < scheduled:
+            return {"routine": routine.id, "action": "not_due"}
+        if now >= window_end:
+            if not (state.get("last_run_at") or state.get("last_status")):
+                # No run history: a book opened after the time has missed
+                # nothing, and the rail stays at "not run yet". A miss is only
+                # for a routine that has run before.
+                return {"routine": routine.id, "action": "never_run"}
+            if state.get("last_missed_day") != day:
+                _update_state(engine, tenant, routine.id, now.timestamp(),
+                              last_missed_day=day, last_status="missed",
+                              last_finding=("It did not run today. Its "
+                                            f"{_clock_words(routine.schedule)} "
+                                            "time has passed."),
+                              last_finding_shop_id="")
+            return {"routine": routine.id, "action": "missed"}
     if not _claim(engine, tenant, routine.id, day, now, _owner_label()):
         # Another process (or an earlier start of this one) already has today.
         return {"routine": routine.id, "action": "already_claimed"}
@@ -492,6 +509,38 @@ def _run_one(engine: Engine, tenant: str, routine: Routine, now: datetime, day: 
                   last_finding_shop_id=(next(iter(finding.shop_ids))
                                         if len(finding.shop_ids) == 1 else ""))
     return {"routine": routine.id, "action": "ran", "finding": finding.line}
+
+
+def run_now(engine: Engine, tenant: str, routine_id: str, *, now: datetime | None = None,
+            write: FindingWriter | None = None) -> dict[str, Any]:
+    """Run one routine now, through the scheduled path, once for today.
+
+    The owner's ``POST /v1/routines/{id}/run`` uses this so a demo does not
+    have to wait for 8:00 AM. It is the same claim, the same finding, the same
+    writer and the same recording as a tick; only the clock gate is skipped,
+    because the owner has said "now". The Lagos day is the claim, so a second
+    run today is refused, and a paused routine is refused with its reason.
+    Returns the routine's row in the same shape as ``GET /v1/routines``.
+    """
+    rid = (routine_id or "").strip()
+    if rid not in BY_ID:
+        raise UnknownRoutine(routine_id)
+    routine = BY_ID[rid]
+    here = lagos(now) if now is not None else _now_lagos()
+    day = here.date().isoformat()
+    everything = _state(engine, tenant, ALL)
+    result = _run_one(engine, tenant, routine, here, day, everything,
+                      write or file_finding, manual=True)
+    action = result.get("action")
+    if action == "skipped_paused":
+        reason = str(result.get("reason") or DEFAULT_PAUSE_REASON)
+        raise RoutineRefused(f"It is paused, so it did not run. The reason: {reason}")
+    if action == "already_claimed":
+        raise RoutineRefused(
+            "It has already run today. It runs again tomorrow at "
+            f"{_clock_words(routine.schedule)}.")
+    return next(row for row in view(engine, tenant, now=here)["routines"]
+                if row["id"] == rid)
 
 
 def _clock_words(schedule: Schedule) -> str:
@@ -554,7 +603,7 @@ def view(engine: Engine, tenant: str, *, now: datetime | None = None) -> dict[st
             "paused": paused,
             "last_run_at": _stored_iso(str(state.get("last_run_at") or "")),
             "next_run_at": _iso(routine.schedule.next_after(here)),
-            "last_finding": str(state.get("last_finding") or NEVER_RUN),
+            "last_finding": str(state.get("last_finding") or ""),
         }
         if paused:
             row["paused_reason"] = reason

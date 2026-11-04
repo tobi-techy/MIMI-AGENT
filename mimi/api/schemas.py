@@ -223,8 +223,9 @@ class ThreadSummary(_Out):
     helper_name: str = Field(..., description="Its display name (Order, Collector, Credit, "
                              "Stock, Brand, Proof or Mimi).")
     status: Literal["needs_you", "running", "done"] = Field(
-        ..., description="needs_you: a pending approval or a turn waiting on the owner; "
-        "running: a turn queued or running; done: otherwise.")
+        ..., description="needs_you: a pending approval, or a turn waiting on a person "
+        "(a question to answer, a park, a denial); running: a turn queued or running; "
+        "done: otherwise.")
     title: str = Field(..., description="A short title written by code (never shop text).")
 
 
@@ -863,6 +864,42 @@ class Liveness(_Out):
     status: Literal["ok"]
 
 
+class BooksShopAgreement(_Out):
+    """One shop's two-books comparison. ``difference_*`` is Mimi minus
+    Zoho: positive means Mimi's book is higher."""
+
+    shop_id: str
+    shop_name: str
+    mimi_outstanding_kobo: int
+    mimi_outstanding_naira: str
+    zoho_outstanding_kobo: int | None
+    zoho_outstanding_naira: str
+    difference_kobo: int | None
+    difference_naira: str
+
+
+class BooksAgreementTotal(_Out):
+    mimi_outstanding_kobo: int
+    mimi_outstanding_naira: str
+    zoho_outstanding_kobo: int | None
+    zoho_outstanding_naira: str
+    difference_kobo: int | None
+    difference_naira: str
+
+
+class BooksAgreementOut(_Out):
+    """The two-books trust read. When ``zoho_connected`` is false the
+    console shows no Zoho figure at all: every zoho and difference field
+    is null and ``note`` says why in plain words."""
+
+    as_of: str
+    zoho_connected: bool
+    currency: str
+    shops: list[BooksShopAgreement]
+    total: BooksAgreementTotal
+    note: str
+
+
 class DemoStatus(_Out):
     """A demo caller's session and today's spend against the caps (kobo)."""
 
@@ -953,7 +990,8 @@ class RoutineOut(_Out):
     ``name``, ``schedule`` and ``last_finding`` are sentences written by code
     and rendered as written. ``last_run_at`` and ``next_run_at`` are ISO 8601
     with an explicit zone (Africa/Lagos); ``last_run_at`` is empty when the
-    routine has never run, and ``last_finding`` then says so.
+    routine has never run, and ``last_finding`` is empty then too (the rail
+    says "Not run yet" from the timestamps, not twice).
     """
 
     id: str
