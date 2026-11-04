@@ -540,6 +540,20 @@ def print_seed_plan(plan: SeedPlan, shops: Sequence[ShopDebt], *,
     _say(f"Demo book: {len(shops)} owing shops, total {owed.naira(plan.total_kobo)}")
     _say(f"Contacts: {len(plan.contact_create)} to create, "
          f"{len(plan.contact_reuse)} reused (never edited)")
+    if plan.draft_delete:
+        _say(f"Draft invoices to delete first: {len(plan.draft_delete)}")
+    for inv in plan.draft_delete:
+        _say(f"  would delete draft invoice {inv.get('invoice_number')} "
+             f"({_naira_float(float(inv.get('balance') or 0))})")
+    for number, why in plan.draft_skip:
+        _say(f"  skip draft {number}: {why}")
+    if plan.stray_delete or plan.stray_skip:
+        _say(f"Then stray contacts to delete: {len(plan.stray_delete)}")
+    for c in plan.stray_delete:
+        _say(f"  would delete contact {c.get('contact_name')} "
+             f"({c.get('contact_id')})")
+    for name, why in plan.stray_skip:
+        _say(f"  skip contact {name}: {why}")
     for shop in plan.contact_create:
         _say(f"  would create contact {shop.name} ({shop.phone})")
     for shop in shops:
@@ -556,20 +570,6 @@ def print_seed_plan(plan: SeedPlan, shops: Sequence[ShopDebt], *,
              f"(due {first.due_on}), then mark it sent")
     for shop, number in plan.invoice_present:
         _say(f"  skip invoice {number} for {shop.name}: already in Zoho")
-    if plan.draft_delete:
-        _say(f"Draft invoices to delete: {len(plan.draft_delete)}")
-    for inv in plan.draft_delete:
-        _say(f"  would delete draft invoice {inv.get('invoice_number')} "
-             f"({_naira_float(float(inv.get('balance') or 0))})")
-    for number, why in plan.draft_skip:
-        _say(f"  skip draft {number}: {why}")
-    if plan.stray_delete or plan.stray_skip:
-        _say(f"Stray contacts to delete: {len(plan.stray_delete)}")
-    for c in plan.stray_delete:
-        _say(f"  would delete contact {c.get('contact_name')} "
-             f"({c.get('contact_id')})")
-    for name, why in plan.stray_skip:
-        _say(f"  skip contact {name}: {why}")
     if clear_strays:
         _say("A contact is deletable only with no invoice and no payment left.")
     assets = sum(s.total_kobo for s, _n in plan.invoice_create)
@@ -604,6 +604,29 @@ def run_seed(shops: Sequence[ShopDebt], zoho: Any, demo_names: set[str], *,
         print_seed_plan(plan, shops, clear_strays=clear_strays)
         return counts
     _say(f"Demo book: {len(shops)} owing shops, total {owed.naira(plan.total_kobo)}")
+    # Deletions first, invoices then contacts: Zoho refuses to delete a
+    # contact that still has a transaction, and the contacts this run creates
+    # must not sit behind a contact it is about to remove.
+    for inv in plan.draft_delete:
+        zoho.delete_invoice(str(inv["invoice_id"]))
+        counts["drafts"] += 1
+        _say(f"  deleted draft invoice {inv.get('invoice_number')} "
+             f"({inv.get('invoice_id')})")
+    if clear_strays and plan.stray_delete:
+        # Re-read after the deletes: a contact that gained a transaction in
+        # between must not go, whatever the earlier plan said.
+        fresh = plan_seed(shops, zoho, demo_names, clear_drafts=False,
+                          clear_strays=True)
+        allowed = {str(c.get("contact_id")) for c in fresh.stray_delete}
+        for c in plan.stray_delete:
+            cid = str(c.get("contact_id"))
+            if cid not in allowed:
+                _say(f"  skip contact {c.get('contact_name')}: it gained a "
+                     "transaction")
+                continue
+            zoho.delete_contact(cid)
+            counts["contacts_deleted"] += 1
+            _say(f"  deleted contact {c.get('contact_name')} ({cid})")
     contact_id = dict(plan.contact_reuse)
     for shop in plan.contact_create:
         row = zoho.create_contact(shop.name, shop.phone)
@@ -620,25 +643,6 @@ def run_seed(shops: Sequence[ShopDebt], zoho: Any, demo_names: set[str], *,
         counts["invoices"] += 1
         _say(f"  created invoice {number} for {shop.name} "
              f"{owed.naira(shop.total_kobo)}, marked sent")
-    for inv in plan.draft_delete:
-        zoho.delete_invoice(str(inv["invoice_id"]))
-        counts["drafts"] += 1
-        _say(f"  deleted draft invoice {inv.get('invoice_number')}")
-    if clear_strays and plan.stray_delete:
-        # Re-read after the deletes: a contact that gained a transaction in
-        # between must not go, whatever the earlier plan said.
-        fresh = plan_seed(shops, zoho, demo_names, clear_drafts=False,
-                          clear_strays=True)
-        allowed = {str(c.get("contact_id")) for c in fresh.stray_delete}
-        for c in plan.stray_delete:
-            cid = str(c.get("contact_id"))
-            if cid not in allowed:
-                _say(f"  skip contact {c.get('contact_name')}: it gained a "
-                     "transaction")
-                continue
-            zoho.delete_contact(cid)
-            counts["contacts_deleted"] += 1
-            _say(f"  deleted contact {c.get('contact_name')} ({cid})")
     for name, why in plan.stray_skip:
         _say(f"  skip contact {name}: {why}")
     for number, why in plan.draft_skip:
