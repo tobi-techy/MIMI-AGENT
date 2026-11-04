@@ -122,11 +122,34 @@ PROOF_GRADE = {"verified": "verified", "likely": "estimated", "estimated": "unve
 # Setting absent means today's behaviour exactly: not connected, no
 # invented data.
 DEMO_ZOHO_ACCOUNT_ENV = "MIMI_DEMO_ZOHO_ACCOUNT"
+DEMO_ZOHO_USER_ENV = "MIMI_DEMO_ZOHO_USER"
+#: The Composio user that authorised the demo account. Composio refuses a call
+#: whose user id is not the connected account's owner ("Connected account user
+#: ID does not match the provided user ID"), so the demo book has to speak as
+#: that owner rather than as its own tenant.
+DEMO_ZOHO_USER_DEFAULT = "mimi-sandbox-owner"
 
 
 def demo_zoho_account() -> str:
     """The demo org's connected account id, or empty when unset."""
     return os.environ.get(DEMO_ZOHO_ACCOUNT_ENV, "").strip()
+
+
+def demo_zoho_user() -> str:
+    """The Composio user that owns the demo connected account."""
+    return os.environ.get(DEMO_ZOHO_USER_ENV, "").strip() or DEMO_ZOHO_USER_DEFAULT
+
+
+def _zoho_user(tenant: str, account: str) -> str:
+    """The Composio user id to address a Zoho call as.
+
+    A real distributor speaks as itself. A demo tenant borrowing the owner's
+    connected account speaks as the account's owner, because Composio matches
+    the two and refuses when they differ."""
+    demo = demo_zoho_account()
+    if _demo_wiring_on() and demo and account == demo:
+        return demo_zoho_user()
+    return tenant
 
 
 def _demo_wiring_on() -> bool:
@@ -690,7 +713,8 @@ def on_approved(engine: Engine, tenant: str, a: dict[str, Any], *,
                     _set_payload(conn, tenant, a["approval_id"], payload)
                 return
         try:
-            res = zp.record_payment(transport=transport, tenant_id=tenant,
+            res = zp.record_payment(transport=transport,
+                                    tenant_id=_zoho_user(tenant, conn_id),
                                     connection_id=conn_id, organization_id=org,
                                     payload=payload,
                                     idempotency_key=f"zoho_payment:{payload['payment_id']}",
@@ -871,7 +895,8 @@ def _zoho_account_org(engine: Engine, tenant: str,
         raise ConnectorError("Zoho Books gave no organization.",
                              next_step="Set ZOHO_BOOKS_ORGANIZATION_ID to the org id.")
     try:
-        orgs = ZohoBooksConnector(transport or ComposioTransport(), tenant_id=tenant,
+        orgs = ZohoBooksConnector(transport or ComposioTransport(),
+                                    tenant_id=_zoho_user(tenant, account),
                                   connection_id=account).read(
             "zoho_books_organizations").rows
     except ConnectorError as exc:
@@ -895,7 +920,8 @@ def _zoho_outstanding(tenant: str, account: str, org: str,
     del org
     from mimi.connectors.zoho.books import ZohoBooksConnector
 
-    books = ZohoBooksConnector(transport or ComposioTransport(), tenant_id=tenant,
+    books = ZohoBooksConnector(transport or ComposioTransport(),
+                                 tenant_id=_zoho_user(tenant, account),
                                connection_id=account)
     out: dict[str, int] = {}
     for row in books.read("zoho_books_contacts").rows:
