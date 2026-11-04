@@ -743,3 +743,22 @@ def test_shop_text_reaches_the_turn_and_thread(env: dict[str, Any]) -> None:
         raw = conn.execute(sa.select(s.messages.c.text).where(
             s.messages.c.message_id == "out:t-1")).scalar()
     assert raw == "Thank you. Delivery dlv-56-9039 is confirmed."  # the record keeps it
+
+
+def test_demo_zoho_call_speaks_as_the_account_owner(monkeypatch) -> None:
+    """Composio refuses a call whose user id is not the connected account's
+    owner: measured live on 4 Nov 2026, "Connected account user ID does not
+    match the provided user ID", because the demo tenant passed its own id.
+    A demo tenant borrowing the owner's account has to speak as that owner;
+    a real distributor still speaks as itself, and an unset setting changes
+    nothing."""
+    monkeypatch.setenv("MIMI_DEMO_WIRING", "1")
+    monkeypatch.setenv("MIMI_DEMO_ZOHO_ACCOUNT", "ca_demo")
+    monkeypatch.delenv("MIMI_DEMO_ZOHO_USER", raising=False)
+    assert dw._zoho_user("demo-abc", "ca_demo") == "mimi-sandbox-owner"
+    monkeypatch.setenv("MIMI_DEMO_ZOHO_USER", "owner@example.com")
+    assert dw._zoho_user("demo-abc", "ca_demo") == "owner@example.com"
+    # a real tenant, and any account that is not the demo one
+    assert dw._zoho_user("coral-lane", "ca_other") == "coral-lane"
+    monkeypatch.delenv("MIMI_DEMO_ZOHO_ACCOUNT")
+    assert dw._zoho_user("demo-abc", "ca_self") == "demo-abc"
