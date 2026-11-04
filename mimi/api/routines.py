@@ -473,12 +473,17 @@ def _run_one(engine: Engine, tenant: str, routine: Routine, now: datetime, day: 
         if now < scheduled:
             return {"routine": routine.id, "action": "not_due"}
         if now >= window_end:
+            if not (state.get("last_run_at") or state.get("last_status")):
+                # No run history: a book opened after the time has missed
+                # nothing, and the rail stays at "not run yet". A miss is only
+                # for a routine that has run before.
+                return {"routine": routine.id, "action": "never_run"}
             if state.get("last_missed_day") != day:
                 _update_state(engine, tenant, routine.id, now.timestamp(),
                               last_missed_day=day, last_status="missed",
-                              last_finding=("It did not run today: the "
-                                            f"{_clock_words(routine.schedule)} window passed "
-                                            "while the API was down."),
+                              last_finding=("It did not run today. Its "
+                                            f"{_clock_words(routine.schedule)} "
+                                            "time has passed."),
                               last_finding_shop_id="")
             return {"routine": routine.id, "action": "missed"}
     if not _claim(engine, tenant, routine.id, day, now, _owner_label()):
