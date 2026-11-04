@@ -139,7 +139,8 @@ is not delivered work, so it never appears in an inbox.
 {
   "items": [ { "task_id": "itk_...", "contract": "helper-inbox-2026-11-04.1", "...": "..." } ],
   "total": 1,
-  "by_state": {"done": 1}
+  "by_state": {"done": 1},
+  "helpers": [ "..." ]
 }
 ```
 
