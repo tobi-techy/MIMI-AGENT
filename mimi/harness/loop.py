@@ -566,7 +566,7 @@ class Harness:
             shorts.append(short)
             tools_ms += ms
         if turn.tool_calls and not state.guard and not state.fail_reason:
-            self._verify_outcomes(state, n_int)
+            self._verify_outcomes(state, n_int, n_msgs)
         if turn.tool_calls and not state.guard and not state.fail_reason:
             moved = len(state.intents) > n_int
             for m in state.messages[n_msgs:]:
@@ -1299,16 +1299,36 @@ class Harness:
     def _history_end(state: LoopState) -> int:
         return state.prefix_len + state.history_len if state.prefix_len else 0
 
-    def _verify_outcomes(self, state: LoopState, n_int: int) -> None:
+    def _step_moved_tools(self, state: LoopState, n_msgs: int) -> bool:
+        """Whether this step's own tools moved the run on (``result_progress``,
+        the same hash the streak reset counts), ignoring the reply itself: a
+        step that read or wrote something after a denial has answered it, while
+        the step that only answers has not (RAI-324 review)."""
+        calls = {str(c.get("id")): str((c.get("function") or {}).get("name") or "")
+                 for m in state.messages[max(0, n_msgs - 1):n_msgs]
+                 if m.get("role") == "assistant"
+                 for c in (m.get("tool_calls") or [])}
+        for m in state.messages[n_msgs:]:
+            if m.get("role") != "tool":
+                continue
+            if calls.get(str(m.get("tool_call_id"))) in C.SPEAKING:
+                continue  # the reply is not the work that answers the denial
+            h = G.result_progress(str(m.get("content") or ""))
+            if h and h not in state.seen_results:
+                return True
+        return False
+
+    def _verify_outcomes(self, state: LoopState, n_int: int, n_msgs: int) -> None:
         """After the step: every message proposed in it that says something was
         done, or promises a later action, must be backed by what the step's
         tools actually did. A held message is withdrawn (it never leaves) and
         the model gets the run's one repair; a second miss fails safe."""
         held: list[tuple[IntentRecord, dict[str, list[str]]]] = []
         # A denial in an earlier step of this run still counts until progress
-        # resets the streak: the honesty gate uses the breaker's own notion,
-        # not just the current step's tool answers (RAI-324 review).
-        refused = state.denials_in_a_row > 0
+        # resets the streak, and a step whose own tools moved the run on has
+        # answered that denial: its report of the new work is not a claim
+        # about the refused call (RAI-324 review).
+        refused = state.denials_in_a_row > 0 and not self._step_moved_tools(state, n_msgs)
         for rec in state.intents[n_int:]:
             if rec.tool not in FIGURE_CHECKED or rec.tool not in C.PERSON_FACING:
                 continue

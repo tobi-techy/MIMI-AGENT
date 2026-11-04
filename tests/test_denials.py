@@ -299,6 +299,36 @@ def test_the_breaker_answers_every_tool_call_once() -> None:
     assert sorted(answered) == sorted(asked)
 
 
+def test_a_reply_after_a_denial_reports_it() -> None:
+    """The shape the review found: the refusal in one step, the answer in the
+    next. The reply cannot claim the read the run was refused, and the hold
+    reads as the run's own denial."""
+    r, state = _run_to_finish(
+        say("", ("get_invoices", {"shop_id": "shop-001"})),
+        say("", ("send_to_user", {"channel": "owner_console",
+                                  "body": "I have read and checked the balance.",
+                                  "ends_turn": True})),
+        withheld=("shop-001",))
+    blocked = [e for e in r.events if e.type == "claim_blocked"]
+    assert blocked and "honesty" in blocked[0].data["problems"]
+    assert all("checked the balance" not in d.body for d in r.outbound_drafts)
+
+
+def test_a_step_that_moved_the_run_on_is_not_refused() -> None:
+    """The first step that succeeds after a denial has answered it: its report
+    of the new work is not a claim about the refused call, so it is not held
+    and it adds no denial (review follow-up)."""
+    r, _ = _run_to_finish(
+        say("", ("get_balance", {"shop_id": "shop-999"})),  # unknown shop: refused
+        say("", ("get_balance", {"shop_id": "shop-001"}),
+            ("send_to_user", {"channel": "owner_console",
+                              "body": "I read the balance for Mama Sola Provisions: N3,497,300.",
+                              "ends_turn": True})))
+    assert r.status != "stopped_denied"
+    assert not [e for e in r.events if e.type == "claim_blocked"]
+    assert [d for d in r.outbound_drafts if d.kind != "question"]
+
+
 def test_reopen_clears_the_denial_streak_and_window() -> None:
     r, state = _run_to_finish(
         say("", ("get_balance", {"shop_id": "shop-001"})),
