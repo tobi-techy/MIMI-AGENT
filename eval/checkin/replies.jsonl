@@ -38,9 +38,9 @@
 {"id": "cr-38", "kind": "checkin", "messages": ["nothing this week"], "expected_bucket": null, "expected_units": null, "exact": false, "source": "checkin_bucket", "lang": "english", "note": "weekly nothing: nothing stored"}
 {"id": "cr-39", "kind": "checkin", "messages": ["stop"], "expected_bucket": null, "expected_units": null, "exact": false, "source": "checkin_bucket", "lang": "english", "note": "stop: no more check-ins"}
 {"id": "cr-40", "kind": "checkin", "messages": ["Yes"], "expected_bucket": null, "expected_units": null, "exact": false, "source": "checkin_bucket", "lang": "english", "note": "weekly Yes: waits for voice or receipt"}
-{"id": "cr-41", "kind": "voice", "messages": ["voice: Na 10 packs remain"], "expected_bucket": "6+", "expected_units": 10, "exact": true, "source": "voice", "lang": "pidgin", "note": "pidgin voice note overrides exactly"}
-{"id": "cr-42", "kind": "voice", "messages": ["voice: 7 bottles dey"], "expected_bucket": "6+", "expected_units": 7, "exact": true, "source": "voice", "lang": "pidgin", "note": "pidgin voice count"}
-{"id": "cr-43", "kind": "voice", "messages": ["voice: O ku 2 packs"], "expected_bucket": "0-2", "expected_units": 2, "exact": true, "source": "voice", "lang": "yoruba", "note": "yoruba voice count"}
+{"id": "cr-41", "kind": "voice", "messages": ["voice: Na 10 cartons remain"], "expected_bucket": "6+", "expected_units": 10, "exact": true, "source": "voice", "lang": "pidgin", "note": "pidgin voice note overrides exactly"}
+{"id": "cr-42", "kind": "voice", "messages": ["voice: 7 cartons dey"], "expected_bucket": "6+", "expected_units": 7, "exact": true, "source": "voice", "lang": "pidgin", "note": "pidgin voice count"}
+{"id": "cr-43", "kind": "voice", "messages": ["voice: O ku 2 cartons"], "expected_bucket": "0-2", "expected_units": 2, "exact": true, "source": "voice", "lang": "yoruba", "note": "yoruba voice count"}
 {"id": "cr-44", "kind": "voice", "messages": ["voice: e don finish, send 6 cartons"], "expected_bucket": "0-2", "expected_units": 0, "exact": true, "source": "voice", "lang": "pidgin", "note": "voice finished with reorder ask"}
 {"id": "cr-45", "kind": "voice", "messages": ["voice: mo ni meta cartons"], "expected_bucket": "3-5", "expected_units": 3, "exact": true, "source": "voice", "lang": "yoruba", "note": "yoruba voice with unit"}
 {"id": "cr-46", "kind": "voice", "messages": ["voice: I no too sure, maybe like 2 or 3"], "expected_bucket": null, "expected_units": null, "exact": false, "source": "voice", "lang": "pidgin", "note": "voice unsure: one confirm, no count"}
