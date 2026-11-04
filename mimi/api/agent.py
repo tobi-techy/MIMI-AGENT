@@ -1868,10 +1868,10 @@ class Agent:
                 s.messages.c.ts.desc(), s.messages.c.message_id.desc())).all()
             result = next((str(m.text) for m in outs
                            if m.channel not in ("shop_whatsapp", "rep_whatsapp")), "")
-            state = "failed" if status == "failed" else (
-                "handed_back" if "hand" in status else "done")
-            ib.set_state(conn, tenant, str(row.task_id), state,
-                         result=clean_reply(result)[:600], now=now)
+            state = dlg.finish_state(status)
+            if state:
+                ib.set_state(conn, tenant, str(row.task_id), state,
+                             result=clean_reply(result)[:600], now=now)
 
     def _handoff_records(self, conn: sa.Connection, claim: Claim, d: RouteDecision,
                          lead: Inbound, fin: Any, status: str, result: dict[str, Any],

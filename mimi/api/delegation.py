@@ -64,6 +64,30 @@ def thread_helper(tenant_id: str, thread_id: str) -> str:
     return thread_id[len(prefix):] if thread_id.startswith(prefix) else ""
 
 
+# The receiver's own run statuses (mimi.harness.types.RunStatus) and what each
+# means for the item it was handed.
+_FINISH_DONE: frozenset[str] = frozenset({"done", "done_quiet"})
+_FINISH_FAILED: frozenset[str] = frozenset(
+    {"failed", "stopped_runaway", "stopped_budget", "stopped_killed"})
+_FINISH_STILL_OPEN: frozenset[str] = frozenset(
+    {"parked_for_approval", "parked_for_timer", "asked_question"})
+
+
+def finish_state(status: str) -> str:
+    """The item state a finished receiver's run status means, or ``""``.
+
+    ``""`` means she is still on it: parked for the owner, a timer, or asking a
+    question. The item stays ``working`` (her owner line shows the wait), it is
+    never closed early. Anything else she did not finish is ``handed_back``."""
+    if status in _FINISH_STILL_OPEN:
+        return ""
+    if status in _FINISH_DONE:
+        return "done"
+    if status in _FINISH_FAILED:
+        return "failed"
+    return "handed_back"
+
+
 def skill_for(helper: str) -> str:
     key = DELEGATE_SKILLS.get(helper, "")
     return key if key in BY_KEY else ""

@@ -72,6 +72,27 @@ def test_reason_is_always_a_sentence_never_a_code(store_url: str) -> None:
     engine.dispose()
 
 
+def test_every_run_status_has_a_finish_meaning() -> None:
+    """The receiver's status must map to a real item state, and a parked or
+    asking run must leave the item open rather than close it early."""
+    from typing import get_args
+
+    from mimi.harness.types import RunStatus
+
+    for status in get_args(RunStatus):
+        assert dlg.finish_state(status) in ("", "done", "failed", "handed_back"), status
+    assert dlg.finish_state("done") == "done"
+    assert dlg.finish_state("done_quiet") == "done"
+    assert dlg.finish_state("failed") == "failed"
+    assert dlg.finish_state("stopped_runaway") == "failed"
+    assert dlg.finish_state("stopped_budget") == "failed"
+    assert dlg.finish_state("stopped_killed") == "failed"
+    for still_open in ("parked_for_approval", "parked_for_timer", "asked_question"):
+        assert dlg.finish_state(still_open) == "", still_open
+    assert dlg.finish_state("stopped_by_owner") == "handed_back"
+    assert dlg.finish_state("cancelled_by_sender") == "handed_back"
+
+
 def test_outcome_is_never_empty_for_any_state() -> None:
     for state in ib.STATES:
         assert ib.outcome(state, "Proof").strip()
