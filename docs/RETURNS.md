@@ -172,10 +172,12 @@ What one shop could cost, aged and risk-weighted, per shop and in total.
 META_API_KEY= python -m pytest tests/test_returns.py tests/test_exposure.py -q
 ```
 
-`tests/test_receivables_locking.py` covers the row locking across the three
-writers of a shop's invoices (see below). Five of its seven tests need row
-locks, so they run only where `MIMI_TEST_DATABASE_URL` points at Postgres and
-skip on SQLite with the reason in the skip message:
+`tests/test_receivables_locking.py` covers the row locking across the writers
+of a shop's invoices (see below). Six of its eight tests need row locks, so they
+run only where `MIMI_TEST_DATABASE_URL` points at Postgres and skip on SQLite
+with the reason in the skip message. The file is named in the Postgres job in
+`.github/workflows/ci.yml`, so those six run in CI and not only on a machine
+where someone happens to point the variable at a database:
 
 ```bash
 MIMI_TEST_DATABASE_URL=postgresql://... META_API_KEY= python -m pytest \
@@ -219,8 +221,15 @@ transaction, always in one order, `position` then `delivery_id`:
   reads the invoices a credit came off by id. It takes all of them, in that
   order, before it writes any, so an undo cannot interleave with another writer
   on the second invoice.
-* `LOCK_ORDER` is the one definition. A new writer (the routine) calls the read
-  instead of writing its own query, which is what keeps a second order from
+* `overdue_ids(conn, tenant, day_no, lock=True)` for the day roll, which marks
+  past-due invoices with one bulk `UPDATE`. A bulk update takes the rows it
+  touches itself, in whatever order the planner picks, so the roll would be the
+  one writer that does not queue in the house order and could cycle with one
+  that does. It reads them through here first, holding them, and then updates.
+* `LOCK_ORDER` is the one definition, and the order in the statements comes from
+  it (`order_by(*(s.receivables.c[name] for name in LOCK_ORDER))`), not from a
+  second literal that could drift from it. A new writer (the routine) calls the
+  read instead of writing its own query, which is what keeps a second order from
   appearing and a deadlock from cycling on it.
 
 **Why the read and not the write.** Two reasons, and the second is the one that
@@ -249,22 +258,35 @@ in the skip message):
    payment waits, and the invoice ends with both amounts off one figure.
 4. A credit spanning two invoices waits on the first and holds nothing, so
    another writer on the second invoice is not blocked by it. That is the
-   property that makes a cycle impossible: a transaction never waits while
-   holding a lower row, because it takes them in one order.
+   property that makes a cycle impossible: a transaction never waits for a
+   lower row while it holds a higher one, because every writer takes the rows
+   in one order. A transaction may hold a lower row and wait for a higher one,
+   which is what this test shows.
 5. Two credits over several invoices at once both land, and every invoice keeps
    `paid + outstanding == total`.
 6. The same two amounts in either order (a credit and a bank payment) leave the
    same balance, first the payment then the credit, and the other way round.
 7. The statement itself: one order (`ORDER BY receivables.position,
-   receivables.delivery_id`) with `FOR UPDATE` on the locked reads and without
-   it on the draft's read.
+   receivables.delivery_id`) with `FOR UPDATE` on the locked reads (including
+   the roll's overdue read) and without it on the draft's read.
+8. The day roll waits for a writer holding one of the invoices it is about to
+   mark overdue: the roll's bulk `UPDATE` is preceded by the same ordered,
+   locked read, so the roll queues the way every other writer does.
 
-Removing the lock from `mimi/store/invoices.py` makes five of these seven fail:
-tests 1 and 4 on their waiting assertions (the second reader gets in at once),
-tests 2 and 3 on the lost update (the invoice ends with one writer's figures
-instead of both), and test 7 on `FOR UPDATE`. Tests 5 and 6 still pass without
-it, because they are the deadlock and invariant guard and the plain arithmetic
-rather than the lost-update guard. The Postgres tests need a database: `MIMI_TEST_DATABASE_URL=postgresql://... python
+Removing the lock from `mimi/store/invoices.py` fails six of these eight, every
+run: 1 and 4 on their waiting assertions (the second reader gets in at once), 2
+and 3 on the lost update (the invoice ends with one writer's figures instead of
+both), 7 on `FOR UPDATE` falling out of both locked statements, and 8 on the
+roll walking past the invoice the test is holding. The other two do not: 6 is
+the plain arithmetic in either order, and 5 is the two-credit race, which fails
+only when the two transactions interleave that way. A reviewer measured 5
+failing three times of three on Postgres 18.6 (one credit lost each time) and
+three runs here passed, which is what a race is. A guard that only fails on some
+interleavings is the reason the whole file is named in the Postgres job in
+`.github/workflows/ci.yml`: with `with_for_update()` deleted, the offline job
+skips these tests and the job that does run Postgres was not running this file,
+so both stayed green. The Postgres tests need a database:
+`MIMI_TEST_DATABASE_URL=postgresql://... python
 -m pytest tests/test_receivables_locking.py`.
 
 One thing still not built: **one snapshot for the exposure read.**

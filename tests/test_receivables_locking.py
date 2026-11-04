@@ -7,7 +7,8 @@ routine. Each reads the invoice, works out the new figures from that read, and
 writes them back, so a read that holds nothing can be overwritten by a writer
 that read first and committed later. Every one of those reads goes through
 `mimi.store.invoices`, which takes the rows `FOR UPDATE` in one order
-(`position` then `delivery_id`).
+(`position` then `delivery_id`), and so does the day roll's bulk mark-overdue,
+which takes whatever rows it touches on its own otherwise.
 
 What each test is evidence for, and what it is not:
 
@@ -37,6 +38,7 @@ from mimi.api import returns as returns_api
 from mimi.api.agent import Agent
 from mimi.api.app import create_app
 from mimi.api.config import Settings, parse_keys
+from mimi.api.week.go import GoSim
 from mimi.harness.gateway import ScriptedModel
 from mimi.store import ensure_schema, make_engine, seed_world
 from mimi.store import invoices as invoice_reads
@@ -360,6 +362,35 @@ def test_two_credits_over_several_invoices_both_land_without_a_deadlock(
         assert len(_applied(engine, approval)) >= 2  # each spanned several invoices
 
 
+def test_the_day_roll_waits_for_a_writer_holding_an_overdue_invoice(
+        book: dict[str, Any]) -> None:
+    """The roll marks overdue with one bulk update, which takes the rows it
+    touches itself. It reads them through the store's invoice reads first, so a
+    writer holding one of them is waited for instead of deadlocked against.
+    (That the roll takes them in the house order is pinned by the shape test
+    below; here the evidence is that it takes them at all.)"""
+    engine = book["engine"]
+    _postgres(engine)
+    with engine.connect() as conn:
+        day_no = max(int(r.due_day) for r in conn.execute(sa.select(s.receivables).where(
+            s.receivables.c.tenant_id == A))) + 1
+        assert invoice_reads.overdue_ids(conn, A, day_no, lock=False)
+    with engine.connect() as holder:
+        tx = holder.begin()
+        invoice_reads.open_invoices(holder, A, SHOP, lock=True)
+        th, done = _in_thread(lambda: GoSim(engine, W, A).open_day(day_no))
+        th.start()
+        th.join(HELD)
+        assert th.is_alive(), "the roll should be waiting on the invoice held here"
+        tx.commit()
+        th.join(WAIT)
+    assert not th.is_alive() and done.get("error") is None, done
+    with engine.connect() as conn:
+        overdue = [str(r.delivery_id) for r in conn.execute(sa.select(s.receivables).where(
+            s.receivables.c.tenant_id == A, s.receivables.c.status == "overdue"))]
+    assert overdue, "the roll should have marked the past-due invoices"
+
+
 def test_the_locked_read_is_one_statement_in_the_house_order(book: dict[str, Any]) -> None:
     """The order is one order, in one module, and the statement says so."""
     class Recorder:
@@ -372,11 +403,12 @@ def test_the_locked_read_is_one_statement_in_the_house_order(book: dict[str, Any
 
     assert invoice_reads.LOCK_ORDER == ("position", "delivery_id")
     order = "ORDER BY receivables.position, receivables.delivery_id"
-    locked, plain, undo = Recorder(), Recorder(), Recorder()
+    locked, plain, undo, overdue = Recorder(), Recorder(), Recorder(), Recorder()
     invoice_reads.open_invoices(cast(Any, locked), A, SHOP, lock=True)
     invoice_reads.open_invoices(cast(Any, plain), A, SHOP, lock=False)
     invoice_reads.invoices_by_id(cast(Any, undo), A, ["dlv-1", "dlv-2"], lock=True)
-    for rec, wants_lock in ((locked, True), (undo, True), (plain, False)):
+    invoice_reads.overdue_ids(cast(Any, overdue), A, 9, lock=True)
+    for rec, wants_lock in ((locked, True), (undo, True), (overdue, True), (plain, False)):
         sql = str(rec.statements[0].compile(dialect=postgresql.dialect()))
         assert order in sql, sql
         assert ("FOR UPDATE" in sql) is wants_lock, sql

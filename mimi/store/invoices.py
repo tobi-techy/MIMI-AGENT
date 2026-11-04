@@ -48,7 +48,7 @@ LOCK_ORDER: tuple[str, ...] = ("position", "delivery_id")
 
 
 def _ordered(stmt: Any, *, lock: bool) -> Any:
-    q = stmt.order_by(s.receivables.c.position, s.receivables.c.delivery_id)
+    q = stmt.order_by(*(s.receivables.c[name] for name in LOCK_ORDER))
     return q.with_for_update() if lock else q
 
 
@@ -85,3 +85,21 @@ def invoices_by_id(conn: sa.Connection, tenant_id: str, delivery_ids: Iterable[s
             s.receivables.c.tenant_id == tenant_id,
             s.receivables.c.delivery_id.in_(ids)), lock=lock))
     return {str(r.delivery_id): r for r in rows}
+
+
+def overdue_ids(conn: sa.Connection, tenant_id: str, day_no: int, *,
+                lock: bool = True) -> list[str]:
+    """The invoices past their due day and still owing, taken in the same order.
+
+    The roll marks these overdue with one bulk ``UPDATE``. A bulk update takes
+    the rows it touches itself, in whatever order the planner picks, so a
+    transaction that is holding an invoice further down the order can deadlock
+    against it. The roll reads them through here first, holding them, so it
+    takes them the way every other writer does.
+    """
+    rows = conn.execute(_ordered(
+        sa.select(s.receivables.c.delivery_id).where(
+            s.receivables.c.tenant_id == tenant_id,
+            s.receivables.c.outstanding_kobo > 0,
+            s.receivables.c.due_day < day_no), lock=lock))
+    return [str(r.delivery_id) for r in rows]
