@@ -111,6 +111,30 @@ def zoho_live_writes_today(conn: sa.Connection, tenant: str, now: float) -> int:
 # The demo's words for the stored proof levels.
 PROOF_GRADE = {"verified": "verified", "likely": "estimated", "estimated": "unverified"}
 
+# The demo org's live Zoho Books account, for demo tenants only. When the
+# deployed demo sets ``MIMI_DEMO_ZOHO_ACCOUNT`` to the owner's connected
+# account id, every demo tenant reads (and, with the live-write switch on,
+# writes) through that account: demo sessions are new tenants and nothing
+# in the demo path ever runs the connect flow that would write a
+# ``connector_accounts`` row, so without this the two-books read is
+# ``zoho_connected: false`` forever. Gated on the demo wiring that is
+# already there, so a real distributor still has to connect properly.
+# Setting absent means today's behaviour exactly: not connected, no
+# invented data.
+DEMO_ZOHO_ACCOUNT_ENV = "MIMI_DEMO_ZOHO_ACCOUNT"
+
+
+def demo_zoho_account() -> str:
+    """The demo org's connected account id, or empty when unset."""
+    return os.environ.get(DEMO_ZOHO_ACCOUNT_ENV, "").strip()
+
+
+def _demo_wiring_on() -> bool:
+    from mimi.flags import demo_wiring
+
+    return demo_wiring()
+
+
 
 def ngn(kobo: int) -> int:
     """Whole naira from kobo (half a naira rounds up)."""
@@ -588,15 +612,27 @@ def _zoho(engine: Engine, tenant: str, demo_mode: bool,
     del demo_mode
     from mimi.connectors.env import ConnectorSettings
 
+    acct: Any = None
     with engine.connect() as conn:
         acct = conn.execute(sa.select(s.connector_accounts).where(
             s.connector_accounts.c.tenant_id == tenant,
             s.connector_accounts.c.toolkit == "ZOHO_BOOKS",
             s.connector_accounts.c.status == "active")).first()
+    demo_account = demo_zoho_account() if _demo_wiring_on() else ""
+    if acct is None and demo_account:
+        # A demo tenant with the demo account set: read (and, with the
+        # live-write switch on, write) through the owner's connected
+        # account. No row is written, so there is nothing to resurrect
+        # and nothing a revoked connection can get out of step with.
+        acct = {"connected_account_id": demo_account,
+                "connection_id": f"demo-{tenant}"}
     if acct is not None and ConnectorSettings.from_env().live and zoho_live_write():
         transport = transport or ComposioTransport()
         # Composio addresses the account by its own id, not our connection id.
-        account = str(acct.connected_account_id or acct.connection_id)
+        account = str((acct.get("connected_account_id") if isinstance(acct, dict)
+                       else acct.connected_account_id)
+                      or (acct.get("connection_id") if isinstance(acct, dict)
+                          else acct.connection_id))
         org = os.environ.get("ZOHO_BOOKS_ORGANIZATION_ID", "").strip()
         if not org:
             # Now that writing is real, an unnamed org refuses rather than
@@ -779,7 +815,13 @@ def books_agreement(engine: Engine, tenant: str,
     if not (ConnectorSettings.from_env().live and _zoho_connected(engine, tenant)):
         return _agreement(False, shops, names, {}, "Zoho Books is not connected, "
                          "so the comparison cannot be made.")
-    account, org = _zoho_account_org(engine, tenant, transport)
+    try:
+        account, org = _zoho_account_org(engine, tenant, transport)
+    except ConnectorError as exc:
+        # The named org is not on this token's list, or the list itself
+        # refused: could-not-read, never a false agreement on nothing.
+        return _agreement(False, shops, names, {},
+                          f"Zoho Books could not be read ({exc}); no comparison was made.")
     try:
         zoho = _zoho_outstanding(tenant, account, org, transport)
     except ConnectorError as exc:
@@ -789,6 +831,10 @@ def books_agreement(engine: Engine, tenant: str,
 
 
 def _zoho_connected(engine: Engine, tenant: str) -> bool:
+    if _demo_wiring_on() and demo_zoho_account():
+        # A demo tenant with the demo account set: connected through the
+        # owner's account, with no row to write or resurrect.
+        return True
     with engine.connect() as conn:
         return conn.execute(sa.select(sa.select(
             s.connector_accounts).where(
@@ -799,21 +845,41 @@ def _zoho_connected(engine: Engine, tenant: str) -> bool:
 
 def _zoho_account_org(engine: Engine, tenant: str,
                       transport: Any | None = None) -> tuple[str, str]:
-    """The live account and org for a read; raises rather than guessing."""
-    del transport
+    """The live account and org for a read; raises rather than guessing.
+
+    The org is pinned from the setting and then verified: the org list is
+    read off the same connection, and the named org must be on it. A token
+    that cannot reach the named org refuses with "could not be read" at
+    the caller, never a false agreement on empty figures."""
+    from mimi.connectors.zoho.books import ZohoBooksConnector
+
+    demo_account = demo_zoho_account() if _demo_wiring_on() else ""
     with engine.connect() as conn:
         acct = conn.execute(sa.select(s.connector_accounts).where(
             s.connector_accounts.c.tenant_id == tenant,
             s.connector_accounts.c.toolkit == "ZOHO_BOOKS",
             s.connector_accounts.c.status == "active")).first()
-    if acct is None:
+    if acct is None and demo_account:
+        account = demo_account
+    elif acct is None:
         raise ConnectorError("Zoho Books is not connected.",
                              next_step="Connect it from Settings first.")
-    account = str(acct.connected_account_id or acct.connection_id)
+    else:
+        account = str(acct.connected_account_id or acct.connection_id)
     org = os.environ.get("ZOHO_BOOKS_ORGANIZATION_ID", "").strip()
     if not org:
         raise ConnectorError("Zoho Books gave no organization.",
                              next_step="Set ZOHO_BOOKS_ORGANIZATION_ID to the org id.")
+    try:
+        orgs = ZohoBooksConnector(transport or ComposioTransport(), tenant_id=tenant,
+                                  connection_id=account).read(
+            "zoho_books_organizations").rows
+    except ConnectorError as exc:
+        raise ConnectorError(f"Zoho Books could not list organizations ({exc}).",
+                             next_step="Reconnect Zoho Books from Settings.") from exc
+    if org not in {str(r.values.get("organization_id") or "") for r in orgs}:
+        raise ConnectorError(f"Zoho Books could not reach organization {org}.",
+                             next_step="Connect the org that holds the books first.")
     return account, org
 
 
