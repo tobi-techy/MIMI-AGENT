@@ -1303,7 +1303,17 @@ class Harness:
         """Whether this step's own tools moved the run on (``result_progress``,
         the same hash the streak reset counts), ignoring the reply itself: a
         step that read or wrote something after a denial has answered it, while
-        the step that only answers has not (RAI-324 review)."""
+        the step that only answers has not (RAI-324 review).
+
+        Deliberate trade-off, named in the review: any non-reply tool that
+        moved the step on disarms the honesty gate for the whole step, so a
+        sentence about the refused call can ride along with unrelated progress
+        ("I have read the invoices carefully" next to a balance read that
+        worked). A false hold is the worse error of the two here: its repair
+        line would tell the model the work was refused when it was not, and the
+        hold counts a denial that can arm the window on a run doing fine. A
+        per-call refinement (arm unless the refused call itself was retried and
+        answered) is the follow-up if this shape is seen in the wild."""
         calls = {str(c.get("id")): str((c.get("function") or {}).get("name") or "")
                  for m in state.messages[max(0, n_msgs - 1):n_msgs]
                  if m.get("role") == "assistant"
