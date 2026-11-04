@@ -198,6 +198,12 @@ def test_a_window_that_passed_is_recorded_as_missed_not_borrowed(
     state = _states(engine)["morning_brief"]
     assert state["last_status"] == "missed"
     assert "8:00 AM window passed" in str(state["last_finding"])
+    # The rail says it in the same plain words: no code, no blank row.
+    row = {r["id"]: r for r in rt.view(
+        engine, T, now=lagos_at(2026, 11, 4, 13, 1))["routines"]}["morning_brief"]
+    assert row["last_finding"] == (
+        "It did not run today: the 8:00 AM window passed while the API was down.")
+    assert "last_finding_shop_id" not in row
     # The same day never records it twice, and the next day runs normally.
     rt.run_due(engine, T, now=lagos_at(2026, 11, 4, 14, 0))
     assert _actions(rt.run_due(engine, T, now=lagos_at(2026, 11, 5, 8, 0)))[
@@ -294,6 +300,12 @@ def test_a_tick_that_throws_is_recorded_and_does_not_stop_the_others(
     state = _states(engine)["bad_routine"]
     assert state["last_status"] == "failed"
     assert state["last_finding"] == "Its last run did not finish. It will try again tomorrow."
+    # The rail shows the sentence, not the exception's name.
+    row = {r["id"]: r for r in rt.view(
+        engine, T, now=lagos_at(2026, 11, 4, 9, 1))["routines"]}["bad_routine"]
+    assert row["last_finding"] == "Its last run did not finish. It will try again tomorrow."
+    assert "RuntimeError" not in row["last_finding"]
+    assert "last_finding_shop_id" not in row
     # The claim is kept: the same day does not retry a routine that failed.
     assert _actions(rt.run_due(engine, T, now=lagos_at(2026, 11, 4, 9, 0)))[
         "bad_routine"] == "already_claimed"
