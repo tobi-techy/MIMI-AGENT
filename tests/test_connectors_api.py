@@ -140,6 +140,32 @@ def test_initiate_puts_the_state_on_the_callback_url() -> None:
     assert seen["callback"].endswith(out["state"])
 
 
+def test_initiate_prefers_link_over_the_retired_initiate() -> None:
+    """Composio retired ``initiate`` for managed OAuth configs: connect uses
+    ``link`` when the SDK has it, with the state on the callback url."""
+    from mimi.connectors.composio import ComposioTransport
+    from mimi.connectors.env import ConnectorSettings
+
+    seen: dict[str, str] = {}
+
+    class _Accounts:
+        def link(self, *, user_id: str, auth_config_id: str, callback_url: str):
+            seen.update(via="link", callback=callback_url, auth=auth_config_id)
+            return type("R", (), {"redirect_url": "https://connect.composio.dev/link/ln_1"})()
+
+        def initiate(self, **kw: str):
+            raise AssertionError("initiate is retired for managed OAuth")
+
+    t = ComposioTransport(ConnectorSettings(
+        mode="composio", composio_api_key="ck", auth_zoho_books="ac_1",  # pragma: allowlist secret
+        callback_url="https://demo.userail.money/settings/connectors"))
+    t._client = type("C", (), {"connected_accounts": _Accounts()})()
+    out = t.initiate("ZOHO_BOOKS", user_id=TENANT)
+    assert seen["via"] == "link" and seen["auth"] == "ac_1"
+    assert out["redirect_url"] == "https://connect.composio.dev/link/ln_1"
+    assert seen["callback"].endswith(out["state"])
+
+
 def test_callback_refuses_a_failed_consent_and_reads_either_id_spelling(tmp_path) -> None:
     c = _client(tmp_path)
     state = c.post("/v1/connectors/ZOHO_BOOKS/connect", headers=_auth(), json={}).json()["state"]
