@@ -387,7 +387,8 @@ over the book: **no model call and no kobo spent**. See
 * **Pause is a row.** `POST /v1/routines/{id}/pause` sets it, `resume` clears
   it; both survive a restart. `all` is the kill switch: one row pauses every
   routine without a deploy. A paused routine records that it skipped the day
-  and why. The read says "It has not run yet." until a routine really has.
+  and why. The rail is empty, not "It has not run yet.", until a routine really
+  has: the empty timestamp says so once.
 * **One thread per process, one process per container.** `MIMI_WORKERS` adds
   turn threads inside the process, not processes, so they share the one
   scheduler. Several processes are still safe by the claim, but they each

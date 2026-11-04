@@ -72,7 +72,6 @@ MAX_REASON = 300
 # by the scheduler at all. The per-run model count is declared on each routine
 # and checked in ``tests/test_routines.py``; the cap is 0 because the cost is 0.
 MODEL_CALLS_PER_RUN = 0
-NEVER_RUN = "It has not run yet."
 DEFAULT_PAUSE_REASON = "Paused by the owner."
 DEFAULT_ALL_REASON = "Every routine is paused."
 
@@ -599,7 +598,7 @@ def view(engine: Engine, tenant: str, *, now: datetime | None = None) -> dict[st
             "paused": paused,
             "last_run_at": _stored_iso(str(state.get("last_run_at") or "")),
             "next_run_at": _iso(routine.schedule.next_after(here)),
-            "last_finding": str(state.get("last_finding") or NEVER_RUN),
+            "last_finding": str(state.get("last_finding") or ""),
         }
         if paused:
             row["paused_reason"] = reason

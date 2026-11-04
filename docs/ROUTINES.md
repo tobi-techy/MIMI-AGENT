@@ -135,9 +135,11 @@ POST /v1/routines/{id}/resume  owner key
 
 `name`, `schedule` and `last_finding` are sentences written by code and
 rendered as written. `last_run_at` and `next_run_at` are ISO 8601 with an
-explicit zone, and `last_run_at` is empty until the routine really has run,
-with `last_finding = "It has not run yet."` rather than a claim at the current
-time. `paused_reason` is present only when paused. `last_finding_shop_id` is
+explicit zone, and `last_run_at` is empty until the routine really has run;
+`last_finding` is empty then too, because the console words "Not run yet"
+from the empty timestamp and a sentence would say it twice. A skip, miss or
+failure is something that happened, so those sentences stay. `paused_reason`
+is present only when paused. `last_finding_shop_id` is
 present only when the last finding names one shop; it is never guessed from
 the sentence. Resuming one routine under the kill switch answers
 `paused: true`: the kill switch is the truth.

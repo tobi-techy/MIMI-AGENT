@@ -498,7 +498,7 @@ def test_the_routine_reads_one_line_and_never_borrows_the_clock(
     assert rows["morning_brief"] == {
         "id": "morning_brief", "name": "Morning briefing", "schedule": "Every day at 8:00 AM",
         "paused": False, "last_run_at": "", "next_run_at": "2026-11-04T08:00:00+01:00",
-        "last_finding": "It has not run yet."}
+        "last_finding": ""}
     rt.run_due(engine, T, now=lagos_at(2026, 11, 4, 8, 0))
     after = {r["id"]: r for r in rt.view(engine, T, now=lagos_at(2026, 11, 4, 8, 1))["routines"]}
     assert after["morning_brief"]["last_run_at"] == "2026-11-04T08:00:00+01:00"
@@ -507,7 +507,7 @@ def test_the_routine_reads_one_line_and_never_borrows_the_clock(
         "Mama Sola Provisions owes ₦3,497,300. Of that, ₦2,387,250 is overdue, and the oldest invoice is 45 days old.")
     assert after["morning_brief"]["last_finding_shop_id"] == "shop-001"
     assert after["aging_scan"]["last_run_at"] == ""
-    assert after["aging_scan"]["last_finding"] == "It has not run yet."
+    assert after["aging_scan"]["last_finding"] == ""
 
 
 # ------------------------------------------------------------------- the API
@@ -541,7 +541,7 @@ def test_get_routines_has_the_console_shape(api: dict[str, object]) -> None:
         assert set(row) == expected
         assert row["paused"] is False
         assert row["last_run_at"] == ""
-        assert row["last_finding"] == "It has not run yet."
+        assert row["last_finding"] == ""
         assert " at " in row["schedule"]
         next_at = datetime.fromisoformat(row["next_run_at"])
         assert next_at.tzinfo is not None and next_at.utcoffset().total_seconds() == 3600
