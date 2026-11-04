@@ -38,6 +38,11 @@ day.
 The message is also idempotent on its own: `out:routine:{id}:{day}`. That is
 belt and braces, not the mechanism.
 
+The owner's `POST /v1/routines/{id}/run` takes the same claim, so it fires at
+most once too. Running a routine by hand before its scheduled time uses that
+day: the 8:00 AM tick later sees the claim and does nothing. For a demo that
+is the point, but run it before the Lagos day whose scheduled run matters.
+
 A run that throws after the claim is recorded `failed` in `routine_runs` and
 in `routine_state`; the same day is not retried, and the next tick carries on
 with the other routines. The next day runs normally.
@@ -88,11 +93,12 @@ row. `test_a_routine_has_no_model_and_never_writes_the_book` digests the book
 and the approvals before and after both routines and compares: no change, no
 spend row.
 
-The morning brief's line names the single most overdue shop ("Mama Sola
-Provisions is 45 days overdue, ₦2,387,250 of it.") and carries that shop's
-id, so the console can link it without reading the sentence. The aging scan's
-line names a shop only when the whole finding is about one shop; several shops
-or a list of alerts leave the id empty.
+The morning brief's line names the single most overdue shop, with the book's
+own integers turned into naira by code: "Mama Sola Provisions owes ₦3,497,300.
+Of that, ₦2,387,250 is overdue, and the oldest invoice is 45 days old." It
+carries that shop's id, so the console can link it without reading the
+sentence. The aging scan's line names a shop only when the whole finding is
+about one shop; several shops or a list of alerts leave the id empty.
 
 A routine that would have to change a number must stop and propose through
 the product's existing approval path. Neither of these two needs to: the
@@ -118,6 +124,10 @@ GET /v1/routines          owner key
                   "last_finding_shop_id"? } ],
   "as_of": "2026-11-04T08:31:00+01:00" }
 
+POST /v1/routines/{id}/run     owner key
+  the routine's row, as GET /v1/routines reads it after the run
+  (409 with a sentence if it is paused or already ran today)
+
 POST /v1/routines/{id}/pause   owner key
 POST /v1/routines/{id}/resume  owner key
 { "id": "morning_brief", "name": "Morning briefing", "paused": true }
@@ -131,6 +141,14 @@ time. `paused_reason` is present only when paused. `last_finding_shop_id` is
 present only when the last finding names one shop; it is never guessed from
 the sentence. Resuming one routine under the kill switch answers
 `paused: true`: the kill switch is the truth.
+
+`/run` is the owner's button for a demo or a check. It goes through the tick's
+own `_run_one`: the same finding, writer, message and recording, with only the
+clock gate skipped because the owner said now. It answers with the row after
+the run, so the rail is never a separate implementation. A paused routine
+answers 409 "It is paused, so it did not run. The reason: ..."; a routine that
+already ran today answers 409 "It has already run today. It runs again
+tomorrow at 8:00 AM." Neither sends anything.
 
 ## Wiring and settings
 
@@ -167,3 +185,5 @@ the sentence. Resuming one routine under the kill switch answers
 * Retrying a failed run the same day: the claim is once a day, so a crash
   cannot double-send. The failure is visible as a sentence and the next day
   runs normally.
+* A manual run that bypasses the day's claim: the owner's button exists so a
+  demo does not wait for 8:00 AM, not so a finding can go out twice.

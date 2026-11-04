@@ -9497,6 +9497,91 @@
         "summary": "Resume one routine (or all) from its next tick"
       }
     },
+    "/v1/routines/{routine_id}/run": {
+      "post": {
+        "description": "Run one routine now, through the same path a tick uses: the same\nfinding sentence, the same shop link, the same message and recording.\nThe Lagos day's claim is the same too, so a second run today answers\n409 with a sentence instead of sending twice; a paused routine answers\n409 with its reason. Answers the routine's row as the rail reads it\nafter the run. No model call: the routines are code.",
+        "operationId": "post_routine_run_v1_routines__routine_id__run_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "routine_id",
+            "required": true,
+            "schema": {
+              "title": "Routine Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RoutineOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Run one routine now, once for today's Lagos day"
+      }
+    },
     "/v1/shops": {
       "get": {
         "operationId": "get_shops_v1_shops_get",
