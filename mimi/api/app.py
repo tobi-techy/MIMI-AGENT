@@ -182,7 +182,7 @@ def create_app(settings: Settings | None = None, agent: Agent | None = None, *,
     app.add_middleware(
         CORSMiddleware, allow_origins=list(settings.cors_origins),
         allow_origin_regex=LOCALHOST_REGEX, allow_credentials=False,
-        allow_methods=["GET", "POST", "OPTIONS"],
+        allow_methods=["GET", "POST", "PUT", "OPTIONS"],
         allow_headers=["Authorization", "Content-Type"])
     engine = agent.engine
     uploads: ConsoleUploads | None = None

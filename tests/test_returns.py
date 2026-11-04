@@ -57,10 +57,14 @@ def h2() -> dict[str, str]:
     return {"Authorization": f"Bearer {OTHER}"}
 
 
-def _pickup(c: TestClient) -> dict[str, Any]:
+def _slow_plans(c: TestClient) -> list[dict[str, Any]]:
     c.post("/v1/stock/slow-check", headers=h())
-    apps = c.get("/v1/approvals", headers=h()).json()["approvals"]
-    return next(a for a in apps if a["kind"] == "slow_stock" and any(
+    return [a for a in c.get("/v1/approvals", headers=h()).json()["approvals"]
+            if a["kind"] == "slow_stock"]
+
+
+def _pickup(c: TestClient) -> dict[str, Any]:
+    return next(a for a in _slow_plans(c) if any(
         o["action"] == "pickup" for o in a["payload"]["options"]))
 
 
@@ -644,3 +648,142 @@ def test_an_undo_refuses_only_when_the_invoice_is_gone(api: dict[str, Any]) -> N
     assert c.get(f"/v1/returns/{body['return_id']}",
                  headers=h()).json()["status"] == "settled"
     assert len(before) == len(_receivables(engine, shop_id)) + 1
+
+
+# ------------------------------------------------------------- review triage
+
+
+def test_scrub_takes_a_credit_note_id_out_of_a_person_read_string() -> None:
+    note_id = ledger.credit_id_for(A, "ret_abc", 1)
+    assert note_id.startswith("crn_")
+    for text in (f"Credit {note_id} recorded.", "Undone: crn_0123456789abcdefabcd off.",
+                 "Credit worth 12000_kobo."):
+        clean = ledger.scrub(text)
+        assert note_id not in clean
+        assert "crn_" not in clean and "_kobo" not in clean
+
+
+def test_collect_refuses_a_line_that_is_not_on_the_return(api: dict[str, Any]) -> None:
+    c = api["c"]
+    body = _open_manual(c, _no_balance_shop(c), quantity=2)
+    rid = body["return_id"]
+    assert c.post(f"/v1/returns/{rid}/approve", headers=h(), json={}).status_code == 200
+    unknown = c.post(f"/v1/returns/{rid}/collect", headers=h(),
+                     json={"lines": [{"line_no": 1, "quantity": 2},
+                                     {"line_no": 9, "quantity": 1}]})
+    assert unknown.status_code == 409, unknown.text
+    assert "not on it" in unknown.json()["detail"]
+    twice = c.post(f"/v1/returns/{rid}/collect", headers=h(),
+                   json={"lines": [{"line_no": 1, "quantity": 1},
+                                   {"line_no": 1, "quantity": 2}]})
+    assert twice.status_code == 409 and "once" in twice.json()["detail"]
+    ok = c.post(f"/v1/returns/{rid}/collect", headers=h(),
+                json={"lines": [{"line_no": 1, "quantity": 2}]})
+    assert ok.status_code == 200
+    # A line cannot be collected twice: the return is collected now, and the
+    # only move out of collected is inspection.
+    assert c.post(f"/v1/returns/{rid}/collect", headers=h(), json={}).status_code == 409
+    got = c.get(f"/v1/returns/{rid}", headers=h()).json()
+    assert got["lines"][0]["quantity_collected"] == 2
+
+
+def test_inspect_refuses_resell_for_goods_that_came_back_damaged(
+        api: dict[str, Any]) -> None:
+    c = api["c"]
+    body = _open_manual(c, _no_balance_shop(c), quantity=2)
+    rid = body["return_id"]
+    c.post(f"/v1/returns/{rid}/approve", headers=h(), json={})
+    c.post(f"/v1/returns/{rid}/collect", headers=h(), json={})
+    for condition in ("expired", "damaged"):
+        bad = c.post(f"/v1/returns/{rid}/inspect", headers=h(), json={"lines": [
+            {"line_no": 1, "quantity_returned": 2, "condition": condition,
+             "disposition": "resell"}]})
+        assert bad.status_code == 409, bad.text
+        assert "sold again" in bad.json()["detail"]
+    ok = c.post(f"/v1/returns/{rid}/inspect", headers=h(), json={"lines": [
+        {"line_no": 1, "quantity_returned": 2, "condition": "expired",
+         "disposition": "write_off"}]})
+    assert ok.status_code == 200, ok.text
+    assert ok.json()["recovered_kobo"] == 0  # nothing recovered from a write-off
+
+
+def test_a_pickup_line_names_the_delivery_its_expiry_came_from(
+        api: dict[str, Any]) -> None:
+    """The plan's expiry is the earliest among the units left, which is the
+    delivery being picked up. The line must take the batch of the note that
+    carries that expiry, not whichever note came last."""
+    c, engine = api["c"], api["engine"]
+    pickup = next(a for a in _slow_plans(c)
+                  if a["payload"].get("slow_kind") == "near_expiry"
+                  and a["payload"].get("expires_on")
+                  and any(o["action"] == "pickup" for o in a["payload"]["options"]))
+    payload = pickup["payload"]
+    shop_id, sku, plan_expiry = payload["shop_id"], payload["sku"], payload["expires_on"]
+    with engine.begin() as conn:
+        notes = conn.execute(
+            sa.select(s.delivery_lines.c.delivery_id, s.delivery_lines.c.expires_on,
+                      s.deliveries.c.day)
+            .join(s.deliveries, sa.and_(
+                s.deliveries.c.tenant_id == s.delivery_lines.c.tenant_id,
+                s.deliveries.c.delivery_id == s.delivery_lines.c.delivery_id))
+            .where(s.delivery_lines.c.tenant_id == A, s.deliveries.c.shop_id == shop_id,
+                   s.delivery_lines.c.sku == sku)
+            .order_by(s.deliveries.c.day.desc())).all()
+        assert len(notes) >= 2, notes
+        mine, newer = notes[-1], notes[0]  # the oldest note carries the plan's expiry
+        conn.execute(s.delivery_lines.update().where(
+            s.delivery_lines.c.tenant_id == A,
+            s.delivery_lines.c.delivery_id == newer.delivery_id,
+            s.delivery_lines.c.sku == sku).values(expires_on="2027-06-01", batch="LATER-1"))
+        conn.execute(s.delivery_lines.update().where(
+            s.delivery_lines.c.tenant_id == A,
+            s.delivery_lines.c.delivery_id == mine.delivery_id,
+            s.delivery_lines.c.sku == sku).values(expires_on=plan_expiry, batch="MINE-1"))
+    approved = c.post(f"/v1/approvals/{pickup['approval_id']}/approve",
+                      headers=h(), json={"option": "pickup"})
+    assert approved.status_code == 200, approved.text
+    opened = c.post("/v1/returns", headers=h(), json={"approval_id": pickup["approval_id"]})
+    assert opened.status_code == 201, opened.text
+    ln = opened.json()["lines"][0]
+    assert ln["expires_on"] == plan_expiry
+    assert ln["batch"] == "MINE-1"  # the note behind the plan's expiry, not the newest
+    assert ln["expiry_source"] == "invoice"
+
+
+def test_an_approved_card_that_never_applied_can_be_settled_again(
+        api: dict[str, Any], monkeypatch: pytest.MonkeyPatch) -> None:
+    """`Agent.decide` records the approval, then the application runs. When the
+    application fails, the return must not be left with a card that cannot be
+    approved twice and cannot be undone."""
+    c = api["c"]
+    body = _open_manual(c, _no_balance_shop(c), quantity=1)
+    rid = body["return_id"]
+    _walk(c, body)
+    first = c.post(f"/v1/returns/{rid}/settle", headers=h(), json={})
+    apr = first.json()["credit_approval_id"]
+    real = returns_api.apply_credit
+
+    def boom(*args: Any, **kwargs: Any) -> None:
+        raise returns_api.Conflict("the book refused it")
+
+    monkeypatch.setattr(returns_api, "apply_credit", boom)
+    failed = c.post(f"/v1/approvals/{apr}/approve", headers=h(), json={})
+    assert failed.status_code == 409, failed.text
+    card = next(x for x in c.get("/v1/approvals", headers=h(),
+                                params={"status": "all"}).json()["approvals"]
+                if x["approval_id"] == apr)
+    assert card["status"] == "approved" and card["result"] is None
+    got = c.get(f"/v1/returns/{rid}", headers=h()).json()
+    assert got["credit_approval_id"] is None and got["credit_kobo"] is None
+    # Settling again drafts a fresh card, and the dead one is retired.
+    monkeypatch.setattr(returns_api, "apply_credit", real)
+    again = c.post(f"/v1/returns/{rid}/settle", headers=h(), json={})
+    assert again.status_code == 200, again.text
+    fresh = again.json()["credit_approval_id"]
+    assert fresh and fresh != apr
+    cards = {x["approval_id"]: x for x in c.get("/v1/approvals", headers=h(),
+                                                params={"status": "all"}).json()["approvals"]}
+    assert cards[apr]["status"] == "withdrawn"
+    assert c.post(f"/v1/approvals/{fresh}/approve", headers=h(),
+                  json={}).status_code == 200
+    assert c.get(f"/v1/returns/{rid}", headers=h()).json()["status"] == "settled"

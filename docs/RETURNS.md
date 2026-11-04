@@ -39,7 +39,12 @@ A line keeps three quantities, so the console never has to guess:
   `write_off`, `return_to_supplier`).
 
 Inspection can never record more than was collected, and every line must be
-named (both 409s).
+named (both 409s). A line that came back `damaged` or `expired` cannot be
+disposed of as `resell`, because a resold line is counted as recovered and
+goods like that cannot go back on the shelf: the choice is write off or send
+it back to the supplier. Collection names each line once and only lines that
+are on the return (409s), and a return is collected once because the only move
+out of `collected` is inspection.
 
 ### Expiry and batch from the distributor's own invoice
 
@@ -48,6 +53,12 @@ batch come off his own invoice line (`delivery_lines.expires_on`, `batch`)
 whenever it carried one, and the line says so: `expiry_source` is `invoice`
 when the note had the date, `estimated` when it did not. The API never
 claims a date off a shop count.
+
+A pickup line names the delivery its goods came in on as far as the book can
+say: the plan carries the expiry the pickup is about (the earliest expiry
+among the units left), and the line takes the batch of the delivery note that
+carries that same expiry rather than the newest note's. When no note carries
+that date, the plan's date stands and the batch is the newest note's.
 
 ### What the return saved or cost
 
@@ -144,9 +155,10 @@ What one shop could cost, aged and risk-weighted, per shop and in total.
 * the lifecycle, the three quantities, the settlement against a balance and
   its undo, and the credit-on-account case for a shop that owes nothing;
 * the settlement rules: a rejected card leaves the return settleable, a second
-  settle with a new amount replaces the waiting card, undoing the pickup
-  cancels the draft, and the undo reverses the credit's own applications so it
-  stays right when a bank payment or a morning roll moved the invoice first;
+  settle with a new amount replaces the waiting card, a card whose application
+  failed after approval can be settled again, undoing the pickup cancels the
+  draft, and the undo reverses the credit's own applications so it stays right
+  when a bank payment or a morning roll moved the invoice first;
 * the unhappy paths: a pickup with no approval, a non-pickup plan, an
   inspection that disagrees with what was collected, a settlement above the
   return value, a transition out of order, settling with no shop and no
@@ -173,3 +185,26 @@ The frozen field names and status strings the console builds against are in
 * A return opens only from a slow-stock pickup or with named lines; there is
   no shop-initiated return request yet, and no partial-line reason per
   disposition beyond the line's own reason.
+
+Two things the review found and this branch does not fix, both about two
+readers and writers on the same invoices at once. Neither can happen in a demo
+walked by one person, and both want tests, so they are the first items after
+the demo rather than a late change:
+
+1. **Row locking on the receivable writers.** `apply_credit` and
+   `_reverse_applications` read an invoice and then write an absolute `paid`
+   and `outstanding`. So does Go's own writer for a verified bank payment. Two
+   of them can read the same invoice before either commits and the later
+   commit then overwrites the earlier one, the classic lost update this branch
+   introduces by adding a second writer. The fix is `with_for_update()` on the
+   invoice rows read inside the same transaction, and it has to be taken in
+   one consistent order (the invoice read order is already `position` then
+   `delivery_id`, so the lock order should follow it) to keep two credits on
+   one shop from deadlocking.
+2. **One snapshot for the exposure read.** `GET /v1/credit/exposure` reads
+   payments and receivables separately (and on two connections), so a bank
+   credit committing between them shows the same money as both verified and
+   outstanding for one request. One connection is not enough by itself under
+   READ COMMITTED: the two sides want a single snapshot, so read them in one
+   transaction at a repeatable-read isolation level or from one statement.
+

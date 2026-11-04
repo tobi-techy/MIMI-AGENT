@@ -65,8 +65,11 @@ LEDGER_VERSION = "returns-v0.1"
 CREDIT_KIND = "return_credit"
 
 # Any internal id shape a person must never read in a reason or a note.
+# ``crn`` is a credit note (``ledger.credit_id_for``); the hex run it carries is
+# not caught on its own, because the underscore before it is a word character.
 _ID_LIKE = re.compile(
-    r"\b(?:shop|dlv|apr|ret|stk|inv)[-_][A-Za-z0-9]+\b|\bshop_\w+\b|_[a-z]*kobo\b|\b[0-9a-f]{16,}\b")
+    r"\b(?:shop|dlv|apr|ret|stk|inv|crn)[-_][A-Za-z0-9]+\b|\bshop_\w+\b|_[a-z]*kobo\b"
+    r"|\b[0-9a-f]{16,}\b")
 
 
 def can_move(current: str, to: str) -> bool:

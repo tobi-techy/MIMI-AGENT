@@ -85,15 +85,18 @@ unit=`unit`, reason=`reason`, collected=`quantity_collected`, came back=
 
 `expiry_source` is `invoice` when the distributor's own delivery note carried
 the expiry and batch, `estimated` when it did not. A shop count is never
-shown as a date.
+shown as a date. On a pickup, the plan names the expiry the goods are being
+picked up for (the earliest expiry among the units left), and the line takes
+the batch of the delivery note carrying that same expiry, so it refers to the
+delivery those goods came in on rather than the newest note.
 
 Request bodies (every field optional unless noted):
 
 - `POST /v1/returns` `{"approval_id": str}` OR
   `{"shop_id": str, "reason": str, "lines": [{"sku": str, "quantity": int, "reason": str}]}`
 - `/approve` `{"by": str, "note": str}`
-- `/collect` `{"by": str, "lines": [{"line_no": int, "quantity": int}]}` (omit lines to take what was drafted)
-- `/inspect` `{"by": str, "lines": [{"line_no": int, "quantity_returned": int, "condition": str, "disposition": str}]}`
+- `/collect` `{"by": str, "lines": [{"line_no": int, "quantity": int}]}` (omit lines to take what was drafted; every `line_no` must be on the return and appear once)
+- `/inspect` `{"by": str, "lines": [{"line_no": int, "quantity_returned": int, "condition": str, "disposition": str}]}` (a line that came back `damaged` or `expired` cannot be disposed of as `resell`)
 - `/settle` `{"by": str, "amount_kobo": int}` (default `value_returned_kobo`)
 - `/cancel` `{"by": str, "note": str}`
 - `PUT /v1/returns/settings` `{"pickup_cost_kobo": int}`
@@ -119,7 +122,11 @@ Settlement rules the console can rely on:
   a new `credit_approval_id` carrying the new amount.
 - A card the owner rejected, withdrew or superseded is not the return's
   credit: `credit_kobo` and `credit_approval_id` read as null, and the next
-  settle drafts a fresh card. A rejection never blocks settlement.
+  settle drafts a fresh card. A rejection never blocks settlement. The same
+  holds for a card that is `approved` but carries no credit note, which is
+  what an application that failed after the approval was recorded leaves
+  behind: settling again drafts a fresh card and retires the old one as
+  `withdrawn`.
 - Undoing an applied credit subtracts that credit's own applications from the
   invoices: it stays correct when two returns credit one invoice (either order
   can be undone) and when a verified bank payment or Go's morning roll moved
@@ -235,7 +242,7 @@ feed, so a shop-reported payment never lowers exposure; it appears as
 
 ## Tests
 
-`tests/test_returns.py` (26 tests) and `tests/test_exposure.py` (9 tests)
+`tests/test_returns.py` (31 tests) and `tests/test_exposure.py` (9 tests)
 cover every string above, including the unhappy paths and the two
 person-read-string guarantees: tenant filtering, and no internal id anywhere
 a person reads.

@@ -54,23 +54,40 @@ def _sku_row(conn: sa.Connection, tenant: str, sku: str) -> Any:
         s.skus.c.tenant_id == tenant, s.skus.c.sku == sku)).first()
 
 
-def _invoice_batch(conn: sa.Connection, tenant: str, shop_id: str, sku: str
-                   ) -> tuple[str, str, str]:
-    """(expires_on, batch, source) from the distributor's own invoice line for
-    this shop and item: the newest delivery line's batch and expiry. Source is
-    ``invoice`` when the note carried an expiry, else ``estimated``."""
-    r = conn.execute(
-        sa.select(s.delivery_lines.c.expires_on, s.delivery_lines.c.batch)
-        .join(s.deliveries, sa.and_(
-            s.deliveries.c.tenant_id == s.delivery_lines.c.tenant_id,
-            s.deliveries.c.delivery_id == s.delivery_lines.c.delivery_id))
-        .where(s.delivery_lines.c.tenant_id == tenant,
-               s.deliveries.c.shop_id == shop_id,
-               s.delivery_lines.c.sku == sku)
-        .order_by(s.deliveries.c.day.desc()).limit(1)).first()
-    if r is None or not r.expires_on:
-        return "", (r.batch or "") if r is not None else "", "estimated"
-    return str(r.expires_on), str(r.batch or ""), "invoice"
+def _invoice_batch(conn: sa.Connection, tenant: str, shop_id: str, sku: str,
+                   expires_on: str = "") -> tuple[str, str, str]:
+    """(expires_on, batch, source) from the distributor's own invoice lines.
+
+    The pickup plan names the expiry the goods are being picked up for (the
+    earliest expiry among the units left, read off the delivery notes). When it
+    does, the batch comes from the delivery line that carries that same expiry,
+    so the return line refers to the delivery those goods came in on rather
+    than whichever note came last. If no line carries that expiry, the plan's
+    date stands and the batch is the newest note's; with no plan expiry (a
+    manual return, or a plan that named none), the newest delivery line for the
+    shop and item is used. Source is ``invoice`` whenever a note carried an
+    expiry, else ``estimated``."""
+    def note(with_expiry: str = "") -> Any:
+        q = (sa.select(s.delivery_lines.c.expires_on, s.delivery_lines.c.batch)
+             .join(s.deliveries, sa.and_(
+                 s.deliveries.c.tenant_id == s.delivery_lines.c.tenant_id,
+                 s.deliveries.c.delivery_id == s.delivery_lines.c.delivery_id))
+             .where(s.delivery_lines.c.tenant_id == tenant,
+                    s.deliveries.c.shop_id == shop_id,
+                    s.delivery_lines.c.sku == sku))
+        if with_expiry:
+            q = q.where(s.delivery_lines.c.expires_on == with_expiry)
+        return conn.execute(q.order_by(s.deliveries.c.day.desc()).limit(1)).first()
+
+    newest = note()
+    if expires_on:
+        same = note(expires_on)
+        batch = same.batch if same is not None else (
+            newest.batch if newest is not None else "")
+        return expires_on, str(batch or ""), "invoice"
+    if newest is None or not newest.expires_on:
+        return "", str((newest.batch or "") if newest is not None else ""), "estimated"
+    return str(newest.expires_on), str(newest.batch or ""), "invoice"
 
 
 def _load(conn: sa.Connection, tenant: str, return_id: str) -> Any:
@@ -136,17 +153,30 @@ def _saving(conn: sa.Connection, tenant: str, rows: Sequence[Any]) -> tuple[int 
 
 def _credit_approval(conn: sa.Connection, tenant: str, r: Any) -> Any | None:
     """The return's credit card when it is still live: waiting for the owner
-    (``pending``) or approved and applied. A rejected, withdrawn or superseded
-    card is not the return's credit any more, so the read says nothing is
-    waiting and a fresh settle is allowed."""
+    (``pending``), or approved and actually applied (it carries the credit note
+    it wrote).
+
+    A rejected, withdrawn or superseded card is not the return's credit any
+    more, so the read says nothing is waiting and a fresh settle is allowed.
+    Neither is an approved card with no credit note behind it: that is a card
+    whose application failed after the approval was recorded (``Agent.decide``
+    commits the approval, then the application runs), and the way out is to
+    settle again rather than to be stuck with a card that cannot be undone and
+    cannot be approved twice."""
     if not r.credit_approval_id:
         return None
     a = conn.execute(sa.select(s.approvals).where(
         s.approvals.c.tenant_id == tenant,
         s.approvals.c.approval_id == r.credit_approval_id)).first()
-    if a is None or a.status not in ("pending", "approved"):
+    if a is None:
         return None
-    return a
+    if a.status == "pending":
+        return a
+    if a.status == "approved":
+        applied = (loads(a.payload, {}).get("result") or {}).get("credit_id")
+        if applied:
+            return a
+    return None
 
 
 def _settle_attempts(conn: sa.Connection, tenant: str, return_id: str) -> int:
@@ -329,7 +359,10 @@ def _from_pickup(conn: sa.Connection, tenant: str, approval_id: str, now: float,
     quantity = int(option.get("quantity") or 0)
     if not sku or quantity <= 0:
         raise Conflict("this pickup has no lines to return")
-    expires_on, batch, source = _invoice_batch(conn, tenant, shop_id, sku)
+    # The plan's own expiry (the earliest expiry among the units left, off the
+    # delivery notes) identifies the delivery this pickup is about.
+    expires_on, batch, source = _invoice_batch(
+        conn, tenant, shop_id, sku, str(payload.get("expires_on") or ""))
     item = str(payload.get("item") or sku)
     unit = str(option.get("unit") or payload.get("unit") or "")
     price = int(option.get("unit_price_kobo") or 0)
@@ -453,6 +486,15 @@ def collect(engine: Engine, tenant: str, return_id: str, *,
         if not ledger.can_move(str(r.status), ledger.COLLECTED):
             raise Conflict(f"a return that is {r.status} cannot be collected")
         rows = _line_rows(conn, tenant, return_id)
+        known = {int(ln.line_no) for ln in rows}
+        asked = [int(x["line_no"]) for x in (lines or [])]
+        unknown = sorted(set(asked) - known)
+        if unknown:
+            raise Conflict(f"this return has {len(rows)} line"
+                           f"{'' if len(rows) == 1 else 's'}; "
+                           f"{len(unknown)} of the collected lines are not on it")
+        if len(asked) != len(set(asked)):
+            raise Conflict("each line is collected once")
         by_no = {int(x["line_no"]): int(x.get("quantity") or 0) for x in (lines or [])}
         for ln in rows:
             qty = by_no.get(int(ln.line_no), int(ln.quantity_drafted))
@@ -502,6 +544,12 @@ def inspect(engine: Engine, tenant: str, return_id: str, *,
             if back > 0 and disposition not in ledger.DISPOSITIONS:
                 raise Conflict(f"name a disposition for {ln.item}: "
                                f"{', '.join(ledger.DISPOSITIONS)}")
+            if back > 0 and disposition == "resell" and condition != "resellable":
+                # Money rests on this: a resold line counts as recovered, and
+                # what came back damaged or expired cannot go back on the shelf.
+                raise Conflict(
+                    f"{ln.item} came back {condition}, so it cannot be sold again. "
+                    "Write it off or send it back to the supplier.")
             line_value = ledger.line_value_kobo(back, int(ln.unit_price_kobo))
             value += line_value
             conn.execute(s.return_lines.update().where(
@@ -549,12 +597,18 @@ def settle(engine: Engine, tenant: str, return_id: str, *,
         # settled a different amount. A card the owner rejected, withdrew or
         # that was superseded is not live, so this drafts a fresh one for it.
         stale_id = ""
+        dead_id = ""
         waiting = _credit_approval(conn, tenant, r)
         if waiting is not None and waiting.status == "pending":
             held = int(loads(waiting.payload, {}).get("amount_kobo") or 0)
             if held == amount:
                 return return_dict(conn, tenant, r)
             stale_id = str(waiting.approval_id)
+        elif r.credit_approval_id:
+            # The card on the return is not this return's credit any more: the
+            # owner rejected or withdrew it, it was superseded, or its
+            # application failed after the approval was recorded.
+            dead_id = str(r.credit_approval_id)
         attempt = 1 + _settle_attempts(conn, tenant, return_id)
         key = f"{RETURN_CREDIT_KIND}:{return_id}:{attempt}"
         apr = approval_id_for(tenant, key)
@@ -586,6 +640,15 @@ def settle(engine: Engine, tenant: str, return_id: str, *,
             from mimi.api import steering
 
             steering.supersede(conn, tenant, stale_id, apr)
+        if dead_id:
+            # So the console stops offering a card that is not the credit, and
+            # the owner sees why it is not.
+            conn.execute(s.approvals.update().where(
+                s.approvals.c.tenant_id == tenant,
+                s.approvals.c.approval_id == dead_id,
+                s.approvals.c.status.in_(("pending", "approved"))).values(
+                status="withdrawn",
+                note="Replaced: this credit was never applied to the shop's invoices."))
         _touch(conn, tenant, return_id, now, credit_kobo=amount, credit_approval_id=apr)
         return return_dict(conn, tenant, _load(conn, tenant, return_id))
 
