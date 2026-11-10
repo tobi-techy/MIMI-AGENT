@@ -348,6 +348,16 @@ def _code_answers(d: RouteDecision) -> bool:
     return d.rule.startswith("owner_rule:") or fixes_2026_10_30()
 
 
+def _day_of(raw: str, now: Any) -> Any:
+    """The Lagos day a stored stamp names, falling back to the clock's day."""
+    from datetime import date as _date
+
+    try:
+        return _date.fromisoformat(str(raw))
+    except ValueError:
+        return now.astimezone(LAGOS).date()
+
+
 class Agent:
     def __init__(
         self,
@@ -763,6 +773,15 @@ class Agent:
     def _run(self, holder: list[Claim]) -> None:
         claim = holder[0]
         ck = dict(claim.checkpoint)
+        if ck.get("parked") and "loop" not in ck:
+            # The allowance refused this turn before its loop began (the paid
+            # call was the route, the steer or a read). The owner has raised it
+            # since, and nothing ran: the turn starts again from what it had
+            # worked out, with the cap check in front of every paid call. The
+            # ``resumed`` mark is what the crash-point check watches for.
+            ck.pop("parked", None)
+            ck["resumed"] = int(ck.get("resumed") or 0) + 1
+            self._checkpoint(holder, ck)
         events = self._load_batch(claim.tenant_id, claim.batch)
         if not events:
             raise RuntimeError("turn has no inbound messages")
@@ -1131,19 +1150,31 @@ class Agent:
 
         The last line of defence when a paid call is refused outside the loop
         step (the loop itself turns the same refusal into ``stopped_budget``
-        and parks through ``_park``, which asks the owner once a day). One
-        compare-and-set parks the turn, so a lost lease writes nothing; a
-        person's message gets one plain sentence, written by code; the figures
-        go to the turn's events and the log, never to a person.
+        and parks through ``_park``, which asks the owner once a day). This
+        one is reached before any loop state exists (the route, the steer or a
+        read was the paid call), so the turn has nothing to reopen: raising
+        the allowance starts it again (``_run``). One compare-and-set parks
+        the turn, so a lost lease writes nothing; a person's message gets one
+        plain sentence, written by code; the figures go to the console card,
+        the turn's events and the log, never as an error to a person.
         """
         claim = holder[0]
         tenant, thread, turn_id = claim.tenant_id, claim.thread_id, claim.turn_id
         now = wall()
-        day = exc.day or self.clock().astimezone(LAGOS).date().isoformat()
+        day_s = exc.day or self.clock().astimezone(LAGOS).date().isoformat()
+        day = _day_of(day_s, self.clock())
         ck = dict(claim.checkpoint)
-        ck["parked"] = {"reason": "daily_cap", "day": day,
+        ck["parked"] = {"reason": "daily_cap", "day": day.isoformat(),
                         "spent_kobo": exc.spent_kobo, "cap_kobo": exc.cap_kobo,
                         "at": now_iso(now)}
+        # Everything that needs a second connection is done before the write
+        # transaction opens: on SQLite a read inside it deadlocks the store.
+        events = self._load_batch(tenant, claim.batch)
+        lead = lead_of(events) if events else None
+        _, shop_id = thread_kind(tenant, thread)
+        shops = self._shops_counted(None, tenant, day)
+        first = self.go.ask_owner_once(tenant, "daily_cap", day)
+        new_cap = max(exc.cap_kobo * 2, exc.cap_kobo + BD.MIN_RAISE_KOBO)
         with self.engine.begin() as conn:
             res = conn.execute(s.turns.update().where(
                 s.turns.c.turn_id == turn_id, s.turns.c.version == claim.version,
@@ -1154,17 +1185,23 @@ class Agent:
                                       "attempt": claim.attempts, "parked": ck["parked"]})))
             if res.rowcount != 1:
                 raise LeaseLost(turn_id)
-            events = self._load_batch(tenant, claim.batch)
-            lead = lead_of(events) if events else None
-            _, shop_id = thread_kind(tenant, thread)
-            if lead is not None and lead.sender in ("shop", "rep"):
+            if lead is not None and lead.sender in ("shop", "rep") \
+                    and lead.source in PERSON_SOURCES:
                 self._out(conn, tenant, thread, turn_id, key=f"hold:{turn_id}",
                           channel=_CHANNEL_FOR[lead.sender], shop_id=shop_id,
-                          text=BD.refusal(tenant=tenant,
-                                          shops=self._shops_counted(conn, tenant, day),
+                          text=BD.refusal(tenant=tenant, shops=shops,
                                           cap_kobo=exc.cap_kobo,
-                                          lang=st._lang(lead.text if lead is not None else "")),
+                                          lang=st._lang(lead.text)),
                           kind="holding_reply", status="ready", ts=now)
+            if first:
+                # The owner reads the same sentence the alert carries, once a
+                # day, on the console: the figures, the tenant, nothing else.
+                self._out(conn, tenant, thread, turn_id, key=f"capnote:{turn_id}",
+                          channel="owner_console", shop_id="",
+                          text=BD.question(exc.spent_kobo, exc.cap_kobo),
+                          kind="cap_note", status="ready", ts=now)
+            self._ask_raise(conn, tenant=tenant, day=day, cap=exc.cap_kobo,
+                            spent=exc.spent_kobo, new_cap=new_cap, turn_id=turn_id)
             insert_ignore(conn, s.thread_events, {
                 "tenant_id": tenant, "event_id": f"cap_{turn_id}_{claim.version}",
                 "thread_id": thread, "run_id": "", "turn_id": turn_id, "seq": -1,
@@ -1173,12 +1210,45 @@ class Agent:
                          f"{BD.summary(exc.spent_kobo, exc.cap_kobo)}",
                 "cost_kobo": exc.spent_kobo, "model": "", "duration_ms": 0.0,
                 "data": dumps(ck["parked"]), "at": now_iso(now), "ts": now})
+            insert_ignore(conn, s.thread_events, {
+                "tenant_id": tenant, "event_id": f"park_{turn_id}_{claim.version}",
+                "thread_id": thread, "run_id": "", "turn_id": turn_id, "seq": -1,
+                "step": 0, "type": "parked", "tool": "", "tier": "",
+                "short": f"paused: {BD.summary(exc.spent_kobo, exc.cap_kobo)}",
+                "cost_kobo": 0, "model": "", "duration_ms": 0.0,
+                "data": dumps(ck["parked"]), "at": now_iso(now), "ts": now})
+
+    def _ask_raise(self, conn: Any, *, tenant: str, day: Any, cap: int, spent: int,
+                   new_cap: int, turn_id: str) -> None:
+        """One "raise today's allowance" item for the day, by idempotency key.
+
+        Shared by the loop's park (``_park``) and the seam's refusal
+        (``_refuse_budget``) so both ask the owner the same way, once a day,
+        with the same figures and the same preview.
+        """
+        payload = {"day": day.isoformat(), "cap_kobo": cap, "spent_kobo": spent,
+                   "new_cap_kobo": new_cap}
+        record = {
+            "tool": "raise_daily_allowance", "intent_kind": "raise_daily_allowance",
+            "tier": self.policy.tier(tenant, "raise_daily_allowance", payload, conn=conn),
+            "scope": "org:plan", "tenant_id": tenant, "shop_id": "",
+            "idempotency_key": business_key(tenant, "raise_daily_allowance",
+                                            {"day": day.isoformat(), "cap_kobo": cap}),
+            "attempt_key": f"park:{turn_id}", "payload": payload,
+            "preview": (f"Raise today's model allowance from {_naira(cap)} "
+                        f"({BD.turns_for(cap)} model turns) to {_naira(new_cap)} "
+                        f"({BD.turns_for(new_cap)} turns)? Helpers that need the "
+                        "model are paused until then; their work waits, the cheap "
+                        "paths keep running and nothing is dropped.")}
+        self.go.apply_intent(conn, tenant, record, turn_id=turn_id, thread_id="",
+                             helper="", skill="mimi/budget")
 
     def _shops_counted(self, conn: Any, tenant: str, day: Any) -> int:
         """How many shops set the day's allowance (``mimi.observe.allowance``).
 
-        Used for the plain sentence a person reads, so a failure here must
-        never stop the park: zero reads as one shop in the wording.
+        Called before a park opens its write transaction (``conn`` is ``None``
+        then, so it takes its own connection). A failure here must never stop
+        the park: zero reads as one shop in the wording.
         """
         from datetime import date as _date
 
@@ -1186,6 +1256,9 @@ class Agent:
 
         try:
             value = day if isinstance(day, _date) else _date.fromisoformat(str(day))
+            if conn is None:
+                with self.engine.connect() as own:
+                    return budget_allowance.allowance(own, tenant, value).active_shops
             return budget_allowance.allowance(conn, tenant, value).active_shops
         except Exception:
             return 0
@@ -1245,22 +1318,8 @@ class Agent:
                     self._out(conn, tenant, thread, turn_id, key=dr.idempotency_key,
                               channel=dr.channel, shop_id="", text=dr.body, kind="cap_note",
                               status="ready", ts=now + (n + 1) * 1e-3)
-            payload = {"day": day.isoformat(), "cap_kobo": cap, "spent_kobo": spent,
-                       "new_cap_kobo": new_cap}
-            record = {
-                "tool": "raise_daily_allowance", "intent_kind": "raise_daily_allowance",
-                "tier": self.policy.tier(tenant, "raise_daily_allowance", payload, conn=conn),
-                "scope": "org:plan", "tenant_id": tenant, "shop_id": "",
-                "idempotency_key": business_key(tenant, "raise_daily_allowance",
-                                                {"day": day.isoformat(), "cap_kobo": cap}),
-                "attempt_key": f"park:{turn_id}", "payload": payload,
-                "preview": (f"Raise today's model allowance from {_naira(cap)} "
-                            f"({BD.turns_for(cap)} model turns) to {_naira(new_cap)} "
-                            f"({BD.turns_for(new_cap)} turns)? Helpers that need the "
-                            "model are paused until then; their work waits, the cheap "
-                            "paths keep running and nothing is dropped.")}
-            self.go.apply_intent(conn, tenant, record, turn_id=turn_id, thread_id="",
-                                 helper="", skill="mimi/budget")
+            self._ask_raise(conn, tenant=tenant, day=day, cap=cap, spent=spent,
+                            new_cap=new_cap, turn_id=turn_id)
             insert_ignore(conn, s.thread_events, {
                 "tenant_id": tenant, "event_id": f"park_{turn_id}_{claim.version}",
                 "thread_id": thread, "run_id": r.run_id, "turn_id": turn_id, "seq": -1,

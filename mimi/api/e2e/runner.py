@@ -176,7 +176,15 @@ class Workers:
             cmd.append("--live")
         if pause:
             cmd += ["--pause-at", pause, "--marker", str(marker)]
-        env = {**os.environ, "PYTHONUNBUFFERED": "1"}
+        # The replay runs the day these answers were recorded on: the
+        # plain-code paths (``MIMI_PLAIN_CODE``, balance/promo/quiet approvals
+        # on by default) postdate the recorded answers, and the cap scene must
+        # park a turn that needs the model. A balance question is answered by
+        # code even with the allowance spent (docs/SLO.md, "what happens when
+        # a distributor is out of allowance"), covered by
+        # tests/test_observe_spend.py; the e2e keeps the recorded model path.
+        # Re-record the caches with the plain paths on and drop the pin.
+        env = {**os.environ, "PYTHONUNBUFFERED": "1", "MIMI_PLAIN_CODE": "0"}
         log = open(self.run.workdir / f"{name}.log", "wb")  # noqa: SIM115
         self.proc = subprocess.Popen(cmd, env=env, stdout=log, stderr=subprocess.STDOUT)
         self.run.worker_log.append(f"started {name}")

@@ -274,3 +274,51 @@ def test_the_call_is_refused_even_when_the_gate_passed(
     # The seam's own refusal: one plain sentence naming the cap, no apology play.
     line = next(m.text for m in spend_out(engine, turn_id) if m.kind == "holding_reply")
     assert "Coral Lane" in line and budget.naira(500) in line
+
+
+def test_a_turn_refused_before_its_loop_begins_runs_when_the_owner_raises(
+        env: Any, monkeypatch: pytest.MonkeyPatch) -> None:
+    """The route or the steer was the paid call, so there is no loop to reopen.
+
+    ``_refuse_budget`` parks a turn before its first step, with no ``loop`` in
+    its checkpoint. Resume used to need one, so such a turn came back as a
+    fresh run that never recorded its resume (the daily-cap crash point in the
+    e2e). Nothing ran before the park, so it runs once, from what it had
+    worked out, and says so.
+    """
+    monkeypatch.setenv("MIMI_PLAIN_CODE", "0")
+    engine, agent = env["engine"], env["agent"]
+    spend_to_cap(engine)  # the loop's gate parks it, exactly as it always has
+
+    turn_id = submit(agent, "spend.resume.1", "abeg wetin I owe now?")
+    assert agent.process(turn_id) == turn_id
+    with engine.connect() as conn:
+        turn = conn.execute(sa.select(s.turns).where(
+            s.turns.c.turn_id == turn_id)).first()
+        approval = conn.execute(sa.select(s.approvals).where(
+            s.approvals.c.turn_id == turn_id,
+            s.approvals.c.tool == "raise_daily_allowance")).first()
+    assert turn.state == "parked" and approval is not None
+    # The seam's park: the same park, written before any step was saved.
+    ck = {k: v for k, v in json.loads(turn.checkpoint).items() if k != "loop"}
+    with engine.begin() as conn:
+        conn.execute(sa.update(s.turns).where(s.turns.c.turn_id == turn_id)
+                     .values(checkpoint=json.dumps(ck)))
+    assert agent.harness.gateway.models[0].calls == 0
+
+    with engine.begin() as conn:  # the owner says yes: the cap goes up
+        conn.execute(sa.delete(s.spend).where(s.spend.c.tenant_id == T))
+    agent.decide(T, approval.approval_id, approve=True, by="owner")
+    assert agent.process(turn_id) == turn_id
+
+    with engine.connect() as conn:
+        turn = conn.execute(sa.select(s.turns).where(
+            s.turns.c.turn_id == turn_id)).first()
+    ck = json.loads(turn.checkpoint)
+    assert turn.state == "done" and int(turn.completions or 0) == 1
+    assert "parked" not in ck and ck.get("resumed") == 1
+    out = sorted(spend_out(engine, turn_id), key=lambda m: m.ts)
+    assert [m.kind for m in out][0] == "holding_reply"  # the shop was told, once
+    assert sum(m.kind == "holding_reply" for m in out) == 1
+    assert sum(m.kind == "reply" for m in out) == 1
+    assert agent.harness.gateway.models[0].calls >= 1  # it took the paid path
