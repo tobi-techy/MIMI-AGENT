@@ -410,7 +410,8 @@ def test_intents_move_no_money() -> None:
 
 
 def test_sql_ledger_round_trip(tmp_path: Path) -> None:
-    ledger = SqlProofLedger(sa.create_engine(f"sqlite:///{tmp_path / 'p.db'}"))
+    ledger = SqlProofLedger(sa.create_engine(f"sqlite:///{tmp_path / 'p.db'}"),
+                                 "coral-lane")
     ledger.ensure_schema()
     rec = _record("wamid.1", "shop-1", "c" * 64, reference="KST1")
     assert ledger.add(rec) and not ledger.add(rec)
