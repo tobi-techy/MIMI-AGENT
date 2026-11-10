@@ -159,8 +159,14 @@ def followup_inbound(parent: Inbound, events: Sequence[Inbound], parts: Sequence
 
 def insert_followup(conn: sa.Connection, tenant_id: str, thread_id: str, inbound: Inbound, *,
                     after_ts: float, order: int, shop_id: str, simulated: bool,
-                    media_ref: str = "") -> str:
-    """Queue a follow-up turn right after ``after_ts`` (before any later message)."""
+                    media_ref: str = "", trace: str = "") -> str:
+    """Queue a follow-up turn right after ``after_ts`` (before any later message).
+
+    ``trace`` is the parent turn's correlation id (``mimi.observe.correlation``):
+    the follow-up is another hop of the same piece of work, so it keeps the
+    parent's trace id and records it on its own row. A caller that has none
+    gets the follow-up's own turn id.
+    """
     turn_id = turn_id_for(tenant_id, inbound.external_id)
     if not insert_ignore(conn, s.inbound_messages, {
             "tenant_id": tenant_id, "external_id": inbound.external_id, "turn_id": turn_id,
@@ -173,8 +179,9 @@ def insert_followup(conn: sa.Connection, tenant_id: str, thread_id: str, inbound
     conn.execute(s.turns.insert().values(
         turn_id=turn_id, tenant_id=tenant_id, thread_id=thread_id, state="queued",
         status="", helper="", skill="", version=0, attempts=0, completions=0, batch="[]",
-        checkpoint="{}", result=dumps({"part_of": inbound.payload.part_of}), error="",
-        stop=False, simulated=simulated, solo=True, created_at=now_iso(created),
+        checkpoint=dumps({"trace": trace or turn_id}),
+        result=dumps({"part_of": inbound.payload.part_of, "trace": trace or turn_id}),
+        error="", stop=False, simulated=simulated, solo=True, created_at=now_iso(created),
         created_ts=created, finished_at=None))
     return turn_id
 

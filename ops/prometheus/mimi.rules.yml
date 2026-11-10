@@ -1,0 +1,159 @@
+# Prometheus rules for Mimi's pilot. Every series named here is emitted by
+# mimi/observe/metrics.py; tests/test_slo.py fails if one is not.
+# The thresholds are the ones in docs/SLO.md. Change both in one commit.
+groups:
+  - name: mimi-pilot
+    interval: 30s
+    rules:
+      # SLO-1: turns finish without failing.
+      - alert: MimiTurnFailureRate
+        expr: |
+          mimi_turn_failure_rate{window="1h"} > 0.02
+          and mimi_turns_finished{window="1h"} >= 10
+        for: 15m
+        labels:
+          severity: page
+          slo: "SLO-1"
+        annotations:
+          summary: "Turn failure rate is {{ $value | humanizePercentage }} over an hour"
+          description: >-
+            More than 2% of finished turns failed in the last hour on at least
+            ten turns. Read mimi_helper_failure_rate to find the helper, then
+            one turn's status for it.
+          runbook: "docs/SLO.md#slo-1-turn-success-rate"
+
+      # SLO-2: a turn answers before a shop gives up.
+      - alert: MimiTurnLatency
+        expr: mimi_turn_latency_ms{quantile="p95"} > 30000
+        for: 10m
+        labels:
+          severity: page
+          slo: "SLO-2"
+        annotations:
+          summary: "Turn p95 latency is {{ $value }} ms"
+          description: >-
+            p95 above 30 seconds for ten minutes. Check turns per minute first:
+            normal traffic means the model provider, ten times normal means the
+            queue.
+          runbook: "docs/SLO.md#slo-2-turn-latency"
+
+      # SLO-3: queued work starts soon; staged so a restart is a warning.
+      - alert: MimiQueueAge
+        expr: mimi_queue_oldest_wait_seconds > 300 and mimi_queue_depth > 0
+        for: 5m
+        labels:
+          severity: warning
+          slo: "SLO-3"
+        annotations:
+          summary: "Oldest queued turn is {{ $value }} s old"
+          description: >-
+            Five minutes of waiting. Check the worker is polling and read the
+            oldest turn's lease; the queue takes over an expired lease on its
+            own. Never delete a queued turn.
+          runbook: "docs/SLO.md#slo-3-queue-age"
+
+      - alert: MimiQueueStuck
+        expr: mimi_queue_oldest_wait_seconds > 900 and mimi_queue_depth > 0
+        for: 5m
+        labels:
+          severity: page
+          slo: "SLO-3"
+        annotations:
+          summary: "Oldest queued turn is {{ $value }} s old: work is stuck"
+          description: >-
+            Fifteen minutes with work waiting. A lease held with an unchanging
+            age is a stuck worker; no lease held is a dead poller.
+          runbook: "docs/SLO.md#slo-3-queue-age"
+
+      # SLO-4: a waiting approval is decided. The owner's backlog, not a fault,
+      # so it tickets; past a day it pages, because a shop is still waiting.
+      - alert: MimiApprovalsWaiting
+        expr: mimi_approvals_oldest_wait_seconds > 14400 and mimi_approvals_waiting > 0
+        for: 15m
+        labels:
+          severity: ticket
+          slo: "SLO-4"
+        annotations:
+          summary: "Oldest pending approval is {{ $value }} s old"
+          description: >-
+            Four hours in the owner's queue. Nothing drafted by a helper has
+            reached a shop. Decide the oldest item, or reject it.
+          runbook: "docs/SLO.md#slo-4-approval-to-decision"
+
+      - alert: MimiApprovalsOverdue
+        expr: mimi_approvals_oldest_wait_seconds > 86400 and mimi_approvals_waiting > 0
+        for: 15m
+        labels:
+          severity: page
+          slo: "SLO-4"
+        annotations:
+          summary: "An approval has waited more than a day"
+          description: >-
+            A shop has been waiting a day for a reply that is stuck on an
+            approval. Decide it or reject it now; the shop's message is
+            unpaused by either.
+          runbook: "docs/SLO.md#slo-4-approval-to-decision"
+
+      # SLO-5: no distributor goes past its day's model allowance unasked.
+      # The sentence is in turns (what a founder can act on); the limit the
+      # gate enforces is money, so mimi_spend_used_fraction is the authority
+      # and the turn count is within one turn of it.
+      - alert: MimiSpendNearlySpent
+        expr: mimi_spend_turns_used >= mimi_spend_turns_cap * 0.8
+        for: 30m
+        labels:
+          severity: warning
+          slo: "SLO-5"
+        annotations:
+          summary: "{{ $labels.tenant }} has used {{ $value }} model turns today"
+          description: >-
+            80% of today's allowance, so the owner still has room to decide
+            before the cap stops paid calls. Read mimi_spend_today_kobo and
+            mimi_spend_used_fraction for the money; mimi_spend_active_shops
+            says how the cap was set.
+          runbook: "docs/SLO.md#slo-5-spend-per-tenant-per-day"
+
+      - alert: MimiSpendCapped
+        expr: mimi_spend_turns_used >= mimi_spend_turns_cap
+        for: 5m
+        labels:
+          severity: ticket
+          slo: "SLO-5"
+        annotations:
+          summary: "{{ $labels.tenant }} used all {{ $value }} of today's model turns"
+          description: >-
+            Paid calls are refused and the cheap paths keep running: balance,
+            promo, receipts and quiet approvals still answer. The owner should
+            have one raise_daily_allowance approval waiting; if not, that is
+            the bug. Never raise the cap by editing the row.
+          runbook: "docs/SLO.md#slo-5-spend-per-tenant-per-day"
+
+      # Connectors: an error rate is not an SLO, but a silently failing sync
+      # means an owner's book is not what Mimi read.
+      - alert: MimiConnectorErrors
+        expr: |
+          mimi_connector_sync_error_rate{window="1h"} > 0.1
+          and mimi_connector_sync_runs{window="1h"} >= 5
+        for: 15m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Connector syncs are failing {{ $value | humanizePercentage }} of the time"
+          description: >-
+            More than one sync in ten failed in the last hour. Read the errors
+            recorded on connector_sync_runs, then the connector's own status.
+          runbook: "docs/SLO.md#the-five"
+
+      # A dead exporter must not read as health: an empty page passes every
+      # threshold above. This one fires when the page itself stops.
+      - alert: MimiMetricsMissing
+        expr: absent(mimi_queue_depth)
+        for: 10m
+        labels:
+          severity: page
+        annotations:
+          summary: "Mimi's metrics endpoint has not been scraped for ten minutes"
+          description: >-
+            Every threshold in this file is blind while this fires. Check the
+            worker serving /metrics and the scrape configuration.
+          runbook: "docs/SLO.md#where-the-alerts-live"

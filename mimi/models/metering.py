@@ -39,6 +39,10 @@ from datetime import date
 from typing import Any, Protocol
 
 from mimi.models.prices import audio_kobo, kobo_cost, sam_kobo
+from mimi.observe import spend as budget
+from mimi.observe.spend import BudgetExhausted
+
+__all__ = ["BudgetExhausted"]
 
 log = logging.getLogger(__name__)
 
@@ -86,6 +90,10 @@ class Charge:
 class SpendBook(Protocol):
     def add_spend(self, tenant_id: str, helper: str, day: date, kobo: int) -> None: ...
 
+    def daily_spend(self, tenant_id: str, day: date) -> tuple[int, int]:
+        """(spent_kobo, cap_kobo) for the distributor's day (the runtime cap)."""
+        ...
+
 
 def book(control: SpendBook, tenant_id: str, helper: str, day: date, kobo: int) -> None:
     """The one place model spend reaches the spend table (the daily cap)."""
@@ -108,6 +116,31 @@ class Scope:
     # Kobo charged outside the harness loop and not yet folded into the run.
     unfolded_kobo: int = 0
     unfolded_calls: int = 0
+
+    def admit(self, role: str) -> None:
+        """Refuse a paid call when the distributor's day is spent.
+
+        The one runtime limit on model spend (``mimi.observe.spend``): read
+        the day's total from the spend table, before the call is made, so
+        every worker sees the same ceiling and a bill cannot run on. Code
+        paths make no paid call, so they are never refused. An unreadable
+        spend row fails closed: a cap that cannot be read is never unlimited.
+        """
+        if self.control is None or self.day is None:
+            return
+        read = getattr(self.control, "daily_spend", None)
+        if read is None:
+            return
+        try:
+            spent, cap = read(self.tenant_id, self.day)
+        except Exception:
+            log.warning("spend cap unreadable for %s: refusing the call",
+                        self.tenant_id, exc_info=True)
+            raise BudgetExhausted(tenant_id=self.tenant_id, role=role,
+                                  cap_kobo=budget.DEFAULT_DAILY_CAP_KOBO,
+                                  day=self.day.isoformat()) from None
+        budget.admit(tenant_id=self.tenant_id, role=role, spent_kobo=int(spent),
+                     cap_kobo=int(cap), day=self.day.isoformat())
 
     def take(self, c: Charge) -> None:
         self.charges.append(c)
@@ -241,6 +274,7 @@ class Metered:
     def complete(self, messages: Sequence[Any], *, max_tokens: int = 400,
                  meta: Mapping[str, str] | None = None,
                  response_format: Mapping[str, object] | None = None) -> Any:
+        _admit(self.role)
         with metered(self.role):
             res = self.inner.complete(messages, max_tokens=max_tokens, meta=meta,
                                       response_format=response_format)
@@ -269,6 +303,7 @@ class MeteredSegmenter:
         self.name = getattr(self.inner, "name", "sam")
 
     def segment(self, image: bytes, mime: str, prompt: str) -> Any:
+        _admit(self.role)
         with metered(self.role):
             seg = self.inner.segment(image, mime, prompt)
         n = int(getattr(seg, "images", 1) or 1)
@@ -289,6 +324,7 @@ class MeteredTranscriber:
         self.name = getattr(self.inner, "name", "stt")
 
     def transcribe(self, clip: Any, ctx: Any) -> Any:
+        _admit(self.role)
         with metered(self.role):
             t = self.inner.transcribe(clip, ctx)
         provider = str(getattr(t, "provider", "") or self.name)
@@ -302,3 +338,15 @@ class MeteredTranscriber:
 
 def is_metered(obj: Any) -> bool:
     return isinstance(obj, (Metered, MeteredSegmenter, MeteredTranscriber))
+
+
+def _admit(role: str) -> None:
+    """The turn's scope decides whether this paid call may run (the cap)."""
+    s = _SCOPE.get()
+    if s is not None:
+        s.admit(role)
+
+
+def admit_now(role: str) -> None:
+    """Refuse a paid call made outside a metered wrapper (the harness gateway)."""
+    _admit(role)

@@ -30,6 +30,9 @@ class StepContext:
     now: datetime
     thread_id: str = ""
     wake_source: str = ""
+    # The correlation id of the work this job belongs to (``Job.trace_id``);
+    # empty means the job's own id (see ``mimi.observe.correlation``).
+    trace_id: str = ""
     # The helper's own saved state from the previous step (``Job.scratch``).
     scratch: dict[str, Any] = field(default_factory=dict)
     # The helpers above this job in its job tree, root first

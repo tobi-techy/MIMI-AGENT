@@ -490,8 +490,11 @@ def score(run: Run, usage_path: Path | None = None) -> dict[str, Any]:
     reads: dict[str, set[int]] = {}
     for e in db["events"]:
         # card_read: what code read from the book for an owner's answer card
-        # (docs/HANDOFFS.md), recorded on the turn like a tool read.
-        if e["tenant_id"] == T and e["type"] in ("tool_result", "tool_called", "card_read"):
+        # (docs/HANDOFFS.md), recorded on the turn like a tool read. cap_hit:
+        # the day's allowance figures the park's code-written sentences quote
+        # (docs/SLO.md, "out of allowance"), read from the same allowance.
+        if e["tenant_id"] == T and e["type"] in ("tool_result", "tool_called", "card_read",
+                                                 "cap_hit"):
             _kobo_values(json.loads(e["data"] or "{}"), reads.setdefault(e["turn_id"], set()))
     invented: list[str] = []
     for m in out_msgs:

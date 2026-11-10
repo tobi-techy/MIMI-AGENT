@@ -24,6 +24,7 @@ from dataclasses import dataclass, replace
 from typing import Any
 
 from mimi.harness.types import Event, RunResult
+from mimi.observe import sinks
 from mimi.observe.turns import Observation, Turn, TurnExporter
 
 
@@ -239,7 +240,7 @@ def trace_route(decision: Any, exporter: TurnExporter, **kw: Any) -> RouteTurn |
         return None
     try:
         t = build_route_turn(decision, **kw)
-        exporter.export(t)
+        sinks.export(exporter, t)
         return t
     except Exception:
         return None
@@ -251,7 +252,7 @@ def trace_run(result: RunResult, exporter: TurnExporter, **kw: Any) -> HarnessTu
         return None
     try:
         turn = build_turn(result, **kw)
-        exporter.export(turn)
+        sinks.export(exporter, turn)
         return turn
     except Exception:  # tracing never breaks a run
         return None
@@ -318,7 +319,7 @@ def trace_job(decision: Any, result: RunResult | None, exporter: TurnExporter, *
         return None
     try:
         t = build_job_turn(decision, result, job_id=job_id, status=status, job=job, **kw)
-        exporter.export(t)
+        sinks.export(exporter, t)
         return t
     except Exception:
         return None

@@ -25,7 +25,7 @@ from __future__ import annotations
 import json
 import re
 from collections import Counter, defaultdict
-from datetime import datetime
+from datetime import date, datetime
 from typing import Any
 
 import sqlalchemy as sa
@@ -92,6 +92,19 @@ def score(run: WeekRun) -> dict[str, Any]:
         approvals = rows(s.approvals)
         caps = {r.tenant_id: int(r.daily_cap_kobo) for r in conn.execute(
             sa.select(s.tenants).where(s.tenants.c.tenant_id.in_(tenants)))}
+        # The cap the gate enforces is N250 per active shop, fixed at Lagos
+        # midnight (mimi.observe.allowance). Read it through the same function
+        # so this report never disagrees with what actually ran.
+        from mimi.observe import allowance as budget_allowance
+
+        day_caps = {}
+        for x in spend:
+            try:
+                spend_day = date.fromisoformat(str(x["day"]))
+            except ValueError:
+                continue
+            day_caps[(x["tenant_id"], x["day"])] = budget_allowance.allowance(
+                conn, x["tenant_id"], spend_day).cap_kobo
         attempts = [dict(r._mapping) for r in conn.execute(sa.select(s.turn_attempts).where(
             s.turn_attempts.c.turn_id.in_([t["turn_id"] for t in turns])))] if turns else []
 
@@ -213,7 +226,7 @@ def score(run: WeekRun) -> dict[str, Any]:
                            for t in turns if t["state"] == "done")
     cap_rows = []
     for x in spend:
-        cap = caps.get(x["tenant_id"], 0)
+        cap = day_caps.get((x["tenant_id"], x["day"]), caps.get(x["tenant_id"], 0))
         raised = [a for a in approvals if a["tenant_id"] == x["tenant_id"]
                   and a["tool"] == "raise_daily_allowance" and a["status"] == "approved"]
         # Over the cap is held only when the owner raised it (each raise doubles it).

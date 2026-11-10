@@ -27,6 +27,7 @@ from typing import Any, Literal, get_args
 
 from mimi.harness.loop import Harness, Helper, LoopState
 from mimi.harness.types import IntentRecord, OutboundDraft, RunEvent, WakeSource
+from mimi.observe import correlation
 from mimi.runtime.outbox import intent_types
 from mimi.runtime.steps import StepContext, StepFn, StepOutcome
 from mimi.types import ShopScope
@@ -74,6 +75,13 @@ _WAKES = set(get_args(WakeSource))
 def harness_steps(harness: Harness, helpers: Mapping[str, Helper]) -> dict[str, StepFn]:
     def make(helper: Helper) -> StepFn:
         def step(ctx: StepContext) -> StepOutcome:
+            with correlation.bind_job(job_id=ctx.job_id, tenant=ctx.tenant_id,
+                                      thread=ctx.thread_id or "",
+                                      trace_id=ctx.trace_id or ctx.job_id,
+                                      attempt=ctx.step_index + 1):
+                return _step(ctx)
+
+        def _step(ctx: StepContext) -> StepOutcome:
             raw = ctx.scratch.get("harness")
             if raw:
                 state = LoopState.model_validate(raw)

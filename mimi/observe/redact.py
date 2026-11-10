@@ -48,11 +48,16 @@ _LONG_DIGITS = re.compile(r"(?<!\d)\d{10,}(?!\d)")
 # hash still matches the record it came from. Exactly 64 hex characters, so no
 # identifier can pass as one ("1234567890" is one 10-digit run, not a digest).
 _HEX_DIGEST = re.compile(r"(?<![\w])[0-9a-f]{64}(?!\w)", re.I)
+# Our own correlation ids (``mimi.observe.correlation``): a hex digest that
+# may contain a run of 10 digits by chance. It names a trace, not a person, so
+# the leak check ignores it (masking it would break correlation in a log line).
+_OUR_IDS = re.compile(r"\b(?:turn|tr)_[0-9a-f]{16,40}\b")
 
 
 def _long_digits(text: str) -> str:
-    """Mask every run of 10 or more digits, except inside a hex digest."""
+    """Mask every run of 10 or more digits, except inside a digest or our id."""
     spans = [m.span() for m in _HEX_DIGEST.finditer(text)]
+    spans += [m.span() for m in _OUR_IDS.finditer(text)]
     if not spans:
         return _LONG_DIGITS.sub(lambda m: mask_digits(m.group(0)), text)
 
@@ -98,6 +103,10 @@ def _digits(s: str) -> str:
 
 
 def mask_phone(raw: str) -> str:
+    if "*" in raw:
+        # Already masked by an earlier pass: redaction is idempotent, so a
+        # sink may redact a trace the guard already redacted.
+        return raw
     d = _digits(raw)
     if d.startswith("234"):
         return "+234" + "*" * max(0, len(d) - 7) + d[-4:]
@@ -105,6 +114,8 @@ def mask_phone(raw: str) -> str:
 
 
 def mask_digits(raw: str) -> str:
+    if "*" in raw:
+        return raw
     d = _digits(raw)
     if len(d) <= 4:
         return "*" * len(d)
@@ -175,3 +186,61 @@ def redact(value: Any, _depth: int = 0) -> Any:
         return redact_text(str(value))
     except Exception:  # never let redaction break a turn; send nothing instead
         return REDACTED
+
+
+# ------------------------------------------------------------- the leak check
+
+
+def _leaks_in_text(text: str) -> list[str]:
+    out: list[str] = []
+    if _PHONE_INTL.search(text) or _PHONE_LOCAL.search(text):
+        out.append("phone")
+    scan = _OUR_IDS.sub(" ", text)
+    spans = [m.span() for m in _HEX_DIGEST.finditer(scan)]
+    for m in _LONG_DIGITS.finditer(scan):
+        s, e = m.span()
+        if not any(a <= s and e <= b for a, b in spans):
+            out.append("long digits")
+            break
+    if any(pat.search(text.replace(REDACTED, "")) for pat in _KEYS) or _DATA_URL.search(text):
+        out.append("key or media")
+    return out
+
+
+def find_leaks(value: Any, *, path: str = "", _depth: int = 0) -> list[str]:
+    """Where an **already redacted** value still looks private: field paths.
+
+    Empty is the only acceptable answer before data leaves the process
+    (``mimi.observe.sinks``). The list names the field and the kind of data
+    (``"input.text: phone"``), never the data itself: a leak report that
+    carried the leak would be one more leak.
+    """
+    try:
+        if _depth > 12:
+            return []
+        if isinstance(value, int) and not isinstance(value, bool):
+            if _long_int(value) and not _is_measure(path.rsplit(".", 1)[-1]):
+                return [f"{path or 'value'}: long number"]
+            return []
+        if value is None or isinstance(value, bool | float):
+            return []
+        if isinstance(value, bytes | bytearray | memoryview):
+            return [f"{path or 'value'}: raw bytes"]
+        if isinstance(value, str):
+            return [f"{path or 'value'}: {kind}" for kind in _leaks_in_text(value)]
+        if isinstance(value, Mapping):
+            out: list[str] = []
+            for k, v in value.items():
+                key = str(k)
+                out.extend(find_leaks(v, path=f"{path}.{key}" if path else key,
+                                      _depth=_depth + 1))
+            return out
+        if isinstance(value, Sequence | set | frozenset):
+            out = []
+            for i, v in enumerate(sorted(value, key=str) if isinstance(value, set | frozenset)
+                                  else value):
+                out.extend(find_leaks(v, path=f"{path}[{i}]", _depth=_depth + 1))
+            return out
+        return _leaks_in_text(str(value))
+    except Exception:  # a check that fails closed: count it as a leak
+        return [f"{path or 'value'}: unreadable"]

@@ -44,6 +44,7 @@ from typing import Any, Literal, Protocol
 
 from mimi.models import prices as _PRICES
 from mimi.models.base import ChatMessage, ChatModel, ChatResult
+from mimi.observe import sinks
 from mimi.runtime.tracing import AttrValue, StepSpan, StepTracer
 
 log = logging.getLogger(__name__)
@@ -355,7 +356,7 @@ class TurnBook:
         self._count[job_id] = turn.number + 1
         self._last_seed[job_id] = turn.trace_seed
         try:
-            self.exporter.export(turn)
+            sinks.export(self.exporter, turn)
             self.exported += 1
         except Exception as exc:  # tracing never breaks a turn
             log.warning("tracing: export failed (%s); turn %s dropped",
@@ -374,7 +375,8 @@ class TurnBook:
         if seed is None:
             return
         try:
-            self.exporter.feedback(Feedback(name, value, data_type, comment, seed))
+            sinks.feedback(self.exporter,
+                           Feedback(name, value, data_type, comment, seed))
         except Exception as exc:
             log.warning("tracing: feedback failed (%s)", type(exc).__name__)
 

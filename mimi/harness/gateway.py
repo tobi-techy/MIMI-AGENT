@@ -208,6 +208,14 @@ class Gateway:
         failed: list[Fallback] = []
         for model in self.models:
             try:
+                if getattr(model, "name", "") != "plain-code":
+                    # A paid model: the distributor's day's allowance decides
+                    # (``mimi.observe.spend``). The plain-code model in front
+                    # of it costs nothing and is never refused, so a tenant
+                    # out of allowance keeps the code paths and loses only
+                    # the model. A refusal is ``BudgetExhausted``, which the
+                    # loop turns into one plain sentence (docs/SLO.md).
+                    metering.admit_now(metering.HARNESS)
                 with metering.metered(metering.HARNESS):
                     turn = model.chat(messages, tools, max_tokens=self.max_tokens)
             except ProviderError as exc:

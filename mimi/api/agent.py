@@ -83,7 +83,10 @@ from mimi.harness.tracing import trace_job
 from mimi.harness.types import RunEvent
 from mimi.models import metering
 from mimi.models.base import ChatModel
+from mimi.observe import correlation
+from mimi.observe import spend as BD
 from mimi.observe.langfuse_export import exporter_from_env
+from mimi.observe.spend import BudgetExhausted
 from mimi.orders.catalogue import family_of
 from mimi.owed import naira_sign
 from mimi.stock.copy import numbers_in
@@ -141,11 +144,8 @@ NOTICE_INTENTS: dict[str, tuple[str, str]] = {
 }
 # The loop's reason when the distributor's daily naira cap stops a run.
 DAILY_CAP_REASON = "daily naira cap reached"
-# The shop's holding reply while its job is parked on the daily cap (code text).
-HOLDING_TEXT = {
-    "en": "Thanks, I have your message. I'll get back to you on it soon.",
-    "pcm": "Thank you, I don see your message. I go come back to you on am soon.",
-}
+# The shop's holding reply while its job is parked on the daily cap is
+# ``mimi.observe.spend.refusal``: one sentence for one cause, written by code.
 # A change to an order already sent, in the shop's words (RAI-302).
 _ORDER_CHANGE = re.compile(r"(?i)\b(?:make (?:it|am|them|that)|change|instead|reduce|increase|"
                            r"remove|cancel|no be|not \d|only \d|more)\b")
@@ -348,6 +348,16 @@ def _code_answers(d: RouteDecision) -> bool:
     return d.rule.startswith("owner_rule:") or fixes_2026_10_30()
 
 
+def _day_of(raw: str, now: Any) -> Any:
+    """The Lagos day a stored stamp names, falling back to the clock's day."""
+    from datetime import date as _date
+
+    try:
+        return _date.fromisoformat(str(raw))
+    except ValueError:
+        return now.astimezone(LAGOS).date()
+
+
 class Agent:
     def __init__(
         self,
@@ -477,7 +487,8 @@ class Agent:
                     status="stopped_running_turns" if stop else "",
                     helper="mimi" if stop else "", skill="mimi/stop" if stop else "",
                     version=0, attempts=0, completions=1 if stop else 0, batch="[]",
-                    checkpoint="{}", result=dumps({"thread_note": note}) if note else "{}",
+                    checkpoint=dumps({"trace": correlation.turn_trace(turn_id)}),
+                    result=dumps({"thread_note": note}) if note else "{}",
                     error="", stop=False, simulated=simulated, created_at=now_iso(now),
                     created_ts=now, finished_at=now_iso(now) if stop else None))
                 if inbound.source in PERSON_SOURCES or inbound.text:
@@ -589,13 +600,26 @@ class Agent:
         # One metering scope per turn: every model call in it is booked to the
         # distributor's spend (the daily cap) and folded into the run budget.
         day = self.clock().astimezone(LAGOS).date()
+        # One correlation id for the whole turn (``mimi.observe.correlation``):
+        # the checkpoint's trace (a follow-up turn carries its parent's) or the
+        # turn id itself, with the attempt number so a retry is the same
+        # incident, labelled, not a second one (see docs/SLO.md).
+        trace = str(dict(claim.checkpoint).get("trace") or correlation.turn_trace(
+            claim.turn_id))
         try:
-            with metering.scope(control=self.go, tenant_id=claim.tenant_id, day=day,
-                                strict=metering.strict_default(),
-                                book_all=metering.meter_all()):
-                self._run(holder)
+            with correlation.bind_turn(claim.turn_id, tenant=claim.tenant_id,
+                                       thread=claim.thread_id, attempt=claim.attempts,
+                                       trace_id=trace):
+                with metering.scope(control=self.go, tenant_id=claim.tenant_id, day=day,
+                                    strict=metering.strict_default(),
+                                    book_all=metering.meter_all()):
+                    self._run(holder)
         except LeaseLost:
             log.warning("lease lost on %s; another worker carries it on", claim.turn_id)
+        except BudgetExhausted as exc:
+            # The tenant's day's allowance is spent: refuse the expensive path
+            # with one plain sentence, never retry it (docs/SLO.md).
+            self._refuse_budget(holder, exc)
         except Exception as exc:
             log.exception("turn %s failed", claim.turn_id)
             try:
@@ -749,6 +773,15 @@ class Agent:
     def _run(self, holder: list[Claim]) -> None:
         claim = holder[0]
         ck = dict(claim.checkpoint)
+        if ck.get("parked") and "loop" not in ck:
+            # The allowance refused this turn before its loop began (the paid
+            # call was the route, the steer or a read). The owner has raised it
+            # since, and nothing ran: the turn starts again from what it had
+            # worked out, with the cap check in front of every paid call. The
+            # ``resumed`` mark is what the crash-point check watches for.
+            ck.pop("parked", None)
+            ck["resumed"] = int(ck.get("resumed") or 0) + 1
+            self._checkpoint(holder, ck)
         events = self._load_batch(claim.tenant_id, claim.batch)
         if not events:
             raise RuntimeError("turn has no inbound messages")
@@ -765,7 +798,15 @@ class Agent:
         if "decision" in ck:
             d = RouteDecision.model_validate(ck["decision"])
         else:
-            d = self.router.route_batch(events, directory, prior)
+            try:
+                d = self.router.route_batch(events, directory, prior)
+            except BudgetExhausted:
+                # Out of allowance: rules and the phrase layer still route
+                # (no paid call). A message they cannot place is refused by
+                # the loop with one plain sentence, and the next model call
+                # raises again, which the loop turns into a park.
+                d = self.router.route_batch(events, directory, prior, allow_model=False)
+                ck["budget_rules_only"] = True
             ck["decision"] = d.model_dump(mode="json")
             self._checkpoint(holder, ck)
         if "steer" not in ck:
@@ -875,7 +916,8 @@ class Agent:
                     state.denial_store_unknown = True
                 else:
                     state.denial_window_denials, state.denial_window_size = counts
-            res = self.harness.step(state, helper, gateway=code[0] if code else None)
+            res = self.harness.step(state, helper, gateway=code[0] if code else None,
+                                    code_only=code is not None)
             state = LoopState.model_validate(res.state)
             ck["loop"] = res.state
             if code and code[1].fallbacks:
@@ -1103,6 +1145,124 @@ class Agent:
 
     # ============================================================ budget park
 
+    def _refuse_budget(self, holder: list[Claim], exc: BudgetExhausted) -> None:
+        """The day's model allowance is spent: refuse, write it down, stop.
+
+        The last line of defence when a paid call is refused outside the loop
+        step (the loop itself turns the same refusal into ``stopped_budget``
+        and parks through ``_park``, which asks the owner once a day). This
+        one is reached before any loop state exists (the route, the steer or a
+        read was the paid call), so the turn has nothing to reopen: raising
+        the allowance starts it again (``_run``). One compare-and-set parks
+        the turn, so a lost lease writes nothing; a person's message gets one
+        plain sentence, written by code; the figures go to the console card,
+        the turn's events and the log, never as an error to a person.
+        """
+        claim = holder[0]
+        tenant, thread, turn_id = claim.tenant_id, claim.thread_id, claim.turn_id
+        now = wall()
+        day_s = exc.day or self.clock().astimezone(LAGOS).date().isoformat()
+        day = _day_of(day_s, self.clock())
+        ck = dict(claim.checkpoint)
+        ck["parked"] = {"reason": "daily_cap", "day": day.isoformat(),
+                        "spent_kobo": exc.spent_kobo, "cap_kobo": exc.cap_kobo,
+                        "at": now_iso(now)}
+        # Everything that needs a second connection is done before the write
+        # transaction opens: on SQLite a read inside it deadlocks the store.
+        events = self._load_batch(tenant, claim.batch)
+        lead = lead_of(events) if events else None
+        _, shop_id = thread_kind(tenant, thread)
+        shops = self._shops_counted(None, tenant, day)
+        first = self.go.ask_owner_once(tenant, "daily_cap", day)
+        new_cap = max(exc.cap_kobo * 2, exc.cap_kobo + BD.MIN_RAISE_KOBO)
+        with self.engine.begin() as conn:
+            res = conn.execute(s.turns.update().where(
+                s.turns.c.turn_id == turn_id, s.turns.c.version == claim.version,
+                s.turns.c.lease_owner == claim.worker_id, s.turns.c.state == "leased")
+                .values(state="parked", status="parked_budget", checkpoint=dumps(ck),
+                        lease_owner=None, lease_expires_ts=None, version=claim.version + 1,
+                        result=dumps({"trace": correlation.current() or turn_id,
+                                      "attempt": claim.attempts, "parked": ck["parked"]})))
+            if res.rowcount != 1:
+                raise LeaseLost(turn_id)
+            if lead is not None and lead.sender in ("shop", "rep") \
+                    and lead.source in PERSON_SOURCES:
+                self._out(conn, tenant, thread, turn_id, key=f"hold:{turn_id}",
+                          channel=_CHANNEL_FOR[lead.sender], shop_id=shop_id,
+                          text=BD.refusal(tenant=tenant, shops=shops,
+                                          cap_kobo=exc.cap_kobo,
+                                          lang=st._lang(lead.text)),
+                          kind="holding_reply", status="ready", ts=now)
+            if first:
+                # The owner reads the same sentence the alert carries, once a
+                # day, on the console: the figures, the tenant, nothing else.
+                self._out(conn, tenant, thread, turn_id, key=f"capnote:{turn_id}",
+                          channel="owner_console", shop_id="",
+                          text=BD.question(exc.spent_kobo, exc.cap_kobo),
+                          kind="cap_note", status="ready", ts=now)
+            self._ask_raise(conn, tenant=tenant, day=day, cap=exc.cap_kobo,
+                            spent=exc.spent_kobo, new_cap=new_cap, turn_id=turn_id)
+            insert_ignore(conn, s.thread_events, {
+                "tenant_id": tenant, "event_id": f"cap_{turn_id}_{claim.version}",
+                "thread_id": thread, "run_id": "", "turn_id": turn_id, "seq": -1,
+                "step": 0, "type": "cap_hit", "tool": "", "tier": "",
+                "short": f"model allowance spent: "
+                         f"{BD.summary(exc.spent_kobo, exc.cap_kobo)}",
+                "cost_kobo": exc.spent_kobo, "model": "", "duration_ms": 0.0,
+                "data": dumps(ck["parked"]), "at": now_iso(now), "ts": now})
+            insert_ignore(conn, s.thread_events, {
+                "tenant_id": tenant, "event_id": f"park_{turn_id}_{claim.version}",
+                "thread_id": thread, "run_id": "", "turn_id": turn_id, "seq": -1,
+                "step": 0, "type": "parked", "tool": "", "tier": "",
+                "short": f"paused: {BD.summary(exc.spent_kobo, exc.cap_kobo)}",
+                "cost_kobo": 0, "model": "", "duration_ms": 0.0,
+                "data": dumps(ck["parked"]), "at": now_iso(now), "ts": now})
+
+    def _ask_raise(self, conn: Any, *, tenant: str, day: Any, cap: int, spent: int,
+                   new_cap: int, turn_id: str) -> None:
+        """One "raise today's allowance" item for the day, by idempotency key.
+
+        Shared by the loop's park (``_park``) and the seam's refusal
+        (``_refuse_budget``) so both ask the owner the same way, once a day,
+        with the same figures and the same preview.
+        """
+        payload = {"day": day.isoformat(), "cap_kobo": cap, "spent_kobo": spent,
+                   "new_cap_kobo": new_cap}
+        record = {
+            "tool": "raise_daily_allowance", "intent_kind": "raise_daily_allowance",
+            "tier": self.policy.tier(tenant, "raise_daily_allowance", payload, conn=conn),
+            "scope": "org:plan", "tenant_id": tenant, "shop_id": "",
+            "idempotency_key": business_key(tenant, "raise_daily_allowance",
+                                            {"day": day.isoformat(), "cap_kobo": cap}),
+            "attempt_key": f"park:{turn_id}", "payload": payload,
+            "preview": (f"Raise today's model allowance from {_naira(cap)} "
+                        f"({BD.turns_for(cap)} model turns) to {_naira(new_cap)} "
+                        f"({BD.turns_for(new_cap)} turns)? Helpers that need the "
+                        "model are paused until then; their work waits, the cheap "
+                        "paths keep running and nothing is dropped.")}
+        self.go.apply_intent(conn, tenant, record, turn_id=turn_id, thread_id="",
+                             helper="", skill="mimi/budget")
+
+    def _shops_counted(self, conn: Any, tenant: str, day: Any) -> int:
+        """How many shops set the day's allowance (``mimi.observe.allowance``).
+
+        Called before a park opens its write transaction (``conn`` is ``None``
+        then, so it takes its own connection). A failure here must never stop
+        the park: zero reads as one shop in the wording.
+        """
+        from datetime import date as _date
+
+        from mimi.observe import allowance as budget_allowance
+
+        try:
+            value = day if isinstance(day, _date) else _date.fromisoformat(str(day))
+            if conn is None:
+                with self.engine.connect() as own:
+                    return budget_allowance.allowance(own, tenant, value).active_shops
+            return budget_allowance.allowance(conn, tenant, value).active_shops
+        except Exception:
+            return 0
+
     def _park(self, holder: list[Claim], ck: dict[str, Any], d: RouteDecision,
               events: Sequence[Inbound], state: LoopState) -> None:
         """The daily naira cap was hit: park the job, never drop it (RAI-272).
@@ -1136,7 +1296,9 @@ class Agent:
                 .values(state="parked", status="parked_budget", helper=d.helper,
                         skill=d.skill, run_id=r.run_id, checkpoint=dumps(ck),
                         lease_owner=None, lease_expires_ts=None, version=claim.version + 1,
-                        result=dumps({"route": {"helper": d.helper, "skill": d.skill,
+                        result=dumps({"trace": correlation.current() or turn_id,
+                                      "attempt": claim.attempts,
+                                      "route": {"helper": d.helper, "skill": d.skill,
                                                 "layer": d.layer, "rule": d.rule,
                                                 "cost_kobo": d.cost_kobo},
                                       "run_status": r.status, "reason": r.reason,
@@ -1146,33 +1308,23 @@ class Agent:
             if lead.sender in ("shop", "rep") and lead.source in PERSON_SOURCES:
                 self._out(conn, tenant, thread, turn_id, key=f"hold:{turn_id}",
                           channel=_CHANNEL_FOR[lead.sender], shop_id=shop_id,
-                          text=HOLDING_TEXT[st._lang(lead.text)], kind="holding_reply",
-                          status="ready", ts=now)
+                          text=BD.refusal(tenant=tenant,
+                                          shops=self._shops_counted(conn, tenant, day),
+                                          cap_kobo=cap, lang=st._lang(lead.text)),
+                          kind="holding_reply", status="ready", ts=now)
             for n, dr in enumerate(r.outbound_drafts):
                 if dr.channel == "owner_console":
                     # The loop wrote it only on the day's first cap hit.
                     self._out(conn, tenant, thread, turn_id, key=dr.idempotency_key,
                               channel=dr.channel, shop_id="", text=dr.body, kind="cap_note",
                               status="ready", ts=now + (n + 1) * 1e-3)
-            payload = {"day": day.isoformat(), "cap_kobo": cap, "spent_kobo": spent,
-                       "new_cap_kobo": new_cap}
-            record = {
-                "tool": "raise_daily_allowance", "intent_kind": "raise_daily_allowance",
-                "tier": self.policy.tier(tenant, "raise_daily_allowance", payload, conn=conn),
-                "scope": "org:plan", "tenant_id": tenant, "shop_id": "",
-                "idempotency_key": business_key(tenant, "raise_daily_allowance",
-                                                {"day": day.isoformat(), "cap_kobo": cap}),
-                "attempt_key": f"park:{turn_id}", "payload": payload,
-                "preview": (f"Raise today's model allowance from {_naira(cap)} to "
-                            f"{_naira(new_cap)}? Helpers are paused until then; their "
-                            "work waits and nothing is dropped.")}
-            self.go.apply_intent(conn, tenant, record, turn_id=turn_id, thread_id="",
-                                 helper="", skill="mimi/budget")
+            self._ask_raise(conn, tenant=tenant, day=day, cap=cap, spent=spent,
+                            new_cap=new_cap, turn_id=turn_id)
             insert_ignore(conn, s.thread_events, {
                 "tenant_id": tenant, "event_id": f"park_{turn_id}_{claim.version}",
                 "thread_id": thread, "run_id": r.run_id, "turn_id": turn_id, "seq": -1,
                 "step": r.spend.steps, "type": "parked", "tool": "", "tier": "",
-                "short": f"paused: daily allowance {_naira(cap)} reached", "cost_kobo": 0,
+                "short": f"paused: {BD.summary(spent, cap)}", "cost_kobo": 0,
                 "model": "", "duration_ms": 0.0,
                 "data": dumps(ck["parked"]), "at": now_iso(now), "ts": now})
 
@@ -1713,6 +1865,7 @@ class Agent:
                 fu = sx.followup_inbound(ib, evs, parts, pids, "new")
                 sx.insert_followup(conn, tenant, thread, fu, after_ts=float(t), order=n,
                                    shop_id=shop_id, simulated=False,
+                                   trace=correlation.current(),
                                    media_ref=sx.media_ref_of(conn, tenant, ib.external_id))
             self._in_txn("absorb", claim)
 
@@ -1779,7 +1932,9 @@ class Agent:
         lead = lead_of(events)
         sender = lead.sender
         now = wall()
-        result: dict[str, Any] = {"route": {"helper": d.helper, "skill": d.skill,
+        result: dict[str, Any] = {"trace": correlation.current() or turn_id,
+                                  "attempt": claim.attempts,
+                                  "route": {"helper": d.helper, "skill": d.skill,
                                             "layer": d.layer, "rule": d.rule,
                                             "confidence": d.confidence,
                                             "language": d.language, "lane": d.lane,
@@ -2189,7 +2344,7 @@ class Agent:
             fu = sx.followup_inbound(parent, events, parts, f["pids"], str(f.get("steer", "new")))
             out.append(sx.insert_followup(
                 conn, claim.tenant_id, claim.thread_id, fu, after_ts=float(t), order=n,
-                shop_id=shop_id, simulated=False,
+                shop_id=shop_id, simulated=False, trace=correlation.current(),
                 media_ref=sx.media_ref_of(conn, claim.tenant_id, src)))
         return out
 

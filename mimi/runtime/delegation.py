@@ -71,6 +71,8 @@ def spawn_child(store: object, parent: Job, *, helper: str, goal: str, job_id: s
                               max_seconds=min(default.max_seconds, left.max_seconds),
                               max_kobo=min(default.max_kobo, left.max_kobo)),
                 budget_grant=Budget(max_steps=0, max_seconds=0.0, max_kobo=0),
-                parent_job_id=parent.job_id, root_job_id=root_id, chain=[*chain, helper])
+                parent_job_id=parent.job_id, root_job_id=root_id, chain=[*chain, helper],
+                # One piece of work, one trace: the child inherits the tree's.
+                trace_id=parent.trace_id or parent.job_id)
     store.create(child)  # type: ignore[attr-defined]
     return child

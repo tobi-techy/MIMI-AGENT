@@ -82,6 +82,8 @@ from mimi.harness.types import (
 )
 from mimi.harness.untrusted import defang
 from mimi.models import metering
+from mimi.observe import spend as budget
+from mimi.observe.spend import BudgetExhausted
 from mimi.tz import LAGOS
 
 log = logging.getLogger(__name__)
@@ -448,8 +450,16 @@ class Harness:
         owner_messages: Sequence[str] = (),
         enforce_run_budget: bool = True,
         gateway: Gateway | None = None,
+        code_only: bool = False,
     ) -> StepResult:
-        """One model call and its tool calls. Pure in, state out."""
+        """One model call and its tool calls. Pure in, state out.
+
+        ``code_only`` says the step's work is answered by code (the plain-code
+        gateway in front of the models, ``mimi.harness.plain``): the day's
+        model allowance does not block it, because it costs nothing. The first
+        paid call inside it (a fallback to the model) is still refused
+        (docs/SLO.md, "a tenant out of allowance keeps the cheap path").
+        """
         t0 = self.perf()
         if state.finished is not None:
             return self._step_result(state, 0, 0, 0, 0)
@@ -459,7 +469,7 @@ class Harness:
         day = now.astimezone(LAGOS).date()
 
         _fold_side_spend(state)
-        if self._gates(state, helper, day, enforce_run_budget):
+        if self._gates(state, helper, day, enforce_run_budget, code_only=code_only):
             return self._step_result(state, n_ev, n_int, n_dr, 0)
 
         for text in owner_messages:
@@ -474,6 +484,23 @@ class Harness:
         try:
             # A plain-code path (``mimi.harness.plain``) puts its own model first.
             reply = (gateway or self.gateway).chat(state.messages, tools)
+        except BudgetExhausted as exc:
+            # The allowance ran out between the gate and the call (another
+            # worker booked spend): refuse with one plain sentence and park,
+            # exactly as a gate hit does.
+            first = self.control.ask_owner_once(state.tenant_id, "daily_cap", day)
+            q = budget.question(exc.spent_kobo, exc.cap_kobo)
+            log.warning("cap_hit tenant=%s %s refused=the model path (seam)",
+                        state.tenant_id, budget.summary(exc.spent_kobo, exc.cap_kobo))
+            self._emit(state, "cap_hit", cost_kobo=exc.spent_kobo,
+                       short=f"model allowance spent: "
+                             f"{budget.summary(exc.spent_kobo, exc.cap_kobo)}",
+                       data={"spent_kobo": exc.spent_kobo, "cap_kobo": exc.cap_kobo,
+                             "owner_asked": first})
+            if first:
+                self._owner_draft(state, q)
+            self._finish(state, "stopped_budget", DAILY_CAP_REASON, question=q)
+            return self._step_result(state, n_ev, n_int, n_dr, 0)
         except AllModelsFailed as exc:
             for fb in exc.fallbacks:
                 self._emit(state, "model_fallback", model=fb.model, short=fb.error)
@@ -679,8 +706,14 @@ class Harness:
                 )
         return "\n".join(lines)
 
-    def _gates(self, state: LoopState, helper: Helper, day: date, enforce: bool) -> bool:
-        """Kill switch, flag, daily cap and run budgets. True if the run ended."""
+    def _gates(self, state: LoopState, helper: Helper, day: date, enforce: bool, *,
+               code_only: bool = False) -> bool:
+        """Kill switch, flag, daily cap and run budgets. True if the run ended.
+
+        The daily cap only stops a run that needs the paid model. A code-only
+        step (``code_only``) makes no paid call, so the run carries on and the
+        tenant keeps the cheap, certain path while its allowance is spent.
+        """
         if not helper.enabled:
             self._emit(state, "kill_switch", short=f"{helper.name} flag is off")
             self._finish(state, "stopped_killed", f"{helper.name} is switched off by its flag")
@@ -691,12 +724,15 @@ class Harness:
                          f"kill switch is on for {helper.name} or this distributor")
             return True
         spent, cap = self.control.daily_spend(state.tenant_id, day)
-        if spent >= cap:
+        if budget.decide(spent, cap).over and not code_only:
             first = self.control.ask_owner_once(state.tenant_id, "daily_cap", day)
-            q = (f"Mimi has used {_naira(spent)} of today's {_naira(cap)} model allowance, so "
-                 "helpers are paused until tomorrow. Raise today's allowance?")
+            q = budget.question(spent, cap)
+            # One line for the log and the alert: the same sentence the owner
+            # card carries, so a founder never has to read a trace to see it.
+            log.warning("cap_hit tenant=%s %s refused=the model path",
+                        state.tenant_id, budget.summary(spent, cap))
             self._emit(state, "cap_hit", cost_kobo=spent,
-                       short=f"daily cap {_naira(cap)} reached",
+                       short=f"model allowance spent: {budget.summary(spent, cap)}",
                        data={"spent_kobo": spent, "cap_kobo": cap, "owner_asked": first})
             if first:
                 self._owner_draft(state, q)

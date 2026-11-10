@@ -316,7 +316,9 @@ def poc_trace_tenant_tag() -> tuple[bool, str]:
                     thread_id="harbour-foods:owner", started_ns=time.time_ns(),
                     metadata={"tenant_id": "harbour-foods"}, helper="collector",
                     status="done", wake_source="owner_message")
-    ex.export(t)
+    from mimi.observe import sinks
+
+    sinks.export(ex, t)
     ex.close(5)
     blob = json.dumps(client.obs, default=str) + json.dumps(t.tags)
     sent = ex.errors == 0 and bool(client.obs)
