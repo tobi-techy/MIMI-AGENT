@@ -207,17 +207,33 @@ def event_id(event: ProofEvent) -> str:
 
 
 class SqlProofLedger:
-    def __init__(self, engine: Engine) -> None:
+    """One tenant's view of the payment proofs.
+
+    Every query ANDs ``tenant_id == self.tenant_id``: a proof id from
+    another tenant reads as missing (``get`` raises ``KeyError``), so ids
+    cannot be probed for existence across tenants."""
+
+    def __init__(self, engine: Engine, tenant_id: str) -> None:
         self.engine = engine
+        self.tenant_id = tenant_id
 
     def ensure_schema(self) -> None:
         metadata.create_all(self.engine)
 
+    def _tenant(self) -> Any:
+        return payment_proofs.c.tenant_id == self.tenant_id
+
     def add(self, record: ProofRecord) -> bool:
+        if record.tenant_id != self.tenant_id:
+            raise ValueError(
+                f"Proof {record.proof_id} belongs to tenant {record.tenant_id}, "
+                f"not to tenant {self.tenant_id}; a ledger never takes another "
+                f"tenant's row.")
         with self.engine.begin() as conn:
             seen = conn.execute(
                 sa.select(payment_proofs.c.proof_id).where(
-                    payment_proofs.c.proof_id == record.proof_id
+                    self._tenant(),
+                    payment_proofs.c.proof_id == record.proof_id,
                 )
             ).first()
             if seen is not None:
@@ -229,7 +245,8 @@ class SqlProofLedger:
         with self.engine.connect() as conn:
             row = (
                 conn.execute(
-                    sa.select(payment_proofs).where(payment_proofs.c.proof_id == proof_id)
+                    sa.select(payment_proofs).where(
+                        self._tenant(), payment_proofs.c.proof_id == proof_id)
                 )
                 .mappings()
                 .first()
@@ -239,10 +256,14 @@ class SqlProofLedger:
         return ProofRecord(**dict(row))
 
     def update(self, proof_id: str, **fields: Any) -> ProofRecord:
+        if "tenant_id" in fields:
+            raise ValueError(
+                "A proof's tenant cannot be changed; move the row and you move "
+                "another tenant's money trail.")
         with self.engine.begin() as conn:
             conn.execute(
                 payment_proofs.update()
-                .where(payment_proofs.c.proof_id == proof_id)
+                .where(self._tenant(), payment_proofs.c.proof_id == proof_id)
                 .values(**fields)
             )
         return self.get(proof_id)
@@ -251,7 +272,7 @@ class SqlProofLedger:
         with self.engine.connect() as conn:
             rows = conn.execute(
                 sa.select(payment_proofs)
-                .where(cond)
+                .where(self._tenant(), cond)
                 .order_by(payment_proofs.c.received_at, payment_proofs.c.proof_id)
             ).mappings()
             return [ProofRecord(**dict(r)) for r in rows]
@@ -274,9 +295,11 @@ class SqlProofLedger:
     def add_event(self, event: ProofEvent, tenant_id: str = "") -> None:
         eid = event_id(event)
         with self.engine.begin() as conn:
-            tid = tenant_id or (conn.execute(
-                sa.select(payment_proofs.c.tenant_id)
-                .where(payment_proofs.c.proof_id == event.record_id)).scalar() or "")
+            tid = tenant_id or self.tenant_id
+            if tid != self.tenant_id:
+                raise ValueError(
+                    f"An event for tenant {tid} does not belong on tenant "
+                    f"{self.tenant_id}'s ledger.")
             seen = conn.execute(sa.select(proof_events.c.event_id).where(
                 proof_events.c.tenant_id == tid, proof_events.c.event_id == eid)).first()
             if seen is None:
@@ -286,6 +309,7 @@ class SqlProofLedger:
     def events(self, record_id: str) -> list[ProofEvent]:
         with self.engine.connect() as conn:
             rows = conn.execute(sa.select(proof_events).where(
+                proof_events.c.tenant_id == self.tenant_id,
                 proof_events.c.record_id == record_id).order_by(proof_events.c.at)).mappings()
             return [ProofEvent(**{k: v for k, v in dict(r).items()
                                   if k not in ("tenant_id", "event_id")}) for r in rows]
