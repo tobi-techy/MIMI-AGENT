@@ -20,9 +20,9 @@ from fastapi.testclient import TestClient
 from mimi.api.agent import Agent
 from mimi.api.app import create_app, openapi_json
 from mimi.api.config import ConfigError, Settings, key_digest, parse_keys
-from mimi.identity.auth import AuthConfig
 from mimi.harness.gateway import ModelTurn, ScriptedModel, say
 from mimi.harness.router_eval import OWNER_PHONE
+from mimi.identity.auth import AuthConfig
 from mimi.store import ensure_schema, make_engine, seed_world
 from mimi.store import schema as s
 from mimi.world.generator import generate_world

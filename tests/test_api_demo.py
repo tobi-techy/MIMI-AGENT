@@ -19,9 +19,9 @@ from mimi.api import demo
 from mimi.api.agent import Agent
 from mimi.api.app import create_app
 from mimi.api.config import ConfigError, Settings, parse_keys
-from mimi.identity.auth import AuthConfig
 from mimi.api.demo import DemoConfig
 from mimi.harness.gateway import ScriptedModel
+from mimi.identity.auth import AuthConfig
 from mimi.store import ensure_schema, make_engine
 from mimi.store import schema as s
 from mimi.store.util import dumps, now_iso
