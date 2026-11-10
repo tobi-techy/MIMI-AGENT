@@ -19,14 +19,31 @@ W = load_world()
 NOW = datetime(2026, 10, 26, 21, 0, tzinfo=UTC)  # 22:00 WAT
 
 
+@pytest.fixture(autouse=True)
+def _needs_the_model(monkeypatch: pytest.MonkeyPatch) -> None:
+    """These turns must need a paid call, so the cap is what stops them.
+
+    The plain-code fast path is on by default and answers a balance question
+    without a model call; a tenant out of allowance keeps those paths
+    (``tests/test_observe_spend.py``). Here we want the model path.
+    """
+    monkeypatch.setenv("MIMI_PLAIN_CODE", "0")
+
+
 @pytest.fixture()
 def engine() -> Any:
+    from mimi.observe import allowance as budget_allowance
+
     e = make_engine("sqlite://")
     ensure_schema(e)
-    seed_world(e, W, daily_cap_kobo=10_000)
-    with e.begin() as conn:  # today's allowance is already used up
+    # The cap is N250 a day per active shop (mimi.observe.allowance), so
+    # "today's allowance is used up" means booking spend up to that number,
+    # not seeding a smaller one in the tenant row.
+    seed_world(e, W)
+    with e.begin() as conn:
+        cap = budget_allowance.allowance(conn, "coral-lane", NOW.date()).cap_kobo
         insert_ignore(conn, s.spend, {"tenant_id": "coral-lane", "day": "2026-10-26",
-                                      "kobo": 10_000})
+                                      "kobo": cap})
     return e
 
 
@@ -69,21 +86,27 @@ def test_cap_parks_with_a_holding_reply_and_one_owner_note_then_resumes(engine: 
         turns = {r.turn_id: r for r in conn.execute(sa.select(s.turns))}
     assert len(aprs) == 1 and aprs[0].status == "pending" and aprs[0].helper == ""
     payload = json.loads(aprs[0].payload)
-    assert payload["cap_kobo"] == 10_000 and payload["new_cap_kobo"] == 60_000
+    from mimi.observe import spend as budget
+
+    cap = payload["cap_kobo"]
+    assert cap == 1_000_000  # 40 active shops in this world, N250 each
+    new_cap = max(cap * 2, cap + 50_000)
+    assert payload["new_cap_kobo"] == new_cap
     assert len(notes) == 1 and "allowance" in notes[0]  # asked once a day, not per job
     for t in (t1, t2):
         out = _out(engine, t)
         assert [m.kind for m in out if m.channel == "shop_whatsapp"] == ["holding_reply"]
         assert turns[t].completions == 0
-        assert not any(c.isdigit() for c in out[0].text)  # no figure in a holding reply
+        # The refusal names the cap in plain words; no internal id leaks.
+        assert budget.naira(cap) in out[0].text and "turn_" not in out[0].text
     # A second decision path: the owner says yes; the cap goes up, both jobs resume.
     row, follow = a.decide("coral-lane", aprs[0].approval_id, approve=True, by="owner")
     assert follow is None and row["status"] == "approved"
     assert {a.view("coral-lane", t).state for t in (t1, t2)} == {"leased"}  # lapsed: claimable
     with engine.connect() as conn:
-        cap = conn.execute(sa.select(s.tenants.c.daily_cap_kobo).where(
+        raised = conn.execute(sa.select(s.tenants.c.daily_cap_kobo).where(
             s.tenants.c.tenant_id == "coral-lane")).scalar()
-    assert cap == 60_000
+    assert raised == new_cap
     while a.process() is not None:
         pass
     with engine.connect() as conn:

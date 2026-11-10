@@ -116,7 +116,17 @@ def test_sqlgo_control_plane_and_gate(engine: Any) -> None:
     go, t, day = SqlGo(engine), W.tenant_id, date(2026, 10, 26)
     go.add_spend(t, "collector", day, 120)
     go.add_spend(t, "collector", day, 30)
-    assert go.daily_spend(t, day) == (150, 50_000)
+    spent, cap = go.daily_spend(t, day)
+    assert spent == 150
+    # The cap is N250 a day per active shop, never a flat number: the store
+    # reads it from mimi.observe.allowance, the same function the report reads.
+    from mimi.observe import allowance as budget_allowance
+
+    budget_allowance.forget()
+    with engine.connect() as conn:
+        a = budget_allowance.allowance(conn, t, day)
+    assert cap == a.cap_kobo == 25_000 * max(1, a.active_shops)
+    assert cap % 25_000 == 0 and cap >= 25_000
     assert go.ask_owner_once(t, "daily_cap", day) and not go.ask_owner_once(t, "daily_cap", day)
     assert not go.killed(t, "collector")
     with engine.begin() as conn:

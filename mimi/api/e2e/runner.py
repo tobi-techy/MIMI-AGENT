@@ -621,14 +621,22 @@ def _collect(*, live: bool, cache_dir: Path, workdir: Path | None = None,
             headers=api.h["owner"]).status_code if v1 else 0
         # --------------- the daily naira cap: helpers pause, the owner resumes them
         with engine.begin() as conn:
-            # The day's model allowance runs out here: the cap is set to what the
-            # run has spent so far (the next step of any helper is over it).
-            spent = int(conn.execute(sa.select(s.spend.c.kobo).where(
+            # The day's model allowance runs out here. The cap is N250 per
+            # active shop, fixed at Lagos midnight (mimi.observe.allowance),
+            # so the run forces it by booking the day's spend up to that cap.
+            from mimi.observe import allowance as budget_allowance
+
+            day_cap = budget_allowance.allowance(conn, sc.TENANT, DAY.date()).cap_kobo
+            already = int(conn.execute(sa.select(s.spend.c.kobo).where(
                 s.spend.c.tenant_id == sc.TENANT, s.spend.c.day == DAY.date().isoformat())
             ).scalar() or 0)
-            conn.execute(s.tenants.update().where(s.tenants.c.tenant_id == sc.TENANT)
-                         .values(daily_cap_kobo=max(1, spent)))
-        run.checks["budget_cap_set_kobo"] = max(1, spent)
+            keep = max(already, day_cap)
+            if conn.execute(s.spend.update().where(
+                    s.spend.c.tenant_id == sc.TENANT,
+                    s.spend.c.day == DAY.date().isoformat()).values(kobo=keep)).rowcount == 0:
+                conn.execute(s.spend.insert().values(
+                    tenant_id=sc.TENANT, day=DAY.date().isoformat(), kobo=keep))
+        run.checks["budget_cap_set_kobo"] = keep
         parked: list[TurnRec] = []
         for n, (sid, text) in enumerate(sc.BUDGET_SHOPS):
             rec = send(TurnRec("budget", sid, "ask", "", ("collector/collections",

@@ -244,6 +244,7 @@ class JobRunner:
             now=started,
             thread_id=job.thread_id,
             wake_source=job.wake_source,
+            trace_id=job.trace_id,
             scratch=job.copy().scratch,
             lineage=tuple(job.chain[:-1]),
             granted=granted,

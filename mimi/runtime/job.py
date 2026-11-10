@@ -101,6 +101,11 @@ class Job:
     parent_job_id: str = ""
     root_job_id: str = ""
     chain: list[str] = field(default_factory=list)
+    # The correlation id of the work this job belongs to
+    # (``mimi.observe.correlation``): the turn that started it, or the job id
+    # for a job that starts on its own. Plain data: the runtime never imports
+    # the observer, the layer that creates and runs the job binds it.
+    trace_id: str = ""
     # Optimistic concurrency: every save must name the version it read.
     version: int = 0
 
@@ -141,6 +146,7 @@ class Job:
             "parent_job_id": self.parent_job_id,
             "root_job_id": self.root_job_id,
             "chain": list(self.chain),
+            "trace_id": self.trace_id,
             "version": self.version,
         }
 
@@ -180,6 +186,7 @@ class Job:
             parent_job_id=str(raw.get("parent_job_id") or ""),
             root_job_id=str(raw.get("root_job_id") or ""),
             chain=list(raw.get("chain") or []),
+            trace_id=str(raw.get("trace_id") or ""),
             version=int(raw["version"]),
         )
 

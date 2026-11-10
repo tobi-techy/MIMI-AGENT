@@ -88,8 +88,9 @@ def test_observe_sits_beside_the_runtime() -> None:
             continue
         for name in _imports(path):
             if name.startswith("mimi."):
+                # mimi.tz is the stdlib-only Lagos clock (metrics' day boundary).
                 assert name.startswith(("mimi.observe", "mimi.runtime", "mimi.models",
-                                        "mimi.types")), (path, name)
+                                        "mimi.types", "mimi.tz")), (path, name)
 
 
 def test_stock_does_not_import_the_sim_or_other_flows() -> None:

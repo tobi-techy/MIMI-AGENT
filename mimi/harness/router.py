@@ -377,12 +377,20 @@ class Router:
     # -------------------------------------------------------------- API
 
     def route(self, inbound: Inbound, directory: Directory,
-              thread: ThreadState | None = None) -> RouteDecision:
-        return self.route_batch([inbound], directory, thread)
+              thread: ThreadState | None = None, *, allow_model: bool = True) -> RouteDecision:
+        return self.route_batch([inbound], directory, thread, allow_model=allow_model)
 
     def route_batch(self, batch: Sequence[Inbound], directory: Directory,
-                    thread: ThreadState | None = None) -> RouteDecision:
-        """One decision for a burst of events on one thread (they make one turn)."""
+                    thread: ThreadState | None = None, *,
+                    allow_model: bool = True) -> RouteDecision:
+        """One decision for a burst of events on one thread (they make one turn).
+
+        ``allow_model=False`` stays on the rules and the phrase layer: the
+        caller (the API agent, when a distributor's model allowance is spent)
+        gets a decision with no paid call. A message the rules cannot place
+        still reaches the loop, whose own gate refuses the model with one
+        plain sentence (docs/SLO.md).
+        """
         t0 = self.perf()
         thread = thread or ThreadState()
         lead = lead_of(batch)
@@ -409,7 +417,8 @@ class Router:
             text = "\n".join(p for p in parts if p).strip()
             if spans:
                 base["injection"] = tuple(spans)
-        dec = self._decide(lead, batch, text, directory, thread, base)
+        dec = self._decide(lead, batch, text, directory, thread, base,
+                           allow_model=allow_model)
         local = (self.perf() - t0) * 1000 - dec.model_ms
         return dec.model_copy(update={
             "local_ms": round(max(0.0, local), 3),
@@ -424,7 +433,8 @@ class Router:
         return "batch"
 
     def _decide(self, lead: Inbound, batch: Sequence[Inbound], text: str,
-                directory: Directory, thread: ThreadState, base: dict[str, Any]
+                directory: Directory, thread: ThreadState, base: dict[str, Any],
+                *, allow_model: bool = True
                 ) -> RouteDecision:
         sender = lead.sender
         p = lead.payload
@@ -521,7 +531,8 @@ class Router:
                     # the phrase rules settle on keeps its own route).
                     return rule(ruled, f"owner_rule:{ruled.split('/')[1]}", language=lang)
             return self._owner_no_loop(
-                self._classify(lead, text, "owner", thread, base, lang), text, thread)
+                self._classify(lead, text, "owner", thread, base, lang,
+                               allow_model=allow_model), text, thread)
 
         # shop or rep
         if sender == "shop" and not directory.shop_for(p.from_phone):
@@ -570,7 +581,8 @@ class Router:
             # Released: routed as if no ask were open (no "waiting" hint to
             # pull the model back to the asker); the ask itself stays open.
             free = replace(thread, pending_skill="", expects="", asked_at="", ask_ref="")
-            dec = self._after_pending(lead, batch, text, directory, free, base, lang, folded)
+            dec = self._after_pending(lead, batch, text, directory, free, base, lang, folded,
+                                      allow_model=allow_model)
             return dec.model_copy(update={
                 "model_called": dec.model_called or spend["model_called"],
                 "model_ms": dec.model_ms + b.model_ms,
@@ -579,11 +591,12 @@ class Router:
                 "cost_kobo": dec.cost_kobo + bind_kobo,
                 "thread_note": (f"open ask for {thread.pending_skill} not answered "
                                 f"({b.label}); it stays open")})
-        return self._after_pending(lead, batch, text, directory, thread, base, lang, folded)
+        return self._after_pending(lead, batch, text, directory, thread, base, lang, folded,
+                                   allow_model=allow_model)
 
     def _after_pending(self, lead: Inbound, batch: Sequence[Inbound], text: str,
                        directory: Directory, thread: ThreadState, base: dict[str, Any],
-                       lang: str, folded: str) -> RouteDecision:
+                       lang: str, folded: str, *, allow_model: bool = True) -> RouteDecision:
         sender = lead.sender
         p = lead.payload
 
@@ -616,7 +629,8 @@ class Router:
             if seen == "order_list":
                 return rule("order/order-intake", "photo_order_list_seen", conf=0.95,
                             language=lang)
-        dec = self._classify(lead, text, sender, thread, base, lang)
+        dec = self._classify(lead, text, sender, thread, base, lang,
+                             allow_model=allow_model)
         if (p.media.kind == "image" and dec.status == "clarify" and seen != "not_list"
                 and "order/order-intake" in dec.options
                 and (set(dec.options) <= _ORDER_OR_STATUS or _ORDER_WORDS.search(folded))):
@@ -736,7 +750,7 @@ class Router:
         return dec
 
     def _classify(self, lead: Inbound, text: str, sender: str, thread: ThreadState,
-                  base: dict[str, Any], lang: str) -> RouteDecision:
+                  base: dict[str, Any], lang: str, *, allow_model: bool = True) -> RouteDecision:
         allowed = frozenset(s.key for s in allowed_for(sender))
         spans = tuple(lexicon.injection_spans(text)) if sender != "owner" else ()
         mention = sender != "owner" and bool(lexicon.MENTION.search(text))
@@ -770,7 +784,7 @@ class Router:
             return RouteDecision(status="routed", helper=top.split("/")[0], skill=top,
                                  confidence=0.9, layer="fast", rule=rule_name, language=lang,
                                  secondary=secondary, **base, **guard)
-        if self.model is None:
+        if self.model is None or not allow_model:
             cands = [k for k in (lx.top, lx.second) if k]
             if len(cands) == 1 and lx.top_score >= lexicon.STRONG:
                 return RouteDecision(status="routed", helper=lx.top.split("/")[0],

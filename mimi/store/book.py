@@ -437,11 +437,21 @@ class SqlGo:
                 s.kill_switches.c.helper.in_((helper, "*")))).first() is not None
 
     def daily_spend(self, tenant_id: str, day: date) -> tuple[int, int]:
+        """(spent today, today's cap): N250 per active shop, fixed at midnight.
+
+        The cap comes from ``mimi.observe.allowance``, the same function the
+        report reads, so the number a founder sees and the number the gate
+        enforces cannot disagree. An approved raise for this day is the only
+        thing above it, and it expires with the day.
+        """
+        from mimi.observe import allowance as budget_allowance
+
         with self.engine.connect() as conn:
-            t = self._tenant_row(conn, tenant_id)
+            self._tenant_row(conn, tenant_id)
             spent = conn.execute(sa.select(s.spend.c.kobo).where(
                 s.spend.c.tenant_id == tenant_id, s.spend.c.day == day.isoformat())).scalar()
-        return int(spent or 0), int(t.daily_cap_kobo)
+            cap = budget_allowance.allowance(conn, tenant_id, day).cap_kobo
+        return int(spent or 0), int(cap)
 
     def add_spend(self, tenant_id: str, helper: str, day: date, kobo: int) -> None:
         if kobo <= 0:
