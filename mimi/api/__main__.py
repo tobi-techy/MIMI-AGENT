@@ -11,6 +11,7 @@ from __future__ import annotations
 import argparse
 import json
 import logging
+import os
 import signal
 import sys
 import threading
@@ -26,6 +27,10 @@ def main(argv: list[str] | None = None) -> int:
     wp = sub.add_parser("worker", help="run a worker process")
     wp.add_argument("--db", default="", help="SQLAlchemy URL (default: DATABASE_URL)")
     wp.add_argument("--idle", type=float, default=0.5, help="seconds between empty polls")
+    wp.add_argument("--health-host", default="0.0.0.0", help="health probe bind address")
+    wp.add_argument("--health-port", type=int,
+                    default=int(os.environ.get("MIMI_WORKER_HEALTH_PORT", "0") or 0),
+                    help="health probe port (0: off; MIMI_WORKER_HEALTH_PORT)")
     op = sub.add_parser("openapi", help="write the OpenAPI document")
     op.add_argument("--out", default="docs/api/openapi.json")
     op.add_argument("--check", action="store_true", help="exit 1 if the file is stale")
@@ -41,6 +46,7 @@ def main(argv: list[str] | None = None) -> int:
     if args.cmd == "worker":
         from mimi.api.agent import Agent
         from mimi.api.config import Settings
+        from mimi.api.worker_health import WorkerHealth
         from mimi.store.db import make_engine
 
         settings = Settings.from_env()
@@ -48,10 +54,26 @@ def main(argv: list[str] | None = None) -> int:
         agent = Agent.from_env(make_engine(args.db or settings.database_url),
                                lease_s=settings.lease_s)
         stop = threading.Event()
+        draining = threading.Event()
+
+        def on_signal(signum: int, _frame: object) -> None:
+            # Readiness first, then stop claiming: the turn in hand finishes.
+            draining.set()
+            stop.set()
+            logging.info("worker %s draining (signal %s)", agent.worker_id, signum)
+
         for sig in (signal.SIGTERM, signal.SIGINT):
-            signal.signal(sig, lambda *_: stop.set())
+            signal.signal(sig, on_signal)
+        health = WorkerHealth(agent, draining, host=args.health_host, port=args.health_port)
+        if args.health_port:
+            logging.info("worker %s health on %s:%s", agent.worker_id,
+                         args.health_host, health.start())
         logging.info("worker %s up (model %s)", agent.worker_id, agent.model_mode)
-        agent.run_worker(stop, idle_s=args.idle)
+        try:
+            agent.run_worker(stop, idle_s=args.idle)
+        finally:
+            health.stop()
+        logging.info("worker %s stopped cleanly", agent.worker_id)
         return 0
 
     from mimi.api.app import openapi_json

@@ -1,8 +1,12 @@
-"""``python -m mimi.store seed [--reset] [--db URL] [--tenant-id ID]``
+"""``python -m mimi.store seed`` and ``python -m mimi.store queue``.
 
-Loads the synthetic Coral Lane Trading world (fictional shops, people and
-numbers) into the store. Run ``alembic upgrade head`` first, or pass
+``seed`` loads the synthetic Coral Lane Trading world (fictional shops, people
+and numbers) into the store. Run ``alembic upgrade head`` first, or pass
 ``--create`` to create the tables directly (local tries only).
+
+``queue`` is the operator's view of the turn queue: ``list`` shows parked
+turns, ``replay --id`` queues one again, ``stats --json`` prints the counts
+(``docs/QUEUE.md``).
 """
 
 from __future__ import annotations
@@ -11,6 +15,7 @@ import argparse
 import sys
 
 from mimi.store.db import database_url, ensure_schema, make_engine
+from mimi.store.queue import main as queue_main
 from mimi.store.seed import SeedError, seed_world
 from mimi.world.loader import load_world
 
@@ -25,7 +30,11 @@ def main(argv: list[str] | None = None) -> int:
     sp.add_argument("--if-empty", action="store_true",
                     help="do nothing when the tenant is already seeded")
     sp.add_argument("--create", action="store_true", help="create tables without alembic")
+    qp = sub.add_parser("queue", help="inspect and replay the turn queue")
+    qp.add_argument("rest", nargs=argparse.REMAINDER, help="list | replay --id ... | stats")
     args = ap.parse_args(argv)
+    if args.cmd == "queue":
+        return queue_main(args.rest)
     engine = make_engine(args.db or database_url())
     if args.create:
         ensure_schema(engine)
