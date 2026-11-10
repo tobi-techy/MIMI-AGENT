@@ -122,7 +122,10 @@ deliveries = sa.Table(
     sa.Column("live", sa.Boolean(), nullable=False, default=False),
     *_proof(),
     sa.PrimaryKeyConstraint("tenant_id", "delivery_id"),
-    sa.Index("ix_deliveries_tenant_shop", "tenant_id", "shop_id"),
+    # A shop's last deliveries, newest first (the shop page, the helper's
+    # ``deliveries`` read): tenant, shop, then the day, so no sort. Replaced
+    # the old (tenant, shop) index in alembic 0019.
+    sa.Index("ix_deliveries_tenant_shop_day", "tenant_id", "shop_id", "day", "delivery_id"),
 )
 
 delivery_lines = sa.Table(
@@ -157,7 +160,19 @@ receivables = sa.Table(
     # The book's own order (oldest first), so lists read the same everywhere.
     sa.Column("position", sa.Integer(), nullable=False, default=0),
     sa.PrimaryKeyConstraint("tenant_id", "delivery_id"),
+    # The full shop history (``SqlGo.today`` reads a shop's invoices whatever
+    # their state); the open ones read the partial index below.
     sa.Index("ix_receivables_tenant_shop", "tenant_id", "shop_id"),
+    # Every open-invoice read: the credit watch and morning brief aggregate the
+    # tenant's open book in position order without a sort, the overdue roll
+    # filters due_day, and the returns ledger locks a shop's open invoices in
+    # the same order. Paid invoices drop out, so the index shrinks as a book is
+    # collected instead of growing with every invoice ever written. Layered on
+    # the full (tenant, shop) index above, which a shop's whole history
+    # (``SqlGo.today``) still reads. Alembic 0019.
+    sa.Index("ix_receivables_tenant_open", "tenant_id", "position", "delivery_id",
+             postgresql_where=sa.text("outstanding_kobo > 0"),
+             sqlite_where=sa.text("outstanding_kobo > 0")),
 )
 
 payments = sa.Table(
@@ -178,7 +193,18 @@ payments = sa.Table(
     sa.Column("fake_alert", sa.Boolean(), nullable=False, default=False),
     *_proof(),
     sa.PrimaryKeyConstraint("tenant_id", "payment_id"),
-    sa.Index("ix_payments_tenant_shop", "tenant_id", "shop_id"),
+    # A shop's payments, newest day first (the shop page). Replaced the old
+    # (tenant, shop) index in alembic 0019: the day is the sort key, so the
+    # index answers the whole read.
+    sa.Index("ix_payments_tenant_shop_day", "tenant_id", "shop_id", "day"),
+    # The morning brief and the dashboard read the tenant's last days of
+    # payments (day >= today - 7), not its whole history. Alembic 0019.
+    sa.Index("ix_payments_tenant_day", "tenant_id", "day"),
+    # Transfer alerts no money backed are rare; the brief reads only those,
+    # oldest first, so the partial index holds the exceptions, not the book.
+    sa.Index("ix_payments_tenant_fake_day", "tenant_id", "day",
+             postgresql_where=sa.text("fake_alert IS TRUE"),
+             sqlite_where=sa.text("fake_alert IS TRUE")),
 )
 
 bank_feed = sa.Table(
@@ -190,6 +216,9 @@ bank_feed = sa.Table(
     sa.Column("received_at", sa.String(40), nullable=False),
     sa.Column("narration", sa.String(300), nullable=False, default=""),
     sa.PrimaryKeyConstraint("tenant_id", "credit_id"),
+    # Matching an inbound transfer to a payment: the match reads the credits
+    # for one amount first, then joins its payment (alembic 0019).
+    sa.Index("ix_bank_feed_tenant_amount", "tenant_id", "amount_kobo"),
 )
 
 promises = sa.Table(
@@ -203,6 +232,8 @@ promises = sa.Table(
     sa.Column("kept", sa.Boolean(), nullable=False, default=False),
     sa.Column("text", sa.Text(), nullable=False, default=""),
     sa.PrimaryKeyConstraint("tenant_id", "promise_id"),
+    # A shop's promises on its page (alembic 0019).
+    sa.Index("ix_promises_tenant_shop", "tenant_id", "shop_id"),
 )
 
 disputes = sa.Table(
@@ -217,6 +248,9 @@ disputes = sa.Table(
     sa.Column("text", sa.Text(), nullable=False, default=""),
     sa.Column("status", sa.String(16), nullable=False),
     sa.PrimaryKeyConstraint("tenant_id", "dispute_id"),
+    # One shop's disputes and the tenant's open count (the shop page, the
+    # morning brief). Alembic 0019.
+    sa.Index("ix_disputes_tenant_shop_status", "tenant_id", "shop_id", "status"),
 )
 
 # Every change to a record's proof level, append-only (RAI-295): the witness
@@ -235,6 +269,9 @@ proof_events = sa.Table(
     sa.Column("at", sa.String(40), nullable=False),
     sa.PrimaryKeyConstraint("tenant_id", "event_id"),
     sa.Index("ix_proof_events_record", "tenant_id", "record_type", "record_id"),
+    # A record's proof history in the order it landed, without naming the
+    # record type first (``SqlProofBook.events``). Alembic 0019.
+    sa.Index("ix_proof_events_tenant_record", "tenant_id", "record_id", "at"),
 )
 
 # A shop is asked to confirm a record once; a skipped ask is never chased.
@@ -264,6 +301,9 @@ threads = sa.Table(
     sa.Column("last_ts", sa.Float(), nullable=False),
     sa.Column("created_at", sa.String(40), nullable=False),
     sa.PrimaryKeyConstraint("tenant_id", "thread_id"),
+    # The console inbox: one tenant's threads, newest activity first, which is
+    # the same order it pages in. Alembic 0019.
+    sa.Index("ix_threads_tenant_last", "tenant_id", "last_ts", "thread_id"),
 )
 
 inbound_messages = sa.Table(
@@ -280,6 +320,12 @@ inbound_messages = sa.Table(
     sa.Column("simulated", sa.Boolean(), nullable=False, default=False),
     sa.Column("received_at", sa.String(40), nullable=False),
     sa.PrimaryKeyConstraint("tenant_id", "external_id"),
+    # The queue's candidate read joins inbound_messages on (tenant, turn): the
+    # index turns a scan of every inbound message into a lookup per candidate.
+    # Alembic 0019.
+    sa.Index("ix_inbound_messages_tenant_turn", "tenant_id", "turn_id"),
+    # A thread's attachments (demo mode reads its uploads back by thread).
+    sa.Index("ix_inbound_messages_tenant_thread", "tenant_id", "thread_id"),
 )
 
 turns = sa.Table(
@@ -317,6 +363,10 @@ turns = sa.Table(
     sa.Column("finished_at", sa.String(40), nullable=True),
     sa.Index("ix_turns_state", "state", "created_ts"),
     sa.Index("ix_turns_tenant_thread", "tenant_id", "thread_id"),
+    # The console's task and activity lists: one tenant's turns, newest first.
+    # It is not a claim index: claiming filters on state and the lease and is
+    # served by ix_turns_state above (the queue owns that read). Alembic 0019.
+    sa.Index("ix_turns_tenant_created", "tenant_id", "created_ts"),
 )
 
 turn_attempts = sa.Table(
@@ -348,6 +398,9 @@ messages = sa.Table(
     sa.Column("ts", sa.Float(), nullable=False),
     sa.PrimaryKeyConstraint("tenant_id", "message_id"),
     sa.Index("ix_messages_tenant_thread", "tenant_id", "thread_id", "ts"),
+    # An approval's draft message: one row per idempotency key, read once per
+    # approval in the list (a tenant-scoped scan without it). Alembic 0019.
+    sa.Index("ix_messages_tenant_idem", "tenant_id", "idempotency_key"),
 )
 
 thread_events = sa.Table(
@@ -372,6 +425,9 @@ thread_events = sa.Table(
     sa.Column("ts", sa.Float(), nullable=False),
     sa.PrimaryKeyConstraint("tenant_id", "event_id"),
     sa.Index("ix_thread_events_tenant_thread", "tenant_id", "thread_id", "ts"),
+    # The Activity view reads one turn's steps without naming its thread;
+    # without this it scans every event the tenant ever wrote. Alembic 0019.
+    sa.Index("ix_thread_events_tenant_turn", "tenant_id", "turn_id"),
 )
 
 intents = sa.Table(
@@ -423,7 +479,13 @@ approvals = sa.Table(
     # does it by hand; approving only records that it was done). RAI-323.
     sa.Column("handling", sa.String(16), nullable=False, default=""),
     sa.UniqueConstraint("tenant_id", "idempotency_key", name="uq_approvals_tenant_key"),
-    sa.Index("ix_approvals_tenant_status", "tenant_id", "status"),
+    # The approvals list: one tenant, one status, newest first (the sort key is
+    # last, so the read is answered by the index). Replaced the old
+    # (tenant, status) index in alembic 0019.
+    sa.Index("ix_approvals_tenant_status_created", "tenant_id", "status", "created_ts"),
+    # A thread's waiting approvals: the inbox summary counts them per row and
+    # the steering reads find the thread's pending items. Alembic 0019.
+    sa.Index("ix_approvals_tenant_thread_status", "tenant_id", "thread_id", "status"),
 )
 
 # A message for a thread whose turn is running (RAI-301). The running loop
@@ -498,6 +560,9 @@ history = sa.Table(
     sa.Column("ts", sa.Float(), nullable=False),
     sa.Column("body", sa.Text(), nullable=False),  # JSON list of messages as sent
     sa.PrimaryKeyConstraint("tenant_id", "thread_id", "turn_id"),
+    # The context builder and the compactor read a thread's history in time
+    # order; the primary key orders by turn id, not time. Alembic 0019.
+    sa.Index("ix_history_tenant_thread_ts", "tenant_id", "thread_id", "ts"),
 )
 
 prefixes = sa.Table(
@@ -534,6 +599,12 @@ compactions = sa.Table(
     sa.Column("due_ts", sa.Float(), nullable=False, default=0.0),
     sa.Column("created_at", sa.String(40), nullable=False, default=""),
     sa.PrimaryKeyConstraint("tenant_id", "thread_id", "version"),
+    # The compactor polls due timer rows (version 0 only) every tick; the
+    # partial index holds one entry per thread waiting, not every summary.
+    # Alembic 0019.
+    sa.Index("ix_compactions_due", "due_ts",
+             postgresql_where=sa.text("version = 0"),
+             sqlite_where=sa.text("version = 0")),
 )
 
 artifacts = sa.Table(
@@ -552,6 +623,9 @@ digest_queue = sa.Table(
     _tenant(),
     sa.Column("shop_id", sa.String(64), nullable=False, default=""),
     sa.Column("body", sa.Text(), nullable=False, default=""),
+    # The trace id of the turn or routine that queued the item (observability,
+    # alembic 0020). Nullable for rows written before it existed.
+    sa.Column("trace_id", sa.String(64), nullable=True),
     sa.Column("kind", sa.String(32), nullable=False, default="reply"),
     sa.Column("day", sa.String(10), nullable=False),  # Africa/Lagos
     sa.Column("reason", sa.Text(), nullable=False, default=""),
@@ -643,6 +717,11 @@ connector_writes = sa.Table(
     sa.Column("write_id", sa.String(64), nullable=False),
     sa.Column("proposal_id", sa.String(64), nullable=False),
     sa.Column("idempotency_key", sa.String(100), nullable=False),
+    # The trace id of the run that made the write (observability, alembic 0020).
+    # Nullable: writes before 0020 have none, and the column is filled by the
+    # writer from the day it ships. Nullable plus an index is the expand half of
+    # expand and contract; the NOT NULL comes later, once every writer sets it.
+    sa.Column("trace_id", sa.String(64), nullable=True),
     sa.Column("action", sa.String(100), nullable=False),
     sa.Column("payload_hash", sa.String(64), nullable=False, default=""),
     sa.Column("before", sa.Text(), nullable=False, default="{}"),
@@ -653,6 +732,8 @@ connector_writes = sa.Table(
     sa.Column("undone_at", sa.String(40), nullable=True),
     sa.PrimaryKeyConstraint("tenant_id", "write_id"),
     sa.UniqueConstraint("tenant_id", "idempotency_key", name="uq_connector_writes_tenant_key"),
+    # A write is found by its trace when no approval is behind it (alembic 0020).
+    sa.Index("ix_connector_writes_tenant_trace", "tenant_id", "trace_id"),
 )
 
 consent_grants = sa.Table(
