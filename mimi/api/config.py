@@ -24,6 +24,12 @@
 * ``MIMI_MEDIA_DIR``: in demo mode, where console uploads are kept
   (``mimi.api.uploads``); the helpers read ``local:`` refs from the same
   directory. Unset: a temporary directory per process.
+* ``MIMI_AUTH_MODE``: ``dev`` (default: the caller is named by the
+  ``X-Actor-Id`` header) or ``stytch`` (the caller is Stytch's session JWT,
+  verified against ``MIMI_STYTCH_JWKS_URL``). ``MIMI_STYTCH_ISSUER`` and
+  ``MIMI_STYTCH_AUDIENCE`` are checked when set, ``MIMI_STYTCH_JWKS_TTL_S``
+  is the key-cache interval (300) and ``MIMI_DEV_ACTOR=0`` turns the dev
+  header off. Production refuses ``MIMI_AUTH_MODE=dev`` (docs/IDENTITY.md).
 """
 
 from __future__ import annotations
@@ -36,6 +42,7 @@ from dataclasses import dataclass, field
 from typing import Literal
 
 from mimi.api.demo import DemoConfig
+from mimi.identity.auth import AuthConfig, AuthConfigError
 from mimi.store.db import database_url
 
 Role = Literal["owner", "channel"]
@@ -105,6 +112,9 @@ class Settings:
     # Demo mode: where console uploads are kept (``mimi.api.uploads``). Empty
     # means a fresh temporary directory per process.
     media_dir: str = ""
+    # The identity seam (Phase 1 slice 1): dev in development, stytch in
+    # production. The switch is this object and nothing else.
+    auth: AuthConfig = field(default_factory=AuthConfig)
 
     @property
     def production(self) -> bool:
@@ -114,6 +124,11 @@ class Settings:
     def from_env(cls, env: Mapping[str, str] | None = None) -> Settings:
         e = env if env is not None else os.environ
         cors = tuple(x.strip() for x in e.get("MIMI_CORS_ORIGINS", "").split(",") if x.strip())
+        production = (e.get("MIMI_ENV", "").strip().lower() in ("prod", "production"))
+        try:
+            identity = AuthConfig.from_env(dict(e), production=production)
+        except AuthConfigError as exc:
+            raise ConfigError(str(exc)) from None
         return cls(
             env=e.get("MIMI_ENV", "dev").strip() or "dev",
             database_url=database_url(e),
@@ -127,6 +142,7 @@ class Settings:
             mode=(e.get("MIMI_MODE", "live").strip().lower() or "live"),
             demo=DemoConfig.from_env(e),
             media_dir=e.get("MIMI_MEDIA_DIR", "").strip(),
+            auth=identity,
         )
 
     @property
@@ -175,3 +191,12 @@ class Settings:
         if any(k.digest in demo for k in self.keys):
             raise ConfigError("MIMI_API_KEYS holds a published local demo key: refusing to "
                               "serve production with it")
+        # The identity seam (Phase 1 slice 1). A production API authenticates
+        # people with the identity provider: the dev actor header is off and
+        # the key is a service credential, not a way in for a person.
+        if self.auth.dev_actor:
+            raise ConfigError("the dev actor header is development only: production "
+                              "authenticates with Stytch (MIMI_AUTH_MODE=stytch)")
+        if self.auth.mode != "stytch":
+            raise ConfigError("MIMI_AUTH_MODE=dev is development only: production needs "
+                              "MIMI_AUTH_MODE=stytch and MIMI_STYTCH_JWKS_URL")

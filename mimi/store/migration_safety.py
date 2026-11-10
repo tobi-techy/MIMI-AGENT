@@ -356,6 +356,13 @@ def check_tree(versions_dir: Path | str = VERSIONS) -> Result:
         # 3 and 4. destructive and locking operations, from RULES_SINCE on.
         destructive: list[tuple[str, ast.Call]] = []
         additive: list[tuple[str, ast.Call]] = []
+        # A table this revision creates is empty when the index is built and
+        # when a column is added, so neither can hold a write lock on rows that
+        # exist. Exempt by construction, not by allow-list entry.
+        created_here = {
+            str(_text(_arg(call, 0)))
+            for op, call in upgrade_calls
+            if op == "create_table" and _arg(call, 0) is not None}
         for op, call in (upgrade_calls if enforced else []):
             table = _table_of_call(op, call)
             if op in _ADDITIVE_OPS:
@@ -370,7 +377,8 @@ def check_tree(versions_dir: Path | str = VERSIONS) -> Result:
                         where, "long-lock",
                         f"alter_column on growing table {table!r}: a type change "
                         "rewrites the table; add a new column and backfill instead"))
-            if op == "create_index" and table and table not in SMALL_TABLES:
+            if (op == "create_index" and table and table not in SMALL_TABLES
+                    and table not in created_here):
                 result.findings.append(Finding(
                     where, "long-lock",
                     f"op.create_index {_text(_arg(call, 0))!r} on growing table {table!r}; "
@@ -382,7 +390,8 @@ def check_tree(versions_dir: Path | str = VERSIONS) -> Result:
                         where, "long-lock",
                         f"op.drop_index {_text(_arg(call, 0))!r} on growing table "
                         f"{table_name!r}; use DROP INDEX CONCURRENTLY"))
-            if op == "add_column" and table and _column_not_null_without_default(table, call):
+            if (op == "add_column" and table and table not in created_here
+                    and _column_not_null_without_default(table, call)):
                 result.findings.append(Finding(
                     where, "long-lock",
                     f"NOT NULL column on {table!r} without server_default: existing rows "

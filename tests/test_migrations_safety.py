@@ -51,7 +51,10 @@ def chain(tmp_path: Path, *files: tuple[str, str, str | None, str]) -> Path:
 def test_the_real_tree_has_one_head_and_passes() -> None:
     result = check_tree(VERSIONS)
     assert result.ok, result.report()
-    assert result.heads == ["0020"]
+    # The property is one head, not this head: naming the current revision here
+    # makes every future migration edit a test, which is how a guardrail gets
+    # weakened in a hurry.
+    assert len(result.heads) == 1, result.heads
 
 
 def test_a_bad_drop_needs_expand_contract_and_irreversible(tmp_path: Path) -> None:
@@ -305,3 +308,56 @@ def test_the_new_revisions_pass_on_their_own(revision: str) -> None:
     result = check_tree(VERSIONS)
     assert result.ok
     assert any(r.revision == revision for r in result.revisions)
+
+
+def test_an_index_on_a_table_this_revision_creates_passes(tmp_path: Path) -> None:
+    """A table created in the same revision is empty when its index builds.
+
+    The lock rule exists to protect rows that already exist. A new table has
+    none, so requiring CONCURRENTLY there would push a real migration onto an
+    allow-list to get past the check, which is how a check becomes a rubber
+    stamp. Found on 11 Nov 2026 by the first Phase 1 migration, which creates
+    two tables and indexes one of them.
+    """
+    chain(tmp_path,
+          ("9000_old", "9000", None, "def upgrade():\n    pass\n\ndef downgrade():\n    pass\n"),
+          ("9001_new", "9001", "9000", '''def upgrade():
+    op.create_table(
+        "fresh_things",
+        sa.Column("tenant_id", sa.String(64), nullable=False),
+        sa.Column("area", sa.String(64), nullable=False),
+    )
+    op.create_index("ix_fresh_things_tenant_area", "fresh_things", ["tenant_id", "area"])
+
+
+def downgrade():
+    op.drop_table("fresh_things")
+'''))
+    result = check_tree(tmp_path)
+    assert not [f for f in result.findings if f.rule == "long-lock"], result.findings
+
+
+def test_the_exemption_is_per_revision_not_global(tmp_path: Path) -> None:
+    """A later revision indexing the same table is still a growing table."""
+    chain(tmp_path,
+          ("9000_old", "9000", None, "def upgrade():\n    pass\n\ndef downgrade():\n    pass\n"),
+          ("9001_new", "9001", "9000", '''def upgrade():
+    op.create_table(
+        "fresh_things",
+        sa.Column("tenant_id", sa.String(64), nullable=False),
+    )
+    op.create_index("ix_fresh_things_tenant", "fresh_things", ["tenant_id"])
+
+
+def downgrade():
+    op.drop_table("fresh_things")
+'''),
+          ("9002_later", "9002", "9001", '''def upgrade():
+    op.create_index("ix_fresh_things_again", "fresh_things", ["tenant_id"])
+
+
+def downgrade():
+    op.drop_index("ix_fresh_things_again", table_name="fresh_things")
+'''))
+    result = check_tree(tmp_path)
+    assert any(f.rule == "long-lock" and "create_index" in f.message for f in result.findings)

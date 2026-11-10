@@ -38,6 +38,7 @@ from mimi.api.e2e.clock import ENV, RECORDED_ON, run_clock
 from mimi.api.helpers import HelperDeps
 from mimi.api.media import LocalMedia
 from mimi.harness.gateway import ModelTurn, ScriptedModel
+from mimi.identity.auth import AuthConfig
 from mimi.models.fake import FakeModel
 from mimi.proof.reading import fake_reader
 from mimi.receipts.verdict import fake_verdict
@@ -130,7 +131,9 @@ def test_production_reads_the_real_clock_and_refuses_a_pinned_one(
     assert abs(datetime.fromisoformat(now_iso()).timestamp() - time.time()) < 1
     keys = parse_keys(f"{T}:owner:{KEYS['owner']}")
     prod = Settings(env="production", keys=keys, has_model_key=True,
-                    database_url="postgresql://x/y")
+                    database_url="postgresql://x/y",
+                    auth=AuthConfig(mode="stytch", dev_actor=False,
+                                    jwks_url="https://example.invalid/jwks.json"))
     monkeypatch.setenv("MIMI_PHONE_PSEUDONYM_KEY", "test-only-pseudonym-key")
     prod.check()
     with clock.pinned(RECORDED_ON), pytest.raises(ConfigError, match="pinned"):

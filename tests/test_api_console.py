@@ -175,7 +175,15 @@ def test_me_names_the_tenant_and_live_mode(env: dict[str, Any]) -> None:
     r = env["c"].get("/v1/me", headers=owner())
     assert r.status_code == 200
     body = r.json()
-    assert body == {"tenant_id": A, "role": "owner", "mode": "live", "demo": None}
+    # A subset, exact on the fields this test is about: Phase 1 slice 1 added
+    # ``user``, ``scopes``, ``channels`` and ``source`` to the same answer.
+    assert {k: body[k] for k in ("tenant_id", "role", "mode", "demo")} == {
+        "tenant_id": A, "role": "owner", "mode": "live", "demo": None}
+    # A distributor key with no actor behind it has no person.
+    assert body["user"] is None
+    assert body["source"] == "key"
+    assert body["scopes"]["all"] is True and body["scopes"]["empty"] is False
+    assert body["channels"] == []  # until channels exist (slice 2)
     assert env["c"].get("/v1/me", headers=chan()).json()["role"] == "channel"
     assert env["c"].get("/v1/me").status_code == 401
 

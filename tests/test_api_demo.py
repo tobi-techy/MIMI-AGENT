@@ -21,6 +21,7 @@ from mimi.api.app import create_app
 from mimi.api.config import ConfigError, Settings, parse_keys
 from mimi.api.demo import DemoConfig
 from mimi.harness.gateway import ScriptedModel
+from mimi.identity.auth import AuthConfig
 from mimi.store import ensure_schema, make_engine
 from mimi.store import schema as s
 from mimi.store.util import dumps, now_iso
@@ -468,8 +469,12 @@ def test_mode_must_be_live_or_demo() -> None:
 def test_production_demo_needs_a_salt_and_no_static_keys(
         monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("MIMI_PHONE_PSEUDONYM_KEY", "test-only-pseudonym-key")
+    # Phase 1 slice 1: every production API authenticates with Stytch, demo
+    # visitors included (their session token is resolved before any JWKS call).
+    stytch = AuthConfig(mode="stytch", dev_actor=False,
+                        jwks_url="https://stytch.example.test/keys")
     base: dict[str, Any] = {"env": "production", "mode": "demo", "has_model_key": True,
-                            "database_url": "postgresql://x/y"}
+                            "database_url": "postgresql://x/y", "auth": stytch}
     with pytest.raises(ConfigError, match="MIMI_DEMO_IP_SALT"):
         Settings(**base, demo=DemoConfig()).check()
     Settings(**base, demo=DemoConfig(ip_salt="s" * 32)).check()  # no MIMI_API_KEYS needed

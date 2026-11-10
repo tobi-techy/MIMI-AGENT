@@ -71,7 +71,7 @@ from mimi.api import demo_wiring as dw
 from mimi.api import reads, returns, sales
 from mimi.api import routines as rt
 from mimi.api.agent import Agent, Conflict, NotFound
-from mimi.api.config import LOCALHOST_REGEX, ApiKey, Settings
+from mimi.api.config import LOCALHOST_REGEX, ApiKey, Settings, key_digest
 from mimi.api.demo import (
     EXPIRED,
     DemoRefused,
@@ -111,6 +111,10 @@ from mimi.api.schemas import (
     InspectIn,
     Liveness,
     MediaOut,
+    MemberIn,
+    MemberList,
+    MemberOut,
+    MemberPatch,
     MentionList,
     MeOut,
     PolicyIn,
@@ -132,6 +136,8 @@ from mimi.api.schemas import (
     SlowCheckOut,
     StopOut,
     TaskList,
+    TerritoriesIn,
+    TerritoriesOut,
     ThreadDetail,
     ThreadList,
     TurnIn,
@@ -146,6 +152,11 @@ from mimi.flags import routines_enabled
 from mimi.harness.go import CrossTenant
 from mimi.harness.inbound import Inbound, Media, Payload
 from mimi.harness.policy import PolicyLocked, owner_rules_on
+from mimi.identity import auth as ident_auth
+from mimi.identity import roles as ident
+from mimi.identity import store as identity_store
+from mimi.identity.roles import Principal, Subject
+from mimi.identity.scopes import NONE, Scope
 from mimi.store import schema as s
 from mimi.store.db import make_engine
 from mimi.store.policy_rules import SqlPolicyRules
@@ -172,7 +183,7 @@ VERSION = "0.1.0"
 _bearer = HTTPBearer(auto_error=False)
 _ERRORS: dict[int | str, dict[str, Any]] = {
     401: {"model": ErrorOut}, 403: {"model": ErrorOut}, 404: {"model": ErrorOut},
-    409: {"model": ErrorOut}}
+    409: {"model": ErrorOut}, 422: {"model": ErrorOut}}
 _DEMO_ERRORS: dict[int | str, dict[str, Any]] = {
     **_ERRORS, 429: {"model": DemoLimitError}, 503: {"model": DemoLimitError}}
 
@@ -230,8 +241,13 @@ def create_app(settings: Settings | None = None, agent: Agent | None = None, *,
         allow_origin_regex=LOCALHOST_REGEX, allow_credentials=False,
         # DELETE: the console disconnects a tool (DELETE /v1/connectors/{id}).
         allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-        allow_headers=["Authorization", "Content-Type"])
+        # X-Actor-Id: the development seam names the person (Phase 1 slice 1).
+        allow_headers=["Authorization", "Content-Type", ident_auth.DEV_ACTOR_HEADER])
     engine = agent.engine
+    # The identity seam: one resolver per process. It holds the provider's
+    # key cache; nothing here is a secret (the URL comes from the environment).
+    identity = ident_auth.Resolver(engine=engine, config=settings.auth)
+    app.state.identity = identity
     uploads: ConsoleUploads | None = None
     if settings.demo_mode:
         uploads = ConsoleUploads(Path(settings.media_dir or tempfile.mkdtemp(prefix="mimi-media-")))
@@ -246,8 +262,8 @@ def create_app(settings: Settings | None = None, agent: Agent | None = None, *,
         computer = ComputerService(ComputerStore(engine))
     app.state.computer = computer
 
-    def auth(creds: Annotated[HTTPAuthorizationCredentials | None, Depends(_bearer)]
-             ) -> ApiKey:
+    def auth(creds: Annotated[HTTPAuthorizationCredentials | None, Depends(_bearer)],
+             request: Request) -> ApiKey:
         token = creds.credentials if creds else ""
         key = settings.lookup(token)
         if key is None and demo is not None and token:
@@ -258,10 +274,68 @@ def create_app(settings: Settings | None = None, agent: Agent | None = None, *,
                                     headers={"WWW-Authenticate": "Bearer"}) from None
             if sess is not None:
                 key = ApiKey(sess.tenant_id, "owner", sess.digest, session=True)
+        if key is None and token and identity.config.mode == "stytch":
+            # Production: the console presents the identity provider's token,
+            # not a key. The person (and so the distributor) comes from our
+            # users row, matched by the verified subject; the row's role, not
+            # the token's claim, is what every permission check uses.
+            principal = _identity_call(lambda: identity.from_token(token))
+            request.state.principal = (key_digest(token), principal)
+            return ApiKey(principal.tenant_id, "owner", key_digest(token))
         if key is None:
             raise HTTPException(401, "a valid bearer key is required",
                                 headers={"WWW-Authenticate": "Bearer"})
         return key
+
+    def _identity_call(call: Any) -> Principal:
+        """Run one seam call, turning its refusal into the API's answer."""
+        try:
+            return call()  # type: ignore[no-any-return]
+        except ident_auth.AuthError as exc:
+            raise HTTPException(exc.status, exc.message) from None
+
+    def caller(request: Request, key: Annotated[ApiKey, Depends(auth)]) -> Principal:
+        """The seam (Phase 1 slice 1): this request's caller, resolved once.
+
+        Both ways in end here and in the same ``Principal``: ``X-Actor-Id`` in
+        development, the identity provider's token in production. With neither,
+        the distributor key itself is the caller (a service call, or the
+        console before sign-in), and its role is the key's."""
+        cached = getattr(request.state, "principal", None)
+        if cached is not None and cached[0] == key.digest:
+            return cached[1]  # type: ignore[no-any-return]
+        actor = (request.headers.get(ident_auth.DEV_ACTOR_HEADER) or "").strip()
+        if actor:
+            principal = _identity_call(lambda: identity.from_actor(key.tenant_id, actor))
+        else:
+            principal = identity.from_key(key.tenant_id, key.role)
+        request.state.principal = (key.digest, principal)
+        return principal
+
+    def scope_of(principal: Principal) -> Scope:
+        scope = principal.scope
+        return scope if isinstance(scope, Scope) else NONE
+
+    def subject_for(tenant: str, shop_id: str, *, money: bool = False) -> Subject:
+        """What an action on this shop touches, from the book's own ground."""
+        area, rep = (reads.shop_grounds(engine, tenant).get(shop_id, ("", ""))
+                     if shop_id else ("", ""))
+        return Subject(money=money, area=area, rep_id=rep)
+
+    def guard(principal: Principal, allowed: bool, message: str) -> None:
+        """A role refusal (403). An out-of-scope id is a 404 instead, elsewhere."""
+        if not allowed:
+            raise HTTPException(403, message)
+
+    def require_settings(principal: Annotated[Principal, Depends(caller)]) -> Principal:
+        guard(principal, ident.can_manage_settings(principal),
+              "only the owner changes this distributor's settings")
+        return principal
+
+    def require_members(principal: Annotated[Principal, Depends(caller)]) -> Principal:
+        guard(principal, ident.can_manage_members(principal),
+              "only the owner manages members")
+        return principal
 
     def visitor(request: Request, key: ApiKey | None = None) -> str:
         """The demo caller's address digest: the session's, else the request's."""
@@ -301,6 +375,11 @@ def create_app(settings: Settings | None = None, agent: Agent | None = None, *,
 
     Owner = Annotated[ApiKey, Depends(reader)]
     Any_ = Annotated[ApiKey, Depends(auth)]
+    # The person behind the call (Phase 1 slice 1). Every route that has to
+    # decide something takes this, never the key's role.
+    Caller = Annotated[Principal, Depends(caller)]
+    Admin = Annotated[Principal, Depends(require_settings)]
+    Members = Annotated[Principal, Depends(require_members)]
 
     @app.exception_handler(NotFound)
     async def _nf(_: Request, exc: NotFound) -> JSONResponse:
@@ -518,27 +597,57 @@ def create_app(settings: Settings | None = None, agent: Agent | None = None, *,
         return agent.stop_turn(key.tenant_id, turn_id)
 
     @app.get("/v1/shops", response_model=ShopList, responses=_ERRORS)
-    def get_shops(key: Owner) -> dict[str, Any]:
-        return reads.list_shops(engine, key.tenant_id)
+    def get_shops(key: Owner, whose: Caller) -> dict[str, Any]:
+        """Only the shops inside the caller's ground. An owner's ground is the
+        whole distributor; a supervisor's is their territories and reps."""
+        return reads.list_shops(engine, key.tenant_id, scope=scope_of(whose))
 
     @app.get("/v1/shops/{shop_id}", response_model=ShopDetail, responses=_ERRORS)
-    def get_shop(shop_id: str, key: Owner) -> dict[str, Any]:
-        return reads.get_shop(engine, key.tenant_id, shop_id)
+    def get_shop(shop_id: str, key: Owner, whose: Caller) -> dict[str, Any]:
+        """404, not 403, for a shop outside the caller's ground."""
+        return reads.get_shop(engine, key.tenant_id, shop_id, scope=scope_of(whose))
 
     @app.get("/v1/approvals", response_model=ApprovalList, responses=_ERRORS,
              summary="Approvals (pending by default)")
-    def get_approvals(key: Owner, status: Annotated[
+    def get_approvals(key: Owner, whose: Caller, status: Annotated[
             str, Query(pattern="^(pending|approved|rejected|superseded|withdrawn|all)$")] = "pending"
             ) -> dict[str, Any]:
-        return reads.list_approvals(engine, key.tenant_id, status=status)
+        return reads.list_approvals(engine, key.tenant_id, status=status,
+                                    scope=scope_of(whose))
+
+    def _decide_guard(key: ApiKey, principal: Principal, approval: dict[str, Any]) -> None:
+        """What this caller may do with this approval, before any decision runs.
+
+        A credit limit is the owner's call even when the limit arrives as an
+        approval. A money item needs ``can_approve_money``: an owner anywhere,
+        a supervisor for one of their own reps. Out of the caller's ground is a
+        404 (the id is not theirs to know); a role refusal is a 403."""
+        tool = str(approval.get("tool") or "")
+        kind = str(approval.get("intent_kind") or "")
+        shop_id = str(approval.get("shop_id") or "")
+        subject = subject_for(key.tenant_id, shop_id, money=ident.is_money(tool, kind))
+        # Scope first, everywhere: an id outside the caller's ground answers
+        # exactly as an id that does not exist.
+        if not ident.in_scope(principal, subject):
+            raise NotFound(shop_id or str(approval.get("approval_id") or ""))
+        if ident.is_credit_limit(tool, kind):
+            guard(principal, ident.can_change_credit_limit(principal),
+                  "a credit limit is the owner's call")
+            return
+        guard(principal, ident.can_approve_money(principal, subject),
+              "this approval is not yours to decide")
 
     def _decide(approval_id: str, key: ApiKey, body: DecisionIn | None, approve: bool,
-                wait: bool) -> dict[str, Any]:
+                wait: bool, whose: Principal) -> dict[str, Any]:
         b = body or DecisionIn(note="", by="owner", option=None)
+        _decide_guard(key, whose, agent.approval(key.tenant_id, approval_id))
+        # The decider is the person, not the key: the approval row records who
+        # decided, what they decided and the evidence it was decided on.
+        by = whose.user_id or b.by
         slow = sales.is_slow(engine, key.tenant_id, approval_id)
         if slow and approve:
             option = sales.check_option(engine, key.tenant_id, approval_id, b.option)
-            row, _ = agent.decide(key.tenant_id, approval_id, approve=True, by=b.by,
+            row, _ = agent.decide(key.tenant_id, approval_id, approve=True, by=by,
                                   note=b.note, demo_mode=settings.demo_mode)
             sales.on_approved(engine, key.tenant_id, approval_id, option)
             return {"approval": agent.approval(key.tenant_id, approval_id), "follow_up": None}
@@ -547,7 +656,7 @@ def create_app(settings: Settings | None = None, agent: Agent | None = None, *,
             if refuses_approval(a["tool"], a["intent_kind"]):
                 raise HTTPException(403, "the demo never raises a credit limit or the "
                                          "daily allowance; you can decline it")
-        row, follow = agent.decide(key.tenant_id, approval_id, approve=approve, by=b.by,
+        row, follow = agent.decide(key.tenant_id, approval_id, approve=approve, by=by,
                                    note=b.note, demo_mode=settings.demo_mode)
         if follow is not None and wait and not follow.finished:
             agent.process(follow.turn_id)
@@ -556,23 +665,25 @@ def create_app(settings: Settings | None = None, agent: Agent | None = None, *,
 
     @app.post("/v1/approvals/{approval_id}/approve", response_model=DecisionOut,
               responses=_ERRORS, summary="Owner approves: Mimi carries on (never moves money)")
-    def approve(approval_id: str, key: Owner, body: DecisionIn | None = None,
+    def approve(approval_id: str, key: Owner, whose: Caller, body: DecisionIn | None = None,
                 wait: bool = True) -> dict[str, Any]:
-        return _decide(approval_id, key, body, True, wait)
+        return _decide(approval_id, key, body, True, wait, whose)
 
     @app.post("/v1/approvals/{approval_id}/reject", response_model=DecisionOut,
               responses=_ERRORS, summary="Owner rejects: nothing is sent")
-    def reject(approval_id: str, key: Owner, body: DecisionIn | None = None,
+    def reject(approval_id: str, key: Owner, whose: Caller, body: DecisionIn | None = None,
                wait: bool = True) -> dict[str, Any]:
-        return _decide(approval_id, key, body, False, wait)
+        return _decide(approval_id, key, body, False, wait, whose)
 
     @app.post("/v1/approvals/{approval_id}/undo", response_model=DecisionOut,
               responses=_ERRORS, summary="Owner undoes an approved Zoho payment write "
                                          "(or a limit Credit suggested)")
-    def undo_approval(approval_id: str, key: Owner) -> dict[str, Any]:
+    def undo_approval(approval_id: str, key: Owner, whose: Caller) -> dict[str, Any]:
         """A ``zoho_payment`` approval: calls Zoho Books' delete path (a fake Zoho
         kept in the store in demo mode). A ``credit_over_limit`` approval: puts
         the old limit back. 409 for anything else or a second undo."""
+        guard(whose, ident.can_undo_write(whose),
+              "only the owner undoes something that was already recorded")
         if sales.is_slow(engine, key.tenant_id, approval_id):
             sales.undo(engine, key.tenant_id, approval_id)
         else:
@@ -581,16 +692,23 @@ def create_app(settings: Settings | None = None, agent: Agent | None = None, *,
 
     @app.post("/v1/credit/{shop_id}/limit", response_model=CreditLimitOut,
               responses=_ERRORS, summary="Owner sets a shop's credit limit (recorded, undoable)")
-    def post_credit_limit(shop_id: str, body: CreditLimitIn, key: Owner) -> dict[str, Any]:
+    def post_credit_limit(shop_id: str, body: CreditLimitIn, key: Owner,
+                          whose: Caller) -> dict[str, Any]:
         """Recorded as a ``limit_change`` step on the shop's thread. Mimi never
         sets a limit on its own: only the owner, here or by approving Credit's
-        suggestion."""
+        suggestion. A limit is the owner's call: no other role, ever."""
+        if not ident.in_scope(whose, subject_for(key.tenant_id, shop_id)):
+            raise NotFound(shop_id)  # out of the caller's ground: same as unknown
+        guard(whose, ident.can_change_credit_limit(whose),
+              "a credit limit is the owner's call: you cannot change it")
         return dw.set_limit(engine, key.tenant_id, shop_id, body.amount_ngn,
                             reason=body.reason)
 
     @app.post("/v1/credit/changes/{change_id}/undo", response_model=CreditLimitOut,
               responses=_ERRORS, summary="Owner undoes a credit-limit change")
-    def post_credit_undo(change_id: str, key: Owner) -> dict[str, Any]:
+    def post_credit_undo(change_id: str, key: Owner, whose: Caller) -> dict[str, Any]:
+        guard(whose, ident.can_change_credit_limit(whose),
+              "a credit limit is the owner's call: you cannot change it")
         return dw.undo_limit(engine, key.tenant_id, change_id)
 
     @app.get("/v1/credit", response_model=CreditOut, responses=_ERRORS,
@@ -654,7 +772,8 @@ def create_app(settings: Settings | None = None, agent: Agent | None = None, *,
 
     @app.put("/v1/returns/settings", response_model=ReturnSettingsOut, responses=_ERRORS,
              summary="Set what a collection trip costs (recorded)")
-    def put_return_settings(body: ReturnSettingsIn, key: Owner) -> dict[str, Any]:
+    def put_return_settings(body: ReturnSettingsIn, key: Owner,
+                            admin: Admin) -> dict[str, Any]:
         return returns.set_settings(engine, key.tenant_id, body.pickup_cost_kobo)
 
     @app.get("/v1/returns", response_model=ReturnList, responses=_ERRORS,
@@ -745,7 +864,7 @@ def create_app(settings: Settings | None = None, agent: Agent | None = None, *,
 
     @app.post("/v1/connectors/{toolkit}/connect", response_model=ConnectorConnectOut,
               responses=_ERRORS, summary="Start the connect flow for a toolkit")
-    def post_connector_connect(toolkit: str, key: Owner,
+    def post_connector_connect(toolkit: str, key: Owner, admin: Admin,
                                body: ConnectorConnectIn | None = None) -> dict[str, Any]:
         from mimi.connectors.env import ZOHO_REGIONS
 
@@ -828,7 +947,8 @@ def create_app(settings: Settings | None = None, agent: Agent | None = None, *,
 
     @app.delete("/v1/connectors/{connection_id}", responses=_ERRORS,
                 summary="Disconnect: revoke before the next sync")
-    def delete_connector(connection_id: str, key: Owner) -> dict[str, Any]:
+    def delete_connector(connection_id: str, key: Owner,
+                         admin: Admin) -> dict[str, Any]:
         with engine.connect() as conn:
             row = conn.execute(sa.select(s.connector_accounts).where(
                 s.connector_accounts.c.tenant_id == key.tenant_id,
@@ -852,7 +972,7 @@ def create_app(settings: Settings | None = None, agent: Agent | None = None, *,
 
     @app.put("/v1/policy", response_model=PolicyOut, responses=_ERRORS,
              summary="Change rules (owner key only; built-in stops stay locked)")
-    def put_policy(body: PolicyIn, key: Owner) -> dict[str, Any]:
+    def put_policy(body: PolicyIn, key: Owner, admin: Admin) -> dict[str, Any]:
         if settings.demo_mode or key.session:
             raise HTTPException(403, "the demo's rules are read-only")
         if not owner_rules_on():
@@ -889,7 +1009,8 @@ def create_app(settings: Settings | None = None, agent: Agent | None = None, *,
     @app.post("/v1/routines/{routine_id}/run", response_model=RoutineOut,
               responses=_ERRORS, response_model_exclude_none=True,
               summary="Run one routine now, once for today's Lagos day")
-    def post_routine_run(routine_id: str, key: Owner) -> dict[str, Any]:
+    def post_routine_run(routine_id: str, key: Owner,
+                         admin: Admin) -> dict[str, Any]:
         """Run one routine now, through the same path a tick uses: the same
         finding sentence, the same shop link, the same message and recording.
         The Lagos day's claim is the same too, so a second run today answers
@@ -906,7 +1027,7 @@ def create_app(settings: Settings | None = None, agent: Agent | None = None, *,
     @app.post("/v1/routines/{routine_id}/pause", response_model=RoutineToggleOut,
               responses=_ERRORS,
               summary="Pause one routine (or all): the row survives a restart")
-    def post_routine_pause(routine_id: str, key: Owner,
+    def post_routine_pause(routine_id: str, key: Owner, admin: Admin,
                            body: RoutinePauseIn | None = None) -> dict[str, Any]:
         """Pause on the Lagos schedule until resumed. The switch is a row in
         the store, so it survives a restart and needs no deploy. ``all`` (or
@@ -917,7 +1038,7 @@ def create_app(settings: Settings | None = None, agent: Agent | None = None, *,
     @app.post("/v1/routines/{routine_id}/resume", response_model=RoutineToggleOut,
               responses=_ERRORS,
               summary="Resume one routine (or all) from its next tick")
-    def post_routine_resume(routine_id: str, key: Owner,
+    def post_routine_resume(routine_id: str, key: Owner, admin: Admin,
                             body: RoutinePauseIn | None = None) -> dict[str, Any]:
         """Resume from the next tick. Resuming one routine while the kill
         switch is on answers ``paused: true`` with that reason: the kill
@@ -937,7 +1058,7 @@ def create_app(settings: Settings | None = None, agent: Agent | None = None, *,
     @app.post("/v1/computer/tasks", response_model=ComputerProposal, status_code=201,
               responses=_ERRORS, summary="Propose a task for the browser container")
     def post_computer_task(body: ComputerTaskIn, request: Request,
-                           key: Owner) -> dict[str, Any]:
+                           key: Owner, admin: Admin) -> dict[str, Any]:
         """Build the plan in code from the goal, the url and the approved
         domain, and return it for the owner to approve. Nothing runs yet and
         nothing is charged. The plan is what will run: it never holds a step
@@ -967,7 +1088,7 @@ def create_app(settings: Settings | None = None, agent: Agent | None = None, *,
     @app.post("/v1/computer/tasks/{task_id}/approve", response_model=ComputerTaskDetail,
               responses=_ERRORS, summary="Approve the plan once; it runs under the guardrails")
     def post_computer_approve(task_id: str, request: Request,
-                              key: Owner) -> dict[str, Any]:
+                              key: Owner, admin: Admin) -> dict[str, Any]:
         """The owner approves the whole task once. The run continues in the
         background; poll this task for its steps. Approving a paused task
         (a sign-in wall) runs the plan again in a fresh browser session: the
@@ -988,7 +1109,8 @@ def create_app(settings: Settings | None = None, agent: Agent | None = None, *,
 
     @app.post("/v1/computer/tasks/{task_id}/stop", response_model=ComputerTaskDetail,
               responses=_ERRORS, summary="Stop the task now, and record why")
-    def post_computer_stop(task_id: str, key: Owner) -> dict[str, Any]:
+    def post_computer_stop(task_id: str, key: Owner,
+                           admin: Admin) -> dict[str, Any]:
         """Accepts a task in any open state, including ``proposed``: that is how
         the owner discards a task they decided not to run. It is recorded
         ``stopped`` with ``stopped_by_owner``. A task that has already ended is
@@ -1036,14 +1158,98 @@ def create_app(settings: Settings | None = None, agent: Agent | None = None, *,
         return {"status": "ok"}
 
     @app.get("/v1/me", response_model=MeOut, responses=_ERRORS,
-             summary="The caller's distributor, role and mode")
-    def me(key: Any_, request: Request) -> dict[str, Any]:
+             summary="The caller: person, role, ground and channels")
+    def me(key: Any_, whose: Caller, request: Request) -> dict[str, Any]:
+        """Who is calling, what they may see, and what needs them.
+
+        ``user`` is null when the caller is only a distributor key (a service
+        call, or the console before sign-in). ``scopes.empty`` is true when the
+        caller's ground holds no shop at all: a supervisor with no territory, a
+        rep with no book row. That is a different answer from "this distributor
+        has no shops", which ``GET /v1/shops`` tells apart by its own total.
+        ``channels`` is empty until channels exist (slice 2)."""
         status = None
         if demo is not None:
             status = demo.status(demo.session(key.digest) if key.session else None,
                                  visitor(request, key), ip_source(request))
-        return {"tenant_id": key.tenant_id, "role": key.role, "mode": settings.mode,
-                "demo": status}
+        user = None
+        if whose.user_id:
+            user = {"user_id": whose.user_id, "role": whose.role, "name": whose.name,
+                    "status": whose.status, "email": whose.email or None,
+                    "phone": whose.phone or None, "last_seen_at": None}
+        return {"tenant_id": key.tenant_id, "role": whose.role, "mode": settings.mode,
+                "demo": status, "user": user, "scopes": scope_of(whose).to_dict(),
+                "channels": [], "source": whose.source}
+
+    # ------------------------------------------------------------- members
+    # An invite is a row: the owner adds the person here, and their first
+    # Stytch login links the Stytch id to it. Nothing is created just in time,
+    # because an uninvited phone number is how a stranger becomes a user.
+
+    def _member_dict(u: Any) -> dict[str, Any]:
+        return {"user_id": u.user_id, "role": u.role, "name": u.name, "status": u.status,
+                "email": u.email, "phone": u.phone_e164, "created_at": u.created_at,
+                "last_seen_at": u.last_seen_at, "created_by_user_id": u.created_by_user_id}
+
+    def _member_error(exc: identity_store.IdentityError) -> HTTPException:
+        """A conflict is 409 (the row exists); anything else is 422 (the input
+        cannot be right), each with the sentence the code wrote."""
+        if isinstance(exc, (identity_store.OwnerExists, identity_store.DuplicateUser)):
+            return HTTPException(409, str(exc))
+        return HTTPException(422, str(exc))
+
+    @app.get("/v1/users", response_model=MemberList, responses=_ERRORS,
+             summary="This distributor's people (owner only)")
+    def get_members(key: Owner, admin: Members) -> dict[str, Any]:
+        with engine.connect() as conn:
+            users = identity_store.list_users(conn, key.tenant_id)
+        return {"users": [_member_dict(u) for u in users], "total": len(users)}
+
+    @app.post("/v1/users", response_model=MemberOut, status_code=201, responses=_ERRORS,
+              summary="Add a person (owner only): an invite is this row")
+    def post_member(body: MemberIn, key: Owner, admin: Members) -> dict[str, Any]:
+        try:
+            with engine.begin() as conn:
+                user = identity_store.create_user(
+                    conn, key.tenant_id, role=body.role, name=body.name, email=body.email,
+                    phone=body.phone, status=body.status,
+                    created_by_user_id=admin.user_id or None)
+        except identity_store.IdentityError as exc:
+            raise _member_error(exc) from None
+        return _member_dict(user)
+
+    @app.patch("/v1/users/{user_id}", response_model=MemberOut, responses=_ERRORS,
+               summary="Change a person's role or status (owner only)")
+    def patch_member(user_id: str, body: MemberPatch, key: Owner,
+                     admin: Members) -> dict[str, Any]:
+        try:
+            with engine.begin() as conn:
+                if identity_store.get_user(conn, key.tenant_id, user_id) is None:
+                    raise NotFound(user_id)
+                if body.role is not None:
+                    identity_store.set_role(conn, key.tenant_id, user_id, body.role)
+                if body.status is not None:
+                    identity_store.set_status(conn, key.tenant_id, user_id, body.status)
+                user = identity_store.get_user(conn, key.tenant_id, user_id)
+        except identity_store.IdentityError as exc:
+            raise _member_error(exc) from None
+        assert user is not None
+        return _member_dict(user)
+
+    @app.put("/v1/users/{user_id}/territories", response_model=TerritoriesOut,
+             responses=_ERRORS,
+             summary="The areas a supervisor covers (owner only); stored normalised")
+    def put_territories(user_id: str, body: TerritoriesIn, key: Owner,
+                        admin: Members) -> dict[str, Any]:
+        try:
+            with engine.begin() as conn:
+                if identity_store.get_user(conn, key.tenant_id, user_id) is None:
+                    raise NotFound(user_id)
+                areas = identity_store.set_territories(conn, key.tenant_id, user_id,
+                                                       body.areas)
+        except identity_store.IdentityError as exc:
+            raise _member_error(exc) from None
+        return {"user_id": user_id, "areas": areas}
 
     def _demo_on() -> DemoStore:
         if demo is None:

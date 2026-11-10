@@ -2,6 +2,11 @@
 
 Figures are summed here in integer kobo; ``*_naira`` strings are made from
 them. An id that belongs to another distributor reads as not found.
+
+Since Phase 1 slice 1 a caller also has a *ground* (``mimi.identity.scopes``):
+the shops their territories and reps cover. A read that takes a ``scope``
+filters to it, and one handed a shop outside it answers not found, so an id
+cannot be probed. The rule itself lives in ``Scope``; these queries only ask.
 """
 
 from __future__ import annotations
@@ -19,6 +24,7 @@ from mimi.api.uploads import PREFIX as UPLOAD_PREFIX
 from mimi.flags import demo_wiring
 from mimi.harness import handoff as hx
 from mimi.harness.style import shop_text
+from mimi.identity.scopes import Scope
 from mimi.provenance import POLICY_VERSION, parse_witnesses, proof_word
 from mimi.store import schema as s
 from mimi.store.book import SqlGo
@@ -108,9 +114,25 @@ def _proof(row: Any) -> dict[str, str]:
             "proof_policy_version": row.proof_policy_version}
 
 
-def list_shops(engine: Engine, tenant: str) -> dict[str, Any]:
+def shop_grounds(engine: Engine, tenant: str) -> dict[str, tuple[str, str]]:
+    """(area, rep_id) for every shop of the distributor: what a scope needs."""
+    with engine.connect() as conn:
+        return _grounds(conn, tenant)
+
+
+def _grounds(conn: Any, tenant: str) -> dict[str, tuple[str, str]]:
+    return {r.shop_id: (str(r.area or ""), str(r.rep_id or "")) for r in conn.execute(
+        sa.select(s.shops.c.shop_id, s.shops.c.area, s.shops.c.rep_id)
+        .where(s.shops.c.tenant_id == tenant)).all()}
+
+
+def list_shops(engine: Engine, tenant: str, *, scope: Scope | None = None) -> dict[str, Any]:
     with engine.connect() as conn:
         rows = _shop_rows(conn, tenant)
+        if scope is not None:
+            grounds = _grounds(conn, tenant)
+            rows = [r for r in rows
+                    if scope.covers_shop(*grounds.get(r.shop_id, ("", "")))]
     book = owed.totals(SqlGo(engine).receivables(tenant, None)) if rows else owed.Owed()
     shops = [_shop_summary(r, book.shops.get(r.shop_id)) for r in rows]
     return {"shops": shops, "total": len(shops),
@@ -119,11 +141,17 @@ def list_shops(engine: Engine, tenant: str) -> dict[str, Any]:
             "overdue_total_naira": naira(book.overdue_kobo)}
 
 
-def get_shop(engine: Engine, tenant: str, shop_id: str) -> dict[str, Any]:
+def get_shop(engine: Engine, tenant: str, shop_id: str,
+             *, scope: Scope | None = None) -> dict[str, Any]:
     go = SqlGo(engine)
     with engine.connect() as conn:
         rows = _shop_rows(conn, tenant, shop_id)
         if not rows:
+            raise NotFound(shop_id)
+        if scope is not None and not scope.covers_shop(*_grounds(conn, tenant).get(
+                shop_id, ("", ""))):
+            # Out of the caller's ground: the same answer as an unknown id, so
+            # a supervisor cannot map ids they should not see.
             raise NotFound(shop_id)
         ds = conn.execute(sa.select(s.deliveries).where(
             s.deliveries.c.tenant_id == tenant, s.deliveries.c.shop_id == shop_id)
@@ -466,16 +494,23 @@ def list_activity(engine: Engine, tenant: str, *,
 # -------------------------------------------------------------- approvals
 
 
-def list_approvals(engine: Engine, tenant: str, *, status: str) -> dict[str, Any]:
+def list_approvals(engine: Engine, tenant: str, *, status: str,
+                   scope: Scope | None = None) -> dict[str, Any]:
     with engine.connect() as conn:
         q = sa.select(s.approvals).where(s.approvals.c.tenant_id == tenant)
         if status != "all":
             q = q.where(s.approvals.c.status == status)
         rows = conn.execute(q.order_by(s.approvals.c.created_ts.desc(),
                                        s.approvals.c.approval_id)).all()
+        grounds = _grounds(conn, tenant) if scope is not None else {}
         out = []
         names = display.names_for(conn, tenant)
         for a in rows:
+            # An approval about no shop is the distributor's own business (a
+            # daily allowance), not a supervisor's, so a scoped caller does not
+            # see it: covers_shop("", "") is false for every scoped ground.
+            if scope is not None and not scope.covers_shop(*grounds.get(a.shop_id, ("", ""))):
+                continue
             draft = conn.execute(sa.select(s.messages.c.text, s.messages.c.channel,
                                            s.messages.c.status).where(
                 s.messages.c.tenant_id == tenant,

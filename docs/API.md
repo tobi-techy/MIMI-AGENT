@@ -89,6 +89,12 @@ queue. Its default database is SQLite in `/data` (mount a volume); set
 | `MIMI_ENV` | `dev` | `production` turns on the start-up checks below |
 | `DATABASE_URL` (or `MIMI_DB_URL`) | `sqlite:///./mimi.db` | the store; `postgres://` is accepted |
 | `MIMI_API_KEYS` | none | `<tenant>:<role>:<key>`, comma separated; `<key>` may be `sha256:<hex>` |
+| `MIMI_AUTH_MODE` | `dev` | who may call as a person: `dev` (`X-Actor-Id`, development only) or `stytch` (a Stytch session JWT). Never both at once; see `docs/IDENTITY.md` |
+| `MIMI_DEV_ACTOR` | `1` | `0` turns the `X-Actor-Id` header off in `dev` mode |
+| `MIMI_STYTCH_JWKS_URL` | none | Stytch's key set; required when `MIMI_AUTH_MODE=stytch` |
+| `MIMI_STYTCH_ISSUER`, `MIMI_STYTCH_AUDIENCE` | none | checked when set |
+| `MIMI_STYTCH_LEEWAY_S` | 60 | clock leeway for `exp` / `nbf` |
+| `MIMI_STYTCH_JWKS_TTL_S` | 300 | how long a fetched key set is trusted; an unknown `kid` refreshes at once |
 | `MIMI_CORS_ORIGINS` | `https://console.userail.money` | extra allowed origins; `http://localhost:*` and `http://127.0.0.1:*` are always allowed |
 | `MIMI_TURN_WAIT_S` | 25 | how long `POST /v1/turns` waits before answering 202 |
 | `MIMI_WORKERS` | 1 | worker threads inside the API process (0 with separate workers) |
@@ -224,6 +230,22 @@ starts with `tenant_id`, so another distributor's shop, thread, turn or
 approval reads as 404. Keys are compared by SHA-256 in constant time; give
 `sha256:<hex>` to keep the plain key off the API host.
 
+A key is a distributor, not a person (Phase 1 slice 1). A **person** calls the
+API two ways, chosen by `MIMI_AUTH_MODE` and never both at once:
+
+* `MIMI_AUTH_MODE=dev` (development, the simulator, the tests):
+  `Authorization: Bearer <owner key>` plus `X-Actor-Id: <u_...>` names a row of
+  `users`. Production refuses this switch.
+* `MIMI_AUTH_MODE=stytch` (production): `Authorization: Bearer <Stytch session
+  JWT>`, verified against Stytch's JWKS. The role and the tenant come from the
+  `users` row the token's subject resolves to, never from a claim.
+
+The person's role decides what they may do (the matrix in
+[docs/IDENTITY.md](IDENTITY.md)); a shop outside their ground answers 404, and
+a role refusal inside it answers 403 with a sentence. A verified phone or email
+with no `users` row is refused, not provisioned: the owner invites people
+first.
+
 ## Endpoints
 
 | Method and path | Role | What |
@@ -269,7 +291,10 @@ approval reads as 404. Keys are compared by SHA-256 in constant time; give
 | `GET /v1/messages/{message_id}/voice` | any | The reply's voice note (RAI-290): its own text read aloud, made now and never stored (`audio/ogg`, or `audio/wav` from the offline speaker). 404 when the reply has no `voice` block |
 | `GET /v1/health` | none | Database, model mode (`live` or `offline`), queue depth, version |
 | `GET /` | none | Liveness for the platform probe: `{"status": "ok"}`, no database |
-| `GET /v1/me` | any | The caller's tenant, role and mode (`live` or `demo`); in demo, the session's expiry and today's spend against the caps |
+| `GET /v1/me` | any | The caller: tenant, role, mode (`live` or `demo`), `source` (`key`, `dev-actor` or `stytch`), the person (`user`: id, role, name, status, email, phone) and their ground (`scopes`: `all`, `empty`, `cover_by`, `areas`, `rep_ids`) and `channels` (empty until slice 2); in demo, the session's expiry and today's spend against the caps. See `docs/IDENTITY.md` |
+| `GET /v1/users`, `POST /v1/users` | owner | This distributor's people, and adding one: `{role, name, email?, phone?}` is the invite. `created_by_user_id` records who added them. 409 for a second owner or a duplicate phone/email, 422 for a row nobody could sign in as |
+| `PATCH /v1/users/{user_id}` | owner | `{role?, status?}`. The owner cannot be demoted or disabled (422) |
+| `PUT /v1/users/{user_id}/territories` | owner | `{areas: [...]}` for a supervisor, stored trimmed and casefolded; a non-supervisor is 422 |
 | `POST /v1/demo/sessions`, `POST /v1/demo/reset` | none, demo session | Demo mode only (404 in live mode) |
 | `POST /v1/media`, `GET /v1/messages/{message_id}/media` | owner (demo session) | Demo mode only: keep one console attachment for a turn, and read it back (404 in live mode) |
 

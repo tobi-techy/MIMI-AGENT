@@ -153,9 +153,12 @@ def test_poc_production_refuses_the_demo_keys(prod_env: None, keys: str) -> None
 
 def test_production_with_real_settings_still_starts(prod_env: None) -> None:
     from mimi.api.config import Settings, parse_keys
+    from mimi.identity.auth import AuthConfig
 
     Settings(env="production", keys=parse_keys("coral-lane:owner:" + "k" * 32),
-             has_model_key=True, database_url="postgresql://poc/db").check()
+             has_model_key=True, database_url="postgresql://poc/db",
+             auth=AuthConfig(mode="stytch", dev_actor=False,
+                             jwks_url="https://example.invalid/jwks.json")).check()
 
 
 def _makefile_api_env() -> str:
