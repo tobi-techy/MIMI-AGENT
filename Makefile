@@ -1,7 +1,7 @@
 PY ?= python
 
 .PHONY: week week-day week-soak credit-eval credit-eval-live credit-fixtures sim-credit e2e e2e-live e2e-postgres demo-check e2e-traced binding-eval binding-eval-live steer-eval steer-eval-live which-eval order-eval order-eval-live photo-route-eval photo-route-eval-live
-.PHONY: loop-safety-eval claims-eval denials-eval policy-eval review-pocs install test eval eval-live eval-fake voice-eval voice-eval-live voice-fixtures voice-values-eval voice-values-eval-live voice-values-fixtures proof-eval proof-eval-live proof-fixtures stock-backtest stock-eval stock-eval-live stock-eval-fake slow-eval sim-stock trace-stock sim sim-live sim-voice sim-voice-v2 sim-screens trace-smoke langfuse-setup langfuse-monitor langfuse-datasets proof-experiment voice-experiment receipts-experiment judge-calibration world-check lint typecheck secrets provenance migrate check harness-eval harness-eval-live trace-harness router-eval router-eval-live context-eval context-eval-live router-train trace-router api api-worker api-seed api-openapi api-openapi-check connectors-eval connectors-eval-live connectors-fixtures checkin-eval checkin-eval-live
+.PHONY: loop-safety-eval claims-eval denials-eval policy-eval review-pocs install test eval eval-live eval-fake voice-eval voice-eval-live voice-fixtures voice-values-eval voice-values-eval-live voice-values-fixtures proof-eval proof-eval-live proof-fixtures stock-backtest stock-eval stock-eval-live stock-eval-fake slow-eval sim-stock trace-stock sim sim-live sim-voice sim-voice-v2 sim-screens trace-smoke langfuse-setup langfuse-monitor langfuse-datasets proof-experiment voice-experiment receipts-experiment judge-calibration world-check lint typecheck secrets provenance migrate check harness-eval harness-eval-live trace-harness router-eval router-eval-live context-eval context-eval-live router-train trace-router api api-worker api-seed api-openapi api-openapi-check dev connectors-eval connectors-eval-live connectors-fixtures checkin-eval checkin-eval-live
 
 install:            ## editable install with dev tools
 	$(PY) -m pip install -e '.[dev,otel,langfuse]'
@@ -218,6 +218,13 @@ api: api-seed       ## the HTTP API on :8000 with one worker thread (offline mod
 
 api-worker:         ## an extra worker process for the API's turn queue (safe to kill)
 	@$(API_ENV) $(PY) -m mimi.api worker
+
+dev:                ## one command: migrate + seed, then the API on :8000 with a separate worker; Ctrl-C stops both
+	@$(API_ENV) MIMI_WORKERS=0 PY="$(PY)" sh -c ' \
+		$$PY -m mimi.api worker & w=$$!; \
+		trap "kill $$w 2>/dev/null" EXIT INT TERM; \
+		echo "Mimi API on http://127.0.0.1:$${PORT:-8000} (liveness GET /); worker pid $$w"; \
+		$$PY -m mimi.api serve --host 127.0.0.1 --port $${PORT:-8000}'
 
 policy-eval:        ## the owner's rulebook (RAI-323): every action x behaviour, built-in stops, loosening attempts
 	$(PY) -m mimi.harness.policy_eval

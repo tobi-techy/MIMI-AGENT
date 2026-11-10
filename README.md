@@ -3,6 +3,24 @@
 **Judges:** start with [`JUDGES.md`](JUDGES.md): the hosted demo, what is new
 in the hackathon window, the demo's caps and safety, and an offline run for N0.
 
+## Run it locally
+
+New here? Three commands on a clean machine (Python 3.11 or 3.12):
+
+```bash
+python -m venv .venv && source .venv/bin/activate
+make install          # editable install with the dev tools
+make dev              # migrate + seed a local database, then run the API and a worker
+```
+
+`make dev` seeds the synthetic Coral Lane world once and serves the API on
+`http://127.0.0.1:8000` (liveness at `GET /`), with the turn worker as a separate
+process so you see the real shape. It uses local demo keys and SQLite by default
+and nothing leaves the machine; Ctrl-C stops both. To run the API alone use
+`make api`; to run the whole offline CI suite use `make check`. Where the code
+lives is in [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md); how to work here is in
+[`CONTRIBUTING.md`](CONTRIBUTING.md).
+
 Mimi is a set of WhatsApp agents for FMCG distributors in Nigeria. A
 distributor's van drops goods at dozens of small shops a day, and most
 arguments about money start with "that is not what you delivered". Mimi sends
