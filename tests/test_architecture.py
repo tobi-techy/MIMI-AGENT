@@ -44,7 +44,7 @@ LEAVES = frozenset({
 DATA = frozenset({"store", "world", "models"})
 PACKAGES = frozenset({
     "api", "brand", "checkin", "computer", "connectors", "credit", "harness",
-    "models", "observe", "orders", "proof", "receipts", "returns", "runtime",
+    "identity", "models", "observe", "orders", "proof", "receipts", "returns", "runtime",
     "sim", "skills", "stock", "store", "voice", "world",
 })
 HTTP_FRAMEWORKS = frozenset({"fastapi", "flask", "django", "starlette", "uvicorn"})
@@ -64,6 +64,13 @@ class Rule:
 # Packages the harness integrates on purpose (brand tools, computer tasks) are
 # not in its forbidden set; the flows it must never reach for are.
 RULES: tuple[Rule, ...] = (
+    Rule(
+        name="identity-is-a-foundation-package",
+        sources=frozenset({"identity"}),
+        forbidden=(PACKAGES - {"identity", "types", "tz", "clock", "store"}) | {"<mimi>"},
+        hint="identity answers who a caller is and what they may do: it reads the "
+             "store and the clock, and never the API, the harness or a flow",
+    ),
     Rule(
         name="runtime-imports-nothing-above-it",
         sources=frozenset({"runtime"}),
