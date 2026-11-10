@@ -282,8 +282,10 @@ def check_policies() -> list[str]:
         if p.kind == "evidence" and p.days < 365:
             problems.append(f"{p.table}: evidence kept under a year")
     for required in ("messages", "proof_events"):
-        p = BY_TABLE.get(required)
-        if p is None or p.days < DISPUTE_EVIDENCE_DAYS:
+        # A separate name from the loop above: reusing ``p`` infers ``Policy``
+        # from the first loop and makes the ``None`` check unsatisfiable.
+        kept = BY_TABLE.get(required)
+        if kept is None or kept.days < DISPUTE_EVIDENCE_DAYS:
             problems.append(f"{required}: must be kept the six-year dispute window")
     return problems
 
