@@ -116,9 +116,14 @@ def main(argv: list[str] | None = None, *, exporter: TurnExporter | None = None)
         engine = sa.create_engine(args.db)
         store, inbox = SqlJobStore(engine), SqlShopInbox(engine)
         prefs = SqlVoicePrefs(engine)
+        import os
+
         from mimi.proof.ledger import SqlProofLedger
 
-        ledger = SqlProofLedger(engine)
+        # The simulator is single-tenant and explicit: one tenant's proofs
+        # in one ledger, so a sim run can never read another tenant's rows.
+        # Default is the seeded world tenant; override with MIMI_TENANT.
+        ledger = SqlProofLedger(engine, os.environ.get("MIMI_TENANT", "coral-lane"))
         if args.db.startswith("sqlite"):
             store.ensure_schema()
             inbox.ensure_schema()
