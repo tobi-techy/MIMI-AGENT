@@ -30,6 +30,10 @@ completes exactly once.
 from __future__ import annotations
 
 import hashlib
+import os
+import sys
+import threading
+from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any
 
@@ -51,6 +55,14 @@ RETRY_BASE_S = 1.0
 RETRY_MAX_S = 30.0
 POISON_NOTE = ("One message could not be handled: Mimi stopped working on it after it "
                "failed {n} times. Nothing was sent for it; it is parked for a look.")
+# One distributor may hold at most this many turns in flight across all worker
+# processes, so a burst from one tenant cannot occupy every worker. The cap is
+# transactionally enforced on Postgres and serialised per process on SQLite;
+# override with ``MIMI_TENANT_INFLIGHT``.
+DEFAULT_TENANT_INFLIGHT = 8
+# How many runnable rows one claim scan considers before ordering. Big enough
+# for a burst without reading the whole queue on every poll.
+CANDIDATE_LIMIT = 500
 
 
 class _Raced(RuntimeError):
@@ -59,6 +71,10 @@ class _Raced(RuntimeError):
 
 class LeaseLost(RuntimeError):
     """This worker no longer holds the turn. Stop without writing."""
+
+
+class NotDeadLettered(LookupError):
+    """A replay was asked for a turn that is not parked in the dead letter."""
 
 
 def turn_id_for(tenant_id: str, external_id: str) -> str:
@@ -81,10 +97,23 @@ class Claim:
 
 class TurnQueue:
     def __init__(self, engine: Engine, *, lease_s: float = 30.0,
-                 clock: Any = wall) -> None:
+                 clock: Any = wall, tenant_cap: int | None = None,
+                 on_event: Callable[[str, dict[str, Any]], None] | None = None) -> None:
         self.engine = engine
         self.lease_s = lease_s
         self.clock = clock
+        raw = tenant_cap if tenant_cap is not None else os.environ.get(
+            "MIMI_TENANT_INFLIGHT", "")
+        try:
+            self.tenant_cap = max(1, int(raw)) if str(raw).strip() else DEFAULT_TENANT_INFLIGHT
+        except ValueError:
+            self.tenant_cap = DEFAULT_TENANT_INFLIGHT
+        # A hook, not a metrics dependency: observe can pass a recorder and the
+        # queue stays importable without it. Events: claim, poison, replay.
+        self.on_event = on_event or (lambda _name, _fields: None)
+        # SQLite serialises writers within a process; take the lock before the
+        # cap count so two threads cannot both read "one slot left".
+        self._sqlite_lock = threading.Lock()
 
     # ------------------------------------------------------------- claim
 
@@ -111,8 +140,16 @@ class TurnQueue:
                     return None
                 q = q.where(s.turns.c.tenant_id == row.tenant_id,
                             s.turns.c.thread_id == row.thread_id)
-            candidates = conn.execute(q.limit(200)).all()
+            candidates = conn.execute(q.limit(CANDIDATE_LIMIT)).all()
+            # Best-effort fairness: a tenant already at its in-flight cap is
+            # skipped here; _claim_txn enforces the cap again under a lock, so
+            # a stale count can only cost an attempt, never exceed the cap.
+            held: dict[str, int] = {str(k): int(v) for k, v in conn.execute(
+                sa.select(s.turns.c.tenant_id, sa.func.count())
+                .where(s.turns.c.state == "leased", s.turns.c.lease_expires_ts >= now)
+                .group_by(s.turns.c.tenant_id)).all()}
             conn.rollback()
+        capped = {t for t, n in held.items() if int(n) >= self.tenant_cap}
         # A lapsed lease first (work already under way), then the owner, then
         # people, then systems and routines (RAI-272: the owner is handled
         # first); oldest first within each. A thread's oldest runnable turn
@@ -129,6 +166,8 @@ class TurnQueue:
             if key in seen:
                 continue  # the oldest runnable turn on a thread leads
             seen.add(key)
+            if c.tenant_id in capped:
+                continue  # this distributor already holds its share of workers
             got = self._try_claim(worker_id, c.turn_id, now)
             if got is not None:
                 return got
@@ -136,6 +175,9 @@ class TurnQueue:
 
     def _try_claim(self, worker_id: str, turn_id: str, now: float) -> Claim | None:
         try:
+            if self.engine.dialect.name == "sqlite":
+                with self._sqlite_lock:
+                    return self._claim_txn(worker_id, turn_id, now)
             return self._claim_txn(worker_id, turn_id, now)
         except _Raced:
             return None
@@ -158,6 +200,21 @@ class TurnQueue:
             if t.attempts >= MAX_CLAIMS:
                 self._poison(conn, t, now)
                 return None
+            # Per-tenant cap, enforced inside the transaction. On Postgres an
+            # advisory lock serialises every claim for this tenant (no tenant
+            # row needed, no deadlock with the turn lock); on SQLite the
+            # process lock in _try_claim does the same in-process and the CAS
+            # still protects the claim itself.
+            if pg:
+                conn.execute(sa.text("SELECT pg_advisory_xact_lock(hashtext(:t))"),
+                             {"t": t.tenant_id})
+            held = int(conn.execute(
+                sa.select(sa.func.count()).select_from(s.turns).where(
+                    s.turns.c.tenant_id == t.tenant_id,
+                    s.turns.c.state == "leased",
+                    s.turns.c.lease_expires_ts >= now)).scalar() or 0)
+            if held >= self.tenant_cap:
+                return None  # this distributor already holds its share of workers
             if pg and conn.execute(sa.select(s.threads.c.thread_id).where(
                     s.threads.c.tenant_id == t.tenant_id,
                     s.threads.c.thread_id == t.thread_id)
@@ -220,13 +277,16 @@ class TurnQueue:
             conn.execute(s.turn_attempts.insert().values(
                 turn_id=turn_id, worker_id=worker_id, takeover=takeover,
                 claimed_at=now_iso(now)))
-            return Claim(turn_id=turn_id, tenant_id=t.tenant_id, thread_id=t.thread_id,
-                         worker_id=worker_id, version=t.version + 1,
-                         attempts=t.attempts + 1, batch=tuple(batch),
-                         checkpoint=dict(loads(t.checkpoint, {})), takeover=takeover)
+            claim = Claim(turn_id=turn_id, tenant_id=t.tenant_id, thread_id=t.thread_id,
+                          worker_id=worker_id, version=t.version + 1,
+                          attempts=t.attempts + 1, batch=tuple(batch),
+                          checkpoint=dict(loads(t.checkpoint, {})), takeover=takeover)
+            self.on_event("claim", {"turn_id": turn_id, "tenant_id": t.tenant_id,
+                                    "worker_id": worker_id, "attempts": claim.attempts,
+                                    "takeover": takeover})
+            return claim
 
-    @staticmethod
-    def _poison(conn: sa.Connection, t: Any, now: float) -> None:
+    def _poison(self, conn: sa.Connection, t: Any, now: float) -> None:
         """Park a turn that keeps killing its worker, with one owner note."""
         conn.execute(s.turns.update().where(
             s.turns.c.turn_id == t.turn_id, s.turns.c.version == t.version)
@@ -241,6 +301,8 @@ class TurnQueue:
             "text": POISON_NOTE.format(n=t.attempts), "kind": "poison_note",
             "status": "ready", "idempotency_key": f"poison:{t.turn_id}", "simulated": False,
             "at": now_iso(now), "ts": now})
+        self.on_event("poison", {"turn_id": t.turn_id, "tenant_id": t.tenant_id,
+                                 "attempts": t.attempts})
 
     # ------------------------------------------------------------ leases
 
@@ -375,3 +437,141 @@ class TurnQueue:
         with self.engine.connect() as conn:
             return int(conn.execute(sa.select(sa.func.count()).select_from(s.turns).where(
                 s.turns.c.state.in_(("queued", "leased")))).scalar() or 0)
+
+    def probe(self) -> bool:
+        """Can this worker claim right now?
+
+        A health probe, not a claim: one round trip to the database and one
+        bounded read the claim itself uses. False means the worker cannot do
+        its job, whatever the queue depth says."""
+        now = self.clock()
+        try:
+            with self.engine.connect() as conn:
+                conn.execute(sa.text("SELECT 1"))
+                conn.execute(sa.select(s.turns.c.turn_id).where(sa.or_(
+                    sa.and_(s.turns.c.state == "queued",
+                            sa.or_(s.turns.c.lease_expires_ts.is_(None),
+                                   s.turns.c.lease_expires_ts < now)),
+                    sa.and_(s.turns.c.state == "leased",
+                            s.turns.c.lease_expires_ts < now))).limit(1)).first()
+            return True
+        except Exception:
+            return False
+
+    def stats(self) -> dict[str, Any]:
+        """Counts for health and for observe's counters, without a dependency."""
+        now = self.clock()
+        with self.engine.connect() as conn:
+            counts = {str(k): int(v) for k, v in conn.execute(
+                sa.select(s.turns.c.state, sa.func.count())
+                .group_by(s.turns.c.state)).all()}
+            oldest = conn.execute(sa.select(sa.func.min(s.turns.c.created_ts)).where(
+                s.turns.c.state == "queued")).scalar()
+            by_tenant = {str(k): int(v) for k, v in conn.execute(
+                sa.select(s.turns.c.tenant_id, sa.func.count())
+                .where(s.turns.c.state == "leased", s.turns.c.lease_expires_ts >= now)
+                .group_by(s.turns.c.tenant_id)).all()}
+        return {
+            "queued": counts.get("queued", 0),
+            "leased": counts.get("leased", 0),
+            "done": counts.get("done", 0),
+            "failed": counts.get("failed", 0),
+            "depth": counts.get("queued", 0) + counts.get("leased", 0),
+            "oldest_queued_ts": float(oldest) if oldest is not None else 0.0,
+            "inflight_by_tenant": by_tenant,
+            "tenant_cap": self.tenant_cap,
+        }
+
+    # --------------------------------------------------------- dead letter
+
+    def dead_letters(self, *, tenant_id: str = "", limit: int = 50) -> list[dict[str, Any]]:
+        """The parked turns a person can inspect before replaying one."""
+        q = sa.select(s.turns.c.turn_id, s.turns.c.tenant_id, s.turns.c.thread_id,
+                      s.turns.c.attempts, s.turns.c.status, s.turns.c.error,
+                      s.turns.c.finished_at).where(s.turns.c.state == "failed")
+        if tenant_id:
+            q = q.where(s.turns.c.tenant_id == tenant_id)
+        q = q.order_by(s.turns.c.finished_at.desc(), s.turns.c.turn_id).limit(max(1, limit))
+        with self.engine.connect() as conn:
+            return [dict(r._mapping) for r in conn.execute(q).all()]
+
+    def replay(self, turn_id: str) -> dict[str, Any]:
+        """Put one dead-lettered turn back in the queue, once, with a clean slate.
+
+        The turn is the same row and the same idempotency key, so replaying it
+        cannot double an effect: completion is still the one compare-and-set
+        and the checkpoint resumes the work. Attempts restart at zero so a
+        poison turn gets the bounded budget again."""
+        with self.engine.begin() as conn:
+            row = conn.execute(sa.select(s.turns).where(
+                s.turns.c.turn_id == turn_id).with_for_update()).first()
+            if row is None or row.state != "failed":
+                raise NotDeadLettered(turn_id)
+            res = conn.execute(s.turns.update().where(
+                s.turns.c.turn_id == turn_id, s.turns.c.state == "failed",
+                s.turns.c.version == row.version)
+                .values(state="queued", status="", error="", lease_owner=None,
+                        lease_expires_ts=None, finished_at=None, attempts=0,
+                        stop=False, version=row.version + 1))
+            if res.rowcount != 1:
+                raise NotDeadLettered(turn_id)
+        self.on_event("replay", {"turn_id": turn_id, "tenant_id": row.tenant_id,
+                                 "attempts": row.attempts})
+        return {"turn_id": turn_id, "tenant_id": row.tenant_id,
+                "state": "queued", "attempts": 0}
+
+
+def main(argv: list[str] | None = None) -> int:
+    """``python -m mimi.store queue list|replay|stats`` (one command a person runs).
+
+    ``list`` shows the dead letter: id, tenant, attempts and the error words.
+    ``replay --id`` queues one parked turn again (refusing anything that is
+    not parked), and ``stats --json`` prints the queue counts for an operator.
+    """
+    import argparse
+    import json
+
+    ap = argparse.ArgumentParser(prog="python -m mimi.store.queue")
+    sub = ap.add_subparsers(dest="cmd", required=True)
+    ls = sub.add_parser("list", help="inspect parked turns")
+    ls.add_argument("--tenant", default="")
+    ls.add_argument("--limit", type=int, default=50)
+    rp = sub.add_parser("replay", help="queue one parked turn again")
+    rp.add_argument("--id", required=True, dest="turn_id")
+    st = sub.add_parser("stats", help="queue counts as JSON")
+    for p in (ls, rp, st):
+        p.add_argument("--db", default="", help="SQLAlchemy URL (default: DATABASE_URL)")
+        p.add_argument("--json", action="store_true", help="machine-readable output")
+    args = ap.parse_args(argv)
+
+    from mimi.store.db import database_url, make_engine
+
+    engine = make_engine(args.db or database_url())
+    queue = TurnQueue(engine)
+    if args.cmd == "stats":
+        print(json.dumps(queue.stats(), indent=2, sort_keys=True))
+        return 0
+    if args.cmd == "list":
+        rows = queue.dead_letters(tenant_id=args.tenant, limit=args.limit)
+        if args.json:
+            print(json.dumps(rows, indent=2, sort_keys=True, default=str))
+            return 0
+        if not rows:
+            print("no parked turns")
+            return 0
+        for r in rows:
+            print(f"{r['turn_id']}  {r['tenant_id']}  attempts {r['attempts']}  "
+                  f"{r['status'] or 'failed'}  {r['error']}")
+        return 0
+    try:
+        row = queue.replay(args.turn_id)
+    except NotDeadLettered:
+        print(f"{args.turn_id} is not parked in the dead letter; nothing changed",
+              file=sys.stderr)
+        return 1
+    print(f"replayed {row['turn_id']}: queued again for {row['tenant_id']}")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
