@@ -20,6 +20,7 @@ from fastapi.testclient import TestClient
 from mimi.api.agent import Agent
 from mimi.api.app import create_app, openapi_json
 from mimi.api.config import ConfigError, Settings, key_digest, parse_keys
+from mimi.identity.auth import AuthConfig
 from mimi.harness.gateway import ModelTurn, ScriptedModel, say
 from mimi.harness.router_eval import OWNER_PHONE
 from mimi.store import ensure_schema, make_engine, seed_world
@@ -448,8 +449,12 @@ def test_zero_cross_tenant_leaks(env: dict[str, Any]) -> None:
 
 def test_production_refuses_to_start_unsafe(monkeypatch: pytest.MonkeyPatch) -> None:
     keys = parse_keys(f"{A}:owner:{KEYS['a_owner']}")
+    # Phase 1 slice 1: a production API authenticates people with the identity
+    # provider, so a safe production Settings carries that seam.
+    stytch = AuthConfig(mode="stytch", dev_actor=False,
+                        jwks_url="https://stytch.example.test/keys")
     prod = Settings(env="production", keys=keys, has_model_key=True,
-                    database_url="postgresql://x/y")
+                    database_url="postgresql://x/y", auth=stytch)
     monkeypatch.delenv("MIMI_PHONE_PSEUDONYM_KEY", raising=False)
     monkeypatch.setenv("MIMI_ENV", "production")
     with pytest.raises(RuntimeError, match="MIMI_PHONE_PSEUDONYM_KEY"):
@@ -462,6 +467,14 @@ def test_production_refuses_to_start_unsafe(monkeypatch: pytest.MonkeyPatch) -> 
     with pytest.raises(ConfigError, match="DATABASE_URL"):
         Settings(env="production", keys=keys, has_model_key=True,
                  database_url="sqlite:///x.db").check()
+    with pytest.raises(ConfigError, match="MIMI_AUTH_MODE"):
+        Settings(env="production", keys=keys, has_model_key=True,
+                 database_url="postgresql://x").check()
+    with pytest.raises(ConfigError, match="dev actor header"):
+        Settings(env="production", keys=keys, has_model_key=True,
+                 database_url="postgresql://x",
+                 auth=AuthConfig(mode="stytch", dev_actor=True,
+                                 jwks_url="https://stytch.example.test/keys")).check()
     prod.check()  # all set: starts
 
 

@@ -937,11 +937,106 @@ class DemoStatus(_Out):
     paused: bool
 
 
+class MeUser(_Out):
+    """The person behind the call (``users``), when one has been resolved.
+
+    A distributor bearer key with no actor has no user: the console key before
+    sign-in, or a service call. The role is always the row's, never a token
+    claim."""
+
+    user_id: str
+    role: str
+    name: str
+    status: str
+    email: str | None = None
+    phone: str | None = None
+    last_seen_at: str | None = None
+
+
+class MeScope(_Out):
+    """The caller's ground: every shop, or the areas and reps they cover.
+
+    ``empty`` is true when the caller may see no shop at all (a supervisor
+    with no territory, a rep with no book row). That is a different answer
+    from "no shops exist yet", so the console can say which."""
+
+    all: bool
+    empty: bool
+    cover_by: str = "area"
+    areas: list[str]
+    rep_ids: list[str]
+
+
+class MeChannel(_Out):
+    """A channel the caller is in. Empty until channels exist (slice 2)."""
+
+    channel_id: str
+    slug: str
+    name: str
+    unread: int = 0
+    open_items: int = 0
+
+
 class MeOut(_Out):
     tenant_id: str
     role: str
     mode: Literal["live", "demo"]
     demo: DemoStatus | None
+    user: MeUser | None = None
+    scopes: MeScope | None = None
+    channels: list[MeChannel] = Field(default_factory=list)
+    # "key" (a distributor key with no person), "dev-actor" or "stytch".
+    source: str = "key"
+
+
+# ------------------------------------------------------------- members
+MemberRole = Literal["owner", "supervisor", "rep", "brand_viewer"]
+MemberStatus = Literal["invited", "active", "disabled"]
+
+
+class MemberIn(_Out):
+    """A person the owner adds. An invite is this row: the person's first
+    Stytch login links their Stytch id to it (docs/IDENTITY.md)."""
+
+    role: MemberRole
+    name: str = Field(min_length=1, max_length=200)
+    email: str | None = Field(default=None, max_length=320)
+    phone: str | None = Field(default=None, max_length=32)
+    status: MemberStatus = "invited"
+
+
+class MemberPatch(_Out):
+    role: MemberRole | None = None
+    status: MemberStatus | None = None
+
+
+class MemberOut(_Out):
+    user_id: str
+    role: str
+    name: str
+    status: str
+    email: str | None = None
+    phone: str | None = None
+    created_at: str = ""
+    last_seen_at: str | None = None
+    created_by_user_id: str | None = None
+
+
+class MemberList(_Out):
+    users: list[MemberOut]
+    total: int
+
+
+class TerritoriesIn(_Out):
+    """The areas a supervisor covers, as the book spells them (``shops.area``).
+    Stored trimmed and casefolded, so case and spacing never matter."""
+
+    areas: list[str] = Field(default_factory=list, max_length=200)
+
+
+class TerritoriesOut(_Out):
+    user_id: str
+    areas: list[str]
 
 
 class DemoCaps(_Out):

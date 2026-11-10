@@ -16,7 +16,7 @@ from __future__ import annotations
 
 import sqlalchemy as sa
 
-metadata = sa.MetaData()
+metadata: sa.MetaData = sa.MetaData()
 
 
 def _tenant() -> sa.Column[str]:
@@ -1040,3 +1040,8 @@ AGENT_TABLES = (threads, inbound_messages, turns, turn_attempts, messages, threa
                 prefixes, artifacts, compactions, computer_tasks, computer_steps,
                 computer_artifacts, returns, return_lines, return_events, credit_notes,
                 returns_settings, routine_state, routine_runs)
+
+# Identity (Phase 1 slice 1): the distributor's people and the areas they
+# cover. Imported last, for its side effect, so every module keeps defining
+# its tables on this one ``metadata`` (alembic ``0021_identity``).
+from mimi.store.schema_identity import IDENTITY_TABLES, user_territories, users  # noqa: E402,F401

@@ -38,7 +38,7 @@ def delete_tenant(conn: sa.Connection, tid: str) -> None:
               s.asked_once, s.kill_switches, s.history, s.prefixes, s.artifacts,
               s.thread_inbox, s.checkin_weeks, s.checkin_shops, s.returns,
               s.return_lines, s.return_events, s.credit_notes, s.returns_settings,
-              s.routine_state, s.routine_runs):
+              s.routine_state, s.routine_runs, *s.IDENTITY_TABLES):
         conn.execute(t.delete().where(t.c.tenant_id == tid))
     conn.execute(s.stock_counts.delete().where(s.stock_counts.c.tenant_id == tid))
     ids = sa.select(s.turns.c.turn_id).where(s.turns.c.tenant_id == tid)
@@ -154,7 +154,40 @@ def seed_world(engine: Engine, world: World, *, tenant_id: str | None = None,
             "tenant_id": tid, "thread_id": f"{tid}:owner", "kind": "owner", "shop_id": "",
             "state": "{}", "summary": "", "claim_seq": 0, "last_at": now_iso(ts),
             "last_ts": ts, "created_at": now_iso(ts)}])
+        counts.update(_seed_identity(conn, tid, world, owner_phones[0]))
     return counts
+
+
+# Who the synthetic distributor's supervisors are, one per rep beat, so the
+# demo can show a supervisor seeing only their own territory. Names, numbers
+# and addresses are fictional (``mimi/world``).
+SUPERVISOR_NAMES = ("Yemi Ogunleye", "Ngozi Eze", "Sadiq Bello", "Amara Obi")
+
+
+def _seed_identity(conn: sa.Connection, tid: str, world: World,
+                   owner_phone: str) -> dict[str, int]:
+    """The people behind the book (Phase 1 slice 1).
+
+    ``users`` is the domain model the console signs in against: one owner (the
+    bootstrap row, which names no creator), one rep per ``reps`` row (matched
+    by phone, so their scope is their beat) and one supervisor per rep beat
+    whose territories are that beat's areas. The supervisor rows are what makes
+    territory scoping demonstrable instead of theoretical."""
+    from mimi.identity import store as ident
+
+    owner = ident.ensure_owner(conn, tid, phone=owner_phone, name="Coral Lane Owner")
+    users = 1
+    for i, rep in enumerate(world.reps):
+        ident.create_user(conn, tid, role="rep", name=rep.name, phone=rep.phone,
+                          status="active", created_by_user_id=owner.user_id)
+        users += 1
+        sup = ident.create_user(
+            conn, tid, role="supervisor", name=SUPERVISOR_NAMES[i % len(SUPERVISOR_NAMES)],
+            phone=f"+234000000{10 + i:04d}", email=f"supervisor{i + 1}@coral-lane.example",
+            status="active", created_by_user_id=owner.user_id)
+        users += 1
+        ident.set_territories(conn, tid, sup.user_id, list(rep.areas))
+    return {"users": users, "user_territories": sum(len(r.areas) for r in world.reps)}
 
 
 def _expiry_cols(world: World, e: LineExpiry | None) -> dict[str, Any]:
