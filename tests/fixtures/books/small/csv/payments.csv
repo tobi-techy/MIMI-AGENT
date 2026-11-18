@@ -1,0 +1,4 @@
+payment_id,shop_id,delivery_id,paid_on,amount_naira,method,reference
+pay-0001,shop-001,dlv-0001,2026-10-08,15000.00,transfer,TRF-88410
+pay-0002,shop-002,dlv-0002,2026-10-13,20000.00,transfer,TRF-88512
+pay-0003,shop-001,,2026-10-20,5000.00,cash_to_rep,

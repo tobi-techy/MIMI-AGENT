@@ -55,7 +55,12 @@ live grant every read. `sync.py` pulls rows into `stock_counts` with
   `EMAIL_*` / `REMIND_*` (they message shops).
 * CSV/Excel (`csv/`, in-house, standard library `csv`; Excel needs
   `openpyxl`): parsed server side; bad files (empty, wrong format,
-  10k+ rows) fail with a plain message.
+  10k+ rows) fail with a plain message. The grid readers there are shared
+  with the book import (`book/`, `docs/BOOK-IMPORT.md`), which writes a
+  distributor's own shops, reps, SKUs, deliveries, receivables and payments
+  into the store: dry run first, idempotent by the distributor's ids,
+  provenance on every row, and every row it will not accept listed with its
+  reason.
 * Mono (`mono/`, stub only): same interface and a fake; the direct
   connector lands later. Terminal and wallet providers stay on forwarded
   alerts and exported reports.
