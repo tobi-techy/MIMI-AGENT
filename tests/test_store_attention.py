@@ -10,16 +10,19 @@ from __future__ import annotations
 
 import csv
 import json
-from datetime import date
+from datetime import date, datetime
 from pathlib import Path
 from typing import Any
 
 import pytest
 import sqlalchemy as sa
 
+from mimi import clock
 from mimi.connectors.book import import_book
-from mimi.store.attention import attention, main, render
+from mimi.store import schema as s
+from mimi.store.attention import attention, main, render, today
 from mimi.store.db import ensure_schema, make_engine
+from mimi.tz import LAGOS
 
 FIXTURES = Path(__file__).parent / "fixtures" / "books" / "small" / "csv"
 TENANT = "sunline-dist"
@@ -129,6 +132,39 @@ def test_a_shop_inside_its_cycle_is_not_listed(tmp_path: Path) -> None:
         "shop-001", "shop-002"}
 
 
+def test_the_default_day_is_the_books_own_day(tmp_path: Path) -> None:
+    """An imported book cut off on 27 Oct is counted from 27 Oct, not from the
+    machine's calendar: otherwise this list and every other surface measure the
+    same book from two different days."""
+    db = engine(tmp_path)
+    import_book(db, FIXTURES, tenant_id=TENANT)
+
+    default = attention(db, TENANT)
+
+    assert default == attention(db, TENANT, BOOK_DAY)
+    [row] = default
+    assert row.days_since_last_delivery == 11
+    assert today() != BOOK_DAY
+
+
+def test_a_book_that_names_no_day_falls_back_to_the_lagos_clock(tmp_path: Path) -> None:
+    db = engine(tmp_path)
+    import_book(db, FIXTURES, tenant_id=TENANT)
+    with db.begin() as conn:
+        conn.execute(sa.update(s.tenants).values(live_date=""))
+    pinned = datetime(2026, 12, 1, 9, 0, tzinfo=LAGOS).timestamp()
+    previous = clock.set_source(lambda: pinned)
+    try:
+        rows = attention(db, TENANT)
+    finally:
+        clock.set_source(previous)
+    # shop-001 was last delivered on 16 Oct, so 1 Dec on its 7 day rhythm is 46
+    # days and 6 cycles, which is not what the book's own day would say.
+    [row] = [r for r in rows if r.shop_id == "shop-001"]
+    assert row.days_since_last_delivery == 46
+    assert row.cycles_missed == 6
+
+
 # ------------------------------------------------------- the order that matters
 
 
@@ -236,6 +272,53 @@ def test_an_interval_hole_still_reports_the_days_it_cannot_rank(tmp_path: Path) 
     assert row.cycles_missed is None
 
 
+def test_a_delivery_after_the_day_counted_is_a_hole_and_not_an_absence(tmp_path: Path) -> None:
+    """Counting an imported book from an earlier day than its newest delivery:
+    that delivery has not happened as of the day, so there is nothing to measure
+    from. The shop is a hole for that day, never a missing row, and the line
+    must not claim the book has no delivery for it."""
+    book = write_book(
+        tmp_path,
+        shops=[shop("shop-004", "Delivered Later", "7"), shop("shop-005", "Nothing Yet", "7")],
+        deliveries=[delivery("dlv-1001", "shop-004", "2026-11-05")],
+        lines=[line("dlv-1001")])
+    db = engine(tmp_path)
+    import_book(db, book, tenant_id=TENANT)
+
+    rows = attention(db, TENANT, BOOK_DAY)
+
+    assert [r.shop_id for r in rows] == ["shop-004", "shop-005"]
+    later, nothing = rows
+    for row in rows:
+        assert (row.kind, row.cycles_missed, row.days_since_last_delivery) == (
+            "unknown", None, None)
+    text = render(rows, BOOK_DAY)
+    assert text.count("nothing delivered by this day") == 2
+    assert "no delivery on record" not in text
+
+
+def test_days_read_in_the_singular_and_the_plural(tmp_path: Path) -> None:
+    """A shop with no rhythm but a delivery on record is the one hole that still
+    knows its days, so it is what shows the wording: today, one day, two days."""
+    book = write_book(
+        tmp_path,
+        shops=[shop("shop-004", "Today Shop", "0"), shop("shop-005", "One Day Shop", "0"),
+               shop("shop-006", "Two Day Shop", "0")],
+        deliveries=[delivery("dlv-1001", "shop-004", "2026-10-27"),
+                    delivery("dlv-1002", "shop-005", "2026-10-26"),
+                    delivery("dlv-1003", "shop-006", "2026-10-25")],
+        lines=[line("dlv-1001"), line("dlv-1002"), line("dlv-1003")])
+    db = engine(tmp_path)
+    import_book(db, book, tenant_id=TENANT)
+
+    text = render(attention(db, TENANT, BOOK_DAY), BOOK_DAY)
+
+    assert "delivered today" in text
+    assert "nothing in 1 day," in text
+    assert "nothing in 2 days," in text
+    assert "1 days" not in text
+
+
 # -------------------------------------------------------------------- the limit
 
 
@@ -273,12 +356,18 @@ def test_the_operator_runs_one_command(tmp_path: Path, capsys: pytest.CaptureFix
     url = f"sqlite:///{tmp_path / 'book.db'}"
 
     assert main(["--tenant-id", TENANT, "--db", url, "--day", "2026-10-27"]) == 0
-    assert capsys.readouterr().out == (
+    listed = capsys.readouterr().out
+    assert listed == (
         "1 shop needs attention today (27 Oct 2026).\n"
         "\n"
         "Past their own restock cycle, most cycles missed first:\n"
         "  Mama Tope Stores, Ikeja, rep-01: restocks every 7 days, nothing in 11 days, "
         "1 cycle missed, ₦82,202.50 outstanding, ₦43,002.50 of it overdue.\n")
+
+    # Without --day the command counts from the book's own day, so it prints the
+    # same list rather than one measured from the machine's calendar.
+    assert main(["--tenant-id", TENANT, "--db", url]) == 0
+    assert capsys.readouterr().out == listed
 
     assert main(["--tenant-id", TENANT, "--db", url, "--day", "2026-10-27", "--json"]) == 0
     printed = json.loads(capsys.readouterr().out)

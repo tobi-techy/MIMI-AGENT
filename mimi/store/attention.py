@@ -10,15 +10,17 @@ Two rules are what make the order believable:
   shop, so nine days is four missed cycles for a two-day shop and one for a
   weekly shop, and the two-day shop is the emergency. Days are not comparable
   across shops; cycles are. Outstanding kobo breaks a tie and never starts a row.
-* **A hole is not a zero.** A shop with no delivery on record, or no restock
-  interval in the book, cannot be ranked at all and must not sink to the bottom
-  as though it were calm. Those rows are ``unknown``: they sort above every
-  measured row and carry no cycles number, because there is no interval to
-  divide by (``plans/mimi-mvp/rep-surface-contract.md``, the exception zone).
+* **A hole is not a zero.** A shop with nothing delivered on or before the day,
+  or no restock interval in the book, cannot be ranked at all and must not sink
+  to the bottom as though it were calm. Those rows are ``unknown``: they sort
+  above every measured row and carry no cycles number, because there is nothing
+  to divide by (``plans/mimi-mvp/rep-surface-contract.md``, the exception zone).
 
 Money is integer kobo, summed here from ``receivables``; no figure is read from
-a file total. Days come from the one wall clock (``mimi.clock``) on the Lagos
-calendar day (``mimi.tz``).
+a file total. The day is the book's own (``tenants.live_date``), the same day
+every other surface reads, so an imported book counted on its export day agrees
+with the shop page; ``mimi.clock`` on the Lagos calendar (``mimi.tz``) only
+answers when the book names no day at all.
 """
 
 from __future__ import annotations
@@ -73,33 +75,40 @@ class AttentionRow(BaseModel):
 
 
 def today() -> date:
-    """The day the list counts from: today on the Lagos clock."""
+    """Today on the Lagos clock. Only for a book that names no day of its own."""
     return datetime.fromtimestamp(wall(), LAGOS).date()
 
 
 def attention(engine: Engine, tenant_id: str, day: date | None = None) -> list[AttentionRow]:
-    """Every shop that needs a call on ``day``, unknown rows first (default: today).
+    """Every shop that needs a call on ``day``, unknown rows first.
 
-    A shop is listed when it has missed at least one restock cycle, or when the
-    book cannot say how far past it is. A shop inside its cycle is not an
-    exception and is left out.
+    ``day`` defaults to the book's own day (``tenants.live_date``), which is the
+    day every other surface counts overdue from: an imported book read without
+    an argument then agrees with the shop page instead of measuring from the
+    machine's calendar. A shop is listed when it has missed at least one restock
+    cycle, or when the book cannot say how far past it is; a shop inside its
+    cycle is not an exception and is left out.
     """
-    counted_on = today() if day is None else day
-    ordinal = counted_on.toordinal()
     with engine.connect() as conn:
+        live_date = conn.execute(sa.select(s.tenants.c.live_date).where(
+            s.tenants.c.tenant_id == tenant_id)).scalar()
+        if live_date is None:
+            return []
+        counted_on = day if day is not None else _book_day(str(live_date))
+        ordinal = counted_on.toordinal()
         shops = conn.execute(sa.select(
             s.shops.c.shop_id, s.shops.c.name, s.shops.c.area, s.shops.c.rep_id,
             s.shops.c.restock_days, s.shops.c.credit_limit_kobo).where(
             s.shops.c.tenant_id == tenant_id).order_by(s.shops.c.shop_id)).all()
         if not shops:
             return []
-        # Deliveries after the run day are not a visit yet: a book imported with
-        # a later date must not read as having delivered before it happened.
+        # The newest delivery in the book whatever its date, so a delivery dated
+        # after the day being counted is a fact about the shop rather than a
+        # shop that looks like it has none.
         last = {r.shop_id: int(r.last_day or 0) for r in conn.execute(
             sa.select(s.deliveries.c.shop_id,
                       sa.func.max(s.deliveries.c.day).label("last_day")).where(
-                s.deliveries.c.tenant_id == tenant_id,
-                s.deliveries.c.day <= ordinal).group_by(s.deliveries.c.shop_id))}
+                s.deliveries.c.tenant_id == tenant_id).group_by(s.deliveries.c.shop_id))}
         money = {r.shop_id: (int(r.outstanding or 0), int(r.overdue or 0))
                  for r in conn.execute(sa.select(
                      s.receivables.c.shop_id,
@@ -117,7 +126,11 @@ def attention(engine: Engine, tenant_id: str, day: date | None = None) -> list[A
         rhythm = int(shop.restock_days or 0)
         restock = rhythm if rhythm > 0 else None
         delivered = last.get(shop.shop_id)
-        days = None if delivered is None else max(0, ordinal - delivered)
+        # A delivery dated after the day being counted has not happened as of
+        # that day, so the days since cannot be measured from it. The shop is a
+        # hole for this day (unknown, no cycles) rather than calm or absent: an
+        # as-of view of a book cannot claim to know a delivery it has not seen.
+        days = None if delivered is None or delivered > ordinal else ordinal - delivered
         position = int(shop.credit_limit_kobo) - outstanding
         cycles = days // restock if (days is not None and restock) else None
         if cycles is not None and cycles < 1:
@@ -133,6 +146,11 @@ def attention(engine: Engine, tenant_id: str, day: date | None = None) -> list[A
     rows.sort(key=lambda r: (r.kind != "unknown", -(r.cycles_missed or 0),
                              -r.outstanding_kobo, r.shop_id))
     return rows
+
+
+def _book_day(live_date: str) -> date:
+    """The book's own day, or today when the book names none."""
+    return date.fromisoformat(live_date) if live_date else today()
 
 
 def render(rows: list[AttentionRow], day: date) -> str:
@@ -164,17 +182,18 @@ def render(rows: list[AttentionRow], day: date) -> str:
 def _line(row: AttentionRow) -> str:
     who = ", ".join(p for p in (row.shop_name, row.area, row.rep_id) if p)
     parts: list[str] = []
-    if row.kind == "unknown" and row.days_since_last_delivery is None:
-        parts.append("no delivery on record")
+    if row.days_since_last_delivery is None:
+        # Either nothing on record or only a delivery dated after this day: the
+        # line says what is true of the day being counted, never "no delivery"
+        # for a shop the book has one for.
+        parts.append("nothing delivered by this day")
     elif row.restock_days is None:
         parts.append("no restock interval in the book")
-        if row.days_since_last_delivery is not None:
-            parts.append(_days(row.days_since_last_delivery))
+        parts.append(_days(row.days_since_last_delivery))
     else:
         every = "every day" if row.restock_days == 1 else f"every {row.restock_days} days"
         parts.append(f"restocks {every}")
-        if row.days_since_last_delivery is not None:
-            parts.append(_days(row.days_since_last_delivery))
+        parts.append(_days(row.days_since_last_delivery))
         if row.cycles_missed is not None:
             one = row.cycles_missed == 1
             parts.append(f"{row.cycles_missed} cycle{'s' if not one else ''} missed")
@@ -189,7 +208,9 @@ def _line(row: AttentionRow) -> str:
 
 
 def _days(days: int) -> str:
-    return "delivered today" if days == 0 else f"nothing in {days} days"
+    if days == 0:
+        return "delivered today"
+    return f"nothing in {days} day" if days == 1 else f"nothing in {days} days"
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -200,24 +221,25 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--tenant-id", required=True, help="the distributor's tenant id")
     ap.add_argument("--db", default="", help="SQLAlchemy URL (default: DATABASE_URL)")
     ap.add_argument("--day", default="",
-                    help="the day to count from, ISO (default: today in Lagos; use it "
-                         "for a book exported on an earlier day)")
+                    help="the day to count from, ISO (default: the book's own day, "
+                         "tenants.live_date; use it to count a book from another day)")
     ap.add_argument("--json", action="store_true", help="print the typed rows")
     args = ap.parse_args(argv)
     try:
-        day = date.fromisoformat(args.day) if args.day else today()
+        asked = date.fromisoformat(args.day) if args.day else None
     except ValueError:
         print(f"--day {args.day!r} is not an ISO date (2026-10-27)", file=sys.stderr)
         return 2
     engine = make_engine(args.db or database_url())
     with engine.connect() as conn:
-        known = conn.execute(sa.select(s.tenants.c.tenant_id).where(
+        live_date = conn.execute(sa.select(s.tenants.c.live_date).where(
             s.tenants.c.tenant_id == args.tenant_id)).scalar()
-    if known is None:
+    if live_date is None:
         # An empty book is an empty list, but a mistyped tenant id must not read
         # as one: the operator would believe the book is calm.
         print(f"no tenant {args.tenant_id!r} in this book", file=sys.stderr)
         return 2
+    day = asked if asked is not None else _book_day(str(live_date))
     rows = attention(engine, args.tenant_id, day)
     if args.json:
         print(json.dumps([r.model_dump() for r in rows], indent=2))

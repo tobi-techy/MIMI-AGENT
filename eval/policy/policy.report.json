@@ -770,6 +770,38 @@
    "bypass": false
   },
   {
+   "group": "matrix",
+   "case": "plan.review_denied=act",
+   "ok": true,
+   "want": "refused; stays approve",
+   "got": "approve/ask/default",
+   "bypass": false
+  },
+  {
+   "group": "matrix",
+   "case": "plan.review_denied=act_if_preapproved",
+   "ok": true,
+   "want": "refused; stays approve",
+   "got": "approve/ask/default",
+   "bypass": false
+  },
+  {
+   "group": "matrix",
+   "case": "plan.review_denied=ask",
+   "ok": true,
+   "want": "approve",
+   "got": "approve/ask/owner",
+   "bypass": false
+  },
+  {
+   "group": "matrix",
+   "case": "plan.review_denied=hand_off",
+   "ok": true,
+   "want": "approve as a hand-off",
+   "got": "approve/hand_off/owner",
+   "bypass": false
+  },
+  {
    "group": "built_in",
    "case": "payment.move_money=act",
    "ok": true,
@@ -1066,9 +1098,9 @@
    "bypass": false
   }
  ],
- "passed_cases": "133/133",
+ "passed_cases": "137/137",
  "groups": {
-  "matrix": "96/96",
+  "matrix": "100/100",
   "built_in": "28/28",
   "loosening": "9/9"
  },
