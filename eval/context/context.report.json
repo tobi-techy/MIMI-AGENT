@@ -9,7 +9,7 @@
   "median_first_call_tokens": 4808.0,
   "input_tokens": 512469,
   "model_calls": 97,
-  "model_spend_kobo": 117714,
+  "model_spend_kobo": 44309,
   "provider_cached_tokens": 417105,
   "provider_cache_rate": 0.8139,
   "max_context_tokens": 7942,
@@ -37,7 +37,8 @@
     "sid": "dispute-06",
     "route": "order/drop-confirmation"
    }
-  ]
+  ],
+  "stale_cache_misses": 0
  },
  "baseline": {
   "runs": 50,
@@ -47,11 +48,11 @@
   "median_first_call_tokens": 21251.5,
   "input_tokens": 2525597,
   "model_calls": 119,
-  "model_spend_kobo": 533187,
+  "model_spend_kobo": 380294,
   "provider_cached_tokens": 868705,
   "provider_cache_rate": 0.344,
   "max_context_tokens": 0,
-  "runs_over_n50": 50,
+  "runs_over_n50": 39,
   "over_budget": 0,
   "manifest_on_runs": 0,
   "routed_to_collector": 48,
@@ -111,7 +112,8 @@
     "sid": "dispute-06",
     "route": "order/drop-confirmation"
    }
-  ]
+  ],
+  "stale_cache_misses": 0
  },
  "median_input_tokens_cut": 0.813,
  "multi_turn_cache_estimate": {

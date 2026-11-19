@@ -1180,7 +1180,7 @@
    1
   ],
   "shop_replies_verbatim": "7/7",
-  "kobo": 57968,
+  "kobo": 35996,
   "model_calls": 60,
   "median_model_calls_per_conversation": 6.0
  },
@@ -1214,7 +1214,7 @@
    "recommendations": [
     "support"
    ],
-   "kobo": 5682,
+   "kobo": 3594,
    "model_calls": 6
   },
   {
@@ -1246,7 +1246,7 @@
    "recommendations": [
     "not_now"
    ],
-   "kobo": 5749,
+   "kobo": 2922,
    "model_calls": 6
   },
   {
@@ -1281,7 +1281,7 @@
    "recommendations": [
     "not_now"
    ],
-   "kobo": 8173,
+   "kobo": 4603,
    "model_calls": 8
   },
   {
@@ -1316,7 +1316,7 @@
    "recommendations": [
     "hold"
    ],
-   "kobo": 10666,
+   "kobo": 6109,
    "model_calls": 10
   },
   {
@@ -1343,7 +1343,7 @@
    ],
    "owner_messages": [],
    "recommendations": [],
-   "kobo": 1482,
+   "kobo": 944,
    "model_calls": 2
   },
   {
@@ -1377,7 +1377,7 @@
    "recommendations": [
     "hold"
    ],
-   "kobo": 5669,
+   "kobo": 4322,
    "model_calls": 6
   },
   {
@@ -1412,7 +1412,7 @@
    "recommendations": [
     "support"
    ],
-   "kobo": 8370,
+   "kobo": 4597,
    "model_calls": 8
   },
   {
@@ -1444,7 +1444,7 @@
    "recommendations": [
     "support"
    ],
-   "kobo": 5666,
+   "kobo": 4478,
    "model_calls": 6
   },
   {
@@ -1468,10 +1468,10 @@
    ],
    "shop_messages": [],
    "owner_messages": [
-    "Blessed Funke Mini Mart — recommendation: support (medium confidence).\n\n- 17 of 17 bank-verified payments on time in 8 weeks (N7,414,300 verified).\n- Nothing overdue.\n- Owes N0 on a N1,790,000 limit (0% used).\n- No shelf photo: history only.\n\nYou set the limit — let me know if you want me to submit this for approval or adjust anything."
+    "Blessed Funke Mini Mart, recommendation: support (medium confidence).\n\n- 17 of 17 bank-verified payments on time in 8 weeks (N7,414,300 verified).\n- Nothing overdue.\n- Owes N0 on a N1,790,000 limit (0% used).\n- No shelf photo: history only.\n\nYou set the limit, let me know if you want me to submit this for approval or adjust anything."
    ],
    "recommendations": [],
-   "kobo": 3020,
+   "kobo": 1989,
    "model_calls": 4
   },
   {
@@ -1500,7 +1500,7 @@
     "support",
     "support"
    ],
-   "kobo": 3491,
+   "kobo": 2438,
    "model_calls": 4
   }
  ],
@@ -2101,7 +2101,7 @@
   "sam_images_recorded": 54,
   "sam_kobo_recorded": 21600,
   "sam_live_calls_this_run": 0,
-  "scene_muse_kobo": 57968,
+  "scene_muse_kobo": 35996,
   "router_model_calls_live_this_run": 0,
   "router_kobo_this_run": 0,
   "scene_live_calls_this_run": [

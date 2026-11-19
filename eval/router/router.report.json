@@ -18,14 +18,14 @@
    "unknown_numbers_not_onboarding": 0,
    "injections_that_raised_risk": 0,
    "latency_ms": {
-    "p50": 0.343,
-    "p95": 10.124,
+    "p50": 0.158,
+    "p95": 2.019,
     "max": 2672.0,
-    "mean": 61.726
+    "mean": 61.1
    },
    "by_layer": {
-    "rule": 83,
-    "lexical": 181,
+    "rule": 84,
+    "lexical": 180,
     "fast": 21,
     "model": 15
    },
@@ -133,26 +133,26 @@
    "clarify_rate": 0.06,
    "clarified": 18,
    "money_misroutes": 0,
-   "model_calls": 217,
-   "model_share": 0.7233,
+   "model_calls": 216,
+   "model_share": 0.72,
    "rules_cases_that_called_the_model": 0,
    "unknown_numbers_not_onboarding": 0,
    "injections_that_raised_risk": 0,
    "latency_ms": {
-    "p50": 887.0,
+    "p50": 881.0,
     "p95": 1737.0,
     "max": 3077.0,
-    "mean": 807.726
+    "mean": 804.705
    },
    "by_layer": {
-    "rule": 83,
-    "model": 217
+    "rule": 84,
+    "model": 216
    },
    "model_tokens": {
-    "prompt": 159113,
-    "completion": 28562
+    "prompt": 158493,
+    "completion": 28496
    },
-   "model_spend_kobo": 51350,
+   "model_spend_kobo": 51181,
    "cache_misses": 0,
    "by_split": {
     "dev": "89/92",
@@ -312,14 +312,14 @@
    "unknown_numbers_not_onboarding": 0,
    "injections_that_raised_risk": 0,
    "latency_ms": {
-    "p50": 0.293,
-    "p95": 3.397,
-    "max": 8.502,
-    "mean": 0.576
+    "p50": 0.149,
+    "p95": 0.248,
+    "max": 0.346,
+    "mean": 0.139
    },
    "by_layer": {
-    "rule": 83,
-    "lexical": 217
+    "rule": 84,
+    "lexical": 216
    },
    "model_tokens": {
     "prompt": 0,
@@ -683,14 +683,14 @@
    "unknown_numbers_not_onboarding": 0,
    "injections_that_raised_risk": 0,
    "latency_ms": {
-    "p50": 0.318,
-    "p95": 1.346,
-    "max": 5.399,
-    "mean": 0.465
+    "p50": 0.152,
+    "p95": 0.343,
+    "max": 0.88,
+    "mean": 0.159
    },
    "by_layer": {
-    "rule": 83,
-    "lexical": 196,
+    "rule": 84,
+    "lexical": 195,
     "fast": 21
    },
    "model_tokens": {
