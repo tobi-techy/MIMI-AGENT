@@ -49,6 +49,9 @@ connectors = ["composio==0.15.0", "openpyxl==3.1.5"]
 computer = ["playwright>=1.44"]
 dev = [
     "pytest>=7.4.3",
+    # The book-import conformance suite reads a real workbook as well as CSVs, so
+    # the XLSX side of the suite runs in CI rather than skipping.
+    "openpyxl==3.1.5",
     "ruff>=0.4.0",
     "mypy>=1.8.0",
     "detect-secrets==1.5.0",

@@ -47,6 +47,29 @@ def test_match_sku_exact_fuzzy_and_miss() -> None:
     assert miss["sku"] is None and miss["needs_confirm"] is True
 
 
+def test_excel_upload_reads_the_active_sheet(tmp_path) -> None:
+    """An upload is the sheet the person left open, not whichever is first.
+
+    A workbook with an Instructions sheet in front must still upload its Stock
+    sheet, and only that sheet is parsed, so a book import's all-sheets reader
+    never changes what a single-table upload reads.
+    """
+    openpyxl = pytest.importorskip("openpyxl")
+    path = tmp_path / "stock.xlsx"
+    book = openpyxl.Workbook()
+    notes = book.active
+    notes.title = "Instructions"
+    notes.append(["How to fill this in"])
+    stock = book.create_sheet("Stock")
+    stock.append(["Item", "Qty left"])
+    stock.append(["Noodles", "1,200"])
+    book.active = book.sheetnames.index("Stock")
+    book.save(path)
+
+    read = CsvConnector().read("csv", {"bytes": path.read_bytes(), "filename": path.name})
+    assert read.rows[0].values == {"item": "Noodles", "qty_left": 1200}
+
+
 def test_csv_bad_files_fail_plain() -> None:
     csvc = CsvConnector(tenant_id="t")
     with pytest.raises(ConnectorError, match="empty"):
