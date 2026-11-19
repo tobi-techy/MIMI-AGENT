@@ -298,24 +298,27 @@ def test_a_delivery_after_the_day_counted_is_a_hole_and_not_an_absence(tmp_path:
 
 
 def test_days_read_in_the_singular_and_the_plural(tmp_path: Path) -> None:
-    """A shop with no rhythm but a delivery on record is the one hole that still
-    knows its days, so it is what shows the wording: today, one day, two days."""
+    """The 1 day case is reachable two ways and both must read in the singular:
+    a shop on a one day rhythm delivered yesterday, and a shop with no rhythm
+    that still knows its days."""
     book = write_book(
         tmp_path,
         shops=[shop("shop-004", "Today Shop", "0"), shop("shop-005", "One Day Shop", "0"),
-               shop("shop-006", "Two Day Shop", "0")],
+               shop("shop-006", "Two Day Shop", "0"), shop("shop-007", "Daily Shop", "1")],
         deliveries=[delivery("dlv-1001", "shop-004", "2026-10-27"),
                     delivery("dlv-1002", "shop-005", "2026-10-26"),
-                    delivery("dlv-1003", "shop-006", "2026-10-25")],
-        lines=[line("dlv-1001"), line("dlv-1002"), line("dlv-1003")])
+                    delivery("dlv-1003", "shop-006", "2026-10-25"),
+                    delivery("dlv-1004", "shop-007", "2026-10-26")],
+        lines=[line("dlv-1001"), line("dlv-1002"), line("dlv-1003"), line("dlv-1004")])
     db = engine(tmp_path)
     import_book(db, book, tenant_id=TENANT)
 
     text = render(attention(db, TENANT, BOOK_DAY), BOOK_DAY)
 
     assert "delivered today" in text
-    assert "nothing in 1 day," in text
+    assert text.count("nothing in 1 day,") == 2
     assert "nothing in 2 days," in text
+    assert "restocks every day, nothing in 1 day, 1 cycle missed" in text
     assert "1 days" not in text
 
 
