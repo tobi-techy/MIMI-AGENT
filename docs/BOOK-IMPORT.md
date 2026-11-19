@@ -63,6 +63,12 @@ figure is refused (`total_mismatch`).
   ever read from a file.
 * **Payment methods** are `transfer`, `cash_to_rep` (or `cash`) and `pos`.
   Anything else is a reject: the payment vocabulary is the book's, not the file's.
+* **Phones are stored in E.164**, the form the channel sends: `0803 123 4567`,
+  `08031234567` and `+234 803 123 4567` are one line, and the store matches an
+  inbound message on the exact string (`SqlGo.directory`). The import normalises
+  once, keeps the raw form on the canonical row (`raw_phone`) and says in the
+  report which numbers it rewrote. A number too short to be a line, or one that
+  starts with 0 and cannot be made international, is a reject.
 * **A delivery is written whole or not at all.** One unreadable line refuses the
   whole delivery, because a total summed over the lines that happened to read is
   the wrong number wearing the right shape.
@@ -80,13 +86,14 @@ honestly.
 | `bad_date` | a date neither form can read (`31/02/2026`) |
 | `bad_money` | not an amount, or not a whole kobo figure |
 | `bad_number` | a quantity that is not a whole number of units |
+| `bad_phone` | a number too short to be a line, or a leading 0 that cannot be made international |
 | `bad_method` | a payment method the book does not know |
 | `no_lines` | a delivery with no lines, or with a line that cannot be read |
 | `unknown_shop` / `unknown_sku` / `unknown_rep` | a row points at something the book does not have |
 | `unknown_delivery` | a line, receivable or payment names a delivery the book does not have |
 | `mixes_two_shops` | a receivable or payment names a shop its delivery did not go to |
 | `total_mismatch` | a receivable or the file's own delivery total disagrees with the lines |
-| `dup_in_file` | the same id twice in one file (identical: first used; different: neither) |
+| `dup_in_file` | the same id twice in one file (identical: first used; different: neither) — every keyed table, including receivables and payments, plus a repeated `line_no` inside one delivery |
 | `dup_in_book` | the id is already in the book with different content |
 
 A file-level problem refuses the file with one plain sentence and writes nothing:
@@ -95,7 +102,8 @@ that names another tenant, or a tenant that is the synthetic demo world.
 
 ## Provenance
 
-Every imported row carries where it came from, in the store's own columns:
+Every imported row is traceable to where it came from, through the store's own
+columns and the proof policy's own vocabulary:
 
 * **Deliveries and payments** get the book's proof columns
   (`proof_level`, `witnesses`, `proof_policy_version`) filled by
@@ -103,14 +111,25 @@ Every imported row carries where it came from, in the store's own columns:
   id. One party's word is `estimated`, so an imported book is `estimated` until a
   shop confirms a receipt or the bank feed matches a payment. That is the honest
   level, and it is what the console shows.
-* **Every imported row** (shops, reps, SKUs, lines and receivables included, which
-  have no proof columns) writes one append-only `proof_events` row:
-  `record_type` and `record_id` name the row, `witness_kind` is
-  `distributor_record`, `witness_source` is the import run, and `at` is the moment
-  it was read.
-* **The run itself** is a `connector_sync_runs` row (`scope = "book"`) with the
-  source label and the file's digest, the row counts, and every reject in plain
-  words. It is how "where did this book come from" is answered.
+* **Each of those rows also writes one append-only `proof_events` line**, built by
+  `mimi.provenance.add_witness`, the same function that records a witness when one
+  lands outside an import. So the record type is one the policy knows — `delivery`
+  for a delivery, and `payment_transfer` / `payment_cash` / `payment_pos` for a
+  payment, never a generic `payment`, because that distinction decides which
+  witnesses can lift a figure at all — and the level is computed by the rules
+  rather than asserted by the writer. `record_id` is the row's own id,
+  `witness_source` the import run, `at` the moment it was read.
+* **Shops, reps, SKUs, lines and receivables are reference rows the proof policy
+  has no record type for**, and the import does not invent one. Their provenance
+  is the run: the `connector_sync_runs` row names the file and its digest, the
+  moment it was read, and how many rows of each table came from it, and their own
+  external ids are their keys. Extending the policy with new record types is a
+  policy decision (`POLICY_VERSION`), not something an importer does quietly.
+* **The run itself** is that `connector_sync_runs` row (`scope = "book"`):
+  `rows_read` is what the source actually read, `rows_mapped` what it wrote, and
+  every reject in plain words is in `errors`. It is how "where did this book come
+  from" is answered, and a second import of the same file shows `rows_read` 32,
+  `rows_mapped` 0 — it read the book and had nothing to write.
 
 ## Idempotency, and what a re-import is for
 
@@ -131,10 +150,18 @@ delivery's witness time, a receivable's paid amount) are not read as disagreemen
 
 `tenants.live_date` is the day overdue is counted from. Without `--as-of` it is
 the newest delivery or payment in the book after the import; with it, the day the
-operator names (a book exported on Sunday still describes Friday). Day numbers
-stored beside it (`deliveries.day`, `payments.day`, `receivables.due_day`) are
-date ordinals, so "days since" arithmetic works on an imported book exactly as it
-does on the synthetic one.
+operator names (a book exported on Sunday still describes Friday).
+
+The day only ever moves forward, and the move is a compare-and-set in the
+statement: two imports racing on one tenant cannot lose the later day. An
+`--as-of` earlier than the day the book is already on is **refused** with both
+days named, because half applying it would store each invoice's word against one
+day while overdue is counted from another. Invoice statuses are restated from the
+day actually in effect after the rows are written, so the word and the sum agree.
+
+Day numbers stored beside it (`deliveries.day`, `payments.day`,
+`receivables.due_day`) are date ordinals, so "days since" arithmetic works on an
+imported book exactly as it does on the synthetic one.
 
 ## Running it
 
@@ -176,7 +203,10 @@ zeroes, never as a sample of Coral Lane.
   that is not whole kobo, a file total that disagrees with its lines), then the
   acceptance: the fixture book imported, overdue counted in code and compared
   with a hand count (₦80,052.50), the same file imported twice and the book
-  unchanged.
+  unchanged. Plus the cases review found: a phone written three ways, an `--as-of`
+  before the book's day, a repeated id in one file, a repeated line number, a
+  negative amount paid, a stale plan landing after a newer one, a payment's own
+  record type, and the CLI refusing SQLite in production.
 * `tests/test_book_conformance.py`: the shared suite. The fixture book
   (`tests/fixtures/books/small`, made by `scripts/make_book_fixtures.py`) in both
   shapes must produce identical canonical rows and the same book.

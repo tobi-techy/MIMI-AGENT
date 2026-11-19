@@ -33,6 +33,7 @@ MISSING_FIELD = "missing_field"
 BAD_DATE = "bad_date"
 BAD_MONEY = "bad_money"
 BAD_NUMBER = "bad_number"
+BAD_PHONE = "bad_phone"
 BAD_METHOD = "bad_method"
 NO_LINES = "no_lines"
 UNKNOWN_SHOP = "unknown_shop"
@@ -76,11 +77,18 @@ class Reject:
 
 @dataclass(frozen=True)
 class DistributorRow:
-    """The book's owner: the tenant it belongs to and its own phones."""
+    """The book's owner: the tenant it belongs to and its own phones.
+
+    ``owner_phones`` is the canonical (E.164) form the store matches an inbound
+    message against; ``raw_owner_phones`` is exactly what the book wrote. They
+    differ whenever the distributor types numbers the way people dial them, and
+    the raw form is kept so the import report can say what it changed.
+    """
 
     tenant_id: str
     name: str
     owner_phones: tuple[str, ...]
+    raw_owner_phones: tuple[str, ...]
     provenance: Provenance
 
 
@@ -88,7 +96,8 @@ class DistributorRow:
 class RepRow:
     rep_id: str
     name: str
-    phone: str
+    phone: str          # canonical (E.164): what an inbound message is matched by
+    raw_phone: str      # as the book wrote it, so the report can name the change
     areas: tuple[str, ...]
     provenance: Provenance
 
@@ -100,7 +109,8 @@ class ShopRow:
     owner: str
     area: str
     street: str
-    phone: str
+    phone: str          # canonical (E.164): the shop's whole channel to Mimi
+    raw_phone: str      # as the book wrote it, so the report can name the change
     rep_id: str
     credit_limit_kobo: int
     restock_days: int
@@ -184,6 +194,10 @@ class Reading:
     source: str
     label: str
     digest: str
+    #: Data rows the source actually read, before any rule was applied: what the
+    #: import ledger reports as ``rows_read``. A re-import reads every row again
+    #: and matches them all.
+    rows_read: int = 0
     distributor: DistributorRow | None = None
     reps: tuple[RepRow, ...] = ()
     shops: tuple[ShopRow, ...] = ()

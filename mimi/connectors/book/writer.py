@@ -51,9 +51,10 @@ from mimi.connectors.book.rows import (
     Reject,
 )
 from mimi.provenance import (
-    POLICY_VERSION,
-    ProofEvent,
+    ProofStamp,
+    add_witness,
     delivery_stamp,
+    parse_witnesses,
     payment_type,
     stamp,
     witness,
@@ -73,12 +74,14 @@ STORE_TABLES: dict[str, sa.Table] = {
 WRITE_ORDER: tuple[str, ...] = ("reps", "shops", "skus", "deliveries", "delivery_lines",
                                "receivables", "payments")
 
-#: The record type each entity's provenance line carries. Shops, reps, SKUs,
-#: lines and receivables have no proof columns of their own, so their provenance
-#: is the append-only event; deliveries and payments get both.
-RECORD_TYPE = {"reps": "rep", "shops": "shop", "skus": "sku", "deliveries": "delivery",
-               "delivery_lines": "delivery_line", "receivables": "receivable",
-               "payments": "payment"}
+#: The two tables whose rows the proof policy reasons about, and so the only two
+#: that write a provenance event here. A delivery's type is ``delivery``; a
+#: payment's is its own (``payment_transfer``, ``payment_cash``, ``payment_pos``),
+#: because that distinction decides which witnesses can lift a figure at all.
+#: Shops, reps, SKUs, lines and receivables are reference rows the policy has no
+#: type for: their provenance is the import run in ``connector_sync_runs``, which
+#: names the file, its digest and the moment it was read.
+PROVENANCED = ("deliveries", "payments")
 
 #: A store row as it will be written, and the proof level it earns.
 _Row = dict[str, Any]
@@ -101,15 +104,15 @@ class Plan:
     digest: str
     at: str
     live_date: str
+    rows_read: int = 0
     tenant: _Row | None = None
     tenant_new: bool = False
-    #: True when this import moves the book's day, so the stored overdue word on
-    #: invoices that were not yet due has to be recomputed.
-    day_moved: bool = False
     creates: dict[str, list[_Row]] = field(default_factory=lambda: {k: [] for k in STORE_TABLES})
     unchanged: dict[str, int] = field(default_factory=lambda: {k: 0 for k in STORE_TABLES})
     rejects: list[Reject] = field(default_factory=list)
     notes: list[str] = field(default_factory=list)
+    #: (row, as written, as stored) for every phone the import normalised.
+    phones: list[tuple[str, str, str]] = field(default_factory=list)
 
     @property
     def rejected(self) -> dict[str, int]:
@@ -191,7 +194,7 @@ def build_plan(engine: Engine, reading: Reading, *, tenant_id: str, at: str,
             next_step="Import a real book into a tenant of its own: pass --tenant-id "
                       "with the distributor's own id.")
     plan = Plan(tenant_id=tenant_id, source=reading.source, label=reading.label,
-                digest=reading.digest, at=at, live_date="",
+                digest=reading.digest, at=at, live_date="", rows_read=reading.rows_read,
                 # A row the source could not read is refused before anything else
                 # is checked; the report is one list, in file order.
                 rejects=list(reading.rejects))
@@ -209,6 +212,7 @@ def build_plan(engine: Engine, reading: Reading, *, tenant_id: str, at: str,
     plan.live_date = _live_date(plan, book, as_of)
     _plan_receivables(plan, reading, book)
     _plan_tenant(plan, reading, book)
+    _describe_phones(plan)
     return plan
 
 
@@ -258,13 +262,9 @@ def _plan_tenant(plan: Plan, reading: Reading, book: _Book) -> None:
                 changes["name"] = distributor.name
             if list(loads(book.tenant.owner_phones, [])) != list(distributor.owner_phones):
                 changes["owner_phones"] = dumps(sorted(distributor.owner_phones))
-        # The book's day follows the book: a later delivery means the book has
-        # moved on, and overdue is counted from the newer day. Same file, same
-        # day, no change.
-        if plan.live_date > str(book.tenant.live_date):
-            changes["live_date"] = plan.live_date
-            changes["live_day"] = date.fromisoformat(plan.live_date).toordinal()
-            plan.day_moved = True
+                for raw, canonical in zip(distributor.raw_owner_phones,
+                                          distributor.owner_phones, strict=True):
+                    _note_phone(plan, plan.tenant_id, raw, canonical)
         if changes:
             plan.tenant = {"tenant_id": plan.tenant_id, **changes}
             plan.notes.append("the distributor's own row changed: "
@@ -272,6 +272,9 @@ def _plan_tenant(plan: Plan, reading: Reading, book: _Book) -> None:
         return
     assert distributor is not None  # build_plan refused a book that names none
     plan.tenant_new = True
+    for raw, canonical in zip(distributor.raw_owner_phones, distributor.owner_phones,
+                              strict=True):
+        _note_phone(plan, plan.tenant_id, raw, canonical)
     plan.tenant = {
         "tenant_id": plan.tenant_id, "name": distributor.name,
         "owner_phones": dumps(sorted(distributor.owner_phones)),
@@ -286,6 +289,31 @@ def _plan_tenant(plan: Plan, reading: Reading, book: _Book) -> None:
     }
 
 
+def _note_phone(plan: Plan, row_id: str, raw: str, canonical: str) -> None:
+    """Only for a row this import writes: a re-import changes no phone, so it
+    says nothing about one."""
+    if raw != canonical:
+        plan.phones.append((row_id, raw, canonical))
+
+
+def _describe_phones(plan: Plan) -> None:
+    """Say in the report which numbers were rewritten, before anyone wonders.
+
+    One line, the count and a few examples: the file still holds what the
+    distributor typed, and the second import of it reports nothing because the
+    store already has the canonical form.
+    """
+    if not plan.phones:
+        return
+    count = len(plan.phones)
+    examples = ", ".join(f"{row} {raw!r} as {canonical}"
+                         for row, raw, canonical in plan.phones[:3])
+    more = "" if count <= 3 else f" and {count - 3} more"
+    plan.notes.append(
+        f"{count} {'phone number' if count == 1 else 'phone numbers'} stored in E.164 "
+        f"(the form the channel sends): {examples}{more}")
+
+
 def _plan_reps(plan: Plan, reading: Reading, book: _Book) -> None:
     for rep in reading.reps:
         values = {"tenant_id": plan.tenant_id, "rep_id": rep.rep_id, "name": rep.name,
@@ -293,6 +321,7 @@ def _plan_reps(plan: Plan, reading: Reading, book: _Book) -> None:
         row = book.reps.get(rep.rep_id)
         if row is None:
             plan.creates["reps"].append(values)
+            _note_phone(plan, rep.rep_id, rep.raw_phone, rep.phone)
         elif _same(row, values, json_fields=("areas",)):
             plan.unchanged["reps"] += 1
         else:
@@ -316,6 +345,7 @@ def _plan_shops(plan: Plan, reading: Reading, book: _Book) -> None:
         row = book.shops.get(shop.shop_id)
         if row is None:
             plan.creates["shops"].append(values)
+            _note_phone(plan, shop.shop_id, shop.raw_phone, shop.phone)
         elif _same(row, values):
             plan.unchanged["shops"] += 1
         else:
@@ -528,19 +558,31 @@ def _live_date(plan: Plan, book: _Book, as_of: str | None) -> str:
     """The book's day: the day overdue is counted from.
 
     ``as_of`` wins when the operator knows it (a book exported on a Sunday still
-    describes Friday). Otherwise it is the last thing that happened in the book:
-    the newest delivery or payment, the file's or the book's.
+    describes Friday), but never an earlier day than the book is already on: that
+    half applies, and half applying a day is how a status and a sum come to
+    disagree. Otherwise the day is the last thing that happened in the book: the
+    newest delivery or payment, the file's or the book's.
     """
-    if as_of:
-        try:
-            return date.fromisoformat(as_of).isoformat()
-        except ValueError:
-            raise ConnectorError(f"{as_of!r} is not a date the book can use.",
-                                 next_step="Pass --as-of as 2026-10-26.") from None
     days = [book.last_day] if book.last_day else []
     days += [str(row["delivered_on"]) for row in plan.creates["deliveries"]]
     days += [str(row["paid_on"]) for row in plan.creates["payments"]]
-    return max(days) if days else now_lagos().date().isoformat()
+    own = max(days) if days else ""
+    if as_of:
+        try:
+            wanted = date.fromisoformat(as_of).isoformat()
+        except ValueError:
+            raise ConnectorError(f"{as_of!r} is not a date the book can use.",
+                                 next_step="Pass --as-of as 2026-10-26.") from None
+        if own and wanted < own:
+            # Half applying it is worse than refusing it: the invoices would be
+            # stored with a status computed for one day while overdue is counted
+            # from another, and the word and the sum would disagree.
+            raise ConnectorError(
+                f"The book's day is already {own} and --as-of {as_of} is earlier.",
+                next_step=f"Pass --as-of on or after {own}, or leave it out: the book "
+                          "day follows the newest delivery or payment in it.")
+        return wanted
+    return own or now_lagos().date().isoformat()
 
 
 # ------------------------------------------------------------------ the writes
@@ -557,10 +599,12 @@ def write_plan(engine: Engine, plan: Plan) -> None:
         f"{plan.tenant_id}|{plan.source}|{plan.digest}|{plan.at}".encode()).hexdigest()[:20]
     with engine.begin() as conn:
         _write_tenant(conn, plan)
-        _refresh_overdue(conn, plan)
         for table in WRITE_ORDER:
             if plan.creates[table]:
                 conn.execute(STORE_TABLES[table].insert(), plan.creates[table])
+        # After the rows, because the day and the words it decides are read from
+        # the book as it now is, not as it was when the plan was made.
+        _refresh_overdue(conn, plan, _apply_day(conn, plan))
         _write_provenance(conn, plan, run_id)
         conn.execute(sa.insert(s.connector_sync_runs).values(
             tenant_id=plan.tenant_id, run_id=run_id,
@@ -568,7 +612,7 @@ def write_plan(engine: Engine, plan: Plan) -> None:
             # its content, which is what makes this run findable again.
             connection_id=f"{plan.source}:{plan.label}#{plan.digest[:12]}",
             shop_id="", scope="book",
-            rows_read=plan.rows_written() + len(plan.rejects),
+            rows_read=plan.rows_read,
             rows_mapped=plan.rows_written(),
             errors=dumps([f"{r.where}: {r.detail}" for r in plan.rejects]),
             started_at=plan.at, finished_at=plan.at))
@@ -590,58 +634,70 @@ def _write_tenant(conn: sa.Connection, plan: Plan) -> None:
         s.tenants.c.tenant_id == plan.tenant_id).values(**plan.tenant))
 
 
-def _refresh_overdue(conn: sa.Connection, plan: Plan) -> None:
-    """Restate which open invoices are late, after the book's day moved.
+def _apply_day(conn: sa.Connection, plan: Plan) -> str:
+    """Move the tenant's day forward if this book is newer; never backward.
 
-    ``status`` is overdue or open, which is the due date compared with the book's
-    day: a fact about the book, not about the file. It is stored because the
-    helpers read it as a word ("overdue"), so it has to be true after an import
-    that moved the day. Outstanding and paid are untouched: money only moves
-    through payments.
+    The comparison is in the statement, not in Python, so two imports racing on
+    one tenant cannot lose the later day: the older plan's update matches no row
+    and the stored day stays where the newer book put it.
     """
-    if not plan.day_moved:
-        return
+    def stored() -> str:
+        raw = conn.execute(sa.select(s.tenants.c.live_date).where(
+            s.tenants.c.tenant_id == plan.tenant_id)).scalar()
+        return str(raw or plan.live_date)
+
+    if plan.live_date > stored():
+        conn.execute(s.tenants.update().where(
+            s.tenants.c.tenant_id == plan.tenant_id,
+            s.tenants.c.live_date < plan.live_date).values(
+            live_date=plan.live_date,
+            live_day=date.fromisoformat(plan.live_date).toordinal()))
+    return stored()
+
+
+def _refresh_overdue(conn: sa.Connection, plan: Plan, day: str) -> None:
+    """Restate which open invoices are late, as of the day the book is now on.
+
+    ``status`` is overdue or open, the due date compared with the book's day: a
+    fact about the book, not about the file. The helpers read it as a word
+    ("overdue"), so it has to be true after any import that could have moved the
+    day or added invoices. It is written from the day in effect rather than the
+    planned one for the same reason. Outstanding and paid are untouched: money
+    only moves through payments.
+    """
     open_rows = sa.and_(s.receivables.c.tenant_id == plan.tenant_id,
                         s.receivables.c.outstanding_kobo > 0)
     conn.execute(s.receivables.update().where(
-        open_rows, s.receivables.c.due_on < plan.live_date,
+        open_rows, s.receivables.c.due_on < day,
         s.receivables.c.status != "overdue").values(status="overdue"))
     conn.execute(s.receivables.update().where(
-        open_rows, s.receivables.c.due_on >= plan.live_date,
+        open_rows, s.receivables.c.due_on >= day,
         s.receivables.c.status != "open").values(status="open"))
 
 
 def _write_provenance(conn: sa.Connection, plan: Plan, run_id: str) -> None:
-    """One append-only event per imported row: which run, which record, when.
+    """One append-only event per imported delivery and payment: which run, which
+    record, when.
 
-    Deliveries and payments carry a witness of their own (in their proof
-    columns, written above); this is the line the other tables do not have room
-    for, and it is the whole provenance record for shops, reps and SKUs.
+    The event is built by ``mimi.provenance.add_witness``, the same function that
+    stamps a record when a witness lands, so the record type is checked against
+    the policy's closed list and the level is computed by the rules rather than
+    asserted here. The witness it records is the import run, which is what makes
+    the event traceable back to a file; the record's own witness (the
+    distributor's row) is already in its proof columns, written above.
     """
-    for table in WRITE_ORDER:
+    for table in PROVENANCED:
         for row in plan.creates[table]:
-            record_id = _record_id(table, row)
-            level = row.get("proof_level", "estimated")
-            event = ProofEvent(
-                record_type=RECORD_TYPE[table], record_id=record_id, old_level="none",
-                new_level=level, witness_kind="distributor_record",  # type: ignore[arg-type]
-                witness_source=run_id, policy_version=POLICY_VERSION, at=plan.at)
+            record_type = "delivery" if table == "deliveries" else payment_type(row["method"])
+            record_id = str(row["delivery_id" if table == "deliveries" else "payment_id"])
+            current = ProofStamp(record_type, row["proof_level"],  # type: ignore[arg-type]
+                                 parse_witnesses(row["witnesses"]),
+                                 row["proof_policy_version"])
+            _, event = add_witness(current, record_type, record_id,
+                                   witness("distributor_record", run_id), plan.at)
+            assert event is not None  # the run is a new witness, so one always lands
             conn.execute(s.proof_events.insert().values(
                 tenant_id=plan.tenant_id, event_id=event_id(event), **event.as_row()))
-
-
-def _record_id(table: str, row: _Row) -> str:
-    """The distributor's own id for the row: the key a figure is traced by."""
-    if table == "delivery_lines":
-        return f"{row['delivery_id']}:{row['line_no']}"
-    if table == "receivables":
-        return str(row["delivery_id"])
-    if table == "skus":
-        return str(row["sku"])
-    for key in ("delivery_id", "payment_id", "shop_id", "rep_id"):
-        if key in row:
-            return str(row[key])
-    raise KeyError(f"no external id on a {table} row")
 
 
 # ------------------------------------------------------------------- helpers

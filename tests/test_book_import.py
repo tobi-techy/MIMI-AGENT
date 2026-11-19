@@ -22,12 +22,14 @@ import sqlalchemy as sa
 from mimi import owed
 from mimi.api import reads
 from mimi.connectors.base import ConnectorError
-from mimi.connectors.book import import_book
+from mimi.connectors.book import build_plan, import_book, read_book, write_plan
 from mimi.connectors.book.__main__ import main as cli
 from mimi.connectors.book.rows import (
     BAD_DATE,
     BAD_MONEY,
+    BAD_PHONE,
     DUP_IN_BOOK,
+    DUP_IN_FILE,
     MISSING_FIELD,
     MIXES_TWO_SHOPS,
     NO_LINES,
@@ -35,6 +37,7 @@ from mimi.connectors.book.rows import (
     UNKNOWN_SHOP,
     UNKNOWN_SKU,
 )
+from mimi.provenance import RECORD_TYPES
 from mimi.store import schema as s
 from mimi.store.book import SqlGo
 from mimi.store.db import ensure_schema, make_engine
@@ -364,18 +367,23 @@ def test_imported_rows_carry_provenance(tmp_path: Path) -> None:
     ledger = rows(db, "connector_sync_runs")
     assert len(ledger) == 1
     run = ledger[0]
-    assert run["rows_mapped"] == 31 and run["rows_read"] == 31
+    # 31 book rows plus the distributor row: what the source actually read.
+    assert run["rows_mapped"] == 31 and run["rows_read"] == 32
     assert run["started_at"] == report.at
     assert run["connection_id"] == f"csv:book#{report.digest[:12]}"
 
+    # One event per delivery and payment: the record types the proof policy
+    # reasons about. Shops, reps, SKUs, lines and receivables have no type in it,
+    # so their provenance is this run, not an event inventing a type.
     events = rows(db, "proof_events")
-    assert len(events) == 31
+    assert len(events) == 6 + 3
     assert {e["witness_source"] for e in events} == {run["run_id"]}
     assert {e["at"] for e in events} == {report.at}
+    assert {e["record_type"] for e in events} <= set(RECORD_TYPES)
     assert {e["record_type"] for e in events} == {
-        "rep", "shop", "sku", "delivery", "delivery_line", "receivable", "payment"}
-    shop = [e for e in events if e["record_type"] == "shop"]
-    assert sorted(e["record_id"] for e in shop) == ["shop-001", "shop-002", "shop-003"]
+        "delivery", "payment_transfer", "payment_cash"}
+    payments = sorted(e["record_id"] for e in events if e["record_type"] != "delivery")
+    assert payments == ["pay-0001", "pay-0002", "pay-0003"]
 
     # A delivery and a payment also carry the book's own proof columns: the
     # distributor's record is one party's word, so the level is estimated.
@@ -467,6 +475,206 @@ def test_a_demo_tenant_is_never_imported_into(tmp_path: Path) -> None:
     tables = cell(base(), "distributor", TENANT, "tenant_id", world.tenant_id)
     with pytest.raises(ConnectorError, match="synthetic demo world"):
         import_book(db, book(tmp_path, tables), tenant_id=world.tenant_id)
+
+
+
+def test_a_record_type_the_policy_does_not_have_is_never_written(tmp_path: Path) -> None:
+    """Provenance is written through the proof policy, not around it.
+
+    Two payments on one delivery is the case that catches both halves: a generic
+    "payment" type throws away cash-versus-transfer, and keying the event by the
+    delivery would collide on the second one. Every event carries a type the
+    policy knows and the id of its own record.
+    """
+    tables = base()
+    tables["payments"].append(
+        ["pay-0004", "shop-001", "dlv-0001", "2026-10-22", "500.00", "cash", ""])
+    db = engine(tmp_path)
+    import_book(db, book(tmp_path, tables), tenant_id=TENANT)
+
+    events = rows(db, "proof_events")
+    assert len({event["event_id"] for event in events}) == len(events)
+    assert {event["record_type"] for event in events} <= set(RECORD_TYPES)
+    money = [event for event in events if event["record_type"] != "delivery"]
+    assert sorted(event["record_type"] for event in money) == [
+        "payment_cash", "payment_cash", "payment_transfer", "payment_transfer"]
+    assert sorted(event["record_id"] for event in money) == [
+        "pay-0001", "pay-0002", "pay-0003", "pay-0004"]
+
+
+def test_an_as_of_before_the_book_day_is_refused(tmp_path: Path) -> None:
+    """Half applying a stale day is worse than refusing it: the stored word and
+    the overdue sum would be counted from two different days."""
+    db = engine(tmp_path)
+    import_book(db, book(tmp_path), tenant_id=TENANT)  # the book's day is 27 Oct
+    with pytest.raises(ConnectorError, match="already 2026-10-27"):
+        import_book(db, book(tmp_path), tenant_id=TENANT, as_of="2026-10-20")
+    assert rows(db, "tenants")[0]["live_date"] == "2026-10-27"
+
+
+def test_the_ledger_counts_the_rows_the_read_saw(tmp_path: Path) -> None:
+    """``rows_read`` means read, so a re-import that matches everything says so."""
+    db = engine(tmp_path)
+    import_book(db, book(tmp_path), tenant_id=TENANT)
+    import_book(db, book(tmp_path), tenant_id=TENANT)
+    ledger = sorted(rows(db, "connector_sync_runs"), key=lambda run: run["started_at"])
+    assert (ledger[0]["rows_read"], ledger[0]["rows_mapped"]) == (32, 31)
+    assert (ledger[1]["rows_read"], ledger[1]["rows_mapped"]) == (32, 0)
+
+
+def test_phones_are_stored_in_one_canonical_form(tmp_path: Path) -> None:
+    """A shop is reachable only if its stored number matches the E.164 the
+    channel sends, so the import normalises it once and says what it changed."""
+    tables = base()
+    cell(tables, "shops", "shop-001", "phone", "0803 123 4567")
+    cell(tables, "shops", "shop-002", "phone", "08031234568")
+    cell(tables, "shops", "shop-003", "phone", "+234 803 123 4569")
+    cell(tables, "reps", "rep-01", "phone", "0803 111 2222")
+    cell(tables, "distributor", TENANT, "owner_phones", "0801 000 0001")
+    db = engine(tmp_path)
+    report = import_book(db, book(tmp_path, tables), tenant_id=TENANT)
+
+    assert {shop["phone"] for shop in rows(db, "shops")} == {
+        "+2348031234567", "+2348031234568", "+2348031234569"}
+    assert {rep["phone"] for rep in rows(db, "reps")} == {
+        "+2348031112222", "+2340000000202"}
+    assert rows(db, "tenants")[0]["owner_phones"] == '["+2348010000001"]'
+
+    # What the channel will actually ask about, and the routing it has to get.
+    directory = SqlGo(db).directory(TENANT)
+    assert directory.shop_for("+2348031234567") == "shop-001"
+    assert directory.shop_for("+2348031234568") == "shop-002"
+    assert "+2348010000001" in directory.owner_phones
+    # The number as typed is still named, so nobody wonders what happened to it.
+    assert "0803 123 4567" in " ".join(report.notes)
+    assert "+2348031234567" in " ".join(report.notes)
+
+
+def test_a_re_import_does_not_re_report_the_same_phone(tmp_path: Path) -> None:
+    """The store now holds the canonical form, so the same file changes nothing
+    and says nothing about phones the second time."""
+    tables = cell(base(), "shops", "shop-001", "phone", "0803 123 4567")
+    db = engine(tmp_path)
+    first = import_book(db, book(tmp_path, tables), tenant_id=TENANT)
+    again = import_book(db, book(tmp_path, tables), tenant_id=TENANT)
+    assert "0803 123 4567" in " ".join(first.notes)
+    assert again.notes == () and again.counts["shops"]["new"] == 0
+
+
+def test_a_phone_too_short_to_be_a_line_is_refused(tmp_path: Path) -> None:
+    """A number nobody could dial is a reject that names it, never a key that
+    silently matches nobody."""
+    tables = cell(base(), "shops", "shop-001", "phone", "12345")
+    db = engine(tmp_path)
+    report = import_book(db, book(tmp_path, tables), tenant_id=TENANT)
+    assert [r.reason for r in rejects(report, entity="shops")] == [BAD_PHONE]
+    assert "12345" in rejects(report, entity="shops")[0].detail
+    assert "shop-001" not in [shop["shop_id"] for shop in rows(db, "shops")]
+
+
+def test_a_negative_amount_paid_is_refused(tmp_path: Path) -> None:
+    """Minus one hundred naira paid would store a debt bigger than the invoice."""
+    tables = cell(base(), "receivables", "dlv-0001", "paid_naira", "-100")
+    db = engine(tmp_path)
+    report = import_book(db, book(tmp_path, tables), tenant_id=TENANT)
+    assert [r.reason for r in rejects(report, entity="receivables")] == [BAD_MONEY]
+    assert "never negative" in rejects(report, entity="receivables")[0].detail
+    assert "dlv-0001" not in [row["delivery_id"] for row in rows(db, "receivables")]
+
+
+def test_two_lines_with_the_same_number_refuse_the_delivery(tmp_path: Path) -> None:
+    """The line number is part of the delivery's key: a repeat is a refused
+    delivery, not a primary-key crash out of the write."""
+    tables = base()
+    tables["delivery_lines"][0] = ["line_no", *tables["delivery_lines"][0]]
+    for row in tables["delivery_lines"][1:]:
+        row.insert(0, "1" if row[0] == "dlv-0001" else "")
+    db = engine(tmp_path)
+    report = import_book(db, book(tmp_path, tables), tenant_id=TENANT)
+    assert [r.reason for r in rejects(report, entity="deliveries")] == [DUP_IN_FILE]
+    assert "two lines numbered 1" in rejects(report, entity="deliveries")[0].detail
+    assert "dlv-0001" not in [row["delivery_id"] for row in rows(db, "deliveries")]
+
+
+def test_an_id_twice_in_one_file_is_named_not_a_crash(tmp_path: Path) -> None:
+    """Every keyed table dedupes in the source, so a repeated id is a named row
+    rather than an IntegrityError after half a plan."""
+    tables = base()
+    tables["receivables"].append(list(tables["receivables"][1]))
+    tables["payments"].append(list(tables["payments"][1]))
+    db = engine(tmp_path)
+    report = import_book(db, book(tmp_path, tables), tenant_id=TENANT)
+
+    assert [r.reason for r in rejects(report, entity="receivables")] == [DUP_IN_FILE]
+    assert [r.reason for r in rejects(report, entity="payments")] == [DUP_IN_FILE]
+    assert len(rows(db, "receivables")) == 4 and len(rows(db, "payments")) == 3
+    assert len(rows(db, "shops")) == 3
+
+    # A copy that disagrees is refused outright: neither version is the book.
+    changed = base()
+    copy = list(changed["payments"][1])
+    copy[4] = "1.00"
+    changed["payments"].append(copy)
+    (tmp_path / "changed").mkdir()
+    other = engine(tmp_path / "changed")
+    report = import_book(other, book(tmp_path / "changed", changed), tenant_id=TENANT)
+    assert [r.reason for r in rejects(report, entity="payments")] == [
+        DUP_IN_FILE, DUP_IN_FILE]
+    assert [row["payment_id"] for row in rows(other, "payments")] == [
+        "pay-0002", "pay-0003"]
+
+
+def test_a_book_naming_another_tenant_is_refused_whatever_else_it_is_missing(
+        tmp_path: Path) -> None:
+    """Which book this is comes first: a half-filled row cannot carry another
+    distributor's data into an existing tenant."""
+    db = engine(tmp_path)
+    import_book(db, book(tmp_path), tenant_id=TENANT)
+    tables = cell(base(), "distributor", TENANT, "tenant_id", "someone-else")
+    cell(tables, "distributor", "someone-else", "name", "")
+    with pytest.raises(ConnectorError, match="belongs to 'someone-else'"):
+        import_book(db, book(tmp_path / "other", tables), tenant_id=TENANT)
+    assert len(rows(db, "shops")) == 3 and len(rows(db, "deliveries")) == 6
+
+
+def test_two_imports_racing_never_move_the_book_day_back(tmp_path: Path) -> None:
+    """A stale plan that lands second must not overwrite a newer book day, and
+    the overdue words must follow the day actually in effect."""
+    db = engine(tmp_path)
+    import_book(db, book(tmp_path), tenant_id=TENANT)  # the book's day is 27 Oct
+
+    older = base()
+    older["deliveries"].append(["dlv-0007", "shop-001", "rep-01", "2026-11-03", "540", ""])
+    older["delivery_lines"].append(["dlv-0007", "SKU-004", "1", "9800.00", "", ""])
+    older["receivables"].append(["dlv-0007", "shop-001", "2026-11-05", "9800.00", "0.00"])
+    newer = base()
+    newer["deliveries"].append(["dlv-0008", "shop-002", "rep-01", "2026-11-10", "540", ""])
+    newer["delivery_lines"].append(["dlv-0008", "SKU-004", "1", "9800.00", "", ""])
+
+    at = "2026-11-19T09:00:00+00:00"
+    plan_older = build_plan(db, read_book(book(tmp_path / "older", older), tenant_id=TENANT,
+                                          read_at=at), tenant_id=TENANT, at=at)
+    plan_newer = build_plan(db, read_book(book(tmp_path / "newer", newer), tenant_id=TENANT,
+                                          read_at=at), tenant_id=TENANT, at=at)
+    write_plan(db, plan_newer)
+    write_plan(db, plan_older)
+
+    assert rows(db, "tenants")[0]["live_date"] == "2026-11-10"
+    status = {row["delivery_id"]: row["status"] for row in rows(db, "receivables")}
+    assert status["dlv-0007"] == "overdue"  # due 5 Nov, book day 10 Nov
+    assert status["dlv-0004"] == "overdue"  # due 30 Oct
+
+
+def test_the_cli_refuses_sqlite_in_production(tmp_path: Path,
+                                              capsys: pytest.CaptureFixture[str],
+                                              monkeypatch: pytest.MonkeyPatch) -> None:
+    """A production import into a file the production API never reads is a book
+    nobody sees."""
+    monkeypatch.setenv("MIMI_ENV", "production")
+    code = cli([str(book(tmp_path)), "--tenant-id", TENANT,
+                "--database-url", f"sqlite:///{tmp_path / 'prod.db'}"])
+    assert code == 1
+    assert "production needs a Postgres database" in capsys.readouterr().err
 
 
 def test_the_import_path_is_code_only() -> None:

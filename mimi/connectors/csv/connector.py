@@ -94,11 +94,36 @@ def csv_grid(text: str) -> list[list[str]]:
 def excel_sheets(data: Any, filename: str) -> dict[str, list[list[Any]]]:
     """Every sheet in a workbook, by the name it carries in the file.
 
-    A book import reads one sheet per table, so it needs the names; the
-    single-sheet upload (``CsvConnector``) uses ``excel_grid`` below. Values
-    are the cached ones (``data_only``): a formula cell gives the number
+    A book import reads one sheet per table, so it needs them all and by name.
+    A single-sheet upload uses ``excel_grid`` below, which reads one sheet only.
+    Values are the cached ones (``data_only``): a formula cell gives the number
     Excel last calculated, never the formula text.
     """
+    book = _workbook(data, filename)
+    out = {sheet.title: _grid_of(sheet) for sheet in book.worksheets}
+    if not any(any(str(c).strip() for c in r) for g in out.values() for r in g):
+        raise ConnectorError("That file is empty.",
+                             next_step="Send a sheet with an item column.")
+    return out
+
+
+def excel_grid(data: Any, filename: str) -> list[list[Any]]:
+    """The workbook's *active* sheet as a values grid.
+
+    An upload is one table, and the sheet the person left open is that table: an
+    Instructions sheet first is not a reason to read the wrong one. Only that
+    sheet is parsed, so a workbook with a huge archive sheet beside it still
+    uploads in the time one sheet takes.
+    """
+    book = _workbook(data, filename)
+    grid = _grid_of(book.active) if book.active is not None else []
+    if not any(any(str(c).strip() for c in r) for r in grid):
+        raise ConnectorError("That file is empty.",
+                             next_step="Send a sheet with an item column.")
+    return grid
+
+
+def _workbook(data: Any, filename: str) -> Any:
     try:
         import openpyxl
     except ImportError as exc:
@@ -109,20 +134,11 @@ def excel_sheets(data: Any, filename: str) -> dict[str, list[list[Any]]]:
         raise ConnectorError("That file is empty.",
                              next_step="Send a sheet with an item column.")
     try:
-        book = openpyxl.load_workbook(io.BytesIO(raw), read_only=True, data_only=True)
-        out = {sheet.title: [[c.value if c.value is not None else "" for c in row]
-                             for row in sheet.iter_rows()]
-               for sheet in book.worksheets}
+        return openpyxl.load_workbook(io.BytesIO(raw), read_only=True, data_only=True)
     except Exception as exc:
         raise ConnectorError(f"I could not read {filename}.",
                              next_step="Send a valid .xlsx file.") from exc
-    if not out or not any(any(str(c).strip() for c in r) for g in out.values() for r in g):
-        raise ConnectorError("That file is empty.",
-                             next_step="Send a sheet with an item column.")
-    return out
 
 
-def excel_grid(data: Any, filename: str) -> list[list[Any]]:
-    """A workbook's first sheet as a values grid (an upload is one table)."""
-    sheets = excel_sheets(data, filename)
-    return next(iter(sheets.values()))
+def _grid_of(sheet: Any) -> list[list[Any]]:
+    return [[c.value if c.value is not None else "" for c in row] for row in sheet.iter_rows()]

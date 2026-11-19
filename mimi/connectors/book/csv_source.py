@@ -31,7 +31,7 @@ from __future__ import annotations
 
 import hashlib
 import re
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from datetime import date, datetime
 from decimal import Decimal, InvalidOperation
@@ -44,6 +44,7 @@ from mimi.connectors.book.rows import (
     BAD_METHOD,
     BAD_MONEY,
     BAD_NUMBER,
+    BAD_PHONE,
     DUP_IN_FILE,
     MISSING_FIELD,
     NO_LINES,
@@ -64,6 +65,7 @@ from mimi.connectors.book.rows import (
 )
 from mimi.connectors.csv.connector import EXCEL_EXTENSIONS, csv_grid, excel_sheets
 from mimi.connectors.sheets.mapping import MAX_ROWS
+from mimi.identity.store import InvalidUser, to_e164
 
 #: The tables inside a book, and the file name or sheet name each one lives under.
 TABLES: tuple[str, ...] = (
@@ -197,18 +199,24 @@ def _parse(source: str, label: str, grids: dict[str, list[list[Any]]],
         source=source,
         label=label,
         digest=digest,
+        rows_read=sum(len(table.rows) for table in tables.values()),
         distributor=_distributor(tables["distributor"], prov, rejects, tenant_id),
         reps=_unique(_reps(tables["reps"], prov, rejects), "reps", "rep_id", rejects),
         shops=_unique(_shops(tables["shops"], prov, rejects), "shops", "shop_id", rejects),
         skus=_unique(_skus(tables["skus"], prov, rejects), "skus", "sku", rejects),
         deliveries=_deliveries(tables["deliveries"], tables["delivery_lines"], prov, rejects),
-        receivables=_receivables(tables["receivables"], prov, rejects),
-        payments=_payments(tables["payments"], prov, rejects),
+        receivables=_unique(_receivables(tables["receivables"], prov, rejects),
+                            "receivables", "delivery_id", rejects),
+        payments=_unique(_payments(tables["payments"], prov, rejects),
+                         "payments", "payment_id", rejects),
         rejects=tuple(rejects))
 
 
-def _unique(rows: list[Any], table: str, key: str, rejects: list[Reject]) -> tuple[Any, ...]:
-    """One row per id, and the copies reported.
+def _unique(rows: Sequence[Any], table: str, key: str,
+            rejects: list[Reject]) -> tuple[Any, ...]:
+    """One row per id, and the copies reported. Every keyed table goes through
+    this: reps, shops, SKUs, receivables and payments here, deliveries in
+    ``_deliveries`` because their lines have to be read with them.
 
     An identical repeat is harmless: the first copy is the row. A repeat that
     *disagrees* is refused entirely, first copy included: the file contradicts
@@ -255,26 +263,35 @@ def _distributor(table: _Raw, prov: _Where, rejects: list[Reject],
     row_no, row = table.rows[0]
     tenant = _text(row, table.columns, "tenant_id")
     place = prov("distributor", tenant, row_no)
-    name = _text(row, table.columns, "name")
-    phones = _phones(_text(row, table.columns, "owner_phones"))
+    # Which book this is comes before how complete its row is: a book that names
+    # another distributor is refused outright, whatever else it is missing, so a
+    # half-filled row can never carry another tenant's data into this one.
+    if tenant and tenant != tenant_id:
+        raise ConnectorError(f"That book belongs to {tenant!r}, not to {tenant_id!r}.",
+                             next_step="Import it into its own tenant, or fix the "
+                                       "tenant_id column in the book.")
     if not tenant:
         rejects.append(Reject("distributor", "", place.where, MISSING_FIELD,
                               "the distributor row has no tenant_id"))
         return None
+    name = _text(row, table.columns, "name")
     if not name:
         rejects.append(Reject("distributor", tenant, place.where, MISSING_FIELD,
                               "the distributor row has no name"))
+        return None
+    try:
+        raw_phones = _list(_text(row, table.columns, "owner_phones"), ",")
+        phones = tuple(_phone(raw, "the distributor's owner_phones") for raw in raw_phones)
+    except _Bad as bad:
+        rejects.append(Reject("distributor", tenant, place.where, bad.reason, bad.detail))
         return None
     if not phones:
         rejects.append(Reject("distributor", tenant, place.where, MISSING_FIELD,
                               "the distributor row has no owner_phones: an owner is "
                               "reached by phone, so there is nobody to sign in"))
         return None
-    if tenant != tenant_id:
-        raise ConnectorError(f"That book belongs to {tenant!r}, not to {tenant_id!r}.",
-                             next_step="Import it into its own tenant, or fix the "
-                                       "tenant_id column in the book.")
-    return DistributorRow(tenant_id=tenant, name=name, owner_phones=phones, provenance=place)
+    return DistributorRow(tenant_id=tenant, name=name, owner_phones=phones,
+                          raw_owner_phones=raw_phones, provenance=place)
 
 
 def _reps(table: _Raw, prov: _Where, rejects: list[Reject]) -> list[RepRow]:
@@ -286,13 +303,15 @@ def _reps(table: _Raw, prov: _Where, rejects: list[Reject]) -> list[RepRow]:
             if not rep_id:
                 raise _Bad(MISSING_FIELD, "a rep row has no rep_id")
             name = _text(row, table.columns, "name")
-            phone = _text(row, table.columns, "phone")
+            raw_phone = _text(row, table.columns, "phone")
             if not name:
                 raise _Bad(MISSING_FIELD, f"rep {rep_id} has no name")
-            if not phone:
+            if not raw_phone:
                 raise _Bad(MISSING_FIELD, f"rep {rep_id} has no phone: a rep is a "
                                           "person Mimi has to be able to reach")
-            out.append(RepRow(rep_id=rep_id, name=name, phone=phone,
+            out.append(RepRow(rep_id=rep_id, name=name,
+                              phone=_phone(raw_phone, f"rep {rep_id}'s phone"),
+                              raw_phone=raw_phone,
                               areas=_list(_text(row, table.columns, "areas")),
                               provenance=place))
         except _Bad as bad:
@@ -308,8 +327,8 @@ def _shops(table: _Raw, prov: _Where, rejects: list[Reject]) -> list[ShopRow]:
         try:
             if not shop_id:
                 raise _Bad(MISSING_FIELD, "a shop row has no shop_id")
-            phone = _text(row, table.columns, "phone")
-            if not phone:
+            raw_phone = _text(row, table.columns, "phone")
+            if not raw_phone:
                 raise _Bad(MISSING_FIELD, f"shop {shop_id} has no phone: the shop's own "
                                           "number is the whole channel to it")
             name = _text(row, table.columns, "name")
@@ -320,7 +339,8 @@ def _shops(table: _Raw, prov: _Where, rejects: list[Reject]) -> list[ShopRow]:
                 shop_id=shop_id, name=name, owner=owner,
                 area=_text(row, table.columns, "area"),
                 street=_text(row, table.columns, "street"),
-                phone=phone, rep_id=_text(row, table.columns, "rep_id"),
+                phone=_phone(raw_phone, f"shop {shop_id}'s phone"),
+                raw_phone=raw_phone, rep_id=_text(row, table.columns, "rep_id"),
                 credit_limit_kobo=_money(row, table.columns, "credit_limit_naira", 0),
                 restock_days=_whole(row, table.columns, "restock_days",
                                     _DEFAULT_RESTOCK_DAYS),
@@ -433,6 +453,10 @@ def _delivery(delivery_id: str, shop_id: str, place: Provenance, row: list[Any],
     if len(parsed) != len(raw_lines):
         raise _Bad(NO_LINES, f"delivery {delivery_id} has a line that cannot be read, "
                              "so its total would be wrong")
+    numbers = [line.line_no for line in parsed]
+    if len(set(numbers)) != len(numbers):
+        raise _Bad(DUP_IN_FILE, f"delivery {delivery_id} has two lines numbered "
+                                f"{sorted({n for n in numbers if numbers.count(n) > 1})[0]}")
     total = sum(line.quantity * line.unit_price_kobo for line in parsed)
     stated = _optional_money(row, columns, "total_naira")
     if stated is not None and stated != total:
@@ -489,6 +513,9 @@ def _receivables(table: _Raw, prov: _Where, rejects: list[Reject]) -> tuple[Rece
             paid = _money(row, table.columns, "paid_naira")
             if total <= 0:
                 raise _Bad(MISSING_FIELD, f"the receivable for {delivery_id} has no total")
+            if paid < 0:
+                raise _Bad(BAD_MONEY, f"the receivable for {delivery_id} says {paid} kobo "
+                                      "was paid: a payment is never negative")
             if paid > total:
                 raise _Bad(BAD_MONEY, f"the receivable for {delivery_id} is paid {paid} "
                                       f"kobo of a {total} kobo total: more than it owes")
@@ -568,13 +595,32 @@ def _text(row: list[Any], columns: dict[str, int], name: str) -> str:
     return "" if raw is None else str(raw).strip()
 
 
-def _list(raw: str) -> tuple[str, ...]:
-    """A pipe- or semicolon-separated list ("Ikeja|Ojota")."""
-    return tuple(part.strip() for part in re.split(r"[|;]", raw) if part.strip())
+def _list(raw: str, extra: str = "") -> tuple[str, ...]:
+    """A separated list: a rep's areas ("Ikeja|Ojota"), an owner's phones."""
+    return tuple(part.strip() for part in re.split(f"[|;{extra}]", raw) if part.strip())
 
 
-def _phones(raw: str) -> tuple[str, ...]:
-    return tuple(part.strip() for part in re.split(r"[|;,]", raw) if part.strip())
+def _phone(raw: str, what: str) -> str:
+    """One number in the form the store matches an inbound message against.
+
+    ``0803 123 4567``, ``08031234567`` and ``+234 803 123 4567`` are one line, and
+    the channel hands its messages over in E.164. Storing the book's spelling
+    would import a shop that can never be routed to, so the number is normalised
+    here, once, and a number too short to be a line is a reject rather than a key
+    nobody can match.
+    """
+    try:
+        phone = to_e164(raw)
+    except InvalidUser as exc:
+        raise _Bad(BAD_PHONE, f"{what} {raw!r} is not a usable number: {exc}") from None
+    if not phone or not phone.startswith("+"):
+        raise _Bad(BAD_PHONE, f"{what} {raw!r} is not a usable number")
+    if phone.startswith("+0"):
+        # A leading zero that no country code could replace: as typed it would
+        # never match the international form a channel sends.
+        raise _Bad(BAD_PHONE, f"{what} {raw!r} starts with 0 and cannot be made "
+                              "international; write it as +234... or 0803...")
+    return phone
 
 
 def _money(row: list[Any], columns: dict[str, int], name: str,
