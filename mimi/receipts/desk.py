@@ -219,4 +219,6 @@ class ReceiptDesk:
             transcript_confidence=t.confidence,
             audio_seconds=t.duration_s,
             audio_sha256=audio_sha256(hook.audio),
+            segments=t.segments,
+            envelope=t.envelope,
         )

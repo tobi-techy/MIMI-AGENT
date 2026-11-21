@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import io
 import json
+import math
+import struct
 import wave
 from pathlib import Path
 
@@ -20,11 +22,12 @@ from mimi.voice import (
     TranscriptCacheMiss,
     VoiceContext,
     VoiceRouter,
+    envelope,
     read_voice_note,
     transcriber_from_env,
 )
 from mimi.voice import audio as va
-from mimi.voice.base import AudioError
+from mimi.voice.base import AudioError, Segment
 from mimi.voice.fixtures import clip_bytes, load_clips
 from mimi.voice.quality import assess
 from mimi.voice.router import DEFAULT_POLICY
@@ -121,6 +124,57 @@ def test_conversion_to_wav16k() -> None:
     assert va.to_wav16k(same) is same
 
 
+# ---------------------------------------------------------------- envelope
+
+
+def sine_wav(amplitude: float, seconds: float = 1.0, rate: int = 16000) -> bytes:
+    buf = io.BytesIO()
+    with wave.open(buf, "wb") as w:
+        w.setnchannels(1)
+        w.setsampwidth(2)
+        w.setframerate(rate)
+        w.writeframes(b"".join(
+            struct.pack("<h", int(amplitude * 32767 * math.sin(2 * math.pi * 440 * i / rate)))
+            for i in range(int(seconds * rate))))
+    return buf.getvalue()
+
+
+def test_envelope_is_the_same_for_the_same_bytes() -> None:
+    data = sine_wav(0.5)
+    first = envelope.envelope_of(data, "wav")
+    assert first == envelope.envelope_of(data, "wav")  # bytes in, same buckets out
+    assert len(first) == envelope.BUCKETS and all(0 <= v <= 100 for v in first)
+
+
+def test_envelope_of_a_one_second_clip_fills_every_bucket() -> None:
+    got = envelope.envelope_of(sine_wav(0.5, seconds=1.0, rate=8000), "wav")
+    assert len(got) == envelope.BUCKETS and min(got) > 40  # a steady tone throughout
+
+
+def test_envelope_of_silence_is_all_zero() -> None:
+    got = envelope.envelope_of(wav_bytes(1.0), "wav")
+    assert got == (0,) * envelope.BUCKETS
+
+
+def test_louder_audio_is_a_higher_envelope() -> None:
+    loud, quiet = envelope.envelope_of(sine_wav(0.5), "wav"), \
+        envelope.envelope_of(sine_wav(0.05), "wav")
+    assert min(loud) > max(quiet)
+
+
+def test_without_ffmpeg_there_is_no_envelope_rather_than_a_guess(
+        monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(envelope, "have_ffmpeg", lambda: False)
+    assert envelope.envelope_of(clip_bytes(OGG), "ogg") is None
+    heard = read_voice_note(clip_bytes(OGG), FakeTranscriber({}), VoiceContext())
+    assert heard.envelope == ()
+
+
+def test_the_envelope_rides_the_transcript_from_the_clip_in_hand() -> None:
+    heard = read_voice_note(wav_bytes(1.0), FakeTranscriber({}), VoiceContext())
+    assert len(heard.envelope) == envelope.BUCKETS
+
+
 # ---------------------------------------------------------------- quality
 
 
@@ -176,6 +230,50 @@ def test_spitch_request_shape_and_parse() -> None:
     assert b'name="content"; filename="voice.ogg"' in body
     assert s.form(VoiceContext("yo"))["language"] == "yo"
     assert "language" not in s.form(VoiceContext(None))
+
+
+def test_spitch_asks_for_sentence_timestamps_and_keeps_them() -> None:
+    seen: list[httpx.Request] = []
+
+    def handler(req: httpx.Request) -> httpx.Response:
+        seen.append(req)
+        return httpx.Response(200, json={
+            "request_id": "r1",
+            "text": "the noodles no complete o. na only 10 cartons.",
+            "segments": [{"text": "the noodles no complete o.", "start": 0.0, "end": 1.8},
+                         {"text": "na only 10 cartons.", "start": 1.8, "end": 3.4}],
+            "detected_language": "en",
+        })
+
+    s = SpitchTranscriber(api_key=KEY, transport=httpx.MockTransport(handler))
+    t = s.transcribe(va.inspect(clip_bytes(OGG)), VoiceContext())
+    assert b'name="timestamp"\r\n\r\nsentence' in seen[0].content
+    assert t.segments == (Segment(0.0, 1.8, "the noodles no complete o."),
+                          Segment(1.8, 3.4, "na only 10 cartons."))
+    # the provider's timings are positions only: the transcript keeps its own words
+    assert t.text == "the noodles no complete o. na only 10 cartons."
+
+
+def test_a_provider_with_no_segments_leaves_them_empty() -> None:
+    def sent(req: httpx.Request) -> httpx.Response:
+        return httpx.Response(200, json={"request_id": "r", "text": "yes all complete",
+                                         "segments": None, "detected_language": "en"})
+
+    t = SpitchTranscriber(api_key=KEY, transport=httpx.MockTransport(sent)).transcribe(
+        va.inspect(clip_bytes(OGG)), VoiceContext())
+    assert (t.status, t.segments) == ("ok", ())
+
+
+def test_segments_we_cannot_read_are_no_positions_never_a_guess() -> None:
+    def odd(req: httpx.Request) -> httpx.Response:
+        return httpx.Response(200, json={
+            "request_id": "r", "text": "yes all complete",
+            "segments": [{"text": "yes all complete"}, {"start": 0.0, "end": 1.0, "text": "?"}],
+        })
+
+    t = SpitchTranscriber(api_key=KEY, transport=httpx.MockTransport(odd)).transcribe(
+        va.inspect(clip_bytes(OGG)), VoiceContext())
+    assert t.segments == () and t.text == "yes all complete"
 
 
 def test_spitch_retries_once_then_fails_safe() -> None:
@@ -317,6 +415,40 @@ def test_cache_records_then_replays(tmp_path: Path) -> None:
         replay.transcribe(CLIP, VoiceContext("yo"))
     stored = path.read_text()
     assert "yes all complete" in stored and "RIFF" not in stored
+
+
+def test_cache_replays_a_transcript_recorded_before_the_shape_existed(
+        tmp_path: Path) -> None:
+    """Entries written before segments and envelopes were kept must still replay."""
+    from mimi.voice.cache import transcript_key
+
+    path = tmp_path / "t.json"
+    key = transcript_key("spitch", CLIP, VoiceContext("en", ("Sunrise",)))
+    path.write_text(json.dumps({key: {"text": "yes all complete", "language": "en",
+                                      "confidence": None, "latency_s": 0.4,
+                                      "audio_s": 1.0}}))
+    replay = CachedTranscriber(None, path, mode="replay", name="spitch")
+    got = replay.transcribe(CLIP, VoiceContext("en", ("Sunrise",)))
+    assert (got.text, got.status, got.segments, got.envelope) == (
+        "yes all complete", "ok", (), ())
+
+
+def test_cache_keeps_the_shape_it_recorded(tmp_path: Path) -> None:
+    class Shaped:
+        name = "spitch"
+        calls = 0
+
+        def transcribe(self, clip: AudioClip, ctx: VoiceContext) -> Transcript:
+            return Transcript("yes all complete", "ok", "spitch", duration_s=1.0,
+                              segments=(Segment(0.0, 0.7, "yes all complete"),),
+                              envelope=(0, 55, 100) * 40)
+
+    path = tmp_path / "t.json"
+    CachedTranscriber(Shaped(), path).transcribe(CLIP, VoiceContext("en"))
+    replay = CachedTranscriber(None, path, mode="replay", name="spitch")
+    got = replay.transcribe(CLIP, VoiceContext("en"))
+    assert got.segments == (Segment(0.0, 0.7, "yes all complete"),)
+    assert got.envelope == (0, 55, 100) * 40
 
 
 def test_cache_does_not_record_unanswered_calls(tmp_path: Path) -> None:

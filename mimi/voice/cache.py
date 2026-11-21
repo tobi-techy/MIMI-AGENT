@@ -6,12 +6,17 @@ the audio, the language hint and the keywords:
 
 * ``"through"``: a recorded transcript is replayed; a miss calls ``inner``
   and records what the API answered (text, detected language, confidence,
-  latency, duration). A call that got no answer (an error after the retry)
-  is not recorded, so a rerun tries again.
+  latency, duration, the sentence segments and the clip's envelope). A call
+  that got no answer (an error after the retry) is not recorded, so a rerun
+  tries again.
 * ``"replay"``: cache only. A miss raises ``TranscriptCacheMiss``.
 
 Only the API's text is stored, never audio. The quality checks are re-run on
 replay, so changing them needs no re-recording.
+
+Segments and the envelope are extras on an entry, not part of its key: a
+transcript recorded before they were kept replays with none of them, which is
+the same thing the live path reports when a provider sends no timings.
 """
 
 from __future__ import annotations
@@ -25,7 +30,7 @@ from pathlib import Path
 from typing import Any, Literal
 
 from mimi.models import metering
-from mimi.voice.base import AudioClip, Transcriber, Transcript, VoiceContext
+from mimi.voice.base import AudioClip, Segment, Transcriber, Transcript, VoiceContext
 from mimi.voice.fake import audio_sha256
 from mimi.voice.quality import assess
 
@@ -97,6 +102,8 @@ class CachedTranscriber:
                     duration_s=clip.duration_s,
                     latency_s=float(hit.get("latency_s", 0.0)),
                     tried=(self.name,),
+                    segments=tuple(Segment(*s) for s in hit.get("segments") or ()),
+                    envelope=tuple(int(v) for v in hit.get("envelope") or ()),
                 )
             )
         if self.mode == "replay" or self.inner is None:
@@ -111,6 +118,8 @@ class CachedTranscriber:
                     "confidence": out.confidence,
                     "latency_s": round(out.latency_s, 3),
                     "audio_s": clip.duration_s,
+                    "segments": [[s.start_s, s.end_s, s.text] for s in out.segments],
+                    "envelope": list(out.envelope),
                 }
                 self._save()
         return out

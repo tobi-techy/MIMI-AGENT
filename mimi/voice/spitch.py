@@ -9,7 +9,12 @@ on 26 Oct 2026 (see ``docs/VOICE.md``):
   ``special_words`` (comma-separated words to bias recognition) and
   ``timestamp`` (``none``, ``sentence`` or ``word``);
 * response: ``{"request_id", "text", "segments", "timestamps",
-  "detected_language"}``. No confidence score.
+  "detected_language"}``. No confidence score. ``segments`` is the timed
+  list at the granularity ``timestamp`` asked for, each
+  ``{"text", "start", "end"}`` in seconds (``timestamps`` is the word-level
+  list); Mimi asks for ``sentence`` and keeps those positions on the
+  transcript. The field is nullable, and a null list is reported as no
+  positions rather than filled in here.
 
 Nigerian Pidgin has no STT code of its own, so a Pidgin hint is sent as
 ``en``. Every request carries ``X-Data-Retention: false`` so Spitch keeps no
@@ -29,6 +34,7 @@ import httpx
 from mimi.models import metering
 from mimi.voice.base import (
     AudioClip,
+    Segment,
     Transcript,
     TranscriptionError,
     VoiceContext,
@@ -43,6 +49,24 @@ _STT_LANG = {"en": "en", "pcm": "en", "yo": "yo", "ig": "ig", "ha": "ha", "am": 
 _MIME = {"ogg": "audio/ogg", "mp3": "audio/mpeg", "wav": "audio/wav", "m4a": "audio/mp4"}
 
 
+def segments(raw: Any) -> tuple[Segment, ...]:
+    """The provider's timed segments, or none when it sent none we understand.
+
+    A null list, a missing one, or an element without its three fields means
+    no usable positions: the transcript keeps its words and gets no timing,
+    and nothing here splits or moves a sentence to fill the gap.
+    """
+    if not isinstance(raw, list):
+        return ()
+    out: list[Segment] = []
+    for item in raw:
+        try:
+            out.append(Segment(float(item["start"]), float(item["end"]), str(item["text"])))
+        except (KeyError, TypeError, ValueError):
+            return ()
+    return tuple(out)
+
+
 class SpitchTranscriber:
     def __init__(
         self,
@@ -51,7 +75,7 @@ class SpitchTranscriber:
         base_url: str = SPITCH_BASE,
         timeout_s: float = 30.0,
         retries: int = 1,
-        timestamp: str = "none",
+        timestamp: str = "sentence",
         transport: httpx.BaseTransport | None = None,
         sleep: Callable[[float], None] = time.sleep,
     ) -> None:
@@ -112,5 +136,6 @@ class SpitchTranscriber:
                 duration_s=clip.duration_s,
                 latency_s=latency,
                 tried=(self.name,),
+                segments=segments(body.get("segments")),
             )
         )

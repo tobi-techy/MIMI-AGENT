@@ -69,6 +69,21 @@ class VoiceContext:
 
 
 @dataclass(frozen=True)
+class Segment:
+    """One sentence of a transcript, timed by the provider that heard it.
+
+    ``text`` is the provider's own words for the segment, kept exactly as it
+    returned them. It is a position, not the transcript: where the reading of
+    a note is shown, ``Transcript.text`` wins and these only say where in the
+    audio each sentence sat.
+    """
+
+    start_s: float
+    end_s: float
+    text: str
+
+
+@dataclass(frozen=True)
 class Transcript:
     text: str
     status: TranscriptStatus
@@ -85,6 +100,12 @@ class Transcript:
     # before any call); such a transcript is never recorded in a cache.
     answered: bool = True
     fake: bool = False
+    # Where each sentence sits, when the provider timestamps its segments.
+    # Empty is a fact: that provider returned none, or nothing was heard.
+    segments: tuple[Segment, ...] = ()
+    # The clip's loudness envelope (``mimi.voice.envelope``): 0 to 100 per
+    # bucket, start to end. Empty when the clip could not be decoded in code.
+    envelope: tuple[int, ...] = ()
 
 
 class TranscriptionError(RuntimeError):

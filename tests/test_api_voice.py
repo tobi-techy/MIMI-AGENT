@@ -19,7 +19,9 @@ from mimi.api.agent import Agent
 from mimi.api.app import create_app
 from mimi.api.config import Settings, parse_keys
 from mimi.harness.gateway import ModelTurn, ScriptedModel, say
+from mimi.receipts import ShopReply, SqlShopInbox
 from mimi.store import ensure_schema, make_engine, seed_world
+from mimi.voice.base import Segment
 from mimi.voice.prefs import shop_voice_consent
 from mimi.world.loader import load_world
 
@@ -147,3 +149,36 @@ def test_the_thread_marks_which_replies_have_a_voice_note(env: dict[str, Any]) -
     assert flags[said["message_id"]] is True and flags[plain["message_id"]] is False
     assert not any(v for k, v in flags.items() if k.startswith("in:"))
     assert all(m["media"] is False for m in r.json()["messages"])  # live mode: no uploads
+
+
+def test_the_thread_shows_a_voice_notes_positions_and_envelope(env: dict[str, Any]) -> None:
+    """The console draws the waveform and the sentence marks from the facts the
+    voice pipeline kept when it heard the note; nothing is recomputed here."""
+    heard = voice_note(env["c"], "wamid.v1", "the noodles no complete o")
+    inbox = SqlShopInbox(env["engine"])
+    inbox.ensure_schema()
+    inbox.add(ShopReply(
+        message_id="wamid.v1", job_id="rcpt-1", shop_id="shop-001", sender="+2340000000001",
+        text="the noodles no complete o", received_at="2026-10-26T10:00:00+01:00",
+        kind="voice", transcript_status="ok", transcript_provider="spitch",
+        audio_seconds=3.4, segments=(Segment(0.0, 1.8, "the noodles no complete o"),),
+        envelope=(0, 40, 100, 0)))
+    owner = {"Authorization": f"Bearer {OWNER}"}
+    r = env["c"].get(f"/v1/threads/{heard['thread_id']}", headers=owner)
+    assert r.status_code == 200, r.text
+    note = next(m for m in r.json()["messages"] if m["message_id"] == "in:wamid.v1")
+    assert note["voice_note"] == {
+        "provider": "spitch", "status": "ok",
+        "segments": [{"start_s": 0.0, "end_s": 1.8, "text": "the noodles no complete o"}],
+        "envelope": [0, 40, 100, 0]}
+
+
+def test_a_voice_note_this_path_did_not_hear_has_no_shape(env: dict[str, Any]) -> None:
+    """The channel transcribed it, so there are no positions to show, and the
+    console is told none rather than being handed an empty-looking waveform."""
+    heard = voice_note(env["c"], "wamid.v1", "good morning")
+    owner = {"Authorization": f"Bearer {OWNER}"}
+    r = env["c"].get(f"/v1/threads/{heard['thread_id']}", headers=owner)
+    assert r.status_code == 200, r.text
+    note = next(m for m in r.json()["messages"] if m["message_id"] == "in:wamid.v1")
+    assert note["voice_note"] is None

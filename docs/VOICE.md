@@ -81,7 +81,9 @@ Reference: `https://docs.spitch.app/features/transcription` and
   automatic handling), `special_words` (comma-separated), `timestamp`
   (`none`, `sentence`, `word`).
 * Response: `{"request_id", "text", "segments", "timestamps",
-  "detected_language"}`. No confidence.
+  "detected_language"}`. No confidence. `segments` is the timed list at the
+  granularity `timestamp` asked for (Mimi asks for `sentence`), each
+  `{"text", "start", "end"}` in seconds; `timestamps` is the word-level list.
 * There is no Pidgin code; Mimi sends `en` for a Pidgin hint.
 * `X-Data-Retention: false` is sent on every call, so Spitch keeps no copy.
 * Price: USD 0.00042 per second of audio.
@@ -99,6 +101,34 @@ On one Yoruba fixture sentence (`vn-31`, about 4 seconds of text) the
 `sade` voice ran on for 15 seconds, 22 seconds on a retry, and the `femi`
 voice for 19 seconds, so it is the engine on that sentence, not the voice.
 The first take is kept as a stress case.
+
+## The shape of a note: where each sentence sits, and how loud it was
+
+Two facts about the audio are kept, because nobody keeps the audio (RAI-18):
+
+* **Positions.** Spitch is asked for `timestamp=sentence`, and the
+  `segments` it returns (`{"text", "start", "end"}`, seconds) are carried on
+  the transcript as `Segment(start_s, end_s, text)` and stored beside it.
+  Muse Voice Transcribe sends no timings. A provider that sends none, or
+  sends a list we cannot read, leaves the positions empty: that is a fact,
+  and nothing splits a sentence to fill the gap.
+* **Envelope.** `mimi/voice/envelope.py` computes about 130 levels, 0 to 100,
+  from the clip's RMS loudness in dBFS with a -50 dBFS floor, while the clip
+  is in hand (`read_voice_note`). WAV is read in pure Python; Ogg/Opus, MP3
+  and M4A are decoded through `to_wav16k`, so they need ffmpeg. Opus packets
+  carry no amplitude, so without ffmpeg there is no pure-Python envelope for
+  a WhatsApp note: it is stored as none rather than guessed. Same bytes give
+  the same levels.
+
+The positions are never the words a person reads: `Transcript.text` wins
+everywhere a person or the model reads the note, and a segment's text is
+kept exactly as the provider wrote it. Both facts reach the console through
+`GET /v1/threads/{thread_id}`, on an inbound voice message's `voice_note`
+(`provider`, `status`, `segments`, `envelope`). A note the channel
+transcribed itself has no `voice_note` here, and a note whose pipeline could
+not produce a fact carries an empty list for it. The transcript cache keeps
+both, so a replay has them too; an entry recorded before they existed
+replays with them empty.
 
 ## Router policy, checked again by the 50-clip eval
 
