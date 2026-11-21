@@ -432,17 +432,19 @@ def _money_item(one: _Shop) -> Item:
         parts.append(f", oldest part {days} day{'s' if days != 1 else ''} overdue")
     else:
         parts.append(", nothing overdue yet")
-    if one.quiet and one.cycles_missed:
-        cycles = one.cycles_missed
-        parts.append(f", {cycles} restock cycle{'s' if cycles != 1 else ''} missed and "
-                     "not ordering")
+    if one.quiet:
+        # Only the fact that it has gone quiet: how far past its own rhythm it is
+        # belongs to the coverage line, so the same shop is not told twice.
+        parts.append(", and it has stopped ordering")
     if one.over_limit_and_ordering:
         parts.append(f", over the {owed.naira(one.limit_kobo)} limit and still taking "
                      f"deliveries on {_day_words(one.latest_delivery_on)}")
     elif one.over_limit_kobo and one.limit_kobo:
         parts.append(f", over its {owed.naira(one.limit_kobo)} limit")
     if one.quiet:
-        action = "call today before it stops trading"
+        # The facts already say it stopped ordering, so the action adds what the
+        # rep should find out rather than repeating the warning.
+        action = "call today and find out why"
     elif one.over_limit_and_ordering:
         action = "stop the van until it pays"
     else:
@@ -471,14 +473,14 @@ def _collection_items(book: _Book) -> list[Item]:
         expected = one.outstanding_kobo
         if one.median_payment_kobo:
             expected = min(expected, one.median_payment_kobo)
-        base = (f"{one.name}{_area(one)}: collect {owed.naira(expected)} of "
-                f"{owed.naira(one.outstanding_kobo)} owed, oldest part "
-                f"{one.oldest_days_overdue} days")
+        target = (f"all {owed.naira(expected)} owed" if expected >= one.outstanding_kobo
+                  else f"{owed.naira(expected)} of {owed.naira(one.outstanding_kobo)} owed")
+        base = f"{one.name}{_area(one)}: collect {target}, oldest part {one.oldest_days_overdue} days"
         if one.unbanked_kobo:
-            holder = f"Rep {one.rep_name}" if one.rep_name else "the rep"
-            boss = one.supervisor or "You"
-            text = (f"{base}. {boss}: get the {owed.naira(one.unbanked_kobo)} {holder} is "
-                    "holding banked first, then collect.")
+            holder = one.rep_name or "your rep"
+            boss = f"{one.supervisor} (supervisor)" if one.supervisor else "You"
+            text = (f"{base}. {boss}: bank the {owed.naira(one.unbanked_kobo)} {holder} is "
+                    "holding, then collect it today.")
             out.append(Item("collections", one.shop_id, text, expected, one.rep_id))
             continue
         if one.rep_name:
@@ -547,8 +549,6 @@ def _coverage_items(due: Sequence[AttentionRow], shops: dict[str, _Shop]) -> lis
         if row.kind != "overdue":
             continue
         cycles = row.cycles_missed or 0
-        owed_part = (f", {owed.naira(row.outstanding_kobo)} owed"
-                     if row.outstanding_kobo else "")
         where = f"{row.shop_name}{f' ({row.area})' if row.area else ''}"
         rep = shops.get(row.shop_id)
         rep_name = rep.rep_name if rep is not None else ""
@@ -558,7 +558,7 @@ def _coverage_items(due: Sequence[AttentionRow], shops: dict[str, _Shop]) -> lis
             tail = " You: give it to a rep and book a delivery this week."
         out.append(Item("coverage", row.shop_id, (
             f"{where}: {cycles} restock cycle{'s' if cycles != 1 else ''} missed, nothing "
-            f"in {row.days_since_last_delivery} days{owed_part}.{tail}")))
+            f"in {row.days_since_last_delivery} days.{tail}")))
     return out
 
 

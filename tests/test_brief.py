@@ -93,6 +93,25 @@ def test_tomorrow_leads_with_the_movement(engine: sa.Engine) -> None:
     assert "came in" in built.text
 
 
+def test_unbanked_rep_cash_is_one_plain_sentence_naming_who_acts(engine: sa.Engine) -> None:
+    """The owner reads this on a phone at 7:55: the sentence says who is holding
+    the cash and what to do about it, in that order, with nothing to parse."""
+    with engine.begin() as conn:
+        shop_id = conn.execute(sa.select(s.shops.c.shop_id).where(
+            s.shops.c.tenant_id == T, s.shops.c.name == "Mama Sola Provisions")).scalar()
+        conn.execute(sa.insert(s.payments).values(
+            tenant_id=T, payment_id="pay-pending-cash-1", shop_id=shop_id,
+            delivery_id="", day=0, paid_on="2026-11-01", amount_kobo=500_000,
+            method="cash_to_rep", reference="", status="reported", partial=False,
+            split_of=None, fake_alert=False))
+    built = bf.build(engine, T, AT.date())
+    line = next(one for one in built.text.splitlines() if "Mama Sola Provisions" in one
+                and "collect" in one)
+    assert line == ("4. Mama Sola Provisions (Oja Oba): collect ₦385,000 of ₦3,497,300 owed, "
+                    "oldest part 54 days. Yemi Ogunleye (supervisor): bank the ₦5,000 "
+                    "Kayode Ajayi is holding, then collect it today.")
+
+
 def test_the_variance_is_per_rep_against_the_morning_targets(engine: sa.Engine) -> None:
     """The 8:30 scan says what came in against what each rep was set."""
     built = bf.build(engine, T, AT.date())
