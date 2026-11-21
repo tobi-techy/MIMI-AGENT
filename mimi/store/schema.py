@@ -1054,13 +1054,37 @@ routine_runs = sa.Table(
     sa.PrimaryKeyConstraint("tenant_id", "routine", "day"),
 )
 
+# The daily brief's own numbers (MIAG-10, alembic 0023): one row per tenant and
+# Lagos day, written by the routine after it counts the book, so the next brief
+# can say what moved. It is not the book: no receivable, payment or return is
+# touched, and the row is the brief's memory, nothing else reads it.
+brief_snapshots = sa.Table(
+    "brief_snapshots", metadata,
+    _tenant(),
+    sa.Column("day", sa.String(10), nullable=False),       # the Lagos day it ran
+    sa.Column("book_day", sa.String(10), nullable=False),  # the day it counted from
+    sa.Column("at_risk_kobo", sa.BigInteger(), nullable=False, default=0),
+    sa.Column("overdue_kobo", sa.BigInteger(), nullable=False, default=0),
+    sa.Column("collected_kobo", sa.BigInteger(), nullable=False, default=0),
+    sa.Column("returns_open", sa.Integer(), nullable=False, default=0),
+    sa.Column("returns_value_kobo", sa.BigInteger(), nullable=False, default=0),
+    sa.Column("returns_closed", sa.Integer(), nullable=False, default=0),
+    sa.Column("shops_missed", sa.Integer(), nullable=False, default=0),
+    sa.Column("items_listed", sa.Integer(), nullable=False, default=0),
+    # What the brief told the reps to collect, as JSON (shop, rep, expected kobo):
+    # the 8:30 scan measures the day's collections against it, per rep.
+    sa.Column("collection_targets", sa.Text(), nullable=False, default="[]"),
+    sa.Column("created_at", sa.String(40), nullable=False),
+    sa.PrimaryKeyConstraint("tenant_id", "day"),
+)
+
 BOOK_TABLES = (reps, shops, consent_withheld, skus, deliveries, delivery_lines, receivables,
                payments, bank_feed, promises, disputes, proof_events, proof_asks)
 AGENT_TABLES = (threads, inbound_messages, turns, turn_attempts, messages, thread_events,
                 intents, approvals, credit_requests, spend, asked_once, kill_switches, history,
                 prefixes, artifacts, compactions, computer_tasks, computer_steps,
                 computer_artifacts, returns, return_lines, return_events, credit_notes,
-                returns_settings, routine_state, routine_runs)
+                returns_settings, routine_state, routine_runs, brief_snapshots)
 
 # Identity (Phase 1 slice 1): the distributor's people and the areas they
 # cover. Imported last, for its side effect, so every module keeps defining

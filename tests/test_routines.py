@@ -19,6 +19,7 @@ import pytest
 import sqlalchemy as sa
 from fastapi.testclient import TestClient
 
+from mimi import owed
 from mimi.api import routines as rt
 from mimi.api.agent import Agent
 from mimi.api.app import create_app
@@ -107,19 +108,47 @@ def test_the_morning_brief_runs_itself_at_eight_and_says_what_it_found(
     [brief] = _messages(engine, "morning_brief")
     assert brief["channel"] == "owner_console"
     assert str(brief["thread_id"]) == f"{T}:owner"
-    assert str(brief["text"]).startswith("Good morning.")
-    assert "Mama Sola Provisions" in str(brief["text"])
-    assert "₦7,231,000" in str(brief["text"])
+    text = str(brief["text"])
+    # The five sections, in the owner's order of worry, and the movement first.
+    assert text.startswith("Mimi morning brief,")
+    heads = ["What changed:", "Money at risk:", "Collections today:", "Returns:", "Coverage:"]
+    assert [head for head in heads if head in text] == heads
+    assert text.index("What changed:") < text.index("Money at risk:")
+    assert text.index("Money at risk:") < text.index("Collections today:")
+    assert text.index("Collections today:") < text.index("Returns:")
+    # The book's own figures, summed here from the store rather than trusted.
+    with engine.connect() as conn:
+        outstanding = int(conn.execute(sa.select(sa.func.coalesce(
+            sa.func.sum(s.receivables.c.outstanding_kobo), 0)).where(
+                s.receivables.c.tenant_id == T,
+                s.receivables.c.outstanding_kobo > 0)).scalar() or 0)
+        live = str(conn.execute(sa.select(s.tenants.c.live_date).where(
+            s.tenants.c.tenant_id == T)).scalar())
+        overdue_shops = int(conn.execute(sa.select(sa.func.count(sa.distinct(
+            s.receivables.c.shop_id))).where(
+                s.receivables.c.tenant_id == T,
+                s.receivables.c.outstanding_kobo > 0,
+                s.receivables.c.due_on < live)).scalar() or 0)
+        oldest = conn.execute(sa.select(s.shops.c.shop_id, s.shops.c.name).where(
+            s.shops.c.tenant_id == T, s.shops.c.shop_id == "shop-001")).first()
+    assert owed.naira(outstanding) in text
+    assert str(oldest.name) in text
     # No internal ids in words a person reads.
-    assert "shop-" not in str(brief["text"]) and "dlv-" not in str(brief["text"])
+    assert "shop-" not in text and "dlv-" not in text
     # The routine read the book and wrote a message: no number moved.
     assert _book_digest(engine) == before
-    # The rail's one line names the one shop it is about, so the console can
-    # link it; that link is a field, never a guess out of the sentence.
+    # The brief keeps its own numbers for tomorrow, and only those.
+    with engine.connect() as conn:
+        snap = conn.execute(sa.select(s.brief_snapshots).where(
+            s.brief_snapshots.c.tenant_id == T)).first()
+    assert snap is not None and int(snap.at_risk_kobo) == outstanding
+    assert snap.collection_targets.startswith("[") and snap.items_listed <= 8
+    # The rail's one line is the message in a sentence.
     row = {r["id"]: r for r in rt.view(
         engine, T, now=lagos_at(2026, 11, 4, 8, 1))["routines"]}["morning_brief"]
-    assert row["last_finding"] == "Mama Sola Provisions owes ₦3,497,300. Of that, ₦2,387,250 is overdue, and the oldest invoice is 45 days old."
-    assert row["last_finding_shop_id"] == "shop-001"
+    assert row["last_finding"] == (f"{owed.naira(outstanding)} at risk, "
+                                   f"{owed.naira(int(snap.overdue_kobo))} of it overdue; "
+                                   f"{overdue_shops} to collect; 0 returns open.")
 
 
 def test_the_aging_scan_files_shops_past_sixty_days_and_unmatched_alerts(
@@ -404,9 +433,8 @@ def test_the_owner_can_run_a_routine_now_and_only_once(env: dict[str, object]) -
     row = rt.run_now(engine, T, "morning_brief", now=lagos_at(2026, 11, 4, 3, 0))
     assert row["last_run_at"] == "2026-11-04T03:00:00+01:00"
     assert row["next_run_at"] == "2026-11-04T08:00:00+01:00"
-    assert row["last_finding"] == (
-        "Mama Sola Provisions owes ₦3,497,300. Of that, ₦2,387,250 is overdue, and the oldest invoice is 45 days old.")
-    assert row["last_finding_shop_id"] == "shop-001"
+    assert row["last_finding"].endswith("to collect; 0 returns open.")
+    assert "at risk" in row["last_finding"] and "of it overdue" in row["last_finding"]
     assert len(_messages(engine, "morning_brief")) == 1
 
     with pytest.raises(rt.RoutineRefused) as refused:
@@ -564,9 +592,12 @@ def test_the_routine_reads_one_line_and_never_borrows_the_clock(
     after = {r["id"]: r for r in rt.view(engine, T, now=lagos_at(2026, 11, 4, 8, 1))["routines"]}
     assert after["morning_brief"]["last_run_at"] == "2026-11-04T08:00:00+01:00"
     assert after["morning_brief"]["next_run_at"] == "2026-11-05T08:00:00+01:00"
-    assert after["morning_brief"]["last_finding"] == (
-        "Mama Sola Provisions owes ₦3,497,300. Of that, ₦2,387,250 is overdue, and the oldest invoice is 45 days old.")
-    assert after["morning_brief"]["last_finding_shop_id"] == "shop-001"
+    finding = after["morning_brief"]["last_finding"]
+    assert finding.endswith("to collect; 0 returns open.")
+    assert "at risk" in finding and "of it overdue" in finding
+    # The brief is about many shops, so the console gets no single-shop link:
+    # a link would be a guess.
+    assert "last_finding_shop_id" not in after["morning_brief"]
     assert after["aging_scan"]["last_run_at"] == ""
     assert after["aging_scan"]["last_finding"] == ""
 
@@ -610,16 +641,16 @@ def test_get_routines_has_the_console_shape(api: dict[str, object]) -> None:
     assert c.get("/v1/routines").status_code == 401
 
 
-def test_the_api_carries_the_one_shop_only_when_there_is_one(
+def test_the_api_carries_a_shop_link_only_when_the_finding_is_about_one(
         api: dict[str, object]) -> None:
+    """A brief about the whole book names many shops, so it gets no link; the
+    scoped case in ``test_a_finding_about_one_shop_carries_that_shop`` does."""
     c = api["c"]
     engine = api["engine"]
     rt.run_due(engine, T, now=lagos_at(2026, 11, 4, 8, 0))
     rt.run_due(engine, T, now=lagos_at(2026, 11, 4, 8, 30))
     rows = {x["id"]: x for x in c.get("/v1/routines", headers=hk("owner")).json()["routines"]}
-    assert rows["morning_brief"]["last_finding_shop_id"] == "shop-001"
-    assert rows["morning_brief"]["last_finding"] == (
-        "Mama Sola Provisions owes ₦3,497,300. Of that, ₦2,387,250 is overdue, and the oldest invoice is 45 days old.")
+    assert "last_finding_shop_id" not in rows["morning_brief"]
     assert "last_finding_shop_id" not in rows["aging_scan"]
 
 
@@ -631,12 +662,11 @@ def test_the_run_endpoint_answers_the_row_and_refuses_twice(
     assert r.status_code == 200, r.text
     row = r.json()
     assert set(row) == {"id", "name", "schedule", "paused", "last_run_at",
-                        "next_run_at", "last_finding", "last_finding_shop_id"}
+                        "next_run_at", "last_finding"}
     assert row["name"] == "Morning briefing"
     assert row["last_run_at"].endswith("+01:00")
-    assert row["last_finding"] == (
-        "Mama Sola Provisions owes ₦3,497,300. Of that, ₦2,387,250 is overdue, and the oldest invoice is 45 days old.")
-    assert row["last_finding_shop_id"] == "shop-001"
+    assert row["last_finding"].endswith("to collect; 0 returns open.")
+    assert "at risk" in row["last_finding"] and "of it overdue" in row["last_finding"]
     assert len(_messages(engine, "morning_brief")) == 1
 
     # One run a day is the contract: the second answers with words, not a
@@ -769,7 +799,7 @@ def test_a_finding_about_one_shop_carries_that_shop(env: dict[str, object]) -> N
     rt.run_due(engine, T, now=lagos_at(2026, 11, 4, 8, 0))
     row = {r["id"]: r for r in rt.view(
         engine, T, now=lagos_at(2026, 11, 4, 8, 1))["routines"]}["morning_brief"]
-    assert row["last_finding"] == "Mama Sola Provisions owes ₦3,497,300. Of that, ₦2,387,250 is overdue, and the oldest invoice is 45 days old."
+    assert row["last_finding"].startswith("₦3,497,300 at risk")
     assert row["last_finding_shop_id"] == "shop-001"
 
 

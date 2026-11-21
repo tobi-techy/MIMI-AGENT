@@ -140,7 +140,12 @@ def test_routine_morning_brief_is_code(env: dict[str, Any]) -> None:
     t = run(env, r)
     assert t["state"] == "done", t
     text = next(x["text"] for x in t["replies"] if x["channel"] == "owner_console")
-    assert text.startswith("Good morning. Top overdue: Mama Sola Provisions is ")
+    # The same message the routine files: one builder, no second brief format.
+    assert text.startswith("Mimi morning brief,")
+    for head in ("What changed:", "Money at risk:", "Collections today:", "Returns:",
+                 "Coverage:"):
+        assert head in text
+    assert "Mama Sola Provisions" in text
     assert "₦" in text and "shop-" not in text and "apr_" not in text
     owner = c.get(f"/v1/threads/{A}:owner", headers=h()).json()
     assert any(m["kind"] == "morning_brief" for m in owner["messages"])
