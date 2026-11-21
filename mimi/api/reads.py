@@ -26,6 +26,7 @@ from mimi.harness import handoff as hx
 from mimi.harness.style import shop_text
 from mimi.identity.scopes import Scope
 from mimi.provenance import POLICY_VERSION, parse_witnesses, proof_word
+from mimi.receipts.inbox import voice_facts
 from mimi.store import schema as s
 from mimi.store.book import SqlGo
 from mimi.store.util import loads, mask_phone
@@ -257,6 +258,22 @@ def list_threads(engine: Engine, tenant: str, *, limit: int, offset: int,
 PRIVATE_KEYS = frozenset({"private_text"})
 
 
+def _voice_note(reply: Any) -> dict[str, Any] | None:
+    """A voice note's shape for the console: where each sentence sat and the
+    loudness envelope, both as stored when the clip was heard. None when this
+    path did not transcribe the note, and empty lists when it did but the
+    provider sent no timings or the audio would not decode."""
+    if reply is None:
+        return None
+    return {
+        "provider": reply.transcript_provider,
+        "status": reply.transcript_status,
+        "segments": [{"start_s": seg.start_s, "end_s": seg.end_s, "text": seg.text}
+                     for seg in reply.segments],
+        "envelope": list(reply.envelope),
+    }
+
+
 def get_thread(engine: Engine, tenant: str, thread_id: str, *,
                uploads: bool = False) -> dict[str, Any]:
     """``uploads``: demo mode, where the owner's console attachments are kept
@@ -278,6 +295,12 @@ def get_thread(engine: Engine, tenant: str, thread_id: str, *,
                     s.inbound_messages.c.thread_id == thread_id,
                     s.inbound_messages.c.media_ref.startswith(own, autoescape=True)))}
         names = display.names_for(conn, tenant)
+        # The voice notes this path transcribed itself, by message id, for the
+        # positions and envelope it kept while the audio was in hand. A note the
+        # channel transcribed has no row here and reads as no shape.
+        heard = voice_facts(conn, [m.message_id[3:] for m in rows
+                                   if m.direction == "in" and m.kind == "voice"
+                                   and m.message_id.startswith("in:")])
         msgs = [{
             "message_id": m.message_id, "direction": m.direction, "sender": m.sender,
             "channel": m.channel, "shop_id": m.shop_id,
@@ -293,6 +316,7 @@ def get_thread(engine: Engine, tenant: str, thread_id: str, *,
             # only a ready shop reply can have a voice note; skip the check for the rest
             "voice": (m.direction == "out" and m.channel == "shop_whatsapp"
                       and vx.reply_voice(conn, tenant, m) is not None),
+            "voice_note": _voice_note(heard.get(m.message_id[3:])),
             "media": m.message_id in uploaded} for m in rows]
         steps = [{
             "event_id": e.event_id, "turn_id": e.turn_id, "run_id": e.run_id, "type": e.type,

@@ -31,6 +31,7 @@ from mimi.runtime.store import InMemoryJobStore
 from mimi.runtime.tracing import RecordingStepTracer
 from mimi.sim.engine import SimGo
 from mimi.voice import FakeTranscriber, VoiceContext
+from mimi.voice.base import Segment
 from mimi.voice.fake import audio_sha256
 from mimi.world import load_world
 
@@ -132,6 +133,9 @@ def test_voice_yes_records_consent_with_voice_witness() -> None:
     reply = inbox.replies(job_id)[0]
     assert reply.kind == "voice" and reply.transcript_status == "ok"
     assert reply.audio_sha256 == audio_sha256(YES_CLIP) and reply.audio_seconds == 2.0
+    # the clip was in hand, so its envelope was computed and kept; the fake
+    # provider sends no timings, so the positions are empty rather than made up
+    assert len(reply.envelope) == 130 and reply.segments == ()
 
 
 def test_voice_dispute_flags_owner_with_labelled_words() -> None:
@@ -190,6 +194,22 @@ def test_voice_webhook_retry_is_not_transcribed_twice() -> None:
     assert voice(desk, clock, YES_CLIP, "wamid.v1") == "routed"
     assert voice(desk, clock, YES_CLIP, "wamid.v1") == "duplicate"
     assert fake.calls == 1
+
+
+def test_sql_inbox_keeps_positions_and_envelope_but_not_audio() -> None:
+    engine = sa.create_engine("sqlite+pysqlite:///:memory:")
+    inbox = SqlShopInbox(engine)
+    inbox.ensure_schema()
+    heard = _reply(message_id="wamid.shape", kind="voice", transcript_status="ok",
+                   segments=(Segment(0.0, 1.8, "the noodles no complete o."),
+                             Segment(1.8, 3.4, "na only 10 cartons.")),
+                   envelope=(0, 12, 100, 55))
+    assert inbox.add(heard)
+    got = inbox.replies(heard.job_id)[0]
+    assert got.segments == heard.segments and got.envelope == (0, 12, 100, 55)
+    with engine.connect() as conn:
+        row = conn.execute(sa.select(shop_inbox.c.segments, shop_inbox.c.envelope)).one()
+    assert row.segments.startswith("[[0.0, 1.8,") and row.envelope == "[0, 12, 100, 55]"
 
 
 def test_sql_inbox_keeps_transcript_not_audio() -> None:

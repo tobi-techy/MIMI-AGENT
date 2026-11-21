@@ -3712,6 +3712,16 @@
             "default": false,
             "title": "Voice",
             "type": "boolean"
+          },
+          "voice_note": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/VoiceNote"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "required": [
@@ -5937,6 +5947,65 @@
           "finished_at"
         ],
         "title": "TurnSummary",
+        "type": "object"
+      },
+      "VoiceNote": {
+        "additionalProperties": false,
+        "description": "The shape of a voice note the voice pipeline transcribed (RAI-18).\n\n``segments`` is empty when the provider sent no timings and ``envelope``\nis empty when the clip would not decode without ffmpeg; both empty means\nthe note had no shape to draw, never a made-up one.",
+        "properties": {
+          "envelope": {
+            "items": {
+              "type": "integer"
+            },
+            "title": "Envelope",
+            "type": "array"
+          },
+          "provider": {
+            "title": "Provider",
+            "type": "string"
+          },
+          "segments": {
+            "items": {
+              "$ref": "#/components/schemas/VoiceNoteSegment"
+            },
+            "title": "Segments",
+            "type": "array"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "provider",
+          "status"
+        ],
+        "title": "VoiceNote",
+        "type": "object"
+      },
+      "VoiceNoteSegment": {
+        "additionalProperties": false,
+        "description": "One sentence of a voice note: where it starts and ends in the audio, and\nthe provider's own words for it (never the words a person is shown).",
+        "properties": {
+          "end_s": {
+            "title": "End S",
+            "type": "number"
+          },
+          "start_s": {
+            "title": "Start S",
+            "type": "number"
+          },
+          "text": {
+            "title": "Text",
+            "type": "string"
+          }
+        },
+        "required": [
+          "start_s",
+          "end_s",
+          "text"
+        ],
+        "title": "VoiceNoteSegment",
         "type": "object"
       },
       "VoiceReply": {

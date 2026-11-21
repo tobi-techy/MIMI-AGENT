@@ -145,6 +145,30 @@ class Health(_Out):
     version: str
 
 
+class VoiceNoteSegment(_Out):
+    """One sentence of a voice note: where it starts and ends in the audio, and
+    the provider's own words for it (never the words a person is shown)."""
+
+    start_s: float
+    end_s: float
+    text: str
+
+
+class VoiceNote(_Out):
+    """The shape of a voice note the voice pipeline transcribed (RAI-18).
+
+    ``segments`` is empty when the provider sent no timings and ``envelope``
+    is empty when the clip would not decode without ffmpeg; both empty means
+    the note had no shape to draw, never a made-up one.
+    """
+
+    provider: str
+    status: str
+    segments: list[VoiceNoteSegment] = Field(default_factory=list)
+    # 0 to 100 per bucket, start to end (mimi.voice.envelope).
+    envelope: list[int] = Field(default_factory=list)
+
+
 class Message(_Out):
     message_id: str
     direction: str
@@ -162,6 +186,9 @@ class Message(_Out):
     # Demo mode: the bytes the owner attached in the console, from
     # GET /v1/messages/{message_id}/media.
     media: bool = False
+    # An inbound voice note's sentence positions and loudness envelope, as
+    # stored when the clip was heard; None when this path did not hear it.
+    voice_note: VoiceNote | None = None
 
 
 class MediaOut(_Out):
