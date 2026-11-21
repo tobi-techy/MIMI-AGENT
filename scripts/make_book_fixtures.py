@@ -93,19 +93,37 @@ TENANT = {
          "TRF-88512"],
         ["pay-0003", "shop-001", "", "2026-10-20", "5000.00", "cash_to_rep", ""],
     ],
+    # One return still with the rep and one already credited, so the optional
+    # tables are exercised in both file shapes and both states.
+    "returns": [
+        ["return_id", "shop_id", "rep_id", "raised_on", "status", "reason",
+         "delivery_id", "total_naira"],
+        ["ret-0001", "shop-002", "rep-01", "2026-10-24", "pending", "damaged",
+         "dlv-0002", "15750.00"],
+        ["ret-0002", "shop-003", "rep-02", "2026-10-20", "credited", "wrong_sku",
+         "dlv-0005", "18500.00"],
+    ],
+    "return_lines": [
+        ["return_id", "line_no", "sku", "quantity", "unit_price_naira", "reason"],
+        ["ret-0001", "1", "SKU-003", "1", "15750.00", "carton crushed"],
+        ["ret-0002", "1", "SKU-001", "1", "18500.00", ""],
+    ],
 }
 
 #: Columns written as real dates in the workbook, so the sheet shape exercises a
 #: date cell where the CSV shape has text. The conformance suite requires both to
 #: read back as the same day.
 DATE_COLUMNS = {"deliveries": ("delivered_on",), "receivables": ("due_on",),
-                "payments": ("paid_on",), "delivery_lines": ("expires_on",)}
+                "payments": ("paid_on",), "delivery_lines": ("expires_on",),
+                "returns": ("raised_on",)}
 #: Columns written as numbers in the workbook and as text in the CSV.
 NUMBER_COLUMNS = {"shops": ("credit_limit_naira", "restock_days"),
                   "skus": ("price_naira",), "deliveries": ("minute", "total_naira"),
                   "delivery_lines": ("quantity", "unit_price_naira"),
                   "receivables": ("total_naira", "paid_naira"),
-                  "payments": ("amount_naira",)}
+                  "payments": ("amount_naira",),
+                  "returns": ("total_naira",),
+                  "return_lines": ("quantity", "unit_price_naira")}
 
 
 def _typed(table: str, header: list[str], row: list[str]) -> list[object]:

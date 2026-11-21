@@ -889,12 +889,26 @@ returns = sa.Table(
     _tenant(),
     sa.Column("return_id", sa.String(64), nullable=False),
     sa.Column("shop_id", sa.String(64), nullable=False),
-    # slow_stock (opened from an approved pickup) | manual
+    # slow_stock (opened from an approved pickup) | manual | imported (the
+    # distributor's own record, alembic 0022)
     sa.Column("source", sa.String(16), nullable=False, default="manual"),
     sa.Column("approval_id", sa.String(64), nullable=True),
+    # The delivery the goods came in on, when the book names it (alembic 0022).
+    sa.Column("delivery_id", sa.String(64), nullable=False, default=""),
+    # Who carries the goods back, and the day the return was raised. ``raised_day``
+    # is a date ordinal so "days open" is the same arithmetic on every book
+    # (alembic 0022).
+    sa.Column("rep_id", sa.String(64), nullable=False, default=""),
+    sa.Column("raised_on", sa.String(10), nullable=False, default=""),
+    sa.Column("raised_day", sa.Integer(), nullable=False, default=0),
+    # An imported return's reason is one of ``mimi.types.RETURN_REASONS``, kept
+    # word for word; a Mimi-opened one is a sentence for the owner.
     sa.Column("reason", sa.Text(), nullable=False, default=""),
-    # drafted | approved | collected | inspected | settled | cancelled
+    # pending | in_transit | received | credited | rejected (the book's states)
+    # or drafted | approved | collected | inspected | settled | cancelled (the
+    # ledger's own); see ``mimi.types.RETURN_STATUSES``.
     sa.Column("status", sa.String(16), nullable=False, default="drafted"),
+    *_proof(),
     sa.Column("value_drafted_kobo", sa.BigInteger(), nullable=False, default=0),
     sa.Column("value_collected_kobo", sa.BigInteger(), nullable=False, default=0),
     sa.Column("value_returned_kobo", sa.BigInteger(), nullable=False, default=0),

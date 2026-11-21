@@ -21,7 +21,9 @@ a database or moves money.
   (fail closed).
 * ``legacy_level(label)``: the old trust words mapped to the new levels.
 
-Rules, policy v1 (the table in RAI-295; Tobi reviews before any bump):
+Rules, policy v2 (the table in RAI-295 plus the return row; Tobi reviews
+before any bump). v1 is every row but the last, unchanged, and rows stamped v1
+still read under it: a bump adds a rule, it never rewrites an old one.
 
 =====================  ==========================  =====================  =================
 Record                 Verified                    Likely                 Estimated
@@ -39,6 +41,9 @@ stock figure           POS item data               owner-confirmed book   count 
 sell-through period    every count POS             every count POS or     anything else
                                                    confirmed book
 stock estimate         never                       never                  always
+return                 never                       never                  always (the
+                                                                          distributor's
+                                                                          own record)
 =====================  ==========================  =====================  =================
 
 Witnesses from the same party count once: a rep log and a distributor
@@ -61,8 +66,13 @@ PROOF_LEVELS: tuple[ProofLevel, ...] = get_args(ProofLevel)
 NOT_COMPUTABLE = "incomplete"
 
 POLICY_V1 = "v1"
-POLICY_VERSION = POLICY_V1
-POLICIES: tuple[str, ...] = (POLICY_V1,)
+#: v2 adds one record type, ``return`` (21 Nov 2026), with a rule that has one
+#: answer: a return is the distributor's own record and nothing else can witness
+#: it yet, so it is estimated and stays there. No row's level changes, which is
+#: why the bump is a new rule set rather than a recomputation.
+POLICY_V2 = "v2"
+POLICY_VERSION = POLICY_V2
+POLICIES: tuple[str, ...] = (POLICY_V1, POLICY_V2)
 
 RecordType = Literal[
     "payment_transfer",
@@ -73,6 +83,7 @@ RecordType = Literal[
     "stock_figure",
     "sell_through",
     "stock_estimate",
+    "return",
 ]
 RECORD_TYPES: tuple[RecordType, ...] = get_args(RecordType)
 
@@ -189,6 +200,18 @@ def _v1(record_type: str, kinds: set[str]) -> ProofLevel:
     raise ProofError(f"unknown record type: {record_type!r}")
 
 
+def _v2(record_type: str, kinds: set[str]) -> ProofLevel:
+    if record_type == "return":
+        # Goods, not money, and only one party to the record: the shop does not
+        # confirm a return and the bank is not involved, so there is no witness
+        # that could lift it.
+        return "estimated"
+    return _v1(record_type, kinds)
+
+
+_RULES = {POLICY_V1: _v1, POLICY_V2: _v2}
+
+
 def proof_level(record_type: str, witnesses: Iterable[Witness],
                 policy: str = POLICY_VERSION) -> ProofLevel:
     """The level the witnesses on a record earn under ``policy``. No model call."""
@@ -196,7 +219,7 @@ def proof_level(record_type: str, witnesses: Iterable[Witness],
         raise ProofError(f"unknown proof policy: {policy!r}")
     if record_type not in RECORD_TYPES:
         raise ProofError(f"unknown record type: {record_type!r}")
-    return _v1(record_type, {w.kind for w in witnesses})
+    return _RULES[policy](record_type, {w.kind for w in witnesses})
 
 
 # ------------------------------------------------------------------ stamps and events

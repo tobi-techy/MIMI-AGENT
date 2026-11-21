@@ -1,7 +1,8 @@
 """Conformance: every book source must produce the same canonical rows.
 
 One small synthetic book (``tests/fixtures/books/small``: 3 shops, 2 reps, 4
-SKUs, 6 deliveries with 9 lines, 4 receivables, 3 payments) exists in two shapes:
+SKUs, 6 deliveries with 9 lines, 4 receivables, 3 payments, 2 returns with 2
+lines) exists in two shapes:
 a folder of CSV files and one workbook with a sheet per table. Both are read by
 the CSV/XLSX source through different code paths -- text and Excel date cells,
 strings and numbers -- so identical canonical rows across the two proves the
@@ -40,7 +41,7 @@ READ_AT = "2026-11-18T09:00:00+00:00"
 #: What the book holds, in canonical rows. A source that reports anything else
 #: has dropped or invented rows.
 EXPECTED = {"reps": 2, "shops": 3, "skus": 4, "deliveries": 6, "receivables": 4,
-            "payments": 3, "delivery_lines": 9}
+            "payments": 3, "delivery_lines": 9, "returns": 2, "return_lines": 2}
 
 
 def _read(path: Path) -> Reading:
@@ -79,12 +80,17 @@ def canonical(reading: Reading) -> dict[str, Any]:
         one = {k: v for k, v in asdict(delivery).items() if k not in ("provenance", "lines")}
         one["lines"] = rows(delivery.lines)
         deliveries.append(one)
+    returns = []
+    for one_return in reading.returns:
+        one = {k: v for k, v in asdict(one_return).items() if k not in ("provenance", "lines")}
+        one["lines"] = rows(one_return.lines)
+        returns.append(one)
     return {
         "distributor": None if reading.distributor is None else
         {k: v for k, v in asdict(reading.distributor).items() if k != "provenance"},
         "reps": rows(reading.reps), "shops": rows(reading.shops), "skus": rows(reading.skus),
         "deliveries": deliveries, "receivables": rows(reading.receivables),
-        "payments": rows(reading.payments),
+        "payments": rows(reading.payments), "returns": returns,
     }
 
 
@@ -98,6 +104,8 @@ def test_a_source_reads_the_whole_book_with_no_rejects(name: str) -> None:
         == {key: EXPECTED[key] for key in counts if isinstance(counts[key], list)}
     assert sum(len(row["lines"]) for row in counts["deliveries"]) == \
         EXPECTED["delivery_lines"]
+    assert sum(len(row["lines"]) for row in counts["returns"]) == \
+        EXPECTED["return_lines"]
 
 
 @pytest.mark.parametrize("name", sorted(SOURCES))
@@ -116,6 +124,8 @@ def test_money_and_dates_arrive_typed(name: str) -> None:
     assert reading.deliveries[0].delivered_on.isoformat() == "2026-10-02"
     assert reading.deliveries[0].lines[0].expires_on is not None
     assert reading.payments[2].method == "cash_to_rep"
+    assert reading.returns[0].raised_on.isoformat() == "2026-10-24"
+    assert reading.returns[0].status == "pending" and reading.returns[0].value_kobo == 1575000
 
 
 @pytest.mark.parametrize("name", sorted(SOURCES))

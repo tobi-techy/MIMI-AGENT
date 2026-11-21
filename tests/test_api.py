@@ -23,6 +23,7 @@ from mimi.api.config import ConfigError, Settings, key_digest, parse_keys
 from mimi.harness.gateway import ModelTurn, ScriptedModel, say
 from mimi.harness.router_eval import OWNER_PHONE
 from mimi.identity.auth import AuthConfig
+from mimi.provenance import POLICY_VERSION
 from mimi.store import ensure_schema, make_engine, seed_world
 from mimi.store import schema as s
 from mimi.world.generator import generate_world
@@ -350,7 +351,7 @@ def test_shops_list_and_detail(env: dict[str, Any]) -> None:
     # RAI-295: every payment says how sure Mimi is, in words, never colour alone.
     assert d["payments"] and all(p["proof_level"] in ("verified", "likely", "estimated")
                                  and p["proof"].startswith(p["proof_level"])
-                                 and p["proof_policy_version"] == "v1"
+                                 and p["proof_policy_version"] == POLICY_VERSION
                                  for p in d["payments"])
     assert c.get("/v1/shops/shop-999", headers=h("a_owner")).status_code == 404
 

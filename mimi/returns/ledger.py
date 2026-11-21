@@ -27,8 +27,10 @@ from collections.abc import Iterable, Mapping, Sequence
 from typing import Any, Literal
 
 from mimi import owed
+from mimi.types import RETURN_OPEN_STATUSES
 
-Status = Literal["drafted", "approved", "collected", "inspected", "settled", "cancelled"]
+Status = Literal["drafted", "approved", "collected", "inspected", "settled", "cancelled",
+                 "pending", "in_transit", "received", "credited", "rejected"]
 
 DRAFTED: Status = "drafted"
 APPROVED: Status = "approved"
@@ -37,10 +39,22 @@ INSPECTED: Status = "inspected"
 SETTLED: Status = "settled"
 CANCELLED: Status = "cancelled"
 
-STATUSES: tuple[Status, ...] = (DRAFTED, APPROVED, COLLECTED, INSPECTED, SETTLED, CANCELLED)
+# The book's own states, for a return imported from the distributor's record.
+PENDING: Status = "pending"
+IN_TRANSIT: Status = "in_transit"
+RECEIVED: Status = "received"
+CREDITED: Status = "credited"
+REJECTED: Status = "rejected"
 
-# What a status may become. A settled return with an undone credit goes back
-# to inspected, so inspected can be reached from collected and from settled.
+STATUSES: tuple[Status, ...] = (DRAFTED, APPROVED, COLLECTED, INSPECTED, SETTLED, CANCELLED,
+                                PENDING, IN_TRANSIT, RECEIVED, CREDITED, REJECTED)
+
+# What a status may become, in the order the goods travel and nothing skipped.
+# The ledger's own path: a settled return with an undone credit goes back to
+# inspected, so inspected can be reached from collected and from settled. The
+# book's path is the straight line pending, in transit, received, credited, or
+# rejected at any point before the credit. A credited or rejected imported
+# return is closed: no move out of either.
 TRANSITIONS: Mapping[str, tuple[str, ...]] = {
     DRAFTED: (APPROVED, CANCELLED),
     APPROVED: (COLLECTED, CANCELLED),
@@ -48,7 +62,18 @@ TRANSITIONS: Mapping[str, tuple[str, ...]] = {
     INSPECTED: (SETTLED,),
     SETTLED: (INSPECTED,),
     CANCELLED: (),
+    PENDING: (IN_TRANSIT, REJECTED),
+    IN_TRANSIT: (RECEIVED, REJECTED),
+    RECEIVED: (CREDITED,),
+    CREDITED: (),
+    REJECTED: (),
 }
+
+
+def is_open(status: str) -> bool:
+    """Whether the return is still being worked on (every read agrees on this)."""
+    return status in RETURN_OPEN_STATUSES
+
 
 Condition = Literal["resellable", "damaged", "expired"]
 Disposition = Literal["resell", "write_off", "return_to_supplier"]

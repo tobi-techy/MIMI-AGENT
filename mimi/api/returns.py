@@ -19,6 +19,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
+from datetime import date
 from typing import Any
 
 import sqlalchemy as sa
@@ -48,6 +49,13 @@ def _shop_name(conn: sa.Connection, tenant: str, shop_id: str) -> str:
     if name is None:
         raise NotFound(shop_id)
     return str(name)
+
+
+def _shop_rep(conn: sa.Connection, tenant: str, shop_id: str) -> str:
+    """The rep who covers the shop: the person who carries a return back."""
+    rep = conn.execute(sa.select(s.shops.c.rep_id).where(
+        s.shops.c.tenant_id == tenant, s.shops.c.shop_id == shop_id)).scalar()
+    return str(rep or "")
 
 
 def _sku_row(conn: sa.Connection, tenant: str, sku: str) -> Any:
@@ -371,9 +379,12 @@ def _from_pickup(conn: sa.Connection, tenant: str, approval_id: str, now: float,
     lreason = ledger.line_reason(item, unit, quantity, expires_on, near)
     key = f"{SLOW_KIND}:{approval_id}"
     rid = ledger.return_id_for(tenant, key)
+    raised_on = _date_text(now)
     fresh = insert_ignore(conn, s.returns, {
         "tenant_id": tenant, "return_id": rid, "shop_id": shop_id, "source": "slow_stock",
         "approval_id": approval_id,
+        "delivery_id": "", "rep_id": _shop_rep(conn, tenant, shop_id),
+        "raised_on": raised_on, "raised_day": date.fromisoformat(raised_on).toordinal(),
         "reason": ledger.return_reason(shop_name, [
             {"quantity_drafted": quantity, "unit": unit, "item": item}]),
         "status": ledger.DRAFTED,
@@ -438,9 +449,12 @@ def _from_lines(conn: sa.Connection, tenant: str, shop_id: str, reason: str,
             "quantity_drafted": qty, "unit_price_kobo": price,
             "value_drafted_kobo": ledger.line_value_kobo(qty, price),
             "expires_on": expires_on or None, "batch": batch, "expiry_source": source})
+    raised_on = _date_text(now)
     insert_ignore(conn, s.returns, {
         "tenant_id": tenant, "return_id": rid, "shop_id": shop_id, "source": "manual",
         "approval_id": None,
+        "delivery_id": "", "rep_id": _shop_rep(conn, tenant, shop_id),
+        "raised_on": raised_on, "raised_day": date.fromisoformat(raised_on).toordinal(),
         "reason": (ledger.scrub(reason) if reason.strip()
                    else ledger.return_reason(shop_name, built)),
         "status": ledger.DRAFTED,

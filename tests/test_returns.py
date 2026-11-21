@@ -108,7 +108,15 @@ def test_lifecycle_transitions_and_scrub() -> None:
     assert ledger.can_move(ledger.SETTLED, ledger.INSPECTED)  # an undone credit
     assert not ledger.can_move(ledger.CANCELLED, ledger.APPROVED)
     assert ledger.STATUSES == ("drafted", "approved", "collected", "inspected", "settled",
-                               "cancelled")
+                               "cancelled", "pending", "in_transit", "received",
+                               "credited", "rejected")
+    # The book's own path is a straight line and nothing skips a step.
+    assert ledger.can_move(ledger.PENDING, ledger.IN_TRANSIT)
+    assert not ledger.can_move(ledger.PENDING, ledger.RECEIVED)
+    assert not ledger.can_move(ledger.PENDING, ledger.CREDITED)
+    assert ledger.can_move(ledger.IN_TRANSIT, ledger.REJECTED)
+    assert not ledger.can_move(ledger.CREDITED, ledger.INSPECTED)
+    assert ledger.is_open(ledger.PENDING) and not ledger.is_open(ledger.CREDITED)
     dirty = "Return for shop-003 from apr_abc123 worth 12000_kobo \u2014 total"
     clean = ledger.scrub(dirty)
     assert "shop-003" not in clean and "apr_abc123" not in clean and "kobo" not in clean

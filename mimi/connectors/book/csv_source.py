@@ -45,12 +45,15 @@ from mimi.connectors.book.rows import (
     BAD_MONEY,
     BAD_NUMBER,
     BAD_PHONE,
+    BAD_REASON,
+    BAD_STATUS,
     DUP_IN_FILE,
     MISSING_FIELD,
     NO_LINES,
     PAYMENT_METHODS,
     TOTAL_MISMATCH,
     UNKNOWN_DELIVERY,
+    UNKNOWN_RETURN,
     DeliveryRow,
     DistributorRow,
     LineRow,
@@ -60,18 +63,27 @@ from mimi.connectors.book.rows import (
     ReceivableRow,
     Reject,
     RepRow,
+    ReturnLineRow,
+    ReturnRow,
     ShopRow,
     SkuRow,
 )
 from mimi.connectors.csv.connector import EXCEL_EXTENSIONS, csv_grid, excel_sheets
 from mimi.connectors.sheets.mapping import MAX_ROWS
 from mimi.identity.store import InvalidUser, to_e164
+from mimi.types import RETURN_BOOK_STATUSES, RETURN_REASONS
 
 #: The tables inside a book, and the file name or sheet name each one lives under.
 TABLES: tuple[str, ...] = (
     "distributor", "reps", "shops", "skus",
     "deliveries", "delivery_lines", "receivables", "payments",
 )
+
+#: Tables a book may carry and must not be refused for missing: an export taken
+#: before returns were recorded has none, and that is a gap in the file, not a
+#: row that cannot be read. The two arrive together (a return with no lines has
+#: nothing to add up).
+OPTIONAL_TABLES: tuple[str, ...] = ("returns", "return_lines")
 
 #: Columns a table must have before any row can be read. Everything else is
 #: optional and reads as empty rather than as a guessed value.
@@ -84,6 +96,8 @@ REQUIRED_COLUMNS: dict[str, tuple[str, ...]] = {
     "delivery_lines": ("delivery_id", "sku", "quantity", "unit_price_naira"),
     "receivables": ("delivery_id", "shop_id", "due_on", "total_naira", "paid_naira"),
     "payments": ("payment_id", "shop_id", "paid_on", "amount_naira", "method"),
+    "returns": ("return_id", "shop_id", "raised_on", "status", "reason"),
+    "return_lines": ("return_id", "sku", "quantity", "unit_price_naira"),
 }
 
 #: ``delivery_lines.line_no`` is optional: a file that does not number its lines
@@ -122,11 +136,11 @@ def read_book(path: str | Path, *, tenant_id: str, read_at: str) -> Reading:
     where = Path(path)
     if where.is_dir():
         return _parse("csv", label=where.name, grids=_tables_from_folder(where),
-                      names={table: f"{table}.csv" for table in TABLES},
+                      names={table: f"{table}.csv" for table in TABLES + OPTIONAL_TABLES},
                       digest=_folder_digest(where), tenant_id=tenant_id, read_at=read_at)
     if where.suffix.lower() in EXCEL_EXTENSIONS:
         return _parse("xlsx", label=where.name, grids=_tables_from_workbook(where),
-                      names={table: f"sheet {table}" for table in TABLES},
+                      names={table: f"sheet {table}" for table in TABLES + OPTIONAL_TABLES},
                       digest=hashlib.sha256(where.read_bytes()).hexdigest(),
                       tenant_id=tenant_id, read_at=read_at)
     if not where.exists():
@@ -142,7 +156,7 @@ def read_book(path: str | Path, *, tenant_id: str, read_at: str) -> Reading:
 
 
 def _tables_from_folder(folder: Path) -> dict[str, list[list[Any]]]:
-    """One CSV file per table. A missing table is refused by name."""
+    """One CSV file per table. A missing required table is refused by name."""
     grids: dict[str, list[list[Any]]] = {}
     missing: list[str] = []
     for table in TABLES:
@@ -158,6 +172,14 @@ def _tables_from_folder(folder: Path) -> dict[str, list[list[Any]]]:
         raise ConnectorError(
             f"The folder {folder.name} has no {', '.join(missing)}.",
             next_step="A book folder holds one file per table, named after the table.")
+    for table in OPTIONAL_TABLES:
+        path = folder / f"{table}.csv"
+        if not path.is_file():
+            continue
+        try:
+            grids[table] = csv_grid(path.read_text(encoding="utf-8-sig"))
+        except ConnectorError as exc:
+            raise ConnectorError(f"{path.name}: {exc}", next_step=exc.next_step) from exc
     return grids
 
 
@@ -165,9 +187,12 @@ def _folder_digest(folder: Path) -> str:
     """One SHA-256 over the folder's tables by name and content, so the same
     book read twice is one digest however the folder was copied."""
     digest = hashlib.sha256()
-    for table in TABLES:
+    for table in TABLES + OPTIONAL_TABLES:
+        path = folder / f"{table}.csv"
+        if not path.is_file():
+            continue
         digest.update(table.encode())
-        digest.update((folder / f"{table}.csv").read_bytes())
+        digest.update(path.read_bytes())
     return digest.hexdigest()
 
 
@@ -180,7 +205,7 @@ def _tables_from_workbook(path: Path) -> dict[str, list[list[Any]]]:
         raise ConnectorError(
             f"{path.name} has no sheet named {', '.join(missing)}.",
             next_step="A book workbook holds one sheet per table, named after the table.")
-    return {table: by_name[table] for table in TABLES}
+    return {table: by_name[table] for table in TABLES + OPTIONAL_TABLES if table in by_name}
 
 
 # ------------------------------------------------------------------- the parse
@@ -195,6 +220,16 @@ def _parse(source: str, label: str, grids: dict[str, list[list[Any]]],
 
     rejects: list[Reject] = []
     tables = {name: _table(grids[name], name, names[name]) for name in TABLES}
+    # Both return tables or neither: a returns sheet with no lines has nothing to
+    # add up, and a lines sheet with no returns names rows that are not there.
+    if ("returns" in grids) != ("return_lines" in grids):
+        raise ConnectorError(
+            f"{names['returns']} and {names['return_lines']} come together.",
+            next_step="Add the other one, or leave returns out of this export.")
+    if "returns" in grids:
+        tables["returns"] = _table(grids["returns"], "returns", names["returns"])
+        tables["return_lines"] = _table(grids["return_lines"], "return_lines",
+                                        names["return_lines"])
     return Reading(
         source=source,
         label=label,
@@ -209,6 +244,8 @@ def _parse(source: str, label: str, grids: dict[str, list[list[Any]]],
                             "receivables", "delivery_id", rejects),
         payments=_unique(_payments(tables["payments"], prov, rejects),
                          "payments", "payment_id", rejects),
+        returns=(_returns(tables["returns"], tables["return_lines"], prov, rejects)
+                 if "returns" in tables else ()),
         rejects=tuple(rejects))
 
 
@@ -555,6 +592,146 @@ def _payments(table: _Raw, prov: _Where, rejects: list[Reject]) -> tuple[Payment
             rejects.append(Reject("payments", payment_id, place.where, bad.reason,
                                   bad.detail))
     return tuple(out)
+
+
+def _returns(table: _Raw, lines: _Raw, prov: _Where,
+             rejects: list[Reject]) -> tuple[ReturnRow, ...]:
+    """Returns and their lines, valued here in code.
+
+    A return is written whole or not at all, for the same reason a delivery is:
+    one unreadable line would make the value a sum over the lines that happened
+    to read. Its status is the book's own state, checked against the closed list
+    (``mimi.types.RETURN_BOOK_STATUSES``) rather than stored as written.
+    """
+    by_return: dict[str, list[tuple[int, list[Any]]]] = {}
+    for row_no, row in lines.rows:
+        by_return.setdefault(_text(row, lines.columns, "return_id"), []).append((row_no, row))
+
+    out: list[ReturnRow] = []
+    placed: set[str] = set()
+    kept: dict[str, ReturnRow] = {}
+    rejected_copies: set[str] = set()
+    for row_no, row in table.rows:
+        return_id = _text(row, table.columns, "return_id")
+        place = prov("returns", return_id, row_no)
+        try:
+            if not return_id:
+                raise _Bad(MISSING_FIELD, "a return row has no return_id")
+            shop_id = _text(row, table.columns, "shop_id")
+            if not shop_id:
+                raise _Bad(MISSING_FIELD, f"return {return_id} names no shop")
+            placed.add(return_id)
+            one = _return(return_id, shop_id, place, row, table.columns,
+                          by_return.get(return_id, []), lines.columns, prov, rejects)
+            first = kept.get(return_id)
+            if first is None:
+                kept[return_id] = one
+                out.append(one)
+                continue
+            same = _signature(first) == _signature(one)
+            if not same and return_id not in rejected_copies:
+                rejected_copies.add(return_id)
+                out = [r for r in out if r.return_id != return_id]
+                rejects.append(Reject(
+                    "returns", return_id, first.provenance.where, DUP_IN_FILE,
+                    f"return {return_id} is listed twice in this file with different "
+                    "content, so no copy of it is imported"))
+            rejects.append(Reject(
+                "returns", return_id, place.where, DUP_IN_FILE,
+                f"return {return_id} is listed twice in this file: "
+                + ("the two rows are identical, so the first is used" if same
+                   else "the two rows disagree, so no copy of it is imported")))
+        except _Bad as bad:
+            rejects.append(Reject("returns", return_id, place.where, bad.reason, bad.detail))
+
+    for return_id, rows in by_return.items():
+        if return_id in placed:
+            continue
+        for row_no, _row in rows:
+            rejects.append(Reject(
+                "return_lines", return_id,
+                prov("return_lines", return_id, row_no).where, UNKNOWN_RETURN,
+                f"a line for return {return_id!r}, which this file does not list"))
+    return tuple(out)
+
+
+def _return(return_id: str, shop_id: str, place: Provenance, row: list[Any],
+            columns: dict[str, int], raw_lines: list[tuple[int, list[Any]]],
+            line_columns: dict[str, int], prov: _Where,
+            rejects: list[Reject]) -> ReturnRow:
+    if not raw_lines:
+        raise _Bad(NO_LINES, f"return {return_id} lists no lines, so there is nothing "
+                             "to value")
+    parsed: list[ReturnLineRow] = []
+    for order, (row_no, line_row) in enumerate(raw_lines, start=1):
+        line = _return_line(return_id, order, line_row, line_columns,
+                            prov("return_lines", return_id, row_no), rejects)
+        if line is not None:
+            parsed.append(line)
+    if len(parsed) != len(raw_lines):
+        raise _Bad(NO_LINES, f"return {return_id} has a line that cannot be read, so "
+                             "its value would be wrong")
+    numbers = [line.line_no for line in parsed]
+    if len(set(numbers)) != len(numbers):
+        raise _Bad(DUP_IN_FILE, f"return {return_id} has two lines numbered "
+                                f"{sorted({n for n in numbers if numbers.count(n) > 1})[0]}")
+    total = sum(line.quantity * line.unit_price_kobo for line in parsed)
+    stated = _optional_money(row, columns, "total_naira")
+    if stated is not None and stated != total:
+        raise _Bad(TOTAL_MISMATCH,
+                   f"return {return_id}: the file says {stated} kobo in total and its "
+                   f"lines add up to {total} kobo")
+    return ReturnRow(
+        return_id=return_id, shop_id=shop_id, rep_id=_text(row, columns, "rep_id"),
+        raised_on=_day(row, columns, "raised_on", f"return {return_id}"),
+        status=_status(_text(row, columns, "status"), return_id),
+        reason=_reason(_text(row, columns, "reason"), return_id),
+        delivery_id=_text(row, columns, "delivery_id"),
+        lines=tuple(parsed), value_kobo=total, provenance=place)
+
+
+def _return_line(return_id: str, order: int, row: list[Any], columns: dict[str, int],
+                 place: Provenance, rejects: list[Reject]) -> ReturnLineRow | None:
+    try:
+        sku = _text(row, columns, "sku")
+        if not sku:
+            raise _Bad(MISSING_FIELD, f"return {return_id}, line {order}: no sku")
+        quantity = _whole(row, columns, "quantity")
+        if quantity <= 0:
+            raise _Bad(BAD_NUMBER, f"return {return_id}, line {order}, sku {sku}: "
+                                   f"quantity {quantity} is not units returned")
+        price = _money(row, columns, "unit_price_naira")
+        if price <= 0:
+            raise _Bad(MISSING_FIELD, f"return {return_id}, line {order}, sku {sku}: the "
+                                      "line has no price")
+        return ReturnLineRow(
+            line_no=_whole(row, columns, "line_no", order), sku=sku, quantity=quantity,
+            unit_price_kobo=price, reason=_text(row, columns, "reason"), provenance=place)
+    except _Bad as bad:
+        rejects.append(Reject("return_lines", return_id, place.where, bad.reason,
+                              bad.detail))
+        return None
+
+
+def _status(raw: str, return_id: str) -> str:
+    status = re.sub(r"[\s-]+", "_", raw.strip().lower())
+    if status not in RETURN_BOOK_STATUSES:
+        raise _Bad(BAD_STATUS,
+                   f"return {return_id} is {raw!r}; this book knows "
+                   f"{', '.join(RETURN_BOOK_STATUSES)}")
+    return status
+
+
+def _reason(raw: str, return_id: str) -> str:
+    if not raw.strip():
+        raise _Bad(MISSING_FIELD, f"return {return_id} gives no reason")
+    wanted = re.sub(r"[\s_-]+", " ", raw.strip().lower())
+    for reason in RETURN_REASONS:
+        if re.sub(r"[\s_-]+", " ", reason) == wanted:
+            return reason
+    raise _Bad(BAD_REASON,
+               f"return {return_id} is {raw!r}; the reasons this book knows are "
+               f"{', '.join(RETURN_REASONS)}")
 
 
 # ----------------------------------------------------------------- table reads
