@@ -33,6 +33,7 @@ from mimi.proof.parse import LAGOS, amount_kobo, last_digits, parse_time
 from mimi.proof.reading import ProofReading, ScreenshotReader, fake_reader, parse_reading
 from mimi.proof.render import ScreenSpec, render
 from mimi.proof.witness import ListBankFeed
+from mimi.provenance import POLICY_VERSION
 from mimi.receipts.intents import SendShopMessage
 from mimi.runtime.outbox import MONEY_VERBS
 from mimi.runtime.runner import JobRunner
@@ -336,7 +337,7 @@ def test_likely_then_bank_witness_makes_it_verified_with_three_witnesses() -> No
     assert rig.ledger.get("wamid.1").level == "verified"
     # RAI-295: the proof level went likely -> verified, one event per witness.
     rec = rig.ledger.get("wamid.1")
-    assert rec.proof_level == "verified" and rec.proof_policy_version == "v1"
+    assert rec.proof_level == "verified" and rec.proof_policy_version == POLICY_VERSION
     assert [(e.old_level, e.new_level, e.witness_kind) for e in rig.ledger.events("wamid.1")] == [
         ("none", "likely", "alert_screenshot_checked"), ("likely", "verified", "bank_feed")]
 

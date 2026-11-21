@@ -14,6 +14,24 @@ from dataclasses import dataclass
 
 Kobo = int
 
+#: The states a return moves through, in order: raised and waiting on the owner
+#: (``drafted``), approved (``approved``), with the rep (``collected``), counted
+#: and examined at the depot (``inspected``), credited and applied (``settled``),
+#: or declined (``cancelled``). One vocabulary for a return from any source; the
+#: transition table that keeps the order is ``mimi.returns.ledger``.
+RETURN_STATUSES: tuple[str, ...] = (
+    "drafted", "approved", "collected", "inspected", "settled", "cancelled")
+
+#: A return in one of these is still being worked on; anything else is closed.
+RETURN_OPEN_STATUSES: frozenset[str] = frozenset({
+    "drafted", "approved", "collected", "inspected"})
+
+#: Why a return came back, from the visit-record contract's closed list plus the
+#: three reasons only a return has. A free-text reason is not a vocabulary, and
+#: a reason nobody chose from cannot be counted.
+RETURN_REASONS: tuple[str, ...] = (
+    "shut", "no stock needed", "refused", "damaged", "expired", "wrong_sku")
+
 
 @dataclass(frozen=True)
 class ShopScope:

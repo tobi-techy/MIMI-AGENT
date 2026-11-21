@@ -91,6 +91,9 @@ TABLE = [
     # the estimator's output is always estimated
     ("stock_estimate", ("pos_report",), "estimated"),
     ("stock_estimate", ("estimator",), "estimated"),
+    # policy v2: a return is one party's word and nothing lifts it.
+    ("return", ("distributor_record",), "estimated"),
+    ("return", ("shop_yes", "distributor_record"), "estimated"),
 ]
 
 
@@ -393,8 +396,8 @@ def test_seeded_book_is_fully_labelled_and_credit_sees_verified_only(tmp_path: P
         for t in (s.payments, s.deliveries):
             rows = c.execute(sa.select(t.c.proof_level, t.c.witnesses,
                                        t.c.proof_policy_version)).all()
-            assert rows and all(r[0] in PROOF_LEVELS and parse_witnesses(r[1]) and r[2] == "v1"
-                                for r in rows)
+            assert rows and all(r[0] in PROOF_LEVELS and parse_witnesses(r[1])
+                                and r[2] == POLICY_VERSION for r in rows)
     counts = book.level_counts(w.tenant_id)
     assert counts["payment"]["verified"] == len({c.payment_id for c in w.bank_feed} - {
         p.payment_id for p in w.payments if p.fake_alert})

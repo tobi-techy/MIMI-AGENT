@@ -4,6 +4,7 @@ filtering, and the unhappy paths. Code only: no model call anywhere."""
 
 from __future__ import annotations
 
+import json
 import re
 from collections.abc import Iterator
 from typing import Any
@@ -17,6 +18,7 @@ from mimi.api.agent import Agent, NotFound
 from mimi.api.app import create_app
 from mimi.api.config import Settings, parse_keys
 from mimi.harness.gateway import ScriptedModel
+from mimi.provenance import POLICY_VERSION
 from mimi.returns import ledger
 from mimi.store import ensure_schema, make_engine, seed_world
 from mimi.store import schema as s
@@ -109,6 +111,11 @@ def test_lifecycle_transitions_and_scrub() -> None:
     assert not ledger.can_move(ledger.CANCELLED, ledger.APPROVED)
     assert ledger.STATUSES == ("drafted", "approved", "collected", "inspected", "settled",
                                "cancelled")
+    # Nothing skips a step: the raised return cannot be inspected or settled
+    # before the rep has taken the goods.
+    assert not ledger.can_move(ledger.DRAFTED, ledger.INSPECTED)
+    assert not ledger.can_move(ledger.DRAFTED, ledger.SETTLED)
+    assert ledger.is_open(ledger.DRAFTED) and not ledger.is_open(ledger.SETTLED)
     dirty = "Return for shop-003 from apr_abc123 worth 12000_kobo \u2014 total"
     clean = ledger.scrub(dirty)
     assert "shop-003" not in clean and "apr_abc123" not in clean and "kobo" not in clean
@@ -158,6 +165,14 @@ def test_pickup_approval_opens_a_drafted_return_with_invoice_expiry(
     assert ln["expiry_source"] in ("invoice", "estimated")
     assert not ID_RE.search(ret["reason"]) and "\u2014" not in ret["reason"]
     assert [t["status"] for t in ret["transitions"]] == ["drafted"]
+    # The proof columns were computed by the policy in code, not left to a
+    # column default: one witness, and the policy version that knows a return.
+    with api["engine"].connect() as conn:
+        row = conn.execute(sa.select(s.returns.c.proof_level, s.returns.c.witnesses,
+                                     s.returns.c.proof_policy_version).where(
+            s.returns.c.tenant_id == A)).first()
+    assert row.proof_level == "estimated" and row.proof_policy_version == POLICY_VERSION
+    assert [w["source_id"] for w in json.loads(row.witnesses)] == [ret["return_id"]]
     # Opening from the same pickup again returns the one draft.
     again = c.post("/v1/returns", headers=h(), json={"approval_id": a["approval_id"]})
     assert again.status_code == 201 and again.json()["return_id"] == ret["return_id"]

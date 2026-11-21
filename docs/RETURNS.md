@@ -29,6 +29,47 @@ The lifecycle, each move written to `return_events`:
 | `settled` | the credit note was approved and applied against the shop's balance |
 | `cancelled` | the owner declined the draft (terminal, nothing moved) |
 
+### The book's own return, imported (MIAG-10, 21 Nov 2026)
+
+A distributor records returns in his own book, and until 21 Nov 2026 that record
+had nowhere to land. `returns.csv` and `return_lines.csv` (or the two sheets)
+now import through the same canonical layer as the rest of the book
+([BOOK-IMPORT.md](BOOK-IMPORT.md)), into the same table, because it is the same
+thing: goods coming back from a shop. There is one returns model and one set of
+statuses; an import does not add a second vocabulary.
+
+The row carries what the book knows and the ledger did not keep: `rep_id` (who
+carries it back), `raised_on` and `raised_day` (the day it was raised, and its
+ordinal, so days open is one subtraction), `delivery_id` (the delivery the goods
+came in on, when the book names one), and the three proof columns every record
+has. A return is the distributor's own record and nothing else witnesses it, so
+it is `estimated` under the policy's `return` rule (policy v2) and stays there;
+the level is stamped through `mimi.provenance` for every row, never left to a
+column default.
+
+An imported return arrives at the stage the distributor's book records —
+`drafted` while it waits on the pickup, or `approved` when the book itself
+records an approval — and moves through the same six statuses as a return Mimi
+proposed. `source` is `imported`. Nothing skips a step
+(`ledger.TRANSITIONS`), and the import never writes a credit into the book: the
+receivable reduction is still only ever applied through an approved
+`return_credit`, computed by arithmetic, never typed (below).
+
+**What a return is worth is one rule** (`mimi.store.returns.at_stake_kobo`):
+the raised value while it waits, what the rep actually took once collected, and
+what inspection accepted after that. A short return is never reported at the
+figure it was raised for, and the aged read and the daily brief share the rule
+so they cannot disagree.
+
+### What is still open, and for how long
+
+`python -m mimi.store.returns --tenant-id <id> [--json]` lists every open return
+on the book's own day: days since raised, status, what it is worth at that
+stage, the shop and the rep, oldest first. It is the read the morning brief's
+returns section stands on, and it reads both sources: a return Mimi proposed
+from a pickup ages exactly like an imported one
+(`mimi.types.RETURN_OPEN_STATUSES`).
+
 A line keeps three quantities, so the console never has to guess:
 
 * `quantity_drafted`: what the pickup said would come back;
@@ -150,7 +191,8 @@ What one shop could cost, aged and risk-weighted, per shop and in total.
 
 ## Tests
 
-`tests/test_returns.py` and `tests/test_exposure.py` (code only, no model):
+`tests/test_returns.py`, `tests/test_returns_import.py` and
+`tests/test_exposure.py` (code only, no model):
 
 * the lifecycle, the three quantities, the settlement against a balance and
   its undo, and the credit-on-account case for a shop that owes nothing;

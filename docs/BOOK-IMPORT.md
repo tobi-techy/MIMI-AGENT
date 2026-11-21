@@ -38,12 +38,21 @@ book/
   receivables.csv     delivery_id, shop_id, due_on, total_naira, paid_naira
   payments.csv        payment_id, shop_id, delivery_id, paid_on, amount_naira,
                       method, reference
+  returns.csv         return_id, shop_id, raised_on, status, reason;
+                      optional rep_id, delivery_id, total_naira
+  return_lines.csv    return_id, sku, quantity, unit_price_naira;
+                      optional line_no, reason
 ```
 
-Or the same eight tables as eight sheets of one `.xlsx`/`.xlsm` workbook, named
-`distributor`, `reps`, `shops`, `skus`, `deliveries`, `delivery_lines`,
-`receivables`, `payments`. Columns are matched by name, not position (`Shop ID`,
-`shop_id` and `SHOP-ID` are one column); an extra column is ignored.
+The first eight tables are required. **The two return tables are optional and
+come together**: an export taken before returns were recorded has none, and a
+re-import of that same book is still one book. A returns file with no lines, or
+a lines file with no returns, is refused with one sentence, because a return
+with nothing to add up is not a return.
+
+Or any of those tables as sheets of one `.xlsx`/`.xlsm` workbook, named after
+the table. Columns are matched by name, not position (`Shop ID`, `shop_id` and
+`SHOP-ID` are one column); an extra column is ignored.
 
 `deliveries.total_naira` is optional. When it is there it is **compared** with
 the sum of the delivery's lines, never used: a file that states a different
@@ -72,6 +81,21 @@ figure is refused (`total_mismatch`).
 * **A delivery is written whole or not at all.** One unreadable line refuses the
   whole delivery, because a total summed over the lines that happened to read is
   the wrong number wearing the right shape.
+* **A return's value is summed from its lines**, quantity times price, and a
+  `total_naira` the file states is only compared against that sum
+  (`total_mismatch`), never used. A return is written whole or not at all, for
+  the same reason a delivery is.
+* **A return's status is the returns ledger's own vocabulary**, from the closed
+  list (`drafted`, `approved`, `collected`, `inspected`, `settled`,
+  `cancelled`, `mimi.types.RETURN_STATUSES`): the book's export says which stage
+  the return has reached and the row lands there, with the same transition table
+  keeping the order from that point. A status this book does not know, including
+  any second vocabulary for the same stages, is a reject (`bad_status`), never
+  stored as written or mapped to a guess.
+* **A return's reason is from the closed list** too (`shut`, `no stock needed`,
+  `refused`, `damaged`, `expired`, `wrong_sku`, `mimi.types.RETURN_REASONS`): the
+  visit-record contract's list plus the three only a return has. A free-text
+  reason cannot be counted, so it is refused (`bad_reason`).
 
 ## What is refused, and what is *not* refused
 
@@ -93,8 +117,11 @@ honestly.
 | `unknown_delivery` | a line, receivable or payment names a delivery the book does not have |
 | `mixes_two_shops` | a receivable or payment names a shop its delivery did not go to |
 | `total_mismatch` | a receivable or the file's own delivery total disagrees with the lines |
-| `dup_in_file` | the same id twice in one file (identical: first used; different: neither) — every keyed table, including receivables and payments, plus a repeated `line_no` inside one delivery |
+| `dup_in_file` | the same id twice in one file (identical: first used; different: neither) — every keyed table, including receivables, payments and returns, plus a repeated `line_no` inside one delivery or return |
 | `dup_in_book` | the id is already in the book with different content |
+| `bad_status` | a return whose status is not one the returns ledger knows |
+| `bad_reason` | a return whose reason is not one of the six the contract names |
+| `unknown_return` | a return line naming a return the file does not list |
 
 A file-level problem refuses the file with one plain sentence and writes nothing:
 a missing table, a missing column, a table over 10,000 rows, a distributor row
@@ -111,13 +138,18 @@ columns and the proof policy's own vocabulary:
   id. One party's word is `estimated`, so an imported book is `estimated` until a
   shop confirms a receipt or the bank feed matches a payment. That is the honest
   level, and it is what the console shows.
+* **Returns carry the same three proof columns.** A return is the distributor's
+  own record and nothing else witnesses it (the shop does not confirm a return,
+  the bank is not involved), so the policy's own rule (`return`, policy v2)
+  makes it `estimated` and leaves it there. The importer computes the level
+  through `mimi.provenance.stamp` rather than asserting it.
 * **Each of those rows also writes one append-only `proof_events` line**, built by
   `mimi.provenance.add_witness`, the same function that records a witness when one
   lands outside an import. So the record type is one the policy knows — `delivery`
-  for a delivery, and `payment_transfer` / `payment_cash` / `payment_pos` for a
-  payment, never a generic `payment`, because that distinction decides which
-  witnesses can lift a figure at all — and the level is computed by the rules
-  rather than asserted by the writer. `record_id` is the row's own id,
+  for a delivery, `return` for a return, and `payment_transfer` / `payment_cash` /
+  `payment_pos` for a payment, never a generic `payment`, because that distinction
+  decides which witnesses can lift a figure at all — and the level is computed by
+  the rules rather than asserted by the writer. `record_id` is the row's own id,
   `witness_source` the import run, `at` the moment it was read.
 * **Shops, reps, SKUs, lines and receivables are reference rows the proof policy
   has no record type for**, and the import does not invent one. Their provenance
@@ -176,6 +208,13 @@ python -m mimi.connectors.book data/sunline --tenant-id sunline
 python -m mimi.connectors.book data/sunline.xlsx --tenant-id sunline --as-of 2026-10-27
 ```
 
+The returns an imported book leaves open, aged on the book's own day:
+
+```bash
+python -m mimi.store.returns --tenant-id sunline          # the list, oldest first
+python -m mimi.store.returns --tenant-id sunline --json   # the typed rows
+```
+
 A tenant made by the import is not the demo world: `tenants.simulated` is false,
 the shops are false, and the owner phone in the distributor row becomes the
 tenant's owner (the person who signs in). An empty book reads as empty, with
@@ -187,7 +226,10 @@ zeroes, never as a sample of Coral Lane.
   shape; a folder of tables and a workbook of sheets are what exist, and the
   conformance suite covers both.
 * **A correction path.** A changed row is refused rather than applied. An
-  amendment flow (with its own audit) is a separate design.
+  amendment flow (with its own audit) is a separate design. A return is the case
+  that will ask for it first: a later export that moves the same return from
+  `drafted` to `collected` is a changed row, and today it is refused like any
+  other, because an import must not edit a book it does not own.
 * **Reconciliation as a report.** The import compares what it can at write time
   (file total against lines, receivable against delivery). A standing
   reconciliation report over an imported book is ring 3 and not in this change.

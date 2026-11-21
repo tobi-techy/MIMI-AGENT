@@ -4316,7 +4316,8 @@
           "source": {
             "enum": [
               "slow_stock",
-              "manual"
+              "manual",
+              "imported"
             ],
             "title": "Source",
             "type": "string"

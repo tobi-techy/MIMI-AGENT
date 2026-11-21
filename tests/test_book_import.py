@@ -45,6 +45,9 @@ from mimi.store.seed import seed_world
 from mimi.world.loader import load_world
 
 FIXTURES = Path(__file__).parent / "fixtures" / "books" / "small"
+#: The eight tables these tests edit. The fixture book also carries returns, which
+#: have rules of their own: ``tests/test_returns_import.py`` reads this same book
+#: with them, so breaking one thing here still breaks exactly one thing.
 TABLES = ("distributor", "reps", "shops", "skus", "deliveries", "delivery_lines",
           "receivables", "payments")
 TENANT = "sunline-dist"

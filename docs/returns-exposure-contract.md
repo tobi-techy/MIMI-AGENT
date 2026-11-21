@@ -19,6 +19,14 @@ Paths:
 - `GET    /v1/returns/settings` -> ReturnSettingsOut
 - `PUT    /v1/returns/settings` -> ReturnSettingsOut
 
+`source` is `imported` for a return read from the distributor's own book
+(`returns.csv`, [BOOK-IMPORT.md](BOOK-IMPORT.md)). An imported return carries no
+`approval_id`, its `reason` is one of the contract's closed list (`shut`,
+`no stock needed`, `refused`, `damaged`, `expired`, `wrong_sku`) rather than a
+sentence, and it moves through the same six statuses as any other return: the
+imported row arrives at the stage the book records and the transition table
+keeps the order from there.
+
 Lifecycle status strings (in `status` and in each transition):
 
 - `drafted` opened from an approved slow-stock pickup option, waiting on the owner
@@ -37,7 +45,7 @@ ReturnOut:
   "return_id": str,
   "shop_id": str,
   "shop_name": str,
-  "source": "slow_stock" | "manual",
+  "source": "slow_stock" | "manual" | "imported",
   "approval_id": str | null,
   "reason": str,
   "status": one of the 6 strings,

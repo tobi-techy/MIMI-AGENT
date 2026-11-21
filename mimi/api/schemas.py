@@ -631,7 +631,7 @@ class ReturnOut(_Out):
     return_id: str
     shop_id: str
     shop_name: str
-    source: Literal["slow_stock", "manual"]
+    source: Literal["slow_stock", "manual", "imported"]
     approval_id: str | None = Field(None, description="The approved pickup it opened from")
     reason: str
     status: Literal["drafted", "approved", "collected", "inspected", "settled", "cancelled"]

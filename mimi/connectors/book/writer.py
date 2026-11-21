@@ -29,7 +29,7 @@ from __future__ import annotations
 
 import hashlib
 from dataclasses import dataclass, field
-from datetime import date
+from datetime import date, datetime
 from pathlib import Path
 from typing import Any
 
@@ -69,10 +69,10 @@ from mimi.tz import now_lagos
 STORE_TABLES: dict[str, sa.Table] = {
     "reps": s.reps, "shops": s.shops, "skus": s.skus, "deliveries": s.deliveries,
     "delivery_lines": s.delivery_lines, "receivables": s.receivables,
-    "payments": s.payments,
+    "payments": s.payments, "returns": s.returns, "return_lines": s.return_lines,
 }
 WRITE_ORDER: tuple[str, ...] = ("reps", "shops", "skus", "deliveries", "delivery_lines",
-                               "receivables", "payments")
+                               "receivables", "payments", "returns", "return_lines")
 
 #: The two tables whose rows the proof policy reasons about, and so the only two
 #: that write a provenance event here. A delivery's type is ``delivery``; a
@@ -81,7 +81,7 @@ WRITE_ORDER: tuple[str, ...] = ("reps", "shops", "skus", "deliveries", "delivery
 #: Shops, reps, SKUs, lines and receivables are reference rows the policy has no
 #: type for: their provenance is the import run in ``connector_sync_runs``, which
 #: names the file, its digest and the moment it was read.
-PROVENANCED = ("deliveries", "payments")
+PROVENANCED = ("deliveries", "returns", "payments")
 
 #: A store row as it will be written, and the proof level it earns.
 _Row = dict[str, Any]
@@ -92,6 +92,13 @@ _Row = dict[str, Any]
 _OWNS_ITSELF: tuple[str, ...] = ("status", "witnessed_at", "live", "fake_alert", "partial",
                                 "split_of", "proof_level", "witnesses",
                                 "proof_policy_version")
+
+#: A return's status is the book's own word and part of its content (a book that
+#: advances a return is a different row, refused like any other change). The
+#: proof columns and the row's own stamps are the writer's, not the file's, so a
+#: re-import of the same file is unchanged rather than a disagreement.
+_RETURN_OWNED: tuple[str, ...] = ("proof_level", "witnesses", "proof_policy_version",
+                                  "created_at", "created_ts", "updated_at")
 
 
 @dataclass
@@ -207,6 +214,7 @@ def build_plan(engine: Engine, reading: Reading, *, tenant_id: str, at: str,
     _plan_skus(plan, reading, book)
     _plan_deliveries(plan, reading, book)
     _plan_payments(plan, reading, book)
+    _plan_returns(plan, reading, book)
     # The book's day has to be known before receivables are planned: whether an
     # invoice is overdue is that day compared with its due date.
     plan.live_date = _live_date(plan, book, as_of)
@@ -228,6 +236,8 @@ class _Book:
     lines: dict[str, dict[int, Any]] = field(default_factory=dict)
     receivables: dict[str, Any] = field(default_factory=dict)
     payments: dict[str, Any] = field(default_factory=dict)
+    returns: dict[str, Any] = field(default_factory=dict)
+    return_lines: dict[str, dict[int, Any]] = field(default_factory=dict)
     last_day: str = ""
 
 
@@ -240,12 +250,16 @@ def _existing(engine: Engine, tenant_id: str) -> _Book:
                                  ("skus", s.skus, "sku"), ("deliveries", s.deliveries,
                                                            "delivery_id"),
                                  ("receivables", s.receivables, "delivery_id"),
-                                 ("payments", s.payments, "payment_id")):
+                                 ("payments", s.payments, "payment_id"),
+                                 ("returns", s.returns, "return_id")):
             rows = conn.execute(sa.select(table).where(table.c.tenant_id == tenant_id)).all()
             setattr(book, name, {getattr(row, key): row for row in rows})
         for line in conn.execute(sa.select(s.delivery_lines).where(
                 s.delivery_lines.c.tenant_id == tenant_id)):
             book.lines.setdefault(line.delivery_id, {})[int(line.line_no)] = line
+        for line in conn.execute(sa.select(s.return_lines).where(
+                s.return_lines.c.tenant_id == tenant_id)):
+            book.return_lines.setdefault(line.return_id, {})[int(line.line_no)] = line
         days = [str(d.delivered_on) for d in book.deliveries.values()]
         days += [str(p.paid_on) for p in book.payments.values()]
     book.last_day = max(days) if days else ""
@@ -546,6 +560,117 @@ def _plan_payments(plan: Plan, reading: Reading, book: _Book) -> None:
             plan.rejects.append(_dup("payments", payment.payment_id, where, "payment"))
 
 
+def _plan_returns(plan: Plan, reading: Reading, book: _Book) -> None:
+    """Imported returns: the shop, the delivery and the SKUs checked, the value summed.
+
+    A return names the shop it came from, the rep carrying it back and the
+    delivery the goods came in on. A row that points at something the book does
+    not have is refused by name, never guessed at, exactly as a delivery is.
+    """
+    shops = set(book.shops) | {row["shop_id"] for row in plan.creates["shops"]}
+    reps = set(book.reps) | {row["rep_id"] for row in plan.creates["reps"]}
+    skus = {sku: (row.name, row.unit) for sku, row in book.skus.items()}
+    skus.update({row["sku"]: (row["name"], row["unit"]) for row in plan.creates["skus"]})
+    deliveries = _delivery_totals(plan, reading, book)
+    for one in reading.returns:
+        where = one.provenance.where
+        if one.shop_id not in shops:
+            plan.rejects.append(Reject(
+                "returns", one.return_id, where, UNKNOWN_SHOP,
+                f"return {one.return_id} is from shop {one.shop_id!r}, which this book "
+                "does not have"))
+            continue
+        if one.rep_id and one.rep_id not in reps:
+            plan.rejects.append(Reject(
+                "returns", one.return_id, where, UNKNOWN_REP,
+                f"return {one.return_id} is carried by rep {one.rep_id!r}, whom the "
+                "book does not have"))
+            continue
+        if one.delivery_id:
+            known = deliveries.get(one.delivery_id)
+            if known is None:
+                plan.rejects.append(Reject(
+                    "returns", one.return_id, where, UNKNOWN_DELIVERY,
+                    f"return {one.return_id} names delivery {one.delivery_id!r}, which "
+                    "this book does not have"))
+                continue
+            if known[0] != one.shop_id:
+                plan.rejects.append(Reject(
+                    "returns", one.return_id, where, MIXES_TWO_SHOPS,
+                    f"return {one.return_id} is from shop {one.shop_id!r} and takes goods "
+                    f"off delivery {one.delivery_id} of shop {known[0]!r}"))
+                continue
+        unknown = [line.sku for line in one.lines if line.sku not in skus]
+        if unknown:
+            plan.rejects.append(Reject(
+                "returns", one.return_id, where, UNKNOWN_SKU,
+                f"return {one.return_id} carries {', '.join(sorted(set(unknown)))}, which "
+                "the book does not price"))
+            continue
+        # The stages where the rep has taken the goods: only then is a collected
+        # and returned value recorded, and only from inspection is it returned.
+        collected = one.status in ("collected", "inspected", "settled")
+        counted = one.status in ("inspected", "settled")
+        values = {
+            "tenant_id": plan.tenant_id, "return_id": one.return_id,
+            "shop_id": one.shop_id, "source": "imported", "approval_id": None,
+            "delivery_id": one.delivery_id, "rep_id": one.rep_id,
+            "raised_on": one.raised_on.isoformat(),
+            "raised_day": one.raised_on.toordinal(),
+            "reason": one.reason, "status": one.status,
+            # The raised value is the sum of the lines, and only a return the book
+            # says came back counts the same figure as returned.
+            "value_drafted_kobo": one.value_kobo,
+            "value_collected_kobo": one.value_kobo if collected else 0,
+            "value_returned_kobo": one.value_kobo if counted else 0,
+            "recovered_kobo": 0, "pickup_cost_kobo": None, "saving_kobo": None,
+            "credit_kobo": None, "credit_approval_id": None,
+            "created_at": plan.at,
+            "created_ts": datetime.fromisoformat(plan.at).timestamp(),
+            "updated_at": plan.at,
+            **_return_proof(one.return_id),
+        }
+        line_values = [_return_line_values(plan, one.return_id, line, skus[line.sku],
+                                           collected=collected, counted=counted)
+                       for line in one.lines]
+        row = book.returns.get(one.return_id)
+        if row is None:
+            plan.creates["returns"].append(values)
+            plan.creates["return_lines"].extend(line_values)
+        elif _same(row, values, ignore=_RETURN_OWNED) and _same_lines(
+                book.return_lines.get(one.return_id, {}), line_values):
+            plan.unchanged["returns"] += 1
+            plan.unchanged["return_lines"] += len(line_values)
+        else:
+            plan.rejects.append(_dup("returns", one.return_id, where, "return"))
+
+
+def _return_line_values(plan: Plan, return_id: str, line: Any, sku: tuple[str, str],
+                        *, collected: bool, counted: bool) -> _Row:
+    """One return line as the store holds it: the product's own name and unit,
+    the value computed from quantity and price."""
+    name, unit = sku
+    value = line.quantity * line.unit_price_kobo
+    return {
+        "tenant_id": plan.tenant_id, "return_id": return_id, "line_no": line.line_no,
+        "sku": line.sku, "item": name, "unit": unit, "reason": line.reason,
+        "quantity_drafted": line.quantity,
+        "quantity_collected": line.quantity if collected else None,
+        "quantity_returned": line.quantity if counted else None,
+        "unit_price_kobo": line.unit_price_kobo,
+        "value_drafted_kobo": value,
+        "value_returned_kobo": value if counted else None,
+        "condition": "", "disposition": "", "expires_on": None, "batch": "",
+        "expiry_source": "estimated",
+    }
+
+
+def _return_proof(return_id: str) -> dict[str, str]:
+    """A return is the distributor's own record: one party's word, so estimated
+    (``mimi.provenance``, policy v2)."""
+    return stamp("return", [witness("distributor_record", return_id)]).columns()
+
+
 def _payment_proof(payment: PaymentRow) -> dict[str, str]:
     """The distributor's own record of a payment is one party's word, so the
     level is whatever ``mimi.provenance`` says one witness earns: estimated,
@@ -566,6 +691,11 @@ def _live_date(plan: Plan, book: _Book, as_of: str | None) -> str:
     days = [book.last_day] if book.last_day else []
     days += [str(row["delivered_on"]) for row in plan.creates["deliveries"]]
     days += [str(row["paid_on"]) for row in plan.creates["payments"]]
+    # A return is a fact about a day too: a book whose newest activity is a
+    # return raised last week is a book whose day is last week, or every age the
+    # brief counts reads zero.
+    days += [str(row["raised_on"]) for row in plan.creates["returns"]
+             if row["raised_on"]]
     own = max(days) if days else ""
     if as_of:
         try:
@@ -688,8 +818,7 @@ def _write_provenance(conn: sa.Connection, plan: Plan, run_id: str) -> None:
     """
     for table in PROVENANCED:
         for row in plan.creates[table]:
-            record_type = "delivery" if table == "deliveries" else payment_type(row["method"])
-            record_id = str(row["delivery_id" if table == "deliveries" else "payment_id"])
+            record_type, record_id = _provenanced_record(table, row)
             current = ProofStamp(record_type, row["proof_level"],  # type: ignore[arg-type]
                                  parse_witnesses(row["witnesses"]),
                                  row["proof_policy_version"])
@@ -698,6 +827,15 @@ def _write_provenance(conn: sa.Connection, plan: Plan, run_id: str) -> None:
             assert event is not None  # the run is a new witness, so one always lands
             conn.execute(s.proof_events.insert().values(
                 tenant_id=plan.tenant_id, event_id=event_id(event), **event.as_row()))
+
+
+def _provenanced_record(table: str, row: _Row) -> tuple[str, str]:
+    """The policy's record type and the row's own id for a provenanced table."""
+    if table == "deliveries":
+        return "delivery", str(row["delivery_id"])
+    if table == "returns":
+        return "return", str(row["return_id"])
+    return payment_type(str(row["method"])), str(row["payment_id"])
 
 
 # ------------------------------------------------------------------- helpers

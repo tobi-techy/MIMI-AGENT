@@ -674,6 +674,13 @@ per lifecycle transition), `credit_notes` (every applied settlement credit,
 with the invoice applications it used, so an undo restores exactly what it
 changed) and `returns_settings` (the owner's pickup cost). Alembic `0016`.
 
+An imported book's returns land in the same two tables (`source` = `imported`,
+provenance `estimated` under the policy's `return` rule, policy v2), carrying
+`rep_id`, `raised_on`/`raised_day`, the delivery the goods came in on and the
+book's own statuses (`pending`, `in_transit`, `received`, `credited`,
+`rejected`). Alembic `0022`. `python -m mimi.store.returns --tenant-id <id>`
+reads what is still open, aged; no route is added for it.
+
 Phone numbers are stored only where the book needs them (shops, reps, the
 owner's numbers) and in a queued message until its turn is done; the API
 returns the last four digits only.

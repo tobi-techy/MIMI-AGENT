@@ -27,6 +27,7 @@ from collections.abc import Iterable, Mapping, Sequence
 from typing import Any, Literal
 
 from mimi import owed
+from mimi.types import RETURN_OPEN_STATUSES
 
 Status = Literal["drafted", "approved", "collected", "inspected", "settled", "cancelled"]
 
@@ -39,8 +40,9 @@ CANCELLED: Status = "cancelled"
 
 STATUSES: tuple[Status, ...] = (DRAFTED, APPROVED, COLLECTED, INSPECTED, SETTLED, CANCELLED)
 
-# What a status may become. A settled return with an undone credit goes back
-# to inspected, so inspected can be reached from collected and from settled.
+# What a status may become, in the order the goods travel and nothing skipped.
+# A settled return with an undone credit goes back to inspected, so inspected can
+# be reached from collected and from settled; a cancelled one is closed.
 TRANSITIONS: Mapping[str, tuple[str, ...]] = {
     DRAFTED: (APPROVED, CANCELLED),
     APPROVED: (COLLECTED, CANCELLED),
@@ -49,6 +51,12 @@ TRANSITIONS: Mapping[str, tuple[str, ...]] = {
     SETTLED: (INSPECTED,),
     CANCELLED: (),
 }
+
+
+def is_open(status: str) -> bool:
+    """Whether the return is still being worked on (every read agrees on this)."""
+    return status in RETURN_OPEN_STATUSES
+
 
 Condition = Literal["resellable", "damaged", "expired"]
 Disposition = Literal["resell", "write_off", "return_to_supplier"]

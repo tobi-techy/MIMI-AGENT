@@ -40,10 +40,13 @@ UNKNOWN_SHOP = "unknown_shop"
 UNKNOWN_SKU = "unknown_sku"
 UNKNOWN_REP = "unknown_rep"
 UNKNOWN_DELIVERY = "unknown_delivery"
+UNKNOWN_RETURN = "unknown_return"
 DUP_IN_FILE = "dup_in_file"
 DUP_IN_BOOK = "dup_in_book"
 MIXES_TWO_SHOPS = "mixes_two_shops"
 TOTAL_MISMATCH = "total_mismatch"
+BAD_STATUS = "bad_status"
+BAD_REASON = "bad_reason"
 
 
 @dataclass(frozen=True)
@@ -154,6 +157,41 @@ class DeliveryRow:
 
 
 @dataclass(frozen=True)
+class ReturnLineRow:
+    """One returned line. ``total_kobo`` is quantity times price, summed in code,
+    never read from the file."""
+
+    line_no: int
+    sku: str
+    quantity: int
+    unit_price_kobo: int
+    reason: str
+    provenance: Provenance
+
+
+@dataclass(frozen=True)
+class ReturnRow:
+    """One return as the distributor's own book records it.
+
+    ``status`` is the book's own state (``mimi.types.RETURN_BOOK_STATUSES``):
+    a return arrives already at the stage the export says it is in, and the
+    ordered lifecycle in ``mimi.returns.ledger`` is what stops it moving out of
+    order later. ``value_kobo`` is the sum of the lines, computed on the way in.
+    """
+
+    return_id: str
+    shop_id: str
+    rep_id: str
+    raised_on: date
+    status: str
+    reason: str
+    delivery_id: str
+    lines: tuple[ReturnLineRow, ...]
+    value_kobo: int
+    provenance: Provenance
+
+
+@dataclass(frozen=True)
 class ReceivableRow:
     """What one delivery owes. ``outstanding_kobo`` is computed when the row is
     written (total minus paid), never supplied."""
@@ -205,4 +243,5 @@ class Reading:
     deliveries: tuple[DeliveryRow, ...] = ()
     receivables: tuple[ReceivableRow, ...] = ()
     payments: tuple[PaymentRow, ...] = ()
+    returns: tuple[ReturnRow, ...] = ()
     rejects: tuple[Reject, ...] = field(default_factory=tuple)
