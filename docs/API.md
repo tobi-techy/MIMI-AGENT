@@ -397,11 +397,15 @@ process (`MIMI_ROUTINES=1`, set in the Dockerfile; off in CI). Both are code
 over the book: **no model call and no kobo spent**. See
 [ROUTINES.md](ROUTINES.md).
 
-* **Morning briefing** (`morning_brief`, every day at 8:00 AM): the single
-  most overdue shop by name, days and ₦, on the owner's thread
-  (`kind: "morning_brief"`), with the fuller brief behind it.
-* **Aging scan** (`aging_scan`, every day at 8:30 AM): shops whose oldest
-  money has passed 60 days, and transfer alerts that never matched a payment
+* **Morning briefing** (`morning_brief`, every day at 8:00 AM): one message on
+  the owner's thread (`kind: "morning_brief"`) in five sections — what changed,
+  money at risk, today's collections, returns, coverage — with at most eight
+  items, each naming an owner and a next action
+  ([BRIEF.md](BRIEF.md)). It keeps its own numbers in `brief_snapshots` so the
+  next morning can say what moved.
+* **Aging scan** (`aging_scan`, every day at 8:30 AM): what the morning's
+  collections came to against each rep's target, shops whose oldest money has
+  passed 60 days, and transfer alerts that never matched a payment
   (`kind: "aging_scan"`). It reports only; nothing on the book changes.
 * **Once per Lagos day.** The claim is a row in `routine_runs` whose primary
   key is (tenant, routine, day). A restart or a second API process loses the
@@ -680,6 +684,10 @@ provenance `estimated` under the policy's `return` rule, policy v2), carrying
 book's own statuses (`pending`, `in_transit`, `received`, `credited`,
 `rejected`). Alembic `0022`. `python -m mimi.store.returns --tenant-id <id>`
 reads what is still open, aged; no route is added for it.
+
+The daily brief adds `brief_snapshots`: one row per tenant and Lagos day with
+the numbers the next brief compares against and the morning's collection targets
+(Alembic `0023`). Nothing in the book is written by a routine.
 
 Phone numbers are stored only where the book needs them (shops, reps, the
 owner's numbers) and in a queued message until its turn is done; the API

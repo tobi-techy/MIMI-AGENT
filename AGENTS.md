@@ -17,6 +17,7 @@ make check                    # everything CI runs, offline
 make harness-eval             # the harness suites and pass marks
 make router-eval              # router: 300 labelled messages, pass marks
 make context-eval             # context builder: 50 scenarios vs full history, pass marks
+make brief-eval               # the daily owner brief: hand-marked scenarios over imported books
 ```
 
 CI is offline: no key means FakeModel or recorded answers. Recorded Muse

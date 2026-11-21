@@ -95,7 +95,6 @@ def attention(engine: Engine, tenant_id: str, day: date | None = None) -> list[A
         if live_date is None:
             return []
         counted_on = day if day is not None else _book_day(str(live_date))
-        ordinal = counted_on.toordinal()
         shops = conn.execute(sa.select(
             s.shops.c.shop_id, s.shops.c.name, s.shops.c.area, s.shops.c.rep_id,
             s.shops.c.restock_days, s.shops.c.credit_limit_kobo).where(
@@ -104,17 +103,20 @@ def attention(engine: Engine, tenant_id: str, day: date | None = None) -> list[A
             return []
         # The newest delivery in the book whatever its date, so a delivery dated
         # after the day being counted is a fact about the shop rather than a
-        # shop that looks like it has none.
-        last = {r.shop_id: int(r.last_day or 0) for r in conn.execute(
+        # shop that looks like it has none. The date string is what is read, not
+        # the stored day number: the synthetic world numbers its days from its
+        # own epoch while an imported book stores date ordinals, and a calendar
+        # day is the one thing both hold.
+        last = {r.shop_id: date.fromisoformat(str(r.last_on)) for r in conn.execute(
             sa.select(s.deliveries.c.shop_id,
-                      sa.func.max(s.deliveries.c.day).label("last_day")).where(
+                      sa.func.max(s.deliveries.c.delivered_on).label("last_on")).where(
                 s.deliveries.c.tenant_id == tenant_id).group_by(s.deliveries.c.shop_id))}
         money = {r.shop_id: (int(r.outstanding or 0), int(r.overdue or 0))
                  for r in conn.execute(sa.select(
                      s.receivables.c.shop_id,
                      sa.func.sum(s.receivables.c.outstanding_kobo).label("outstanding"),
                      sa.func.sum(sa.case(
-                         (s.receivables.c.due_day < ordinal,
+                         (s.receivables.c.due_on < counted_on.isoformat(),
                           s.receivables.c.outstanding_kobo), else_=0)).label("overdue")).where(
                      s.receivables.c.tenant_id == tenant_id,
                      s.receivables.c.outstanding_kobo > 0).group_by(
@@ -130,7 +132,8 @@ def attention(engine: Engine, tenant_id: str, day: date | None = None) -> list[A
         # that day, so the days since cannot be measured from it. The shop is a
         # hole for this day (unknown, no cycles) rather than calm or absent: an
         # as-of view of a book cannot claim to know a delivery it has not seen.
-        days = None if delivered is None or delivered > ordinal else ordinal - delivered
+        days = (None if delivered is None or delivered > counted_on
+                else (counted_on - delivered).days)
         position = int(shop.credit_limit_kobo) - outstanding
         cycles = days // restock if (days is not None and restock) else None
         if cycles is not None and cycles < 1:

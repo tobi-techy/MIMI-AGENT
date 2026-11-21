@@ -13,8 +13,8 @@ Code: `mimi/api/routines.py`. Tables: `routine_state` and `routine_runs`
 
 | Routine | Schedule | What it files |
 |---|---|---|
-| `morning_brief` ("Morning briefing") | Every day at 8:00 AM | The shop most overdue by name and ₦, on the owner's thread |
-| `aging_scan` ("Aging scan") | Every day at 8:30 AM | Shops whose oldest money has passed 60 days, and transfer alerts that never matched a payment |
+| `morning_brief` ("Morning briefing") | Every day at 8:00 AM | The daily brief ([BRIEF.md](BRIEF.md)): what changed, money at risk, today's collections, returns and coverage, in one message |
+| `aging_scan` ("Aging scan") | Every day at 8:30 AM | What the morning's collections came to against each rep's target, shops past 60 days, and transfer alerts that never matched a payment |
 
 Both are code over the same book the reads use (`mimi.owed`, `SqlGo`,
 `demo_wiring.brief_text`). Times and days are Africa/Lagos through

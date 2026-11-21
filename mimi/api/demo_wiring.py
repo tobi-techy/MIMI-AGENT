@@ -337,18 +337,16 @@ def recent_payments(engine: Engine, tenant: str, limit: int = 50) -> list[dict[s
 BRIEF_ROUTINES = frozenset({"morning_brief", "mimi.morning_brief"})
 
 
-def brief_text(engine: Engine, tenant: str, top: int = 3) -> str:
-    """The morning brief's words: the top overdue shops by name and ₦."""
-    shops = sorted((b for b in overdue_by_shop(engine, tenant).values() if b.overdue_kobo > 0),
-                   key=lambda b: (-b.overdue_kobo, b.shop_id))
-    if not shops:
-        return "Good morning. No shop is overdue today."
-    lines = [f"{b.shop_name} is {b.oldest_days_overdue} day"
-             f"{'s' if b.oldest_days_overdue != 1 else ''} overdue on {owed.naira(b.overdue_kobo)}"
-             for b in shops[:top]]
-    total = sum(b.overdue_kobo for b in shops)
-    return (f"Good morning. Top overdue: {'; '.join(lines)}. In all {owed.naira(total)} is "
-            f"overdue across {len(shops)} shop{'s' if len(shops) != 1 else ''}.")
+def brief_text(engine: Engine, tenant: str) -> str:
+    """The morning brief's words: the same message the routine files.
+
+    A scheduled ``mimi.morning_brief`` inbound takes this path instead of the
+    routine's, and the two must not drift into two different briefs
+    (``mimi.api.brief`` builds the message in one place).
+    """
+    from mimi.api import brief as daily
+
+    return daily.build(engine, tenant).text
 
 
 # ------------------------------------------------------ screenshot payments

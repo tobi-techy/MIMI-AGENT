@@ -27,6 +27,11 @@ The rules this module keeps:
   message. A routine that would have to change a number must stop and hand
   the owner a proposal through the product's existing approval path, which
   these two do not need (they only report).
+* **The brief keeps its own numbers.** ``morning_brief`` writes one
+  ``brief_snapshots`` row per Lagos day (``mimi.api.brief``), because "what
+  changed" needs yesterday's figures and the book does not hold them. That row
+  is the routine's memory, not the distributor's book: no receivable, payment
+  or return is touched by any routine here.
 
 Schedule words are written for a person ("Every day at 8:00 AM"); times are
 Africa/Lagos through ``mimi.tz`` and the one clock through ``mimi.clock``.
@@ -47,8 +52,10 @@ import sqlalchemy as sa
 from sqlalchemy.engine import Engine
 
 from mimi import owed
+from mimi.api import brief as build_brief
 from mimi.api import demo_wiring as dw
 from mimi.clock import wall, wall_utc
+from mimi.harness.style import clean_reply
 from mimi.store import schema as s
 from mimi.store.book import SqlGo
 from mimi.store.util import insert_ignore, now_iso
@@ -180,23 +187,17 @@ def _day_words(raw: str) -> str:
 
 def _morning_brief(engine: Engine, tenant: str, day: date,
                    now: datetime) -> Finding:
-    """The read-only book: the most overdue shop, and the full brief behind it.
+    """The four problems in one message: what changed, money at risk, today's
+    collections, returns and coverage (``mimi.api.brief``).
 
-    The one-line finding names one shop, so the console can link it; the
-    thread message still gives the top three and the book total."""
-    debtors = sorted((b for b in dw.overdue_by_shop(engine, tenant).values()
-                      if b.overdue_kobo > 0),
-                     key=lambda b: (-b.overdue_kobo, b.shop_id))
-    text = dw.brief_text(engine, tenant)
-    if not debtors:
-        return Finding(line="No shop is overdue.", text=text)
-    top = debtors[0]
-    return Finding(
-        line=(f"{top.shop_name} owes {owed.naira(top.owed_kobo)}. Of that, "
-              f"{owed.naira(top.overdue_kobo)} is overdue, and the oldest "
-              f"invoice is {top.oldest_days_overdue} days old."),
-        text=text,
-        shop_ids=frozenset({top.shop_id}))
+    Code counts the book; no model is called. The one-line finding is the
+    message in a sentence for the console, and the shops it names are the ones
+    it wants acted on, so the console links a shop only when there is exactly
+    one. The brief's own numbers are kept for tomorrow's comparison."""
+    brief = build_brief.build(engine, tenant, day)
+    build_brief.record(engine, tenant, brief, now)
+    return Finding(line=brief.line, text=clean_reply(brief.text, where="morning brief"),
+                   shop_ids=brief.shop_ids)
 
 
 def _unmatched_alerts(engine: Engine, tenant: str) -> list[dict[str, Any]]:
@@ -235,15 +236,19 @@ def _over_sixty(engine: Engine, tenant: str) -> list[dict[str, Any]]:
 
 
 def _aging_scan(engine: Engine, tenant: str, day: date, now: datetime) -> Finding:
-    """Shops past 60 days and transfer alerts that never matched a payment.
+    """What the morning's collections came to, then ageing and unmatched alerts.
 
-    Reads only: no receivable, payment or approval is written. Both figures
-    are summed here, from the book's own rows."""
+    The variance comes first because it is the only part of the scan that is
+    about today rather than the state of the book: the morning brief set each
+    rep an amount, and this says what came in against it (``brief.variance``).
+    A day with no brief behind it says so instead of inventing a target.
+
+    Reads only: no receivable, payment or approval is written. Every figure is
+    summed here, from the book's own rows."""
     over = _over_sixty(engine, tenant)
     alerts = _unmatched_alerts(engine, tenant)
-    if not over and not alerts:
-        return Finding(line="Nothing has passed 60 days and every transfer alert is matched.")
-    parts: list[str] = []
+    collections = build_brief.variance(engine, tenant, day)
+    parts: list[str] = [collections]
     if over:
         shown_shops = over[:5]
         shop_lines = [f"{b['shop_name']} is {b['oldest_days_overdue']} days overdue on "
@@ -263,6 +268,8 @@ def _aging_scan(engine: Engine, tenant: str, day: date, now: datetime) -> Findin
             alert_lines.append(f"and {more} more")
         parts.append(f"{len(alerts)} {_alerts_word(len(alerts))} never matched a payment: "
                      f"{'; '.join(alert_lines)}.")
+    if not over and not alerts:
+        parts.append("Nothing has passed 60 days and every transfer alert is matched.")
     parts.append("Nothing has changed on the book.")
     # The one-line finding names a shop only when the finding is about one,
     # so the console's link can never point at a guess.
@@ -277,14 +284,17 @@ def _aging_scan(engine: Engine, tenant: str, day: date, now: datetime) -> Findin
                 else f"{_shop_phrase(len(over))} passed 60 days.")
     elif len(alerts) == 1:
         line = f"A transfer alert from {alerts[0]['shop_name']} never matched a payment."
-    else:
+    elif alerts:
         line = f"{len(alerts)} {_alerts_word(len(alerts))} never matched a payment."
+    else:
+        line = "The morning's collections are measured against target and nothing else moved."
     return Finding(line=line, text=" ".join(parts), shop_ids=frozenset(shop_ids))
 
 
 MORNING_BRIEF = Routine(
     id="morning_brief", name="Morning briefing", schedule=Schedule(8, 0),
-    summary="The shops most overdue, by name and naira, at the start of the day.",
+    summary=("What changed, the money at risk, today's collections, the returns and "
+             "the coverage, in one message."),
     run=_morning_brief)
 AGING_SCAN = Routine(
     id="aging_scan", name="Aging scan", schedule=Schedule(8, 30),
