@@ -39,9 +39,9 @@ from mimi.connectors.book.rows import (
 from mimi.provenance import POLICY_VERSION
 from mimi.store import ensure_schema, make_engine
 from mimi.store import schema as s
-from mimi.store.returns import aged_returns
+from mimi.store.returns import aged_returns, at_stake_kobo
 from mimi.store.returns import main as returns_cli
-from mimi.types import RETURN_BOOK_STATUSES
+from mimi.types import RETURN_STATUSES
 from tests.test_book_import import FIXTURES, cell, write
 
 TENANT = "sunline-dist"
@@ -91,7 +91,7 @@ def test_a_return_lands_with_its_value_summed_from_the_lines(db: sa.Engine,
     pending = {r["return_id"]: r for r in _rows(db, "returns") if r["return_id"] == "ret-0001"}
     one = pending["ret-0001"]
     assert one["shop_id"] == "shop-002" and one["rep_id"] == "rep-01"
-    assert one["status"] == "pending" and one["reason"] == "damaged"
+    assert one["status"] == "drafted" and one["reason"] == "damaged"
     assert one["delivery_id"] == "dlv-0002" and one["source"] == "imported"
     assert one["raised_on"] == "2026-10-24"
     assert one["raised_day"] == date.fromisoformat("2026-10-24").toordinal()
@@ -99,7 +99,7 @@ def test_a_return_lands_with_its_value_summed_from_the_lines(db: sa.Engine,
     # Nothing has come back yet, so the returned value is zero.
     assert one["value_returned_kobo"] == 0
     credited = next(r for r in _rows(db, "returns") if r["return_id"] == "ret-0002")
-    assert credited["status"] == "credited" and credited["value_returned_kobo"] == 1_850_000
+    assert credited["status"] == "settled" and credited["value_returned_kobo"] == 1_850_000
     line = _rows(db, "return_lines")[0]
     assert line["sku"] == "SKU-003" and line["item"] == "Peak Milk 400g"
     assert line["quantity_drafted"] == 1 and line["value_drafted_kobo"] == 1_575_000
@@ -194,10 +194,52 @@ def test_a_status_the_book_does_not_know_is_refused(db: sa.Engine, tmp_path: Pat
     _refused(tmp_path, db, BAD_STATUS, tables)
 
 
-def test_every_book_status_is_accepted(tmp_path: Path) -> None:
+def test_a_second_status_vocabulary_is_refused(db: sa.Engine, tmp_path: Path) -> None:
+    """The ledger's six states are the only words a return has, imported or not:
+    a file that invents a stage is refused rather than mapped to a guess."""
+    for invented in ("pending", "in_transit", "received", "credited", "rejected"):
+        tables = cell(book_tables(), "returns", "ret-0001", "status", invented)
+        _refused(tmp_path, db, BAD_STATUS, tables)
+
+
+def test_a_short_return_is_worth_what_came_back_not_what_was_raised(
+        db: sa.Engine, tmp_path: Path) -> None:
+    """The one value rule: the raised figure before the goods move, what the rep
+    took once collected, what inspection accepted after that."""
+    _import(db, write(book_tables(), tmp_path / "book"))
+    with db.begin() as conn:
+        conn.execute(s.returns.update().where(s.returns.c.return_id == "ret-0001").values(
+            status="collected", value_drafted_kobo=1_575_000, value_collected_kobo=500_000,
+            value_returned_kobo=0))
+    [one] = aged_returns(db, TENANT)
+    assert one.value_kobo == 500_000
+    with db.begin() as conn:
+        conn.execute(s.returns.update().where(s.returns.c.return_id == "ret-0001").values(
+            status="inspected", value_returned_kobo=0))
+    [one] = aged_returns(db, TENANT)
+    assert one.value_kobo == 500_000
+
+
+def test_a_book_whose_newest_fact_is_a_return_is_counted_from_that_day(
+        tmp_path: Path) -> None:
+    """The book's day is the newest thing in it, and a return is a thing: a book
+    whose last delivery is weeks old but whose return was raised yesterday must
+    not age that return as zero days."""
+    made = make_engine(f"sqlite:///{tmp_path / 'day.db'}")
+    ensure_schema(made)
+    tables = book_tables()
+    cell(tables, "returns", "ret-0001", "raised_on", "2026-11-20")
+    report = _import(made, write(tables, tmp_path / "book"))
+    assert report.rejects == ()
+    with made.connect() as conn:
+        assert conn.execute(sa.select(s.tenants.c.live_date)).scalar() == "2026-11-20"
+    made.dispose()
+
+
+def test_every_return_status_is_accepted(tmp_path: Path) -> None:
     """The closed list is the whole vocabulary: each word reads, however it is
     spelled in the file."""
-    for status in RETURN_BOOK_STATUSES:
+    for status in RETURN_STATUSES:
         made = make_engine(f"sqlite:///{tmp_path / f'{status}.db'}")
         ensure_schema(made)
         tables = cell(book_tables(), "returns", "ret-0001", "status",
@@ -237,11 +279,11 @@ def test_a_changed_return_is_refused_never_overwritten(db: sa.Engine,
     return on is a correction, and the correction path does not exist yet."""
     folder = write(book_tables(), tmp_path / "book")
     _import(db, folder)
-    moved = cell(book_tables(), "returns", "ret-0001", "status", "in_transit")
+    moved = cell(book_tables(), "returns", "ret-0001", "status", "collected")
     report = _import(db, write(moved, tmp_path / "book2"))
     assert [r.reason for r in _rejects(report, DUP_IN_BOOK)] == [DUP_IN_BOOK]
     assert next(r["status"] for r in _rows(db, "returns")
-                if r["return_id"] == "ret-0001") == "pending"
+                if r["return_id"] == "ret-0001") == "drafted"
 
 
 def test_a_dry_run_writes_no_return(db: sa.Engine, tmp_path: Path) -> None:
@@ -261,13 +303,13 @@ def test_the_aged_read_lists_what_is_still_out(db: sa.Engine, tmp_path: Path) ->
     assert [r.return_id for r in aged] == ["ret-0001"]
     one = aged[0]
     assert (one.shop_name, one.rep_name) == ("Blessed Kiosk", "Abiola Nwosu")
-    assert one.days_open == 3 and one.value_kobo == 1_575_000 and one.status == "pending"
+    assert one.days_open == 3 and one.value_kobo == 1_575_000 and one.status == "drafted"
 
 
 def test_the_aged_read_says_when_nothing_is_open(db: sa.Engine, tmp_path: Path) -> None:
     _import(db, write(book_tables(), tmp_path / "book"))
     with db.begin() as conn:
-        conn.execute(s.returns.update().values(status="credited"))
+        conn.execute(s.returns.update().values(status="settled"))
     assert aged_returns(db, TENANT) == []
 
 
@@ -280,6 +322,19 @@ def test_the_cli_prints_the_rows_and_their_json(db: sa.Engine, tmp_path: Path,
     assert returns_cli(["--tenant-id", TENANT, "--db", url, "--json"]) == 0
     printed = json.loads(capsys.readouterr().out)
     assert printed[0]["return_id"] == "ret-0001" and printed[0]["days_open"] == 3
+
+
+def test_the_value_rule_is_pinned() -> None:
+    assert at_stake_kobo("drafted", drafted_kobo=15_750, collected_kobo=0,
+                         returned_kobo=0) == 15_750
+    assert at_stake_kobo("collected", drafted_kobo=15_750, collected_kobo=5_000,
+                         returned_kobo=0) == 5_000
+    assert at_stake_kobo("inspected", drafted_kobo=15_750, collected_kobo=5_000,
+                         returned_kobo=3_000) == 3_000
+    # A stage with no figure recorded falls back, because a missing count is not
+    # a zero.
+    assert at_stake_kobo("collected", drafted_kobo=15_750, collected_kobo=0,
+                         returned_kobo=0) == 15_750
 
 
 def test_the_cli_names_a_tenant_it_cannot_find(tmp_path: Path,

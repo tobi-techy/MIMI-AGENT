@@ -16,6 +16,8 @@ from __future__ import annotations
 
 import sqlalchemy as sa
 
+from mimi.provenance import POLICY_VERSION
+
 metadata: sa.MetaData = sa.MetaData()
 
 
@@ -26,11 +28,17 @@ def _tenant() -> sa.Column[str]:
 def _proof() -> tuple[sa.Column[str], ...]:
     """Every record carries its proof level (RAI-295, ``mimi.provenance``): the
     level, the witnesses behind it (JSON list of kind and source row id) and
-    the rules version that set it. Alembic ``0010_proof_levels``."""
+    the rules version that set it. Alembic ``0010_proof_levels``.
+
+    The version default is the policy's own constant, not a literal: a writer
+    that forgot to stamp a row would otherwise label it with a policy that may
+    not know its record type at all.
+    """
     return (
         sa.Column("proof_level", sa.String(16), nullable=False, default="estimated"),
         sa.Column("witnesses", sa.Text(), nullable=False, default="[]"),
-        sa.Column("proof_policy_version", sa.String(16), nullable=False, default="v1"),
+        sa.Column("proof_policy_version", sa.String(16), nullable=False,
+                  default=POLICY_VERSION),
     )
 
 
@@ -904,9 +912,8 @@ returns = sa.Table(
     # An imported return's reason is one of ``mimi.types.RETURN_REASONS``, kept
     # word for word; a Mimi-opened one is a sentence for the owner.
     sa.Column("reason", sa.Text(), nullable=False, default=""),
-    # pending | in_transit | received | credited | rejected (the book's states)
-    # or drafted | approved | collected | inspected | settled | cancelled (the
-    # ledger's own); see ``mimi.types.RETURN_STATUSES``.
+    # drafted | approved | collected | inspected | settled | cancelled, whichever
+    # source opened it; see ``mimi.types.RETURN_STATUSES``.
     sa.Column("status", sa.String(16), nullable=False, default="drafted"),
     *_proof(),
     sa.Column("value_drafted_kobo", sa.BigInteger(), nullable=False, default=0),

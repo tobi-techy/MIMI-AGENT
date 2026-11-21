@@ -28,6 +28,7 @@ from sqlalchemy.engine import Engine
 from mimi import owed
 from mimi.api.agent import Conflict, NotFound
 from mimi.clock import wall
+from mimi.provenance import stamp, witness
 from mimi.returns import ledger
 from mimi.stock.items import display_name, unit_word
 from mimi.store import invoices as invoice_reads
@@ -49,6 +50,16 @@ def _shop_name(conn: sa.Connection, tenant: str, shop_id: str) -> str:
     if name is None:
         raise NotFound(shop_id)
     return str(name)
+
+
+def _return_stamp(return_id: str) -> dict[str, str]:
+    """The proof columns of a return Mimi proposes.
+
+    A return is the distributor's own record and nothing else witnesses it, so
+    the policy's ``return`` rule makes it ``estimated``; the level is computed
+    here, never left to a column default that could disagree with the policy.
+    """
+    return stamp("return", [witness("distributor_record", return_id)]).columns()
 
 
 def _shop_rep(conn: sa.Connection, tenant: str, shop_id: str) -> str:
@@ -388,6 +399,7 @@ def _from_pickup(conn: sa.Connection, tenant: str, approval_id: str, now: float,
         "reason": ledger.return_reason(shop_name, [
             {"quantity_drafted": quantity, "unit": unit, "item": item}]),
         "status": ledger.DRAFTED,
+        **_return_stamp(rid),
         "value_drafted_kobo": ledger.line_value_kobo(quantity, price),
         "value_collected_kobo": 0, "value_returned_kobo": 0, "recovered_kobo": 0,
         "created_at": now_iso(now), "created_ts": now, "updated_at": now_iso(now)})
@@ -458,6 +470,7 @@ def _from_lines(conn: sa.Connection, tenant: str, shop_id: str, reason: str,
         "reason": (ledger.scrub(reason) if reason.strip()
                    else ledger.return_reason(shop_name, built)),
         "status": ledger.DRAFTED,
+        **_return_stamp(rid),
         "value_drafted_kobo": sum(b["value_drafted_kobo"] for b in built),
         "value_collected_kobo": 0, "value_returned_kobo": 0, "recovered_kobo": 0,
         "created_at": now_iso(now), "created_ts": now, "updated_at": now_iso(now)})

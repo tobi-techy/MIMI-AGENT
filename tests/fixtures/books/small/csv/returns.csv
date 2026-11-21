@@ -1,3 +1,3 @@
 return_id,shop_id,rep_id,raised_on,status,reason,delivery_id,total_naira
-ret-0001,shop-002,rep-01,2026-10-24,pending,damaged,dlv-0002,15750.00
-ret-0002,shop-003,rep-02,2026-10-20,credited,wrong_sku,dlv-0005,18500.00
+ret-0001,shop-002,rep-01,2026-10-24,drafted,damaged,dlv-0002,15750.00
+ret-0002,shop-003,rep-02,2026-10-20,settled,wrong_sku,dlv-0005,18500.00

@@ -85,11 +85,13 @@ figure is refused (`total_mismatch`).
   `total_naira` the file states is only compared against that sum
   (`total_mismatch`), never used. A return is written whole or not at all, for
   the same reason a delivery is.
-* **A return's status is the book's own word**, from the closed list
-  (`pending`, `in_transit`, `received`, `credited`, `rejected`,
-  `mimi.types.RETURN_BOOK_STATUSES`): a return arrives at the stage the export
-  says it is in, and it moves forward one step at a time from there. A status
-  this book does not know is a reject (`bad_status`), never stored as written.
+* **A return's status is the returns ledger's own vocabulary**, from the closed
+  list (`drafted`, `approved`, `collected`, `inspected`, `settled`,
+  `cancelled`, `mimi.types.RETURN_STATUSES`): the book's export says which stage
+  the return has reached and the row lands there, with the same transition table
+  keeping the order from that point. A status this book does not know, including
+  any second vocabulary for the same stages, is a reject (`bad_status`), never
+  stored as written or mapped to a guess.
 * **A return's reason is from the closed list** too (`shut`, `no stock needed`,
   `refused`, `damaged`, `expired`, `wrong_sku`, `mimi.types.RETURN_REASONS`): the
   visit-record contract's list plus the three only a return has. A free-text
@@ -117,7 +119,7 @@ honestly.
 | `total_mismatch` | a receivable or the file's own delivery total disagrees with the lines |
 | `dup_in_file` | the same id twice in one file (identical: first used; different: neither) — every keyed table, including receivables, payments and returns, plus a repeated `line_no` inside one delivery or return |
 | `dup_in_book` | the id is already in the book with different content |
-| `bad_status` | a return whose status is not one the book knows |
+| `bad_status` | a return whose status is not one the returns ledger knows |
 | `bad_reason` | a return whose reason is not one of the six the contract names |
 | `unknown_return` | a return line naming a return the file does not list |
 
@@ -226,7 +228,7 @@ zeroes, never as a sample of Coral Lane.
 * **A correction path.** A changed row is refused rather than applied. An
   amendment flow (with its own audit) is a separate design. A return is the case
   that will ask for it first: a later export that moves the same return from
-  `pending` to `in_transit` is a changed row, and today it is refused like any
+  `drafted` to `collected` is a changed row, and today it is refused like any
   other, because an import must not edit a book it does not own.
 * **Reconciliation as a report.** The import compares what it can at write time
   (file total against lines, receivable against delivery). A standing

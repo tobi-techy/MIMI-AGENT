@@ -125,7 +125,7 @@ def test_money_and_dates_arrive_typed(name: str) -> None:
     assert reading.deliveries[0].lines[0].expires_on is not None
     assert reading.payments[2].method == "cash_to_rep"
     assert reading.returns[0].raised_on.isoformat() == "2026-10-24"
-    assert reading.returns[0].status == "pending" and reading.returns[0].value_kobo == 1575000
+    assert reading.returns[0].status == "drafted" and reading.returns[0].value_kobo == 1575000
 
 
 @pytest.mark.parametrize("name", sorted(SOURCES))

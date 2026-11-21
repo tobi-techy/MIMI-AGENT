@@ -71,7 +71,7 @@ from mimi.connectors.book.rows import (
 from mimi.connectors.csv.connector import EXCEL_EXTENSIONS, csv_grid, excel_sheets
 from mimi.connectors.sheets.mapping import MAX_ROWS
 from mimi.identity.store import InvalidUser, to_e164
-from mimi.types import RETURN_BOOK_STATUSES, RETURN_REASONS
+from mimi.types import RETURN_REASONS, RETURN_STATUSES
 
 #: The tables inside a book, and the file name or sheet name each one lives under.
 TABLES: tuple[str, ...] = (
@@ -715,10 +715,10 @@ def _return_line(return_id: str, order: int, row: list[Any], columns: dict[str, 
 
 def _status(raw: str, return_id: str) -> str:
     status = re.sub(r"[\s-]+", "_", raw.strip().lower())
-    if status not in RETURN_BOOK_STATUSES:
+    if status not in RETURN_STATUSES:
         raise _Bad(BAD_STATUS,
-                   f"return {return_id} is {raw!r}; this book knows "
-                   f"{', '.join(RETURN_BOOK_STATUSES)}")
+                   f"return {return_id} is {raw!r}; a return this book knows is one of "
+                   f"{', '.join(RETURN_STATUSES)}")
     return status
 
 

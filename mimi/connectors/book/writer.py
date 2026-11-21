@@ -607,7 +607,10 @@ def _plan_returns(plan: Plan, reading: Reading, book: _Book) -> None:
                 f"return {one.return_id} carries {', '.join(sorted(set(unknown)))}, which "
                 "the book does not price"))
             continue
-        counted = one.status in ("received", "credited")
+        # The stages where the rep has taken the goods: only then is a collected
+        # and returned value recorded, and only from inspection is it returned.
+        collected = one.status in ("collected", "inspected", "settled")
+        counted = one.status in ("inspected", "settled")
         values = {
             "tenant_id": plan.tenant_id, "return_id": one.return_id,
             "shop_id": one.shop_id, "source": "imported", "approval_id": None,
@@ -618,7 +621,7 @@ def _plan_returns(plan: Plan, reading: Reading, book: _Book) -> None:
             # The raised value is the sum of the lines, and only a return the book
             # says came back counts the same figure as returned.
             "value_drafted_kobo": one.value_kobo,
-            "value_collected_kobo": 0,
+            "value_collected_kobo": one.value_kobo if collected else 0,
             "value_returned_kobo": one.value_kobo if counted else 0,
             "recovered_kobo": 0, "pickup_cost_kobo": None, "saving_kobo": None,
             "credit_kobo": None, "credit_approval_id": None,
@@ -628,7 +631,8 @@ def _plan_returns(plan: Plan, reading: Reading, book: _Book) -> None:
             **_return_proof(one.return_id),
         }
         line_values = [_return_line_values(plan, one.return_id, line, skus[line.sku],
-                                           counted=counted) for line in one.lines]
+                                           collected=collected, counted=counted)
+                       for line in one.lines]
         row = book.returns.get(one.return_id)
         if row is None:
             plan.creates["returns"].append(values)
@@ -642,7 +646,7 @@ def _plan_returns(plan: Plan, reading: Reading, book: _Book) -> None:
 
 
 def _return_line_values(plan: Plan, return_id: str, line: Any, sku: tuple[str, str],
-                        *, counted: bool) -> _Row:
+                        *, collected: bool, counted: bool) -> _Row:
     """One return line as the store holds it: the product's own name and unit,
     the value computed from quantity and price."""
     name, unit = sku
@@ -651,7 +655,7 @@ def _return_line_values(plan: Plan, return_id: str, line: Any, sku: tuple[str, s
         "tenant_id": plan.tenant_id, "return_id": return_id, "line_no": line.line_no,
         "sku": line.sku, "item": name, "unit": unit, "reason": line.reason,
         "quantity_drafted": line.quantity,
-        "quantity_collected": line.quantity if counted else None,
+        "quantity_collected": line.quantity if collected else None,
         "quantity_returned": line.quantity if counted else None,
         "unit_price_kobo": line.unit_price_kobo,
         "value_drafted_kobo": value,
@@ -687,6 +691,11 @@ def _live_date(plan: Plan, book: _Book, as_of: str | None) -> str:
     days = [book.last_day] if book.last_day else []
     days += [str(row["delivered_on"]) for row in plan.creates["deliveries"]]
     days += [str(row["paid_on"]) for row in plan.creates["payments"]]
+    # A return is a fact about a day too: a book whose newest activity is a
+    # return raised last week is a book whose day is last week, or every age the
+    # brief counts reads zero.
+    days += [str(row["raised_on"]) for row in plan.creates["returns"]
+             if row["raised_on"]]
     own = max(days) if days else ""
     if as_of:
         try:

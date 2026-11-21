@@ -93,14 +93,14 @@ TENANT = {
          "TRF-88512"],
         ["pay-0003", "shop-001", "", "2026-10-20", "5000.00", "cash_to_rep", ""],
     ],
-    # One return still with the rep and one already credited, so the optional
+    # One return still to be picked up and one already credited, so the optional
     # tables are exercised in both file shapes and both states.
     "returns": [
         ["return_id", "shop_id", "rep_id", "raised_on", "status", "reason",
          "delivery_id", "total_naira"],
-        ["ret-0001", "shop-002", "rep-01", "2026-10-24", "pending", "damaged",
+        ["ret-0001", "shop-002", "rep-01", "2026-10-24", "drafted", "damaged",
          "dlv-0002", "15750.00"],
-        ["ret-0002", "shop-003", "rep-02", "2026-10-20", "credited", "wrong_sku",
+        ["ret-0002", "shop-003", "rep-02", "2026-10-20", "settled", "wrong_sku",
          "dlv-0005", "18500.00"],
     ],
     "return_lines": [

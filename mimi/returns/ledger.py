@@ -29,8 +29,7 @@ from typing import Any, Literal
 from mimi import owed
 from mimi.types import RETURN_OPEN_STATUSES
 
-Status = Literal["drafted", "approved", "collected", "inspected", "settled", "cancelled",
-                 "pending", "in_transit", "received", "credited", "rejected"]
+Status = Literal["drafted", "approved", "collected", "inspected", "settled", "cancelled"]
 
 DRAFTED: Status = "drafted"
 APPROVED: Status = "approved"
@@ -39,22 +38,11 @@ INSPECTED: Status = "inspected"
 SETTLED: Status = "settled"
 CANCELLED: Status = "cancelled"
 
-# The book's own states, for a return imported from the distributor's record.
-PENDING: Status = "pending"
-IN_TRANSIT: Status = "in_transit"
-RECEIVED: Status = "received"
-CREDITED: Status = "credited"
-REJECTED: Status = "rejected"
-
-STATUSES: tuple[Status, ...] = (DRAFTED, APPROVED, COLLECTED, INSPECTED, SETTLED, CANCELLED,
-                                PENDING, IN_TRANSIT, RECEIVED, CREDITED, REJECTED)
+STATUSES: tuple[Status, ...] = (DRAFTED, APPROVED, COLLECTED, INSPECTED, SETTLED, CANCELLED)
 
 # What a status may become, in the order the goods travel and nothing skipped.
-# The ledger's own path: a settled return with an undone credit goes back to
-# inspected, so inspected can be reached from collected and from settled. The
-# book's path is the straight line pending, in transit, received, credited, or
-# rejected at any point before the credit. A credited or rejected imported
-# return is closed: no move out of either.
+# A settled return with an undone credit goes back to inspected, so inspected can
+# be reached from collected and from settled; a cancelled one is closed.
 TRANSITIONS: Mapping[str, tuple[str, ...]] = {
     DRAFTED: (APPROVED, CANCELLED),
     APPROVED: (COLLECTED, CANCELLED),
@@ -62,11 +50,6 @@ TRANSITIONS: Mapping[str, tuple[str, ...]] = {
     INSPECTED: (SETTLED,),
     SETTLED: (INSPECTED,),
     CANCELLED: (),
-    PENDING: (IN_TRANSIT, REJECTED),
-    IN_TRANSIT: (RECEIVED, REJECTED),
-    RECEIVED: (CREDITED,),
-    CREDITED: (),
-    REJECTED: (),
 }
 
 

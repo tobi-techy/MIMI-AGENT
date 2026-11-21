@@ -38,6 +38,32 @@ _MONTHS = ("Jan", "Feb", "Mar", "Apr", "May", "Jun",
            "Jul", "Aug", "Sep", "Oct", "Nov", "Dec")
 
 
+def at_stake_kobo(status: str, *, drafted_kobo: int, collected_kobo: int | None,
+                  returned_kobo: int | None) -> int:
+    """What a return is worth *at its stage*, in kobo: one rule for every reader.
+
+    A return's value moves as the goods move, and reporting the drafted figure
+    for goods that came back short is a number nobody owes:
+
+    * ``drafted`` or ``approved``: what the return was raised for;
+    * ``collected`` or later: what the rep actually took;
+    * ``inspected`` or later: what inspection accepted, which is the figure a
+      credit note rests on.
+
+    A stage with no figure recorded falls back to the one before it, because a
+    missing count is not a zero. The aged read and the daily brief both call
+    this, so the two can never disagree about what is at stake.
+    """
+    taken = int(collected_kobo or 0)
+    back = int(returned_kobo or 0)
+    raised = int(drafted_kobo or 0)
+    if status in ("inspected", "settled"):
+        return back or taken or raised
+    if status == "collected":
+        return taken or raised
+    return raised
+
+
 class AgedReturn(BaseModel):
     """One return still open, and what it costs to leave it there."""
 
@@ -88,7 +114,10 @@ def aged_returns(engine: Engine, tenant_id: str, day: date | None = None) -> lis
             rep_name=str(r.rep_name or ""), status=str(r.status),
             raised_on=str(r.raised_on or ""),
             days_open=max(0, ordinal - raised) if raised else 0,
-            value_kobo=int(r.value_drafted_kobo or 0), reason=str(r.reason or "")))
+            value_kobo=at_stake_kobo(str(r.status), drafted_kobo=int(r.value_drafted_kobo or 0),
+                                     collected_kobo=int(r.value_collected_kobo or 0),
+                                     returned_kobo=int(r.value_returned_kobo or 0)),
+            reason=str(r.reason or "")))
     out.sort(key=lambda r: (-r.days_open, -r.value_kobo, r.return_id))
     return out
 
