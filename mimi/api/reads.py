@@ -11,12 +11,13 @@ cannot be probed. The rule itself lives in ``Scope``; these queries only ask.
 
 from __future__ import annotations
 
+from datetime import UTC, datetime
 from typing import Any
 
 import sqlalchemy as sa
 from sqlalchemy.engine import Engine
 
-from mimi import owed
+from mimi import clock, owed
 from mimi.api import display, threadmeta
 from mimi.api import voice as vx
 from mimi.api.agent import NotFound, approval_dict, turn_handoff
@@ -231,7 +232,8 @@ def _thread_summary(conn: sa.Connection, tenant: str, t: Any) -> dict[str, Any]:
                  .order_by(s.turns.c.created_ts, s.turns.c.turn_id))]
     meta = threadmeta.derive(kind=t.kind, thread_id=t.thread_id, shop_id=t.shop_id,
                              shop_name=shop_name, pending=int(pending or 0), turns=turns,
-                             rep_name=rep_name)
+                             rep_name=rep_name, state=loads(t.state, {}),
+                             now=datetime.fromtimestamp(clock.wall(), UTC))
     return {"thread_id": t.thread_id, "kind": t.kind, "shop_id": t.shop_id,
             "shop_name": shop_name, "last_at": t.last_at,
             "last_text": (display.humanize(last.text, display.names_for(conn, tenant))[:200]
@@ -418,8 +420,6 @@ def _activity_steps(conn: sa.Connection, tenant: str, turn_id: str) -> list[dict
 
 def _activity_at(created_at: str, created_ts: float) -> str:
     """When the turn started, on the Lagos clock with its zone."""
-    from datetime import UTC, datetime
-
     try:
         dt = datetime.fromisoformat(str(created_at))
     except ValueError:
