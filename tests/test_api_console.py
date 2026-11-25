@@ -6,9 +6,11 @@ are additive; the old ones keep their shape (``tests/test_api.py``).
 
 from __future__ import annotations
 
+import json
 import re
 import time
 from collections.abc import Iterator
+from datetime import timedelta
 from pathlib import Path
 from typing import Any
 
@@ -16,11 +18,13 @@ import pytest
 import sqlalchemy as sa
 from fastapi.testclient import TestClient
 
+from mimi import clock
 from mimi.api import threadmeta
 from mimi.api.agent import Agent
 from mimi.api.app import create_app
 from mimi.api.config import Settings, parse_keys
 from mimi.harness.gateway import ScriptedModel
+from mimi.harness.router_eval import OWNER_PHONE
 from mimi.harness.skills import SKILLS
 from mimi.store import ensure_schema, make_engine, seed_world
 from mimi.store import schema as s
@@ -139,6 +143,113 @@ def test_a_parked_turn_needs_you(env: dict[str, Any]) -> None:
     assert _thread(c, f"{A}:shop:shop-001")["status"] == "needs_you"
 
 
+# ------------------------------------------------------- whose move it is
+
+
+def _as_asked(engine: Any, thread_id: str, asked_at: str) -> None:
+    """Write a router state with an open ask straight to the thread's row."""
+    with engine.begin() as conn:
+        conn.execute(s.threads.update().where(s.threads.c.tenant_id == A,
+                                              s.threads.c.thread_id == thread_id)
+                     .values(state=json.dumps({"pending_skill": "collector/promise-to-pay",
+                                               "asked_at": asked_at})))
+
+
+def _detail_thread(c: TestClient, tid: str) -> dict[str, Any]:
+    r = c.get(f"/v1/threads/{tid}", headers=owner())
+    assert r.status_code == 200, r.text
+    return dict(r.json()["thread"])
+
+
+def test_a_pending_approval_waits_on_the_owner(env: dict[str, Any]) -> None:
+    c = env["c"]
+    assert turn(c, "w.w.1", "abeg wetin I owe now? FIRM").json()["status"] == \
+        "parked_for_approval"
+    row = _thread(c, f"{A}:shop:shop-001")
+    assert row["pending_approvals"] >= 1 and row["waiting_on"] == "owner"
+
+
+def test_a_live_ask_waits_on_the_shop(env: dict[str, Any]) -> None:
+    c = env["c"]
+    assert turn(c, "w.w.2", "abeg wetin I owe now?").status_code == 200
+    _as_asked(env["engine"], f"{A}:shop:shop-001",
+              (clock.wall_utc() - timedelta(minutes=5)).isoformat())
+    assert _thread(c, f"{A}:shop:shop-001")["waiting_on"] == "shop"
+
+
+def test_a_live_ask_waits_on_the_rep(env: dict[str, Any]) -> None:
+    c = env["c"]
+    r = c.post("/v1/turns", json={"message_id": "w.w.3", "source": "rep_message",
+                                  "phone": W.reps[0].phone, "text": "morning"},
+               headers=chan())
+    assert r.status_code == 200, r.text
+    tid = f"{A}:rep:{W.reps[0].rep_id}"
+    _as_asked(env["engine"], tid, (clock.wall_utc() - timedelta(minutes=5)).isoformat())
+    assert _thread(c, tid)["waiting_on"] == "rep"
+
+
+def test_a_live_ask_on_the_owner_thread_waits_on_the_owner(env: dict[str, Any]) -> None:
+    c = env["c"]
+    r = c.post("/v1/turns", json={"message_id": "w.w.4", "source": "owner_message",
+                                  "phone": OWNER_PHONE, "text": "morning"},
+               headers=chan())
+    assert r.status_code == 200, r.text
+    _as_asked(env["engine"], f"{A}:owner", (clock.wall_utc() - timedelta(minutes=5)).isoformat())
+    assert _thread(c, f"{A}:owner")["waiting_on"] == "owner"
+
+
+def test_an_expired_ask_is_not_live_and_waits_on_nobody(env: dict[str, Any]) -> None:
+    c = env["c"]
+    assert turn(c, "w.w.5", "abeg wetin I owe now?").status_code == 200
+    _as_asked(env["engine"], f"{A}:shop:shop-001",
+              (clock.wall_utc() - timedelta(days=30)).isoformat())
+    row = _thread(c, f"{A}:shop:shop-001")
+    assert row["status"] == "done" and row["waiting_on"] == "nobody"
+
+
+def test_a_parked_turn_waits_on_the_owner(env: dict[str, Any]) -> None:
+    c = env["c"]
+    assert turn(c, "w.w.6", "hi").status_code == 200
+    with env["engine"].begin() as conn:
+        conn.execute(s.turns.update().where(s.turns.c.tenant_id == A)
+                     .values(state="parked", status="parked_budget"))
+    assert _thread(c, f"{A}:shop:shop-001")["waiting_on"] == "owner"
+
+
+def test_a_denied_or_failed_turn_waits_on_the_owner(env: dict[str, Any]) -> None:
+    c = env["c"]
+    assert turn(c, "w.w.7", "hi").status_code == 200
+    for state, status in (("done", "stopped_denied"), ("failed", "failed")):
+        with env["engine"].begin() as conn:
+            conn.execute(s.turns.update().where(s.turns.c.tenant_id == A)
+                         .values(state=state, status=status))
+        assert _thread(c, f"{A}:shop:shop-001")["waiting_on"] == "owner", status
+
+
+def test_a_running_turn_waits_on_nobody(env: dict[str, Any]) -> None:
+    c = env["c"]
+    assert turn(c, "w.w.8", "hi", params={"wait": "false"}).status_code == 202
+    row = _thread(c, f"{A}:shop:shop-001")
+    assert row["status"] == "running" and row["waiting_on"] == "nobody"
+
+
+def test_a_finished_thread_with_messages_waits_on_nobody(env: dict[str, Any]) -> None:
+    c = env["c"]
+    assert turn(c, "w.w.9", "abeg wetin I owe now?").status_code == 200
+    row = _thread(c, f"{A}:shop:shop-001")
+    assert row["messages"] >= 2 and row["status"] == "done"
+    assert row["waiting_on"] == "nobody"
+
+
+def test_the_list_and_the_detail_agree_on_waiting_on(env: dict[str, Any]) -> None:
+    c = env["c"]
+    assert turn(c, "w.w.10", "abeg wetin I owe now?").status_code == 200
+    _as_asked(env["engine"], f"{A}:shop:shop-001",
+              (clock.wall_utc() - timedelta(minutes=5)).isoformat())
+    assert _thread(c, f"{A}:shop:shop-001")["waiting_on"] == \
+        _detail_thread(c, f"{A}:shop:shop-001")["waiting_on"] == "shop"
+
+
 def test_every_skill_has_an_owner_title_with_no_dashes() -> None:
     for sk in SKILLS:
         title = threadmeta.skill_title(sk.key)
@@ -150,11 +261,12 @@ def test_titles_never_carry_shop_text() -> None:
     meta = threadmeta.derive(kind="shop", thread_id=f"{A}:shop:shop-001", shop_id="shop-001",
                              shop_name="Mama Sola", pending=0, turns=[
                                  {"helper": "collector", "skill": "collector/collections",
-                                  "state": "done"}])
+                                  "state": "done"}], state={}, now=clock.wall_utc())
     assert meta == {"helper": "collector", "helper_name": "Collector", "status": "done",
-                    "title": "Mama Sola: Balance question"}
+                    "title": "Mama Sola: Balance question", "waiting_on": "nobody"}
     owner_meta = threadmeta.derive(kind="owner", thread_id=f"{A}:owner", shop_id="",
-                                   shop_name="", pending=0, turns=[])
+                                   shop_name="", pending=0, turns=[], state={},
+                                   now=clock.wall_utc())
     assert owner_meta["title"] == "You and Mimi" and owner_meta["helper"] == "mimi"
 
 

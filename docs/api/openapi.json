@@ -5621,6 +5621,17 @@
             "description": "A short title written by code (never shop text).",
             "title": "Title",
             "type": "string"
+          },
+          "waiting_on": {
+            "description": "Whose move it is, written by code from the thread's rows: owner (the distributor's owner at the console: a pending approval, or a turn parked, denied or failed); shop or rep (the counterparty outside the console, while that helper's ask is still live); nobody (nothing is blocked: a running turn or a finished thread, and an ask past its expiry is not a live ask).",
+            "enum": [
+              "owner",
+              "shop",
+              "rep",
+              "nobody"
+            ],
+            "title": "Waiting On",
+            "type": "string"
           }
         },
         "required": [
@@ -5636,6 +5647,7 @@
           "helper",
           "helper_name",
           "status",
+          "waiting_on",
           "title"
         ],
         "title": "ThreadSummary",

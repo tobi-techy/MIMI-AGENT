@@ -226,6 +226,12 @@ class ThreadSummary(_Out):
         ..., description="needs_you: a pending approval, or a turn waiting on a person "
         "(a question to answer, a park, a denial); running: a turn queued or running; "
         "done: otherwise.")
+    waiting_on: Literal["owner", "shop", "rep", "nobody"] = Field(
+        ..., description="Whose move it is, written by code from the thread's rows: owner "
+        "(the distributor's owner at the console: a pending approval, or a turn parked, "
+        "denied or failed); shop or rep (the counterparty outside the console, while that "
+        "helper's ask is still live); nobody (nothing is blocked: a running turn or a "
+        "finished thread, and an ask past its expiry is not a live ask).")
     title: str = Field(..., description="A short title written by code (never shop text).")
 
 
